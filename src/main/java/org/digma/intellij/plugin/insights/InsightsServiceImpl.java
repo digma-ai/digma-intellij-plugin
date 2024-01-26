@@ -21,6 +21,7 @@ import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.IDEUtilsService;
 import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator;
 import org.digma.intellij.plugin.document.DocumentInfoContainer;
+import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider;
 import org.digma.intellij.plugin.insights.model.outgoing.Method;
@@ -32,6 +33,7 @@ import org.digma.intellij.plugin.jcef.common.UserRegistrationEvent;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.model.discovery.CodeLessSpan;
+import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
@@ -53,12 +55,12 @@ import org.digma.intellij.plugin.ui.model.EndpointScope;
 import org.digma.intellij.plugin.ui.model.MethodScope;
 import org.digma.intellij.plugin.ui.model.Scope;
 import org.digma.intellij.plugin.ui.model.UIInsightsStatus;
-import org.digma.intellij.plugin.ui.model.insights.InsightsModelReact;
 import org.digma.intellij.plugin.ui.recentactivity.RecentActivityService;
 import org.digma.intellij.plugin.ui.service.InsightsService;
 import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier;
 import org.digma.intellij.plugin.ui.settings.SettingsChangeListener;
 import org.digma.intellij.plugin.ui.settings.Theme;
+import org.digma.intellij.plugin.ui.tests.TestsService;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -103,6 +105,10 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
     public InsightsServiceImpl(Project project) {
         this.project = project;
+
+        //TestsService depends on InsightsModelReact.scope so make sure its initialized and listening.
+        // It may also be called from TestsTabPanel, whom even comes first
+        project.getService(TestsService.class);
 
         if (JBCefApp.isSupported()) {
 
@@ -184,8 +190,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
     }
 
     private InsightsModelReact model() {
-        var modelHolder = project.getService(InsightsModelReactHolder.class);
-        return modelHolder.getModel();
+        return InsightsModelReact.getInstance(project);
     }
 
     private void registerAppSchemeHandler(Project project) {
@@ -223,16 +228,27 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
     @Override
     public void updateInsights(@NotNull CodeLessSpan codeLessSpan) {
+        //only interface methods should set the scope when it really changes because InsightsModelReact
+        // fires scope change event and some other services depend on that event. refresh methods that are
+        // internal to this service should not change the scope.
+        model().clearProperties();
+        var scope = new CodeLessSpanScope(codeLessSpan, null);
+        model().setScope(scope);
+        updateInsights(scope);
+    }
+
+
+    private void updateInsights(@NotNull CodeLessSpanScope codeLessSpanScope) {
 
         Backgroundable.ensurePooledThread(() -> withUpdateLock(() -> {
 
-            Log.log(logger::debug, "updateInsightsModel to {}. ", codeLessSpan);
+            var codeLessSpan = codeLessSpanScope.getSpan();
 
-            model().clearProperties();
+            Log.log(logger::debug, "updateInsightsModel to {}. ", codeLessSpan);
 
             try {
                 var insightsResponse = AnalyticsService.getInstance(project).getInsightsForSingleSpan(codeLessSpan.getSpanId());
-                model().setScope(new CodeLessSpanScope(codeLessSpan, insightsResponse.getSpanInfo()));
+                codeLessSpanScope.setSpanInfo(insightsResponse.getSpanInfo());
 
                 var insights = insightsResponse.getInsights();
 
@@ -254,19 +270,27 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
     }
 
 
-
     @Override
     public void updateInsights(@NotNull EndpointInfo endpointInfo) {
+        //only interface methods should set the scope when it really changes because InsightsModelReact
+        // fires scope change event and some other services depend on that event. refresh methods that are
+        // internal to this service should not change the scope.
+        model().clearProperties();
+        var scope = new EndpointScope(endpointInfo);
+        model().setScope(scope);
+        updateInsights(scope);
+    }
+
+    private void updateInsights(@NotNull EndpointScope endpointScope) {
 
         Backgroundable.ensurePooledThread(() -> withUpdateLock(() -> {
 
-            Log.log(logger::debug, "updateInsightsModel to {}. ", endpointInfo);
+            var endpointInfo = endpointScope.getEndpoint();
 
-            model().clearProperties();
+            Log.log(logger::debug, "updateInsightsModel to {}. ", endpointInfo);
 
             try {
                 var insightsResponse = AnalyticsService.getInstance(project).getInsightsForSingleEndpoint(endpointInfo.idWithType());
-                model().setScope(new EndpointScope(endpointInfo));
 
                 var methodWithInsights = insightsResponse.getMethodsWithInsights().stream().findAny().orElse(null);
                 if (methodWithInsights != null) {
@@ -291,32 +315,37 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
     @Override
     public void updateInsights(@NotNull MethodInfo methodInfo) {
-        updateInsightsImpl(methodInfo, null);
+        //only interface methods should set the scope when it really changes because InsightsModelReact
+        // fires scope change event and some other services depend on that event. refresh methods that are
+        // internal to this service should not change the scope.
+        model().clearProperties();
+        var scope = new MethodScope(methodInfo);
+        model().setScope(scope);
+        updateInsights(scope, null);
     }
 
 
-    private void updateInsights(@NotNull MethodInfo methodInfo, @Nullable UIInsightsStatus predefinedStatus) {
+    private void updateInsights(@NotNull MethodScope methodScope, @Nullable UIInsightsStatus predefinedStatus) {
 
         Backgroundable.ensurePooledThread(() -> withUpdateLock(() -> {
             //check we are still on the same method. while updating the status the scope may already change
-            if (model().getScope() instanceof MethodScope methodScope && methodScope.getMethodInfo().getId().equals(methodInfo.getId())) {
-                updateInsightsImpl(methodInfo, predefinedStatus);
+            if (model().getScope() instanceof MethodScope currentMethodScope &&
+                    methodScope.getMethodInfo().getId().equals(currentMethodScope.getMethodInfo().getId())) {
+                updateInsightsImpl(methodScope, predefinedStatus);
             }
         }));
     }
 
 
-    private void updateInsightsImpl(@NotNull MethodInfo methodInfo, @Nullable UIInsightsStatus predefinedStatus) {
+    private void updateInsightsImpl(@NotNull MethodScope methodScope, @Nullable UIInsightsStatus predefinedStatus) {
 
         Backgroundable.ensurePooledThread(() -> withUpdateLock(() -> {
+
+            var methodInfo = methodScope.getMethodInfo();
 
             Log.log(logger::debug, "updateInsightsModel to {}. ", methodInfo);
 
             try {
-
-                model().clearProperties();
-
-                model().setScope(new MethodScope(methodInfo));
 
                 var methodInstrumentationPresenter = new MethodInstrumentationPresenter(project);
                 ApplicationManager.getApplication().runReadAction(() -> methodInstrumentationPresenter.update(methodInfo.getId()));
@@ -334,7 +363,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
                     if (insights.isEmpty()) {
                         Log.log(logger::debug, "No insights for method {}, Starting background thread to update status.", methodInfo.getName());
                         statusToUse = UIInsightsStatus.Loading.name();
-                        updateStatusInBackground(methodInfo);
+                        updateStatusInBackground(methodScope);
                     }
                 }
 
@@ -373,9 +402,11 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
     }
 
 
-    private void updateStatusInBackground(@NotNull MethodInfo methodInfo) {
+    private void updateStatusInBackground(@NotNull MethodScope methodScope) {
 
         Backgroundable.executeOnPooledThread(() -> {
+
+            var methodInfo = methodScope.getMethodInfo();
 
             Log.log(logger::debug, "Loading backend status in background for method {}", methodInfo.getName());
             var insightStatus = getInsightStatus(methodInfo);
@@ -383,7 +414,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
             UIInsightsStatus status = toUiInsightStatus(insightStatus, methodInfo.hasRelatedCodeObjectIds());
 
-            updateInsights(methodInfo, status);
+            updateInsights(methodScope, status);
 
         });
     }
@@ -434,36 +465,45 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
     @Override
     public void showDocumentPreviewList(@Nullable DocumentInfoContainer documentInfoContainer, @NotNull String fileUri) {
+        model().clearProperties();
+        if (documentInfoContainer == null) {
+            model().setScope(new EmptyScope(fileUri.substring(fileUri.lastIndexOf("/"))));
+            messageHandler.emptyPreview();
+        } else {
+            var documentScope = new DocumentScope(documentInfoContainer.getDocumentInfo());
+            model().setScope(documentScope);
+            showDocumentPreviewList(documentScope, fileUri);
+        }
+    }
+
+    private void showDocumentPreviewList(@NotNull DocumentScope documentScope, @NotNull String fileUri) {
 
         withUpdateLock(() -> {
 
-            model().clearProperties();
+            var documentInfo = documentScope.getDocumentInfo();
+            var documentInfoContainer = DocumentInfoService.getInstance(project).getDocumentInfo(documentInfo.getFileUri());
 
-            if (documentInfoContainer == null) {
-                model().setScope(new EmptyScope(fileUri.substring(fileUri.lastIndexOf("/"))));
-                messageHandler.emptyPreview();
-            } else {
-                model().setScope(new DocumentScope(documentInfoContainer.getDocumentInfo()));
-                var functionsList = getDocumentPreviewItems(documentInfoContainer);
-
-                var status = UIInsightsStatus.Default;
-                if (functionsList.isEmpty()) {
-                    if (hasDiscoverableCodeObjects(documentInfoContainer)) {
-                        status = UIInsightsStatus.NoSpanData;
-                    } else {
-                        status = UIInsightsStatus.NoInsights;
-                    }
-                }
-
-                messageHandler.pushInsights(Collections.emptyList(), Collections.emptyList(), fileUri, EMPTY_SERVICE_NAME,
-                        AnalyticsService.getInstance(project).getEnvironment().getCurrent(), status.name(), ViewMode.PREVIEW.name(), functionsList, false, false, false);
-
+            var functionsList = Collections.<Method>emptyList();
+            if (documentInfoContainer != null) {
+                functionsList = getDocumentPreviewItems(documentInfoContainer);
             }
+
+            var status = UIInsightsStatus.Default;
+            if (functionsList.isEmpty()) {
+                if (hasDiscoverableCodeObjects(documentInfo)) {
+                    status = UIInsightsStatus.NoSpanData;
+                } else {
+                    status = UIInsightsStatus.NoInsights;
+                }
+            }
+
+            messageHandler.pushInsights(Collections.emptyList(), Collections.emptyList(), fileUri, EMPTY_SERVICE_NAME,
+                    AnalyticsService.getInstance(project).getEnvironment().getCurrent(), status.name(), ViewMode.PREVIEW.name(), functionsList, false, false, false);
         });
     }
 
-    private boolean hasDiscoverableCodeObjects(DocumentInfoContainer documentInfoContainer) {
-        return documentInfoContainer.getDocumentInfo().getMethods().entrySet().stream().anyMatch(entry -> entry.getValue().hasRelatedCodeObjectIds());
+    private boolean hasDiscoverableCodeObjects(DocumentInfo documentInfo) {
+        return documentInfo.getMethods().entrySet().stream().anyMatch(entry -> entry.getValue().hasRelatedCodeObjectIds());
     }
 
 
@@ -486,13 +526,13 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
             Log.log(logger::debug, project, "refreshInsights called, scope is {}", getScopeObject(model().getScope()));
             var scope = model().getScope();
             if (scope instanceof MethodScope) {
-                updateInsights(((MethodScope) scope).getMethodInfo());
+                updateInsights((MethodScope) scope, null);
             } else if (scope instanceof CodeLessSpanScope) {
-                updateInsights(((CodeLessSpanScope) scope).getSpan());
+                updateInsights((CodeLessSpanScope) scope);
             } else if (scope instanceof EndpointScope) {
-                updateInsights(((EndpointScope) scope).getEndpoint());
+                updateInsights((EndpointScope) scope);
             } else if (scope instanceof DocumentScope) {
-                //do nothing, keep the view as is, don't empty. todo: maybe refresh the functions list,requires reloading insights
+                showDocumentPreviewList((DocumentScope) scope, ((DocumentScope) scope).getDocumentInfo().getFileUri());
             } else {
                 emptyInsights();
             }

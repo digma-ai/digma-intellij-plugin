@@ -13,4 +13,5 @@
       window.isDockerInstalled = ${isDockerInstalled?string('true', 'false')};
       window.isDockerComposeInstalled = ${isDockerComposeInstalled?string('true', 'false')};
       window.digmaApiUrl = "${digmaApiUrl}";
+      window.jaegerURL = "${jaegerURL}";
       window.isMicrometerProject = ${isMicrometerProject?string('true', 'false')};

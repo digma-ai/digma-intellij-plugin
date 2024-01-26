@@ -32,7 +32,6 @@ import org.digma.intellij.plugin.ui.ToolWindowShower
 import org.digma.intellij.plugin.ui.service.ErrorsViewService
 import org.digma.intellij.plugin.ui.service.InsightsService
 import org.digma.intellij.plugin.ui.service.InsightsViewService
-import org.digma.intellij.plugin.ui.service.TestsService
 
 /**
  * the job of this class is to show insights for code objects and navigate to source code if necessary and possible.
@@ -94,7 +93,6 @@ class InsightsViewOrchestrator(val project: Project) {
             val stopWatch = stopWatchStart()
 
             project.service<InsightsService>().updateInsights(span)
-            project.service<TestsService>().refresh()
 
             //clear the latest method so that if user clicks on the editor again after watching code less insights the context will change
             project.service<CurrentContextUpdater>().clearLatestMethod()
@@ -133,7 +131,6 @@ class InsightsViewOrchestrator(val project: Project) {
             val methodInfo: MethodInfo = tryFindMethodInfo(CodeObjectsUtil.stripMethodPrefix(methodCodeObjectId))
 
             project.service<InsightsService>().updateInsights(methodInfo)
-            project.service<TestsService>().refresh()
 
             EDT.ensureEDT {
                 project.service<ErrorsViewOrchestrator>().closeErrorDetailsBackButton()
@@ -185,7 +182,6 @@ class InsightsViewOrchestrator(val project: Project) {
         Backgroundable.ensurePooledThread {
 
             project.service<InsightsService>().updateInsights(methodInfo)
-            project.service<TestsService>().refresh()
 
             EDT.ensureEDT {
                 project.service<ErrorsViewOrchestrator>().closeErrorDetailsBackButton()
@@ -214,7 +210,6 @@ class InsightsViewOrchestrator(val project: Project) {
         Backgroundable.ensurePooledThread {
 
             project.service<InsightsService>().updateInsights(endpointInfo)
-            project.service<TestsService>().refresh()
 
             EDT.ensureEDT {
                 project.service<ErrorsViewOrchestrator>().closeErrorDetailsBackButton()
@@ -358,7 +353,6 @@ class InsightsViewOrchestrator(val project: Project) {
                 documentInfo?.let {
 
                     project.service<InsightsService>().updateInsights(methodInfo)
-                    project.service<TestsService>().refresh()
 
                     val methodHasNewInsights =
                         documentInfo.loadInsightsForMethod(methodUnderCaret.id) // might be long call since going to the backend
@@ -377,7 +371,6 @@ class InsightsViewOrchestrator(val project: Project) {
                 documentInfo?.let {
 
                     project.service<InsightsService>().updateInsights(endpointInfo)
-                    project.service<TestsService>().refresh()
 
                     val methodHasNewInsights =
                         documentInfo.loadInsightsForMethod(methodUnderCaret.id) // might be long call since going to the backend
@@ -415,7 +408,6 @@ class InsightsViewOrchestrator(val project: Project) {
 
         Backgroundable.ensurePooledThread {
             project.service<InsightsService>().showDocumentPreviewList(documentInfoContainer, fileUri)
-            project.service<TestsService>().refresh()
             project.service<InsightsViewService>().showDocumentPreviewList(documentInfoContainer, fileUri)
             project.service<ErrorsViewService>().showDocumentPreviewList(documentInfoContainer, fileUri)
 

@@ -24,7 +24,7 @@ public class JavaSpanNavigationStartupActivity implements StartupActivity {
                 var javaEndpointNavigationProvider = JavaEndpointNavigationProvider.getInstance(project);
                 javaEndpointNavigationProvider.buildEndpointNavigation();
                 Log.log(logger::info, "navigation mapping completed successfully");
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 Log.warnWithException(logger, e, "error in navigation mapping {}", e);
                 ErrorReporter.getInstance().reportError(project, "JavaSpanNavigationStartupActivity.runActivity", e);
             }

@@ -22,6 +22,7 @@ import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.ui.recentactivity.model.AdditionToConfigResult
 import org.digma.intellij.plugin.ui.recentactivity.model.EnvironmentType
 import org.digma.intellij.plugin.ui.recentactivity.model.PendingEnvironment
+import org.jetbrains.idea.maven.execution.MavenRunConfiguration
 
 //app level service so includes pending environments from all projects
 @Service(Service.Level.APP)
@@ -244,6 +245,15 @@ class AddEnvironmentsService {
         }
 
         return when (config) {
+            //todo: separate the maven code to a specific module that will not fail if maven plugin is disabled
+            is MavenRunConfiguration -> {
+                config.runnerSettings?.let {
+                    Log.log(logger::info, "adding environment to configuration {}", config.name)
+                    it.environmentProperties = it.environmentProperties.toMutableMap()
+                    addEnvironmentToOtelResourceAttributes(it.environmentProperties)
+                    true
+                } ?: false
+            }
             is CommonProgramRunConfigurationParameters -> {
                 Log.log(logger::info, "adding environment to configuration {}", config.name)
                 config.envs = config.envs.toMutableMap()

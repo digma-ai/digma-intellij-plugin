@@ -14,7 +14,12 @@ public class AssetsPanel extends JPanel {
     public AssetsPanel(Project project) {
         setLayout(new BorderLayout());
         setBorder(JBUI.Borders.empty());
-        add(AssetsService.getInstance(project).getComponent());
+
+        var component = AssetsService.getInstance(project).getComponent();
+        if (component == null) {
+            component = new JLabel("JCef is not supported");
+        }
+        add(component);
         setBackground(listBackground());
     }
 

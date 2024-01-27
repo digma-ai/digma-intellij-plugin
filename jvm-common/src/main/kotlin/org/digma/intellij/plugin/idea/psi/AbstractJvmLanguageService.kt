@@ -14,11 +14,9 @@ import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.progress.EmptyProgressIndicator
 import com.intellij.openapi.progress.ProgressIndicator
-import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectFileIndex
-import com.intellij.openapi.util.ThrowableComputable
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.pom.Navigatable
 import com.intellij.psi.JavaPsiFacade
@@ -28,7 +26,6 @@ import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
-import com.intellij.testFramework.PlatformTestUtil
 import org.digma.intellij.plugin.WITH_SPAN_ANNOTATION_FQN
 import org.digma.intellij.plugin.WITH_SPAN_DEPENDENCY_DESCRIPTION
 import org.digma.intellij.plugin.common.EDT
@@ -59,7 +56,6 @@ import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.psi.PsiFileNotFountException
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.digma.intellij.plugin.ui.CaretContextService
-import org.jetbrains.plugins.gradle.execution.test.runner.TestMethodGradleConfigurationProducer
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.UMethod
@@ -119,29 +115,37 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
 
     override fun buildDocumentInfo(psiFile: PsiFile, selectedTextEditor: FileEditor?): DocumentInfo {
+        EDT.assertNonDispatchThread()
         return buildDocumentInfo(psiFile)
     }
 
     override fun buildDocumentInfo(psiFile: PsiFile): DocumentInfo {
-        Log.log(logger::debug, "got buildDocumentInfo request for {}", psiFile)
-        if (isSupportedFile(psiFile)) {
-            return ProgressManager.getInstance().runProcess<DocumentInfo>({
-                Retries.retryWithResult(
-                    {
-                        ReadAction.compute(
-                            ThrowableComputable<DocumentInfo, RuntimeException> {
-                                codeObjectDiscovery.buildDocumentInfo(
-                                    project,
-                                    psiFile
-                                )
-                            })
-                    },
-                    Throwable::class.java, 50, 5
-                )
-            }, EmptyProgressIndicator())
 
+        EDT.assertNonDispatchThread()
+
+        Log.log(logger::debug, "got buildDocumentInfo request for {}", psiFile)
+        if (!project.isDisposed && psiFile.isValid && isSupportedFile(psiFile)) {
+            try {
+
+                //retry the whole operation.
+                //runInReadAccessInSmartModeWithResultAndRetry will also retry a few times
+                // but with shorter delay and more retries.
+                return Retries.retryWithResult({
+                    //this is the top most call to codeObjectDiscovery.buildDocumentInfo and the read access will start here
+                    runInReadAccessInSmartModeWithResultAndRetry<DocumentInfo>(project) {
+                        codeObjectDiscovery.buildDocumentInfo(
+                            project,
+                            psiFile
+                        )
+                    }
+                }, Throwable::class.java, 100, 3)
+
+            } catch (e: Throwable) {
+                ErrorReporter.getInstance().reportError("${this::class.java.simpleName}.buildDocumentInfo", e)
+                return DocumentInfo(PsiUtils.psiFileToUri(psiFile), mutableMapOf())
+            }
         } else {
-            Log.log(logger::debug, "psi file is not kotlin, returning empty DocumentInfo for {}", psiFile)
+            Log.log(logger::debug, "psi file is not supported or not valid, returning empty DocumentInfo for {}", psiFile)
             return DocumentInfo(PsiUtils.psiFileToUri(psiFile), mutableMapOf())
         }
     }
@@ -627,11 +631,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
         return Retries.retryWithResultAndDefault({
             val myRunnable = MyRunnable()
-            val success = ProgressManager.getInstance()
-                .runInReadActionWithWriteActionPriority(myRunnable, myRunnable.progressIndicator)
-            if (!success) {
-                throw RuntimeException("canInstrumentMethod read action failed")
-            }
+            runInReadAccessInSmartMode(project, myRunnable, myRunnable.progressIndicator)
             Objects.requireNonNullElseGet(myRunnable.result) { CanInstrumentMethodResult.failure() }
         }, Throwable::class.java, 50, 5, CanInstrumentMethodResult.failure())
     }

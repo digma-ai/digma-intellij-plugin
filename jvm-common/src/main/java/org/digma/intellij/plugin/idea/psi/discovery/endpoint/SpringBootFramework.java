@@ -10,7 +10,6 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.search.searches.AnnotatedElementsSearch;
 import com.intellij.util.Query;
-import org.digma.intellij.plugin.common.Retries;
 import org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils;
 import org.digma.intellij.plugin.idea.psi.java.JavaPsiUtils;
 import org.digma.intellij.plugin.model.discovery.EndpointFramework;
@@ -25,11 +24,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import static org.digma.intellij.plugin.idea.psi.JvmCodeObjectsUtilsKt.createPsiMethodCodeObjectId;
-import static org.digma.intellij.plugin.idea.psi.PsiAccessUtilsKt.runInReadAccess;
-import static org.digma.intellij.plugin.idea.psi.PsiAccessUtilsKt.runInReadAccessWithResult;
+import static org.digma.intellij.plugin.idea.psi.PsiAccessUtilsKt.runInReadAccessInSmartModeAndRetry;
+import static org.digma.intellij.plugin.idea.psi.PsiAccessUtilsKt.runInReadAccessInSmartModeWithResultAndRetry;
 
 public class SpringBootFramework extends EndpointDiscovery {
 
@@ -63,7 +61,6 @@ public class SpringBootFramework extends EndpointDiscovery {
     private final Project project;
 
     // late init
-    private boolean lateInitAlready = false;
     private PsiClass controllerAnnotationClass;
     private List<JavaAnnotation> httpMethodsAnnotations;
 
@@ -74,11 +71,11 @@ public class SpringBootFramework extends EndpointDiscovery {
     private void lateInit() {
 
 
-        Retries.simpleRetry(() -> runInReadAccess(project, () -> {
+        runInReadAccessInSmartModeAndRetry(project, () -> {
             JavaPsiFacade psiFacade = JavaPsiFacade.getInstance(project);
             controllerAnnotationClass = psiFacade.findClass(CONTROLLER_ANNOTATION_STR, GlobalSearchScope.allScope(project));
             initHttpMethodAnnotations(psiFacade);
-        }), Throwable.class, 50, 5);
+        });
     }
 
     private void initHttpMethodAnnotations(JavaPsiFacade psiFacade) {
@@ -89,7 +86,7 @@ public class SpringBootFramework extends EndpointDiscovery {
                     return new JavaAnnotation(currFqn, psiClass);
                 })
                 .filter(Objects::nonNull)
-                .collect(Collectors.toUnmodifiableList());
+                .toList();
     }
 
     private boolean isSpringBootWebRelevant() {
@@ -107,16 +104,17 @@ public class SpringBootFramework extends EndpointDiscovery {
 
         httpMethodsAnnotations.forEach(currAnnotation -> {
 
-            Collection<PsiMethod> psiMethodsInFile = Retries.retryWithResult(() -> runInReadAccessWithResult(project, () -> {
+            Collection<PsiMethod> psiMethodsInFile =
+                    runInReadAccessInSmartModeWithResultAndRetry(project, () -> {
                 Query<PsiMethod> psiMethods = AnnotatedElementsSearch.searchPsiMethods(currAnnotation.getPsiClass(), searchScopeSupplier.get());
                 return psiMethods.findAll();
-            }), Throwable.class, 50, 5);
+                    });
 
 
             for (PsiMethod currPsiMethod : psiMethodsInFile) {
 
 
-                Retries.simpleRetry(() -> runInReadAccess(project, () -> {
+                runInReadAccessInSmartModeAndRetry(project, () -> {
                     final String methodId = createPsiMethodCodeObjectId(currPsiMethod);
                     final PsiAnnotation mappingPsiAnnotationOnMethod = currPsiMethod.getAnnotation(currAnnotation.getClassNameFqn());
                     if (mappingPsiAnnotationOnMethod == null) {
@@ -150,7 +148,7 @@ public class SpringBootFramework extends EndpointDiscovery {
                         EndpointInfo endpointInfo = new EndpointInfo(httpEndpointCodeObjectId, methodId, JavaPsiUtils.toFileUri(currPsiMethod), null, EndpointFramework.SpringBoot);
                         retList.add(endpointInfo);
                     }
-                }), Throwable.class, 50, 5);
+                });
             }
         });
         return retList;

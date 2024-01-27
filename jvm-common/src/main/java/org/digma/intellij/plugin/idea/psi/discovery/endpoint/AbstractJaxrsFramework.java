@@ -16,7 +16,6 @@ import com.intellij.psi.search.searches.AnnotatedElementsSearch;
 import com.intellij.psi.search.searches.OverridingMethodsSearch;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Query;
-import org.digma.intellij.plugin.common.Retries;
 import org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils;
 import org.digma.intellij.plugin.idea.psi.java.JavaPsiUtils;
 import org.digma.intellij.plugin.model.discovery.EndpointFramework;
@@ -31,11 +30,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import static org.digma.intellij.plugin.idea.psi.JvmCodeObjectsUtilsKt.createPsiMethodCodeObjectId;
-import static org.digma.intellij.plugin.idea.psi.PsiAccessUtilsKt.runInReadAccess;
-import static org.digma.intellij.plugin.idea.psi.PsiAccessUtilsKt.runInReadAccessWithResult;
+import static org.digma.intellij.plugin.idea.psi.PsiAccessUtilsKt.runInReadAccessInSmartModeAndRetry;
+import static org.digma.intellij.plugin.idea.psi.PsiAccessUtilsKt.runInReadAccessInSmartModeWithResultAndRetry;
 
 public abstract class AbstractJaxrsFramework extends EndpointDiscovery {
 
@@ -101,11 +99,11 @@ public abstract class AbstractJaxrsFramework extends EndpointDiscovery {
     //todo:maybe synchronize because may be called from multiple threads
     private void lateInit() {
 
-        Retries.simpleRetry(() -> runInReadAccess(project, () -> {
+        runInReadAccessInSmartModeAndRetry(project, () -> {
             JavaPsiFacade psiFacade = JavaPsiFacade.getInstance(project);
             jaxrsPathAnnotationClass = psiFacade.findClass(JAX_RS_PATH_ANNOTATION_STR(), GlobalSearchScope.allScope(project));
             initHttpMethodAnnotations(psiFacade);
-        }), Throwable.class, 50, 5);
+        });
     }
 
     private void initHttpMethodAnnotations(JavaPsiFacade psiFacade) {
@@ -116,7 +114,7 @@ public abstract class AbstractJaxrsFramework extends EndpointDiscovery {
                     return new JavaAnnotation(currFqn, psiClass);
                 })
                 .filter(Objects::nonNull)
-                .collect(Collectors.toUnmodifiableList());
+                .toList();
     }
 
     private boolean isJaxRsHttpRelevant() {
@@ -137,8 +135,8 @@ public abstract class AbstractJaxrsFramework extends EndpointDiscovery {
         List<EndpointInfo> endpointInfos = new ArrayList<>();
 
         Collection<PsiClass> allClassesInFile =
-                Retries.retryWithResult(() -> runInReadAccessWithResult(project, () ->
-                        PsiTreeUtil.findChildrenOfType(psiFile, PsiClass.class)), Throwable.class, 50, 5);
+                runInReadAccessInSmartModeWithResultAndRetry(project, () ->
+                        PsiTreeUtil.findChildrenOfType(psiFile, PsiClass.class));
 
 
         for (final PsiClass currClass : allClassesInFile) {
@@ -148,7 +146,7 @@ public abstract class AbstractJaxrsFramework extends EndpointDiscovery {
             for (final PsiMethod currPsiMethod : methodsInClass) {
 
 
-                Retries.simpleRetry(() -> runInReadAccess(project, () -> {
+                runInReadAccessInSmartModeAndRetry(project, () -> {
                     Set<PsiMethod> candidateMethods = new HashSet<>();
                     final PsiAnnotation methodPathAnnotation = JavaPsiUtils.findNearestAnnotation(currPsiMethod, JAX_RS_PATH_ANNOTATION_STR());
                     boolean hasPath = methodPathAnnotation != null;
@@ -159,7 +157,7 @@ public abstract class AbstractJaxrsFramework extends EndpointDiscovery {
                         candidateMethods.add(currPsiMethod);
                     }
                     endpointInfos.addAll(handleCandidateMethods(candidateMethods).stream().toList());
-                }), Throwable.class, 50, 5);
+                });
             }
         }
 
@@ -179,21 +177,22 @@ public abstract class AbstractJaxrsFramework extends EndpointDiscovery {
 
         for (JavaAnnotation currExpectedAnnotation : httpMethodsAnnotations) {
 
-            Collection<PsiMethod> methodsWithDirectHttpMethod = Retries.retryWithResult(() -> runInReadAccessWithResult(project, () -> {
+            Collection<PsiMethod> methodsWithDirectHttpMethod =
+                    runInReadAccessInSmartModeWithResultAndRetry(project, () -> {
                 Query<PsiMethod> psiMethods = AnnotatedElementsSearch.searchPsiMethods(currExpectedAnnotation.getPsiClass(), searchScopeSupplier.get());
                 return psiMethods.findAll();
-            }), Throwable.class, 50, 5);
+                    });
 
 
             for (final PsiMethod directMethodWithHttpMethod : methodsWithDirectHttpMethod) {
 
-                Retries.simpleRetry(() -> runInReadAccess(project, () -> {
+                runInReadAccessInSmartModeAndRetry(project, () -> {
                     Set<PsiMethod> candidateMethods = new HashSet<>();
                     candidateMethods.add(directMethodWithHttpMethod);
                     Query<PsiMethod> overridingMethods = OverridingMethodsSearch.search(directMethodWithHttpMethod);
                     candidateMethods.addAll(overridingMethods.findAll());
                     endpointInfos.addAll(handleCandidateMethods(candidateMethods).stream().toList());
-                }), Throwable.class, 50, 5);
+                });
 
             }
         }

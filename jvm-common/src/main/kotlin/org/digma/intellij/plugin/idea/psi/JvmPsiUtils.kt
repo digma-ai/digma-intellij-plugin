@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.idea.psi
 
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
@@ -53,10 +52,10 @@ fun getMethodsInClass(project: Project, cls: UClass): Collection<UMethod> {
         // see issue https://github.com/digma-ai/digma-intellij-plugin/issues/833
         // see issue https://youtrack.jetbrains.com/issue/IDEA-323198
 
-        val ownMethods = if (ApplicationManager.getApplication().isReadAccessAllowed) {
+        val ownMethods = if (isReadAccessAllowed()) {
             (cls.sourcePsi as PsiExtensibleClass).ownMethods
         } else {
-            runInReadAccessWithResult(project) { (cls.sourcePsi as PsiExtensibleClass).ownMethods }
+            runInReadAccessWithResult { (cls.sourcePsi as PsiExtensibleClass).ownMethods }
         }
         return ownMethods.map { psiMethod: PsiMethod -> psiMethod.toUElementOfType<UMethod>()!! }
     }

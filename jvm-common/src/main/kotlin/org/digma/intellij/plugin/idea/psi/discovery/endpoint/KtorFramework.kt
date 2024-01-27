@@ -9,8 +9,8 @@ import org.digma.intellij.plugin.common.Retries
 import org.digma.intellij.plugin.common.TextRangeUtils
 import org.digma.intellij.plugin.idea.psi.createMethodCodeObjectId
 import org.digma.intellij.plugin.idea.psi.getExpressionValue
-import org.digma.intellij.plugin.idea.psi.runInReadAccess
-import org.digma.intellij.plugin.idea.psi.runInReadAccessWithResult
+import org.digma.intellij.plugin.idea.psi.runInReadAccessInSmartMode
+import org.digma.intellij.plugin.idea.psi.runInReadAccessInSmartModeWithResult
 import org.digma.intellij.plugin.model.discovery.EndpointFramework
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.psi.PsiUtils
@@ -64,7 +64,7 @@ class KtorFramework(private val project: Project) : EndpointDiscovery() {
 
 
             val declarations = Retries.retryWithResult({
-                runInReadAccessWithResult<Collection<KtNamedFunction>>(project) {
+                runInReadAccessInSmartModeWithResult<Collection<KtNamedFunction>>(project) {
                     //todo: maybe cache the declarations
                     val declarations = KotlinTopLevelFunctionFqnNameIndex.get(fqName, project, GlobalSearchScope.allScope(project))
                     declarations.filter { ktNamedFunction: KtNamedFunction -> ktNamedFunction.containingKtFile.isCompiled }
@@ -75,7 +75,7 @@ class KtorFramework(private val project: Project) : EndpointDiscovery() {
             declarations.forEach { methodDeclarations ->
 
                 val references = Retries.retryWithResult({
-                    runInReadAccessWithResult<Collection<PsiReference>>(project) {
+                    runInReadAccessInSmartModeWithResult<Collection<PsiReference>>(project) {
                         ReferencesSearch.search(methodDeclarations, searchScopeSupplier.get()).findAll()
                     }
                 }, Throwable::class.java, 50, 5)
@@ -84,7 +84,7 @@ class KtorFramework(private val project: Project) : EndpointDiscovery() {
                 references.forEach { ref ->
 
                     Retries.simpleRetry({
-                        runInReadAccess(project) {
+                        runInReadAccessInSmartMode(project) {
                             val methodId = ref.element.toUElementOfType<UReferenceExpression>()?.getContainingUMethod()?.let { uMethod ->
                                 createMethodCodeObjectId(uMethod)
                             } ?: ""

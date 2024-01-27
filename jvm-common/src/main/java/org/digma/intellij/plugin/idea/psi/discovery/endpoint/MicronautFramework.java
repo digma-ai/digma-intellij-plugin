@@ -15,7 +15,6 @@ import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.search.searches.AnnotatedElementsSearch;
 import com.intellij.util.Query;
 import com.intellij.util.text.VersionComparatorUtil;
-import org.digma.intellij.plugin.common.Retries;
 import org.digma.intellij.plugin.idea.deps.ModulesDepsService;
 import org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils;
 import org.digma.intellij.plugin.idea.psi.java.JavaPsiUtils;
@@ -32,11 +31,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import static org.digma.intellij.plugin.idea.psi.JvmCodeObjectsUtilsKt.createPsiMethodCodeObjectId;
-import static org.digma.intellij.plugin.idea.psi.PsiAccessUtilsKt.runInReadAccess;
-import static org.digma.intellij.plugin.idea.psi.PsiAccessUtilsKt.runInReadAccessWithResult;
+import static org.digma.intellij.plugin.idea.psi.PsiAccessUtilsKt.runInReadAccessInSmartModeAndRetry;
+import static org.digma.intellij.plugin.idea.psi.PsiAccessUtilsKt.runInReadAccessInSmartModeWithResultAndRetry;
 
 public class MicronautFramework extends EndpointDiscovery {
 
@@ -59,7 +57,6 @@ public class MicronautFramework extends EndpointDiscovery {
     private final Project project;
 
     // late init
-    private boolean lateInitAlready = false;
     private PsiClass controllerAnnotationClass;
     private List<JavaAnnotation> httpMethodsAnnotations;
 
@@ -69,11 +66,11 @@ public class MicronautFramework extends EndpointDiscovery {
 
     private void lateInit() {
 
-        Retries.simpleRetry(() -> runInReadAccess(project, () -> {
+        runInReadAccessInSmartModeAndRetry(project, () -> {
             JavaPsiFacade psiFacade = JavaPsiFacade.getInstance(project);
             controllerAnnotationClass = psiFacade.findClass(CONTROLLER_ANNOTATION_STR, GlobalSearchScope.allScope(project));
             initHttpMethodAnnotations(psiFacade);
-        }), Throwable.class, 50, 5);
+        });
     }
 
     private void initHttpMethodAnnotations(JavaPsiFacade psiFacade) {
@@ -84,7 +81,7 @@ public class MicronautFramework extends EndpointDiscovery {
                     return new JavaAnnotation(currFqn, psiClass);
                 })
                 .filter(Objects::nonNull)
-                .collect(Collectors.toUnmodifiableList());
+                .toList();
     }
 
     private boolean isMicronautHttpRelevant() {
@@ -102,15 +99,16 @@ public class MicronautFramework extends EndpointDiscovery {
 
         httpMethodsAnnotations.forEach(currAnnotation -> {
 
-            Collection<PsiMethod> psiMethodsInFile = Retries.retryWithResult(() -> runInReadAccessWithResult(project, () -> {
+            Collection<PsiMethod> psiMethodsInFile =
+                    runInReadAccessInSmartModeWithResultAndRetry(project, () -> {
                 Query<PsiMethod> psiMethods = AnnotatedElementsSearch.searchPsiMethods(currAnnotation.getPsiClass(), searchScopeSupplier.get());
                 return psiMethods.findAll();
-            }), Throwable.class, 50, 5);
+                    });
 
 
             for (PsiMethod currPsiMethod : psiMethodsInFile) {
 
-                Retries.simpleRetry(() -> runInReadAccess(project, () -> {
+                runInReadAccessInSmartModeAndRetry(project, () -> {
                     PsiClass controllerClass = currPsiMethod.getContainingClass();
                     if (controllerClass == null) {
                         return; // very unlikely
@@ -131,7 +129,7 @@ public class MicronautFramework extends EndpointDiscovery {
                     Log.log(LOGGER::debug, "Found endpoint info '{}' for method '{}'", endpointInfo.getId(), endpointInfo.getContainingMethodId());
 
                     retList.add(endpointInfo);
-                }), Throwable.class, 50, 5);
+                });
 
             }
         });
@@ -141,6 +139,10 @@ public class MicronautFramework extends EndpointDiscovery {
     @Nullable
     private String createHttpEndpointCodeObjectId(PsiMethod psiMethod, JavaAnnotation httpMethodAnnotation, String endpointUriPrefix) {
         PsiAnnotation httpPsiAnnotation = psiMethod.getAnnotation(httpMethodAnnotation.getClassNameFqn());
+        if (httpPsiAnnotation == null) {
+            return null;
+        }
+
         List<JvmAnnotationAttribute> annotationAttributes = httpPsiAnnotation.getAttributes();
 
         String endpointUriSuffix = "/";

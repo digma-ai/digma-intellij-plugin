@@ -1,6 +1,16 @@
 # Changelog
 
-## [2.0.246] - 2024-01-25
+## [2.0.247] - 2024-01-27
+- Updated Jaeger UI by @ohrebeniuk in https://github.com/digma-ai/digma-intellij-plugin/pull/1691
+- more-details-in-fatal-error by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1692
+- fix-fata-error-supported-jvm-languages Closes #1694 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1695
+- fix IndexNotReadyException in RunCfgFlavor Closes #1696 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1697
+- change page size, page number and some potential bugs fixes Closes #1685 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1686
+- fix npe in assets panel Closes #1700 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1701
+- add isJcefSupported to posthog session Closes #1703 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1704
+- check project isDisposed in AbstractCodeLensService Closes #1681 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1706
+
+## 2.0.246 - 2024-01-25
 - Fixed duplicated icons by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1675
 - fix-late-init-jcefcomponent Closes #1673 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1674
 - fix-ensureFileBelongsToIndexableFilter Closes #1672 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1676

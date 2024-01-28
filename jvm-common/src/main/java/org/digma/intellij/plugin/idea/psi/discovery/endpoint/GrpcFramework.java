@@ -7,9 +7,9 @@ import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.search.GlobalSearchScope;
-import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.search.searches.ClassInheritorsSearch;
 import com.intellij.util.Query;
+import org.digma.intellij.plugin.common.SearchScopeProvider;
 import org.digma.intellij.plugin.idea.psi.java.JavaPsiUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.EndpointFramework;
@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Supplier;
 
 import static org.digma.intellij.plugin.idea.psi.JvmCodeObjectsUtilsKt.createPsiMethodCodeObjectId;
 import static org.digma.intellij.plugin.idea.psi.PsiAccessUtilsKt.runInReadAccessInSmartModeAndRetry;
@@ -57,7 +56,7 @@ public class GrpcFramework extends EndpointDiscovery {
 
     @Override
     @Nullable
-    public List<EndpointInfo> lookForEndpoints(@NotNull Supplier<SearchScope> searchScopeSupplier) {
+    public List<EndpointInfo> lookForEndpoints(@NotNull SearchScopeProvider searchScopeProvider) {
         lateInit();
         if (!isGrpcServerRelevant()) {
             return Collections.emptyList();
@@ -66,7 +65,7 @@ public class GrpcFramework extends EndpointDiscovery {
         List<EndpointInfo> retList = new ArrayList<>();
 
         Collection<PsiClass> grpcServerClassesInFile = runInReadAccessInSmartModeWithResultAndRetry(project, () -> {
-            Query<PsiClass> psiClasses = ClassInheritorsSearch.search(bindableServiceAnnotationClass, searchScopeSupplier.get(), true);
+            Query<PsiClass> psiClasses = ClassInheritorsSearch.search(bindableServiceAnnotationClass, searchScopeProvider.get(), true);
             return psiClasses.findAll();
         });
 

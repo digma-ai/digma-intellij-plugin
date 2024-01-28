@@ -9,18 +9,31 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Computable
 import com.intellij.openapi.util.Ref
 import org.digma.intellij.plugin.common.ReadActions
-import org.digma.intellij.plugin.common.Retries
+import org.digma.intellij.plugin.common.runWIthRetry
+import org.digma.intellij.plugin.common.runWIthRetryWithResult
+import java.util.function.Consumer
+import java.util.function.Function
 import java.util.function.Supplier
 
+
+fun runInReadAccess(runnable: Runnable) {
+    ReadActions.ensureReadAction(runnable)
+}
+
+fun runInReadAccessWithRetry(runnable: Runnable) {
+    return runWIthRetryWithResult({
+        ReadActions.ensureReadAction(runnable)
+    }, backOffMillis = 20, maxRetries = 5)
+}
 
 fun <T> runInReadAccessWithResult(computable: Computable<T>): T {
     return ReadActions.ensureReadAction(Supplier { computable.compute() })
 }
 
 fun <T> runInReadAccessWithResultAndRetry(computable: Computable<T>): T {
-    return Retries.retryWithResult({
+    return runWIthRetryWithResult({
         ReadActions.ensureReadAction(Supplier { computable.compute() })
-    }, Throwable::class.java, 20, 5)
+    }, backOffMillis = 20, maxRetries = 5)
 }
 
 
@@ -35,7 +48,7 @@ fun runInReadAccessInSmartMode(project: Project, runnable: Runnable) {
 }
 
 fun runInReadAccessInSmartModeAndRetry(project: Project, runnable: Runnable) {
-    Retries.simpleRetry({
+    runWIthRetry({
         if (isReadAccessAllowed()) {
             runnable.run()
         } else {
@@ -43,7 +56,7 @@ fun runInReadAccessInSmartModeAndRetry(project: Project, runnable: Runnable) {
                 DumbService.getInstance(project).runReadActionInSmartMode(runnable)
             }, EmptyProgressIndicator())
         }
-    }, Throwable::class.java, 50, 5)
+    }, backOffMillis = 50, maxRetries = 5)
 }
 
 
@@ -58,7 +71,7 @@ fun runInReadAccessInSmartMode(project: Project, runnable: Runnable, progressInd
 }
 
 fun runInReadAccessInSmartModeAndRetry(project: Project, runnable: Runnable, progressIndicator: ProgressIndicator) {
-    Retries.simpleRetry({
+    runWIthRetryWithResult({
         if (isReadAccessAllowed()) {
             runnable.run()
         } else {
@@ -66,7 +79,7 @@ fun runInReadAccessInSmartModeAndRetry(project: Project, runnable: Runnable, pro
                 DumbService.getInstance(project).runReadActionInSmartMode(runnable)
             }, progressIndicator)
         }
-    }, Throwable::class.java, 50, 5)
+    }, backOffMillis = 50, maxRetries = 5)
 }
 
 
@@ -82,7 +95,7 @@ fun <T> runInReadAccessInSmartModeWithResult(project: Project, computable: Compu
 
 
 fun <T> runInReadAccessInSmartModeWithResultAndRetry(project: Project, computable: Computable<T>): T {
-    return Retries.retryWithResult({
+    return runWIthRetryWithResult({
         if (isReadAccessAllowed()) {
             computable.compute()
         } else {
@@ -91,12 +104,12 @@ fun <T> runInReadAccessInSmartModeWithResultAndRetry(project: Project, computabl
             }, EmptyProgressIndicator())
 
         }
-    }, Throwable::class.java, 50, 5)
+    }, backOffMillis = 50, maxRetries = 5)
 }
 
 
 fun <T> runInReadAccessInSmartModeWithWriteActionPriorityWithRetry(project: Project, computable: Computable<T>): T {
-    return Retries.retryWithResult({
+    return runWIthRetryWithResult({
 
         //don't wait for smart mode if in read action
         if (!isReadAccessAllowed()) {
@@ -109,7 +122,7 @@ fun <T> runInReadAccessInSmartModeWithWriteActionPriorityWithRetry(project: Proj
         }, EmptyProgressIndicator())
         result.get()
 
-    }, Throwable::class.java, 50, 5)
+    }, backOffMillis = 50, maxRetries = 5)
 }
 
 
@@ -117,3 +130,19 @@ fun isReadAccessAllowed(): Boolean {
     return ApplicationManager.getApplication().isReadAccessAllowed
 }
 
+
+fun executeCatching(runnable: Runnable, onException: Consumer<Throwable>) {
+    return try {
+        runnable.run()
+    } catch (e: Throwable) {
+        onException.accept(e)
+    }
+}
+
+fun <T> executeCatching(computable: Computable<T>, onException: Function<Throwable, T>): T {
+    return try {
+        computable.compute()
+    } catch (e: Throwable) {
+        onException.apply(e)
+    }
+}

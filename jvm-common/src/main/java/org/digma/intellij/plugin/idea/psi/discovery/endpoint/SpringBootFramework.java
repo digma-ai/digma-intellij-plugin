@@ -7,9 +7,9 @@ import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.search.GlobalSearchScope;
-import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.search.searches.AnnotatedElementsSearch;
 import com.intellij.util.Query;
+import org.digma.intellij.plugin.common.SearchScopeProvider;
 import org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils;
 import org.digma.intellij.plugin.idea.psi.java.JavaPsiUtils;
 import org.digma.intellij.plugin.model.discovery.EndpointFramework;
@@ -23,7 +23,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Supplier;
 
 import static org.digma.intellij.plugin.idea.psi.JvmCodeObjectsUtilsKt.createPsiMethodCodeObjectId;
 import static org.digma.intellij.plugin.idea.psi.PsiAccessUtilsKt.runInReadAccessInSmartModeAndRetry;
@@ -94,7 +93,7 @@ public class SpringBootFramework extends EndpointDiscovery {
     }
 
     @Override
-    public List<EndpointInfo> lookForEndpoints(@NotNull Supplier<SearchScope> searchScopeSupplier) {
+    public List<EndpointInfo> lookForEndpoints(@NotNull SearchScopeProvider searchScopeProvider) {
         lateInit();
         if (!isSpringBootWebRelevant()) {
             return Collections.emptyList();
@@ -106,7 +105,7 @@ public class SpringBootFramework extends EndpointDiscovery {
 
             Collection<PsiMethod> psiMethodsInFile =
                     runInReadAccessInSmartModeWithResultAndRetry(project, () -> {
-                Query<PsiMethod> psiMethods = AnnotatedElementsSearch.searchPsiMethods(currAnnotation.getPsiClass(), searchScopeSupplier.get());
+                        Query<PsiMethod> psiMethods = AnnotatedElementsSearch.searchPsiMethods(currAnnotation.getPsiClass(), searchScopeProvider.get());
                 return psiMethods.findAll();
                     });
 

@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.idea.psi
 
 import com.intellij.openapi.project.Project
+import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.impl.source.PsiExtensibleClass
@@ -10,6 +11,7 @@ import org.jetbrains.uast.UFile
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.toUElementOfType
+import java.util.function.Predicate
 
 
 fun isJvmSupportedFile(project: Project, psiFile: PsiFile): Boolean {
@@ -43,6 +45,18 @@ fun getClassSimpleName(uClass: UClass): String {
 fun findMethodInClass(project: Project, cls: UClass, methodId: String): UMethod? {
     return getMethodsInClass(project, cls).firstOrNull { uMethod: UMethod -> methodId == createMethodCodeObjectId(uMethod) }
 }
+
+@Suppress("UnstableApiUsage")
+fun findMethodInClass(psiClass: PsiClass, methodName: String, methodPredicate: Predicate<PsiMethod>): PsiMethod? {
+    val methods = psiClass.findMethodsByName(methodName)
+    for (method in methods) {
+        if (method is PsiMethod && methodPredicate.test(method)) {
+            return method
+        }
+    }
+    return null
+}
+
 
 fun getMethodsInClass(project: Project, cls: UClass): Collection<UMethod> {
 

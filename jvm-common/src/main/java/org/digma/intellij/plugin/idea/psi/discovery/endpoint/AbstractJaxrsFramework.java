@@ -11,11 +11,11 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.search.GlobalSearchScope;
-import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.search.searches.AnnotatedElementsSearch;
 import com.intellij.psi.search.searches.OverridingMethodsSearch;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Query;
+import org.digma.intellij.plugin.common.SearchScopeProvider;
 import org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils;
 import org.digma.intellij.plugin.idea.psi.java.JavaPsiUtils;
 import org.digma.intellij.plugin.model.discovery.EndpointFramework;
@@ -29,7 +29,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Supplier;
 
 import static org.digma.intellij.plugin.idea.psi.JvmCodeObjectsUtilsKt.createPsiMethodCodeObjectId;
 import static org.digma.intellij.plugin.idea.psi.PsiAccessUtilsKt.runInReadAccessInSmartModeAndRetry;
@@ -165,7 +164,7 @@ public abstract class AbstractJaxrsFramework extends EndpointDiscovery {
     }
 
     @Override
-    public List<EndpointInfo> lookForEndpoints(@NotNull Supplier<SearchScope> searchScopeSupplier) {
+    public List<EndpointInfo> lookForEndpoints(@NotNull SearchScopeProvider searchScopeProvider) {
         lateInit();
         if (!isJaxRsHttpRelevant()) {
             return Collections.emptyList();
@@ -179,7 +178,7 @@ public abstract class AbstractJaxrsFramework extends EndpointDiscovery {
 
             Collection<PsiMethod> methodsWithDirectHttpMethod =
                     runInReadAccessInSmartModeWithResultAndRetry(project, () -> {
-                Query<PsiMethod> psiMethods = AnnotatedElementsSearch.searchPsiMethods(currExpectedAnnotation.getPsiClass(), searchScopeSupplier.get());
+                        Query<PsiMethod> psiMethods = AnnotatedElementsSearch.searchPsiMethods(currExpectedAnnotation.getPsiClass(), searchScopeProvider.get());
                 return psiMethods.findAll();
                     });
 

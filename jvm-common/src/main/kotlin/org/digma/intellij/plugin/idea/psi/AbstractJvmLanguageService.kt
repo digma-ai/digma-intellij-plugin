@@ -32,6 +32,7 @@ import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.common.Retries
 import org.digma.intellij.plugin.common.allowSlowOperation
+import org.digma.intellij.plugin.common.runWIthRetryWithResult
 import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.editor.EditorUtils
@@ -126,19 +127,13 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
         Log.log(logger::debug, "got buildDocumentInfo request for {}", psiFile)
         if (!project.isDisposed && psiFile.isValid && isSupportedFile(psiFile)) {
             try {
-
                 //retry the whole operation.
-                //runInReadAccessInSmartModeWithResultAndRetry will also retry a few times
-                // but with shorter delay and more retries.
-                return Retries.retryWithResult({
-                    //this is the top most call to codeObjectDiscovery.buildDocumentInfo and the read access will start here
-                    runInReadAccessInSmartModeWithResultAndRetry<DocumentInfo>(project) {
-                        codeObjectDiscovery.buildDocumentInfo(
-                            project,
-                            psiFile
-                        )
-                    }
-                }, Throwable::class.java, 100, 3)
+                return runWIthRetryWithResult({
+                    codeObjectDiscovery.buildDocumentInfo(
+                        project,
+                        psiFile
+                    )
+                }, backOffMillis = 100, maxRetries = 3)
 
             } catch (e: Throwable) {
                 ErrorReporter.getInstance().reportError("${this::class.java.simpleName}.buildDocumentInfo", e)

@@ -2,18 +2,17 @@ package org.digma.intellij.plugin.idea.psi.discovery.endpoint
 
 import com.intellij.psi.PsiFile
 import com.intellij.psi.search.GlobalSearchScope
-import com.intellij.psi.search.SearchScope
+import org.digma.intellij.plugin.common.SearchScopeProvider
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import java.util.Objects
-import java.util.function.Supplier
 
 abstract class EndpointDiscovery {
 
     //must run with read access
     //using searchScope supplier because building SearchScope needs read access
-    abstract fun lookForEndpoints(searchScopeSupplier: Supplier<SearchScope>): List<EndpointInfo>?
+    abstract fun lookForEndpoints(searchScopeProvider: SearchScopeProvider): List<EndpointInfo>?
 
     // default method uses fileScope. however, in some cases logic could be bit different
     open fun lookForEndpoints(psiFile: PsiFile): List<EndpointInfo>? {

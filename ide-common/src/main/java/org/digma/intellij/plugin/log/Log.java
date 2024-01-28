@@ -61,6 +61,10 @@ public class Log {
         logger.error(DIGMA + msg, exception);
     }
 
+    public static void error(Logger logger, String msg) {
+        logger.error(DIGMA + msg);
+    }
+
 
 
 }

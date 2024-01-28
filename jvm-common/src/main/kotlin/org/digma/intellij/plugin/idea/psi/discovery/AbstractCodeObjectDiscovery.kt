@@ -85,7 +85,7 @@ abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSp
 
     open fun buildDocumentInfo(project: Project, psiFile: PsiFile): DocumentInfo {
 
-        if (project.isDisposed || !psiFile.isValid) {
+        if (project.isDisposed || !PsiUtils.isValidPsiFile(psiFile)) {
             return DocumentInfo(PsiUtils.psiFileToUri(psiFile), mutableMapOf())
         }
 

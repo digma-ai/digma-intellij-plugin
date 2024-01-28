@@ -19,6 +19,7 @@ import com.jetbrains.rider.projectView.SolutionLifecycleHost;
 import kotlin.Pair;
 import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.common.EDT;
+import org.digma.intellij.plugin.common.ReadActions;
 import org.digma.intellij.plugin.editor.EditorUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
@@ -242,9 +243,11 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
 
     @Override
     public boolean isRelevant(PsiFile psiFile) {
-        return psiFile.isValid() &&
+        return ReadActions.ensureReadAction(() ->
+                PsiUtils.isValidPsiFile(psiFile) &&
                 psiFile.isWritable() &&
-                isSupportedFile(psiFile);
+                        isSupportedFile(psiFile));
+
     }
 
     @Override

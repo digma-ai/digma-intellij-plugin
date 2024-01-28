@@ -125,7 +125,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
         EDT.assertNonDispatchThread()
 
         Log.log(logger::debug, "got buildDocumentInfo request for {}", psiFile)
-        if (!project.isDisposed && psiFile.isValid && isSupportedFile(psiFile)) {
+        if (!project.isDisposed && PsiUtils.isValidPsiFile(psiFile) && isSupportedFile(psiFile)) {
             try {
                 //retry the whole operation.
                 return runWIthRetryWithResult({
@@ -147,8 +147,10 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
 
     override fun isSupportedFile(project: Project, newFile: VirtualFile): Boolean {
-        val psiFile = PsiManager.getInstance(project).findFile(newFile)
-        return psiFile != null && isSupportedFile(psiFile)
+        return ReadActions.ensureReadAction(Supplier {
+            val psiFile = PsiManager.getInstance(project).findFile(newFile)
+            PsiUtils.isValidPsiFile(psiFile) && isSupportedFile(psiFile)
+        })
     }
 
 
@@ -181,26 +183,29 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
         val projectFileIndex: ProjectFileIndex = project.getService(ProjectFileIndex::class.java)
 
         return allowSlowOperation<Boolean> {
+            runInReadAccessWithResult {
+                val isRelevant = psiFile.isWritable &&
+                        projectFileIndex.isInSourceContent(psiFile.virtualFile) &&
+                        !projectFileIndex.isInLibrary(psiFile.virtualFile) &&
+                        !projectFileIndex.isExcluded(psiFile.virtualFile) &&
+                        isSupportedFile(psiFile) &&
+                        !fileNamesToExclude.contains(psiFile.virtualFile.name)
 
-            val isRelevant = psiFile.isWritable &&
-                    projectFileIndex.isInSourceContent(psiFile.virtualFile) &&
-                    !projectFileIndex.isInLibrary(psiFile.virtualFile) &&
-                    !projectFileIndex.isExcluded(psiFile.virtualFile) &&
-                    isSupportedFile(psiFile) &&
-                    !fileNamesToExclude.contains(psiFile.virtualFile.name)
-
-            return@allowSlowOperation isRelevant
+                return@runInReadAccessWithResult isRelevant
+            }
         }
     }
 
 
     override fun isRelevant(file: VirtualFile): Boolean {
         return allowSlowOperation<Boolean> {
-            if (file.isDirectory || !file.isValid) {
-                return@allowSlowOperation false
+            runInReadAccessWithResult {
+                if (file.isDirectory || !file.isValid) {
+                    return@runInReadAccessWithResult false
+                }
+                val psiFile = PsiManager.getInstance(project).findFile(file) ?: return@runInReadAccessWithResult false
+                isRelevant(psiFile)
             }
-            val psiFile = PsiManager.getInstance(project).findFile(file) ?: return@allowSlowOperation false
-            isRelevant(psiFile)
         }
     }
 

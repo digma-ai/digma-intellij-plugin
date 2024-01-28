@@ -24,6 +24,7 @@ import org.digma.intellij.plugin.idea.psi.runInReadAccessInSmartModeWithResultAn
 import org.digma.intellij.plugin.idea.psi.runInReadAccessWithResult
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.SpanInfo
+import org.digma.intellij.plugin.psi.PsiUtils
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.toUElementOfType
@@ -39,7 +40,7 @@ abstract class AbstractSpanDiscovery {
 
     fun discoverSpans(project: Project, psiFile: PsiFile): Collection<SpanInfo> {
 
-        if (project.isDisposed || !psiFile.isValid) {
+        if (project.isDisposed || !PsiUtils.isValidPsiFile(psiFile)) {
             return listOf()
         }
 

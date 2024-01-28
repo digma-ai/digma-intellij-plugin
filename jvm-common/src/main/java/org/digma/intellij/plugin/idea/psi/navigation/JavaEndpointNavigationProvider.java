@@ -19,6 +19,7 @@ import org.digma.intellij.plugin.idea.psi.JvmPsiUtilsKt;
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscoveryService;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
+import org.digma.intellij.plugin.psi.PsiUtils;
 import org.digma.intellij.plugin.ui.service.ErrorsViewService;
 import org.digma.intellij.plugin.ui.service.InsightsViewService;
 import org.jetbrains.annotations.NotNull;
@@ -167,7 +168,7 @@ public class JavaEndpointNavigationProvider implements Disposable {
             }
 
             var psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document);
-            if (psiFile == null || !psiFile.isValid() ||
+            if (!PsiUtils.isValidPsiFile(psiFile) ||
                     !JvmPsiUtilsKt.isJvmSupportedFile(project, psiFile)) {
                 return;
             }

@@ -25,6 +25,7 @@ import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.psi.LanguageServiceLocator;
+import org.digma.intellij.plugin.psi.PsiUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
@@ -139,7 +140,7 @@ class DocumentChangeListener {
 
     private void processDocumentChanged(@NotNull PsiFile psiFile, FileEditor fileEditor) {
 
-        if (project.isDisposed()) {
+        if (project.isDisposed() || !PsiUtils.isValidPsiFile(psiFile)) {
             return;
         }
 

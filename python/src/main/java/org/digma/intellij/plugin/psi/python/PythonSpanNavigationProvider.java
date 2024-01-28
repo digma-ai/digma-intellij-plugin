@@ -198,7 +198,7 @@ public class PythonSpanNavigationProvider implements Disposable {
             }
 
             var psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document);
-            if (psiFile == null || !psiFile.isValid() ||
+            if (!PsiUtils.isValidPsiFile(psiFile) ||
                     !PythonLanguage.INSTANCE.equals(psiFile.getLanguage())) {
                 return;
             }

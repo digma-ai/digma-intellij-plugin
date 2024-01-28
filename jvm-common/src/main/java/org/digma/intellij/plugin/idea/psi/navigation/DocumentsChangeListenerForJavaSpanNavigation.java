@@ -19,6 +19,7 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.idea.psi.JvmLanguageService;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.psi.LanguageService;
+import org.digma.intellij.plugin.psi.PsiUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
@@ -66,7 +67,7 @@ public class DocumentsChangeListenerForJavaSpanNavigation implements FileEditorM
 
 
             PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
-            if (psiFile != null && psiFile.isValid() && languageService.isRelevant(file)) {
+            if (PsiUtils.isValidPsiFile(psiFile) && languageService.isRelevant(file)) {
                 Document document = PsiDocumentManager.getInstance(project).getDocument(psiFile);
                 if (document != null) {
                     Disposable parentDisposable = Disposer.newDisposable();

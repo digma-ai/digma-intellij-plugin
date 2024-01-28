@@ -33,6 +33,7 @@ import org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils;
 import org.digma.intellij.plugin.idea.psi.java.JavaSpanDiscoveryUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.SpanInfo;
+import org.digma.intellij.plugin.psi.PsiUtils;
 import org.digma.intellij.plugin.ui.service.ErrorsViewService;
 import org.digma.intellij.plugin.ui.service.InsightsViewService;
 import org.jetbrains.annotations.NotNull;
@@ -339,7 +340,7 @@ public class JavaSpanNavigationProvider implements Disposable {
             }
 
             var psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document);
-            if (psiFile == null || !psiFile.isValid() ||
+            if (!PsiUtils.isValidPsiFile(psiFile) ||
                     !JvmPsiUtilsKt.isJvmSupportedFile(project, psiFile)) {
                 return;
             }

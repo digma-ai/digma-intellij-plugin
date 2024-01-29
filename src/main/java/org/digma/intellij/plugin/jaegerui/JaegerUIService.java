@@ -169,7 +169,7 @@ public class JaegerUIService {
 
     public void openEmbeddedJaeger(@NotNull List<TraceSample> traceSamples, @NotNull String spanName, @Nullable String spanCodeObjectId, boolean sendSearchQuery) {
 
-        if (showExisting(traceSamples, spanName)) {
+        if (showExisting(traceSamples, spanName, spanCodeObjectId)) {
             return;
         }
 
@@ -189,14 +189,14 @@ public class JaegerUIService {
 
     }
 
-    private boolean showExisting(List<TraceSample> traceSamples, String spanName) {
+    private boolean showExisting(List<TraceSample> traceSamples, String spanName, String spanCodeObjectId) {
         for (var editor : FileEditorManager.getInstance(project).getAllEditors()) {
             var file = editor.getFile();
             if (file != null && JaegerUIVirtualFile.isJaegerUIVirtualFile(file)) {
                 JaegerUIVirtualFile openFile = (JaegerUIVirtualFile) file;
                 if (Objects.equals(openFile.getSpanName(), spanName) &&
-                        openFile.getTraceSamples() != null &&
-                        CollectionUtils.isEqualCollection(openFile.getTraceSamples(), traceSamples)) {
+                        Objects.equals(openFile.getSpanCodeObjectId(), spanCodeObjectId) &&
+                        openFile.getTraceSamples() != null && CollectionUtils.isEqualCollection(openFile.getTraceSamples(), traceSamples)) {
                     EDT.ensureEDT(() -> FileEditorManager.getInstance(project).openFile(file, true, true));
                     return true;
                 }

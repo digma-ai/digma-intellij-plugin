@@ -6,6 +6,7 @@ import org.digma.intellij.plugin.common.SearchScopeProvider
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
+import org.digma.intellij.plugin.psi.PsiUtils
 import java.util.Objects
 
 abstract class EndpointDiscovery {
@@ -16,7 +17,11 @@ abstract class EndpointDiscovery {
 
     // default method uses fileScope. however, in some cases logic could be bit different
     open fun lookForEndpoints(psiFile: PsiFile): List<EndpointInfo>? {
-        return lookForEndpoints { GlobalSearchScope.fileScope(psiFile) }
+        return if (PsiUtils.isValidPsiFile(psiFile)) {
+            lookForEndpoints { GlobalSearchScope.fileScope(psiFile) }
+        } else {
+            listOf()
+        }
     }
 
 

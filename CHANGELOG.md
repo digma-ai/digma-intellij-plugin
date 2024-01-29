@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.247] - 2024-01-27
+## [2.0.248] - 2024-01-29
+- Update Tests UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1712
+
+## 2.0.247 - 2024-01-27
 - Updated Jaeger UI by @ohrebeniuk in https://github.com/digma-ai/digma-intellij-plugin/pull/1691
 - more-details-in-fatal-error by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1692
 - fix-fata-error-supported-jvm-languages Closes #1694 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1695

@@ -7,6 +7,8 @@ import com.intellij.psi.PsiManager;
 import com.intellij.util.PlatformUtils;
 import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.psi.LanguageService;
+import org.digma.intellij.plugin.psi.PsiAccessUtilsKt;
+import org.digma.intellij.plugin.psi.PsiUtils;
 import org.digma.intellij.plugin.psi.SupportedLanguages;
 import org.jetbrains.annotations.NotNull;
 
@@ -79,14 +81,14 @@ public class IDEUtilsService {
     public boolean isRiderAndCSharpFile(@NotNull Project project, VirtualFile file) {
 
         //it may be a C# file that was opened from vcs, it doesn't count as C# that CSharpLanguageService should handle
-        if (file == null) {
+        if (!VfsUtilsKt.isValidVirtualFile(file)) {
             return false;
         }
 
         if (isRider.isRider()) {
             LanguageService csharpLanguageService = isRider.getCSharpLanguageService();
-            PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
-            if (psiFile == null) {
+            PsiFile psiFile = PsiAccessUtilsKt.runInReadAccessWithResult(() -> PsiManager.getInstance(project).findFile(file));
+            if (!PsiUtils.isValidPsiFile(psiFile)) {
                 return false;
             }
             return csharpLanguageService.isServiceFor(psiFile.getLanguage());

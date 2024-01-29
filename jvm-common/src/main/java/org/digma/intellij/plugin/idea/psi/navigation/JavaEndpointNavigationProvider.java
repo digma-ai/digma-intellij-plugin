@@ -14,6 +14,7 @@ import com.intellij.psi.search.GlobalSearchScope;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.Retries;
+import org.digma.intellij.plugin.common.VfsUtilsKt;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.idea.psi.JvmPsiUtilsKt;
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscoveryService;
@@ -125,12 +126,12 @@ public class JavaEndpointNavigationProvider implements Disposable {
 
     private void buildEndpointForFile(@NotNull VirtualFile virtualFile) {
 
-        if (project.isDisposed() || !virtualFile.isValid()) {
+        if (project.isDisposed() || !VfsUtilsKt.isValidVirtualFile(virtualFile)) {
             return;
         }
 
         final PsiFile psiFile = ReadAction.compute(() -> PsiManager.getInstance(project).findFile(virtualFile));
-        if (psiFile == null) return; // very unlikely
+        if (!PsiUtils.isValidPsiFile(psiFile)) return;
 
         var endpointDiscoveries = EndpointDiscoveryService.getInstance(project).getEndpointDiscoveryForLanguage(psiFile);
 

@@ -16,7 +16,6 @@ import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
-import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.psi.AbstractJvmLanguageService
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscovery
@@ -29,21 +28,21 @@ import org.digma.intellij.plugin.instrumentation.CanInstrumentMethodResult
 import org.digma.intellij.plugin.instrumentation.JvmCanInstrumentMethodResult
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.psi.PsiUtils
+import org.digma.intellij.plugin.psi.runInReadAccessWithResult
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.toUElementOfType
-import java.util.function.Supplier
 
 @Suppress("LightServiceMigrationCode")
 class JavaLanguageService(project: Project) : AbstractJvmLanguageService(project, project.service<JavaCodeObjectDiscovery>()) {
 
     override fun isSupportedFile(psiFile: PsiFile): Boolean {
-        return ReadActions.ensureReadAction(Supplier {
+        return runInReadAccessWithResult {
             psiFile is PsiJavaFile &&
                     PsiUtils.isValidPsiFile(psiFile) &&
                     JavaLanguage.INSTANCE == psiFile.viewProvider.baseLanguage &&
                     !psiFile.name.contains("package-info")
-        })
+        }
     }
 
     override fun isServiceFor(language: Language): Boolean {

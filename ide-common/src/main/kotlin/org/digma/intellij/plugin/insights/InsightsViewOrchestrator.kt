@@ -152,23 +152,28 @@ class InsightsViewOrchestrator(val project: Project) {
     //todo: best effort to find MethodInfo. not the best way to do it.
     // need to implement language service methods to do method discovery from methodCodeObjectId
     private fun tryFindMethodInfo(methodCodeObjectId: String): MethodInfo {
+
+        val methodClassAndName: Pair<String, String> = CodeObjectsUtil.getMethodClassAndName(methodCodeObjectId)
+        val defaultResult = MethodInfo(methodCodeObjectId, methodClassAndName.second, methodClassAndName.first, "", "", 0)
+
         return try {
             val languageService = LanguageService.findLanguageServiceByMethodCodeObjectId(project, methodCodeObjectId)
             val workspaceUris = languageService.findWorkspaceUrisForMethodCodeObjectIds(listOf(methodCodeObjectId))
-            if (workspaceUris.isNotEmpty()) {
-                val fileUri = workspaceUris[methodCodeObjectId]?.first
-                val psiFile = PsiUtils.uriToPsiFile(fileUri!!, project)
-                val documentInfo = languageService.buildDocumentInfo(psiFile)
-                documentInfo.methods[methodCodeObjectId]!!
+            val fileUri = workspaceUris[methodCodeObjectId]?.first
+            if (fileUri != null) {
+                val psiFile = PsiUtils.uriToPsiFile(fileUri, project)
+                if (PsiUtils.isValidPsiFile(psiFile)) {
+                    val documentInfo = languageService.buildDocumentInfo(psiFile)
+                    documentInfo.methods[methodCodeObjectId] ?: defaultResult
+                } else {
+                    return defaultResult
+                }
             } else {
-                val methodClassAndName: Pair<String, String> = CodeObjectsUtil.getMethodClassAndName(methodCodeObjectId)
-                MethodInfo(methodCodeObjectId, methodClassAndName.second, methodClassAndName.first, "", "", 0)
+                return defaultResult
             }
         } catch (e: Throwable) {
             ErrorReporter.getInstance().reportError("InsightsViewOrchestrator.tryFindMethodInfo", e)
-            val methodClassAndName: Pair<String, String> = CodeObjectsUtil.getMethodClassAndName(methodCodeObjectId)
-            MethodInfo(methodCodeObjectId, methodClassAndName.second, methodClassAndName.first, "", "", 0)
-
+            defaultResult
         }
     }
 

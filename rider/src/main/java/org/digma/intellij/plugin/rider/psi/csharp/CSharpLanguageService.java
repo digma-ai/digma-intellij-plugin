@@ -20,12 +20,14 @@ import kotlin.Pair;
 import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.ReadActions;
+import org.digma.intellij.plugin.common.VfsUtilsKt;
 import org.digma.intellij.plugin.editor.EditorUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
 import org.digma.intellij.plugin.psi.LanguageService;
+import org.digma.intellij.plugin.psi.PsiAccessUtilsKt;
 import org.digma.intellij.plugin.psi.PsiUtils;
 import org.digma.intellij.plugin.rider.protocol.CodeLensHost;
 import org.digma.intellij.plugin.rider.protocol.LanguageServiceHost;
@@ -107,8 +109,13 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
 
     @Override
     public boolean isSupportedFile(@NotNull Project project, @NotNull VirtualFile newFile) {
-        PsiFile psiFile = com.intellij.psi.PsiManager.getInstance(project).findFile(newFile);
-        if (psiFile == null) {
+
+        if (!VfsUtilsKt.isValidVirtualFile(newFile)) {
+            return false;
+        }
+
+        PsiFile psiFile = PsiAccessUtilsKt.runInReadAccessWithResult(() -> PsiManager.getInstance(project).findFile(newFile));
+        if (!PsiUtils.isValidPsiFile(psiFile)) {
             return false;
         }
         return isSupportedFile(psiFile);
@@ -116,6 +123,9 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
 
     @Override
     public boolean isSupportedFile(PsiFile psiFile) {
+        if (!PsiUtils.isValidPsiFile(psiFile)) {
+            return false;
+        }
         return CSharpLanguageUtil.isCSharpLanguage(psiFile.getLanguage());
     }
 
@@ -184,13 +194,15 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
                 var fileEditor = FileEditorManager.getInstance(project).getSelectedEditor();
                 if (fileEditor != null) {
                     var file = fileEditor.getFile();
-                    var psiFile = PsiManager.getInstance(project).findFile(file);
-                    if (psiFile != null && isRelevant(psiFile.getVirtualFile())) {
-                        var selectedTextEditor = EditorUtils.getSelectedTextEditorForFile(file, FileEditorManager.getInstance(project));
-                        if (selectedTextEditor != null) {
-                            int offset = selectedTextEditor.getCaretModel().getOffset();
-                            var methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedTextEditor, offset);
-                            CaretContextService.getInstance(project).contextChanged(methodUnderCaret);
+                    if (VfsUtilsKt.isValidVirtualFile(file)) {
+                        var psiFile = PsiManager.getInstance(project).findFile(file);
+                        if (PsiUtils.isValidPsiFile(psiFile) && isRelevant(psiFile.getVirtualFile())) {
+                            var selectedTextEditor = EditorUtils.getSelectedTextEditorForFile(file, FileEditorManager.getInstance(project));
+                            if (selectedTextEditor != null) {
+                                int offset = selectedTextEditor.getCaretModel().getOffset();
+                                var methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedTextEditor, offset);
+                                CaretContextService.getInstance(project).contextChanged(methodUnderCaret);
+                            }
                         }
                     }
                 }
@@ -233,7 +245,7 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
         }
 
         PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
-        if (psiFile == null) {
+        if (!PsiUtils.isValidPsiFile(psiFile)) {
             return false;
         }
 

@@ -32,6 +32,7 @@ import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.common.Retries
 import org.digma.intellij.plugin.common.allowSlowOperation
+import org.digma.intellij.plugin.common.isValidVirtualFile
 import org.digma.intellij.plugin.common.runWIthRetryWithResult
 import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.document.DocumentInfoService
@@ -56,6 +57,8 @@ import org.digma.intellij.plugin.model.discovery.TextRange
 import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.psi.PsiFileNotFountException
 import org.digma.intellij.plugin.psi.PsiUtils
+import org.digma.intellij.plugin.psi.runInReadAccessInSmartMode
+import org.digma.intellij.plugin.psi.runInReadAccessWithResult
 import org.digma.intellij.plugin.ui.CaretContextService
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UFile
@@ -147,10 +150,14 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
 
     override fun isSupportedFile(project: Project, newFile: VirtualFile): Boolean {
-        return ReadActions.ensureReadAction(Supplier {
-            val psiFile = PsiManager.getInstance(project).findFile(newFile)
-            PsiUtils.isValidPsiFile(psiFile) && isSupportedFile(psiFile)
-        })
+        return runInReadAccessWithResult {
+            return@runInReadAccessWithResult if (isValidVirtualFile(newFile)) {
+                val psiFile = PsiManager.getInstance(project).findFile(newFile)
+                PsiUtils.isValidPsiFile(psiFile) && isSupportedFile(psiFile)
+            } else {
+                false
+            }
+        }
     }
 
 
@@ -160,14 +167,16 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                 val fileEditor = FileEditorManager.getInstance(project).selectedEditor
                 if (fileEditor != null) {
                     val file = fileEditor.file
-                    val psiFile = PsiManager.getInstance(project).findFile(file)
-                    if (psiFile != null && isRelevant(psiFile.virtualFile)) {
-                        val selectedTextEditor =
-                            EditorUtils.getSelectedTextEditorForFile(file, FileEditorManager.getInstance(project))
-                        if (selectedTextEditor != null) {
-                            val offset = selectedTextEditor.caretModel.offset
-                            val methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedTextEditor, offset)
-                            CaretContextService.getInstance(project).contextChanged(methodUnderCaret)
+                    if (isValidVirtualFile(file)) {
+                        val psiFile = PsiManager.getInstance(project).findFile(file)
+                        if (PsiUtils.isValidPsiFile(psiFile) && psiFile != null && isRelevant(psiFile.virtualFile)) {
+                            val selectedTextEditor =
+                                EditorUtils.getSelectedTextEditorForFile(file, FileEditorManager.getInstance(project))
+                            if (selectedTextEditor != null) {
+                                val offset = selectedTextEditor.caretModel.offset
+                                val methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedTextEditor, offset)
+                                CaretContextService.getInstance(project).contextChanged(methodUnderCaret)
+                            }
                         }
                     }
                 }
@@ -179,6 +188,10 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
 
     override fun isRelevant(psiFile: PsiFile): Boolean {
+
+        if (!PsiUtils.isValidPsiFile(psiFile)) {
+            return false
+        }
 
         val projectFileIndex: ProjectFileIndex = project.getService(ProjectFileIndex::class.java)
 
@@ -198,9 +211,14 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
 
     override fun isRelevant(file: VirtualFile): Boolean {
+
+        if (!isValidVirtualFile(file)) {
+            return false
+        }
+
         return allowSlowOperation<Boolean> {
             runInReadAccessWithResult {
-                if (file.isDirectory || !file.isValid) {
+                if (file.isDirectory || !isValidVirtualFile(file)) {
                     return@runInReadAccessWithResult false
                 }
                 val psiFile = PsiManager.getInstance(project).findFile(file) ?: return@runInReadAccessWithResult false
@@ -293,12 +311,16 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
             try {
 
                 val psiFile = PsiUtils.uriToPsiFile(fileUri, project)
-                val psiElement = psiFile.findElementAt(offset)
-                psiElement?.let { element ->
-                    val psiMethod = PsiTreeUtil.getParentOfType(element, PsiMethod::class.java)
-                    psiMethod?.let { method ->
-                        createPsiMethodCodeObjectId(method)
+                if (PsiUtils.isValidPsiFile(psiFile)) {
+                    val psiElement = psiFile.findElementAt(offset)
+                    psiElement?.let { element ->
+                        val psiMethod = PsiTreeUtil.getParentOfType(element, PsiMethod::class.java)
+                        psiMethod?.let { method ->
+                            createPsiMethodCodeObjectId(method)
+                        }
                     }
+                } else {
+                    null
                 }
 
             } catch (e: PsiFileNotFountException) {

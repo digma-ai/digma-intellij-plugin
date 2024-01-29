@@ -6,6 +6,8 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.impl.source.PsiExtensibleClass
 import org.digma.intellij.plugin.psi.LanguageService
+import org.digma.intellij.plugin.psi.isReadAccessAllowed
+import org.digma.intellij.plugin.psi.runInReadAccessWithResult
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.UMethod

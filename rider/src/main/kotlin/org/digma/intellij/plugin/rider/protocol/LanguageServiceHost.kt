@@ -19,6 +19,7 @@ import kotlinx.coroutines.runBlocking
 import org.apache.commons.collections4.map.LRUMap
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
+import org.digma.intellij.plugin.common.isValidVirtualFile
 import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.DocumentInfo
@@ -31,6 +32,7 @@ import org.digma.intellij.plugin.rider.psi.csharp.CSharpLanguageUtil
 import org.digma.intellij.plugin.ui.CaretContextService
 import kotlin.random.Random
 
+@Suppress("LightServiceMigrationCode")
 class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project) {
 
     private val logger = Logger.getInstance(LanguageServiceHost::class.java)
@@ -96,9 +98,9 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
             val selectedEditor = FileEditorManager.getInstance(project).selectedEditor
             selectedEditor?.let {
                 val virtualFile = selectedEditor.file
-                virtualFile?.let {
+                virtualFile?.takeIf { isValidVirtualFile(virtualFile) }.let {
                     val psiFile = PsiManager.getInstance(project).findFile(virtualFile)
-                    psiFile?.let {
+                    psiFile?.takeIf { PsiUtils.isValidPsiFile(psiFile) }?.let {
 
                         if (CSharpLanguageUtil.isCSharpLanguage(psiFile.language)) {
 

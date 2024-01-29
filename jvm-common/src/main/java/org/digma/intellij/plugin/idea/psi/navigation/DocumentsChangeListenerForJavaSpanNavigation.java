@@ -15,6 +15,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.util.Alarm;
 import com.intellij.util.AlarmFactory;
+import org.digma.intellij.plugin.common.VfsUtilsKt;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.idea.psi.JvmLanguageService;
 import org.digma.intellij.plugin.log.Log;
@@ -49,7 +50,7 @@ public class DocumentsChangeListenerForJavaSpanNavigation implements FileEditorM
 
         try {
 
-            if (project.isDisposed() || !file.isValid()) {
+            if (project.isDisposed() || !VfsUtilsKt.isValidVirtualFile(file)) {
                 return;
             }
 

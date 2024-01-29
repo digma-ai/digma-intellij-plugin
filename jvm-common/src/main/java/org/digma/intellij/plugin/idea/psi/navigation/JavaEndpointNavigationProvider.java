@@ -1,7 +1,6 @@
 package org.digma.intellij.plugin.idea.psi.navigation;
 
 import com.intellij.openapi.Disposable;
-import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
@@ -13,13 +12,14 @@ import com.intellij.psi.PsiManager;
 import com.intellij.psi.search.GlobalSearchScope;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.EDT;
-import org.digma.intellij.plugin.common.Retries;
+import org.digma.intellij.plugin.common.RetryUtilsKt;
 import org.digma.intellij.plugin.common.VfsUtilsKt;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.idea.psi.JvmPsiUtilsKt;
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscoveryService;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
+import org.digma.intellij.plugin.psi.PsiAccessUtilsKt;
 import org.digma.intellij.plugin.psi.PsiUtils;
 import org.digma.intellij.plugin.ui.service.ErrorsViewService;
 import org.digma.intellij.plugin.ui.service.InsightsViewService;
@@ -78,7 +78,7 @@ public class JavaEndpointNavigationProvider implements Disposable {
 
         try {
             buildEndpointLock.lock();
-            Retries.simpleRetry(() -> {
+            RetryUtilsKt.runWIthRetry(() -> {
                 Log.log(LOGGER::info, "Building buildEndpointAnnotations");
                 buildEndpointNavigationForProject();
             }, Throwable.class, 100, 5);
@@ -130,7 +130,7 @@ public class JavaEndpointNavigationProvider implements Disposable {
             return;
         }
 
-        final PsiFile psiFile = ReadAction.compute(() -> PsiManager.getInstance(project).findFile(virtualFile));
+        final PsiFile psiFile = PsiAccessUtilsKt.runInReadAccessWithResult(() -> PsiManager.getInstance(project).findFile(virtualFile));
         if (!PsiUtils.isValidPsiFile(psiFile)) return;
 
         var endpointDiscoveries = EndpointDiscoveryService.getInstance(project).getEndpointDiscoveryForLanguage(psiFile);
@@ -175,7 +175,9 @@ public class JavaEndpointNavigationProvider implements Disposable {
             }
 
             var virtualFile = FileDocumentManager.getInstance().getFile(document);
-            fileChanged(virtualFile);
+            if (VfsUtilsKt.isValidVirtualFile(virtualFile)) {
+                fileChanged(virtualFile);
+            }
         } catch (Exception e) {
             Log.warnWithException(LOGGER, e, "Exception in documentChanged");
             ErrorReporter.getInstance().reportError(project, "JavaEndpointNavigationProvider.documentChanged", e);
@@ -189,20 +191,21 @@ public class JavaEndpointNavigationProvider implements Disposable {
      */
     public void fileChanged(VirtualFile virtualFile) {
 
-        if (project.isDisposed() || virtualFile == null || !virtualFile.isValid()) {
+        if (project.isDisposed() || !VfsUtilsKt.isValidVirtualFile(virtualFile)) {
             return;
         }
 
+
         Backgroundable.executeOnPooledThread(() -> {
             try {
-                if (virtualFile != null && virtualFile.isValid()) {
+                if (VfsUtilsKt.isValidVirtualFile(virtualFile)) {
                     buildEndpointLock.lock();
                     //if file moved then removeDocumentEndpoints will not remove anything but building endpoint locations will
                     // override the entries anyway
                     removeDocumentEndpoint(virtualFile);
                     buildEndpointForFile(virtualFile);
                 }
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 Log.warnWithException(LOGGER, e, "Exception in fileChanged");
                 ErrorReporter.getInstance().reportError(project, "JavaEndpointNavigationProvider.fileChanged", e);
             } finally {
@@ -214,7 +217,7 @@ public class JavaEndpointNavigationProvider implements Disposable {
 
     public void fileDeleted(VirtualFile virtualFile) {
 
-        if (project.isDisposed() || virtualFile == null || !virtualFile.isValid()) {
+        if (project.isDisposed()) {
             return;
         }
 

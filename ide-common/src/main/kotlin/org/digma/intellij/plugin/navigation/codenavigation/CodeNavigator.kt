@@ -13,6 +13,7 @@ import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigation
 import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.psi.SupportedLanguages
+import org.digma.intellij.plugin.psi.runInReadAccessWithResult
 import org.digma.intellij.plugin.service.EditorService
 import org.digma.intellij.plugin.ui.ToolWindowShower
 
@@ -152,7 +153,7 @@ class CodeNavigator(val project: Project) {
         SupportedLanguages.values().forEach { language ->
             val languageService = LanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
             if (languageService != null) {
-                val methodCodeObjectId = ReadActions.ensureReadAction<String> {
+                val methodCodeObjectId = runInReadAccessWithResult {
                     languageService.detectMethodBySpan(project, CodeObjectsUtil.stripSpanPrefix(spanCodeObjectId))
                 }
                 return methodCodeObjectId;

@@ -7,9 +7,9 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.impl.source.PsiExtensibleClass
 import com.intellij.psi.util.PsiTreeUtil
-import org.digma.intellij.plugin.idea.psi.isReadAccessAllowed
-import org.digma.intellij.plugin.idea.psi.runInReadAccessInSmartModeWithResult
 import org.digma.intellij.plugin.psi.PsiUtils
+import org.digma.intellij.plugin.psi.isReadAccessAllowed
+import org.digma.intellij.plugin.psi.runInReadAccessInSmartModeWithResult
 import org.jetbrains.annotations.NotNull
 import org.jetbrains.annotations.Nullable
 

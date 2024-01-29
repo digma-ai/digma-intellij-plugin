@@ -7,11 +7,11 @@ import org.digma.intellij.plugin.common.SearchScopeProvider
 import org.digma.intellij.plugin.common.TextRangeUtils
 import org.digma.intellij.plugin.idea.psi.createMethodCodeObjectId
 import org.digma.intellij.plugin.idea.psi.getExpressionValue
-import org.digma.intellij.plugin.idea.psi.runInReadAccessInSmartModeAndRetry
-import org.digma.intellij.plugin.idea.psi.runInReadAccessInSmartModeWithResultAndRetry
 import org.digma.intellij.plugin.model.discovery.EndpointFramework
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.psi.PsiUtils
+import org.digma.intellij.plugin.psi.runInReadAccessInSmartModeAndRetry
+import org.digma.intellij.plugin.psi.runInReadAccessInSmartModeWithResultAndRetry
 import org.jetbrains.kotlin.idea.stubindex.KotlinTopLevelFunctionFqnNameIndex
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.uast.UCallExpression

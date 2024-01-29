@@ -15,8 +15,10 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.util.Alarm;
 import com.intellij.util.AlarmFactory;
+import org.digma.intellij.plugin.common.VfsUtilsKt;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.psi.PsiUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
@@ -49,7 +51,7 @@ public class DocumentsChangeListenerForPythonSpanNavigation implements FileEdito
 
         try {
 
-            if (project.isDisposed()) {
+            if (project.isDisposed() || !VfsUtilsKt.isValidVirtualFile(file)) {
                 return;
             }
 
@@ -62,7 +64,7 @@ public class DocumentsChangeListenerForPythonSpanNavigation implements FileEdito
             }
 
             PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
-            if (psiFile != null) {
+            if (PsiUtils.isValidPsiFile(psiFile)) {
                 Document document = PsiDocumentManager.getInstance(project).getDocument(psiFile);
                 if (document != null) {
                     Disposable parentDisposable = Disposer.newDisposable();
@@ -92,7 +94,7 @@ public class DocumentsChangeListenerForPythonSpanNavigation implements FileEdito
                                     }
                                 }, 5000);
 
-                            } catch (Exception e) {
+                            } catch (Throwable e) {
                                 Log.warnWithException(LOGGER, e, "Exception in documentChanged");
                                 ErrorReporter.getInstance().reportError(project, "DocumentsChangeListenerForPythonSpanNavigation.DocumentListener.documentChanged", e);
                             }
@@ -103,7 +105,7 @@ public class DocumentsChangeListenerForPythonSpanNavigation implements FileEdito
 
             }
 
-        } catch (Exception e) {
+        } catch (Throwable e) {
             Log.warnWithException(LOGGER, e, "Exception in fileOpened");
             ErrorReporter.getInstance().reportError(project, "DocumentsChangeListenerForPythonSpanNavigation.fileOpened", e);
         }

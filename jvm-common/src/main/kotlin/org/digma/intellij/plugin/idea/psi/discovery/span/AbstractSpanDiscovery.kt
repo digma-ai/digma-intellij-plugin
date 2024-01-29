@@ -18,13 +18,13 @@ import org.digma.intellij.plugin.WITH_SPAN_ANNOTATION_FQN
 import org.digma.intellij.plugin.common.SearchScopeProvider
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.psi.discovery.MicrometerTracingFramework
-import org.digma.intellij.plugin.idea.psi.executeCatching
 import org.digma.intellij.plugin.idea.psi.findMethodInClass
-import org.digma.intellij.plugin.idea.psi.runInReadAccessInSmartModeWithResultAndRetry
-import org.digma.intellij.plugin.idea.psi.runInReadAccessWithResult
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.SpanInfo
 import org.digma.intellij.plugin.psi.PsiUtils
+import org.digma.intellij.plugin.psi.executeCatching
+import org.digma.intellij.plugin.psi.runInReadAccessInSmartModeWithResultAndRetry
+import org.digma.intellij.plugin.psi.runInReadAccessWithResult
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.toUElementOfType

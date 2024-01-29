@@ -8,6 +8,7 @@ import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import org.digma.intellij.plugin.common.ReadActions;
+import org.digma.intellij.plugin.common.VfsUtilsKt;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -73,7 +74,7 @@ public class PsiUtils {
             var selectedEditor = FileEditorManager.getInstance(project).getSelectedEditor();
             if (selectedEditor != null){
                 var file = selectedEditor.getFile();
-                var psiFile = file == null ? null : PsiManager.getInstance(project).findFile(file);
+                var psiFile = !VfsUtilsKt.isValidVirtualFile(file) ? null : PsiManager.getInstance(project).findFile(file);
                 psiUri = psiFile == null ? null : PsiUtils.psiFileToUri(psiFile);
             }
             return psiUri;

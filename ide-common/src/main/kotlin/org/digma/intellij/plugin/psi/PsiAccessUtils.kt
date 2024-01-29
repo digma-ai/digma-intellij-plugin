@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.idea.psi
+package org.digma.intellij.plugin.psi
 
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.progress.EmptyProgressIndicator

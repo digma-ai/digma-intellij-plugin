@@ -30,6 +30,7 @@ import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.ReadActions;
 import org.digma.intellij.plugin.common.Retries;
 import org.digma.intellij.plugin.common.SlowOperationsUtilsKt;
+import org.digma.intellij.plugin.common.VfsUtilsKt;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.editor.EditorUtils;
 import org.digma.intellij.plugin.log.Log;
@@ -37,6 +38,7 @@ import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
 import org.digma.intellij.plugin.psi.LanguageService;
+import org.digma.intellij.plugin.psi.PsiAccessUtilsKt;
 import org.digma.intellij.plugin.psi.PsiUtils;
 import org.digma.intellij.plugin.ui.CaretContextService;
 import org.jetbrains.annotations.NotNull;
@@ -116,8 +118,11 @@ public class PythonLanguageService implements LanguageService {
 
     @Override
     public boolean isSupportedFile(@NotNull Project project, @NotNull VirtualFile newFile) {
-        PsiFile psiFile = com.intellij.psi.PsiManager.getInstance(project).findFile(newFile);
-        return psiFile != null && isSupportedFile(psiFile);
+        if (!VfsUtilsKt.isValidVirtualFile(newFile)) {
+            return false;
+        }
+        PsiFile psiFile = PsiAccessUtilsKt.runInReadAccessWithResult(() -> PsiManager.getInstance(project).findFile(newFile));
+        return PsiUtils.isValidPsiFile(psiFile) && isSupportedFile(psiFile);
     }
 
     @Override
@@ -305,13 +310,15 @@ public class PythonLanguageService implements LanguageService {
                 var fileEditor = FileEditorManager.getInstance(project).getSelectedEditor();
                 if (fileEditor != null) {
                     var file = fileEditor.getFile();
-                    var psiFile = PsiManager.getInstance(project).findFile(file);
-                    if (psiFile != null && isRelevant(psiFile)) {
-                        var selectedTextEditor = FileEditorManager.getInstance(project).getSelectedTextEditor();
-                        if (selectedTextEditor != null) {
-                            int offset = selectedTextEditor.getCaretModel().getOffset();
-                            var methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedTextEditor, offset);
-                            CaretContextService.getInstance(project).contextChanged(methodUnderCaret);
+                    if (VfsUtilsKt.isValidVirtualFile(file)) {
+                        var psiFile = PsiManager.getInstance(project).findFile(file);
+                        if (PsiUtils.isValidPsiFile(psiFile) && isRelevant(psiFile)) {
+                            var selectedTextEditor = FileEditorManager.getInstance(project).getSelectedTextEditor();
+                            if (selectedTextEditor != null) {
+                                int offset = selectedTextEditor.getCaretModel().getOffset();
+                                var methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedTextEditor, offset);
+                                CaretContextService.getInstance(project).contextChanged(methodUnderCaret);
+                            }
                         }
                     }
                 }
@@ -345,28 +352,30 @@ public class PythonLanguageService implements LanguageService {
     @Override
     public boolean isRelevant(VirtualFile file) {
 
-        if (file.isDirectory() || !file.isValid()) {
-            return false;
-        }
+        return PsiAccessUtilsKt.runInReadAccessWithResult(() -> {
+            if (file.isDirectory() || !VfsUtilsKt.isValidVirtualFile(file)) {
+                return false;
+            }
 
-        PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
-        if (psiFile == null) {
-            return false;
-        }
+            PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
+            if (PsiUtils.isValidPsiFile(psiFile)) {
+                return false;
+            }
 
-        return isRelevant(psiFile);
+            return isRelevant(psiFile);
+        });
     }
 
 
     @Override
     public boolean isRelevant(PsiFile psiFile) {
 
-        return SlowOperationsUtilsKt.allowSlowOperation(() -> psiFile.isValid() &&
+        return SlowOperationsUtilsKt.allowSlowOperation(() -> PsiAccessUtilsKt.runInReadAccessWithResult(() -> psiFile.isValid() &&
                 psiFile.isWritable() &&
                 PythonLanguageUtils.isProjectFile(project, psiFile) &&
                 !projectFileIndex.isInLibrary(psiFile.getVirtualFile()) &&
                 !projectFileIndex.isExcluded(psiFile.getVirtualFile()) &&
-                isSupportedFile(psiFile));
+                isSupportedFile(psiFile)));
     }
 
     @Override

@@ -31,8 +31,8 @@ import java.util.Objects;
 import java.util.Set;
 
 import static org.digma.intellij.plugin.idea.psi.JvmCodeObjectsUtilsKt.createPsiMethodCodeObjectId;
-import static org.digma.intellij.plugin.idea.psi.PsiAccessUtilsKt.runInReadAccessInSmartModeAndRetry;
-import static org.digma.intellij.plugin.idea.psi.PsiAccessUtilsKt.runInReadAccessInSmartModeWithResultAndRetry;
+import static org.digma.intellij.plugin.psi.PsiAccessUtilsKt.runInReadAccessInSmartModeAndRetry;
+import static org.digma.intellij.plugin.psi.PsiAccessUtilsKt.runInReadAccessInSmartModeWithResultAndRetry;
 
 public abstract class AbstractJaxrsFramework extends EndpointDiscovery {
 

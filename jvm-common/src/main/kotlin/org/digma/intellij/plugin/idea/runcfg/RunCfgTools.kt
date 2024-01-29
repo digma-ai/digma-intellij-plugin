@@ -20,8 +20,8 @@ import com.intellij.psi.PsiClass
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.util.keyFMap.KeyFMap
 import org.digma.intellij.plugin.common.allowSlowOperation
-import org.digma.intellij.plugin.idea.psi.runInReadAccessInSmartModeWithResultAndRetry
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.psi.runInReadAccessInSmartModeWithResultAndRetry
 import org.jetbrains.annotations.VisibleForTesting
 import org.jetbrains.idea.maven.execution.MavenRunConfiguration
 import org.jetbrains.plugins.gradle.service.execution.GradleRunConfiguration

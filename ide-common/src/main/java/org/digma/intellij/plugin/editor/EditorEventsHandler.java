@@ -17,8 +17,8 @@ import com.intellij.util.AlarmFactory;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.FileUtils;
-import org.digma.intellij.plugin.common.ReadActions;
 import org.digma.intellij.plugin.common.SlowOperationsUtilsKt;
+import org.digma.intellij.plugin.common.VfsUtilsKt;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
@@ -27,6 +27,7 @@ import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
 import org.digma.intellij.plugin.navigation.NavigationModel;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.psi.LanguageServiceLocator;
+import org.digma.intellij.plugin.psi.PsiAccessUtilsKt;
 import org.digma.intellij.plugin.psi.PsiUtils;
 import org.digma.intellij.plugin.ui.CaretContextService;
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
@@ -57,9 +58,9 @@ public class EditorEventsHandler implements FileEditorManagerListener {
 
     public EditorEventsHandler(Project project) {
         this.project = project;
-        caretContextService = project.getService(CaretContextService.class);
-        languageServiceLocator = project.getService(LanguageServiceLocator.class);
-        documentInfoService = project.getService(DocumentInfoService.class);
+        caretContextService = CaretContextService.getInstance(project);
+        languageServiceLocator = LanguageServiceLocator.getInstance(project);
+        documentInfoService = DocumentInfoService.getInstance(project);
         currentContextUpdater = project.getService(CurrentContextUpdater.class);
         caretListener = new CaretListener(project, currentContextUpdater);
         documentChangeListener = new DocumentChangeListener(project, currentContextUpdater);
@@ -156,7 +157,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
             Backgroundable.executeOnPooledThread(() -> {
 
 
-                PsiFile psiFile = DumbService.getInstance(project).runReadActionInSmartMode(() -> PsiManager.getInstance(project).findFile(newFile));
+                PsiFile psiFile = PsiAccessUtilsKt.runInReadAccessInSmartModeWithResult(project, () -> PsiManager.getInstance(project).findFile(newFile));
 
                 if (!PsiUtils.isValidPsiFile(psiFile)) {
                     Log.log(LOGGER::trace, "No psi file for :{}", newFile);
@@ -261,6 +262,10 @@ public class EditorEventsHandler implements FileEditorManagerListener {
 
         Log.log(LOGGER::trace, "fileClosed: file:{}", file);
 
+        if (!VfsUtilsKt.isValidVirtualFile(file)) {
+            return;
+        }
+
         PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
         if (PsiUtils.isValidPsiFile(psiFile) && !FileUtils.isVcsFile(file) && isRelevantFile(file)) {
 
@@ -301,11 +306,11 @@ public class EditorEventsHandler implements FileEditorManagerListener {
         contextChangeAlarmAfterFileClosed.cancelAllRequests();
         if (selectedEditor != null) {
             var selectedFile = selectedEditor.getFile();
-            if (isRelevantFile(selectedFile) && !FileUtils.isVcsFile(selectedFile)) {
+            if (VfsUtilsKt.isValidVirtualFile(selectedFile) && isRelevantFile(selectedFile) && !FileUtils.isVcsFile(selectedFile)) {
                 Log.log(LOGGER::trace, "updateContextAfterFileClosed found selected file {}", selectedFile);
                 PsiFile psiFile = PsiManager.getInstance(project).findFile(selectedFile);
                 var selectedTextEditor = EditorUtils.getSelectedTextEditorForFile(selectedFile, fileEditorManager);
-                if (psiFile != null && selectedTextEditor != null) {
+                if (PsiUtils.isValidPsiFile(psiFile) && selectedTextEditor != null) {
                     Log.log(LOGGER::trace, "updateContextAfterFileClosed psi file {}", psiFile.getVirtualFile());
                     //each language service may do the refresh differently, Rider is different from others.
                     LanguageService languageService = languageServiceLocator.locate(psiFile.getLanguage());
@@ -328,14 +333,18 @@ public class EditorEventsHandler implements FileEditorManagerListener {
 
     private boolean isRelevantFile(VirtualFile file) {
 
-        return ReadActions.ensureReadAction(() -> {
-            if (file.isDirectory() || !file.isValid()) {
+        if (!VfsUtilsKt.isValidVirtualFile(file)) {
+            return false;
+        }
+
+        return PsiAccessUtilsKt.runInReadAccessWithResult(() -> {
+            if (file.isDirectory() || !VfsUtilsKt.isValidVirtualFile(file)) {
                 return false;
             }
 
             PsiFile psiFile = SlowOperationsUtilsKt.allowSlowOperation(() -> PsiManager.getInstance(project).findFile(file));
 
-            if (psiFile == null) {
+            if (!PsiUtils.isValidPsiFile(psiFile)) {
                 return false;
             }
             LanguageService languageService = languageServiceLocator.locate(psiFile.getLanguage());

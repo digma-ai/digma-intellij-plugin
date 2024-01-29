@@ -649,7 +649,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
         Log.log(logger::debug, project, "openHistogram called {},{}", instrumentationLibrary, spanName);
 
         ActivityMonitor.getInstance(project).registerButtonClicked("histogram", InsightType.valueOf(insightType));
-        var title  = displayName != null? displayName: spanName;
+        var title  = displayName != null && !displayName.isEmpty()? displayName: spanName;
         try {
 
             try {

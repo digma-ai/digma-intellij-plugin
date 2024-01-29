@@ -16,8 +16,10 @@ import com.intellij.psi.PsiManager;
 import com.intellij.util.Alarm;
 import com.intellij.util.AlarmFactory;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
-import org.digma.intellij.plugin.idea.psi.java.JavaLanguageService;
+import org.digma.intellij.plugin.idea.psi.JvmLanguageService;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.psi.LanguageService;
+import org.digma.intellij.plugin.psi.PsiUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
@@ -35,13 +37,10 @@ public class DocumentsChangeListenerForJavaSpanNavigation implements FileEditorM
 
     private final Project project;
 
-    private final JavaLanguageService javaLanguageService;
-
     private final Map<VirtualFile, Disposable> disposables = new HashMap<>();
 
     public DocumentsChangeListenerForJavaSpanNavigation(@NotNull Project project) {
         this.project = project;
-        javaLanguageService = project.getService(JavaLanguageService.class);
     }
 
 
@@ -50,20 +49,25 @@ public class DocumentsChangeListenerForJavaSpanNavigation implements FileEditorM
 
         try {
 
-            if (project.isDisposed()) {
+            if (project.isDisposed() || !file.isValid()) {
                 return;
             }
 
-            if (!javaLanguageService.isRelevant(file)) {
-                return;
-            }
-
+            //that means a listener is already installed
             if (disposables.containsKey(file)) {
                 return;
             }
 
+            var languageService = LanguageService.findLanguageServiceByFile(project, file);
+
+            //only jvm languages are supported here
+            if (!JvmLanguageService.class.isAssignableFrom(languageService.getClass())) {
+                return;
+            }
+
+
             PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
-            if (psiFile != null) {
+            if (PsiUtils.isValidPsiFile(psiFile) && languageService.isRelevant(file)) {
                 Document document = PsiDocumentManager.getInstance(project).getDocument(psiFile);
                 if (document != null) {
                     Disposable parentDisposable = Disposer.newDisposable();
@@ -89,14 +93,14 @@ public class DocumentsChangeListenerForJavaSpanNavigation implements FileEditorM
                                     try {
                                         javaSpanNavigationProvider.documentChanged(event.getDocument());
                                         javaEndpointNavigationProvider.documentChanged(event.getDocument());
-                                    } catch (Exception e) {
+                                    } catch (Throwable e) {
                                         Log.warnWithException(LOGGER, e, "Exception in documentChanged");
                                         ErrorReporter.getInstance().reportError(project, "DocumentsChangeListenerForJavaSpanNavigation.DocumentListener.documentChanged", e);
                                     }
                                 }, 5000);
 
 
-                            } catch (Exception e) {
+                            } catch (Throwable e) {
                                 Log.warnWithException(LOGGER, e, "Exception in documentChanged");
                                 ErrorReporter.getInstance().reportError(project, "DocumentsChangeListenerForJavaSpanNavigation.DocumentListener.documentChanged", e);
                             }
@@ -106,7 +110,7 @@ public class DocumentsChangeListenerForJavaSpanNavigation implements FileEditorM
                 }
 
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             Log.warnWithException(LOGGER, e, "Exception in fileOpened");
             ErrorReporter.getInstance().reportError(project, "DocumentsChangeListenerForJavaSpanNavigation.fileOpened", e);
         }
@@ -115,9 +119,10 @@ public class DocumentsChangeListenerForJavaSpanNavigation implements FileEditorM
 
     @Override
     public void fileClosed(@NotNull FileEditorManager source, @NotNull VirtualFile file) {
-        if (disposables.containsKey(file)) {
+        var disposable = disposables.remove(file);
+        if (disposable != null) {
             Log.log(LOGGER::debug, "disposing disposable for file:{}", file);
-            Disposer.dispose(disposables.remove(file));
+            Disposer.dispose(disposable);
         }
     }
 

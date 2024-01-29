@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.idea.psi.java
 
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiClass
@@ -8,7 +7,8 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.impl.source.PsiExtensibleClass
 import com.intellij.psi.util.PsiTreeUtil
-import org.digma.intellij.plugin.idea.psi.runInReadAccessWithResult
+import org.digma.intellij.plugin.idea.psi.isReadAccessAllowed
+import org.digma.intellij.plugin.idea.psi.runInReadAccessInSmartModeWithResult
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.jetbrains.annotations.NotNull
 import org.jetbrains.annotations.Nullable
@@ -102,10 +102,10 @@ class JavaPsiUtils {
                 // see issue https://github.com/digma-ai/digma-intellij-plugin/issues/833
                 // see issue https://youtrack.jetbrains.com/issue/IDEA-323198
 
-                return if (ApplicationManager.getApplication().isReadAccessAllowed) {
+                return if (isReadAccessAllowed()) {
                     psiClass.ownMethods
                 } else {
-                    runInReadAccessWithResult(project) { psiClass.ownMethods }
+                    runInReadAccessInSmartModeWithResult(project) { psiClass.ownMethods }
                 }
 
             }

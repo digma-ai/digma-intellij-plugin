@@ -115,6 +115,31 @@ public interface LanguageService extends Disposable {
     void runWhenSmart(Runnable task);
 
 
+    @NotNull
+    static LanguageService findLanguageServiceByFile(@NotNull Project project, @NotNull VirtualFile virtualFile) {
+
+        for (SupportedLanguages value : SupportedLanguages.values()) {
+
+            try {
+                Class<? extends LanguageService> clazz = (Class<? extends LanguageService>) Class.forName(value.getLanguageServiceClassName());
+                LanguageService languageService = project.getService(clazz);
+                var isSupported = languageService.isSupportedFile(project, virtualFile);
+                if (isSupported) {
+                    return languageService;
+                }
+            } catch (Throwable e) {
+                //catch Throwable because there may be errors.
+                //ignore: some classes will fail to load , for example the CSharpLanguageService
+                //will fail to load if it's not rider because it depends on rider classes.
+                //JavaLanguageService will fail to load on rider, etc.
+                //don't log, it will happen too many times
+            }
+        }
+        return NoOpLanguageService.INSTANCE;
+    }
+
+
+
     /**
      * if we have MethodInfo it should be easy to find the language. it should always be the preferred way when there
      * is a MethodInfo.
@@ -124,7 +149,7 @@ public interface LanguageService extends Disposable {
 
         try {
             PsiFile psiFile = PsiUtils.uriToPsiFile(methodInfo.getContainingFileUri(), project);
-            if (psiFile.isValid()) {
+            if (PsiUtils.isValidPsiFile(psiFile)) {
                 Language language = psiFile.getLanguage();
                 return project.getService(LanguageServiceLocator.class).locate(language);
             }

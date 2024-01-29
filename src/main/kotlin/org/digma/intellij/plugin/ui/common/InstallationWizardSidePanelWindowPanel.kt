@@ -11,6 +11,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.ui.jcef.JBCefApp
 import com.intellij.ui.jcef.JBCefBrowser
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -652,7 +653,11 @@ class DigmaStatusUpdater {
                     }
 
                 } catch (e: Exception) {
-                    ErrorReporter.getInstance().reportError(project, "DigmaStatusUpdater.loop", e)
+                    //no need to report CancellationException , it's not an error, we cancel the job
+                    if (e !is CancellationException) {
+                        ErrorReporter.getInstance().reportError(project, "DigmaStatusUpdater.loop", e)
+                    }
+
                 }
             }
         }

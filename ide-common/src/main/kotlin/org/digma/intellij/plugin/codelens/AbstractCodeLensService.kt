@@ -21,6 +21,7 @@ import com.intellij.util.messages.MessageBusConnection
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.document.CodeLensProvider
 import org.digma.intellij.plugin.document.DocumentInfoChanged
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.navigation.HomeSwitcherService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
@@ -152,10 +153,12 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
 
         EDT.ensureEDT {
             WriteAction.run<RuntimeException> {
-                val manager = PsiManager.getInstance(project)
-                manager.dropPsiCaches()
-                manager.dropResolveCaches()
-                DaemonCodeAnalyzer.getInstance(project).restart()
+                if (!project.isDisposed) {
+                    val manager = PsiManager.getInstance(project)
+                    manager.dropPsiCaches()
+                    manager.dropResolveCaches()
+                    DaemonCodeAnalyzer.getInstance(project).restart()
+                }
             }
         }
 
@@ -187,24 +190,30 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
         private val lensTitle: String,
         private val project: Project,
     ) : (MouseEvent?, Editor) -> Unit {
+        private val logger: Logger = Logger.getInstance(this::class.java)
         private val elementPointer = SmartPointerManager.createPointer(element)
         override fun invoke(event: MouseEvent?, editor: Editor) {
-            project.service<MainToolWindowCardsController>().closeCoveringViewsIfNecessary()
-            ActivityMonitor.getInstance(project).registerLensClicked(lensTitle)
-            project.service<HomeSwitcherService>().switchToInsights()
-            ToolWindowShower.getInstance(project).showToolWindow()
-            elementPointer.element?.let {
-                if (it is Navigatable && it.canNavigateToSource()) {
-                    it.navigate(true)
-                } else {
-                    //it's a fallback. sometimes the psiMethod.canNavigateToSource is false and really the
-                    //navigation doesn't work. I can't say why. usually it happens when indexing is not ready yet,
-                    // and the user opens files, selects tabs or moves the caret. then when indexing is finished
-                    // we have the list of methods but then psiMethod.navigate doesn't work.
-                    // navigation to source using the editor does work in these circumstances.
-                    val selectedEditor = FileEditorManager.getInstance(project).selectedTextEditor
-                    selectedEditor?.caretModel?.moveToOffset(elementPointer.element!!.textOffset)
+            try {
+                project.service<MainToolWindowCardsController>().closeCoveringViewsIfNecessary()
+                ActivityMonitor.getInstance(project).registerLensClicked(lensTitle)
+                project.service<HomeSwitcherService>().switchToInsights()
+                ToolWindowShower.getInstance(project).showToolWindow()
+                elementPointer.element?.let {
+                    if (it is Navigatable && it.canNavigateToSource()) {
+                        it.navigate(true)
+                    } else {
+                        //it's a fallback. sometimes the psiMethod.canNavigateToSource is false and really the
+                        //navigation doesn't work. I can't say why. usually it happens when indexing is not ready yet,
+                        // and the user opens files, selects tabs or moves the caret. then when indexing is finished
+                        // we have the list of methods but then psiMethod.navigate doesn't work.
+                        // navigation to source using the editor does work in these circumstances.
+                        val selectedEditor = FileEditorManager.getInstance(project).selectedTextEditor
+                        selectedEditor?.caretModel?.moveToOffset(elementPointer.element!!.textOffset)
+                    }
                 }
+            } catch (e: Exception) {
+                Log.warnWithException(logger, project, e, "error in ClickHandler {}", e)
+                ErrorReporter.getInstance().reportError("AbstractCodeLensService.ClickHandler.invoke", e)
             }
         }
     }

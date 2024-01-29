@@ -11,6 +11,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDocumentManager;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.psi.PsiUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
@@ -52,7 +53,7 @@ class CaretListener {
         }
 
         var psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.getDocument());
-        if (psiFile == null) {
+        if (!PsiUtils.isValidPsiFile(psiFile)) {
             return;
         }
 

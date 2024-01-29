@@ -16,6 +16,7 @@ import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.psi.LanguageServiceLocator;
+import org.digma.intellij.plugin.psi.PsiUtils;
 import org.digma.intellij.plugin.ui.CaretContextService;
 import org.jetbrains.annotations.NotNull;
 
@@ -86,8 +87,8 @@ public class CurrentContextUpdater implements Disposable {
 
         PsiFile psiFile = DumbService.getInstance(project).runReadActionInSmartMode(() -> PsiManager.getInstance(project).findFile(file));
 
-        if (psiFile == null) {
-            Log.log(LOGGER::debug, "psi file not found for file: {}", file);
+        if (!PsiUtils.isValidPsiFile(psiFile)) {
+            Log.log(LOGGER::debug, "psi file not found or is not valid for file: {}", file);
             return;
         }
         updateCurrentContext(editor, caretOffset, psiFile);

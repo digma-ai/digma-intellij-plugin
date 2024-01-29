@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.idea.psi
 
-import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.impl.source.PsiClassReferenceType
 import org.jetbrains.uast.UAnnotation
@@ -130,19 +129,6 @@ fun getFieldValue(uField: UField): String? {
 
 fun getLiteralValue(uLiteralExpression: ULiteralExpression): String? {
     return uLiteralExpression.value?.toString()
-}
-
-
-//todo: move to JvmPsiUtils.kt
-@Suppress("UnstableApiUsage")
-fun findMethodInClass(psiClass: PsiClass, methodName: String, methodPredicate: Predicate<PsiMethod>): PsiMethod? {
-    val methods = psiClass.findMethodsByName(methodName)
-    for (method in methods) {
-        if (method is PsiMethod && methodPredicate.test(method)) {
-            return method
-        }
-    }
-    return null
 }
 
 

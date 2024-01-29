@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.updates
 import com.intellij.collaboration.async.disposingScope
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationInfo
+import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import kotlinx.coroutines.delay
@@ -30,6 +31,7 @@ import java.util.Timer
 import java.util.TimerTask
 import java.util.concurrent.TimeUnit
 
+@Service(Service.Level.PROJECT)
 class UpdatesService(private val project: Project) : Disposable {
 
     companion object {

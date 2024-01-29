@@ -3,91 +3,37 @@
 package org.digma.intellij.plugin.idea.psi.java
 
 import com.intellij.openapi.project.Project
-import com.intellij.psi.JavaPsiFacade
-import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
-import com.intellij.psi.search.GlobalSearchScope
-import com.intellij.psi.search.searches.AnnotatedElementsSearch
-import com.intellij.psi.search.searches.MethodReferencesSearch
-import org.digma.intellij.plugin.SPAN_BUILDER_FQN
-import org.digma.intellij.plugin.WITH_SPAN_ANNOTATION_FQN
+import com.intellij.psi.PsiReference
 import org.digma.intellij.plugin.idea.psi.discovery.span.AbstractSpanDiscovery
 import org.digma.intellij.plugin.model.discovery.SpanInfo
-import java.util.Objects
+import org.jetbrains.uast.UMethod
+import org.jetbrains.uast.UReferenceExpression
 
 class JavaSpanDiscovery : AbstractSpanDiscovery() {
 
+    //todo: JavaSpanDiscoveryUtils is complete for java.
+    // SpanDiscoveryUtils.kt is not complete and does not support everything.
+    // we need to complete SpanDiscoveryUtils.kt to work for java and kotlin and then JavaSpanDiscoveryUtils
+    // can be deleted
 
-    //todo: currently using existing code written for java only in JavaSpanDiscoveryUtils.
-    // make common code for java and kotlin. use only AbstractSpanDiscovery.discoverSpans
-    override fun discoverSpans(project: Project, psiFile: PsiFile): Collection<SpanInfo> {
-
-        val spanInfos = mutableListOf<SpanInfo>()
-
-        val withSpanSpans = withSpanAnnotationSpanDiscovery(project, psiFile)
-        withSpanSpans.let {
-            spanInfos.addAll(it)
+    //todo: refactor to have the same code for java and kotlin
+    override fun findSpanInfosFromWithSpanAnnotatedMethod(uMethod: UMethod): List<SpanInfo> {
+        //it should always be PsiMethod
+        if (uMethod.sourcePsi is PsiMethod) {
+            val psiMethod = uMethod.sourcePsi as PsiMethod
+            return JavaSpanDiscoveryUtils.getSpanInfoFromWithSpanAnnotatedMethod(psiMethod)
+        } else {
+            //this actually should not happen
+            return JavaSpanDiscoveryUtils.getSpanInfoFromWithSpanAnnotatedMethod(uMethod)
         }
-
-        val startSpanSpans = startSpanMethodCallSpanDiscovery(project, psiFile)
-        startSpanSpans.let {
-            spanInfos.addAll(it)
-        }
-
-
-        val micrometerSpans = micrometerTracingFramework.discoverSpans(project, psiFile)
-        micrometerSpans.let {
-            spanInfos.addAll(it)
-        }
-
-        return spanInfos
     }
 
-
-    private fun withSpanAnnotationSpanDiscovery(project: Project, psiFile: PsiFile): Collection<SpanInfo> {
-
-        val spanInfos = mutableListOf<SpanInfo>()
-
-        val withSpanClass = JavaPsiFacade.getInstance(project).findClass(WITH_SPAN_ANNOTATION_FQN, GlobalSearchScope.allScope(project))
-        //maybe the annotation is not in the classpath
-        if (withSpanClass != null) {
-            var psiMethods = AnnotatedElementsSearch.searchPsiMethods(withSpanClass, GlobalSearchScope.fileScope(psiFile))
-            psiMethods = JavaSpanDiscoveryUtils.filterNonRelevantMethodsForSpanDiscovery(psiMethods)
-
-            psiMethods.forEach {
-                val spans = JavaSpanDiscoveryUtils.getSpanInfoFromWithSpanAnnotatedMethod(it)
-                spanInfos.addAll(spans)
-            }
-        }
-
-        return spanInfos
-    }
-
-
-    private fun startSpanMethodCallSpanDiscovery(project: Project, psiFile: PsiFile): Collection<SpanInfo> {
-
-        val spanInfos = mutableListOf<SpanInfo>()
-
-        val tracerBuilderClass = JavaPsiFacade.getInstance(project).findClass(SPAN_BUILDER_FQN, GlobalSearchScope.allScope(project))
-        if (tracerBuilderClass != null) {
-            val startSpanMethod =
-                JavaLanguageUtils.findMethodInClass(tracerBuilderClass, "startSpan") { psiMethod: PsiMethod -> psiMethod.parameters.isEmpty() }
-            Objects.requireNonNull(startSpanMethod, "startSpan method must be found in SpanBuilder class")
-
-            var startSpanReferences = MethodReferencesSearch.search(startSpanMethod!!, GlobalSearchScope.fileScope(psiFile), true)
-            //filter classes that we don't support,which should not happen but just in case. we don't support Annotations,Enums and Records.
-            startSpanReferences = JavaSpanDiscoveryUtils.filterNonRelevantReferencesForSpanDiscovery(startSpanReferences)
-
-            startSpanReferences.forEach { ref ->
-                val spanInfo = JavaSpanDiscoveryUtils.getSpanInfoFromStartSpanMethodReference(project, ref)
-                spanInfo?.let {
-                    spanInfos.add(it)
-                }
-
-            }
-        }
-
-        return spanInfos
+    //todo: refactor to have the same code for java and kotlin
+    override fun findSpanInfoFromStartSpanMethodReference(project: Project, uReferenceExpression: UReferenceExpression): SpanInfo? {
+        //if uReferenceExpression.sourcePsi is not PsiReference this will throw exception. but it should be
+        val psiReference = uReferenceExpression.sourcePsi as PsiReference
+        return JavaSpanDiscoveryUtils.getSpanInfoFromStartSpanMethodReference(project, psiReference)
     }
 
 

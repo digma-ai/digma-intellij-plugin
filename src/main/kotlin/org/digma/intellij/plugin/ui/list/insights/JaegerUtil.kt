@@ -255,7 +255,7 @@ fun isJaegerButtonEnabled(): Boolean {
             (!settingsState.jaegerUrl.isNullOrBlank() && CommonUtils.isWelFormedUrl(settingsState.jaegerUrl))
 }
 
-fun getJaegerUrl(): String ?{
+fun getJaegerUrl(): String? {
     val settingsState = SettingsState.getInstance()
     val jaegerBaseUrl = settingsState.jaegerUrl?.trim()?.trimEnd('/')
     val jaegerQueryUrl = SettingsState.getInstance().jaegerQueryUrl

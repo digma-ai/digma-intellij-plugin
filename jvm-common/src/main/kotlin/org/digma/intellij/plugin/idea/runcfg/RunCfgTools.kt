@@ -20,6 +20,7 @@ import com.intellij.psi.PsiClass
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.util.keyFMap.KeyFMap
 import org.digma.intellij.plugin.common.allowSlowOperation
+import org.digma.intellij.plugin.idea.psi.runInReadAccessInSmartModeWithResultAndRetry
 import org.digma.intellij.plugin.log.Log
 import org.jetbrains.annotations.VisibleForTesting
 import org.jetbrains.idea.maven.execution.MavenRunConfiguration
@@ -138,11 +139,15 @@ private abstract class RunCfgFlavor<T : RunConfiguration>(protected val runCfgBa
         if (!mainClassFqn.isNullOrBlank()) {
 
             val module: Module? = allowSlowOperation(Supplier {
-                var psiClass: PsiClass? = psiFacade.findClass(mainClassFqn, searchScope)
-                if (psiClass == null) {
-                    // try shorter name, since maybe the last part is method name
-                    val shorterName = mainClassFqn.substringBeforeLast('.')
-                    psiClass = psiFacade.findClass(shorterName, searchScope)
+
+                val psiClass = runInReadAccessInSmartModeWithResultAndRetry(project) {
+                    var cls: PsiClass? = psiFacade.findClass(mainClassFqn, searchScope)
+                    if (cls == null) {
+                        // try shorter name, since maybe the last part is method name
+                        val shorterName = mainClassFqn.substringBeforeLast('.')
+                        cls = psiFacade.findClass(shorterName, searchScope)
+                    }
+                    cls
                 }
 
                 if (psiClass != null) {
@@ -188,15 +193,15 @@ private class GradleCfgFlavor(runCfgBase: GradleRunConfiguration) :
     RunCfgFlavor<GradleRunConfiguration>(runCfgBase) {
 
     override fun evalMainClass(params: JavaParameters): String? {
-        if (containsGradleTestTask(runCfgBase.settings.taskNames)) {
-            return cleanupName(evalClassFromConfigOfTest(params))
+        return if (containsGradleTestTask(runCfgBase.settings.taskNames)) {
+            cleanupName(evalClassFromConfigOfTest(params))
         } else {
-            return cleanupName(evalClassFromConfigOfMain(params))
+            cleanupName(evalClassFromConfigOfMain(params))
         }
     }
 
     @VisibleForTesting
-    protected fun cleanupName(classFqn: String?): String? {
+    private fun cleanupName(classFqn: String?): String? {
         if (classFqn == null) return null
 
         return classFqn
@@ -205,7 +210,7 @@ private class GradleCfgFlavor(runCfgBase: GradleRunConfiguration) :
     }
 
     @VisibleForTesting
-    protected fun evalClassFromConfigOfMain(params: JavaParameters): String? {
+    private fun evalClassFromConfigOfMain(params: JavaParameters): String? {
         // this section relates to MAIN app run
         val confMap: KeyFMap = runCfgBase.get()
         val gradleScriptContent = confMap.get(GradleTaskManager.INIT_SCRIPT_KEY)
@@ -213,18 +218,18 @@ private class GradleCfgFlavor(runCfgBase: GradleRunConfiguration) :
     }
 
     @VisibleForTesting
-    protected fun containsGradleTestTask(gradleTasks: Collection<String>): Boolean {
+    private fun containsGradleTestTask(gradleTasks: Collection<String>): Boolean {
         return gradleTasks.any {
             isGradleTestTask(it)
         }
     }
 
     @VisibleForTesting
-    protected fun isGradleTestTask(taskName: String): Boolean =
+    private fun isGradleTestTask(taskName: String): Boolean =
         taskName.endsWith(":test")
 
     @VisibleForTesting
-    protected fun findMainClassName(gradleScript: String?): String? {
+    private fun findMainClassName(gradleScript: String?): String? {
         if (gradleScript.isNullOrBlank()) return null
 
         // search for line like this:
@@ -249,7 +254,7 @@ private class GradleCfgFlavor(runCfgBase: GradleRunConfiguration) :
     }
 
     @VisibleForTesting
-    protected fun evalClassFromConfigOfTest(params: JavaParameters): String? {
+    private fun evalClassFromConfigOfTest(params: JavaParameters): String? {
 //        myTaskNames = {ArrayList@60614}  size = 3
 //        0 = ":test"
 //        1 = "--tests"

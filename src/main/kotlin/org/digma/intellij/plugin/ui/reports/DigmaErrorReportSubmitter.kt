@@ -4,6 +4,7 @@ import com.intellij.diagnostic.AbstractMessage
 import com.intellij.diagnostic.LogMessage
 import com.intellij.ide.DataManager
 import com.intellij.openapi.actionSystem.CommonDataKeys
+import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.diagnostic.ErrorReportSubmitter
 import com.intellij.openapi.diagnostic.IdeaLoggingEvent
 import com.intellij.openapi.diagnostic.SubmittedReportInfo
@@ -12,9 +13,11 @@ import com.intellij.openapi.project.ProjectManager
 import com.intellij.util.Consumer
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
+import org.digma.intellij.plugin.common.UserId
 import org.digma.intellij.plugin.common.findActiveProject
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.semanticversion.SemanticVersionUtil
 import java.awt.Component
 
 
@@ -79,14 +82,35 @@ class DigmaErrorReportSubmitter : ErrorReportSubmitter() {
 
         val details = mutableMapOf<String, String>()
 
-        details["event.message"] = event.message ?: ""
-        details["event.throwableText"] = event.throwableText ?: ""
+        //ordered for easier reading in posthog, although posthog doesn't always keep the order
+        details["exceptionClass"] = getExceptionClassName(event)
+        details["exceptionMessage"] = getExceptionMessage(event)
         details["additionalUserInfo"] = additionalInfo ?: ""
+        details["event.message"] = event.message ?: ""
+
+        val osType = System.getProperty("os.name")
+        val ideInfo = ApplicationInfo.getInstance()
+        val ideName = ideInfo.versionName
+        val ideVersion = ideInfo.fullVersion
+        val ideBuildNumber = ideInfo.build.asString()
+        val pluginVersion = SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("unknown")
+
+        details["ide.name"] = ideName
+        details["ide.version"] = ideVersion
+        details["ide.build"] = ideBuildNumber
+        details["plugin.version"] = pluginVersion
+        details["os.type"] = osType
+        details["user.type"] = if (UserId.isDevUser) "internal" else "external"
+
 
         if (event.data is AbstractMessage) {
             val data = event.data as AbstractMessage
             details["event.date"] = data.date.toString()
         }
+
+
+        details["event.throwableText"] = event.throwableText ?: ""
+
 
         if (event.data is LogMessage) {
             val data = event.data as LogMessage
@@ -98,6 +122,23 @@ class DigmaErrorReportSubmitter : ErrorReportSubmitter() {
         }
 
         ActivityMonitor.getInstance(project).registerFatalError(details)
+    }
 
+    private fun getExceptionMessage(event: IdeaLoggingEvent): String {
+        val data = event.data
+        return if (data is LogMessage) {
+            data.throwable.message ?: ""
+        } else {
+            event.throwable.message ?: ""
+        }
+    }
+
+    private fun getExceptionClassName(event: IdeaLoggingEvent): String {
+        val data = event.data
+        return if (data is LogMessage) {
+            data.throwable.javaClass.name
+        } else {
+            event.throwable.javaClass.name
+        }
     }
 }

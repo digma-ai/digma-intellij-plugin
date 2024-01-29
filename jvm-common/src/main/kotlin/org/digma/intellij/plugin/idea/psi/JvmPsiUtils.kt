@@ -1,20 +1,29 @@
 package org.digma.intellij.plugin.idea.psi
 
-import com.intellij.lang.Language
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
+import com.intellij.psi.PsiClass
+import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.impl.source.PsiExtensibleClass
+import org.digma.intellij.plugin.psi.LanguageService
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.toUElementOfType
+import java.util.function.Predicate
 
 
-fun isJvmSupportedLanguage(language: Language): Boolean {
+fun isJvmSupportedFile(project: Project, psiFile: PsiFile): Boolean {
     SupportedJvmLanguages.values().forEach {
-        return it.languageInstance == language
+        val languageService = LanguageService.findLanguageServiceByName(project, it.language.languageServiceClassName)
+        if (languageService != null &&
+            languageService is JvmLanguageService &&
+            languageService.isSupportedFile(psiFile)
+        ) {
+
+            return true
+        }
     }
     return false
 }
@@ -37,6 +46,18 @@ fun findMethodInClass(project: Project, cls: UClass, methodId: String): UMethod?
     return getMethodsInClass(project, cls).firstOrNull { uMethod: UMethod -> methodId == createMethodCodeObjectId(uMethod) }
 }
 
+@Suppress("UnstableApiUsage")
+fun findMethodInClass(psiClass: PsiClass, methodName: String, methodPredicate: Predicate<PsiMethod>): PsiMethod? {
+    val methods = psiClass.findMethodsByName(methodName)
+    for (method in methods) {
+        if (method is PsiMethod && methodPredicate.test(method)) {
+            return method
+        }
+    }
+    return null
+}
+
+
 fun getMethodsInClass(project: Project, cls: UClass): Collection<UMethod> {
 
     if (cls.sourcePsi is PsiExtensibleClass) {
@@ -45,10 +66,10 @@ fun getMethodsInClass(project: Project, cls: UClass): Collection<UMethod> {
         // see issue https://github.com/digma-ai/digma-intellij-plugin/issues/833
         // see issue https://youtrack.jetbrains.com/issue/IDEA-323198
 
-        val ownMethods = if (ApplicationManager.getApplication().isReadAccessAllowed) {
+        val ownMethods = if (isReadAccessAllowed()) {
             (cls.sourcePsi as PsiExtensibleClass).ownMethods
         } else {
-            runInReadAccessWithResult(project) { (cls.sourcePsi as PsiExtensibleClass).ownMethods }
+            runInReadAccessWithResult { (cls.sourcePsi as PsiExtensibleClass).ownMethods }
         }
         return ownMethods.map { psiMethod: PsiMethod -> psiMethod.toUElementOfType<UMethod>()!! }
     }

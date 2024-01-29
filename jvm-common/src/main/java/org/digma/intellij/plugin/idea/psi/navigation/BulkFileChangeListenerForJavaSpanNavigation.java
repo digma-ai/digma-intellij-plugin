@@ -6,8 +6,9 @@ import com.intellij.openapi.vfs.newvfs.events.VFileDeleteEvent;
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent;
 import org.digma.intellij.plugin.bulklistener.AbstractBulkFileChangeListener;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
-import org.digma.intellij.plugin.idea.psi.java.JavaLanguageService;
+import org.digma.intellij.plugin.idea.psi.JvmLanguageService;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.psi.LanguageService;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -22,15 +23,22 @@ public class BulkFileChangeListenerForJavaSpanNavigation extends AbstractBulkFil
     @Override
     public void processEvents(@NotNull Project project, @NotNull List<? extends VFileEvent> events) {
 
+        if (project.isDisposed()) {
+            return;
+        }
+
         try {
 
             events.forEach(vFileEvent -> {
 
                 var file = vFileEvent.getFile();
-                if (file != null && isRelevantFile(project, file)) {
+                if (file != null && file.isValid() && isRelevantFile(project, file)) {
                     Log.log(LOGGER::debug, "got bulk change for file  {}", vFileEvent.getFile());
-                    var javaLanguageService = project.getService(JavaLanguageService.class);
-                    if (javaLanguageService.isRelevant(file)) {
+                    var languageService = LanguageService.findLanguageServiceByFile(project, file);
+                    //only jvm languages are supported here
+                    if (JvmLanguageService.class.isAssignableFrom(languageService.getClass()) &&
+                            languageService.isRelevant(file)) {
+
                         if (vFileEvent instanceof VFileDeleteEvent) {
                             JavaSpanNavigationProvider.getInstance(project).fileDeleted(vFileEvent.getFile());
                             JavaEndpointNavigationProvider.getInstance(project).fileDeleted(vFileEvent.getFile());
@@ -41,7 +49,7 @@ public class BulkFileChangeListenerForJavaSpanNavigation extends AbstractBulkFil
                     }
                 }
             });
-        } catch (Exception e) {
+        } catch (Throwable e) {
             Log.warnWithException(LOGGER, e, "Exception in processEvents");
             ErrorReporter.getInstance().reportError(project, "BulkFileChangeListenerForJavaSpanNavigation.processEvents", e);
         }

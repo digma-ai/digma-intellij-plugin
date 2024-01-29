@@ -33,6 +33,7 @@ import org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils;
 import org.digma.intellij.plugin.idea.psi.java.JavaSpanDiscoveryUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.SpanInfo;
+import org.digma.intellij.plugin.psi.PsiUtils;
 import org.digma.intellij.plugin.ui.service.ErrorsViewService;
 import org.digma.intellij.plugin.ui.service.InsightsViewService;
 import org.jetbrains.annotations.NotNull;
@@ -51,7 +52,6 @@ import static org.digma.intellij.plugin.DiscoveryConstantsKt.WITH_SPAN_ANNOTATIO
 import static org.digma.intellij.plugin.idea.psi.java.JavaSpanDiscoveryUtils.filterNonRelevantMethodsForSpanDiscovery;
 import static org.digma.intellij.plugin.idea.psi.java.JavaSpanDiscoveryUtils.filterNonRelevantReferencesForSpanDiscovery;
 
-@SuppressWarnings("UnstableApiUsage")
 public class JavaSpanNavigationProvider implements Disposable {
 
     private static final Logger LOGGER = Logger.getInstance(JavaSpanNavigationProvider.class);
@@ -106,7 +106,7 @@ public class JavaSpanNavigationProvider implements Disposable {
                 Log.log(LOGGER::info, "Building buildWithSpanAnnotation");
                 buildWithSpanAnnotation(() -> GlobalSearchScope.projectScope(project));
             }, Throwable.class, 100, 5);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             Log.warnWithException(LOGGER, e, "Exception in buildSpanNavigation buildWithSpanAnnotation");
             ErrorReporter.getInstance().reportError(project, "JavaSpanNavigationProvider.buildSpanNavigation.buildWithSpanAnnotation", e);
         } finally {
@@ -122,7 +122,7 @@ public class JavaSpanNavigationProvider implements Disposable {
                 Log.log(LOGGER::info, "Building buildStartSpanMethodCall");
                 buildStartSpanMethodCall(() -> GlobalSearchScope.projectScope(project));
             }, Throwable.class, 100, 5);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             Log.warnWithException(LOGGER, e, "Exception in buildSpanNavigation buildStartSpanMethodCall");
             ErrorReporter.getInstance().reportError(project, "JavaSpanNavigationProvider.buildSpanNavigation.buildStartSpanMethodCall", e);
         } finally {
@@ -138,7 +138,7 @@ public class JavaSpanNavigationProvider implements Disposable {
                 Log.log(LOGGER::info, "Building buildObservedAnnotation");
                 buildObservedAnnotation(() -> GlobalSearchScope.projectScope(project));
             }, Throwable.class, 100, 5);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             Log.warnWithException(LOGGER, e, "Exception in buildSpanNavigation buildObservedAnnotation");
             ErrorReporter.getInstance().reportError(project, "JavaSpanNavigationProvider.buildSpanNavigation.buildObservedAnnotation", e);
         } finally {
@@ -207,7 +207,7 @@ public class JavaSpanNavigationProvider implements Disposable {
                             spanLocations.put(spanInfo.getId(), location);
                         }));
                     }
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     Log.warnWithException(LOGGER, project, e, "error building span info for method {}", psiMethod.getName());
                     ErrorReporter.getInstance().reportError(project, "JavaSpanNavigationProvider.buildSpanNavigation.buildWithSpanAnnotation", e);
                 }
@@ -264,7 +264,7 @@ public class JavaSpanNavigationProvider implements Disposable {
                             spanLocations.put(spanInfo.getId(), location);
                         });
                     }
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     Log.warnWithException(LOGGER, project, e, "error building span info for psiReference");
                     ErrorReporter.getInstance().reportError(project, "JavaSpanNavigationProvider.buildSpanNavigation.buildStartSpanMethodCall", e);
                 }
@@ -318,7 +318,7 @@ public class JavaSpanNavigationProvider implements Disposable {
                             spanLocations.put(spanInfo.getId(), location);
                         });
                     }
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     Log.warnWithException(LOGGER, project, e, "error building span info for psiMethod {}", psiMethod.getName());
                     ErrorReporter.getInstance().reportError(project, "JavaSpanNavigationProvider.buildSpanNavigation.buildObservedAnnotation", e);
                 }
@@ -340,14 +340,14 @@ public class JavaSpanNavigationProvider implements Disposable {
             }
 
             var psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document);
-            if (psiFile == null || !psiFile.isValid() ||
-                    !JvmPsiUtilsKt.isJvmSupportedLanguage(psiFile.getLanguage())) {
+            if (!PsiUtils.isValidPsiFile(psiFile) ||
+                    !JvmPsiUtilsKt.isJvmSupportedFile(project, psiFile)) {
                 return;
             }
 
             var virtualFile = FileDocumentManager.getInstance().getFile(document);
             fileChanged(virtualFile);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             Log.warnWithException(LOGGER, e, "Exception in documentChanged");
             ErrorReporter.getInstance().reportError(project, "JavaSpanNavigationProvider.documentChanged", e);
         }
@@ -376,7 +376,7 @@ public class JavaSpanNavigationProvider implements Disposable {
                     buildStartSpanMethodCall(() -> GlobalSearchScope.fileScope(project, virtualFile));
                     buildObservedAnnotation(() -> GlobalSearchScope.fileScope(project, virtualFile));
                 }
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 Log.warnWithException(LOGGER, e, "Exception in fileChanged");
                 ErrorReporter.getInstance().reportError(project, "JavaSpanNavigationProvider.fileChanged", e);
             } finally {

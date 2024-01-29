@@ -78,7 +78,8 @@ class EndpointScope(private val endpointInfo: EndpointInfo) : Scope {
 }
 
 
-class CodeLessSpanScope(private val codeLessSpan: CodeLessSpan, private val spanInfo: SpanInfo?) : Scope {
+class CodeLessSpanScope(private val codeLessSpan: CodeLessSpan, var spanInfo: SpanInfo? = null) : Scope {
+
     override fun getScope(): String {
         return spanInfo?.displayName ?: codeLessSpan.spanId.substringAfterLast("\$_$")
     }

@@ -149,7 +149,7 @@ public interface LanguageService extends Disposable {
 
         try {
             PsiFile psiFile = PsiUtils.uriToPsiFile(methodInfo.getContainingFileUri(), project);
-            if (psiFile.isValid()) {
+            if (PsiUtils.isValidPsiFile(psiFile)) {
                 Language language = psiFile.getLanguage();
                 return project.getService(LanguageServiceLocator.class).locate(language);
             }

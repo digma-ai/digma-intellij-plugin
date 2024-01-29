@@ -7,10 +7,9 @@ import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.search.GlobalSearchScope;
-import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.search.searches.ClassInheritorsSearch;
 import com.intellij.util.Query;
-import org.digma.intellij.plugin.common.Retries;
+import org.digma.intellij.plugin.common.SearchScopeProvider;
 import org.digma.intellij.plugin.idea.psi.java.JavaPsiUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.EndpointFramework;
@@ -22,11 +21,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Supplier;
 
 import static org.digma.intellij.plugin.idea.psi.JvmCodeObjectsUtilsKt.createPsiMethodCodeObjectId;
-import static org.digma.intellij.plugin.idea.psi.PsiAccessUtilsKt.runInReadAccess;
-import static org.digma.intellij.plugin.idea.psi.PsiAccessUtilsKt.runInReadAccessWithResult;
+import static org.digma.intellij.plugin.idea.psi.PsiAccessUtilsKt.runInReadAccessInSmartModeAndRetry;
+import static org.digma.intellij.plugin.idea.psi.PsiAccessUtilsKt.runInReadAccessInSmartModeWithResultAndRetry;
 
 public class GrpcFramework extends EndpointDiscovery {
     private static final Logger LOGGER = Logger.getInstance(GrpcFramework.class);
@@ -37,7 +35,6 @@ public class GrpcFramework extends EndpointDiscovery {
     private final Project project;
 
     // late init
-    private boolean lateInitAlready = false;
     private PsiClass bindableServiceAnnotationClass;
 
     public GrpcFramework(Project project) {
@@ -46,11 +43,11 @@ public class GrpcFramework extends EndpointDiscovery {
 
     private void lateInit() {
 
-        Retries.simpleRetry(() -> runInReadAccess(project, () -> {
+        runInReadAccessInSmartModeAndRetry(project, () -> {
             JavaPsiFacade psiFacade = JavaPsiFacade.getInstance(project);
             bindableServiceAnnotationClass = psiFacade.findClass(BINDABLE_SERVICE_ANNOTATION_STR, GlobalSearchScope.allScope(project));
             Log.log(LOGGER::info, "GRPC init. isGrpcServerRelevant='{}'", isGrpcServerRelevant());
-        }), Throwable.class, 50, 5);
+        });
     }
 
     private boolean isGrpcServerRelevant() {
@@ -59,7 +56,7 @@ public class GrpcFramework extends EndpointDiscovery {
 
     @Override
     @Nullable
-    public List<EndpointInfo> lookForEndpoints(@NotNull Supplier<SearchScope> searchScopeSupplier) {
+    public List<EndpointInfo> lookForEndpoints(@NotNull SearchScopeProvider searchScopeProvider) {
         lateInit();
         if (!isGrpcServerRelevant()) {
             return Collections.emptyList();
@@ -67,14 +64,14 @@ public class GrpcFramework extends EndpointDiscovery {
 
         List<EndpointInfo> retList = new ArrayList<>();
 
-        Collection<PsiClass> grpcServerClassesInFile = Retries.retryWithResult(() -> runInReadAccessWithResult(project, () -> {
-            Query<PsiClass> psiClasses = ClassInheritorsSearch.search(bindableServiceAnnotationClass, searchScopeSupplier.get(), true);
+        Collection<PsiClass> grpcServerClassesInFile = runInReadAccessInSmartModeWithResultAndRetry(project, () -> {
+            Query<PsiClass> psiClasses = ClassInheritorsSearch.search(bindableServiceAnnotationClass, searchScopeProvider.get(), true);
             return psiClasses.findAll();
-        }), Throwable.class, 50, 5);
+        });
 
         for (PsiClass currGrpcServerClass : grpcServerClassesInFile) {
 
-            Retries.simpleRetry(() -> runInReadAccess(project, () -> {
+            runInReadAccessInSmartModeAndRetry(project, () -> {
                 if (JavaPsiUtils.isBaseClass(currGrpcServerClass)) {
                     // if has no super class then it is the generated GRPC server class, we do not want it
                     Log.log(LOGGER::debug, "endpointDiscovery, skip bindableService GrpcServerClass fqn='{}' since it is the generated GRPC base service", currGrpcServerClass.getQualifiedName());
@@ -83,7 +80,7 @@ public class GrpcFramework extends EndpointDiscovery {
                 Log.log(LOGGER::debug, "endpointDiscovery, bingo - its a GRPC server class, its fqn='{}'", currGrpcServerClass.getQualifiedName());
                 List<EndpointInfo> endpointsAtClass = addEndpointMethods(currGrpcServerClass);
                 retList.addAll(endpointsAtClass);
-            }), Throwable.class, 50, 5);
+            });
         }
         return retList;
     }

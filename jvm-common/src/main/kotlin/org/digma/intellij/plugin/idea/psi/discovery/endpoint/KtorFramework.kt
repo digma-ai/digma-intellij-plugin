@@ -1,16 +1,14 @@
 package org.digma.intellij.plugin.idea.psi.discovery.endpoint
 
 import com.intellij.openapi.project.Project
-import com.intellij.psi.PsiReference
 import com.intellij.psi.search.GlobalSearchScope
-import com.intellij.psi.search.SearchScope
 import com.intellij.psi.search.searches.ReferencesSearch
-import org.digma.intellij.plugin.common.Retries
+import org.digma.intellij.plugin.common.SearchScopeProvider
 import org.digma.intellij.plugin.common.TextRangeUtils
 import org.digma.intellij.plugin.idea.psi.createMethodCodeObjectId
 import org.digma.intellij.plugin.idea.psi.getExpressionValue
-import org.digma.intellij.plugin.idea.psi.runInReadAccess
-import org.digma.intellij.plugin.idea.psi.runInReadAccessWithResult
+import org.digma.intellij.plugin.idea.psi.runInReadAccessInSmartModeAndRetry
+import org.digma.intellij.plugin.idea.psi.runInReadAccessInSmartModeWithResultAndRetry
 import org.digma.intellij.plugin.model.discovery.EndpointFramework
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.psi.PsiUtils
@@ -25,7 +23,6 @@ import org.jetbrains.uast.getUCallExpression
 import org.jetbrains.uast.textRange
 import org.jetbrains.uast.toUElementOfType
 import org.jetbrains.uast.util.isMethodCall
-import java.util.function.Supplier
 
 class KtorFramework(private val project: Project) : EndpointDiscovery() {
 
@@ -49,69 +46,64 @@ class KtorFramework(private val project: Project) : EndpointDiscovery() {
     }
 
 
-    override fun lookForEndpoints(searchScopeSupplier: Supplier<SearchScope>): List<EndpointInfo> {
+    override fun lookForEndpoints(searchScopeProvider: SearchScopeProvider): List<EndpointInfo> {
         val endpoints = mutableListOf<EndpointInfo>()
-        endpoints.addAll(lookForRoutingBuilderEndpoints(searchScopeSupplier))
+        endpoints.addAll(lookForRoutingBuilderEndpoints(searchScopeProvider))
         return endpoints
     }
 
 
-    private fun lookForRoutingBuilderEndpoints(searchScopeSupplier: Supplier<SearchScope>): List<EndpointInfo> {
+    private fun lookForRoutingBuilderEndpoints(searchScopeProvider: SearchScopeProvider): List<EndpointInfo> {
 
         val endpoints = mutableListOf<EndpointInfo>()
 
         KTOR_ROUTING_BUILDER_ENDPOINTS.forEach { (fqName, httpMethod) ->
 
 
-            val declarations = Retries.retryWithResult({
-                runInReadAccessWithResult<Collection<KtNamedFunction>>(project) {
+            val declarations =
+                runInReadAccessInSmartModeWithResultAndRetry<Collection<KtNamedFunction>>(project) {
                     //todo: maybe cache the declarations
                     val declarations = KotlinTopLevelFunctionFqnNameIndex.get(fqName, project, GlobalSearchScope.allScope(project))
                     declarations.filter { ktNamedFunction: KtNamedFunction -> ktNamedFunction.containingKtFile.isCompiled }
                 }
-            }, Throwable::class.java, 50, 5)
 
 
             declarations.forEach { methodDeclarations ->
 
-                val references = Retries.retryWithResult({
-                    runInReadAccessWithResult<Collection<PsiReference>>(project) {
-                        ReferencesSearch.search(methodDeclarations, searchScopeSupplier.get()).findAll()
+                val references =
+                    runInReadAccessInSmartModeWithResultAndRetry(project) {
+                        ReferencesSearch.search(methodDeclarations, searchScopeProvider.get()).findAll()
                     }
-                }, Throwable::class.java, 50, 5)
 
 
                 references.forEach { ref ->
 
-                    Retries.simpleRetry({
-                        runInReadAccess(project) {
-                            val methodId = ref.element.toUElementOfType<UReferenceExpression>()?.getContainingUMethod()?.let { uMethod ->
-                                createMethodCodeObjectId(uMethod)
-                            } ?: ""
+                    runInReadAccessInSmartModeAndRetry(project) {
+                        val methodId = ref.element.toUElementOfType<UReferenceExpression>()?.getContainingUMethod()?.let { uMethod ->
+                            createMethodCodeObjectId(uMethod)
+                        } ?: ""
 
-                            val fileUri = ref.element.toUElementOfType<UReferenceExpression>()?.getContainingUFile()?.let { uFile ->
-                                PsiUtils.psiFileToUri(uFile.sourcePsi)
-                            } ?: ""
+                        val fileUri = ref.element.toUElementOfType<UReferenceExpression>()?.getContainingUFile()?.let { uFile ->
+                            PsiUtils.psiFileToUri(uFile.sourcePsi)
+                        } ?: ""
 
-                            val textRange =
-                                TextRangeUtils.fromJBTextRange(ref.element.toUElementOfType<UReferenceExpression>()?.getUCallExpression()?.textRange)
+                        val textRange =
+                            TextRangeUtils.fromJBTextRange(ref.element.toUElementOfType<UReferenceExpression>()?.getUCallExpression()?.textRange)
 
-                            ref.element.toUElementOfType<UReferenceExpression>()?.let { uReference ->
+                        ref.element.toUElementOfType<UReferenceExpression>()?.let { uReference ->
 
-                                uReference.getUCallExpression()?.let { callExpression ->
+                            uReference.getUCallExpression()?.let { callExpression ->
 
-                                    getEndpointNameFromCallExpression(callExpression)?.let { endpointName ->
+                                getEndpointNameFromCallExpression(callExpression)?.let { endpointName ->
 
-                                        val id = "epHTTP:" + "HTTP " + httpMethod.uppercase() + " " + endpointName
+                                    val id = "epHTTP:" + "HTTP " + httpMethod.uppercase() + " " + endpointName
 
-                                        endpoints.add(EndpointInfo(id, methodId, fileUri, textRange, EndpointFramework.Ktor))
+                                    endpoints.add(EndpointInfo(id, methodId, fileUri, textRange, EndpointFramework.Ktor))
 
-                                    }
                                 }
                             }
                         }
-
-                    }, Throwable::class.java, 50, 5)
+                    }
                 }
             }
         }

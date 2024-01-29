@@ -17,6 +17,7 @@ import com.intellij.util.AlarmFactory;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.FileUtils;
+import org.digma.intellij.plugin.common.ReadActions;
 import org.digma.intellij.plugin.common.SlowOperationsUtilsKt;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
@@ -26,6 +27,7 @@ import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
 import org.digma.intellij.plugin.navigation.NavigationModel;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.psi.LanguageServiceLocator;
+import org.digma.intellij.plugin.psi.PsiUtils;
 import org.digma.intellij.plugin.ui.CaretContextService;
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
 import org.jetbrains.annotations.NotNull;
@@ -156,7 +158,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
 
                 PsiFile psiFile = DumbService.getInstance(project).runReadActionInSmartMode(() -> PsiManager.getInstance(project).findFile(newFile));
 
-                if (psiFile == null) {
+                if (!PsiUtils.isValidPsiFile(psiFile)) {
                     Log.log(LOGGER::trace, "No psi file for :{}", newFile);
                     return;
                 }
@@ -196,7 +198,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
                     if (selectedTextEditor != null) {
                         Log.log(LOGGER::trace, "Found selected editor for :{}", newFile);
                         PsiFile psiFile1 = PsiDocumentManager.getInstance(project).getPsiFile(selectedTextEditor.getDocument());
-                        if (psiFile1 != null && isRelevantFile(psiFile1.getVirtualFile())) {
+                        if (PsiUtils.isValidPsiFile(psiFile1) && isRelevantFile(psiFile1.getVirtualFile())) {
                             Log.log(LOGGER::trace, "Found relevant psi file for :{}", newFile);
                             caretListener.maybeAddCaretListener(selectedTextEditor);
                             documentChangeListener.maybeAddDocumentListener(selectedTextEditor);
@@ -260,7 +262,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
         Log.log(LOGGER::trace, "fileClosed: file:{}", file);
 
         PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
-        if (psiFile != null && !FileUtils.isVcsFile(file) && isRelevantFile(file)) {
+        if (PsiUtils.isValidPsiFile(psiFile) && !FileUtils.isVcsFile(file) && isRelevantFile(file)) {
 
             Log.log(LOGGER::trace, "found psi file for fileClosed {}", file);
 
@@ -326,20 +328,20 @@ public class EditorEventsHandler implements FileEditorManagerListener {
 
     private boolean isRelevantFile(VirtualFile file) {
 
-        if (file.isDirectory() || !file.isValid()) {
-            return false;
-        }
+        return ReadActions.ensureReadAction(() -> {
+            if (file.isDirectory() || !file.isValid()) {
+                return false;
+            }
 
-        PsiFile psiFile = SlowOperationsUtilsKt.allowSlowOperation(() -> PsiManager.getInstance(project).findFile(file));
+            PsiFile psiFile = SlowOperationsUtilsKt.allowSlowOperation(() -> PsiManager.getInstance(project).findFile(file));
 
+            if (psiFile == null) {
+                return false;
+            }
+            LanguageService languageService = languageServiceLocator.locate(psiFile.getLanguage());
 
-        if (psiFile == null) {
-            return false;
-        }
-        LanguageService languageService = languageServiceLocator.locate(psiFile.getLanguage());
-
-        return !FileUtils.isLightVirtualFileBase(file) && languageService.isRelevant(file);
-
+            return !FileUtils.isLightVirtualFileBase(file) && languageService.isRelevant(file);
+        });
     }
 
 

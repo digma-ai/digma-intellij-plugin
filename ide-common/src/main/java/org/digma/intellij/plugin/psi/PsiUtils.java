@@ -7,6 +7,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
+import org.digma.intellij.plugin.common.ReadActions;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -16,6 +17,10 @@ public class PsiUtils {
     private PsiUtils() {
     }
 
+
+    public static boolean isValidPsiFile(@Nullable PsiFile psiFile) {
+        return psiFile != null && ReadActions.ensureReadAction(psiFile::isValid);
+    }
 
 
     /*

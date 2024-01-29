@@ -1,6 +1,12 @@
 # Changelog
 
-## [2.0.248] - 2024-01-29
+## [2.0.249] - 2024-01-29
+- fix errors in buildDocumentInfo flow Closes #1707 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1715
+- check virtual file valid Closes #1718 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1719
+- Fix trace navigation by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1721
+- more checks in span and endpoint navigation by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1722
+
+## 2.0.248 - 2024-01-29
 - Update Tests UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1712
 
 ## 2.0.247 - 2024-01-27

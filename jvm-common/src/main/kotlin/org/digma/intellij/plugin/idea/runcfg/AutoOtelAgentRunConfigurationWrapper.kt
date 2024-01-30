@@ -59,8 +59,8 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
 
         val project = configuration.project
         val isSpringBootWithMicrometerTracing = evalSpringBootMicrometerTracing(resolvedModule)
-        val isMicronautModule = evalIsMicronautModule(resolvedModule)
-        val useAgent = !(isMicronautModule || isSpringBootWithMicrometerTracing)
+//        val isMicronautModule = evalIsMicronautModule(resolvedModule)
+        val useAgent = !isSpringBootWithMicrometerTracing
         when (val runConfigType = evalRunConfigType(configuration)) {
             RunConfigType.JavaTest,
             RunConfigType.KotlinRun,

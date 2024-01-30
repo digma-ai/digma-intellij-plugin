@@ -22,9 +22,9 @@ fun properties(key: String) = properties(key,project)
 plugins {
     id("semantic-version")
     id("plugin-project")
-    id("org.jetbrains.changelog") version "2.1.0"
+    id("org.jetbrains.changelog") version "2.2.0"
     id("org.jetbrains.qodana") version "0.1.13"
-    id("org.jetbrains.kotlinx.kover") version "0.6.1"
+    id("org.jetbrains.kotlinx.kover") version "0.7.5"
 
 }
 
@@ -51,27 +51,24 @@ val riderDotNetObjects: Configuration by configurations.creating {
 }
 
 dependencies {
+
+    //todo: enable instrumentedJar : https://github.com/digma-ai/digma-intellij-plugin/issues/1729
+
     implementation(libs.commons.lang3)
+    implementation(libs.freemarker)
     implementation(project(":model"))
     implementation(project(":analytics-provider"))
     implementation(project(":ide-common"))
     implementation(project(":jvm-common"))
     implementation(project(":python"))
     implementation(project(":rider"))
-// todo: jetbrains recommend using the instrumented jar but there is a bug.
-// https://github.com/digma-ai/digma-intellij-plugin/issues/1017
-//    implementation(project(":ide-common", "instrumentedJar"))
-//    implementation(project(":jvm-common", "instrumentedJar"))
-//    implementation(project(":python", "instrumentedJar"))
-//    implementation(project(":rider", "instrumentedJar"))
-
-
-    implementation(libs.freemarker)
 
     riderDotNetObjects(project(mapOf(
         "path" to ":rider",
         "configuration" to "riderDotNetObjects")))
 }
+
+
 
 
 intellij {
@@ -88,7 +85,7 @@ intellij {
     version.set(platformVersion)
     type.set(platformType)
     plugins.set(platformPlugins)
-    downloadSources.set(project.shouldDownloadSources())
+    downloadSources.set(project.shouldDownloadSources()) //todo: probably not necessary because the default is to check CI env
 
     pluginsRepositories {
         marketplace()
@@ -134,7 +131,6 @@ project.afterEvaluate{
 
 
 tasks {
-
 
     prepareSandbox{
         //copy rider dlls to the plugin sandbox so it is packaged in the zip
@@ -221,11 +217,14 @@ tasks {
         }
     }
 
+
     runIde {
         dependsOn(deleteLog)
 
         //to disable the splash screen on startup because it may interrupt when debugging.
         //args(listOf("nosplash"))
+
+//        jvmArgs("-XX:ReservedCodeCacheSize=512M")
 
         maxHeapSize = "2g"
         // Rider's backend doesn't support dynamic plugins. It might be possible to work with auto-reload of the frontend
@@ -281,6 +280,7 @@ tasks {
 
 
     publishPlugin {
+
         if (System.getenv("PUBLISH_TOKEN") != null) {
             token.set(System.getenv("PUBLISH_TOKEN").trim())
         }
@@ -288,8 +288,9 @@ tasks {
         // the version is based on the SemVer (https://semver.org) and supports pre-release labels, like 2.1.7-alpha.3
         // Specify pre-release label to publish the plugin in a custom Release Channel automatically. Read more:
         // https://plugins.jetbrains.com/docs/intellij/deployment.html#specifying-a-release-channel
-        channels.set(listOf(project.buildVersion().split('-').getOrElse(1) { "default" }
-            .split('.').first()))
+        channels.set(listOf("default"))
+//        channels.set(listOf(project.buildVersion().split('-').getOrElse(1) { "default" }
+//            .split('.').first()))
     }
 
 

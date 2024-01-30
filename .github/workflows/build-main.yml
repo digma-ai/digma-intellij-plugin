@@ -7,7 +7,7 @@ jobs:
   build-workflow:
     strategy:
       matrix:
-        profile: [ p223, p231, p232, p233 ]
+        profile: [ p223, p231, p232, p233, p241 ]
     uses: ./.github/workflows/build-workflow.yml
     with:
       build-profile: ${{ matrix.profile }}
@@ -18,7 +18,7 @@ jobs:
   build-workflow-with-rider:
     strategy:
       matrix:
-        profile: [ p223, p231, p232, p233 ]
+        profile: [ p223, p231, p232, p233, p241 ]
     uses: ./.github/workflows/build-workflow.yml
     with:
       build-profile: ${{ matrix.profile }}
@@ -30,7 +30,7 @@ jobs:
     needs: [ build-workflow,build-workflow-with-rider ]
     strategy:
       matrix:
-        profile: [ p223, p231, p232, p233 ]
+        profile: [ p223, p231, p232, p233, p241 ]
     uses: ./.github/workflows/plugin-verifier-workflow.yml
     with:
       build-profile: ${{ matrix.profile }}

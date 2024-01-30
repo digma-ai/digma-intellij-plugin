@@ -28,8 +28,9 @@ dependencies {
     api(libs.commons.lang3)
     api(libs.commons.collections4)
     api(libs.posthog)
-    api(libs.maven.artifact)
-    api(libs.glovoapp.versioning)
+    api(libs.glovoapp.versioning) {
+        exclude("org.jetbrains.kotlin", "kotlin-stdlib-jdk8")
+    }
 
     implementation(project(":model"))
     implementation(project(":analytics-provider"))

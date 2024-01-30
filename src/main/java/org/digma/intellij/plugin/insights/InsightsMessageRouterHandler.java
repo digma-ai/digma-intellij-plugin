@@ -390,10 +390,12 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
     private void goToTrace(JsonNode jsonNode) throws JsonProcessingException {
 
-        var traceId = objectMapper.readTree(jsonNode.get("payload").toString()).get("trace").get("id").asText();
-        var traceName = objectMapper.readTree(jsonNode.get("payload").toString()).get("trace").get("name").asText();
-        var insightType = objectMapper.readTree(jsonNode.get("payload").toString()).get("insightType").asText();
-        var spanCodeObjectId = objectMapper.readTree(jsonNode.get("payload").toString()).get("spanCodeObjectId").asText();
+        var payload = objectMapper.readTree(jsonNode.get("payload").toString());
+        var traceId = payload.get("trace").get("id").asText();
+        var traceName = payload.get("trace").get("name").asText();
+        var insightType = payload.get("insightType").asText();
+        String spanCodeObjectId = payload.has("spanCodeObjectId")? payload.get("spanCodeObjectId").asText(): null;
+
         InsightsService.getInstance(project).goToTrace(traceId, traceName, InsightType.valueOf(insightType), spanCodeObjectId);
     }
 

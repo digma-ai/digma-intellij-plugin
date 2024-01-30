@@ -87,8 +87,8 @@ public class DocumentsChangeListenerForJavaSpanNavigation implements FileEditorM
                                     return;
                                 }
 
-                                var javaSpanNavigationProvider = project.getService(JavaSpanNavigationProvider.class);
-                                var javaEndpointNavigationProvider = project.getService(JavaEndpointNavigationProvider.class);
+                                var javaSpanNavigationProvider = JavaSpanNavigationProvider.getInstance(project);
+                                var javaEndpointNavigationProvider = JavaEndpointNavigationProvider.getInstance(project);
                                 documentChangeAlarm.cancelAllRequests();
                                 documentChangeAlarm.addRequest(() -> {
                                     try {
@@ -120,10 +120,14 @@ public class DocumentsChangeListenerForJavaSpanNavigation implements FileEditorM
 
     @Override
     public void fileClosed(@NotNull FileEditorManager source, @NotNull VirtualFile file) {
-        var disposable = disposables.remove(file);
-        if (disposable != null) {
-            Log.log(LOGGER::debug, "disposing disposable for file:{}", file);
-            Disposer.dispose(disposable);
+        try {
+            var disposable = disposables.remove(file);
+            if (disposable != null) {
+                Log.log(LOGGER::debug, "disposing disposable for file:{}", file);
+                Disposer.dispose(disposable);
+            }
+        } catch (Throwable e) {
+            ErrorReporter.getInstance().reportError(project, "DocumentsChangeListenerForJavaSpanNavigation.fileClosed", e);
         }
     }
 

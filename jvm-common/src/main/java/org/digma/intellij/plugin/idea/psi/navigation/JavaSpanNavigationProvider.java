@@ -1,13 +1,9 @@
 package org.digma.intellij.plugin.idea.psi.navigation;
 
 import com.intellij.openapi.Disposable;
-import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
-import com.intellij.openapi.progress.EmptyProgressIndicator;
-import com.intellij.openapi.progress.ProgressManager;
-import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.JavaPsiFacade;
@@ -16,7 +12,6 @@ import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.search.GlobalSearchScope;
-import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.search.searches.AnnotatedElementsSearch;
 import com.intellij.psi.search.searches.MethodReferencesSearch;
 import com.intellij.util.Query;
@@ -24,8 +19,9 @@ import kotlin.Pair;
 import org.apache.commons.collections4.CollectionUtils;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.EDT;
-import org.digma.intellij.plugin.common.ReadActions;
-import org.digma.intellij.plugin.common.Retries;
+import org.digma.intellij.plugin.common.RetryUtilsKt;
+import org.digma.intellij.plugin.common.SearchScopeProvider;
+import org.digma.intellij.plugin.common.VfsUtilsKt;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.idea.psi.JvmPsiUtilsKt;
 import org.digma.intellij.plugin.idea.psi.discovery.MicrometerTracingFramework;
@@ -33,6 +29,7 @@ import org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils;
 import org.digma.intellij.plugin.idea.psi.java.JavaSpanDiscoveryUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.SpanInfo;
+import org.digma.intellij.plugin.psi.PsiAccessUtilsKt;
 import org.digma.intellij.plugin.psi.PsiUtils;
 import org.digma.intellij.plugin.ui.service.ErrorsViewService;
 import org.digma.intellij.plugin.ui.service.InsightsViewService;
@@ -44,7 +41,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static org.digma.intellij.plugin.DiscoveryConstantsKt.SPAN_BUILDER_FQN;
@@ -102,7 +98,7 @@ public class JavaSpanNavigationProvider implements Disposable {
 
         try {
             buildSpansLock.lock();
-            Retries.simpleRetry(() -> {
+            RetryUtilsKt.runWIthRetry(() -> {
                 Log.log(LOGGER::info, "Building buildWithSpanAnnotation");
                 buildWithSpanAnnotation(() -> GlobalSearchScope.projectScope(project));
             }, Throwable.class, 100, 5);
@@ -118,7 +114,7 @@ public class JavaSpanNavigationProvider implements Disposable {
 
         try {
             buildSpansLock.lock();
-            Retries.simpleRetry(() -> {
+            RetryUtilsKt.runWIthRetry(() -> {
                 Log.log(LOGGER::info, "Building buildStartSpanMethodCall");
                 buildStartSpanMethodCall(() -> GlobalSearchScope.projectScope(project));
             }, Throwable.class, 100, 5);
@@ -134,7 +130,7 @@ public class JavaSpanNavigationProvider implements Disposable {
 
         try {
             buildSpansLock.lock();
-            Retries.simpleRetry(() -> {
+            RetryUtilsKt.runWIthRetry(() -> {
                 Log.log(LOGGER::info, "Building buildObservedAnnotation");
                 buildObservedAnnotation(() -> GlobalSearchScope.projectScope(project));
             }, Throwable.class, 100, 5);
@@ -162,18 +158,14 @@ public class JavaSpanNavigationProvider implements Disposable {
 
     //callers to this method should be ready for ProcessCanceledException.
     //the search scope is lastly created. so it will be created inside a read action, file search scope must be created in side read access
-    private void buildWithSpanAnnotation(@NotNull Supplier<SearchScope> searchScope) {
+    private void buildWithSpanAnnotation(@NotNull SearchScopeProvider searchScopeProvider) {
 
         if (project.isDisposed() || project.isDefault()) {
             return;
         }
 
-
-        DumbService dumbService = DumbService.getInstance(project);
-
-        PsiClass withSpanClass = Retries.retryWithResult(() -> dumbService.runReadActionInSmartMode(() ->
-                        JavaPsiFacade.getInstance(project).findClass(WITH_SPAN_ANNOTATION_FQN, GlobalSearchScope.allScope(project))),
-                Throwable.class, 50, 5);
+        PsiClass withSpanClass = PsiAccessUtilsKt.runInReadAccessInSmartModeWithResultAndRetry(project, () ->
+                JavaPsiFacade.getInstance(project).findClass(WITH_SPAN_ANNOTATION_FQN, GlobalSearchScope.allScope(project)));
 
 
         //maybe the annotation is not in the classpath
@@ -181,11 +173,11 @@ public class JavaSpanNavigationProvider implements Disposable {
 
             //this section will query for relevant psi methods and return a Collection that can be iterated.
             // iterating directly on Query object may throw a ProcessCanceledException so converting to Collection makes it safer to iterate
-            Collection<PsiMethod> psiMethods = ProgressManager.getInstance().runProcess(() -> Retries.retryWithResult(() -> dumbService.runReadActionInSmartMode(() -> {
-                Query<PsiMethod> psiMethodsQuery = AnnotatedElementsSearch.searchPsiMethods(withSpanClass, searchScope.get());
+            Collection<PsiMethod> psiMethods = PsiAccessUtilsKt.runInReadAccessInSmartModeWithResultAndRetry(project, () -> {
+                Query<PsiMethod> psiMethodsQuery = AnnotatedElementsSearch.searchPsiMethods(withSpanClass, searchScopeProvider.get());
                 psiMethodsQuery = filterNonRelevantMethodsForSpanDiscovery(psiMethodsQuery);
                 return psiMethodsQuery.findAll();
-            }), Throwable.class, 50, 5), new EmptyProgressIndicator());
+            });
 
 
             psiMethods.forEach(psiMethod -> {
@@ -193,14 +185,11 @@ public class JavaSpanNavigationProvider implements Disposable {
                 //on exception the current method is skipped
                 try {
 
-                    List<SpanInfo> spanInfos = Retries.retryWithResult(() ->
-                                    ProgressManager.getInstance().runProcess(() ->
-                                            dumbService.runReadActionInSmartMode(() ->
-                                                    JavaSpanDiscoveryUtils.getSpanInfoFromWithSpanAnnotatedMethod(psiMethod)), new EmptyProgressIndicator())
-                            , Throwable.class, 50, 5);
+                    List<SpanInfo> spanInfos = PsiAccessUtilsKt.runInReadAccessInSmartModeWithResultAndRetry(project, () ->
+                            JavaSpanDiscoveryUtils.getSpanInfoFromWithSpanAnnotatedMethod(psiMethod));
 
                     if (CollectionUtils.isNotEmpty(spanInfos)) {
-                        spanInfos.forEach(spanInfo -> ReadActions.ensureReadAction(() -> {
+                        spanInfos.forEach(spanInfo -> PsiAccessUtilsKt.runInReadAccess(() -> {
                             Log.log(LOGGER::debug, "Found span info {} for method {}", spanInfo.getId(), spanInfo.getContainingMethodId());
                             int offset = psiMethod.getTextOffset();
                             var location = new SpanLocation(spanInfo.getContainingFileUri(), offset);
@@ -218,46 +207,40 @@ public class JavaSpanNavigationProvider implements Disposable {
 
     //callers to this method should be ready for ProcessCanceledException.
     //the search scope is lastly created. so it will be created inside a read action, file search scope must be created in side read access
-    private void buildStartSpanMethodCall(@NotNull Supplier<SearchScope> searchScope) {
+    private void buildStartSpanMethodCall(@NotNull SearchScopeProvider searchScopeProvider) {
 
         if (project.isDisposed() || project.isDefault()) {
             return;
         }
 
-        DumbService dumbService = DumbService.getInstance(project);
-
-        PsiClass tracerBuilderClass = Retries.retryWithResult(() -> dumbService.runReadActionInSmartMode(() ->
-                        JavaPsiFacade.getInstance(project).findClass(SPAN_BUILDER_FQN, GlobalSearchScope.allScope(project))),
-                Throwable.class, 50, 5);
+        PsiClass tracerBuilderClass = PsiAccessUtilsKt.runInReadAccessInSmartModeWithResultAndRetry(project, () ->
+                JavaPsiFacade.getInstance(project).findClass(SPAN_BUILDER_FQN, GlobalSearchScope.allScope(project)));
 
         if (tracerBuilderClass != null) {
 
-            PsiMethod startSpanMethod = Retries.retryWithResult(() -> ReadAction.compute(() -> JavaLanguageUtils.findMethodInClass(tracerBuilderClass, "startSpan", psiMethod -> psiMethod.getParameters().length == 0)), Throwable.class, 50, 5);
+            PsiMethod startSpanMethod = PsiAccessUtilsKt.runInReadAccessWithResult(() -> JavaLanguageUtils.findMethodInClass(tracerBuilderClass, "startSpan", psiMethod -> psiMethod.getParameters().length == 0));
             //must not be null or we have a bug
             Objects.requireNonNull(startSpanMethod, "startSpan method must be found in SpanBuilder class");
 
             //this section will query for relevant psi references and return a Collection that can be iterated.
             // iterating directly on Query object may throw a ProcessCanceledException so converting to Collection makes it safer to iterate
-            Collection<PsiReference> startSpanReferences = ProgressManager.getInstance().runProcess(() -> Retries.retryWithResult(() -> dumbService.runReadActionInSmartMode(() -> {
-                Query<PsiReference> references = MethodReferencesSearch.search(startSpanMethod, searchScope.get(), true);
+            Collection<PsiReference> startSpanReferences = PsiAccessUtilsKt.runInReadAccessInSmartModeWithResultAndRetry(project, () -> {
+                Query<PsiReference> references = MethodReferencesSearch.search(startSpanMethod, searchScopeProvider.get(), true);
                 //filter classes that we don't support,which should not happen but just in case. we don't support Annotations,Enums and Records.
                 references = filterNonRelevantReferencesForSpanDiscovery(references);
                 return references.findAll();
-            }), Throwable.class, 50, 5), new EmptyProgressIndicator());
+            });
 
 
             startSpanReferences.forEach(psiReference -> {
 
                 //on exception the current psiReference is skipped
                 try {
-                    SpanInfo spanInfo = Retries.retryWithResult(() ->
-                                    ProgressManager.getInstance().runProcess(() ->
-                                            dumbService.runReadActionInSmartMode(() ->
-                                                    JavaSpanDiscoveryUtils.getSpanInfoFromStartSpanMethodReference(project, psiReference)), new EmptyProgressIndicator())
-                            , Throwable.class, 50, 5);
+                    SpanInfo spanInfo = PsiAccessUtilsKt.runInReadAccessInSmartModeWithResultAndRetry(project, () ->
+                            JavaSpanDiscoveryUtils.getSpanInfoFromStartSpanMethodReference(project, psiReference));
 
                     if (spanInfo != null) {
-                        ReadActions.ensureReadAction(() -> {
+                        PsiAccessUtilsKt.runInReadAccess(() -> {
                             Log.log(LOGGER::debug, "Found span info {} in method {}", spanInfo.getId(), spanInfo.getContainingMethodId());
                             int lineNumber = psiReference.getElement().getTextOffset();
                             var location = new SpanLocation(spanInfo.getContainingFileUri(), lineNumber);
@@ -275,28 +258,25 @@ public class JavaSpanNavigationProvider implements Disposable {
 
     //callers to this method should be ready for ProcessCanceledException.
     //the search scope is lastly created. so it will be created inside a read action, file search scope must be created in side read access
-    private void buildObservedAnnotation(@NotNull Supplier<SearchScope> searchScope) {
+    private void buildObservedAnnotation(@NotNull SearchScopeProvider searchScopeProvider) {
 
         if (project.isDisposed() || project.isDefault()) {
             return;
         }
 
-        DumbService dumbService = DumbService.getInstance(project);
-
-        PsiClass observedClass = Retries.retryWithResult(() -> dumbService.runReadActionInSmartMode(() ->
-                        JavaPsiFacade.getInstance(project).findClass(MicrometerTracingFramework.OBSERVED_FQN, GlobalSearchScope.allScope(project))),
-                Throwable.class, 50, 5);
+        PsiClass observedClass = PsiAccessUtilsKt.runInReadAccessInSmartModeWithResultAndRetry(project, () ->
+                JavaPsiFacade.getInstance(project).findClass(MicrometerTracingFramework.OBSERVED_FQN, GlobalSearchScope.allScope(project)));
 
         //maybe the annotation is not in the classpath
         if (observedClass != null) {
 
             //this section will query for relevant psi methods and return a Collection that can be iterated.
             // iterating directly on Query object may throw a ProcessCanceledException so converting to Collection makes it safer to iterate
-            Collection<PsiMethod> psiMethods = ProgressManager.getInstance().runProcess(() -> Retries.retryWithResult(() -> dumbService.runReadActionInSmartMode(() -> {
-                Query<PsiMethod> psiMethodsQuery = AnnotatedElementsSearch.searchPsiMethods(observedClass, searchScope.get());
+            Collection<PsiMethod> psiMethods = PsiAccessUtilsKt.runInReadAccessInSmartModeWithResultAndRetry(project, () -> {
+                Query<PsiMethod> psiMethodsQuery = AnnotatedElementsSearch.searchPsiMethods(observedClass, searchScopeProvider.get());
                 psiMethodsQuery = filterNonRelevantMethodsForSpanDiscovery(psiMethodsQuery);
                 return psiMethodsQuery.findAll();
-            }), Throwable.class, 50, 5), new EmptyProgressIndicator());
+            });
 
             var micrometerTracingFramework = new MicrometerTracingFramework();
             psiMethods.forEach(psiMethod -> {
@@ -304,14 +284,11 @@ public class JavaSpanNavigationProvider implements Disposable {
                 //on exception the current psiReference is skipped
                 try {
 
-                    var spanInfo = Retries.retryWithResult(() ->
-                                    ProgressManager.getInstance().runProcess(() ->
-                                            dumbService.runReadActionInSmartMode(() ->
-                                                    micrometerTracingFramework.getSpanInfoFromObservedAnnotatedMethod(psiMethod)), new EmptyProgressIndicator())
-                            , Throwable.class, 50, 5);
+                    var spanInfo = PsiAccessUtilsKt.runInReadAccessInSmartModeWithResultAndRetry(project, () ->
+                            micrometerTracingFramework.getSpanInfoFromObservedAnnotatedMethod(psiMethod));
 
                     if (spanInfo != null) {
-                        ReadActions.ensureReadAction(() -> {
+                        PsiAccessUtilsKt.runInReadAccess(() -> {
                             Log.log(LOGGER::debug, "Found span info {} for method {}", spanInfo.getId(), spanInfo.getContainingMethodId());
                             int offset = psiMethod.getTextOffset();
                             var location = new SpanLocation(spanInfo.getContainingFileUri(), offset);
@@ -346,7 +323,9 @@ public class JavaSpanNavigationProvider implements Disposable {
             }
 
             var virtualFile = FileDocumentManager.getInstance().getFile(document);
-            fileChanged(virtualFile);
+            if (VfsUtilsKt.isValidVirtualFile(virtualFile)) {
+                fileChanged(virtualFile);
+            }
         } catch (Throwable e) {
             Log.warnWithException(LOGGER, e, "Exception in documentChanged");
             ErrorReporter.getInstance().reportError(project, "JavaSpanNavigationProvider.documentChanged", e);
@@ -360,14 +339,14 @@ public class JavaSpanNavigationProvider implements Disposable {
      */
     public void fileChanged(VirtualFile virtualFile) {
 
-        if (project.isDisposed() || virtualFile == null || !virtualFile.isValid()) {
+        if (project.isDisposed() || !VfsUtilsKt.isValidVirtualFile(virtualFile)) {
             return;
         }
 
         Backgroundable.executeOnPooledThread(() -> {
             try {
                 buildSpansLock.lock();
-                if (virtualFile != null && virtualFile.isValid()) {
+                if (VfsUtilsKt.isValidVirtualFile(virtualFile)) {
 
                     //if file moved then removeDocumentSpans will not remove anything but building span locations will
                     // override the entries anyway

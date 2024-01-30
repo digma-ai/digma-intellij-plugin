@@ -80,4 +80,6 @@ constructor(
     @JsonProperty("quantile")
     val quantile: Double? = null
 
+    @JsonProperty("lastDetected")
+    val lastDetected: Date? = null
 }

@@ -708,12 +708,12 @@
   width: 10px;
   height: 10px;
   background: hsl(14deg 66% ${({$score:e})=>100-50*e}%);
-`},75347:function(e,t,n){"use strict";var r=this&&this.__createBinding||(Object.create?function(e,t,n,r){void 0===r&&(r=n);var o=Object.getOwnPropertyDescriptor(t,n);o&&!("get"in o?!t.__esModule:o.writable||o.configurable)||(o={enumerable:!0,get:function(){return t[n]}}),Object.defineProperty(e,r,o)}:function(e,t,n,r){void 0===r&&(r=n),e[r]=t[n]}),o=this&&this.__setModuleDefault||(Object.create?function(e,t){Object.defineProperty(e,"default",{enumerable:!0,value:t})}:function(e,t){e.default=t}),i=this&&this.__importStar||function(e){if(e&&e.__esModule)return e;var t={};if(null!=e)for(var n in e)"default"!==n&&Object.prototype.hasOwnProperty.call(e,n)&&r(t,e,n);return o(t,e),t};Object.defineProperty(t,"__esModule",{value:!0}),t.Select=void 0;const a=n(85893),s=n(67294),l=n(55114),u=n(10542),c=n(41032),d=n(74667),f=n(87536),p=n(5721),h=i(n(50629));t.Select=e=>{const[t,n]=(0,s.useState)(!1),[r,o]=(0,s.useState)(""),i=e.items.filter((e=>e.selected)).map((e=>e.value)),m=e.items.filter((e=>e.label.toLocaleLowerCase().includes(r)));return(0,a.jsx)(c.NewPopover,{sameWidth:!0,content:(0,a.jsxs)(h.MenuContainer,{children:[(0,a.jsxs)(h.SearchInputContainer,{children:[(0,a.jsx)(h.SearchInputIconContainer,{children:(0,a.jsx)(f.MagnifierIcon,{})}),(0,a.jsx)(h.SearchInput,{type:"text",placeholder:"Search",onChange:e=>{o(e.target.value)}})]}),(0,a.jsx)(h.OptionList,{children:m.length>0?m.map((t=>(0,a.jsxs)(h.OptionListItem,{onClick:()=>(t=>{if(t.enabled){const n=e.items.filter((e=>e.selected&&e.value!==t.value)).map((e=>e.value)),r=t.selected?n:[...n,t.value];e.onChange(e.multiselect?r:t.value)}})(t),children:[(0,a.jsx)(u.Checkbox,{value:Boolean(t.selected),label:"",onChange:()=>{},disabled:!t.enabled}),t.label]},t.value))):(0,a.jsx)(h.NoResultsContainer,{children:"No results"})})]}),onOpenChange:n,isOpen:t,placement:"bottom-start",children:(0,a.jsxs)(h.Button,{$isOpen:t,onClick:()=>{n(!t)},children:[(0,l.isString)(e.placeholder)&&(0,a.jsx)(h.ButtonLabel,{children:e.placeholder}),i.length>0&&(0,a.jsx)(h.Number,{children:i.length}),e.counts&&(0,a.jsxs)(h.Counts,{children:[e.counts.filtered<e.counts.total?(0,a.jsx)(h.FilteredCount,{children:e.counts.filtered}):e.counts.filtered,"/",e.counts.total]}),(0,a.jsx)(h.ChevronIconContainer,{children:(0,a.jsx)(d.ChevronIcon,{color:"currentColor",size:14,direction:t?p.Direction.UP:p.Direction.DOWN})})]})})}},50629:function(e,t,n){"use strict";var r=this&&this.__importDefault||function(e){return e&&e.__esModule?e:{default:e}};Object.defineProperty(t,"__esModule",{value:!0}),t.NoResultsContainer=t.OptionListItem=t.OptionList=t.SearchInputIconContainer=t.SearchInput=t.SearchInputContainer=t.MenuContainer=t.ChevronIconContainer=t.FilteredCount=t.Counts=t.Number=t.ButtonLabel=t.Button=void 0;const o=r(n(70394)),i=n(38992);t.Button=o.default.button`
+`},75347:function(e,t,n){"use strict";var r=this&&this.__createBinding||(Object.create?function(e,t,n,r){void 0===r&&(r=n);var o=Object.getOwnPropertyDescriptor(t,n);o&&!("get"in o?!t.__esModule:o.writable||o.configurable)||(o={enumerable:!0,get:function(){return t[n]}}),Object.defineProperty(e,r,o)}:function(e,t,n,r){void 0===r&&(r=n),e[r]=t[n]}),o=this&&this.__setModuleDefault||(Object.create?function(e,t){Object.defineProperty(e,"default",{enumerable:!0,value:t})}:function(e,t){e.default=t}),i=this&&this.__importStar||function(e){if(e&&e.__esModule)return e;var t={};if(null!=e)for(var n in e)"default"!==n&&Object.prototype.hasOwnProperty.call(e,n)&&r(t,e,n);return o(t,e),t};Object.defineProperty(t,"__esModule",{value:!0}),t.Select=void 0;const a=n(85893),s=n(67294),l=n(55114),u=n(10542),c=n(41032),d=n(67873),f=n(74667),p=n(87536),h=n(5721),m=i(n(50629));t.Select=e=>{const[t,n]=(0,s.useState)(!1),[r,o]=(0,s.useState)(""),i=e.items.filter((e=>e.selected)).map((e=>e.value)),g=e.items.filter((e=>e.label.toLocaleLowerCase().includes(r)));return(0,a.jsx)(c.NewPopover,{sameWidth:!0,content:(0,a.jsxs)(m.MenuContainer,{children:[(0,a.jsxs)(m.SearchInputContainer,{children:[(0,a.jsx)(m.SearchInputIconContainer,{children:(0,a.jsx)(p.MagnifierIcon,{})}),(0,a.jsx)(m.SearchInput,{type:"text",placeholder:"Search",onChange:e=>{o(e.target.value)}})]}),(0,a.jsx)(m.OptionList,{children:g.length>0?g.map((t=>(0,a.jsxs)(m.OptionListItem,{onClick:()=>(t=>{if(!t.enabled)return;const n=e.items.filter((e=>e.selected&&e.value!==t.value)).map((e=>e.value)),r=t.selected?n:[...n,t.value];e.onChange(e.multiselect?r:t.value)})(t),$enabled:t.enabled,$selected:t.selected,children:[(0,a.jsx)(u.Checkbox,{value:Boolean(t.selected),label:"",onChange:()=>{},disabled:!t.enabled}),(0,a.jsx)(d.Tooltip,{title:t.label,children:(0,a.jsx)(m.OptionListItemLabel,{children:t.label})})]},t.value))):(0,a.jsx)(m.NoResultsContainer,{children:"No results"})})]}),onOpenChange:n,isOpen:t,placement:"bottom-start",children:(0,a.jsxs)(m.Button,{$isActive:t,onClick:()=>{n(!t)},children:[(0,l.isString)(e.placeholder)&&(0,a.jsx)(m.ButtonLabel,{$isActive:t,children:e.placeholder}),i.length>0&&(0,a.jsx)(m.Number,{children:i.length}),e.counts&&(0,a.jsxs)(m.Counts,{children:[e.counts.filtered<e.counts.total?(0,a.jsx)(m.FilteredCount,{children:e.counts.filtered}):e.counts.filtered,"/",e.counts.total]}),(0,a.jsx)(m.ChevronIconContainer,{children:(0,a.jsx)(f.ChevronIcon,{color:"currentColor",size:14,direction:t?h.Direction.UP:h.Direction.DOWN})})]})})}},50629:function(e,t,n){"use strict";var r=this&&this.__importDefault||function(e){return e&&e.__esModule?e:{default:e}};Object.defineProperty(t,"__esModule",{value:!0}),t.NoResultsContainer=t.OptionListItemLabel=t.OptionListItem=t.OptionList=t.SearchInputIconContainer=t.SearchInput=t.SearchInputContainer=t.MenuContainer=t.ChevronIconContainer=t.FilteredCount=t.Counts=t.Number=t.ButtonLabel=t.Button=void 0;const o=r(n(70394)),i=n(38992);t.Button=o.default.button`
   border: 1px solid
-    ${({theme:e,$isOpen:t})=>t?e.colors.stroke.brand:e.colors.stroke.primary};
+    ${({theme:e,$isActive:t})=>t?e.colors.stroke.brand:e.colors.stroke.primary};
   background: ${({theme:e})=>e.colors.surface.secondary};
   border-radius: 4px;
-  padding: 4px 6px 4px 4px;
+  padding: 4px 8px;
   display: flex;
   gap: 6px;
   align-items: center;
@@ -730,12 +730,12 @@
     border: 1px solid ${({theme:e})=>e.colors.stroke.brand};
   }
 `,t.ButtonLabel=o.default.span`
-  display: flex;
-  gap: 4px;
-  align-items: center;
-  font-size: 14px;
-  color: ${({theme:e})=>e.colors.text.base};
   margin-right: auto;
+  font-weight: 500;
+  color: ${({theme:e,$isActive:t})=>t?i.primaryScale[100]:e.colors.select.menu.text.primary};
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
 `,t.Number=o.default.span`
   display: flex;
   justify-content: center;
@@ -752,6 +752,7 @@
 `,t.FilteredCount=o.default.span`
   color: ${i.primaryScale[200]};
 `,t.ChevronIconContainer=o.default.span`
+  display: flex;
   color: ${({theme:e})=>e.colors.icon.primary};
 `,t.MenuContainer=o.default.div`
   padding: 4px;
@@ -792,15 +793,21 @@
   gap: 4px;
   padding: 0;
   margin: 0;
-  overflow-y: auto;
   font-size: 14px;
+  overflow: hidden;
+  overflow-y: auto;
 `,t.OptionListItem=o.default.li`
   display: flex;
   padding: 4px 8px;
   align-items: center;
   gap: 6px;
   align-self: stretch;
-  cursor: pointer;
+  cursor: ${({$enabled:e})=>e?"pointer":"default"};
+  color: ${({theme:e,$selected:t,$enabled:n})=>{if(!n)switch(e.mode){case"light":return"#dadada";case"dark":case"dark-jetbrains":return"#49494d"}return t?i.primaryScale[100]:e.colors.select.menu.text.primary}};
+`,t.OptionListItemLabel=o.default.span`
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
 `,t.NoResultsContainer=o.default.div`
   display: flex;
   align-items: center;

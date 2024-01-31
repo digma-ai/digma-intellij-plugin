@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-    <configuration default="false" name="Run IDEA Ultimate - 20241" type="GradleRunConfiguration" factoryName="Gradle">
+    <configuration default="false" name="Run IDEA Ultimate - 2024.1" type="GradleRunConfiguration" factoryName="Gradle">
         <log_file alias="idea.log" path="$PROJECT_DIR$/build/idea-sandbox/system/log/idea_IU.log"/>
         <ExternalSystemSettings>
             <option name="executionName"/>

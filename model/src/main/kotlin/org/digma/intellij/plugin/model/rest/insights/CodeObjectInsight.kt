@@ -66,6 +66,7 @@ interface CodeObjectInsight {
     val deactivatedCommitId: String?
     val reopenCount: Int
     val ticketLink: String?
+    val lastDetected: Date?
 
     fun hasDecorators(): Boolean {
         return !decorators.isNullOrEmpty()

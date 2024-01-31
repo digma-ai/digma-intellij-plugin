@@ -32,7 +32,8 @@ data class SpanUsagesInsight
         "deactivatedCommitId",
         "reopenCount",
         "ticketLink",
-        "firstDetected"
+        "firstDetected",
+        "lastDetected"
 )
 constructor(
         override val codeObjectId: String,
@@ -59,6 +60,7 @@ constructor(
         override val reopenCount: Int,
         override val ticketLink: String?,
         override val firstDetected: Date?,
+        override val lastDetected: Date?,
 ) : SpanInsight {
 
     override val type: InsightType = InsightType.SpanUsages

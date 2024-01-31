@@ -31,7 +31,8 @@ data class HotspotInsight
         "deactivatedCommitId",
         "reopenCount",
         "firstDetected",
-        "ticketLink"
+        "ticketLink",
+        "lastDetected"
 )
 constructor(
         override val codeObjectId: String,
@@ -56,6 +57,7 @@ constructor(
         override val reopenCount: Int,
         override val firstDetected: Date?,
         override val ticketLink: String?,
+        override val lastDetected: Date?,
 ) : CodeObjectInsight {
 
     override val type: InsightType = InsightType.HotSpot

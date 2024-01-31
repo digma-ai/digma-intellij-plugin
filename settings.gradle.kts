@@ -17,9 +17,11 @@ pluginManagement {
                 val rdGenVersion = if (settings.providers.gradleProperty("buildProfile").isPresent) {
                     val profile = settings.providers.gradleProperty("buildProfile").get()
                     when (profile) {
+                        "p223", "lowest" -> "2023.2.0"
                         "p231" -> "2023.2.0"
-                        "p232", "latest" -> "2023.2.2"
-                        "p233", "eap" -> "2023.3.2"
+                        "p232" -> "2023.2.2"
+                        "p233", "latest" -> "2023.3.2"
+                        "p241", "eap" -> "2023.3.2"
                         else -> "2023.2.0"
                     }
                 } else {
@@ -34,6 +36,10 @@ pluginManagement {
     }
 }
 
+
+plugins {
+    id("org.gradle.toolchains.foojay-resolver-convention") version ("0.7.0")
+}
 
 /*
 kotlin-stdlib: the kotlin-stdlib must be compatible with the intellij platform version,

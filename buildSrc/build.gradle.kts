@@ -11,9 +11,8 @@ repositories {
 }
 
 dependencies {
-    //todo: 1.14.2 has a bug that posthog token url file is empty, check that before upgrading gradle-intellij-plugin
-    implementation("org.jetbrains.intellij.plugins:gradle-intellij-plugin:1.15.0")
-    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.22")
+    implementation("org.jetbrains.intellij.plugins:gradle-intellij-plugin:1.17.0")
+    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.21")
     implementation("com.glovoapp.gradle:versioning:1.1.10")
     implementation("de.undercouch:gradle-download-task:5.4.0")
 }

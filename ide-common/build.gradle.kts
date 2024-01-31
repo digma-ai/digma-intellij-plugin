@@ -28,7 +28,11 @@ dependencies {
     api(libs.commons.lang3)
     api(libs.commons.collections4)
     api(libs.posthog)
+    api(libs.maven.artifact)
     api(libs.glovoapp.versioning) {
+        //must exclude kotlin stdlib otherwise it will be packaged with the plugin and that is not necessary
+        // and not advisable because the IDE already has it. if included it will overrdie the bersion that
+        // comes with the IDE
         exclude("org.jetbrains.kotlin", "kotlin-stdlib-jdk8")
     }
 

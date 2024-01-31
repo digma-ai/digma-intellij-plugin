@@ -67,7 +67,10 @@ dependencies {
         "path" to ":rider",
         "configuration" to "riderDotNetObjects")))
 }
-
+//todo: exclude kotlin-stdlib from all
+//configurations.all{
+//    exclude(a)
+//}
 
 
 

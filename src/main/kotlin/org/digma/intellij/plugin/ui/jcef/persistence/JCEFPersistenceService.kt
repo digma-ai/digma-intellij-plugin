@@ -1,13 +1,18 @@
 package org.digma.intellij.plugin.ui.jcef.persistence
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
+import com.intellij.util.xmlb.Converter
+import com.intellij.util.xmlb.annotations.Attribute
+import com.intellij.util.xmlb.annotations.XMap
 import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import org.digma.intellij.plugin.ui.jcef.createObjectMapper
 import org.digma.intellij.plugin.ui.jcef.model.ErrorPayload
 import org.digma.intellij.plugin.ui.jcef.model.GetFromPersistenceRequest
 import org.digma.intellij.plugin.ui.jcef.model.SaveToPersistenceRequest
@@ -35,17 +40,27 @@ class JCEFPersistenceService(private val project: Project) {
     }
 
     private fun getFromProjectPersistence(browser: CefBrowser, fromPersistenceRequest: GetFromPersistenceRequest) {
-        val value = JCEFProjectPersistence.getInstance(project).get(PersistenceKey(fromPersistenceRequest.payload.key))
-        sendPersistenceValue(browser, fromPersistenceRequest, value)
+        try {
+            val value = JCEFProjectPersistence.getInstance(project).get(fromPersistenceRequest.payload.key)
+            sendPersistenceValue(browser, fromPersistenceRequest, value)
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError("JCEFPersistenceService.getFromProjectPersistence", e)
+            sendError(fromPersistenceRequest.payload.key, fromPersistenceRequest.payload.scope, e, browser)
+        }
     }
 
     private fun getFromApplicationPersistence(browser: CefBrowser, fromPersistenceRequest: GetFromPersistenceRequest) {
-        val value = JCEFApplicationPersistence.getInstance().get(PersistenceKey(fromPersistenceRequest.payload.key))
-        sendPersistenceValue(browser, fromPersistenceRequest, value)
+        try {
+            val value = JCEFApplicationPersistence.getInstance().get(fromPersistenceRequest.payload.key)
+            sendPersistenceValue(browser, fromPersistenceRequest, value)
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError("JCEFPersistenceService.getFromApplicationPersistence", e)
+            sendError(fromPersistenceRequest.payload.key, fromPersistenceRequest.payload.scope, e, browser)
+        }
     }
 
 
-    private fun sendPersistenceValue(browser: CefBrowser, fromPersistenceRequest: GetFromPersistenceRequest, value: String?) {
+    private fun sendPersistenceValue(browser: CefBrowser, fromPersistenceRequest: GetFromPersistenceRequest, value: JsonNode?) {
 
         try {
             val message = SetFromPersistenceMessage(
@@ -58,33 +73,44 @@ class JCEFPersistenceService(private val project: Project) {
             serializeAndExecuteWindowPostMessageJavaScript(browser, message)
         } catch (e: Throwable) {
             ErrorReporter.getInstance().reportError("JCEFPersistenceService.sendPersistenceValue", e)
-            val message = SetFromPersistenceMessage(
-                SetFromPersistenceMessagePayload(
-                    fromPersistenceRequest.payload.key,
-                    null,
-                    fromPersistenceRequest.payload.scope, ErrorPayload(e.toString())
-                )
-            )
-            serializeAndExecuteWindowPostMessageJavaScript(browser, message)
+            sendError(fromPersistenceRequest.payload.key, fromPersistenceRequest.payload.scope, e, browser)
         }
     }
 
+
+    private fun sendError(key: String, scope: Scope, e: Throwable, browser: CefBrowser) {
+        val message = SetFromPersistenceMessage(
+            SetFromPersistenceMessagePayload(
+                key,
+                null,
+                scope, ErrorPayload(e.toString())
+            )
+        )
+        serializeAndExecuteWindowPostMessageJavaScript(browser, message)
+    }
+
+
     fun saveToPersistence(saveToPersistenceRequest: SaveToPersistenceRequest) {
-        when (saveToPersistenceRequest.payload.scope) {
-            Scope.application -> {
-                JCEFProjectPersistence.getInstance(project).set(
-                    PersistenceKey(saveToPersistenceRequest.payload.key),
-                    saveToPersistenceRequest.payload.value
-                )
-            }
 
-            Scope.project -> {
-                JCEFApplicationPersistence.getInstance().set(
-                    PersistenceKey(saveToPersistenceRequest.payload.key),
-                    saveToPersistenceRequest.payload.value
-                )
+        try {
+            when (saveToPersistenceRequest.payload.scope) {
+                Scope.application -> {
+                    JCEFApplicationPersistence.getInstance().set(
+                        saveToPersistenceRequest.payload.key,
+                        saveToPersistenceRequest.payload.value
+                    )
+                }
 
+                Scope.project -> {
+                    JCEFProjectPersistence.getInstance(project).set(
+                        saveToPersistenceRequest.payload.key,
+                        saveToPersistenceRequest.payload.value
+                    )
+
+                }
             }
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError("JCEFPersistenceService.saveToPersistence", e)
         }
     }
 }
@@ -129,20 +155,49 @@ abstract class JCEFPersistence : PersistentStateComponent<JCEFPersistenceState> 
         persistenceState = state
     }
 
-
-    fun get(key: PersistenceKey): String? {
-        return persistenceState.state[key.key]
+    fun get(key: String): JsonNode? {
+        return get(PersistenceKey(key))?.value
     }
 
-    fun set(key: PersistenceKey, value: String) {
-        persistenceState.state[key.key] = value
+    private fun get(key: PersistenceKey): PersistenceValue? {
+        return persistenceState.state[key]
+    }
+
+    fun set(key: String, value: JsonNode) {
+        set(PersistenceKey(key), PersistenceValue(value))
+    }
+
+    private fun set(key: PersistenceKey, value: PersistenceValue) {
+        persistenceState.state[key] = value
     }
 
 }
 
-class JCEFPersistenceState {
+data class JCEFPersistenceState(
+    @get:XMap
+    val state: MutableMap<PersistenceKey, PersistenceValue> = mutableMapOf(),
+)
 
-    val state = mutableMapOf<String, String>()
+data class PersistenceKey(
+    @Attribute(value = "key")
+    val key: String = "",
+)
+
+data class PersistenceValue(
+    @Attribute(value = "filter", converter = JsonNodeConverter::class)
+    val value: JsonNode? = null,
+)
+
+
+internal class JsonNodeConverter : Converter<JsonNode>() {
+
+    private val objectMapper = createObjectMapper()
+
+    override fun toString(value: JsonNode): String? {
+        return objectMapper.writeValueAsString(value)
+    }
+
+    override fun fromString(value: String): JsonNode? {
+        return objectMapper.readTree(value)
+    }
 }
-
-class PersistenceKey(val key: String)

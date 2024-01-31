@@ -70,7 +70,7 @@ fun Project.currentProfile(): BuildProfile = BuildProfiles.currentProfile(this)
 
 object BuildProfiles {
 
-    enum class Profiles { p223, p231, p232, p233 }
+    enum class Profiles { p223, p231, p232, p233, p241 }
 
     fun currentProfile(project: Project): BuildProfile {
 
@@ -91,8 +91,8 @@ object BuildProfiles {
     //update as new profiles are added or removed
     private val profileAliases = mapOf(
         "lowest" to Profiles.p223.name,
-        "latest" to Profiles.p232.name,
-        "eap" to Profiles.p233.name,
+        "latest" to Profiles.p233.name,
+        "eap" to Profiles.p241.name,
     )
 
 
@@ -102,6 +102,10 @@ object BuildProfiles {
     //https://plugins.jetbrains.com/plugin/7322-python-community-edition/versions/stable
     //./gradlew clean buildPlugin -PbuildProfile=p233
 
+    //todo: check products releases file, can be used to automatically update the profiles
+    // https://www.jetbrains.com/updates/updates.xml
+    // IntelliJPluginConstants.IDEA_PRODUCTS_RELEASES_URL
+    // https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html#tasks-listproductsreleases
 
     private val profiles = mapOf(
 
@@ -157,41 +161,39 @@ object BuildProfiles {
         Profiles.p233 to BuildProfile(
 
             profile = Profiles.p233,
-            platformVersion = "2023.3.2",
-            riderVersion = "2023.3.2",
-            pycharmVersion = "2023.3.2",
-            riderResharperVersion = "2023.3.2",
+            platformVersion = "2023.3.3",
+            riderVersion = "2023.3.3",
+            pycharmVersion = "2023.3.3",
+            riderResharperVersion = "2023.3.3",
             riderResharperVersionConstant = "PROFILE_2023_2",
-            pythonPluginVersion = "233.13135.103",
+            pythonPluginVersion = "233.14015.106",
             platformVersionCode = "233",
             pluginSinceBuild = "233",
             pluginUntilBuild = "233.*",
-            versionToRunPluginVerifier = "2023.3.2",
-            kotlinTarget = KotlinVersion.KOTLIN_1_8.version,
+            versionToRunPluginVerifier = "2023.3.3",
+            kotlinTarget = KotlinVersion.KOTLIN_1_9.version,
             javaVersion = JavaVersion.VERSION_17.majorVersion
         ),
 
         //next EAP
-//        Profiles.p241 to BuildProfile(
-//
-//            profile = Profiles.p241,
-//            isEAP = true,
-//            // platformVersion is for Intellij IDEA Community and Ultimate
-//            platformVersion = "2023.3.1",
-//            riderVersion = "2023.3.1",
-//            pycharmVersion = "2023.3.1",
-//            riderResharperVersion = "2023.3.1",
-//            riderResharperVersionConstant = "PROFILE_2023_2",
-//            pythonPluginVersion = "233.13135.65",
-//            platformVersionCode = "233",
-//            pluginSinceBuild = "233",
-//            pluginUntilBuild = "233.*",
-//            versionToRunPluginVerifier = "2023.3.1",
-//            kotlinTarget = KotlinVersion.KOTLIN_1_8.version,
-//            javaVersion = JavaVersion.VERSION_17.majorVersion
-//        )
+        Profiles.p241 to BuildProfile(
 
-
+            profile = Profiles.p241,
+            isEAP = true,
+//            platformVersion = "LATEST-EAP-SNAPSHOT",
+            platformVersion = "241.9959-EAP-CANDIDATE-SNAPSHOT",
+            riderVersion = "2024.1-EAP2-SNAPSHOT",
+            pycharmVersion = "241-EAP-SNAPSHOT",
+            riderResharperVersion = "2024.1-eap02",
+            riderResharperVersionConstant = "PROFILE_2023_2",
+            pythonPluginVersion = "241.9959.31",
+            platformVersionCode = "241",
+            pluginSinceBuild = "241",
+            pluginUntilBuild = "241.*",
+            versionToRunPluginVerifier = "2024.1",
+            kotlinTarget = KotlinVersion.KOTLIN_1_8.version, //todo: maybe need to upgrade to 20
+            javaVersion = JavaVersion.VERSION_17.majorVersion,
+        )
     )
 
 }

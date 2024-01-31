@@ -8,9 +8,24 @@ plugins {
 }
 
 java {
+    @Suppress("UnstableApiUsage")
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(project.currentProfile().javaVersion))
-//        languageVersion.set(JavaLanguageVersion.of(properties("javaVersion", project)))
+        //it is possible to use jetbrains runtime for toolchain but then
+        // runIde will use this runtime to run the development instance and that is not ideal,
+        // it's better to run the development instance with the bundled runtime.
+
+        //todo: but because of this issue
+        // https://github.com/JetBrains/gradle-intellij-plugin/issues/1534
+        // we currently must run the 241 development instance with JBR 17, until the issue is fixed
+        // another issue is that runIde changes the test task executable to the bundled JBR, so when
+        // building with 241 some of our tests will fail.
+
+        vendor = JvmVendorSpec.JETBRAINS
+
+        //there is not real need for vendor, any jdk should compile the project correctly.
+        //amazon is recommended by jetbrains
+        //vendor = JvmVendorSpec.IBM
     }
 }
 
@@ -60,20 +75,20 @@ tasks {
     withType<JavaCompile> {
 
         doFirst {
-            logger.lifecycle("Compiling java with release:${options.release.get()}")
+            logger.lifecycle("Compiling java with release:${options.release.get()}, compiler:${javaCompiler.get().executablePath}")
         }
 
         options.compilerArgs.addAll(listOf("-Xlint:unchecked,deprecation"))
         options.release.set(JavaLanguageVersion.of(project.currentProfile().javaVersion).asInt())
-//        options.release.set(JavaLanguageVersion.of(properties("javaVersion", project)).asInt())
     }
 
 
     //configuration of test tasks logging
     withType<Test> {
         doFirst {
-            logger.lifecycle("${project.name}:${name}: testing java with {}", javaLauncher.get().executablePath)
+            logger.lifecycle("${project.name}:${name}: Testing java with {}", javaLauncher.get().executablePath)
         }
+
 
         addTestListener(object : TestListener {
             override fun beforeTest(testDescriptor: TestDescriptor) {}

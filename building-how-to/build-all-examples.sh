@@ -10,11 +10,15 @@ set -e
 ./gradlew clean buildPlugin -PbuildProfile=p223
 ./gradlew clean buildPlugin -PbuildProfile=p231
 ./gradlew clean buildPlugin -PbuildProfile=p232
+./gradlew clean buildPlugin -PbuildProfile=p233
+./gradlew clean buildPlugin -PbuildProfile=p241
 
 ## to run ide from command line
 ./gradlew clean buildPlugin runIde
 ./gradlew clean buildPlugin runIde -PbuildProfile=p231
 ./gradlew clean buildPlugin runIde -PbuildProfile=p232
+./gradlew clean buildPlugin runIde -PbuildProfile=p233
+./gradlew clean buildPlugin runIde -PbuildProfile=p241
 
 
 ## run idea community with python plugin installed , this is for testing that digma functions correctly
@@ -23,6 +27,8 @@ set -e
 ./gradlew clean runIde -PplatformPlugins=com.intellij.java,PythonCore:223.7571.182 -PbuildProfile=p223
 ./gradlew clean runIde -PplatformPlugins=com.intellij.java,PythonCore:231.8770.65 -PbuildProfile=p231
 ./gradlew clean runIde -PplatformPlugins=com.intellij.java,PythonCore:232.8660.48 -PbuildProfile=p232
+./gradlew clean runIde -PplatformPlugins=com.intellij.java,PythonCore:232.8660.48 -PbuildProfile=p233
+./gradlew clean runIde -PplatformPlugins=com.intellij.java,PythonCore:232.8660.48 -PbuildProfile=p241
 
 
 ###################### idea ultimate
@@ -30,11 +36,15 @@ set -e
 ./gradlew clean buildPlugin -PbuildWIthUltimate=true
 ./gradlew clean buildPlugin -PbuildWIthUltimate=true -PbuildProfile=p231
 ./gradlew clean buildPlugin -PbuildWIthUltimate=true -PbuildProfile=p232
+./gradlew clean buildPlugin -PbuildWIthUltimate=true -PbuildProfile=p233
+./gradlew clean buildPlugin -PbuildWIthUltimate=true -PbuildProfile=p241
 
 ## to run ide from command line
 ./gradlew clean buildPlugin runIde -PbuildWIthUltimate=true
 ./gradlew clean buildPlugin runIde -PbuildWIthUltimate=true -PbuildProfile=p231
 ./gradlew clean buildPlugin runIde -PbuildWIthUltimate=true -PbuildProfile=p232
+./gradlew clean buildPlugin runIde -PbuildWIthUltimate=true -PbuildProfile=p233
+./gradlew clean buildPlugin runIde -PbuildWIthUltimate=true -PbuildProfile=p241
 
 
 

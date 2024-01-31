@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.ui.jcef.model
 
 import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.databind.JsonNode
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
 import java.beans.ConstructorProperties
 
@@ -20,7 +21,7 @@ constructor(
 class SaveToPersistencePayload
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 @ConstructorProperties("key", "value", "scope")
-constructor(val key: String, val value: String, val scope: Scope)
+constructor(val key: String, val value: JsonNode, val scope: Scope)
 
 
 class GetFromPersistenceRequest
@@ -42,4 +43,4 @@ class SetFromPersistenceMessage(val payload: SetFromPersistenceMessagePayload) {
     val action = JCefMessagesUtils.GLOBAL_SET_FROM_PERSISTENCE
 }
 
-class SetFromPersistenceMessagePayload(val key: String, val value: String?, val scope: Scope, val error: ErrorPayload? = null)
+class SetFromPersistenceMessagePayload(val key: String, val value: JsonNode?, val scope: Scope, val error: ErrorPayload? = null)

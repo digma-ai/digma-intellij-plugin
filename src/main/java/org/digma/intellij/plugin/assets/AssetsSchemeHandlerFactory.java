@@ -6,6 +6,7 @@ import org.cef.browser.CefFrame;
 import org.cef.callback.CefSchemeHandlerFactory;
 import org.cef.handler.CefResourceHandler;
 import org.cef.network.CefRequest;
+import org.digma.intellij.plugin.ui.assets.AssetsConstantsKt;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.MalformedURLException;
@@ -26,12 +27,12 @@ class AssetsSchemeHandlerFactory implements CefSchemeHandlerFactory {
             var file = url.getFile();
             if (AssetsService.DOMAIN_NAME.equals(host) &&
                     AssetsService.SCHEMA_NAME.equals(schemeName)) {
-                var resourceName = AssetsService.RESOURCE_FOLDER_NAME + file;
+                var resourceName = AssetsConstantsKt.ASSETS_APP_RESOURCE_FOLDER_NAME + file;
                 var resource = getClass().getResource(resourceName);
                 if (resource != null) {
                     return new AssetsResourceHandler(project, resourceName);
                 } else {
-                    return new AssetsResourceHandler(project, AssetsService.RESOURCE_FOLDER_NAME + "/index.html");
+                    return new AssetsResourceHandler(project, AssetsConstantsKt.ASSETS_APP_RESOURCE_FOLDER_NAME + "/index.html");
                 }
             }
         }

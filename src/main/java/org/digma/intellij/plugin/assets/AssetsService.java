@@ -23,6 +23,7 @@ import org.digma.intellij.plugin.insights.InsightsViewOrchestrator;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.posthog.MonitoredPanel;
+import org.digma.intellij.plugin.ui.assets.AssetsIndexTemplateBuilder;
 import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier;
 import org.digma.intellij.plugin.ui.settings.SettingsChangeListener;
 import org.digma.intellij.plugin.ui.settings.Theme;
@@ -41,7 +42,7 @@ public final class AssetsService implements Disposable {
 
     private final Project project;
 
-    static final String RESOURCE_FOLDER_NAME = "/webview/assets";
+
     static final String DOMAIN_NAME = "assets";
     static final String SCHEMA_NAME = "http";
 

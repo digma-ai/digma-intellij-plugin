@@ -15,26 +15,9 @@
     <div id="root"></div>
     <!-- Environment variables -->
     <script>
-      window.theme = "${theme}";
-      window.platform = "JetBrains";
-      window.ide = "${ide}";
-      window.mainFont = "${mainFont}";
-      window.codeFont = "${codeFont}";
-      window.isJaegerEnabled= ${isJaegerEnabled?string('true', 'false')};
-      window.userEmail = "${userEmail}";
-      window.isObservabilityEnabled = ${isObservabilityEnabled?string('true', 'false')};
-      window.isDigmaEngineInstalled = ${isDigmaEngineInstalled?string('true', 'false')};
-      window.isDigmaEngineRunning = ${isDigmaEngineRunning?string('true', 'false')};
-      window.isDockerInstalled = ${isDockerInstalled?string('true', 'false')};
-      window.isDockerComposeInstalled = ${isDockerComposeInstalled?string('true', 'false')};
+      @GLOBAL_ENV_VARS@
 
-      <#if assetsSelectedServices??>
       window.assetsSelectedServices = ${assetsSelectedServices?json_string};
-      <#else>
-      window.assetsSelectedServices = [];
-      </#if>
-
-      window.environment = "${environment}";
       window.assetsSearch = ${assetsSearch};
       window.assetsRefreshInterval;
 

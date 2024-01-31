@@ -33,7 +33,10 @@ import org.digma.intellij.plugin.model.rest.jcef.common.SendTrackingEventRequest
 import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
+import org.digma.intellij.plugin.ui.jcef.model.GetFromPersistenceRequest;
 import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest;
+import org.digma.intellij.plugin.ui.jcef.model.SaveToPersistenceRequest;
+import org.digma.intellij.plugin.ui.jcef.persistence.JCEFPersistenceService;
 import org.digma.intellij.plugin.ui.settings.Theme;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -45,6 +48,7 @@ import java.util.Objects;
 
 import static org.digma.intellij.plugin.common.StopWatchUtilsKt.stopWatchStart;
 import static org.digma.intellij.plugin.common.StopWatchUtilsKt.stopWatchStop;
+import static org.digma.intellij.plugin.ui.jcef.JCefBrowserUtilsKt.jsonToObject;
 import static org.digma.intellij.plugin.ui.jcef.JCefBrowserUtilsKt.serializeAndExecuteWindowPostMessageJavaScript;
 
 class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
@@ -111,6 +115,14 @@ class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
                         if (trackingRequest != null && trackingRequest.getPayload() != null) {
                             ActivityMonitor.getInstance(project).registerCustomEvent(trackingRequest.getPayload().getEventName(), trackingRequest.getPayload().getData());
                         }
+                    }
+                    case JCefMessagesUtils.GLOBAL_SAVE_TO_PERSISTENCE -> {
+                        SaveToPersistenceRequest saveToPersistenceRequest = jsonToObject(request, SaveToPersistenceRequest.class);
+                        JCEFPersistenceService.getInstance(project).saveToPersistence(saveToPersistenceRequest);
+                    }
+                    case JCefMessagesUtils.GLOBAL_GET_FROM_PERSISTENCE -> {
+                        GetFromPersistenceRequest getFromPersistenceRequest = jsonToObject(request, GetFromPersistenceRequest.class);
+                        JCEFPersistenceService.getInstance(project).getFromPersistence(browser, getFromPersistenceRequest);
                     }
 
                     default -> throw new IllegalStateException("Unexpected value: " + action);

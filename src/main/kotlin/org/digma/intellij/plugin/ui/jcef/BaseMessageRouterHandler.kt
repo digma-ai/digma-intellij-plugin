@@ -22,8 +22,11 @@ import org.digma.intellij.plugin.model.rest.jcef.common.SendTrackingEventRequest
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
+import org.digma.intellij.plugin.ui.jcef.model.GetFromPersistenceRequest
 import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest
 import org.digma.intellij.plugin.ui.jcef.model.OpenInInternalBrowserRequest
+import org.digma.intellij.plugin.ui.jcef.model.SaveToPersistenceRequest
+import org.digma.intellij.plugin.ui.jcef.persistence.JCEFPersistenceService
 
 abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouterHandlerAdapter() {
 
@@ -110,6 +113,16 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
                                 ActivityMonitor.getInstance(project).registerCustomEvent(pl.eventName, pl.data)
                             }
                         }
+                    }
+
+                    JCefMessagesUtils.GLOBAL_SAVE_TO_PERSISTENCE -> {
+                        val saveToPersistenceRequest = jsonToObject(request, SaveToPersistenceRequest::class.java)
+                        JCEFPersistenceService.getInstance(project).saveToPersistence(saveToPersistenceRequest);
+                    }
+
+                    JCefMessagesUtils.GLOBAL_GET_FROM_PERSISTENCE -> {
+                        val getFromPersistenceRequest = jsonToObject(request, GetFromPersistenceRequest::class.java)
+                        JCEFPersistenceService.getInstance(project).getFromPersistence(browser, getFromPersistenceRequest);
                     }
 
                     else -> {

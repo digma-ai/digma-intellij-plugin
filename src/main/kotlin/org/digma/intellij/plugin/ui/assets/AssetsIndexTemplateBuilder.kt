@@ -15,7 +15,7 @@ class AssetsIndexTemplateBuilder : BaseIndexTemplateBuilder(ASSETS_APP_RESOURCE_
 
     override fun addAppSpecificEnvVariable(project: Project, data: HashMap<String, Any>) {
 
-        val assetSearchEnabledForLinux: Boolean = VersionComparatorUtil.compare(ApplicationInfo.getInstance().getMajorVersion(), "2023") >= 0
+        val assetSearchEnabledForLinux: Boolean = VersionComparatorUtil.compare(ApplicationInfo.getInstance().majorVersion, "2023") >= 0
         data[ASSET_SEARCH_ENV_NAME] = if (SystemInfo.isLinux) assetSearchEnabledForLinux.toString() else "true"
 
         val selectedServices = PersistenceService.getInstance().getSelectedServices()[project.name]
@@ -25,5 +25,4 @@ class AssetsIndexTemplateBuilder : BaseIndexTemplateBuilder(ASSETS_APP_RESOURCE_
             data[SELECTED_SERVICES_VARIABLE] = "['${selectedServices.joinToString("','")}']"
         }
     }
-
 }

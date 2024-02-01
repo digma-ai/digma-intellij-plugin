@@ -43,6 +43,7 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
                 val environments = project.service<AnalyticsService>().environment.getEnvironments()
                 project.service<LiveViewUpdater>().appInitialized()
                 project.service<RecentActivityUpdater>().updateLatestActivities(environments)
+                doCommonInitialize(browser)
             }
 
             "RECENT_ACTIVITY/GO_TO_SPAN" -> {

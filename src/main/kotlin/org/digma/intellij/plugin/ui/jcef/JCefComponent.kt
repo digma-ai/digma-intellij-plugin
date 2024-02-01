@@ -23,6 +23,7 @@ import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDe
 import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil
 import org.digma.intellij.plugin.jcef.common.UserRegistrationEvent
 import org.digma.intellij.plugin.settings.SettingsState
+import org.digma.intellij.plugin.ui.jcef.model.BackendInfoMessage
 import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier
 import org.digma.intellij.plugin.ui.settings.SettingsChangeListener
 import org.digma.intellij.plugin.ui.settings.Theme
@@ -81,7 +82,7 @@ private constructor(
                         } catch (e: Exception) {
                             ErrorReporter.getInstance().reportError("JCefComponent.connectionLost", e)
                         }
-                    }, 5000)
+                    }, 2000)
                 }
 
                 override fun connectionGained() {
@@ -91,10 +92,15 @@ private constructor(
                         try {
                             val status = service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionGained()
                             updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
+
+                            val about = AnalyticsService.getInstance(project).about
+                            val message = BackendInfoMessage(about)
+                            serializeAndExecuteWindowPostMessageJavaScript(jbCefBrowser.cefBrowser, message)
+
                         } catch (e: Exception) {
                             ErrorReporter.getInstance().reportError("JCefComponent.connectionGained", e)
                         }
-                    }, 5000)
+                    }, 2000)
                 }
             })
 

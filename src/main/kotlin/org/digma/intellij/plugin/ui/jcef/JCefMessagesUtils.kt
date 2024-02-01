@@ -9,10 +9,13 @@ import org.digma.intellij.plugin.common.getEnvironmentEntities
 import org.digma.intellij.plugin.docker.DigmaInstallationStatus
 import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
+import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.ui.jcef.model.ApiUrlPayload
 import org.digma.intellij.plugin.ui.jcef.model.DigmaEngineStatusMessage
 import org.digma.intellij.plugin.ui.jcef.model.IsMicrometerPayload
 import org.digma.intellij.plugin.ui.jcef.model.SetApiUrlMessage
+import org.digma.intellij.plugin.ui.jcef.model.SetEnvironmentMessage
+import org.digma.intellij.plugin.ui.jcef.model.SetEnvironmentMessagePayload
 import org.digma.intellij.plugin.ui.jcef.model.SetEnvironmentsMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetEnvironmentsMessagePayload
 import org.digma.intellij.plugin.ui.jcef.model.SetIsMicrometerMessage
@@ -84,5 +87,12 @@ fun sendEnvironmentEntities(cefBrowser: CefBrowser, environments: List<String>) 
         cefBrowser,
         SetEnvironmentsMessage(SetEnvironmentsMessagePayload(environmentEntities))
     )
+}
 
+fun sendCurrentEnvironment(cefBrowser: CefBrowser, environment: String?) {
+    val envToSend = environment ?: PersistenceService.getInstance().getCurrentEnv() ?: ""
+    serializeAndExecuteWindowPostMessageJavaScript(
+        cefBrowser,
+        SetEnvironmentMessage(SetEnvironmentMessagePayload(envToSend))
+    )
 }

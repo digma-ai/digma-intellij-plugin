@@ -82,11 +82,13 @@ public interface AnalyticsProvider extends Closeable {
 
     CodeObjectNavigation getCodeObjectNavigation(CodeObjectNavigationRequest codeObjectNavigationRequest);
 
-    String getAssetCategories(String environment, String[] services);
+    String getAssetCategories(Map<String, Object> queryParams);
+
+    String getAssetFilters(Map<String, Object> queryParams);
 
     String insightExists(String environment);
 
-    String getAssets(Map<String, String> queryParams, String[] services);
+    String getAssets(Map<String, Object> queryParams);
 
     String getServices(String environment);
 

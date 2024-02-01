@@ -48,7 +48,7 @@ class UpdatesService(private val project: Project) : Disposable {
 //        TimeUnit.SECONDS.toSeconds(12) // use short period (few seconds) when debugging
 
     // delay for first check for update since startup
-    private val DelayMilliseconds = TimeUnit.SECONDS.toMillis(5)
+    private val DelayMilliseconds = TimeUnit.SECONDS.toMillis(0)
 
     private val PeriodMilliseconds =
         TimeUnit.MINUTES.toMillis(5) // production value is 5 minutes

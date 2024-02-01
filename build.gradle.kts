@@ -68,7 +68,16 @@ dependencies {
         "configuration" to "riderDotNetObjects")))
 }
 
-
+configurations {
+    runtimeClasspath {
+        //make sure we never package kotlin-stdlib-jdk8 or kotlin-stdlib-jdk7 because its is supplied by the IDE.
+        //see more in
+        //buildSrc/src/main/kotlin/digma-base.gradle.kts
+        //settings.gradle.kts
+        exclude("org.jetbrains.kotlin", "kotlin-stdlib-jdk8")
+        exclude("org.jetbrains.kotlin", "kotlin-stdlib-jdk7")
+    }
+}
 
 
 intellij {

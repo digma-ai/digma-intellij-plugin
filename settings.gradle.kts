@@ -52,18 +52,23 @@ dependencyResolutionManagement {
         create("libs") {
             //rdgen version is independent of rider version
             version("rider-rdgen", "2023.2.0")
+
             //kotlin stdlib is not packaged with the plugin because intellij platform already contains it.
             //it's necessary for compilation in some cases for example rider protocol module.
             //it must target the lowest bundled stdlib version of the platform we support
             //see: https://plugins.jetbrains.com/docs/intellij/using-kotlin.html#adding-kotlin-support
+            //see also resolutionStrategy in buildSrc/src/main/kotlin/digma-base.gradle.kts
+            //before changing this version search the project for mentions of the library and make the necessary changes.
             version("kotlin-stdlib", "1.7.0")
             library("kotlin-stdlib-jdk8", "org.jetbrains.kotlin", "kotlin-stdlib-jdk8").versionRef("kotlin-stdlib")
+            library("kotlin-stdlib-jdk7", "org.jetbrains.kotlin", "kotlin-stdlib-jdk7").versionRef("kotlin-stdlib")
+
             library("guava", "com.google.guava", "guava").version("31.1-jre")
             version("retrofit", "2.9.0")
             library("retrofit-client", "com.squareup.retrofit2", "retrofit").versionRef("retrofit")
             library("retrofit-jackson", "com.squareup.retrofit2", "converter-jackson").versionRef("retrofit")
             library("retrofit-scalars", "com.squareup.retrofit2", "converter-scalars").versionRef("retrofit")
-            library("jackson-datetime", "com.fasterxml.jackson.datatype", "jackson-datatype-jsr310").version("2.10.1")
+            library("jackson-datetime", "com.fasterxml.jackson.datatype", "jackson-datatype-jsr310").version("2.10.5")
             version("okhttp", "4.9.3")
             library("okhttp", "com.squareup.okhttp3", "okhttp").versionRef("okhttp")
             library("okhttp-mockwebserver", "com.squareup.okhttp3", "mockwebserver").versionRef("okhttp")

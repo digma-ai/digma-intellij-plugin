@@ -21,7 +21,7 @@ intellij {
 }
 
 dependencies {
-    //pretty time can be moved to the model project to it s accessible to all project classes.
+    //todo: pretty time can be moved to the model project, so it's accessible to all project classes.
     //from here the model classes can't use it
     api(libs.prettytime)
     api(libs.threeten)
@@ -29,12 +29,7 @@ dependencies {
     api(libs.commons.collections4)
     api(libs.posthog)
     api(libs.maven.artifact)
-    api(libs.glovoapp.versioning) {
-        //must exclude kotlin stdlib otherwise it will be packaged with the plugin and that is not necessary
-        // and not advisable because the IDE already has it. if included it will overrdie the bersion that
-        // comes with the IDE
-        exclude("org.jetbrains.kotlin", "kotlin-stdlib-jdk8")
-    }
+    api(libs.glovoapp.versioning)
 
     implementation(project(":model"))
     implementation(project(":analytics-provider"))

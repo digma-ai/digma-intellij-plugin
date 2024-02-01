@@ -65,5 +65,5 @@ constructor(
 )
 
 enum class NavItemType {
-    ClosestParentServer, ClosestParentInternal, ClosestParentWithMethodCodeObjectId
+    ClosestParentInternal, ClosestParentWithMethodCodeObjectId
 }

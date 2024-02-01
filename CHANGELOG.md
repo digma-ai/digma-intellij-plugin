@@ -1,6 +1,13 @@
 # Changelog
 
-## [2.0.250] - 2024-01-31
+## [2.0.251] - 2024-02-01
+
+- Added navigation to server spans by @ohrebeniuk in https://github.com/digma-ai/digma-intellij-plugin/pull/1739
+- fix-vulnerability-in-jackson-databind Closes #1665 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1740
+- Update index file by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1742
+- Add asset filters by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1743
+
+## 2.0.250 - 2024-01-31
 
 - Fix 1708/open histogram by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1725
 - add-agent-in-micronaut by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1733

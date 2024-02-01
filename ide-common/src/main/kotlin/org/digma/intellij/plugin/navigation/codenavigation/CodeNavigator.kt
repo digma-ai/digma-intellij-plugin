@@ -278,7 +278,6 @@ class CodeNavigator(val project: Project) {
         } ?: false
     }
 
-
     fun tryNavigateToEndpointById(endpointId: String): Boolean {
 
         val endpointIdWithoutType = CodeObjectsUtil.stripEndpointPrefix(endpointId)

@@ -47,6 +47,7 @@ class TestsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pro
     private fun initialize(project: Project, browser: CefBrowser, requestJsonNode: JsonNode) {
         Log.log(logger::info, "got TESTS/INITIALIZE")
         sendEnvironmentEntities(browser, AnalyticsService.getInstance(project).environment.getEnvironments())
+        doCommonInitialize(browser)
     }
 
     private fun handleQuerySpanGetLatestData(project: Project, requestJsonNode: JsonNode) {

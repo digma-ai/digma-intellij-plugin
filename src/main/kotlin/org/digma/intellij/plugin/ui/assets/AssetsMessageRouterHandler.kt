@@ -5,9 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
-import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
-import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.ui.assets.model.SetAssetsDataFiltersMessage
@@ -15,7 +13,6 @@ import org.digma.intellij.plugin.ui.assets.model.SetAssetsDataMessage
 import org.digma.intellij.plugin.ui.assets.model.SetCategoriesDataMessage
 import org.digma.intellij.plugin.ui.assets.model.SetServicesDataMessage
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
-import org.digma.intellij.plugin.ui.jcef.model.BackendInfoMessage
 import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
 
 @Suppress("VulnerableCodeUsages") // todo: fix, there is an issue
@@ -52,10 +49,7 @@ class AssetsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pr
 
     private fun onInitialize(browser: CefBrowser) {
         try {
-            val about = AnalyticsService.getInstance(project).about
-            val message = BackendInfoMessage(about)
-            Log.log(logger::trace, project, "sending {} message", JCefMessagesUtils.GLOBAL_SET_BACKEND_INFO)
-            serializeAndExecuteWindowPostMessageJavaScript(browser, message)
+            doCommonInitialize(browser)
         } catch (e: AnalyticsServiceException) {
             Log.warnWithException(logger, e, "error getting backend info")
         }

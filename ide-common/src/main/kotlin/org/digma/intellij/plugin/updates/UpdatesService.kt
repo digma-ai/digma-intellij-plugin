@@ -124,7 +124,7 @@ class UpdatesService(private val project: Project) : Disposable {
         if (versionsResp == null) {
             return
         }
-/*
+
         if (versionsResp.errors.isNotEmpty()) {
             val currErrors = versionsResp.errors.toList()
 
@@ -137,7 +137,7 @@ class UpdatesService(private val project: Project) : Disposable {
             prevBackendErrorsList = currErrors
             return
         }
-*/
+
         stateBackendVersion = versionsResp.backend
         statePluginVersion.latestVersion = versionsResp.plugin.latestVersion
 

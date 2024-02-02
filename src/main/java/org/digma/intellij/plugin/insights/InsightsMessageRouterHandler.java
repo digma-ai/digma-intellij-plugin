@@ -20,7 +20,6 @@ import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.EDT;
-import org.digma.intellij.plugin.dashboard.outgoing.BackendInfoMessage;
 import org.digma.intellij.plugin.document.CodeObjectsUtil;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.insights.model.outgoing.CommitInfo;
@@ -50,6 +49,7 @@ import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.service.InsightsActionsService;
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
 import org.digma.intellij.plugin.ui.jcef.RegistrationEventHandler;
+import org.digma.intellij.plugin.ui.jcef.model.BackendInfoMessage;
 import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest;
 import org.digma.intellij.plugin.ui.service.InsightsService;
 import org.digma.intellij.plugin.ui.settings.Theme;
@@ -430,9 +430,7 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
     private void onInitialize(CefBrowser browser) {
         try {
             AboutResult about = AnalyticsService.getInstance(project).getAbout();
-            var message = new BackendInfoMessage(
-                    JCefMessagesUtils.REQUEST_MESSAGE_TYPE, JCefMessagesUtils.GLOBAL_SET_BACKEND_INFO,
-                    about);
+            var message = new BackendInfoMessage(about);
 
             Log.log(LOGGER::trace, project, "sending {} message",JCefMessagesUtils.GLOBAL_SET_BACKEND_INFO);
             serializeAndExecuteWindowPostMessageJavaScript(browser, message);

@@ -11,6 +11,7 @@ import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
 import org.cef.callback.CefQueryCallback
 import org.cef.handler.CefMessageRouterHandlerAdapter
+import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.stopWatchStart
@@ -22,8 +23,12 @@ import org.digma.intellij.plugin.model.rest.jcef.common.SendTrackingEventRequest
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
+import org.digma.intellij.plugin.ui.jcef.model.BackendInfoMessage
+import org.digma.intellij.plugin.ui.jcef.model.GetFromPersistenceRequest
 import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest
 import org.digma.intellij.plugin.ui.jcef.model.OpenInInternalBrowserRequest
+import org.digma.intellij.plugin.ui.jcef.model.SaveToPersistenceRequest
+import org.digma.intellij.plugin.ui.jcef.persistence.JCEFPersistenceService
 
 abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouterHandlerAdapter() {
 
@@ -112,6 +117,16 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
                         }
                     }
 
+                    JCefMessagesUtils.GLOBAL_SAVE_TO_PERSISTENCE -> {
+                        val saveToPersistenceRequest = jsonToObject(request, SaveToPersistenceRequest::class.java)
+                        JCEFPersistenceService.getInstance(project).saveToPersistence(saveToPersistenceRequest);
+                    }
+
+                    JCefMessagesUtils.GLOBAL_GET_FROM_PERSISTENCE -> {
+                        val getFromPersistenceRequest = jsonToObject(request, GetFromPersistenceRequest::class.java)
+                        JCEFPersistenceService.getInstance(project).getFromPersistence(browser, getFromPersistenceRequest);
+                    }
+
                     else -> {
                         doOnQuery(project, browser, requestJsonNode, request, action)
                     }
@@ -146,4 +161,13 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
     override fun onQueryCanceled(browser: CefBrowser?, frame: CefFrame?, queryId: Long) {
         Log.log(logger::trace, "jcef query canceled")
     }
+
+
+    protected fun doCommonInitialize(browser: CefBrowser) {
+        val about = AnalyticsService.getInstance(project).about
+        val message = BackendInfoMessage(about)
+        Log.log(logger::trace, project, "sending {} message", JCefMessagesUtils.GLOBAL_SET_BACKEND_INFO)
+        serializeAndExecuteWindowPostMessageJavaScript(browser, message)
+    }
+
 }

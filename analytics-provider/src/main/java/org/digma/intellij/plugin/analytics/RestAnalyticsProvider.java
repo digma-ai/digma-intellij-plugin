@@ -191,8 +191,8 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
-    public String getAssetCategories(String environment, String[] services) {
-        return execute(() -> client.analyticsProvider.getAssetCategories(environment, services));
+    public String getAssetCategories(Map<String, Object> queryParams) {
+        return execute(() -> client.analyticsProvider.getAssetCategories(queryParams));
     }
 
     @Override
@@ -201,8 +201,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
-    public String getAssets(Map<String, String> queryParams, String[] services) {
-        return execute(() -> client.analyticsProvider.getAssets(queryParams, services));
+    public String getAssetFilters(Map<String, Object> queryParams) {
+        return execute(() -> client.analyticsProvider.getAssetFilters(queryParams));
+    }
+
+    @Override
+    public String getAssets(Map<String, Object> queryParams) {
+        return execute(() -> client.analyticsProvider.getAssets(queryParams));
     }
 
     @Override
@@ -569,8 +574,8 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @GET("/CodeAnalytics/codeObjects/asset_categories")
-        Call<String> getAssetCategories(@Query("environment") String environment, @Query("services") String[] services);
+        @GET("/assets/get_categories")
+        Call<String> getAssetCategories(@QueryMap Map<String, Object> fields);
 
         @Headers({
                 "Accept: application/+json",
@@ -584,8 +589,15 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @GET("/CodeAnalytics/codeObjects/getAssets")
-        Call<String> getAssets(@QueryMap Map<String, String> fields, @Query("services") String[] services);
+        @GET("/assets/get_assets")
+        Call<String> getAssets(@QueryMap Map<String, Object> fields);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @GET("/assets/get_filter")
+        Call<String> getAssetFilters(@QueryMap Map<String, Object> fields);
 
         @GET("/services/getServices")
         Call<String> getServices(@Query("environment") String environment);

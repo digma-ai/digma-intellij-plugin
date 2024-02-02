@@ -43,6 +43,9 @@ public class JCefMessagesUtils {
     public static final String GLOBAL_SET_IS_OBSERVABILITY_ENABLED = "GLOBAL/SET_IS_OBSERVABILITY_ENABLED";
     public static final String GLOBAL_SET_BACKEND_INFO = "GLOBAL/SET_BACKEND_INFO";
     public static final String GLOBAL_SET_IS_MICROMETER_PROJECT = "GLOBAL/SET_IS_MICROMETER_PROJECT";
+    public static final String GLOBAL_SAVE_TO_PERSISTENCE = "GLOBAL/SAVE_TO_PERSISTENCE";
+    public static final String GLOBAL_GET_FROM_PERSISTENCE = "GLOBAL/GET_FROM_PERSISTENCE";
+    public static final String GLOBAL_SET_FROM_PERSISTENCE = "GLOBAL/SET_FROM_PERSISTENCE";
 
 
     //todo: replace with org.digma.intellij.plugin.ui.jcef.JCefBrowserUtilsKt.jsonToObject

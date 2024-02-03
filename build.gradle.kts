@@ -1,4 +1,6 @@
+import common.BuildProfiles
 import common.buildVersion
+import common.currentProfile
 import common.dynamicPlatformType
 import common.logBuildProfile
 import common.platformPlugins
@@ -245,6 +247,24 @@ tasks {
             //make large idea.log because the default rotates every 10M and makes it difficult to follow messages with tail
             "idea.log.limit" to "999999999"
         )
+
+
+        //todo: this is a workaround for these issues:
+        // 241 should run with JBR 21. but currently there is a bug in gradle-intellij-plugin that downloads
+        // a 21 JBR without jcef support.
+        // see this issue:
+        // https://github.com/JetBrains/gradle-intellij-plugin/issues/1534
+        // and this PR fixes it
+        // https://github.com/JetBrains/gradle-intellij-plugin/pull/1535
+        // when gradle-intellij-plugin has a new release including the above fix it will download the right 21 JBR.
+        // but then there is this issue:
+        // https://github.com/digma-ai/digma-intellij-plugin/issues/1734
+        // if 241 runs with 21 then gradle-intellij-plugin will configure the test task to use this JBR,
+        // but some of our tests fail with 21. so we have to make sure all our tests pass with JBR 21
+        // before removing this workaround.
+        if (project.currentProfile().profile == BuildProfiles.Profiles.p241) {
+            jbrVersion = "17.0.10b1087.17"
+        }
     }
 
 

@@ -45,6 +45,9 @@ class KtorFramework(private val project: Project) : EndpointDiscovery() {
 
     }
 
+    override fun getName(): String {
+        return "ktor"
+    }
 
     override fun lookForEndpoints(searchScopeProvider: SearchScopeProvider): List<EndpointInfo> {
         val endpoints = mutableListOf<EndpointInfo>()

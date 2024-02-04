@@ -20,9 +20,9 @@
 
 
         <projectService
-                serviceImplementation="org.digma.intellij.plugin.idea.psi.navigation.JavaSpanNavigationProvider"/>
+                serviceImplementation="org.digma.intellij.plugin.idea.navigation.JvmSpanNavigationProvider"/>
         <projectService
-                serviceImplementation="org.digma.intellij.plugin.idea.psi.navigation.JavaEndpointNavigationProvider"/>
+                serviceImplementation="org.digma.intellij.plugin.idea.navigation.JvmEndpointNavigationProvider"/>
         <postStartupActivity
                 implementation="org.digma.intellij.plugin.idea.navigation.JvmNavigationDiscoveryStartupActivity"/>
 

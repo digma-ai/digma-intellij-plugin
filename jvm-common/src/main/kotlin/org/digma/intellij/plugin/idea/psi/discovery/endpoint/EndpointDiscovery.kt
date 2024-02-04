@@ -11,6 +11,9 @@ import java.util.Objects
 
 abstract class EndpointDiscovery {
 
+
+    abstract fun getName(): String
+
     //must run with read access
     //using searchScope supplier because building SearchScope needs read access
     abstract fun lookForEndpoints(searchScopeProvider: SearchScopeProvider): List<EndpointInfo>?
@@ -26,7 +29,12 @@ abstract class EndpointDiscovery {
 
 
     fun endpointDiscovery(psiFile: PsiFile, documentInfo: DocumentInfo) {
-        val endpointInfos = lookForEndpoints(psiFile)
+
+        if (!PsiUtils.isValidPsiFile(psiFile)) {
+            return
+        }
+
+        val endpointInfos = lookForEndpoints { GlobalSearchScope.fileScope(psiFile) }
 
         endpointInfos?.let { infos ->
             for (endpointInfo in infos) {
@@ -41,7 +49,7 @@ abstract class EndpointDiscovery {
                     }
                     methodInfo?.addEndpoint(endpointInfo)
                 } catch (e: Exception) {
-                    ErrorReporter.getInstance().reportError("${this::class.java}.endpointDiscovery", e)
+                    ErrorReporter.getInstance().reportError("${this::class.java}.endpointDiscovery.${getName()}", e)
                 }
             }
         }

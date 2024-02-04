@@ -497,9 +497,13 @@ class ActivityMonitor(private val project: Project) : Disposable {
     }
 
     fun registerPluginUninstalled(): String {
-        postHog?.capture(userId, "plugin uninstalled")
+        capture("plugin uninstalled")
         if(PersistenceService.getInstance().hasEmail()){
-            postHog?.capture(userId, "registered user uninstalled")
+            capture(
+                "registered user uninstalled", mapOf(
+                    "email" to PersistenceService.getInstance().hasEmail()
+                )
+            )
         }
         postHog?.set(
             userId, mapOf(
@@ -510,9 +514,13 @@ class ActivityMonitor(private val project: Project) : Disposable {
     }
 
     fun registerPluginDisabled(): String {
-        postHog?.capture(userId, "plugin disabled")
+        capture("plugin disabled")
         if(PersistenceService.getInstance().hasEmail()){
-            postHog?.capture(userId, "registered user disabled")
+            capture(
+                "registered user disabled", mapOf(
+                    "email" to PersistenceService.getInstance().hasEmail()
+                )
+            )
         }
         postHog?.set(
             userId, mapOf(
@@ -611,7 +619,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
         val bytes = message.toByteArray()
         val md = MessageDigest.getInstance("SHA-256")
         val digest = md.digest(bytes)
-        return digest.fold("", { str, it -> str + "%02x".format(it) })
+        return digest.fold("") { str, it -> str + "%02x".format(it) }
     }
 
 

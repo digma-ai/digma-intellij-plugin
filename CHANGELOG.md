@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.252] - 2024-02-02
+## [2.0.253] - 2024-02-04
+
+- dont use jetbrains vendor in toolchain by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1748
+- add email to registered user uninstall and disabled events Closes #1749 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1750
+
+## 2.0.252 - 2024-02-02
 
 - Fix render by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1745
 - Update Assets UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1747

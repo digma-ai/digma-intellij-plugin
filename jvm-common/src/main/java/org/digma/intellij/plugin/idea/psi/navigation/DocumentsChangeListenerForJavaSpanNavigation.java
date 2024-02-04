@@ -3,28 +3,22 @@ package org.digma.intellij.plugin.idea.psi.navigation;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
-import com.intellij.openapi.editor.event.DocumentEvent;
-import com.intellij.openapi.editor.event.DocumentListener;
-import com.intellij.openapi.fileEditor.FileEditorManager;
-import com.intellij.openapi.fileEditor.FileEditorManagerListener;
+import com.intellij.openapi.editor.event.*;
+import com.intellij.openapi.fileEditor.*;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiDocumentManager;
-import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiManager;
-import com.intellij.util.Alarm;
-import com.intellij.util.AlarmFactory;
+import com.intellij.psi.*;
+import com.intellij.util.*;
 import org.digma.intellij.plugin.common.VfsUtilsKt;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
+import org.digma.intellij.plugin.idea.navigation.*;
 import org.digma.intellij.plugin.idea.psi.JvmLanguageService;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.psi.LanguageService;
-import org.digma.intellij.plugin.psi.PsiUtils;
+import org.digma.intellij.plugin.psi.*;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * a listener for document change that updates span navigation map.
@@ -76,7 +70,7 @@ public class DocumentsChangeListenerForJavaSpanNavigation implements FileEditorM
                     Log.log(LOGGER::debug, "adding document listener for file:{}", file);
                     document.addDocumentListener(new DocumentListener() {
 
-                        private final Alarm documentChangeAlarm = AlarmFactory.getInstance().create();
+                        private final Alarm documentChangeAlarm = AlarmFactory.getInstance().create(Alarm.ThreadToUse.POOLED_THREAD, JvmSpanNavigationProvider.getInstance(project));
 
                         @Override
                         public void documentChanged(@NotNull DocumentEvent event) {
@@ -87,8 +81,8 @@ public class DocumentsChangeListenerForJavaSpanNavigation implements FileEditorM
                                     return;
                                 }
 
-                                var javaSpanNavigationProvider = JavaSpanNavigationProvider.getInstance(project);
-                                var javaEndpointNavigationProvider = JavaEndpointNavigationProvider.getInstance(project);
+                                var javaSpanNavigationProvider = JvmSpanNavigationProvider.getInstance(project);
+                                var javaEndpointNavigationProvider = JvmEndpointNavigationProvider.getInstance(project);
                                 documentChangeAlarm.cancelAllRequests();
                                 documentChangeAlarm.addRequest(() -> {
                                     try {

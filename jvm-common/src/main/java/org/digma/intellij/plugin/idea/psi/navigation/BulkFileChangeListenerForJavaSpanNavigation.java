@@ -2,10 +2,10 @@ package org.digma.intellij.plugin.idea.psi.navigation;
 
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.vfs.newvfs.events.VFileDeleteEvent;
-import com.intellij.openapi.vfs.newvfs.events.VFileEvent;
+import com.intellij.openapi.vfs.newvfs.events.*;
 import org.digma.intellij.plugin.bulklistener.AbstractBulkFileChangeListener;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
+import org.digma.intellij.plugin.idea.navigation.*;
 import org.digma.intellij.plugin.idea.psi.JvmLanguageService;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.psi.LanguageService;
@@ -40,11 +40,11 @@ public class BulkFileChangeListenerForJavaSpanNavigation extends AbstractBulkFil
                             languageService.isRelevant(file)) {
 
                         if (vFileEvent instanceof VFileDeleteEvent) {
-                            JavaSpanNavigationProvider.getInstance(project).fileDeleted(vFileEvent.getFile());
-                            JavaEndpointNavigationProvider.getInstance(project).fileDeleted(vFileEvent.getFile());
+                            JvmSpanNavigationProvider.getInstance(project).fileDeleted(vFileEvent.getFile());
+                            JvmEndpointNavigationProvider.getInstance(project).fileDeleted(vFileEvent.getFile());
                         } else {
-                            JavaSpanNavigationProvider.getInstance(project).fileChanged(vFileEvent.getFile());
-                            JavaEndpointNavigationProvider.getInstance(project).fileChanged(vFileEvent.getFile());
+                            JvmSpanNavigationProvider.getInstance(project).fileChanged(vFileEvent.getFile());
+                            JvmEndpointNavigationProvider.getInstance(project).fileChanged(vFileEvent.getFile());
                         }
                     }
                 }

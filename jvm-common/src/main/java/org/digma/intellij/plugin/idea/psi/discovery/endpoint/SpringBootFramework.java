@@ -2,31 +2,19 @@ package org.digma.intellij.plugin.idea.psi.discovery.endpoint;
 
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
-import com.intellij.psi.JavaPsiFacade;
-import com.intellij.psi.PsiAnnotation;
-import com.intellij.psi.PsiClass;
-import com.intellij.psi.PsiMethod;
+import com.intellij.psi.*;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.searches.AnnotatedElementsSearch;
 import com.intellij.util.Query;
 import org.digma.intellij.plugin.common.SearchScopeProvider;
-import org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils;
-import org.digma.intellij.plugin.idea.psi.java.JavaPsiUtils;
-import org.digma.intellij.plugin.model.discovery.EndpointFramework;
-import org.digma.intellij.plugin.model.discovery.EndpointInfo;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.digma.intellij.plugin.idea.psi.java.*;
+import org.digma.intellij.plugin.model.discovery.*;
+import org.jetbrains.annotations.*;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 import static org.digma.intellij.plugin.idea.psi.JvmCodeObjectsUtilsKt.createPsiMethodCodeObjectId;
-import static org.digma.intellij.plugin.psi.PsiAccessUtilsKt.runInReadAccessInSmartModeAndRetry;
-import static org.digma.intellij.plugin.psi.PsiAccessUtilsKt.runInReadAccessInSmartModeWithResultAndRetry;
+import static org.digma.intellij.plugin.psi.PsiAccessUtilsKt.*;
 
 public class SpringBootFramework extends EndpointDiscovery {
 
@@ -65,6 +53,13 @@ public class SpringBootFramework extends EndpointDiscovery {
 
     public SpringBootFramework(Project project) {
         this.project = project;
+    }
+
+
+    @NotNull
+    @Override
+    public String getName() {
+        return "SpringBoot";
     }
 
     private void lateInit() {

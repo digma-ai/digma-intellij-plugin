@@ -15,6 +15,11 @@ import java.lang.reflect.Field
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
+const val SEVERITY_PROP_NAME = "severity"
+const val SEVERITY_LOW_NO_FIX = "low, reporting only,no need to fix"
+const val SEVERITY_MEDIUM_TRY_FIX = "medium, try to fix"
+const val SEVERITY_HIGH_TRY_FIX = "high, try to fix"
+
 @Service(Service.Level.APP)
 class ErrorReporter {
 
@@ -34,7 +39,7 @@ class ErrorReporter {
         try not to use this method and always send the project reference if available.
      */
     fun reportError(message: String, t: Throwable) {
-        reportError(message, t, mapOf())
+        reportError(findActiveProject(), message, t)
     }
 
     /*
@@ -50,7 +55,11 @@ class ErrorReporter {
         the event will contain the stack trace and exception message.
      */
     fun reportError(project: Project?, message: String, throwable: Throwable) {
-        reportError(project, message, throwable, mapOf())
+        reportError(
+            project, message, throwable, mapOf(
+                SEVERITY_PROP_NAME to SEVERITY_HIGH_TRY_FIX
+            )
+        )
     }
 
     fun reportError(project: Project?, message: String, throwable: Throwable, extraDetails: Map<String, String>) {

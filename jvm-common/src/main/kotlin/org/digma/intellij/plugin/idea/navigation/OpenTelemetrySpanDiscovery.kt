@@ -3,6 +3,8 @@ package org.digma.intellij.plugin.idea.navigation
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import org.digma.intellij.plugin.SPAN_BUILDER_FQN
+import org.digma.intellij.plugin.WITH_SPAN_ANNOTATION_FQN
 import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.idea.navigation.model.NavigationProcessContext
 import org.digma.intellij.plugin.idea.navigation.model.SpanLocation
@@ -57,7 +59,7 @@ class OpenTelemetrySpanDiscovery(private val project: Project) : SpanDiscoveryPr
 
         val annotatedMethods =
             executeCatchingWithResultWithRetry(context, getName(), 50, 5) {
-                val withSpanClass = psiPointers.getOtelWithSpanAnnotationPsiClass(project) ?: return@executeCatchingWithResultWithRetry listOf()
+                val withSpanClass = psiPointers.getPsiClass(project, WITH_SPAN_ANNOTATION_FQN) ?: return@executeCatchingWithResultWithRetry listOf()
                 findAnnotatedMethods(project, withSpanClass, context.searchScope)
             } ?: return mapOf()
 
@@ -110,7 +112,7 @@ class OpenTelemetrySpanDiscovery(private val project: Project) : SpanDiscoveryPr
         val psiPointers = project.service<PsiPointers>()
 
         val startSpanReferences = executeCatchingWithResultWithRetry(context, getName(), 50, 5) {
-            val tracerBuilderClass = psiPointers.getOtelTracerBuilderPsiClass(project) ?: return@executeCatchingWithResultWithRetry listOf()
+            val tracerBuilderClass = psiPointers.getPsiClass(project, SPAN_BUILDER_FQN) ?: return@executeCatchingWithResultWithRetry listOf()
             val startSpanMethod = psiPointers.getOtelStartSpanMethod(project, tracerBuilderClass)
             Objects.requireNonNull(startSpanMethod, "startSpan method must be found in SpanBuilder class")
             startSpanMethod?.let {

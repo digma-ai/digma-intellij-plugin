@@ -47,7 +47,8 @@ class MicrometerSpanDiscovery(private val project: Project) : SpanDiscoveryProvi
 
         val annotatedMethods =
             executeCatchingWithResultWithRetry(context, getName(), 50, 5) {
-                val observedClass = psiPointers.getMicrometerObservedAnnotationPsiClass(project) ?: return@executeCatchingWithResultWithRetry listOf()
+                val observedClass =
+                    psiPointers.getPsiClass(project, MicrometerTracingFramework.OBSERVED_FQN) ?: return@executeCatchingWithResultWithRetry listOf()
                 findAnnotatedMethods(project, observedClass, context.searchScope)
             } ?: return mapOf()
 

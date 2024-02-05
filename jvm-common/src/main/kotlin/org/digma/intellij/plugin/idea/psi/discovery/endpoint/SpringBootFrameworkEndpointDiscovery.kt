@@ -137,7 +137,6 @@ class SpringBootFrameworkEndpointDiscovery(private val project: Project) : Endpo
 
         annotatedMethod.element?.let { psiMethod ->
 
-
             val methodId = createPsiMethodCodeObjectId(psiMethod)
             val mappingPsiAnnotationOnMethod: PsiAnnotation = psiMethod.getAnnotation(annotationFqn)
                 ?: return  // very unlikely

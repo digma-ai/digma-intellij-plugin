@@ -11,6 +11,8 @@ import com.intellij.psi.PsiReference
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.searches.AnnotatedElementsSearch
 import com.intellij.psi.search.searches.MethodReferencesSearch
+import org.digma.intellij.plugin.SPAN_BUILDER_FQN
+import org.digma.intellij.plugin.WITH_SPAN_ANNOTATION_FQN
 import org.digma.intellij.plugin.common.SearchScopeProvider
 import org.digma.intellij.plugin.common.executeCatching
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
@@ -84,7 +86,7 @@ abstract class AbstractSpanDiscovery {
 
         val psiPointers = project.service<PsiPointers>()
 
-        val withSpanAnnotationClass = psiPointers.getOtelWithSpanAnnotationPsiClass(project)
+        val withSpanAnnotationClass = psiPointers.getPsiClass(project, WITH_SPAN_ANNOTATION_FQN)
 
         return withSpanAnnotationClass?.let { withSpanClass ->
 
@@ -135,7 +137,7 @@ abstract class AbstractSpanDiscovery {
 
         val psiPointers = project.service<PsiPointers>()
 
-        val tracerBuilderClass = psiPointers.getOtelTracerBuilderPsiClass(project)
+        val tracerBuilderClass = psiPointers.getPsiClass(project, SPAN_BUILDER_FQN)
 
         return tracerBuilderClass?.let { builderClass ->
 

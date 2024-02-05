@@ -114,7 +114,7 @@ fun <T> runInReadAccessInSmartModeWithResultAndRetry(project: Project, computabl
 }
 
 
-fun <T> runInReadAccessInSmartModeIgnorePCE(project: Project, computable: Computable<T>): T? {
+fun <T> runInReadAccessInSmartModeIgnorePCE(project: Project, computable: Computable<T>): T {
     return runWIthRetryWithResultIgnorePCE({
         if (isReadAccessAllowed()) {
             computable.compute()

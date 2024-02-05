@@ -1,17 +1,20 @@
 package org.digma.intellij.plugin.idea.psi.discovery.endpoint
 
 import com.intellij.openapi.project.Project
+import com.intellij.psi.PsiReference
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.searches.ReferencesSearch
 import org.digma.intellij.plugin.common.SearchScopeProvider
 import org.digma.intellij.plugin.common.TextRangeUtils
+import org.digma.intellij.plugin.common.executeCatchingWithRetryIgnorePCE
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.psi.createMethodCodeObjectId
 import org.digma.intellij.plugin.idea.psi.getExpressionValue
 import org.digma.intellij.plugin.model.discovery.EndpointFramework
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
+import org.digma.intellij.plugin.progress.ProcessContext
 import org.digma.intellij.plugin.psi.PsiUtils
-import org.digma.intellij.plugin.psi.runInReadAccessInSmartModeAndRetry
-import org.digma.intellij.plugin.psi.runInReadAccessInSmartModeWithResultAndRetry
+import org.digma.intellij.plugin.psi.runInReadAccessInSmartModeIgnorePCE
 import org.jetbrains.kotlin.idea.stubindex.KotlinTopLevelFunctionFqnNameIndex
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.uast.UCallExpression
@@ -24,13 +27,12 @@ import org.jetbrains.uast.textRange
 import org.jetbrains.uast.toUElementOfType
 import org.jetbrains.uast.util.isMethodCall
 
-class KtorFramework(private val project: Project) : EndpointDiscovery() {
+class KtorFrameworkEndpointDiscovery(private val project: Project) : EndpointDiscovery() {
 
-//    private val psiPointers = PsiPointers()
 
     companion object {
 
-        const val KTOR_SERVER_ROUTING_BUILDER_PREFIX = "io.ktor.server.routing."
+        private const val KTOR_SERVER_ROUTING_BUILDER_PREFIX = "io.ktor.server.routing."
         //const val KTOR_SERVER_RESOURCES_PREFIX = "io.ktor.server.resources"
 
         val KTOR_ROUTING_BUILDER_ENDPOINTS = mapOf(
@@ -50,22 +52,33 @@ class KtorFramework(private val project: Project) : EndpointDiscovery() {
     }
 
     override fun lookForEndpoints(searchScopeProvider: SearchScopeProvider): List<EndpointInfo> {
+        return lookForEndpoints(searchScopeProvider, null)
+    }
+
+
+    override fun lookForEndpoints(searchScopeProvider: SearchScopeProvider, context: ProcessContext?): List<EndpointInfo> {
         val endpoints = mutableListOf<EndpointInfo>()
-        endpoints.addAll(lookForRoutingBuilderEndpoints(searchScopeProvider))
+        executeCatchingWithRetryIgnorePCE({
+            endpoints.addAll(lookForRoutingBuilderEndpoints(searchScopeProvider, context))
+        }, { e ->
+            context?.addError(getName(), e)
+            ErrorReporter.getInstance().reportError("KtorFrameworkEndpointDiscovery.lookForEndpoints", e)
+        })
+
         return endpoints
     }
 
 
-    private fun lookForRoutingBuilderEndpoints(searchScopeProvider: SearchScopeProvider): List<EndpointInfo> {
+    private fun lookForRoutingBuilderEndpoints(searchScopeProvider: SearchScopeProvider, context: ProcessContext?): List<EndpointInfo> {
 
-        val endpoints = mutableListOf<EndpointInfo>()
+        val resultEndpoints = mutableListOf<EndpointInfo>()
 
         KTOR_ROUTING_BUILDER_ENDPOINTS.forEach { (fqName, httpMethod) ->
 
 
             val declarations =
-                runInReadAccessInSmartModeWithResultAndRetry<Collection<KtNamedFunction>>(project) {
-                    //todo: maybe cache the declarations
+                runInReadAccessInSmartModeIgnorePCE(project) {
+                    //todo: maybe cache the declarations, maybe in SmartElementPointer
                     val declarations = KotlinTopLevelFunctionFqnNameIndex.get(fqName, project, GlobalSearchScope.allScope(project))
                     declarations.filter { ktNamedFunction: KtNamedFunction -> ktNamedFunction.containingKtFile.isCompiled }
                 }
@@ -73,45 +86,57 @@ class KtorFramework(private val project: Project) : EndpointDiscovery() {
 
             declarations.forEach { methodDeclarations ->
 
+                context?.indicator?.checkCanceled()
+
                 val references =
-                    runInReadAccessInSmartModeWithResultAndRetry(project) {
+                    runInReadAccessInSmartModeIgnorePCE(project) {
                         ReferencesSearch.search(methodDeclarations, searchScopeProvider.get()).findAll()
                     }
 
 
                 references.forEach { ref ->
 
-                    runInReadAccessInSmartModeAndRetry(project) {
-                        val methodId = ref.element.toUElementOfType<UReferenceExpression>()?.getContainingUMethod()?.let { uMethod ->
-                            createMethodCodeObjectId(uMethod)
-                        } ?: ""
-
-                        val fileUri = ref.element.toUElementOfType<UReferenceExpression>()?.getContainingUFile()?.let { uFile ->
-                            PsiUtils.psiFileToUri(uFile.sourcePsi)
-                        } ?: ""
-
-                        val textRange =
-                            TextRangeUtils.fromJBTextRange(ref.element.toUElementOfType<UReferenceExpression>()?.getUCallExpression()?.textRange)
-
-                        ref.element.toUElementOfType<UReferenceExpression>()?.let { uReference ->
-
-                            uReference.getUCallExpression()?.let { callExpression ->
-
-                                getEndpointNameFromCallExpression(callExpression)?.let { endpointName ->
-
-                                    val id = "epHTTP:" + "HTTP " + httpMethod.uppercase() + " " + endpointName
-
-                                    endpoints.add(EndpointInfo(id, methodId, fileUri, textRange, EndpointFramework.Ktor))
-
-                                }
-                            }
+                    executeCatchingWithRetryIgnorePCE({
+                        runInReadAccessInSmartModeIgnorePCE(project) {
+                            buildEndpointFromReference(resultEndpoints, ref, httpMethod)
                         }
-                    }
+                    }, { e ->
+                        context?.addError(getName(), e)
+                        ErrorReporter.getInstance().reportError("KtorFrameworkEndpointDiscovery.lookForRoutingBuilderEndpoints", e)
+                    })
                 }
             }
         }
 
-        return endpoints
+        return resultEndpoints
+    }
+
+    private fun buildEndpointFromReference(resultEndpoints: MutableList<EndpointInfo>, ref: PsiReference, httpMethod: String) {
+
+        val methodId = ref.element.toUElementOfType<UReferenceExpression>()?.getContainingUMethod()?.let { uMethod ->
+            createMethodCodeObjectId(uMethod)
+        } ?: ""
+
+        val fileUri = ref.element.toUElementOfType<UReferenceExpression>()?.getContainingUFile()?.let { uFile ->
+            PsiUtils.psiFileToUri(uFile.sourcePsi)
+        } ?: ""
+
+        val textRange =
+            TextRangeUtils.fromJBTextRange(ref.element.toUElementOfType<UReferenceExpression>()?.getUCallExpression()?.textRange)
+
+        ref.element.toUElementOfType<UReferenceExpression>()?.let { uReference ->
+
+            uReference.getUCallExpression()?.let { callExpression ->
+
+                getEndpointNameFromCallExpression(callExpression)?.let { endpointName ->
+
+                    val id = "epHTTP:" + "HTTP " + httpMethod.uppercase() + " " + endpointName
+
+                    resultEndpoints.add(EndpointInfo(id, methodId, fileUri, textRange, EndpointFramework.Ktor))
+
+                }
+            }
+        }
     }
 
 

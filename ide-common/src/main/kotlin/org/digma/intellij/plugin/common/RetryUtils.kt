@@ -72,8 +72,9 @@ fun <T> runWIthRetryWithResultIgnorePCE(
     retryOnException: Class<out Throwable> = Throwable::class.java,
     delayMillis: Int = 50,
     maxRetries: Int = 5,
-): T? {
+): T {
 
+    var error: Throwable? = null
     repeat(maxRetries) { count ->
 
         try {
@@ -81,16 +82,21 @@ fun <T> runWIthRetryWithResultIgnorePCE(
         } catch (e: ProcessCanceledException) {
             throw e
         } catch (e: Throwable) {
+            error = e
             if (!retryOnException.isAssignableFrom(e::class.java) ||
                 count >= maxRetries - 1
             ) {
                 throw e
             }
+
             Thread.sleep(delayMillis.toLong())
         }
     }
 
-    return null
+    //this should never happen but the compiler can't see that and complains on return statement
+    error?.let {
+        throw it
+    } ?: throw IllegalStateException("Something went wrong in retry")
 }
 
 

@@ -51,10 +51,3 @@ class CopyableLabelHtml(myText: String) : BaseCopyableLabel(myText) {
         construct(myText, DEFAULT_FOREGROUND)
     }
 }
-
-class CopyableLabelHtmlWithForegroundColor(myText: String, foregroundColor: Color) : BaseCopyableLabel(myText) {
-    init {
-        contentType = "text/html"
-        construct(myText, foregroundColor)
-    }
-}

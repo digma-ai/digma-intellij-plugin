@@ -19,7 +19,7 @@ import org.digma.intellij.plugin.idea.psi.discovery.endpoint.GrpcFramework
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.JaxrsJakartaFramework
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.JaxrsJavaxFramework
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.KtorFramework
-import org.digma.intellij.plugin.idea.psi.discovery.endpoint.MicronautFramework
+import org.digma.intellij.plugin.idea.psi.discovery.endpoint.MicronautFrameworkEndpointDiscovery
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.SpringBootFrameworkEndpointDiscovery
 import org.digma.intellij.plugin.instrumentation.CanInstrumentMethodResult
 import org.digma.intellij.plugin.instrumentation.JvmCanInstrumentMethodResult
@@ -158,7 +158,7 @@ class KotlinLanguageService(project: Project) : AbstractJvmLanguageService(proje
     }
 
     override fun getEndpointFrameworks(project: Project): Collection<EndpointDiscovery> {
-        val micronautFramework = MicronautFramework(project)
+        val micronautFramework = MicronautFrameworkEndpointDiscovery(project)
         val jaxrsJavaxFramework = JaxrsJavaxFramework(project)
         val jaxrsJakartaFramework = JaxrsJakartaFramework(project)
         val grpcFramework = GrpcFramework(project)

@@ -22,7 +22,7 @@ import org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscovery
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.GrpcFramework
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.JaxrsJakartaFramework
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.JaxrsJavaxFramework
-import org.digma.intellij.plugin.idea.psi.discovery.endpoint.MicronautFramework
+import org.digma.intellij.plugin.idea.psi.discovery.endpoint.MicronautFrameworkEndpointDiscovery
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.SpringBootFrameworkEndpointDiscovery
 import org.digma.intellij.plugin.instrumentation.CanInstrumentMethodResult
 import org.digma.intellij.plugin.instrumentation.JvmCanInstrumentMethodResult
@@ -119,7 +119,7 @@ class JavaLanguageService(project: Project) : AbstractJvmLanguageService(project
         //don't need frameworks that are definitely only used in kotlin like ktor.
         //if someone writes ktor application in java then ktor endpoints will not work but that is probably
         // a very rare case and maybe even not possible.
-        val micronautFramework = MicronautFramework(project)
+        val micronautFramework = MicronautFrameworkEndpointDiscovery(project)
         val jaxrsJavaxFramework = JaxrsJavaxFramework(project)
         val jaxrsJakartaFramework = JaxrsJakartaFramework(project)
         val grpcFramework = GrpcFramework(project)

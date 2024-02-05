@@ -18,15 +18,6 @@ abstract class EndpointDiscovery {
     //using searchScope supplier because building SearchScope needs read access
     abstract fun lookForEndpoints(searchScopeProvider: SearchScopeProvider): List<EndpointInfo>?
 
-    // default method uses fileScope. however, in some cases logic could be bit different
-    open fun lookForEndpoints(psiFile: PsiFile): List<EndpointInfo>? {
-        return if (PsiUtils.isValidPsiFile(psiFile)) {
-            lookForEndpoints { GlobalSearchScope.fileScope(psiFile) }
-        } else {
-            listOf()
-        }
-    }
-
 
     fun endpointDiscovery(psiFile: PsiFile, documentInfo: DocumentInfo) {
 

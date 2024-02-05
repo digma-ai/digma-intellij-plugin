@@ -18,7 +18,7 @@ import org.digma.intellij.plugin.psi.runInReadAccessWithResult
 import org.digma.intellij.plugin.psi.runInReadAccessWithRetryIgnorePCE
 import java.util.Objects
 
-class OpenTelemetrySpanDiscovery(private val project: Project) : SpanDiscoveryProvider {
+class OpenTelemetrySpanNavigationDiscovery(private val project: Project) : SpanNavigationDiscoveryProvider {
 
     private val logger = Logger.getInstance(this::class.java)
 

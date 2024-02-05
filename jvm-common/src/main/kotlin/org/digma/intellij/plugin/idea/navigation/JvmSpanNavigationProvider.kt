@@ -49,8 +49,8 @@ internal class JvmSpanNavigationProvider(project: Project) : AbstractNavigationD
     //used to restrict one update thread at a time
     private val buildSpansLock = ReentrantLock()
 
-    private val spanDiscoveryProviders: List<SpanDiscoveryProvider> =
-        listOf(OpenTelemetrySpanDiscovery(project), MicrometerSpanDiscovery(project))
+    private val spanNavigationDiscoveryProviders: List<SpanNavigationDiscoveryProvider> =
+        listOf(OpenTelemetrySpanNavigationDiscovery(project), MicrometerSpanNavigationDiscovery(project))
 
 
     companion object {
@@ -205,7 +205,7 @@ internal class JvmSpanNavigationProvider(project: Project) : AbstractNavigationD
 
         buildSpansLock.lock()
         try {
-            spanDiscoveryProviders.forEach { provider ->
+            spanNavigationDiscoveryProviders.forEach { provider ->
 
                 executeCatchingWithRetry(context, provider.getName(), 30000, 5) {
                     val otelSpans: Map<String, SpanLocation> = provider.discover(context)

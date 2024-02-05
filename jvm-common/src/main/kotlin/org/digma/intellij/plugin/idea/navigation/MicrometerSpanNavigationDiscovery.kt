@@ -12,7 +12,7 @@ import org.digma.intellij.plugin.idea.psi.findAnnotatedMethods
 import org.digma.intellij.plugin.psi.runInReadAccessInSmartModeIgnorePCE
 import org.digma.intellij.plugin.psi.runInReadAccessWithRetry
 
-class MicrometerSpanDiscovery(private val project: Project) : SpanDiscoveryProvider {
+class MicrometerSpanNavigationDiscovery(private val project: Project) : SpanNavigationDiscoveryProvider {
 
     private val logger = Logger.getInstance(this::class.java)
 

@@ -615,6 +615,31 @@ class ActivityMonitor(private val project: Project) : Disposable {
         )
     }
 
+
+    fun registerPythonNavigationDiscoveryEvent(eventName: String, details: Map<String, Any> = mapOf()) {
+        val enrichedDetails = details.toMutableMap()
+        enrichedDetails["type"] = "python"
+        registerNavigationDiscoveryEvent(eventName, enrichedDetails)
+    }
+
+    fun registerJvmNavigationDiscoveryEvent(eventName: String, details: Map<String, Any> = mapOf()) {
+        val enrichedDetails = details.toMutableMap()
+        enrichedDetails["type"] = "jvm"
+        registerNavigationDiscoveryEvent(eventName, enrichedDetails)
+    }
+
+
+    private fun registerNavigationDiscoveryEvent(eventName: String, details: Map<String, Any> = mapOf()) {
+        capture(
+            "NavigationDiscovery.".plus(eventName),
+            details
+        )
+    }
+
+
+
+
+
     fun hash(message: String): String {
         val bytes = message.toByteArray()
         val md = MessageDigest.getInstance("SHA-256")

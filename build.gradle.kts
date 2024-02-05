@@ -245,7 +245,8 @@ tasks {
             "idea.log.trace.categories" to "#org.digma",
             "idea.log.debug.categories" to "#org.digma",
             //make large idea.log because the default rotates every 10M and makes it difficult to follow messages with tail
-            "idea.log.limit" to "999999999"
+            "idea.log.limit" to "999999999",
+//            "idea.ProcessCanceledException" to "disabled"
         )
 
 

@@ -10,9 +10,9 @@ import com.intellij.openapi.util.Computable
 import com.intellij.openapi.util.Ref
 import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.common.runWIthRetry
+import org.digma.intellij.plugin.common.runWIthRetryIgnorePCE
 import org.digma.intellij.plugin.common.runWIthRetryWithResult
-import java.util.function.Consumer
-import java.util.function.Function
+import org.digma.intellij.plugin.common.runWIthRetryWithResultIgnorePCE
 import java.util.function.Supplier
 
 
@@ -21,9 +21,15 @@ fun runInReadAccess(runnable: Runnable) {
 }
 
 fun runInReadAccessWithRetry(runnable: Runnable) {
-    return runWIthRetryWithResult({
+    runWIthRetry({
         ReadActions.ensureReadAction(runnable)
     }, backOffMillis = 20, maxRetries = 5)
+}
+
+fun runInReadAccessWithRetryIgnorePCE(runnable: Runnable) {
+    runWIthRetryIgnorePCE({
+        ReadActions.ensureReadAction(runnable)
+    }, delayMillis = 20, maxRetries = 5)
 }
 
 fun <T> runInReadAccessWithResult(computable: Computable<T>): T {
@@ -108,6 +114,17 @@ fun <T> runInReadAccessInSmartModeWithResultAndRetry(project: Project, computabl
 }
 
 
+fun <T> runInReadAccessInSmartModeIgnorePCE(project: Project, computable: Computable<T>): T? {
+    return runWIthRetryWithResultIgnorePCE({
+        if (isReadAccessAllowed()) {
+            computable.compute()
+        } else {
+            DumbService.getInstance(project).runReadActionInSmartMode(computable)
+        }
+    }, delayMillis = 50, maxRetries = 5)
+}
+
+
 fun <T> runInReadAccessInSmartModeWithWriteActionPriorityWithRetry(project: Project, computable: Computable<T>): T {
     return runWIthRetryWithResult({
 
@@ -131,18 +148,3 @@ fun isReadAccessAllowed(): Boolean {
 }
 
 
-fun executeCatching(runnable: Runnable, onException: Consumer<Throwable>) {
-    return try {
-        runnable.run()
-    } catch (e: Throwable) {
-        onException.accept(e)
-    }
-}
-
-fun <T> executeCatching(computable: Computable<T>, onException: Function<Throwable, T>): T {
-    return try {
-        computable.compute()
-    } catch (e: Throwable) {
-        onException.apply(e)
-    }
-}

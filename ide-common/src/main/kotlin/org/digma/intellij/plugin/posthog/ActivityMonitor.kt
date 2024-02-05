@@ -501,7 +501,8 @@ class ActivityMonitor(private val project: Project) : Disposable {
         if(PersistenceService.getInstance().hasEmail()){
             capture(
                 "registered user uninstalled", mapOf(
-                    "email" to PersistenceService.getInstance().hasEmail()
+                    "registered email" to (PersistenceService.getInstance().getUserRegistrationEmail() ?: ""),
+                    "email" to (PersistenceService.getInstance().getUserEmail() ?: "")
                 )
             )
         }
@@ -518,7 +519,8 @@ class ActivityMonitor(private val project: Project) : Disposable {
         if(PersistenceService.getInstance().hasEmail()){
             capture(
                 "registered user disabled", mapOf(
-                    "email" to PersistenceService.getInstance().hasEmail()
+                    "registered email" to (PersistenceService.getInstance().getUserRegistrationEmail() ?: ""),
+                    "email" to (PersistenceService.getInstance().getUserEmail() ?: "")
                 )
             )
         }

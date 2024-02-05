@@ -8,24 +8,15 @@ plugins {
 }
 
 java {
-    @Suppress("UnstableApiUsage")
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(project.currentProfile().javaVersion))
         //it is possible to use jetbrains runtime for toolchain but then
         // runIde will use this runtime to run the development instance and that is not ideal,
         // it's better to run the development instance with the bundled runtime.
+        // so IMO its not a good idea to configure 'vendor = JvmVendorSpec.JETBRAINS'
+        // follow this issue: https://github.com/JetBrains/gradle-intellij-plugin/issues/1538
 
-        //todo: but because of this issue
-        // https://github.com/JetBrains/gradle-intellij-plugin/issues/1534
-        // we currently must run the 241 development instance with JBR 17, until the issue is fixed
-        // another issue is that runIde changes the test task executable to the bundled JBR, so when
-        // building with 241 some of our tests will fail.
-
-        vendor = JvmVendorSpec.JETBRAINS
-
-        //there is not real need for vendor, any jdk should compile the project correctly.
-        //amazon is recommended by jetbrains
-        //vendor = JvmVendorSpec.IBM
+        vendor = JvmVendorSpec.AMAZON
     }
 }
 

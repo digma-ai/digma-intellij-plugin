@@ -6,8 +6,6 @@ import com.intellij.openapi.util.IconLoader
 import com.intellij.ui.JBColor
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.icons.IconsUtil
-import org.digma.intellij.plugin.ui.common.Laf.Sizes.Companion.BUTTON_SIZE_24
-import org.digma.intellij.plugin.ui.common.Laf.Sizes.Companion.INSIGHT_ICON_SIZE_32
 import org.digma.intellij.plugin.ui.list.insights.ThreeDotsIcon
 import java.awt.Color
 import java.awt.Font
@@ -83,8 +81,8 @@ object Laf {
             //@JvmStatic val SIMPLE_ICON_COLOR: JBColor = JBColor(0x222222, 0xDDDDDD)
             @JvmStatic val GRAY: Color = Color(0x8A8A8A)
             //the LIVE_BUTTON_BORDER colors should match the colors of the rect in LiveButtonFullIconDark and LiveButtonFullIconLight
-            @JvmStatic val LIVE_BUTTON_BORDER_DARK: Color = Color(0x414363)
-            @JvmStatic val LIVE_BUTTON_BORDER_LIGHT: Color = Color(0x8f90ff)
+//            @JvmStatic val LIVE_BUTTON_BORDER_DARK: Color = Color(0x414363)
+//            @JvmStatic val LIVE_BUTTON_BORDER_LIGHT: Color = Color(0x8f90ff)
         }
     }
 
@@ -100,10 +98,11 @@ object Laf {
                 @JvmStatic val HOME_SELECTED_LIGHT: Icon = SvgIcon.asIs("/icons/home-selected-light.svg")
                 @JvmStatic val PROJECT_DARK: Icon = SvgIcon.asIs("/icons/project-dark.svg")
                 @JvmStatic val PROJECT_LIGHT: Icon = SvgIcon.asIs("/icons/project-light.svg")
-                @JvmStatic val ARROW_UP: Icon = SvgIcon.asIs("/icons/arrow-up.svg")
-                @JvmStatic val ARROW_DOWN: Icon = SvgIcon.asIs("/icons/arrow-down.svg")
-                @JvmStatic val DIGMA_LOGO: Icon = SvgIcon.asIs("/icons/digma-logo.svg")
-                @JvmStatic val RELATED_INSIGHTS: Icon = SvgIcon.asIs("/icons/related-insights.svg")
+
+                //                @JvmStatic val ARROW_UP: Icon = SvgIcon.asIs("/icons/arrow-up.svg")
+//                @JvmStatic val ARROW_DOWN: Icon = SvgIcon.asIs("/icons/arrow-down.svg")
+//                @JvmStatic val DIGMA_LOGO: Icon = SvgIcon.asIs("/icons/digma-logo.svg")
+//                @JvmStatic val RELATED_INSIGHTS: Icon = SvgIcon.asIs("/icons/related-insights.svg")
                 @JvmStatic val POINTER: Icon = SvgIcon.asIs("/icons/pointer.svg")
                 @JvmStatic val SLACK: Icon = SvgIcon.asIs("/icons/slack.svg")
                 @JvmStatic val TARGET: Icon = SvgIcon.asIs("/icons/target.svg")
@@ -129,8 +128,8 @@ object Laf {
                 @JvmStatic val ENVIRONMENT_HAS_USAGE = SvgIcon.asIs("/icons/active-env.svg")
                 @JvmStatic
                 val ENVIRONMENT_HAS_NO_USAGE = SvgIcon.asIs("/icons/disabled-env.svg")
-                @JvmStatic
-                val NO_CONNECTION_ICON = SvgIcon.asIs("/icons/no-signal.svg")
+//                @JvmStatic
+//                val NO_CONNECTION_ICON = SvgIcon.asIs("/icons/no-signal.svg")
             }
         }
 
@@ -142,36 +141,37 @@ object Laf {
                 @JvmStatic val FILE: Icon = SvgIcon.withColor("/icons/file.svg", Colors.DEFAULT_LABEL_FOREGROUND)
                 @JvmStatic val TELESCOPE: Icon = SvgIcon.withColor("/icons/telescope.svg", Colors.DEFAULT_LABEL_FOREGROUND)
                 @JvmStatic val INTERFACE: Icon = SvgIcon.withColor("/icons/interface.svg", Colors.DEFAULT_LABEL_FOREGROUND)
-                @JvmStatic val MESSAGE: Icon = SvgIcon.withColor("/icons/message.svg", Colors.DEFAULT_LABEL_FOREGROUND)
+
+                //                @JvmStatic val MESSAGE: Icon = SvgIcon.withColor("/icons/message.svg", Colors.DEFAULT_LABEL_FOREGROUND)
                 // Insight item icons
-                @JvmStatic val BOTTLENECK = SvgIcon.asIs("/icons/bottleneck.svg")
-                @JvmStatic val DURATION = SvgIcon.asIs("/icons/duration.svg")
-                @JvmStatic val ERRORS = SvgIcon.asIs("/icons/errors.svg")
-                @JvmStatic val HOTSPOT = SvgIcon.asIs("/icons/hotspot.svg")
-                @JvmStatic val LOW_USAGE = SvgIcon.asIs("/icons/traffic-low.svg")
-                @JvmStatic val N_PLUS_ONE = loadAndScaleIconByWidth("/icons/sql.png", BUTTON_SIZE_24)
-                @JvmStatic val NORMAL_USAGE = SvgIcon.asIs("/icons/traffic-normal.svg")
-                @JvmStatic val HIGH_USAGE = SvgIcon.asIs("/icons/traffic-high.svg")
-                @JvmStatic val WAITING_DATA = SvgIcon.asIs("/icons/sand-watch.svg")
-                @JvmStatic val SLOW = SvgIcon.asIs("/icons/snail.svg")
+//                @JvmStatic val BOTTLENECK = SvgIcon.asIs("/icons/bottleneck.svg")
+//                @JvmStatic val DURATION = SvgIcon.asIs("/icons/duration.svg")
+//                @JvmStatic val ERRORS = SvgIcon.asIs("/icons/errors.svg")
+//                @JvmStatic val HOTSPOT = SvgIcon.asIs("/icons/hotspot.svg")
+//                @JvmStatic val LOW_USAGE = SvgIcon.asIs("/icons/traffic-low.svg")
+//                @JvmStatic val N_PLUS_ONE = loadAndScaleIconByWidth("/icons/sql.png", BUTTON_SIZE_24)
+//                @JvmStatic val NORMAL_USAGE = SvgIcon.asIs("/icons/traffic-normal.svg")
+//                @JvmStatic val HIGH_USAGE = SvgIcon.asIs("/icons/traffic-high.svg")
+//                @JvmStatic val WAITING_DATA = SvgIcon.asIs("/icons/sand-watch.svg")
+//                @JvmStatic val SLOW = SvgIcon.asIs("/icons/snail.svg")
                 @JvmStatic val THREE_DOTS = ThreeDotsIcon.asIs("/icons/three-dots.svg")
                 @JvmStatic val REFRESH = ThreeDotsIcon.asIs("/icons/repeat.svg")
-                @JvmStatic val SCALE = SvgIcon.asIs("/icons/scale.svg")
+//                @JvmStatic val SCALE = SvgIcon.asIs("/icons/scale.svg")
 
-                @JvmStatic val QUESTION_MARK = AllIcons.General.QuestionDialog
-                @JvmStatic val SPAN_DURATION_DROPPED = loadAndScaleIconByWidth("/icons/dropped.png", 8)
-                @JvmStatic val SPAN_DURATION_ROSE = loadAndScaleIconByWidth("/icons/rose.png", 8)
+//                @JvmStatic val QUESTION_MARK = AllIcons.General.QuestionDialog
+//                @JvmStatic val SPAN_DURATION_DROPPED = loadAndScaleIconByWidth("/icons/dropped.png", 8)
+//                @JvmStatic val SPAN_DURATION_ROSE = loadAndScaleIconByWidth("/icons/rose.png", 8)
             }
         }
 
         class Common {
             companion object {
-                @JvmStatic val NoDataYetLight = SvgIcon.asIs("/icons/no_data_yet-light.svg")
-                @JvmStatic val NoDataYetDark = SvgIcon.asIs("/icons/no_data_yet-dark.svg")
-                @JvmStatic val NoObservabilityLight = SvgIcon.asIs("/icons/no_observability-light.svg")
-                @JvmStatic val NoObservabilityDark = SvgIcon.asIs("/icons/no_observability-dark.svg")
-                @JvmStatic val NoInsightsLight = SvgIcon.asIs("/icons/no_insights_light.svg")
-                @JvmStatic val NoInsightsDark = SvgIcon.asIs("/icons/no_insights_dark.svg")
+                //                @JvmStatic val NoDataYetLight = SvgIcon.asIs("/icons/no_data_yet-light.svg")
+//                @JvmStatic val NoDataYetDark = SvgIcon.asIs("/icons/no_data_yet-dark.svg")
+//                @JvmStatic val NoObservabilityLight = SvgIcon.asIs("/icons/no_observability-light.svg")
+//                @JvmStatic val NoObservabilityDark = SvgIcon.asIs("/icons/no_observability-dark.svg")
+//                @JvmStatic val NoInsightsLight = SvgIcon.asIs("/icons/no_insights_light.svg")
+//                @JvmStatic val NoInsightsDark = SvgIcon.asIs("/icons/no_insights_dark.svg")
                 @JvmStatic val UpdateProductDark = SvgIcon.asIs("/icons/update-product-dark.svg")
                 @JvmStatic val UpdateProductLight = SvgIcon.asIs("/icons/update-product-light.svg")
 
@@ -193,10 +193,10 @@ object Laf {
                 //These two icons LiveButtonFullIconDark and LiveButtonFullIconLight can be used as one icon
                 // for the live view button, but we probably don't need to use them, it doesn't look good.
                 // we use LiveIconDark and LiveIconLight plus regular text.
-                @JvmStatic val LiveButtonFullIconDark = SvgIcon.asIs("/icons/live-view-button-full-icon-dark.svg")
-                @JvmStatic val LiveButtonFullIconLight = SvgIcon.asIs("/icons/live-view-button-full-icon-light.svg")
-                @JvmStatic val LiveIconDark = SvgIcon.asIs("/icons/live-icon-dark.svg")
-                @JvmStatic val LiveIconLight = SvgIcon.asIs("/icons/live-icon-light.svg")
+//                @JvmStatic val LiveButtonFullIconDark = SvgIcon.asIs("/icons/live-view-button-full-icon-dark.svg")
+//                @JvmStatic val LiveButtonFullIconLight = SvgIcon.asIs("/icons/live-view-button-full-icon-light.svg")
+//                @JvmStatic val LiveIconDark = SvgIcon.asIs("/icons/live-icon-dark.svg")
+//                @JvmStatic val LiveIconLight = SvgIcon.asIs("/icons/live-icon-light.svg")
                 @JvmStatic
                 val NotificationsBellDark = SvgIcon.asIs("/icons/notification-bell-dark.svg")
                 @JvmStatic
@@ -233,30 +233,17 @@ object Laf {
             }
         }
 
-        companion object {
-            private fun loadAndScaleInsightIcon(path: String): Icon {
-                return loadAndScaleInsightIconByWidth(path)
-            }
 
-            private fun loadAndScaleInsightIconByWidth(path: String): Icon {
-                val size = scaleIcons(INSIGHT_ICON_SIZE_32)
-                return IconsUtil.loadAndScaleIconObjectByWidth(path, size)
-            }
-
-            private fun loadAndScaleIconByWidth(path: String, width: Int): Icon {
-                return IconsUtil.loadAndScaleIconObjectByWidth(path, width)
-            }
-        }
     }
 
     class Sizes {
         companion object {
-            @JvmStatic
-            val INSIGHT_ICON_SIZE_32: Int = 32
+            //            @JvmStatic
+//            val INSIGHT_ICON_SIZE_32: Int = 32
             const val PANEL_SIZE_32 = 32
             const val BUTTON_SIZE_32 = 32
             const val BUTTON_SIZE_24 = 24
-            const val BUTTON_SIZE_26 = 26
+//            const val BUTTON_SIZE_26 = 26
         }
     }
 

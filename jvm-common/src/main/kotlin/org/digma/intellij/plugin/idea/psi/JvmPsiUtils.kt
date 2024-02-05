@@ -78,3 +78,14 @@ fun getMethodsInClass(project: Project, cls: UClass): Collection<UMethod> {
     return cls.methods.asList()
 }
 
+
+//must be called in read access
+fun hasOneOfAnnotations(psiClass: PsiClass, vararg annotationsFqn: String): Boolean {
+    annotationsFqn.forEach {
+        val annotObj = psiClass.getAnnotation(it)
+        if (annotObj != null) {
+            return true
+        }
+    }
+    return false
+}

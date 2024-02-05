@@ -120,20 +120,6 @@ class JavaPsiUtils {
             return psiClass.innerClasses.asList()
         }
 
-
-
-
-        @JvmStatic
-        fun hasOneOfAnnotations(psiClass: PsiClass, vararg annotationsFqn: String): Boolean {
-            annotationsFqn.forEach {
-                val annotObj = psiClass.getAnnotation(it)
-                if (annotObj != null) {
-                    return true
-                }
-            }
-            return false
-        }
-
     }
 
 }

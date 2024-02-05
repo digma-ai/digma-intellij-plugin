@@ -83,6 +83,8 @@ abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSp
 
      */
 
+    //todo: run under process and use org.digma.intellij.plugin.progress.ProcessContext
+    // to track errors, create a ProcessContext class for buildDocumentInfo like BuildDocumentInfoProcessContext
     open fun buildDocumentInfo(project: Project, psiFile: PsiFile): DocumentInfo {
 
         if (project.isDisposed || !PsiUtils.isValidPsiFile(psiFile)) {

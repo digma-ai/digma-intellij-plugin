@@ -6,6 +6,7 @@ import org.digma.intellij.plugin.common.SearchScopeProvider
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
+import org.digma.intellij.plugin.progress.ProcessContext
 import org.digma.intellij.plugin.psi.PsiUtils
 import java.util.Objects
 
@@ -18,7 +19,18 @@ abstract class EndpointDiscovery {
     //using searchScope supplier because building SearchScope needs read access
     abstract fun lookForEndpoints(searchScopeProvider: SearchScopeProvider): List<EndpointInfo>?
 
+    //a framework can override this method and implement instead lookForEndpoints(searchScopeProvider: SearchScopeProvider)
+    // the context is used to track errors
+    //todo: always send ProcessContext to track errors also from buildDocumentInfo.
+    // make the ProcessContext non nullable
+    // implement this method for all EndpointDiscovery
+    open fun lookForEndpoints(searchScopeProvider: SearchScopeProvider, context: ProcessContext?): List<EndpointInfo>? {
+        //call the old method for frameworks that still don't implement this method
+        return lookForEndpoints(searchScopeProvider)
+    }
 
+
+    //todo: send ProcessContext here too
     fun endpointDiscovery(psiFile: PsiFile, documentInfo: DocumentInfo) {
 
         if (!PsiUtils.isValidPsiFile(psiFile)) {

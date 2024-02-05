@@ -58,6 +58,23 @@ fun executeCatchingIgnorePCE(runnable: Runnable, onException: Consumer<Throwable
     }
 }
 
+
+fun executeCatchingWithRetryIgnorePCE(runnable: Runnable, onException: Consumer<Throwable>, onFinally: Runnable? = null) {
+    try {
+        runWIthRetryIgnorePCE({
+            runnable.run()
+        })
+    } catch (e: ProcessCanceledException) {
+        throw e
+    } catch (e: Throwable) {
+        onException.accept(e)
+    } finally {
+        onFinally?.run()
+    }
+}
+
+
+
 fun <T> executeCatchingWithResultIgnorePCE(computable: Computable<T>, onException: Function<Throwable, T>, onFinally: Runnable? = null): T {
     return try {
         computable.compute()
@@ -69,3 +86,5 @@ fun <T> executeCatchingWithResultIgnorePCE(computable: Computable<T>, onExceptio
         onFinally?.run()
     }
 }
+
+

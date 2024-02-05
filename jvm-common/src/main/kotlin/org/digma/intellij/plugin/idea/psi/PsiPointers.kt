@@ -13,15 +13,42 @@ import org.digma.intellij.plugin.WITH_SPAN_ANNOTATION_FQN
 import org.digma.intellij.plugin.idea.psi.discovery.MicrometerTracingFramework
 import org.digma.intellij.plugin.psi.runInReadAccessInSmartModeIgnorePCE
 import org.digma.intellij.plugin.psi.runInReadAccessWithResult
+import java.util.concurrent.ConcurrentHashMap
 
 @Service(Service.Level.PROJECT)
 class PsiPointers(val project: Project) {
+
+
+    private val classPointers = ConcurrentHashMap(mutableMapOf<String, SmartPsiElementPointer<PsiClass>>())
+
 
     private var withSpanAnnotationClassPointer: SmartPsiElementPointer<PsiClass>? = null
     private var traceBuilderPsiClassPointer: SmartPsiElementPointer<PsiClass>? = null
     private var startSpanPsiMethodPointer: SmartPsiElementPointer<PsiMethod>? = null
     private var micrometerObservedAnnotationClassPointer: SmartPsiElementPointer<PsiClass>? = null
 
+
+    fun getPsiClass(project: Project, className: String): PsiClass? {
+        return runInReadAccessWithResult { getPsiClassPointer(project, className)?.element }
+    }
+
+    fun getPsiClassPointer(project: Project, className: String): SmartPsiElementPointer<PsiClass>? {
+        if (classPointers[className] == null) {
+            val classPointer = runInReadAccessInSmartModeIgnorePCE(project) {
+                val psiClass = JavaPsiFacade.getInstance(project).findClass(className, GlobalSearchScope.allScope(project))
+                psiClass?.let {
+                    SmartPointerManager.getInstance(project).createSmartPsiElementPointer(it)
+                }
+            }
+            classPointer?.let {
+                classPointers[className] = it
+            }
+        }
+        return classPointers[className]
+    }
+
+
+    //todo: can be converted to getPsiClassClass
     fun getOtelWithSpanAnnotationPsiClass(project: Project): PsiClass? {
         if (withSpanAnnotationClassPointer == null) {
             withSpanAnnotationClassPointer = runInReadAccessInSmartModeIgnorePCE(project) {
@@ -38,7 +65,7 @@ class PsiPointers(val project: Project) {
         }
     }
 
-
+    //todo: can be converted to getPsiClassClass
     fun getOtelTracerBuilderPsiClass(project: Project): PsiClass? {
         if (traceBuilderPsiClassPointer == null) {
             traceBuilderPsiClassPointer = runInReadAccessInSmartModeIgnorePCE(project) {
@@ -73,7 +100,7 @@ class PsiPointers(val project: Project) {
         }
     }
 
-
+    //todo: can be converted to getPsiClassClass
     fun getMicrometerObservedAnnotationPsiClass(project: Project): PsiClass? {
         if (micrometerObservedAnnotationClassPointer == null) {
             micrometerObservedAnnotationClassPointer = runInReadAccessInSmartModeIgnorePCE(project) {

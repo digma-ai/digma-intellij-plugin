@@ -5,14 +5,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import java.beans.ConstructorProperties
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class QueryOptimizationSpan
+data class QueryOptimizationEndpoints
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-@ConstructorProperties("spanInfo", "traceId", "severity", "criticality", "ticketLink", "duration")
+@ConstructorProperties("endpointInfo")
 constructor(
-    val spanInfo: SpanInfo?,
-    val traceId: String?,
-    val severity: Double,
-    val criticality: Double,
-    var ticketLink: String?,
-    val duration: Duration,
+        val endpointInfo: EndpointInfo
 )

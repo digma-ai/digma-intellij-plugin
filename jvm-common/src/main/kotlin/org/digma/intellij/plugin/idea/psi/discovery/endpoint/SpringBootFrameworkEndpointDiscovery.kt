@@ -11,7 +11,6 @@ import org.digma.intellij.plugin.common.executeCatchingWithRetryIgnorePCE
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.psi.PsiPointers
 import org.digma.intellij.plugin.idea.psi.createPsiMethodCodeObjectId
-import org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscoveryUtils.Companion.combineUri
 import org.digma.intellij.plugin.idea.psi.findAnnotatedMethods
 import org.digma.intellij.plugin.idea.psi.hasOneOfAnnotations
 import org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils

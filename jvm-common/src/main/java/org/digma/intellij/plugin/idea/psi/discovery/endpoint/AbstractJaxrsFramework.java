@@ -237,7 +237,7 @@ public abstract class AbstractJaxrsFramework extends EndpointDiscovery {
                 String endpointSuffixUri = combinePaths(controllerPathAnnotation, methodPathAnnotation);
 
                 for (String appPath : appPaths) {
-                    String endpointFullUri = EndpointDiscoveryUtils.combineUri(appPath, endpointSuffixUri);
+                    String endpointFullUri = EndpointDiscoveryUtilsKt.combineUri(appPath, endpointSuffixUri);
                     String httpEndpointCodeObjectId = createHttpEndpointCodeObjectId(currExpectedAnnotation, endpointFullUri);
 
                     EndpointInfo endpointInfo = new EndpointInfo(httpEndpointCodeObjectId, createPsiMethodCodeObjectId(currPsiMethod), JavaPsiUtils.toFileUri(currPsiMethod), null, getFramework());
@@ -288,7 +288,7 @@ public abstract class AbstractJaxrsFramework extends EndpointDiscovery {
         if (annotOfSuffix != null) {
             suffixStr = JavaLanguageUtils.getPsiAnnotationAttributeValue(annotOfSuffix, "value");
         }
-        return EndpointDiscoveryUtils.combineUri(prefixStr, suffixStr);
+        return EndpointDiscoveryUtilsKt.combineUri(prefixStr, suffixStr);
     }
 
     @NotNull

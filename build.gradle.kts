@@ -350,7 +350,8 @@ tasks {
                 "webview/recentactivity/recentActivityTemplate.ftl",
                 "webview/tests/testsTemplate.ftl",
                 "webview/notifications/notificationstemplate.ftl",
-                "webview/assets/assetstemplate.ftl"
+                "webview/assets/assetstemplate.ftl",
+                "webview/navigation/navigationtemplate.ftl"
             )
         ) {
             filter<ReplaceTokens>("tokens" to tokens)

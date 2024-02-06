@@ -12,16 +12,16 @@ import javax.swing.JPanel
 import javax.swing.SwingConstants
 
 
-fun createNoInsightsPanel(): JPanel {
-
-    val icon = if (JBColor.isBright()) {
-        Laf.Icons.Common.NoInsightsLight
-    } else {
-        Laf.Icons.Common.NoInsightsDark
-    }
-
-    return createSimpleEmptyStatePanel(icon,"No Insights")
-}
+//fun createNoInsightsPanel(): JPanel {
+//
+//    val icon = if (JBColor.isBright()) {
+//        Laf.Icons.Common.NoInsightsLight
+//    } else {
+//        Laf.Icons.Common.NoInsightsDark
+//    }
+//
+//    return createSimpleEmptyStatePanel(icon,"No Insights")
+//}
 
 
 

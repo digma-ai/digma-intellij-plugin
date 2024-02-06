@@ -2,37 +2,23 @@ package org.digma.intellij.plugin.idea.psi.discovery.endpoint;
 
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleUtilCore;
+import com.intellij.openapi.module.*;
 import com.intellij.openapi.project.Project;
-import com.intellij.psi.JavaPsiFacade;
-import com.intellij.psi.PsiAnnotation;
-import com.intellij.psi.PsiClass;
-import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiMethod;
+import com.intellij.psi.*;
 import com.intellij.psi.search.GlobalSearchScope;
-import com.intellij.psi.search.searches.AnnotatedElementsSearch;
-import com.intellij.psi.search.searches.OverridingMethodsSearch;
+import com.intellij.psi.search.impl.VirtualFileEnumeration;
+import com.intellij.psi.search.searches.*;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Query;
-import org.digma.intellij.plugin.common.SearchScopeProvider;
-import org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils;
-import org.digma.intellij.plugin.idea.psi.java.JavaPsiUtils;
-import org.digma.intellij.plugin.model.discovery.EndpointFramework;
-import org.digma.intellij.plugin.model.discovery.EndpointInfo;
-import org.jetbrains.annotations.NotNull;
+import org.digma.intellij.plugin.common.*;
+import org.digma.intellij.plugin.idea.psi.java.*;
+import org.digma.intellij.plugin.model.discovery.*;
+import org.jetbrains.annotations.*;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 import static org.digma.intellij.plugin.idea.psi.JvmCodeObjectsUtilsKt.createPsiMethodCodeObjectId;
-import static org.digma.intellij.plugin.psi.PsiAccessUtilsKt.runInReadAccessInSmartModeAndRetry;
-import static org.digma.intellij.plugin.psi.PsiAccessUtilsKt.runInReadAccessInSmartModeWithResultAndRetry;
+import static org.digma.intellij.plugin.psi.PsiAccessUtilsKt.*;
 
 public abstract class AbstractJaxrsFramework extends EndpointDiscovery {
 
@@ -124,8 +110,7 @@ public abstract class AbstractJaxrsFramework extends EndpointDiscovery {
      * Overriding since have different logic,
      * in this impl searching for classes/methods in file and see if they inherit from super classes which declare on @PATH annotations.
      */
-    @Override
-    public List<EndpointInfo> lookForEndpoints(@NotNull PsiFile psiFile) {
+    private List<EndpointInfo> lookForEndpoints(@NotNull PsiFile psiFile) {
         lateInit();
         if (!isJaxRsHttpRelevant()) {
             return Collections.emptyList();
@@ -165,6 +150,13 @@ public abstract class AbstractJaxrsFramework extends EndpointDiscovery {
 
     @Override
     public List<EndpointInfo> lookForEndpoints(@NotNull SearchScopeProvider searchScopeProvider) {
+
+        //jax-rs need special discovery for PsiFile
+        PsiFile psiFile = extractPsiFileIfFileScope(searchScopeProvider);
+        if (psiFile != null) {
+            return lookForEndpoints(psiFile);
+        }
+
         lateInit();
         if (!isJaxRsHttpRelevant()) {
             return Collections.emptyList();
@@ -197,6 +189,29 @@ public abstract class AbstractJaxrsFramework extends EndpointDiscovery {
         }
 
         return endpointInfos;
+    }
+
+    @SuppressWarnings("UnstableApiUsage")
+    @Nullable
+    private PsiFile extractPsiFileIfFileScope(SearchScopeProvider searchScopeProvider) {
+
+        return ReadActions.ensureReadAction(() -> {
+            var scope = searchScopeProvider.get();
+            if (scope instanceof GlobalSearchScope globalSearchScope) {
+                var virtualFileEnumeration = VirtualFileEnumeration.extract(globalSearchScope);
+                if (virtualFileEnumeration != null) {
+                    var filesCollection = virtualFileEnumeration.getFilesIfCollection();
+                    if (filesCollection != null) {
+                        var virtualFile = filesCollection.stream().findFirst().orElse(null);
+                        if (virtualFile != null) {
+                            return PsiManager.getInstance(project).findFile(virtualFile);
+                        }
+                        return null;
+                    }
+                }
+            }
+            return null;
+        });
     }
 
     protected Set<EndpointInfo> handleCandidateMethods(Collection<PsiMethod> candidateMethods) {

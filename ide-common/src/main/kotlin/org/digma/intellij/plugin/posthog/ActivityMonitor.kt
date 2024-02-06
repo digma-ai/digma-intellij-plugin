@@ -501,7 +501,8 @@ class ActivityMonitor(private val project: Project) : Disposable {
         if(PersistenceService.getInstance().hasEmail()){
             capture(
                 "registered user uninstalled", mapOf(
-                    "email" to PersistenceService.getInstance().hasEmail()
+                    "registered email" to (PersistenceService.getInstance().getUserRegistrationEmail() ?: ""),
+                    "email" to (PersistenceService.getInstance().getUserEmail() ?: "")
                 )
             )
         }
@@ -518,7 +519,8 @@ class ActivityMonitor(private val project: Project) : Disposable {
         if(PersistenceService.getInstance().hasEmail()){
             capture(
                 "registered user disabled", mapOf(
-                    "email" to PersistenceService.getInstance().hasEmail()
+                    "registered email" to (PersistenceService.getInstance().getUserRegistrationEmail() ?: ""),
+                    "email" to (PersistenceService.getInstance().getUserEmail() ?: "")
                 )
             )
         }
@@ -614,6 +616,31 @@ class ActivityMonitor(private val project: Project) : Disposable {
             mapOf("errorMessage" to errorMessage)
         )
     }
+
+
+    fun registerPythonNavigationDiscoveryEvent(eventName: String, details: Map<String, Any> = mapOf()) {
+        val enrichedDetails = details.toMutableMap()
+        enrichedDetails["type"] = "python"
+        registerNavigationDiscoveryEvent(eventName, enrichedDetails)
+    }
+
+    fun registerJvmNavigationDiscoveryEvent(eventName: String, details: Map<String, Any> = mapOf()) {
+        val enrichedDetails = details.toMutableMap()
+        enrichedDetails["type"] = "jvm"
+        registerNavigationDiscoveryEvent(eventName, enrichedDetails)
+    }
+
+
+    private fun registerNavigationDiscoveryEvent(eventName: String, details: Map<String, Any> = mapOf()) {
+        capture(
+            "NavigationDiscovery.".plus(eventName),
+            details
+        )
+    }
+
+
+
+
 
     fun hash(message: String): String {
         val bytes = message.toByteArray()

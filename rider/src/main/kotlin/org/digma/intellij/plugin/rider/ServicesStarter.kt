@@ -12,7 +12,7 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.rider.protocol.CodeLensHost
 import org.digma.intellij.plugin.rider.protocol.LanguageServiceHost
 import org.digma.intellij.plugin.rider.protocol.ShowToolWindowHost
-import java.util.*
+import java.util.Objects
 
 class ServicesStarter : StartupActivity, DumbAware {
 
@@ -26,21 +26,18 @@ class ServicesStarter : StartupActivity, DumbAware {
     }
 
 
-    companion object {
-        @JvmStatic
-        fun loadStartupServices(project: Project) {
-            val logger = Logger.getInstance(ServicesStarter::class.java)
+    private fun loadStartupServices(project: Project) {
+        val logger = Logger.getInstance(ServicesStarter::class.java)
 
-            SolutionLifecycleHost.getInstance(project).isBackendLoaded.whenTrue(project.lifetime) {
-                Log.log(logger::debug, "Initializing startup services")
-                EDT.ensureEDT {
-                    Objects.requireNonNull(project.getService(ShowToolWindowHost::class.java))
+        SolutionLifecycleHost.getInstance(project).isBackendLoaded.whenTrue(project.lifetime) {
+            Log.log(logger::debug, "Initializing startup services")
+            EDT.ensureEDT {
+                Objects.requireNonNull(project.getService(ShowToolWindowHost::class.java))
 
-                    //initialize LanguageServiceHost early on startup, so it can initialize its model early on EDT.
-                    // if called later it will require EDT which is not always the case.
-                    Objects.requireNonNull(project.getService(LanguageServiceHost::class.java))
-                    Objects.requireNonNull(project.getService(CodeLensHost::class.java))
-                }
+                //initialize LanguageServiceHost early on startup, so it can initialize its model early on EDT.
+                // if called later it will require EDT which is not always the case.
+                Objects.requireNonNull(LanguageServiceHost.getInstance(project))
+                Objects.requireNonNull(CodeLensHost.getInstance(project))
             }
         }
     }

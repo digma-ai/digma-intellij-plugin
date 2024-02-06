@@ -7,6 +7,7 @@ import com.intellij.openapi.util.Computable
 import com.intellij.psi.PsiFile
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.ReadActions
+import org.digma.intellij.plugin.common.executeCatching
 import org.digma.intellij.plugin.common.runWIthRetryWithResult
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.psi.createMethodCodeObjectId
@@ -20,7 +21,6 @@ import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.discovery.SpanInfo
 import org.digma.intellij.plugin.psi.PsiUtils
-import org.digma.intellij.plugin.psi.executeCatching
 import org.digma.intellij.plugin.psi.runInReadAccessInSmartModeAndRetry
 import org.digma.intellij.plugin.psi.runInReadAccessWithResult
 import org.digma.intellij.plugin.psi.runInReadAccessWithRetry

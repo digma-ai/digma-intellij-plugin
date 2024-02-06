@@ -11,22 +11,21 @@ import java.util.Objects
 
 abstract class EndpointDiscovery {
 
+
+    abstract fun getName(): String
+
     //must run with read access
     //using searchScope supplier because building SearchScope needs read access
     abstract fun lookForEndpoints(searchScopeProvider: SearchScopeProvider): List<EndpointInfo>?
 
-    // default method uses fileScope. however, in some cases logic could be bit different
-    open fun lookForEndpoints(psiFile: PsiFile): List<EndpointInfo>? {
-        return if (PsiUtils.isValidPsiFile(psiFile)) {
-            lookForEndpoints { GlobalSearchScope.fileScope(psiFile) }
-        } else {
-            listOf()
-        }
-    }
-
 
     fun endpointDiscovery(psiFile: PsiFile, documentInfo: DocumentInfo) {
-        val endpointInfos = lookForEndpoints(psiFile)
+
+        if (!PsiUtils.isValidPsiFile(psiFile)) {
+            return
+        }
+
+        val endpointInfos = lookForEndpoints { GlobalSearchScope.fileScope(psiFile) }
 
         endpointInfos?.let { infos ->
             for (endpointInfo in infos) {
@@ -41,7 +40,7 @@ abstract class EndpointDiscovery {
                     }
                     methodInfo?.addEndpoint(endpointInfo)
                 } catch (e: Exception) {
-                    ErrorReporter.getInstance().reportError("${this::class.java}.endpointDiscovery", e)
+                    ErrorReporter.getInstance().reportError("${this::class.java}.endpointDiscovery.${getName()}", e)
                 }
             }
         }

@@ -4,7 +4,6 @@ import com.intellij.ide.impl.ProjectUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.wm.IdeFocusManager
-import java.awt.Window
 
 fun findActiveProject(): Project? {
 
@@ -21,4 +20,9 @@ fun findActiveProject(): Project? {
 
     return project
 
+}
+
+
+fun isProjectValid(project: Project): Boolean {
+    return !project.isDisposed && !project.isDefault
 }

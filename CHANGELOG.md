@@ -1,6 +1,19 @@
 # Changelog
 
-## [2.0.253] - 2024-02-04
+## [2.0.255] - 2024-02-06
+
+- Update index file by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1766
+- Add Insight Jira feature notification by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1765
+
+## 2.0.254 - 2024-02-05
+
+- update eap 241 build profile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1754
+- Improve navigation discovery Closes #1741 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1753
+- handle get-backend-info -n DashboardMessageRouterHandler Closes #1713 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1760
+- delete insightsTab Closes #1756 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1759
+- fix-email-in-posthog-event by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1762
+
+## 2.0.253 - 2024-02-04
 
 - dont use jetbrains vendor in toolchain by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1748
 - add email to registered user uninstall and disabled events Closes #1749 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1750

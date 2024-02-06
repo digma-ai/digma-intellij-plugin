@@ -13,6 +13,7 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.progress.EmptyProgressIndicator
+import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
@@ -42,10 +43,10 @@ import org.digma.intellij.plugin.idea.buildsystem.BuildSystemChecker.Companion.d
 import org.digma.intellij.plugin.idea.buildsystem.JavaBuildSystem
 import org.digma.intellij.plugin.idea.deps.ModulesDepsService
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
+import org.digma.intellij.plugin.idea.navigation.JvmEndpointNavigationProvider
+import org.digma.intellij.plugin.idea.navigation.JvmSpanNavigationProvider
 import org.digma.intellij.plugin.idea.psi.discovery.AbstractCodeObjectDiscovery
 import org.digma.intellij.plugin.idea.psi.discovery.MicrometerTracingFramework
-import org.digma.intellij.plugin.idea.psi.navigation.JavaEndpointNavigationProvider
-import org.digma.intellij.plugin.idea.psi.navigation.JavaSpanNavigationProvider
 import org.digma.intellij.plugin.instrumentation.CanInstrumentMethodResult
 import org.digma.intellij.plugin.instrumentation.JvmCanInstrumentMethodResult
 import org.digma.intellij.plugin.instrumentation.MissingDependencyCause
@@ -66,7 +67,6 @@ import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.getContainingUFile
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.toUElementOfType
-import java.util.Collections
 import java.util.Objects
 import java.util.function.Consumer
 import java.util.function.Supplier
@@ -117,7 +117,6 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
     }
 
 
-
     override fun buildDocumentInfo(psiFile: PsiFile, selectedTextEditor: FileEditor?): DocumentInfo {
         EDT.assertNonDispatchThread()
         return buildDocumentInfo(psiFile)
@@ -130,6 +129,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
         Log.log(logger::debug, "got buildDocumentInfo request for {}", psiFile)
         if (!project.isDisposed && PsiUtils.isValidPsiFile(psiFile) && isSupportedFile(psiFile)) {
             try {
+                //todo: run in invisible process and don't catch PCE
                 //retry the whole operation.
                 return runWIthRetryWithResult({
                     codeObjectDiscovery.buildDocumentInfo(
@@ -272,11 +272,11 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
 
     override fun findWorkspaceUrisForSpanIds(spanIds: List<String>): Map<String, Pair<String, Int>> {
-        return JavaSpanNavigationProvider.getInstance(project).getUrisForSpanIds(spanIds)
+        return JvmSpanNavigationProvider.getInstance(project).getUrisForSpanIds(spanIds)
     }
 
     override fun lookForDiscoveredEndpoints(endpointId: String): Set<EndpointInfo> {
-        return JavaEndpointNavigationProvider.getInstance(project).getEndpointInfos(endpointId)
+        return JvmEndpointNavigationProvider.getInstance(project).getEndpointInfos(endpointId)
     }
 
 
@@ -299,10 +299,10 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
     }
 
 
-    override fun detectMethodBySpan(project: Project, spanCodeObjectId: String?): String? {
+    override fun detectMethodBySpan(project: Project, spanCodeObjectId: String): String? {
 
         val urisForSpanIds: Map<String, Pair<String, Int>> =
-            JavaSpanNavigationProvider.getInstance(project).getUrisForSpanIds(Collections.singletonList(spanCodeObjectId))
+            JvmSpanNavigationProvider.getInstance(project).getUrisForSpanIds(listOf(spanCodeObjectId))
 
         val pair = urisForSpanIds[spanCodeObjectId]
         return pair?.let {
@@ -328,7 +328,6 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
             }
         }
     }
-
 
 
     fun findMethodByMethodCodeObjectId(methodId: String?): UMethod? {
@@ -452,10 +451,6 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
         }
         return null
     }
-
-
-
-
 
 
     override fun navigateToMethod(methodId: String) {
@@ -644,6 +639,8 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                     }
 
                     result = JvmCanInstrumentMethodResult(methodId, uMethod, annotationPsiClass, psiFile)
+                } catch (e: ProcessCanceledException) {
+                    throw e
                 } catch (e: Throwable) {
                     ErrorReporter.getInstance().reportError("AbstractJvmLanguageService.canInstrumentMethod", e)
                 }

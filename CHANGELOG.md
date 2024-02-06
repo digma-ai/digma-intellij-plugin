@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.254] - 2024-02-05
+## [2.0.255] - 2024-02-06
+
+- Update index file by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1766
+- Add Insight Jira feature notification by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1765
+
+## 2.0.254 - 2024-02-05
 
 - update eap 241 build profile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1754
 - Improve navigation discovery Closes #1741 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1753

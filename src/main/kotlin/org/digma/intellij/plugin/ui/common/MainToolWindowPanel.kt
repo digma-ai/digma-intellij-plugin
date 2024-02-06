@@ -10,6 +10,7 @@ import org.digma.intellij.plugin.common.IDEUtilsService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.frameworks.QuarkusConfigureDepsPanel
 import org.digma.intellij.plugin.ui.frameworks.SpringBootMicrometerConfigureDepsPanel
+import org.digma.intellij.plugin.ui.navigation.NavigationPanel
 import java.awt.BorderLayout
 import javax.swing.BorderFactory
 import javax.swing.BoxLayout

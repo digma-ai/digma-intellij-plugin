@@ -34,12 +34,11 @@ open class SvgIcon constructor(val path: String, val getColor : ColorGetter? = n
     }
 
     override fun getIconWidth(): Int {
-
         return try {
             getIcon().iconWidth
         } catch (e: Throwable) {
             ErrorReporter.getInstance().reportError(
-                "", e, mapOf(
+                "SvgIcon.getIconWidth", e, mapOf(
                     "icon.path" to path,
                     "icon.color" to getColor?.invoke().toString()
                 )
@@ -53,7 +52,7 @@ open class SvgIcon constructor(val path: String, val getColor : ColorGetter? = n
             getIcon().iconHeight
         } catch (e: Throwable) {
             ErrorReporter.getInstance().reportError(
-                "", e, mapOf(
+                "SvgIcon.getIconHeight", e, mapOf(
                     "icon.path" to path,
                     "icon.color" to getColor?.invoke().toString()
                 )

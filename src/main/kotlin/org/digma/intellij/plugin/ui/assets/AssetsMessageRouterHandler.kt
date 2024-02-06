@@ -15,7 +15,6 @@ import org.digma.intellij.plugin.ui.assets.model.SetServicesDataMessage
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
 import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
 
-@Suppress("VulnerableCodeUsages") // todo: fix, there is an issue
 class AssetsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(project) {
 
 

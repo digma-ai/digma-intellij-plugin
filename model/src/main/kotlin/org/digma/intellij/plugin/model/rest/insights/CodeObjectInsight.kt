@@ -30,6 +30,7 @@ import java.util.Date
     JsonSubTypes.Type(value = NormalUsageInsight::class, name = "NormalUsage"),
     JsonSubTypes.Type(value = HighUsageInsight::class, name = "HighUsage"),
     JsonSubTypes.Type(value = EPNPlusSpansInsight::class, name = "EndpointSpaNPlusOne"),
+    JsonSubTypes.Type(value = EndpointQueryOptimizationInsight::class, name = "EndpointQueryOptimization"),
     JsonSubTypes.Type(value = EndpointSessionInViewInsight::class, name = "EndpointSessionInView"),
     JsonSubTypes.Type(value = EndpointChattyApiInsight::class, name = "EndpointChattyApi"),
 

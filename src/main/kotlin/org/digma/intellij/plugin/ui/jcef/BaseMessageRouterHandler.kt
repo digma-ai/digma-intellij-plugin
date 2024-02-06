@@ -119,12 +119,12 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
 
                     JCefMessagesUtils.GLOBAL_SAVE_TO_PERSISTENCE -> {
                         val saveToPersistenceRequest = jsonToObject(request, SaveToPersistenceRequest::class.java)
-                        JCEFPersistenceService.getInstance(project).saveToPersistence(saveToPersistenceRequest);
+                        JCEFPersistenceService.getInstance(project).saveToPersistence(saveToPersistenceRequest)
                     }
 
                     JCefMessagesUtils.GLOBAL_GET_FROM_PERSISTENCE -> {
                         val getFromPersistenceRequest = jsonToObject(request, GetFromPersistenceRequest::class.java)
-                        JCEFPersistenceService.getInstance(project).getFromPersistence(browser, getFromPersistenceRequest);
+                        JCEFPersistenceService.getInstance(project).getFromPersistence(browser, getFromPersistenceRequest)
                     }
 
                     else -> {

@@ -1,0 +1,6 @@
+package org.digma.intellij.plugin.ui.navigation
+
+const val NAVIGATION_APP_DOMAIN_NAME = "navigation"
+const val NAVIGATION_APP_URL = "https://$NAVIGATION_APP_DOMAIN_NAME/index.html"
+const val NAVIGATION_APP_RESOURCE_FOLDER_NAME = "/webview/navigation"
+const val NAVIGATION_APP_INDEX_TEMPLATE_NAME = "navigationtemplate.ftl"

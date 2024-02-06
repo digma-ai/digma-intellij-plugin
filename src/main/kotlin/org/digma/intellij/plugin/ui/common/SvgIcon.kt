@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.ui.common
 
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.util.IconLoader
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import java.awt.Color
 import java.awt.Component
@@ -33,11 +34,31 @@ open class SvgIcon constructor(val path: String, val getColor : ColorGetter? = n
     }
 
     override fun getIconWidth(): Int {
-        return getIcon().iconWidth
+        return try {
+            getIcon().iconWidth
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError(
+                "SvgIcon.getIconWidth", e, mapOf(
+                    "icon.path" to path,
+                    "icon.color" to getColor?.invoke().toString()
+                )
+            )
+            throw e
+        }
     }
 
     override fun getIconHeight(): Int {
-        return getIcon().iconHeight
+        return try {
+            getIcon().iconHeight
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError(
+                "SvgIcon.getIconHeight", e, mapOf(
+                    "icon.path" to path,
+                    "icon.color" to getColor?.invoke().toString()
+                )
+            )
+            throw e
+        }
     }
 
     private fun getIcon(): Icon {

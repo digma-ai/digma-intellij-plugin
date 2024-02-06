@@ -14,8 +14,8 @@ import org.jetbrains.annotations.*;
 
 import java.util.*;
 
+import static org.digma.intellij.plugin.common.PsiAccessUtilsKt.*;
 import static org.digma.intellij.plugin.idea.psi.JvmCodeObjectsUtilsKt.createPsiMethodCodeObjectId;
-import static org.digma.intellij.plugin.psi.PsiAccessUtilsKt.*;
 
 public class GrpcFramework extends EndpointDiscovery {
     private static final Logger LOGGER = Logger.getInstance(GrpcFramework.class);
@@ -40,7 +40,7 @@ public class GrpcFramework extends EndpointDiscovery {
 
     private void lateInit() {
 
-        runInReadAccessInSmartModeAndRetry(project, () -> {
+        runInReadAccessInSmartModeWithRetryIgnorePCE(project, () -> {
             JavaPsiFacade psiFacade = JavaPsiFacade.getInstance(project);
             bindableServiceAnnotationClass = psiFacade.findClass(BINDABLE_SERVICE_ANNOTATION_STR, GlobalSearchScope.allScope(project));
             Log.log(LOGGER::info, "GRPC init. isGrpcServerRelevant='{}'", isGrpcServerRelevant());
@@ -61,14 +61,14 @@ public class GrpcFramework extends EndpointDiscovery {
 
         List<EndpointInfo> retList = new ArrayList<>();
 
-        Collection<PsiClass> grpcServerClassesInFile = runInReadAccessInSmartModeWithResultAndRetry(project, () -> {
+        Collection<PsiClass> grpcServerClassesInFile = runInReadAccessInSmartModeWithResultAndRetryIgnorePCE(project, () -> {
             Query<PsiClass> psiClasses = ClassInheritorsSearch.search(bindableServiceAnnotationClass, searchScopeProvider.get(), true);
             return psiClasses.findAll();
         });
 
         for (PsiClass currGrpcServerClass : grpcServerClassesInFile) {
 
-            runInReadAccessInSmartModeAndRetry(project, () -> {
+            runInReadAccessInSmartModeWithRetryIgnorePCE(project, () -> {
                 if (JavaPsiUtils.isBaseClass(currGrpcServerClass)) {
                     // if has no super class then it is the generated GRPC server class, we do not want it
                     Log.log(LOGGER::debug, "endpointDiscovery, skip bindableService GrpcServerClass fqn='{}' since it is the generated GRPC base service", currGrpcServerClass.getQualifiedName());

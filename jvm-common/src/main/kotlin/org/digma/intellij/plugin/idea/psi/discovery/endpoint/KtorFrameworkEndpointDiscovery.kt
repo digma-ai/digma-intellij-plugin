@@ -7,6 +7,7 @@ import com.intellij.psi.search.searches.ReferencesSearch
 import org.digma.intellij.plugin.common.SearchScopeProvider
 import org.digma.intellij.plugin.common.TextRangeUtils
 import org.digma.intellij.plugin.common.executeCatchingWithRetryIgnorePCE
+import org.digma.intellij.plugin.common.runInReadAccessInSmartModeWithResultAndRetryIgnorePCE
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.psi.createMethodCodeObjectId
 import org.digma.intellij.plugin.idea.psi.getExpressionValue
@@ -14,7 +15,6 @@ import org.digma.intellij.plugin.model.discovery.EndpointFramework
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.progress.ProcessContext
 import org.digma.intellij.plugin.psi.PsiUtils
-import org.digma.intellij.plugin.psi.runInReadAccessInSmartModeIgnorePCE
 import org.jetbrains.kotlin.idea.stubindex.KotlinTopLevelFunctionFqnNameIndex
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.uast.UCallExpression
@@ -77,7 +77,7 @@ class KtorFrameworkEndpointDiscovery(private val project: Project) : EndpointDis
 
 
             val declarations =
-                runInReadAccessInSmartModeIgnorePCE(project) {
+                runInReadAccessInSmartModeWithResultAndRetryIgnorePCE(project) {
                     //todo: maybe cache the declarations, maybe in SmartElementPointer
                     val declarations = KotlinTopLevelFunctionFqnNameIndex.get(fqName, project, GlobalSearchScope.allScope(project))
                     declarations.filter { ktNamedFunction: KtNamedFunction -> ktNamedFunction.containingKtFile.isCompiled }
@@ -89,7 +89,7 @@ class KtorFrameworkEndpointDiscovery(private val project: Project) : EndpointDis
                 context?.indicator?.checkCanceled()
 
                 val references =
-                    runInReadAccessInSmartModeIgnorePCE(project) {
+                    runInReadAccessInSmartModeWithResultAndRetryIgnorePCE(project) {
                         ReferencesSearch.search(methodDeclarations, searchScopeProvider.get()).findAll()
                     }
 
@@ -97,7 +97,7 @@ class KtorFrameworkEndpointDiscovery(private val project: Project) : EndpointDis
                 references.forEach { ref ->
 
                     executeCatchingWithRetryIgnorePCE({
-                        runInReadAccessInSmartModeIgnorePCE(project) {
+                        runInReadAccessInSmartModeWithResultAndRetryIgnorePCE(project) {
                             buildEndpointFromReference(resultEndpoints, ref, httpMethod)
                         }
                     }, { e ->

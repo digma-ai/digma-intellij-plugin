@@ -34,6 +34,8 @@ import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.common.Retries
 import org.digma.intellij.plugin.common.allowSlowOperation
 import org.digma.intellij.plugin.common.isValidVirtualFile
+import org.digma.intellij.plugin.common.runInReadAccessInSmartMode
+import org.digma.intellij.plugin.common.runInReadAccessWithResult
 import org.digma.intellij.plugin.common.runWIthRetryWithResult
 import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.document.DocumentInfoService
@@ -58,8 +60,6 @@ import org.digma.intellij.plugin.model.discovery.TextRange
 import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.psi.PsiFileNotFountException
 import org.digma.intellij.plugin.psi.PsiUtils
-import org.digma.intellij.plugin.psi.runInReadAccessInSmartMode
-import org.digma.intellij.plugin.psi.runInReadAccessWithResult
 import org.digma.intellij.plugin.ui.CaretContextService
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UFile

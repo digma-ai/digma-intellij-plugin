@@ -2,34 +2,24 @@ package org.digma.intellij.plugin.editor;
 
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.editor.Document;
-import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.editor.event.DocumentEvent;
-import com.intellij.openapi.editor.event.DocumentListener;
-import com.intellij.openapi.fileEditor.FileDocumentManager;
-import com.intellij.openapi.fileEditor.FileEditor;
-import com.intellij.openapi.fileEditor.FileEditorManager;
-import com.intellij.openapi.project.DumbService;
-import com.intellij.openapi.project.Project;
+import com.intellij.openapi.editor.*;
+import com.intellij.openapi.editor.event.*;
+import com.intellij.openapi.fileEditor.*;
+import com.intellij.openapi.project.*;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiDocumentManager;
-import com.intellij.psi.PsiFile;
-import com.intellij.util.Alarm;
+import com.intellij.psi.*;
+import com.intellij.util.*;
 import com.intellij.util.Alarm.ThreadToUse;
-import com.intellij.util.AlarmFactory;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
-import org.digma.intellij.plugin.psi.LanguageService;
-import org.digma.intellij.plugin.psi.LanguageServiceLocator;
-import org.digma.intellij.plugin.psi.PsiUtils;
+import org.digma.intellij.plugin.psi.*;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Listens to documentChanged events and updates DocumentInfoService and the current context.
@@ -155,10 +145,10 @@ class DocumentChangeListener {
 
         if (fileEditor.isValid()) {
 
+            //todo: retry this block if buildDocumentInfo fails.
+            // send a process context from here and if failed retry
             DocumentInfo documentInfo = languageService.buildDocumentInfo(psiFile, fileEditor);
-
             Log.log(LOGGER::debug, "got DocumentInfo for {}", psiFile.getVirtualFile());
-
             documentInfoService.addCodeObjects(psiFile, documentInfo);
             Log.log(LOGGER::debug, "documentInfoService updated with DocumentInfo for {}", psiFile.getVirtualFile());
         }

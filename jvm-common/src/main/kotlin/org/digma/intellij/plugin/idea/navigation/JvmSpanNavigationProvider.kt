@@ -19,6 +19,7 @@ import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.common.SearchScopeProvider
 import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.common.isValidVirtualFile
+import org.digma.intellij.plugin.common.runInReadAccessWithResult
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.errorreporting.SEVERITY_LOW_NO_FIX
 import org.digma.intellij.plugin.errorreporting.SEVERITY_MEDIUM_TRY_FIX
@@ -30,7 +31,6 @@ import org.digma.intellij.plugin.idea.psi.isJvmSupportedFile
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.progress.RetryableTask
 import org.digma.intellij.plugin.psi.PsiUtils
-import org.digma.intellij.plugin.psi.runInReadAccessWithResult
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock

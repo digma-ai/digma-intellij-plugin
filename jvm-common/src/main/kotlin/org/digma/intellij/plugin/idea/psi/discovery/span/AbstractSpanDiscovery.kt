@@ -15,13 +15,14 @@ import org.digma.intellij.plugin.SPAN_BUILDER_FQN
 import org.digma.intellij.plugin.WITH_SPAN_ANNOTATION_FQN
 import org.digma.intellij.plugin.common.SearchScopeProvider
 import org.digma.intellij.plugin.common.executeCatching
+import org.digma.intellij.plugin.common.executeCatchingWithResult
+import org.digma.intellij.plugin.common.runInReadAccessInSmartModeWithResultAndRetryIgnorePCE
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.psi.PsiPointers
 import org.digma.intellij.plugin.idea.psi.discovery.MicrometerTracingFramework
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.SpanInfo
 import org.digma.intellij.plugin.psi.PsiUtils
-import org.digma.intellij.plugin.psi.runInReadAccessInSmartModeWithResultAndRetry
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.toUElementOfType
@@ -66,7 +67,7 @@ abstract class AbstractSpanDiscovery {
 
 
         executeCatching({
-            val micrometerSpans = runInReadAccessInSmartModeWithResultAndRetry(project) {
+            val micrometerSpans = runInReadAccessInSmartModeWithResultAndRetryIgnorePCE(project) {
                 micrometerTracingFramework.discoverSpans(project, psiFile)
             }
             micrometerSpans.let {
@@ -98,8 +99,8 @@ abstract class AbstractSpanDiscovery {
 
                 //catch exceptions for each annotated method and skip it
                 val methodSpans: List<SpanInfo> =
-                    executeCatching(Computable {
-                        runInReadAccessInSmartModeWithResultAndRetry(project) {
+                    executeCatchingWithResult(Computable {
+                        runInReadAccessInSmartModeWithResultAndRetryIgnorePCE(project) {
                             findSpanInfosFromWithSpanAnnotatedMethod(it)
                         }
                     }) { e ->
@@ -126,7 +127,7 @@ abstract class AbstractSpanDiscovery {
 
     private fun findAnnotatedMethods(project: Project, annotationClass: PsiClass, searchScope: SearchScopeProvider): List<UMethod> {
         //todo: different search for java/kotlin, for kotlin use KotlinAnnotatedElementsSearcher or KotlinAnnotationsIndex
-        return runInReadAccessInSmartModeWithResultAndRetry(project) {
+        return runInReadAccessInSmartModeWithResultAndRetryIgnorePCE(project) {
             val psiMethods = AnnotatedElementsSearch.searchPsiMethods(annotationClass, searchScope.get())
             psiMethods.findAll().mapNotNull { psiMethod: PsiMethod -> psiMethod.toUElementOfType<UMethod>() }
         }
@@ -154,8 +155,8 @@ abstract class AbstractSpanDiscovery {
 
                     //catch exceptions for each method reference and skip it
                     val spanInfo: SpanInfo? =
-                        executeCatching(Computable {
-                            runInReadAccessInSmartModeWithResultAndRetry(project) {
+                        executeCatchingWithResult({
+                            runInReadAccessInSmartModeWithResultAndRetryIgnorePCE(project) {
                                 findSpanInfoFromStartSpanMethodReference(project, uReference)
                             }
                         }) { e ->
@@ -190,7 +191,7 @@ abstract class AbstractSpanDiscovery {
         searchScope: SearchScopeProvider,
     ): Collection<UReferenceExpression> {
 
-        return runInReadAccessInSmartModeWithResultAndRetry(project) {
+        return runInReadAccessInSmartModeWithResultAndRetryIgnorePCE(project) {
             val methodReferences = MethodReferencesSearch.search(startSpanMethod, searchScope.get(), true)
             methodReferences.findAll().mapNotNull { psiReference: PsiReference -> psiReference.element.toUElementOfType<UReferenceExpression>() }
         }

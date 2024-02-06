@@ -3,11 +3,14 @@ package org.digma.intellij.plugin.idea.psi.discovery
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.Computable
 import com.intellij.psi.PsiFile
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.common.executeCatching
+import org.digma.intellij.plugin.common.executeCatchingWithResult
+import org.digma.intellij.plugin.common.runInReadAccessInSmartModeWithRetryIgnorePCE
+import org.digma.intellij.plugin.common.runInReadAccessWithResult
+import org.digma.intellij.plugin.common.runInReadAccessWithRetryIgnorePCE
 import org.digma.intellij.plugin.common.runWIthRetryWithResult
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.psi.createMethodCodeObjectId
@@ -21,9 +24,6 @@ import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.discovery.SpanInfo
 import org.digma.intellij.plugin.psi.PsiUtils
-import org.digma.intellij.plugin.psi.runInReadAccessInSmartModeAndRetry
-import org.digma.intellij.plugin.psi.runInReadAccessWithResult
-import org.digma.intellij.plugin.psi.runInReadAccessWithRetry
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.UMethod
@@ -87,6 +87,8 @@ abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSp
     // to track errors, create a ProcessContext class for buildDocumentInfo like BuildDocumentInfoProcessContext
     open fun buildDocumentInfo(project: Project, psiFile: PsiFile): DocumentInfo {
 
+        must run under progress
+
         if (project.isDisposed || !PsiUtils.isValidPsiFile(psiFile)) {
             return DocumentInfo(PsiUtils.psiFileToUri(psiFile), mutableMapOf())
         }
@@ -149,7 +151,7 @@ abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSp
             // monitor errors and if we see too many errors here we may want to reduce granularity of read access and smart mode
             // and do it locally in each framework.
             executeCatching({
-                runInReadAccessInSmartModeAndRetry(project) {
+                runInReadAccessInSmartModeWithRetryIgnorePCE(project) {
                     framework.endpointDiscovery(
                         psiFile,
                         documentInfo
@@ -168,7 +170,7 @@ abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSp
         psiFile: PsiFile,
     ): Collection<SpanInfo> {
         //if span discovery fails catch it and continue execution so at least we have a partial document info.
-        return executeCatching(Computable {
+        return executeCatchingWithResult({
             runWIthRetryWithResult({
                 spanDiscovery.discoverSpans(project, psiFile)
             })
@@ -199,7 +201,7 @@ abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSp
 
                 methods.forEach { uMethod ->
                     executeCatching({
-                        runInReadAccessWithRetry {
+                        runInReadAccessWithRetryIgnorePCE {
                             val id: String = createMethodCodeObjectId(uMethod)
                             val name: String = uMethod.name
                             val containingClassName: String = uClass.qualifiedName ?: getClassSimpleName(uClass)

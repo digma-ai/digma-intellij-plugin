@@ -8,6 +8,7 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.SmartPsiElementPointer
 import org.digma.intellij.plugin.common.SearchScopeProvider
 import org.digma.intellij.plugin.common.executeCatchingWithRetryIgnorePCE
+import org.digma.intellij.plugin.common.runInReadAccess
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.psi.PsiPointers
 import org.digma.intellij.plugin.idea.psi.createPsiMethodCodeObjectId
@@ -18,7 +19,6 @@ import org.digma.intellij.plugin.idea.psi.java.JavaPsiUtils.Companion.toFileUri
 import org.digma.intellij.plugin.model.discovery.EndpointFramework
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.progress.ProcessContext
-import org.digma.intellij.plugin.psi.runInReadAccess
 import java.util.Locale
 
 private const val CONTROLLER_ANNOTATION_STR = "org.springframework.stereotype.Controller"

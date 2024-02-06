@@ -27,7 +27,7 @@ fun executeCatching(runnable: Runnable, onException: Consumer<Throwable>, onFina
 }
 
 
-fun <T> executeCatching(computable: Computable<T>, onException: Function<Throwable, T>): T {
+fun <T> executeCatchingWithResult(computable: Computable<T>, onException: Function<Throwable, T>): T {
     return try {
         computable.compute()
     } catch (e: Throwable) {
@@ -35,7 +35,7 @@ fun <T> executeCatching(computable: Computable<T>, onException: Function<Throwab
     }
 }
 
-fun <T> executeCatching(computable: Computable<T>, onException: Function<Throwable, T>, onFinally: Supplier<T>): T {
+fun <T> executeCatchingWithResult(computable: Computable<T>, onException: Function<Throwable, T>, onFinally: Supplier<T>): T {
     return try {
         computable.compute()
     } catch (e: Throwable) {
@@ -74,10 +74,23 @@ fun executeCatchingWithRetryIgnorePCE(runnable: Runnable, onException: Consumer<
 }
 
 
-
 fun <T> executeCatchingWithResultIgnorePCE(computable: Computable<T>, onException: Function<Throwable, T>, onFinally: Runnable? = null): T {
     return try {
         computable.compute()
+    } catch (e: ProcessCanceledException) {
+        throw e
+    } catch (e: Throwable) {
+        onException.apply(e)
+    } finally {
+        onFinally?.run()
+    }
+}
+
+fun <T> executeCatchingWithResultAndRetryIgnorePCE(computable: Computable<T>, onException: Function<Throwable, T>, onFinally: Runnable? = null): T {
+    return try {
+        runWIthRetryWithResultIgnorePCE({
+            computable.compute()
+        })
     } catch (e: ProcessCanceledException) {
         throw e
     } catch (e: Throwable) {

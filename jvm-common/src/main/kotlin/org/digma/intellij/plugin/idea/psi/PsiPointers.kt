@@ -8,8 +8,8 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.SmartPointerManager
 import com.intellij.psi.SmartPsiElementPointer
 import com.intellij.psi.search.GlobalSearchScope
-import org.digma.intellij.plugin.psi.runInReadAccessInSmartModeIgnorePCE
-import org.digma.intellij.plugin.psi.runInReadAccessWithResult
+import org.digma.intellij.plugin.common.runInReadAccessInSmartModeWithResultAndRetryIgnorePCE
+import org.digma.intellij.plugin.common.runInReadAccessWithResult
 import java.util.concurrent.ConcurrentHashMap
 
 @Service(Service.Level.PROJECT)
@@ -27,7 +27,7 @@ class PsiPointers(val project: Project) {
 
     fun getPsiClassPointer(project: Project, className: String): SmartPsiElementPointer<PsiClass>? {
         if (classPointers[className] == null) {
-            val classPointer = runInReadAccessInSmartModeIgnorePCE(project) {
+            val classPointer = runInReadAccessInSmartModeWithResultAndRetryIgnorePCE(project) {
                 val psiClass = JavaPsiFacade.getInstance(project).findClass(className, GlobalSearchScope.allScope(project))
                 psiClass?.let {
                     SmartPointerManager.getInstance(project).createSmartPsiElementPointer(it)
@@ -45,7 +45,7 @@ class PsiPointers(val project: Project) {
     // we don't have many cases that we need to keep a pointer to PsiMethod so specific method is ok.
     fun getOtelStartSpanMethod(project: Project, builderClass: PsiClass): PsiMethod? {
         if (startSpanPsiMethodPointer == null) {
-            startSpanPsiMethodPointer = runInReadAccessInSmartModeIgnorePCE(project) {
+            startSpanPsiMethodPointer = runInReadAccessInSmartModeWithResultAndRetryIgnorePCE(project) {
                 val startSpanMethod: PsiMethod? = findMethodInClass(builderClass, "startSpan") { psiMethod: PsiMethod ->
                     @Suppress("UnstableApiUsage")
                     psiMethod.parameters.isEmpty()

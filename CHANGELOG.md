@@ -1,6 +1,12 @@
 # Changelog
 
-## [2.0.255] - 2024-02-06
+## [2.0.256] - 2024-02-06
+
+- report error in SvgIcon.kt by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1768
+- Update Installation Wizard UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1769
+- Update Installation Wizard UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1770
+
+## 2.0.255 - 2024-02-06
 
 - Update index file by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1766
 - Add Insight Jira feature notification by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1765

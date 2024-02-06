@@ -2,11 +2,9 @@ package org.digma.intellij.plugin.ui.common
 
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.editor.colors.GlobalEditorScheme
-import com.intellij.openapi.util.IconLoader
 import com.intellij.ui.JBColor
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.icons.IconsUtil
-import org.digma.intellij.plugin.ui.list.insights.ThreeDotsIcon
 import java.awt.Color
 import java.awt.Font
 import javax.swing.Icon
@@ -45,10 +43,6 @@ object Laf {
         //JBUI.scale(size)
     }
 
-    fun scaleIcons(size: Int): Int {
-        //todo: need to consider if to scale icons always
-        return JBUI.scale(size)
-    }
 
     //can be called from java code: Laf.INSTANCE.getColorHex(Laf.Colors.getPLUGIN_BACKGROUND())
     fun getColorHex(jbColor: JBColor): String {
@@ -89,47 +83,67 @@ object Laf {
     class Icons{
         class General{
             companion object {
-                @JvmStatic val HOME: Icon = SvgIcon.asIs("/icons/home.svg")
-                @JvmStatic val HOME_DEFAULT_DARK: Icon = SvgIcon.asIs("/icons/home-default-dark.svg")
-                @JvmStatic val HOME_HOVER_DARK: Icon = SvgIcon.asIs("/icons/home-hover-dark.svg")
-                @JvmStatic val HOME_SELECTED_DARK: Icon = SvgIcon.asIs("/icons/home-selected-dark.svg")
-                @JvmStatic val HOME_DEFAULT_LIGHT: Icon = SvgIcon.asIs("/icons/home-default-light.svg")
-                @JvmStatic val HOME_HOVER_LIGHT: Icon = SvgIcon.asIs("/icons/home-hover-light.svg")
-                @JvmStatic val HOME_SELECTED_LIGHT: Icon = SvgIcon.asIs("/icons/home-selected-light.svg")
-                @JvmStatic val PROJECT_DARK: Icon = SvgIcon.asIs("/icons/project-dark.svg")
-                @JvmStatic val PROJECT_LIGHT: Icon = SvgIcon.asIs("/icons/project-light.svg")
-
-                //                @JvmStatic val ARROW_UP: Icon = SvgIcon.asIs("/icons/arrow-up.svg")
-//                @JvmStatic val ARROW_DOWN: Icon = SvgIcon.asIs("/icons/arrow-down.svg")
-//                @JvmStatic val DIGMA_LOGO: Icon = SvgIcon.asIs("/icons/digma-logo.svg")
-//                @JvmStatic val RELATED_INSIGHTS: Icon = SvgIcon.asIs("/icons/related-insights.svg")
-                @JvmStatic val POINTER: Icon = SvgIcon.asIs("/icons/pointer.svg")
-                @JvmStatic val SLACK: Icon = SvgIcon.asIs("/icons/slack.svg")
-                @JvmStatic val TARGET: Icon = SvgIcon.asIs("/icons/target.svg")
-                @JvmStatic val TARGET10: Icon = SvgIcon.asIs("/icons/target10.svg")
-                @JvmStatic val TARGET_PRESSED: Icon = SvgIcon.asIs("/icons/target-pressed.svg")
-                @JvmStatic val CODE_LOCATION_LINK: Icon = SvgIcon.asIs("/icons/code-location-link.svg")
                 @JvmStatic
-                val ACTIVE_GREEN: Icon = SvgIcon.asIs("/icons/active-green.svg")
+                val HOME: Icon = IconsUtil.loadIcon("/icons/home.svg")
+                @JvmStatic
+                val HOME_DEFAULT_DARK: Icon = IconsUtil.loadIcon("/icons/home-default-dark.svg")
+                @JvmStatic
+                val HOME_HOVER_DARK: Icon = IconsUtil.loadIcon("/icons/home-hover-dark.svg")
+                @JvmStatic
+                val HOME_SELECTED_DARK: Icon = IconsUtil.loadIcon("/icons/home-selected-dark.svg")
+                @JvmStatic
+                val HOME_DEFAULT_LIGHT: Icon = IconsUtil.loadIcon("/icons/home-default-light.svg")
+                @JvmStatic
+                val HOME_HOVER_LIGHT: Icon = IconsUtil.loadIcon("/icons/home-hover-light.svg")
+                @JvmStatic
+                val HOME_SELECTED_LIGHT: Icon = IconsUtil.loadIcon("/icons/home-selected-light.svg")
+                @JvmStatic
+                val PROJECT_DARK: Icon = IconsUtil.loadIcon("/icons/project-dark.svg")
+                @JvmStatic
+                val PROJECT_LIGHT: Icon = IconsUtil.loadIcon("/icons/project-light.svg")
+
+                //@JvmStatic val ARROW_UP: Icon = IconsUtil.loadIcon("/icons/arrow-up.svg")
+                //@JvmStatic val ARROW_DOWN: Icon = IconsUtil.loadIcon("/icons/arrow-down.svg")
+                //@JvmStatic val DIGMA_LOGO: Icon = IconsUtil.loadIcon("/icons/digma-logo.svg")
+                //@JvmStatic val RELATED_INSIGHTS: Icon = IconsUtil.loadIcon("/icons/related-insights.svg")
+                @JvmStatic
+                val POINTER: Icon = IconsUtil.loadIcon("/icons/pointer.svg")
+                @JvmStatic
+                val SLACK: Icon = IconsUtil.loadIcon("/icons/slack.svg")
+                @JvmStatic
+                val TARGET: Icon = IconsUtil.loadIcon("/icons/target.svg")
+                @JvmStatic
+                val TARGET10: Icon = IconsUtil.loadIcon("/icons/target10.svg")
+                @JvmStatic
+                val TARGET_PRESSED: Icon = IconsUtil.loadIcon("/icons/target-pressed.svg")
+                @JvmStatic
+                val CODE_LOCATION_LINK: Icon = IconsUtil.loadIcon("/icons/code-location-link.svg")
+                @JvmStatic
+                val ACTIVE_GREEN: Icon = IconsUtil.loadIcon("/icons/active-green.svg")
             }
         }
 
         class ErrorDetails{
             companion object {
-                @JvmStatic val BACK: Icon = SvgIcon.withColor("/icons/arrow-left.svg", Colors.DEFAULT_LABEL_FOREGROUND)
-                @JvmStatic val FORWARD: Icon = SvgIcon.withColor("/icons/arrow-right.svg", Colors.DEFAULT_LABEL_FOREGROUND)
-                @JvmStatic val EVENT_RED: Icon = SvgIcon.withColor("/icons/event.svg", Colors.ERROR_RED)
-                @JvmStatic val TELESCOPE_BLUE_LIGHT_SHADE: Icon = SvgIcon.withColor("/icons/telescope.svg", Colors.BLUE_LIGHT_SHADE)
+                @JvmStatic
+                val BACK: Icon = IconsUtil.loadAndColorizeIcon("/icons/arrow-left.svg", Colors.DEFAULT_LABEL_FOREGROUND)
+                @JvmStatic
+                val FORWARD: Icon = IconsUtil.loadAndColorizeIcon("/icons/arrow-right.svg", Colors.DEFAULT_LABEL_FOREGROUND)
+                @JvmStatic
+                val EVENT_RED: Icon = IconsUtil.loadAndColorizeIcon("/icons/event.svg", Colors.ERROR_RED)
+                @JvmStatic
+                val TELESCOPE_BLUE_LIGHT_SHADE: Icon = IconsUtil.loadAndColorizeIcon("/icons/telescope.svg", Colors.BLUE_LIGHT_SHADE)
             }
         }
 
         class Environment {
             companion object {
-                @JvmStatic val ENVIRONMENT_HAS_USAGE = SvgIcon.asIs("/icons/active-env.svg")
                 @JvmStatic
-                val ENVIRONMENT_HAS_NO_USAGE = SvgIcon.asIs("/icons/disabled-env.svg")
+                val ENVIRONMENT_HAS_USAGE = IconsUtil.loadIcon("/icons/active-env.svg")
+                @JvmStatic
+                val ENVIRONMENT_HAS_NO_USAGE = IconsUtil.loadIcon("/icons/disabled-env.svg")
 //                @JvmStatic
-//                val NO_CONNECTION_ICON = SvgIcon.asIs("/icons/no-signal.svg")
+//                val NO_CONNECTION_ICON = IconsUtil.loadIcon("/icons/no-signal.svg")
             }
         }
 
@@ -137,26 +151,32 @@ object Laf {
             companion object {
                 // Scope icons
                 @JvmStatic val EMPTY: Icon = AllIcons.General.InspectionsErrorEmpty
-                @JvmStatic val METHOD: Icon = SvgIcon.withColor("/icons/method.svg", Colors.DEFAULT_LABEL_FOREGROUND)
-                @JvmStatic val FILE: Icon = SvgIcon.withColor("/icons/file.svg", Colors.DEFAULT_LABEL_FOREGROUND)
-                @JvmStatic val TELESCOPE: Icon = SvgIcon.withColor("/icons/telescope.svg", Colors.DEFAULT_LABEL_FOREGROUND)
-                @JvmStatic val INTERFACE: Icon = SvgIcon.withColor("/icons/interface.svg", Colors.DEFAULT_LABEL_FOREGROUND)
+                @JvmStatic
+                val METHOD: Icon = IconsUtil.loadAndColorizeIcon("/icons/method.svg", Colors.DEFAULT_LABEL_FOREGROUND)
+                @JvmStatic
+                val FILE: Icon = IconsUtil.loadAndColorizeIcon("/icons/file.svg", Colors.DEFAULT_LABEL_FOREGROUND)
+                @JvmStatic
+                val TELESCOPE: Icon = IconsUtil.loadAndColorizeIcon("/icons/telescope.svg", Colors.DEFAULT_LABEL_FOREGROUND)
+                @JvmStatic
+                val INTERFACE: Icon = IconsUtil.loadAndColorizeIcon("/icons/interface.svg", Colors.DEFAULT_LABEL_FOREGROUND)
 
-                //                @JvmStatic val MESSAGE: Icon = SvgIcon.withColor("/icons/message.svg", Colors.DEFAULT_LABEL_FOREGROUND)
+                //                @JvmStatic val MESSAGE: Icon = IconsUtil.loadAndColorizeIcon("/icons/message.svg", Colors.DEFAULT_LABEL_FOREGROUND)
                 // Insight item icons
-//                @JvmStatic val BOTTLENECK = SvgIcon.asIs("/icons/bottleneck.svg")
-//                @JvmStatic val DURATION = SvgIcon.asIs("/icons/duration.svg")
-//                @JvmStatic val ERRORS = SvgIcon.asIs("/icons/errors.svg")
-//                @JvmStatic val HOTSPOT = SvgIcon.asIs("/icons/hotspot.svg")
-//                @JvmStatic val LOW_USAGE = SvgIcon.asIs("/icons/traffic-low.svg")
+//                @JvmStatic val BOTTLENECK = IconsUtil.loadIcon("/icons/bottleneck.svg")
+//                @JvmStatic val DURATION = IconsUtil.loadIcon("/icons/duration.svg")
+//                @JvmStatic val ERRORS = IconsUtil.loadIcon("/icons/errors.svg")
+//                @JvmStatic val HOTSPOT = IconsUtil.loadIcon("/icons/hotspot.svg")
+//                @JvmStatic val LOW_USAGE = IconsUtil.loadIcon("/icons/traffic-low.svg")
 //                @JvmStatic val N_PLUS_ONE = loadAndScaleIconByWidth("/icons/sql.png", BUTTON_SIZE_24)
-//                @JvmStatic val NORMAL_USAGE = SvgIcon.asIs("/icons/traffic-normal.svg")
-//                @JvmStatic val HIGH_USAGE = SvgIcon.asIs("/icons/traffic-high.svg")
-//                @JvmStatic val WAITING_DATA = SvgIcon.asIs("/icons/sand-watch.svg")
-//                @JvmStatic val SLOW = SvgIcon.asIs("/icons/snail.svg")
-                @JvmStatic val THREE_DOTS = ThreeDotsIcon.asIs("/icons/three-dots.svg")
-                @JvmStatic val REFRESH = ThreeDotsIcon.asIs("/icons/repeat.svg")
-//                @JvmStatic val SCALE = SvgIcon.asIs("/icons/scale.svg")
+//                @JvmStatic val NORMAL_USAGE = IconsUtil.loadIcon("/icons/traffic-normal.svg")
+//                @JvmStatic val HIGH_USAGE = IconsUtil.loadIcon("/icons/traffic-high.svg")
+//                @JvmStatic val WAITING_DATA = IconsUtil.loadIcon("/icons/sand-watch.svg")
+//                @JvmStatic val SLOW = IconsUtil.loadIcon("/icons/snail.svg")
+                @JvmStatic
+                val THREE_DOTS = IconsUtil.loadIcon("/icons/three-dots.svg")
+                @JvmStatic
+                val REFRESH = IconsUtil.loadIcon("/icons/repeat.svg")
+//                @JvmStatic val SCALE = IconsUtil.loadIcon("/icons/scale.svg")
 
 //                @JvmStatic val QUESTION_MARK = AllIcons.General.QuestionDialog
 //                @JvmStatic val SPAN_DURATION_DROPPED = loadAndScaleIconByWidth("/icons/dropped.png", 8)
@@ -166,45 +186,57 @@ object Laf {
 
         class Common {
             companion object {
-                //                @JvmStatic val NoDataYetLight = SvgIcon.asIs("/icons/no_data_yet-light.svg")
-//                @JvmStatic val NoDataYetDark = SvgIcon.asIs("/icons/no_data_yet-dark.svg")
-//                @JvmStatic val NoObservabilityLight = SvgIcon.asIs("/icons/no_observability-light.svg")
-//                @JvmStatic val NoObservabilityDark = SvgIcon.asIs("/icons/no_observability-dark.svg")
-//                @JvmStatic val NoInsightsLight = SvgIcon.asIs("/icons/no_insights_light.svg")
-//                @JvmStatic val NoInsightsDark = SvgIcon.asIs("/icons/no_insights_dark.svg")
-                @JvmStatic val UpdateProductDark = SvgIcon.asIs("/icons/update-product-dark.svg")
-                @JvmStatic val UpdateProductLight = SvgIcon.asIs("/icons/update-product-light.svg")
+                //                @JvmStatic val NoDataYetLight = IconsUtil.loadIcon("/icons/no_data_yet-light.svg")
+//                @JvmStatic val NoDataYetDark = IconsUtil.loadIcon("/icons/no_data_yet-dark.svg")
+//                @JvmStatic val NoObservabilityLight = IconsUtil.loadIcon("/icons/no_observability-light.svg")
+//                @JvmStatic val NoObservabilityDark = IconsUtil.loadIcon("/icons/no_observability-dark.svg")
+//                @JvmStatic val NoInsightsLight = IconsUtil.loadIcon("/icons/no_insights_light.svg")
+//                @JvmStatic val NoInsightsDark = IconsUtil.loadIcon("/icons/no_insights_dark.svg")
+                @JvmStatic
+                val UpdateProductDark = IconsUtil.loadIcon("/icons/update-product-dark.svg")
+                @JvmStatic
+                val UpdateProductLight = IconsUtil.loadIcon("/icons/update-product-light.svg")
 
                 //                @JvmStatic val DigmaLogo64 = loadAndScaleIconByWidth("/icons/digma.png", 64)
 //                @JvmStatic val DigmaLogo16 = loadAndScaleIconByWidth("/icons/digma.png", 16)
                 @JvmStatic
-                val DigmaLogo = IconLoader.getIcon("/icons/digma.svg", Laf::class.java.classLoader);
-                @JvmStatic val FileDark = SvgIcon.asIs("/icons/file-dark.svg")
-                @JvmStatic val FileLight = SvgIcon.asIs("/icons/file-light.svg")
-                @JvmStatic val LoadingDark = SvgIcon.asIs("/icons/loader-anim-dark.svg")
-                @JvmStatic val LoadingLight = SvgIcon.asIs("/icons/loader-anim-light.svg")
-                @JvmStatic val ProcessingDark = SvgIcon.asIs("/icons/processing-dark.svg")
-                @JvmStatic val ProcessingLight = SvgIcon.asIs("/icons/processing-light.svg")
-                @JvmStatic val NoConnectionDark = SvgIcon.asIs("/icons/no-connection-dark.svg")
-                @JvmStatic val NoConnectionLight = SvgIcon.asIs("/icons/no-connection-light.svg")
-                @JvmStatic val NoErrorsDark = SvgIcon.asIs("/icons/no-errors-dark.svg")
-                @JvmStatic val NoErrorsLight = SvgIcon.asIs("/icons/no-errors-light.svg")
+                val DigmaLogo = IconsUtil.loadIcon("/icons/digma.svg");
+                @JvmStatic
+                val FileDark = IconsUtil.loadIcon("/icons/file-dark.svg")
+                @JvmStatic
+                val FileLight = IconsUtil.loadIcon("/icons/file-light.svg")
+                @JvmStatic
+                val LoadingDark = IconsUtil.loadIcon("/icons/loader-anim-dark.svg")
+                @JvmStatic
+                val LoadingLight = IconsUtil.loadIcon("/icons/loader-anim-light.svg")
+                @JvmStatic
+                val ProcessingDark = IconsUtil.loadIcon("/icons/processing-dark.svg")
+                @JvmStatic
+                val ProcessingLight = IconsUtil.loadIcon("/icons/processing-light.svg")
+                @JvmStatic
+                val NoConnectionDark = IconsUtil.loadIcon("/icons/no-connection-dark.svg")
+                @JvmStatic
+                val NoConnectionLight = IconsUtil.loadIcon("/icons/no-connection-light.svg")
+                @JvmStatic
+                val NoErrorsDark = IconsUtil.loadIcon("/icons/no-errors-dark.svg")
+                @JvmStatic
+                val NoErrorsLight = IconsUtil.loadIcon("/icons/no-errors-light.svg")
 
                 //These two icons LiveButtonFullIconDark and LiveButtonFullIconLight can be used as one icon
                 // for the live view button, but we probably don't need to use them, it doesn't look good.
                 // we use LiveIconDark and LiveIconLight plus regular text.
-//                @JvmStatic val LiveButtonFullIconDark = SvgIcon.asIs("/icons/live-view-button-full-icon-dark.svg")
-//                @JvmStatic val LiveButtonFullIconLight = SvgIcon.asIs("/icons/live-view-button-full-icon-light.svg")
-//                @JvmStatic val LiveIconDark = SvgIcon.asIs("/icons/live-icon-dark.svg")
-//                @JvmStatic val LiveIconLight = SvgIcon.asIs("/icons/live-icon-light.svg")
+//                @JvmStatic val LiveButtonFullIconDark = IconsUtil.loadIcon("/icons/live-view-button-full-icon-dark.svg")
+//                @JvmStatic val LiveButtonFullIconLight = IconsUtil.loadIcon("/icons/live-view-button-full-icon-light.svg")
+//                @JvmStatic val LiveIconDark = IconsUtil.loadIcon("/icons/live-icon-dark.svg")
+//                @JvmStatic val LiveIconLight = IconsUtil.loadIcon("/icons/live-icon-light.svg")
                 @JvmStatic
-                val NotificationsBellDark = SvgIcon.asIs("/icons/notification-bell-dark.svg")
+                val NotificationsBellDark = IconsUtil.loadIcon("/icons/notification-bell-dark.svg")
                 @JvmStatic
-                val NotificationsBellDarkPressed = SvgIcon.asIs("/icons/notification-bell-dark-pressed.svg")
+                val NotificationsBellDarkPressed = IconsUtil.loadIcon("/icons/notification-bell-dark-pressed.svg")
                 @JvmStatic
-                val NotificationsBellLight = SvgIcon.asIs("/icons/notification-bell-light.svg")
+                val NotificationsBellLight = IconsUtil.loadIcon("/icons/notification-bell-light.svg")
                 @JvmStatic
-                val NotificationsBellLightPressed = SvgIcon.asIs("/icons/notification-bell-light-pressed.svg")
+                val NotificationsBellLightPressed = IconsUtil.loadIcon("/icons/notification-bell-light-pressed.svg")
 
                 @JvmStatic
                 val DashboardDark: Icon = IconsUtil.loadAndScaleIconObjectByFactor("/icons/dashboard.svg", 2.0)
@@ -228,8 +260,10 @@ object Laf {
 
         class Misc {
             companion object {
-                @JvmStatic val Quarkus = SvgIcon.asIs("/icons/quarkus.svg")
-                @JvmStatic val SpringBoot = SvgIcon.asIs("/icons/spring-boot.svg")
+                @JvmStatic
+                val Quarkus = IconsUtil.loadIcon("/icons/quarkus.svg")
+                @JvmStatic
+                val SpringBoot = IconsUtil.loadIcon("/icons/spring-boot.svg")
             }
         }
 

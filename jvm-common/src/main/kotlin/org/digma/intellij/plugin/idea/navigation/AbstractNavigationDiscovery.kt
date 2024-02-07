@@ -13,6 +13,12 @@ abstract class AbstractNavigationDiscovery(protected val project: Project) {
 
     protected fun registerStartEvent(eventName: String, origin: Origin, retry: Int) {
 
+        //no need to send the event on file changed because it is too many
+        if (origin == Origin.FileChanged) {
+            return
+        }
+
+
         val pluginLoadedTime = SessionMetadata.getInstance().getCreated(getPluginLoadedKey(project))
         val duration = pluginLoadedTime?.let {
             Clock.System.now().minus(it)
@@ -52,6 +58,11 @@ abstract class AbstractNavigationDiscovery(protected val project: Project) {
         hadErrors: Boolean,
         hadPCE: Boolean,
     ) {
+
+        //no need to send the event on file changed because it is too many
+        if (origin == Origin.FileChanged) {
+            return
+        }
 
         val timeToShow = if (timeTookMillis > 2000) "${TimeUnit.MILLISECONDS.toSeconds(timeTookMillis)} seconds" else "$timeTookMillis millis"
 

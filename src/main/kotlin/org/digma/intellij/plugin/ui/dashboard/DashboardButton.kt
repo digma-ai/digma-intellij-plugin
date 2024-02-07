@@ -21,8 +21,8 @@ class DashboardButton(val project: Project) : JButton() {
 
     init {
 
-        icon = if (JBColor.isBright()) Laf.Icons.Common.DashboardLight else Laf.Icons.Common.DashboardDark
-        pressedIcon = if (JBColor.isBright()) Laf.Icons.Common.DashboardLightPressed else Laf.Icons.Common.DashboardDarkPressed
+        icon = Laf.Icons.Common.Dashboard
+        pressedIcon = Laf.Icons.Common.DashboardPressed
         cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
         border = JBUI.Borders.empty()
         toolTipText = "Open Dashboard"

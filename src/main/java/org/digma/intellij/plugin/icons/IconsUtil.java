@@ -20,12 +20,11 @@ public class IconsUtil {
                 ScaleContext.create(OBJ_SCALE.of(scale)));
     }
 
-    @NotNull
-    public static Icon loadAndColorizeIcon(String path, Color color) {
-        var orgIcon = IconLoader.getIcon(path, IconsUtil.class.getClassLoader());
-//        Icon coloredIcon = new JBImageIcon(IconUtil.toImage(orgIcon));
-        return IconUtil.colorize(orgIcon, JBColor.RED);
-    }
+//    @NotNull
+//    public static Icon loadAndColorizeIcon(String path, Color color) {
+//        var orgIcon = IconLoader.getIcon(path, IconsUtil.class.getClassLoader());
+//        return IconUtil.colorize(orgIcon, JBColor.RED);
+//    }
 
     @NotNull
     public static Icon loadIcon(String path) {

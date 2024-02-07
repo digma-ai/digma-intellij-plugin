@@ -26,8 +26,8 @@ class EndpointDiscoveryService(private val project: Project) {
     fun getAllEndpointDiscovery(): List<EndpointDiscovery> {
 
         val micronautFramework = MicronautFrameworkEndpointDiscovery(project)
-        val jaxrsJavaxFramework = JaxrsJavaxFramework(project)
-        val jaxrsJakartaFramework = JaxrsJakartaFramework(project)
+        val jaxrsJavaxFramework = JaxrsJavaxFrameworkEndpointDiscovery(project)
+        val jaxrsJakartaFramework = JaxrsJakartaFrameworkEndpointDiscovery(project)
         val grpcFramework = GrpcFramework(project)
         val springBootFramework = SpringBootFrameworkEndpointDiscovery(project)
         val ktorFramework = KtorFrameworkEndpointDiscovery(project)

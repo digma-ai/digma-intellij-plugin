@@ -21,8 +21,8 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.psi.AbstractJvmLanguageService
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscovery
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.GrpcFramework
-import org.digma.intellij.plugin.idea.psi.discovery.endpoint.JaxrsJakartaFramework
-import org.digma.intellij.plugin.idea.psi.discovery.endpoint.JaxrsJavaxFramework
+import org.digma.intellij.plugin.idea.psi.discovery.endpoint.JaxrsJakartaFrameworkEndpointDiscovery
+import org.digma.intellij.plugin.idea.psi.discovery.endpoint.JaxrsJavaxFrameworkEndpointDiscovery
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.MicronautFrameworkEndpointDiscovery
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.SpringBootFrameworkEndpointDiscovery
 import org.digma.intellij.plugin.instrumentation.CanInstrumentMethodResult
@@ -120,8 +120,8 @@ class JavaLanguageService(project: Project) : AbstractJvmLanguageService(project
         //if someone writes ktor application in java then ktor endpoints will not work but that is probably
         // a very rare case and maybe even not possible.
         val micronautFramework = MicronautFrameworkEndpointDiscovery(project)
-        val jaxrsJavaxFramework = JaxrsJavaxFramework(project)
-        val jaxrsJakartaFramework = JaxrsJakartaFramework(project)
+        val jaxrsJavaxFramework = JaxrsJavaxFrameworkEndpointDiscovery(project)
+        val jaxrsJakartaFramework = JaxrsJakartaFrameworkEndpointDiscovery(project)
         val grpcFramework = GrpcFramework(project)
         val springBootFramework = SpringBootFrameworkEndpointDiscovery(project)
         return listOf(

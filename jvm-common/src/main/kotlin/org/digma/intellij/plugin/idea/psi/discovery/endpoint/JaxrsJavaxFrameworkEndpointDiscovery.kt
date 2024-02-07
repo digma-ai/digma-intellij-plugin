@@ -1,28 +1,17 @@
-package org.digma.intellij.plugin.idea.psi.discovery.endpoint;
+package org.digma.intellij.plugin.idea.psi.discovery.endpoint
 
-import com.intellij.openapi.project.Project;
-import org.digma.intellij.plugin.model.discovery.EndpointFramework;
-import org.jetbrains.annotations.NotNull;
+import com.intellij.openapi.project.Project
+import org.digma.intellij.plugin.model.discovery.EndpointFramework
 
-public class JaxrsJavaxFramework extends AbstractJaxrsFramework {
+private const val JAXRS_PACKAGE_NAME = "javax.ws.rs"
 
-    @NotNull
-    @Override
-    public String getName() {
-        return "JaxrsJavax";
+
+class JaxrsJavaxFrameworkEndpointDiscovery(project: Project) : AbstractJaxrsFrameworkEndpointDiscover(project, JAXRS_PACKAGE_NAME) {
+    override fun getName(): String {
+        return "JaxrsJavax"
     }
 
-    public JaxrsJavaxFramework(Project project) {
-        super(project);
-    }
-
-    @Override
-    String getJaxRsPackageName() {
-        return "javax.ws.rs";
-    }
-
-    @Override
-    protected EndpointFramework getFramework() {
-        return EndpointFramework.JaxrsJavax;
+    override fun getFramework(): EndpointFramework {
+        return EndpointFramework.JaxrsJavax
     }
 }

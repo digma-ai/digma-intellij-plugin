@@ -16,8 +16,8 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.psi.AbstractJvmLanguageService
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscovery
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.GrpcFramework
-import org.digma.intellij.plugin.idea.psi.discovery.endpoint.JaxrsJakartaFramework
-import org.digma.intellij.plugin.idea.psi.discovery.endpoint.JaxrsJavaxFramework
+import org.digma.intellij.plugin.idea.psi.discovery.endpoint.JaxrsJakartaFrameworkEndpointDiscovery
+import org.digma.intellij.plugin.idea.psi.discovery.endpoint.JaxrsJavaxFrameworkEndpointDiscovery
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.KtorFrameworkEndpointDiscovery
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.MicronautFrameworkEndpointDiscovery
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.SpringBootFrameworkEndpointDiscovery
@@ -159,8 +159,8 @@ class KotlinLanguageService(project: Project) : AbstractJvmLanguageService(proje
 
     override fun getEndpointFrameworks(project: Project): Collection<EndpointDiscovery> {
         val micronautFramework = MicronautFrameworkEndpointDiscovery(project)
-        val jaxrsJavaxFramework = JaxrsJavaxFramework(project)
-        val jaxrsJakartaFramework = JaxrsJakartaFramework(project)
+        val jaxrsJavaxFramework = JaxrsJavaxFrameworkEndpointDiscovery(project)
+        val jaxrsJakartaFramework = JaxrsJakartaFrameworkEndpointDiscovery(project)
         val grpcFramework = GrpcFramework(project)
         val springBootFramework = SpringBootFrameworkEndpointDiscovery(project)
         val ktorFramework = KtorFrameworkEndpointDiscovery(project)

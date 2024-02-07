@@ -14,7 +14,7 @@ import org.digma.intellij.plugin.idea.psi.createPsiMethodCodeObjectId
 import org.digma.intellij.plugin.idea.psi.findAnnotatedMethods
 import org.digma.intellij.plugin.idea.psi.hasOneOfAnnotations
 import org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils
-import org.digma.intellij.plugin.idea.psi.java.JavaPsiUtils.Companion.toFileUri
+import org.digma.intellij.plugin.idea.psi.toFileUri
 import org.digma.intellij.plugin.model.discovery.EndpointFramework
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.progress.ProcessContext

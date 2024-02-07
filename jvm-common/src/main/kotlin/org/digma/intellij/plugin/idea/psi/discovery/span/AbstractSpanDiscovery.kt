@@ -3,7 +3,6 @@ package org.digma.intellij.plugin.idea.psi.discovery.span
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.Computable
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
@@ -14,14 +13,14 @@ import com.intellij.psi.search.searches.MethodReferencesSearch
 import org.digma.intellij.plugin.SPAN_BUILDER_FQN
 import org.digma.intellij.plugin.WITH_SPAN_ANNOTATION_FQN
 import org.digma.intellij.plugin.common.SearchScopeProvider
-import org.digma.intellij.plugin.common.executeCatching
-import org.digma.intellij.plugin.common.executeCatchingWithResult
+import org.digma.intellij.plugin.common.executeCatchingWithResultIgnorePCE
+import org.digma.intellij.plugin.common.executeCatchingWithRetryIgnorePCE
+import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.common.runInReadAccessInSmartModeWithResultAndRetryIgnorePCE
-import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.psi.PsiPointers
 import org.digma.intellij.plugin.idea.psi.discovery.MicrometerTracingFramework
-import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.SpanInfo
+import org.digma.intellij.plugin.psi.BuildDocumentInfoProcessContext
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UReferenceExpression
@@ -31,59 +30,56 @@ abstract class AbstractSpanDiscovery {
 
     protected val logger: Logger = Logger.getInstance(this::class.java)
 
-//    private val psiPointers = PsiPointers()
-
     private val micrometerTracingFramework = MicrometerTracingFramework()
 
 
-    fun discoverSpans(project: Project, psiFile: PsiFile): Collection<SpanInfo> {
+    fun discoverSpans(project: Project, psiFile: PsiFile, context: BuildDocumentInfoProcessContext): Collection<SpanInfo> {
 
-        if (project.isDisposed || !PsiUtils.isValidPsiFile(psiFile)) {
+        if (!isProjectValid(project) || !PsiUtils.isValidPsiFile(psiFile)) {
             return listOf()
         }
 
         val spanInfos = mutableListOf<SpanInfo>()
 
-        executeCatching({
-            val withSpanSpans = discoverWithSpanAnnotationSpans(project) { GlobalSearchScope.fileScope(psiFile) }
+        executeCatchingWithRetryIgnorePCE({
+            val withSpanSpans = discoverWithSpanAnnotationSpans(project, context) { GlobalSearchScope.fileScope(psiFile) }
             withSpanSpans?.let {
                 spanInfos.addAll(it)
             }
-        }) { e ->
-            Log.warnWithException(logger, project, e, "error in span discovery {}", e)
-            ErrorReporter.getInstance().reportError("${this::class.java.simpleName}.discoverSpans", e)
-        }
+        }, { e ->
+            context.addError("discoverWithSpan", e)
+        })
 
 
-        executeCatching({
-            val startSpanSpans = discoverStartSpanMethodCallSpanDiscovery(project) { GlobalSearchScope.fileScope(psiFile) }
+        executeCatchingWithRetryIgnorePCE({
+            val startSpanSpans = discoverStartSpanMethodCallSpanDiscovery(project, context) { GlobalSearchScope.fileScope(psiFile) }
             startSpanSpans?.let {
                 spanInfos.addAll(it)
             }
-        }) { e ->
-            Log.warnWithException(logger, project, e, "error in span discovery {}", e)
-            ErrorReporter.getInstance().reportError("${this::class.java.simpleName}.discoverSpans", e)
-        }
+        }, { e ->
+            context.addError("discoverStartSpan", e)
+        })
 
 
-        executeCatching({
-            val micrometerSpans = runInReadAccessInSmartModeWithResultAndRetryIgnorePCE(project) {
-                micrometerTracingFramework.discoverSpans(project, psiFile)
-            }
+        executeCatchingWithRetryIgnorePCE({
+            val micrometerSpans = micrometerTracingFramework.discoverSpans(project, psiFile, context)
             micrometerSpans.let {
                 spanInfos.addAll(it)
             }
-        }) { e ->
-            Log.warnWithException(logger, project, e, "error in span discovery {}", e)
-            ErrorReporter.getInstance().reportError("${this::class.java.simpleName}.discoverSpans", e)
-        }
+        }, { e ->
+            context.addError("discoverMicrometerSpans", e)
+        })
 
 
         return spanInfos
     }
 
 
-    private fun discoverWithSpanAnnotationSpans(project: Project, searchScope: SearchScopeProvider): Collection<SpanInfo>? {
+    private fun discoverWithSpanAnnotationSpans(
+        project: Project,
+        context: BuildDocumentInfoProcessContext,
+        searchScope: SearchScopeProvider,
+    ): Collection<SpanInfo>? {
 
         val psiPointers = project.service<PsiPointers>()
 
@@ -99,15 +95,14 @@ abstract class AbstractSpanDiscovery {
 
                 //catch exceptions for each annotated method and skip it
                 val methodSpans: List<SpanInfo> =
-                    executeCatchingWithResult(Computable {
+                    executeCatchingWithResultIgnorePCE({
                         runInReadAccessInSmartModeWithResultAndRetryIgnorePCE(project) {
                             findSpanInfosFromWithSpanAnnotatedMethod(it)
                         }
-                    }) { e ->
-                        Log.warnWithException(logger, project, e, "error in span discovery {}", e)
-                        ErrorReporter.getInstance().reportError("${this::class.java.simpleName}.discoverWithSpanAnnotationSpans", e)
+                    }, { e ->
+                        context.addError("discoverWithSpanAnnotationSpans", e)
                         listOf()
-                    }
+                    })
 
                 spanInfos.addAll(methodSpans)
 
@@ -134,7 +129,11 @@ abstract class AbstractSpanDiscovery {
     }
 
 
-    private fun discoverStartSpanMethodCallSpanDiscovery(project: Project, searchScope: SearchScopeProvider): Collection<SpanInfo>? {
+    private fun discoverStartSpanMethodCallSpanDiscovery(
+        project: Project,
+        context: BuildDocumentInfoProcessContext,
+        searchScope: SearchScopeProvider,
+    ): Collection<SpanInfo>? {
 
         val psiPointers = project.service<PsiPointers>()
 
@@ -155,15 +154,14 @@ abstract class AbstractSpanDiscovery {
 
                     //catch exceptions for each method reference and skip it
                     val spanInfo: SpanInfo? =
-                        executeCatchingWithResult({
+                        executeCatchingWithResultIgnorePCE({
                             runInReadAccessInSmartModeWithResultAndRetryIgnorePCE(project) {
                                 findSpanInfoFromStartSpanMethodReference(project, uReference)
                             }
-                        }) { e ->
-                            Log.warnWithException(logger, project, e, "error in span discovery {}", e)
-                            ErrorReporter.getInstance().reportError("${this::class.java.simpleName}.discoverStartSpanMethodCallSpanDiscovery", e)
+                        }, { e ->
+                            context.addError("discoverStartSpanMethodCallSpanDiscovery", e)
                             null
-                        }
+                        })
 
                     spanInfo?.let { span ->
                         spanInfos.add(span)

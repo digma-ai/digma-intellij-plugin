@@ -7,8 +7,8 @@ import com.intellij.psi.search.searches.ReferencesSearch
 import org.digma.intellij.plugin.common.SearchScopeProvider
 import org.digma.intellij.plugin.common.TextRangeUtils
 import org.digma.intellij.plugin.common.executeCatchingWithRetryIgnorePCE
+import org.digma.intellij.plugin.common.runInReadAccessInSmartModeWithResult
 import org.digma.intellij.plugin.common.runInReadAccessInSmartModeWithResultAndRetryIgnorePCE
-import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.psi.createMethodCodeObjectId
 import org.digma.intellij.plugin.idea.psi.getExpressionValue
 import org.digma.intellij.plugin.model.discovery.EndpointFramework
@@ -51,25 +51,20 @@ class KtorFrameworkEndpointDiscovery(private val project: Project) : EndpointDis
         return "ktor"
     }
 
-    override fun lookForEndpoints(searchScopeProvider: SearchScopeProvider): List<EndpointInfo> {
-        return lookForEndpoints(searchScopeProvider, null)
-    }
 
-
-    override fun lookForEndpoints(searchScopeProvider: SearchScopeProvider, context: ProcessContext?): List<EndpointInfo> {
+    override fun lookForEndpoints(searchScopeProvider: SearchScopeProvider, context: ProcessContext): List<EndpointInfo> {
         val endpoints = mutableListOf<EndpointInfo>()
         executeCatchingWithRetryIgnorePCE({
             endpoints.addAll(lookForRoutingBuilderEndpoints(searchScopeProvider, context))
         }, { e ->
-            context?.addError(getName(), e)
-            ErrorReporter.getInstance().reportError("KtorFrameworkEndpointDiscovery.lookForEndpoints", e)
+            context.addError(getName(), e)
         })
 
         return endpoints
     }
 
 
-    private fun lookForRoutingBuilderEndpoints(searchScopeProvider: SearchScopeProvider, context: ProcessContext?): List<EndpointInfo> {
+    private fun lookForRoutingBuilderEndpoints(searchScopeProvider: SearchScopeProvider, context: ProcessContext): List<EndpointInfo> {
 
         val resultEndpoints = mutableListOf<EndpointInfo>()
 
@@ -86,7 +81,7 @@ class KtorFrameworkEndpointDiscovery(private val project: Project) : EndpointDis
 
             declarations.forEach { methodDeclarations ->
 
-                context?.indicator?.checkCanceled()
+                context.indicator.checkCanceled()
 
                 val references =
                     runInReadAccessInSmartModeWithResultAndRetryIgnorePCE(project) {
@@ -97,12 +92,11 @@ class KtorFrameworkEndpointDiscovery(private val project: Project) : EndpointDis
                 references.forEach { ref ->
 
                     executeCatchingWithRetryIgnorePCE({
-                        runInReadAccessInSmartModeWithResultAndRetryIgnorePCE(project) {
+                        runInReadAccessInSmartModeWithResult(project) {
                             buildEndpointFromReference(resultEndpoints, ref, httpMethod)
                         }
                     }, { e ->
-                        context?.addError(getName(), e)
-                        ErrorReporter.getInstance().reportError("KtorFrameworkEndpointDiscovery.lookForRoutingBuilderEndpoints", e)
+                        context.addError(getName(), e)
                     })
                 }
             }

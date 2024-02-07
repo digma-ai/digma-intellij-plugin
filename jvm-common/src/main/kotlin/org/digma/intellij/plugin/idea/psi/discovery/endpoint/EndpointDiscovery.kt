@@ -7,37 +7,24 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.progress.ProcessContext
+import org.digma.intellij.plugin.psi.BuildDocumentInfoProcessContext
 import org.digma.intellij.plugin.psi.PsiUtils
 import java.util.Objects
 
 abstract class EndpointDiscovery {
 
-
     abstract fun getName(): String
 
-    //must run with read access
-    //using searchScope supplier because building SearchScope needs read access
-    abstract fun lookForEndpoints(searchScopeProvider: SearchScopeProvider): List<EndpointInfo>?
-
-    //a framework can override this method and implement instead lookForEndpoints(searchScopeProvider: SearchScopeProvider)
-    // the context is used to track errors
-    //todo: always send ProcessContext to track errors also from buildDocumentInfo.
-    // make the ProcessContext non nullable
-    // implement this method for all EndpointDiscovery
-    open fun lookForEndpoints(searchScopeProvider: SearchScopeProvider, context: ProcessContext?): List<EndpointInfo>? {
-        //call the old method for frameworks that still don't implement this method
-        return lookForEndpoints(searchScopeProvider)
-    }
+    abstract fun lookForEndpoints(searchScopeProvider: SearchScopeProvider, context: ProcessContext): List<EndpointInfo>?
 
 
-    //todo: send ProcessContext here too
-    fun endpointDiscovery(psiFile: PsiFile, documentInfo: DocumentInfo) {
+    fun endpointDiscovery(psiFile: PsiFile, documentInfo: DocumentInfo, context: BuildDocumentInfoProcessContext) {
 
         if (!PsiUtils.isValidPsiFile(psiFile)) {
             return
         }
 
-        val endpointInfos = lookForEndpoints { GlobalSearchScope.fileScope(psiFile) }
+        val endpointInfos = lookForEndpoints({ GlobalSearchScope.fileScope(psiFile) }, context)
 
         endpointInfos?.let { infos ->
             for (endpointInfo in infos) {

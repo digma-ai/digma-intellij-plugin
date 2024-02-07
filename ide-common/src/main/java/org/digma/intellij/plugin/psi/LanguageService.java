@@ -9,23 +9,16 @@ import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
+import com.intellij.psi.*;
 import kotlin.Pair;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.instrumentation.CanInstrumentMethodResult;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.model.discovery.DocumentInfo;
-import org.digma.intellij.plugin.model.discovery.EndpointInfo;
-import org.digma.intellij.plugin.model.discovery.MethodInfo;
-import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.digma.intellij.plugin.model.discovery.*;
+import org.jetbrains.annotations.*;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public interface LanguageService extends Disposable {
 
@@ -334,12 +327,12 @@ public interface LanguageService extends Disposable {
 
 
     @NotNull
-    DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile);
+    DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, BuildDocumentInfoProcessContext context);
 
     //some language services need the selected editor , for example CSharpLanguageService need to take
     // getProjectModelId from the selected editor. it may be null
     @NotNull
-    DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, @Nullable FileEditor selectedTextEditor);
+    DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, @Nullable FileEditor selectedTextEditor, BuildDocumentInfoProcessContext context);
 
 
     boolean isRelevant(VirtualFile file);

@@ -9,7 +9,6 @@ import com.intellij.psi.SmartPsiElementPointer
 import org.digma.intellij.plugin.common.SearchScopeProvider
 import org.digma.intellij.plugin.common.executeCatchingWithRetryIgnorePCE
 import org.digma.intellij.plugin.common.runInReadAccess
-import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.psi.PsiPointers
 import org.digma.intellij.plugin.idea.psi.createPsiMethodCodeObjectId
 import org.digma.intellij.plugin.idea.psi.findAnnotatedMethods
@@ -72,12 +71,7 @@ class SpringBootFrameworkEndpointDiscovery(private val project: Project) : Endpo
     }
 
 
-    //todo: until all frameworks implement the other method and ProcessContext is sent from all processes
-    override fun lookForEndpoints(searchScopeProvider: SearchScopeProvider): List<EndpointInfo> {
-        return lookForEndpoints(searchScopeProvider, null)
-    }
-
-    override fun lookForEndpoints(searchScopeProvider: SearchScopeProvider, context: ProcessContext?): List<EndpointInfo> {
+    override fun lookForEndpoints(searchScopeProvider: SearchScopeProvider, context: ProcessContext): List<EndpointInfo> {
 
         if (!isSpringBootWebRelevant()) {
             return listOf()
@@ -92,7 +86,7 @@ class SpringBootFrameworkEndpointDiscovery(private val project: Project) : Endpo
 
         HTTP_METHODS_ANNOTATION_STR_LIST.forEach { annotationFqn ->
 
-            context?.indicator?.checkCanceled()
+            context.indicator.checkCanceled()
 
             //catch any exception for each annotation
             executeCatchingWithRetryIgnorePCE({
@@ -105,7 +99,7 @@ class SpringBootFrameworkEndpointDiscovery(private val project: Project) : Endpo
 
                     annotatedMethods.forEach { annotatedMethod: SmartPsiElementPointer<PsiMethod> ->
 
-                        context?.indicator?.checkCanceled()
+                        context.indicator.checkCanceled()
 
                         //catch any exception for each annotation
                         executeCatchingWithRetryIgnorePCE({
@@ -114,14 +108,12 @@ class SpringBootFrameworkEndpointDiscovery(private val project: Project) : Endpo
                                 buildEndpointsForAnnotatedMethod(resultEndpoints, annotationFqn, annotatedMethod)
                             }
                         }, { e ->
-                            ErrorReporter.getInstance().reportError("SpringBootFrameworkEndpointDiscovery.lookForEndpoints", e)
-                            context?.addError(getName(), e)
+                            context.addError(getName(), e)
                         })
                     }
                 }
             }, { e ->
-                ErrorReporter.getInstance().reportError("SpringBootFrameworkEndpointDiscovery.lookForEndpoints", e)
-                context?.addError(getName(), e)
+                context.addError(getName(), e)
             })
 
         }

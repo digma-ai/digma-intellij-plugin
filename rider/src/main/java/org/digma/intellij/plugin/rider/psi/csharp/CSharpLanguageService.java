@@ -199,12 +199,12 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
 
 
     @Override
-    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile) {
-        return buildDocumentInfo(psiFile, null);
+    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, BuildDocumentInfoProcessContext context) {
+        return buildDocumentInfo(psiFile, null, context);
     }
 
     @Override
-    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, @Nullable FileEditor newEditor) {
+    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, @Nullable FileEditor newEditor, BuildDocumentInfoProcessContext context) {
 
         Log.log(LOGGER::debug, "got buildDocumentInfo request for {}", psiFile);
         //must be PsiJavaFile , this method should be called only for java files

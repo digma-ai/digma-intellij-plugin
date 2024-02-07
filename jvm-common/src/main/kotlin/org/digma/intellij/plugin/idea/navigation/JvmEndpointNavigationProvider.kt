@@ -204,7 +204,6 @@ internal class JvmEndpointNavigationProvider(project: Project) : AbstractNavigat
             endpointDiscoveries.forEach { endpointDiscovery: EndpointDiscovery ->
 
                 executeCatchingWithRetry(context, endpointDiscovery.getName(), 30000, 5) {
-                    //todo: send context to the framework to track exceptions
                     val endpointInfos = endpointDiscovery.lookForEndpoints(context.searchScope, context)
                     endpointInfos?.forEach {
                         addToMethodsMap(it)

@@ -5,13 +5,13 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.*;
 import com.intellij.openapi.editor.event.*;
 import com.intellij.openapi.fileEditor.*;
-import com.intellij.openapi.project.*;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.intellij.util.*;
 import com.intellij.util.Alarm.ThreadToUse;
-import org.digma.intellij.plugin.common.EDT;
+import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
@@ -130,7 +130,7 @@ class DocumentChangeListener {
 
     private void processDocumentChanged(@NotNull PsiFile psiFile, FileEditor fileEditor) {
 
-        if (project.isDisposed() || !PsiUtils.isValidPsiFile(psiFile)) {
+        if (!ProjectUtilsKt.isProjectValid(project) || !PsiUtils.isValidPsiFile(psiFile)) {
             return;
         }
 
@@ -138,21 +138,15 @@ class DocumentChangeListener {
 
         LanguageService languageService = LanguageServiceLocator.getInstance(project).locate(psiFile.getLanguage());
 
-        //todo: try to improve.
-        // see : https://github.com/digma-ai/digma-intellij-plugin/issues/343
-
-        DumbService.getInstance(project).waitForSmartMode();
-
         if (fileEditor.isValid()) {
-
-            //todo: retry this block if buildDocumentInfo fails.
-            // send a process context from here and if failed retry
-            DocumentInfo documentInfo = languageService.buildDocumentInfo(psiFile, fileEditor);
-            Log.log(LOGGER::debug, "got DocumentInfo for {}", psiFile.getVirtualFile());
-            documentInfoService.addCodeObjects(psiFile, documentInfo);
-            Log.log(LOGGER::debug, "documentInfoService updated with DocumentInfo for {}", psiFile.getVirtualFile());
+            BuildDocumentInfoProcessContext.buildDocumentInfoUnderProcess(project, progressIndicator -> {
+                var context = new BuildDocumentInfoProcessContext(progressIndicator);
+                DocumentInfo documentInfo = languageService.buildDocumentInfo(psiFile, fileEditor, context);
+                Log.log(LOGGER::debug, "got DocumentInfo for {}", psiFile.getVirtualFile());
+                documentInfoService.addCodeObjects(psiFile, documentInfo);
+                Log.log(LOGGER::debug, "documentInfoService updated with DocumentInfo for {}", psiFile.getVirtualFile());
+            });
         }
-
     }
 
 

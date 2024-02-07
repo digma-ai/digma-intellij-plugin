@@ -84,7 +84,7 @@ class OpenTelemetrySpanNavigationDiscovery(private val project: Project) : SpanN
                         JavaSpanDiscoveryUtils.getSpanInfoFromWithSpanAnnotatedMethod(psiMethod)
                     }
 
-                    spanInfos?.forEach { spanInfo: SpanInfo ->
+                    spanInfos.forEach { spanInfo: SpanInfo ->
                         runInReadAccessWithRetryIgnorePCE {
                             val offset = psiMethod.textOffset
                             val location = SpanLocation(spanInfo.containingFileUri, offset)

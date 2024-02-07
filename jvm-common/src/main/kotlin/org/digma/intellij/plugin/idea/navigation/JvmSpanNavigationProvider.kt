@@ -113,9 +113,10 @@ internal class JvmSpanNavigationProvider(project: Project) : AbstractNavigationD
 
         var context: NavigationProcessContext? = null
         val workTask = Consumer<ProgressIndicator> {
-            context = NavigationProcessContext(searchScopeProvider, it)
+            val myContext = NavigationProcessContext(searchScopeProvider, it)
+            context = myContext
             //can prepare data here if necessary
-            buildSpanNavigation(context!!, origin, it, retry)
+            buildSpanNavigation(myContext, origin, it, retry)
         }
 
         val beforeRetryTask = Consumer<RetryableTask> { task ->
@@ -147,8 +148,6 @@ internal class JvmSpanNavigationProvider(project: Project) : AbstractNavigationD
             )
         }
 
-        //onFinish will be called for each retry , can check properties on the task to decide
-        // if all retries are finished, actually task.exhausted
         val onFinish = Consumer<RetryableTask> { task ->
 
             val hadProgressErrors = task.error != null
@@ -187,7 +186,7 @@ internal class JvmSpanNavigationProvider(project: Project) : AbstractNavigationD
             onErrorTask = onErrorTask,
             onFinish = onFinish,
             onPCETask = onPCETask,
-            maxRetries = 3, //todo: change to 10 or more
+            maxRetries = 10,
             delayBetweenRetriesMillis = 2000L
         )
 

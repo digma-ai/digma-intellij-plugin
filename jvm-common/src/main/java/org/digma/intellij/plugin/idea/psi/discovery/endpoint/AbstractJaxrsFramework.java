@@ -13,7 +13,7 @@ import com.intellij.util.Query;
 import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.idea.psi.java.*;
 import org.digma.intellij.plugin.model.discovery.*;
-import org.digma.intellij.plugin.psi.PsiUtils;
+import org.digma.intellij.plugin.progress.ProcessContext;
 import org.jetbrains.annotations.*;
 
 import java.util.*;
@@ -149,12 +149,18 @@ public abstract class AbstractJaxrsFramework extends EndpointDiscovery {
         return endpointInfos;
     }
 
+    //todo: temporary, take read access on the whole process
+    // convert to kotlin and take short read access
     @Override
-    public List<EndpointInfo> lookForEndpoints(@NotNull SearchScopeProvider searchScopeProvider) {
+    public List<EndpointInfo> lookForEndpoints(@NotNull SearchScopeProvider searchScopeProvider, @NotNull ProcessContext context) {
+        return runInReadAccessInSmartModeWithResultAndRetryIgnorePCE(project, () -> lookForEndpointsImpl(searchScopeProvider, context));
+    }
+
+    private List<EndpointInfo> lookForEndpointsImpl(@NotNull SearchScopeProvider searchScopeProvider, @NotNull ProcessContext context) {
 
         //jax-rs need special discovery for PsiFile
         PsiFile psiFile = extractPsiFileIfFileScope(searchScopeProvider);
-        if (PsiUtils.isValidPsiFile(psiFile)) {
+        if (psiFile != null) {
             return lookForEndpoints(psiFile);
         }
 
@@ -204,7 +210,7 @@ public abstract class AbstractJaxrsFramework extends EndpointDiscovery {
                     var filesCollection = virtualFileEnumeration.getFilesIfCollection();
                     if (filesCollection != null) {
                         var virtualFile = filesCollection.stream().findFirst().orElse(null);
-                        if (virtualFile != null && VfsUtilsKt.isValidVirtualFile(virtualFile)) {
+                        if (virtualFile != null) {
                             return PsiManager.getInstance(project).findFile(virtualFile);
                         }
                         return null;

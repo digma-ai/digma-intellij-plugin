@@ -24,6 +24,7 @@ import org.digma.intellij.plugin.navigation.HomeSwitcherService
 import org.digma.intellij.plugin.navigation.InsightsAndErrorsTabsHelper
 import org.digma.intellij.plugin.navigation.NavigationModel
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator
+import org.digma.intellij.plugin.psi.BuildDocumentInfoProcessContext
 import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.digma.intellij.plugin.service.EditorService
@@ -163,8 +164,12 @@ class InsightsViewOrchestrator(val project: Project) {
             if (fileUri != null) {
                 val psiFile = PsiUtils.uriToPsiFile(fileUri, project)
                 if (PsiUtils.isValidPsiFile(psiFile)) {
-                    val documentInfo = languageService.buildDocumentInfo(psiFile)
-                    documentInfo.methods[methodCodeObjectId] ?: defaultResult
+                    BuildDocumentInfoProcessContext.buildDocumentInfoUnderProcessOnCurrentThreadNoRetry { pi ->
+                        val context = BuildDocumentInfoProcessContext(pi)
+                        val documentInfo = languageService.buildDocumentInfo(psiFile, context)
+                        documentInfo.methods[methodCodeObjectId] ?: defaultResult
+                    }
+
                 } else {
                     return defaultResult
                 }

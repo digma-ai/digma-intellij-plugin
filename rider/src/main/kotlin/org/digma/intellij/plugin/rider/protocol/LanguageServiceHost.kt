@@ -5,6 +5,7 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
@@ -26,6 +27,7 @@ import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret
 import org.digma.intellij.plugin.model.discovery.SpanInfo
+import org.digma.intellij.plugin.psi.BuildDocumentInfoProcessContext
 import org.digma.intellij.plugin.psi.LanguageServiceLocator
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.digma.intellij.plugin.rider.psi.csharp.CSharpLanguageUtil
@@ -110,14 +112,18 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
                                 val offset = selectedTextEditor.logicalPositionToOffset(selectedTextEditor.caretModel.logicalPosition)
 
                                 Backgroundable.executeOnPooledThread {
-                                    val documentInfoService = DocumentInfoService.getInstance(project)
-                                    val documentInfo = languageService.buildDocumentInfo(psiFile, selectedEditor)
-                                    documentInfo.let {
-                                        documentInfoService.addCodeObjects(psiFile, documentInfo)
+
+                                    BuildDocumentInfoProcessContext.buildDocumentInfoUnderProcess(project) { progressIndicator: ProgressIndicator ->
+                                        val context = BuildDocumentInfoProcessContext(progressIndicator)
+                                        val documentInfoService = DocumentInfoService.getInstance(project)
+                                        val documentInfo = languageService.buildDocumentInfo(psiFile, selectedEditor, context)
+                                        documentInfo.let {
+                                            documentInfoService.addCodeObjects(psiFile, documentInfo)
+                                        }
+                                        val methodUnderCaret =
+                                            detectMethodUnderCaret(psiFile, selectedTextEditor, offset)
+                                        CaretContextService.getInstance(project).contextChanged(methodUnderCaret)
                                     }
-                                    val methodUnderCaret =
-                                        detectMethodUnderCaret(psiFile, selectedTextEditor, offset)
-                                    CaretContextService.getInstance(project).contextChanged(methodUnderCaret)
                                 }
                             }
                         }

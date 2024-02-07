@@ -33,14 +33,17 @@ import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.common.Retries
 import org.digma.intellij.plugin.common.allowSlowOperation
+import org.digma.intellij.plugin.common.executeCatchingWithResultAndRetryIgnorePCE
+import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.common.isValidVirtualFile
 import org.digma.intellij.plugin.common.runInReadAccessInSmartMode
 import org.digma.intellij.plugin.common.runInReadAccessWithResult
-import org.digma.intellij.plugin.common.runWIthRetryWithResult
 import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.editor.EditorUtils
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import org.digma.intellij.plugin.errorreporting.SEVERITY_MEDIUM_TRY_FIX
+import org.digma.intellij.plugin.errorreporting.SEVERITY_PROP_NAME
 import org.digma.intellij.plugin.idea.buildsystem.BuildSystemChecker.Companion.determineBuildSystem
 import org.digma.intellij.plugin.idea.buildsystem.JavaBuildSystem
 import org.digma.intellij.plugin.idea.deps.ModulesDepsService
@@ -57,6 +60,8 @@ import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret
 import org.digma.intellij.plugin.model.discovery.TextRange
+import org.digma.intellij.plugin.progress.assertUnderProgress
+import org.digma.intellij.plugin.psi.BuildDocumentInfoProcessContext
 import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.psi.PsiFileNotFountException
 import org.digma.intellij.plugin.psi.PsiUtils
@@ -117,31 +122,44 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
     }
 
 
-    override fun buildDocumentInfo(psiFile: PsiFile, selectedTextEditor: FileEditor?): DocumentInfo {
+    override fun buildDocumentInfo(psiFile: PsiFile, selectedTextEditor: FileEditor?, context: BuildDocumentInfoProcessContext): DocumentInfo {
         EDT.assertNonDispatchThread()
-        return buildDocumentInfo(psiFile)
+        return buildDocumentInfo(psiFile, context)
     }
 
-    override fun buildDocumentInfo(psiFile: PsiFile): DocumentInfo {
+    override fun buildDocumentInfo(psiFile: PsiFile, context: BuildDocumentInfoProcessContext): DocumentInfo {
 
+        assertUnderProgress()
         EDT.assertNonDispatchThread()
 
         Log.log(logger::debug, "got buildDocumentInfo request for {}", psiFile)
-        if (!project.isDisposed && PsiUtils.isValidPsiFile(psiFile) && isSupportedFile(psiFile)) {
-            try {
-                //todo: run in invisible process and don't catch PCE
-                //retry the whole operation.
-                return runWIthRetryWithResult({
-                    codeObjectDiscovery.buildDocumentInfo(
-                        project,
-                        psiFile
-                    )
-                }, backOffMillis = 100, maxRetries = 3)
 
-            } catch (e: Throwable) {
-                ErrorReporter.getInstance().reportError("${this::class.java.simpleName}.buildDocumentInfo", e)
-                return DocumentInfo(PsiUtils.psiFileToUri(psiFile), mutableMapOf())
+        if (isProjectValid(project) && PsiUtils.isValidPsiFile(psiFile) && isSupportedFile(psiFile)) {
+
+            val documentInfo = executeCatchingWithResultAndRetryIgnorePCE({
+                codeObjectDiscovery.buildDocumentInfo(project, psiFile, context)
+            }, { e ->
+                context.addError("buildDocumentInfo", e)
+                DocumentInfo(PsiUtils.psiFileToUri(psiFile), mutableMapOf())
+            }) {
+                if (context.hasErrors()) {
+                    context.errorsList().forEach { entry ->
+                        val hint = entry.key
+                        val errors = entry.value
+                        errors.forEach { err ->
+                            Log.warnWithException(logger, project, err, "Exception in buildDocumentInfo")
+                            ErrorReporter.getInstance().reportError(
+                                project, "${this::class.simpleName}.buildDocumentInfo.$hint", err, mapOf(
+                                    SEVERITY_PROP_NAME to SEVERITY_MEDIUM_TRY_FIX
+                                )
+                            )
+                        }
+                    }
+                }
             }
+
+            return documentInfo
+
         } else {
             Log.log(logger::debug, "psi file is not supported or not valid, returning empty DocumentInfo for {}", psiFile)
             return DocumentInfo(PsiUtils.psiFileToUri(psiFile), mutableMapOf())

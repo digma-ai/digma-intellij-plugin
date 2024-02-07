@@ -10,6 +10,7 @@ import org.digma.intellij.plugin.common.SearchScopeProvider;
 import org.digma.intellij.plugin.idea.psi.java.JavaPsiUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.*;
+import org.digma.intellij.plugin.progress.ProcessContext;
 import org.jetbrains.annotations.*;
 
 import java.util.*;
@@ -51,9 +52,17 @@ public class GrpcFramework extends EndpointDiscovery {
         return bindableServiceAnnotationClass != null;
     }
 
+
+    //todo: temporary, take read access on the whole process
+    // convert to kotlin and take short read access
     @Override
     @Nullable
-    public List<EndpointInfo> lookForEndpoints(@NotNull SearchScopeProvider searchScopeProvider) {
+    public List<EndpointInfo> lookForEndpoints(@NotNull SearchScopeProvider searchScopeProvider, @NotNull ProcessContext context) {
+        return runInReadAccessInSmartModeWithResultAndRetryIgnorePCE(project, () -> lookForEndpointsImpl(searchScopeProvider, context));
+    }
+
+    @Nullable
+    private List<EndpointInfo> lookForEndpointsImpl(@NotNull SearchScopeProvider searchScopeProvider, @NotNull ProcessContext context) {
         lateInit();
         if (!isGrpcServerRelevant()) {
             return Collections.emptyList();

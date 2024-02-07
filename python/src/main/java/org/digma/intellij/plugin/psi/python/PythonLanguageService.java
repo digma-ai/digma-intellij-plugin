@@ -309,7 +309,7 @@ public class PythonLanguageService implements LanguageService {
 
 
     @Override
-    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile) {
+    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, BuildDocumentInfoProcessContext context) {
         Log.log(LOGGER::debug, "got buildDocumentInfo request for {}", psiFile);
         if (psiFile instanceof PyFile pyFile) {
 
@@ -323,8 +323,8 @@ public class PythonLanguageService implements LanguageService {
     }
 
     @Override
-    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, @Nullable FileEditor newEditor) {
-        return buildDocumentInfo(psiFile);
+    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, @Nullable FileEditor newEditor, BuildDocumentInfoProcessContext context) {
+        return buildDocumentInfo(psiFile, context);
     }
 
 

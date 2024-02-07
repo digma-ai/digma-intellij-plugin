@@ -159,12 +159,14 @@ public class EditorEventsHandler implements FileEditorManagerListener {
                         LanguageService languageService = languageServiceLocator.locate(psiFile.getLanguage());
                         Log.log(LOGGER::trace, "Found language service {} for :{}", languageService, newFile);
 
-                        //todo: retry this block if buildDocumentInfo fails.
-                        // send a process context from here and if failed retry
-                        DocumentInfo documentInfo = languageService.buildDocumentInfo(psiFile, newEditor);
-                        Log.log(LOGGER::trace, "got DocumentInfo for :{}", newFile);
-                        documentInfoService.addCodeObjects(psiFile, documentInfo);
-                        Log.log(LOGGER::trace, "documentInfoService updated with DocumentInfo for :{}", newFile);
+
+                        BuildDocumentInfoProcessContext.buildDocumentInfoUnderProcess(project, progressIndicator -> {
+                            var context = new BuildDocumentInfoProcessContext(progressIndicator);
+                            DocumentInfo documentInfo = languageService.buildDocumentInfo(psiFile, newEditor, context);
+                            Log.log(LOGGER::trace, "got DocumentInfo for :{}", newFile);
+                            documentInfoService.addCodeObjects(psiFile, documentInfo);
+                            Log.log(LOGGER::trace, "documentInfoService updated with DocumentInfo for :{}", newFile);
+                        });
                     }
                 } else {
                     Log.log(LOGGER::trace, "documentInfoService already contains :{}", newFile);

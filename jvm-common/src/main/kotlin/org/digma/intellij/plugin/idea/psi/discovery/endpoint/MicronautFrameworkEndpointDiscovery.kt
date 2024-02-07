@@ -14,7 +14,6 @@ import com.intellij.util.text.VersionComparatorUtil
 import org.digma.intellij.plugin.common.SearchScopeProvider
 import org.digma.intellij.plugin.common.executeCatchingWithRetryIgnorePCE
 import org.digma.intellij.plugin.common.runInReadAccess
-import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.deps.ModulesDepsService.Companion.toUnifiedCoordinates
 import org.digma.intellij.plugin.idea.psi.PsiPointers
 import org.digma.intellij.plugin.idea.psi.createPsiMethodCodeObjectId
@@ -76,12 +75,7 @@ class MicronautFrameworkEndpointDiscovery(private val project: Project) : Endpoi
     }
 
 
-    //todo: until all frameworks implement the other method and ProcessContext is sent from all processes
-    override fun lookForEndpoints(searchScopeProvider: SearchScopeProvider): List<EndpointInfo> {
-        return lookForEndpoints(searchScopeProvider, null)
-    }
-
-    override fun lookForEndpoints(searchScopeProvider: SearchScopeProvider, context: ProcessContext?): List<EndpointInfo> {
+    override fun lookForEndpoints(searchScopeProvider: SearchScopeProvider, context: ProcessContext): List<EndpointInfo> {
 
         if (!isMicronautHttpRelevant()) {
             return listOf()
@@ -96,7 +90,7 @@ class MicronautFrameworkEndpointDiscovery(private val project: Project) : Endpoi
 
         HTTP_METHODS_ANNOTATION_STR_LIST.forEach { annotationFqn ->
 
-            context?.indicator?.checkCanceled()
+            context.indicator.checkCanceled()
 
             //catch any exception for each annotation
             executeCatchingWithRetryIgnorePCE({
@@ -109,7 +103,7 @@ class MicronautFrameworkEndpointDiscovery(private val project: Project) : Endpoi
 
                     annotatedMethods.forEach { annotatedMethod: SmartPsiElementPointer<PsiMethod> ->
 
-                        context?.indicator?.checkCanceled()
+                        context.indicator.checkCanceled()
 
                         //catch any exception for each annotation
                         executeCatchingWithRetryIgnorePCE({
@@ -118,14 +112,12 @@ class MicronautFrameworkEndpointDiscovery(private val project: Project) : Endpoi
                                 buildEndpointsForAnnotatedMethod(resultEndpoints, annotationFqn, annotatedMethod)
                             }
                         }, { e ->
-                            ErrorReporter.getInstance().reportError("SpringBootFrameworkEndpointDiscovery.lookForEndpoints", e)
-                            context?.addError(getName(), e)
+                            context.addError(getName(), e)
                         })
                     }
                 }
             }, { e ->
-                ErrorReporter.getInstance().reportError("SpringBootFrameworkEndpointDiscovery.lookForEndpoints", e)
-                context?.addError(getName(), e)
+                context.addError(getName(), e)
             })
 
         }

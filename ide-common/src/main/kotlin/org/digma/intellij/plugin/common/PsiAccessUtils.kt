@@ -1,7 +1,6 @@
 package org.digma.intellij.plugin.common
 
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Computable
@@ -30,7 +29,7 @@ fun <T> runInReadAccessWithResultAndRetryIgnorePCE(computable: Computable<T>): T
 }
 
 
-fun runInReadAccessInSmartMode(project: Project, runnable: Runnable, progressIndicator: ProgressIndicator) {
+fun runInReadAccessInSmartMode(project: Project, runnable: Runnable) {
     if (isReadAccessAllowed()) {
         runnable.run()
     } else {

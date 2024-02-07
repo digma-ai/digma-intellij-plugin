@@ -5,7 +5,6 @@ import com.intellij.buildsystem.model.unified.UnifiedCoordinates
 import com.intellij.buildsystem.model.unified.UnifiedDependency
 import com.intellij.externalSystem.DependencyModifierService
 import com.intellij.lang.Language
-import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditor
@@ -15,6 +14,7 @@ import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.progress.EmptyProgressIndicator
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.progress.ProgressIndicator
+import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectFileIndex
@@ -37,7 +37,7 @@ import org.digma.intellij.plugin.common.executeCatchingWithResult
 import org.digma.intellij.plugin.common.executeCatchingWithResultAndRetryIgnorePCE
 import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.common.isValidVirtualFile
-import org.digma.intellij.plugin.common.runInReadAccessInSmartMode
+import org.digma.intellij.plugin.common.runInReadAccess
 import org.digma.intellij.plugin.common.runInReadAccessWithResult
 import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.document.DocumentInfoService
@@ -75,7 +75,6 @@ import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.toUElementOfType
 import java.util.Objects
 import java.util.function.Consumer
-import java.util.function.Supplier
 
 @Suppress("MemberVisibilityCanBePrivate")
 abstract class AbstractJvmLanguageService(protected val project: Project, protected val codeObjectDiscovery: AbstractCodeObjectDiscovery) :
@@ -264,12 +263,11 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
         //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
         className = className.replace('$', '.')
 
-        return ReadAction.compute<Language?, java.lang.RuntimeException> {
-
+        return runInReadAccessWithResult {
 
             val uClass = findClassByClassName(className, GlobalSearchScope.allScope(project))
 
-            return@compute uClass?.let {
+            uClass?.let {
                 it.sourcePsi?.language
             }
         }
@@ -280,11 +278,11 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
         //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
         val classNameToFind = className.replace('$', '.')
 
-        return ReadAction.compute<Language?, java.lang.RuntimeException> {
+        return runInReadAccessWithResult {
 
             val uClass = findClassByClassName(classNameToFind, GlobalSearchScope.allScope(project))
 
-            return@compute uClass?.let {
+            uClass?.let {
                 it.sourcePsi?.language
             }
         }
@@ -304,7 +302,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
         val workspaceUrls: MutableMap<String, Pair<String, Int>> = HashMap()
 
         methodCodeObjectIds.forEach(Consumer { methodId: String ->
-            ReadActions.ensureReadAction {
+            runInReadAccess {
                 allowSlowOperation {
                     val uMethod = findMethodByMethodCodeObjectId(methodId)
                     uMethod?.getContainingUFile()?.sourcePsi?.let { psiFile ->
@@ -358,16 +356,16 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
             return null
         }
 
-        return ReadActions.ensureReadAction<UMethod> {
+        return runInReadAccessWithResult {
             if (!methodId.contains("\$_$")) {
                 Log.log(logger::debug, "method id in netoFindPsiMethodByMethodCodeObjectId does not contain \$_$ {}", methodId)
-                return@ensureReadAction null
+                return@runInReadAccessWithResult null
             }
 
             //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
             val className = methodId.substring(0, methodId.indexOf("\$_$")).replace('$', '.')
 
-            return@ensureReadAction allowSlowOperation<UMethod?> {
+            return@runInReadAccessWithResult allowSlowOperation<UMethod?> {
                 val uClass = findClassByClassName(className, GlobalSearchScope.projectScope(project))
 
                 return@allowSlowOperation uClass?.let { cls ->
@@ -388,7 +386,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
             //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
             className = className.replace('$', '.')
 
-            ReadActions.ensureReadAction {
+            runInReadAccess {
 
                 val uClass = findClassByClassName(className, GlobalSearchScope.projectScope(project))
                 uClass?.let {
@@ -486,7 +484,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
             return
         }
 
-        ReadActions.ensureReadAction {
+        runInReadAccess {
             allowSlowOperation {
                 try {
                     var className = methodId.substring(0, methodId.indexOf("\$_$"))
@@ -506,7 +504,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                         }
                     }
                 } catch (e: Throwable) {
-                    ErrorReporter.getInstance().reportError("AbstractJvmLanguageService.navigateToMethod", e)
+                    ErrorReporter.getInstance().reportError("${this::class.java.simpleName}.navigateToMethod", e)
                 }
             }
         }
@@ -523,9 +521,9 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
         }
 
 
-        return ReadActions.ensureReadAction(Supplier {
+        return runInReadAccessWithResult {
 
-            return@Supplier allowSlowOperation<PsiElement?> {
+            return@runInReadAccessWithResult allowSlowOperation<PsiElement?> {
 
                 return@allowSlowOperation try {
 
@@ -542,7 +540,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                     null
                 }
             }
-        })
+        }
     }
 
     override fun getPsiElementForClassByMethodId(methodId: String): PsiElement? {
@@ -563,9 +561,9 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
         Log.log(logger::debug, "got getPsiElementForClassByName request {}", className)
 
-        return ReadActions.ensureReadAction(Supplier {
+        return runInReadAccessWithResult {
 
-            return@Supplier allowSlowOperation<PsiElement?> {
+            return@runInReadAccessWithResult allowSlowOperation<PsiElement?> {
 
                 return@allowSlowOperation try {
 
@@ -578,7 +576,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                     null
                 }
             }
-        })
+        }
     }
 
 
@@ -674,7 +672,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
         return Retries.retryWithResultAndDefault({
             val myRunnable = MyRunnable()
-            runInReadAccessInSmartMode(project, myRunnable, myRunnable.progressIndicator)
+            ProgressManager.getInstance().runProcess(myRunnable, myRunnable.progressIndicator)
             Objects.requireNonNullElseGet(myRunnable.result) { CanInstrumentMethodResult.failure() }
         }, Throwable::class.java, 50, 5, CanInstrumentMethodResult.failure())
     }

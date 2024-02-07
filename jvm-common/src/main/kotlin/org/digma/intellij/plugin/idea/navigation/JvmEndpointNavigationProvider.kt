@@ -34,6 +34,7 @@ import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.progress.RetryableTask
 import org.digma.intellij.plugin.psi.PsiUtils
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CopyOnWriteArraySet
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 import java.util.function.Consumer
@@ -244,7 +245,7 @@ internal class JvmEndpointNavigationProvider(project: Project) : AbstractNavigat
 
 
     private fun addToMethodsMap(endpointInfo: EndpointInfo) {
-        val methods = endpointsMap.computeIfAbsent(endpointInfo.id) { mutableSetOf() }
+        val methods = endpointsMap.computeIfAbsent(endpointInfo.id) { CopyOnWriteArraySet() }
         methods.add(endpointInfo)
     }
 

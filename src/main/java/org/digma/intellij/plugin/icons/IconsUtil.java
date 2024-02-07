@@ -7,7 +7,6 @@ import com.intellij.util.IconUtil;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
-import java.awt.*;
 
 import static com.intellij.ui.scale.ScaleType.OBJ_SCALE;
 

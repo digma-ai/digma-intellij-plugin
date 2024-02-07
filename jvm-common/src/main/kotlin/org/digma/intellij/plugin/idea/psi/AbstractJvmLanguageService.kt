@@ -33,6 +33,7 @@ import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.common.Retries
 import org.digma.intellij.plugin.common.allowSlowOperation
+import org.digma.intellij.plugin.common.executeCatchingWithResult
 import org.digma.intellij.plugin.common.executeCatchingWithResultAndRetryIgnorePCE
 import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.common.isValidVirtualFile
@@ -123,14 +124,15 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
 
     override fun buildDocumentInfo(psiFile: PsiFile, selectedTextEditor: FileEditor?, context: BuildDocumentInfoProcessContext): DocumentInfo {
-        EDT.assertNonDispatchThread()
         return buildDocumentInfo(psiFile, context)
     }
 
     override fun buildDocumentInfo(psiFile: PsiFile, context: BuildDocumentInfoProcessContext): DocumentInfo {
 
-        assertUnderProgress()
         EDT.assertNonDispatchThread()
+        //should not be in read access, read access is acquired when necessary to make it short periods
+        ReadActions.assertNotInReadAccess()
+        assertUnderProgress()
 
         Log.log(logger::debug, "got buildDocumentInfo request for {}", psiFile)
 
@@ -407,12 +409,13 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
     override fun detectMethodUnderCaret(project: Project, psiFile: PsiFile, selectedEditor: Editor?, caretOffset: Int): MethodUnderCaret {
 
-        return Retries.retryWithResult({
-
-            ReadAction.compute<MethodUnderCaret, java.lang.RuntimeException> {
-
+        //detectMethodUnderCaret should run very fast and return a result,
+        // this operation may become invalid very soon if user clicks somewhere else.
+        // no retry because it needs to complete very fast
+        //it may be called from EDT or background, runInReadAccessWithResult will acquire read access if necessary.
+        return executeCatchingWithResult({
+            runInReadAccessWithResult {
                 allowSlowOperation<MethodUnderCaret> {
-
                     val fileUri = PsiUtils.psiFileToUri(psiFile)
                     if (!isSupportedFile(psiFile)) {
                         return@allowSlowOperation MethodUnderCaret("", "", "", "", fileUri, caretOffset, null, false)
@@ -420,7 +423,10 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                     return@allowSlowOperation detectMethodUnderCaret(psiFile, fileUri, caretOffset)
                 }
             }
-        }, Throwable::class.java, 50, 5)
+        }, { e ->
+            ErrorReporter.getInstance().reportError("${this::class.java.simpleName}.detectMethodUnderCaret", e)
+            MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), caretOffset, null, false)
+        })
     }
 
 

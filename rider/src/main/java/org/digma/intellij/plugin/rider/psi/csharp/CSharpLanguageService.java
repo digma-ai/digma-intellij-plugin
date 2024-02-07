@@ -16,6 +16,7 @@ import kotlin.Pair;
 import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.editor.EditorUtils;
+import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.*;
 import org.digma.intellij.plugin.psi.*;
@@ -25,6 +26,9 @@ import org.jetbrains.annotations.*;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+
+import static org.digma.intellij.plugin.common.CatchingUtilsKt.executeCatchingWithResult;
+import static org.digma.intellij.plugin.common.PsiAccessUtilsKt.runInReadAccessWithResult;
 
 public class CSharpLanguageService extends LifetimedProjectComponent implements LanguageService {
 
@@ -98,7 +102,7 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
             return false;
         }
 
-        PsiFile psiFile = PsiAccessUtilsKt.runInReadAccessWithResult(() -> PsiManager.getInstance(project).findFile(newFile));
+        PsiFile psiFile = runInReadAccessWithResult(() -> PsiManager.getInstance(project).findFile(newFile));
         if (!PsiUtils.isValidPsiFile(psiFile)) {
             return false;
         }
@@ -119,8 +123,17 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
     @Override
     @NotNull
     public MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, @Nullable Editor selectedEditor, int caretOffset) {
-        return LanguageServiceHost.getInstance(project).detectMethodUnderCaret(psiFile, selectedEditor, caretOffset);
+
+        //detectMethodUnderCaret should run very fast and return a result,
+        // this operation may become invalid very soon if user clicks somewhere else.
+        // no retry because it needs to complete very fast
+        //it may be called from EDT or background, runInReadAccessWithResult will acquire read access if necessary.
+        return executeCatchingWithResult(() -> PsiAccessUtilsKt.runInReadAccessWithResult(() -> LanguageServiceHost.getInstance(project).detectMethodUnderCaret(psiFile, selectedEditor, caretOffset)), throwable -> {
+            ErrorReporter.getInstance().reportError(getClass().getSimpleName() + ".detectMethodUnderCaret", throwable);
+            return new MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), caretOffset, null, false);
+        });
     }
+
 
     @Override
     public void navigateToMethod(String methodId) {

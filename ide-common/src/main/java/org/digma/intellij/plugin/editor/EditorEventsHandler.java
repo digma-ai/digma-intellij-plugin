@@ -197,7 +197,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
 
                             Backgroundable.executeOnPooledThread(() -> {
                                 LanguageService languageService1 = languageServiceLocator.locate(psiFile1.getLanguage());
-                                MethodUnderCaret methodUnderCaret = DumbService.getInstance(project).runReadActionInSmartMode(() -> languageService1.detectMethodUnderCaret(project, psiFile1, selectedTextEditor, offset));
+                                MethodUnderCaret methodUnderCaret = languageService1.detectMethodUnderCaret(project, psiFile1, selectedTextEditor, offset);
                                 Log.log(LOGGER::trace, "Found MethodUnderCaret for :{}, '{}'", newFile, methodUnderCaret);
                                 caretContextService.contextChanged(methodUnderCaret);
                                 Log.log(LOGGER::trace, "contextChanged for :{}, '{}'", newFile, methodUnderCaret);

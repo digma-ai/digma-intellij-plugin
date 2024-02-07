@@ -21,6 +21,7 @@ import kotlin.Pair;
 import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.editor.EditorUtils;
+import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.*;
 import org.digma.intellij.plugin.psi.*;
@@ -28,6 +29,8 @@ import org.digma.intellij.plugin.ui.CaretContextService;
 import org.jetbrains.annotations.*;
 
 import java.util.*;
+
+import static org.digma.intellij.plugin.common.CatchingUtilsKt.executeCatchingWithResult;
 
 public class PythonLanguageService implements LanguageService {
 
@@ -112,24 +115,35 @@ public class PythonLanguageService implements LanguageService {
     @Override
     @NotNull
     public MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, Editor selectedEditor, int caretOffset) {
-        return Retries.retryWithResult(() -> ReadAction.compute(() -> {
-            if (!isSupportedFile(psiFile)) {
-                return new MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), caretOffset, null, false);
-            }
-            PsiElement underCaret = psiFile.findElementAt(caretOffset);
-            if (underCaret == null) {
-                return new MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), caretOffset, null, true);
-            }
-            PyFunction pyFunction = PsiTreeUtil.getParentOfType(underCaret, PyFunction.class);
-            if (pyFunction != null) {
-                var methodId = PythonLanguageUtils.createPythonMethodCodeObjectId(project, pyFunction);
-                var name = pyFunction.getName() == null ? "" : pyFunction.getName();
-                var containingClass = pyFunction.getContainingClass();
-                var className = containingClass == null ? "" : containingClass.getName() + ".";
-                return new MethodUnderCaret(methodId, name, className, "", PsiUtils.psiFileToUri(psiFile), caretOffset);
-            }
-            return new MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), caretOffset);
-        }), Throwable.class, 50, 5);
+
+        //detectMethodUnderCaret should run very fast and return a result,
+        // this operation may become invalid very soon if user clicks somewhere else.
+        // no retry because it needs to complete very fast
+        //it may be called from EDT or background, runInReadAccessWithResult will acquire read access if necessary.
+        return executeCatchingWithResult(() -> PsiAccessUtilsKt.runInReadAccessWithResult(() -> detectMethodUnderCaret(project, psiFile, caretOffset)), throwable -> {
+            ErrorReporter.getInstance().reportError(getClass().getSimpleName() + ".detectMethodUnderCaret", throwable);
+            return new MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), caretOffset, null, false);
+        });
+    }
+
+    private MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, int caretOffset) {
+
+        if (!isSupportedFile(psiFile)) {
+            return new MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), caretOffset, null, false);
+        }
+        PsiElement underCaret = psiFile.findElementAt(caretOffset);
+        if (underCaret == null) {
+            return new MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), caretOffset, null, true);
+        }
+        PyFunction pyFunction = PsiTreeUtil.getParentOfType(underCaret, PyFunction.class);
+        if (pyFunction != null) {
+            var methodId = PythonLanguageUtils.createPythonMethodCodeObjectId(project, pyFunction);
+            var name = pyFunction.getName() == null ? "" : pyFunction.getName();
+            var containingClass = pyFunction.getContainingClass();
+            var className = containingClass == null ? "" : containingClass.getName() + ".";
+            return new MethodUnderCaret(methodId, name, className, "", PsiUtils.psiFileToUri(psiFile), caretOffset);
+        }
+        return new MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), caretOffset);
     }
 
     /**

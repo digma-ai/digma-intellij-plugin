@@ -1,6 +1,13 @@
 # Changelog
 
-## [2.0.256] - 2024-02-06
+## [2.0.257] - 2024-02-07
+
+- Feature/endpoint query otimization by @ohrebeniuk in https://github.com/digma-ai/digma-intellij-plugin/pull/1761
+- Update Insights UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1771
+- Update Recent Activity UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1772
+- dont-send-navigation-event-on-filechanged by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1773
+
+## 2.0.256 - 2024-02-06
 
 - report error in SvgIcon.kt by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1768
 - Update Installation Wizard UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1769

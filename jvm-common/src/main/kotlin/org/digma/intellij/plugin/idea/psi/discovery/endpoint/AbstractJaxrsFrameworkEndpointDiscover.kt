@@ -20,6 +20,8 @@ import com.intellij.psi.search.searches.OverridingMethodsSearch
 import com.intellij.psi.util.PsiTreeUtil
 import org.digma.intellij.plugin.common.SearchScopeProvider
 import org.digma.intellij.plugin.common.executeCatchingIgnorePCE
+import org.digma.intellij.plugin.common.isProjectValid
+import org.digma.intellij.plugin.common.isValidVirtualFile
 import org.digma.intellij.plugin.common.runInReadAccessInSmartModeWithResultAndRetryIgnorePCE
 import org.digma.intellij.plugin.common.runInReadAccessWithResult
 import org.digma.intellij.plugin.common.runInReadAccessWithRetryIgnorePCE
@@ -74,7 +76,7 @@ abstract class AbstractJaxrsFrameworkEndpointDiscover(private val project: Proje
      */
     private fun lookForEndpoints(psiFile: PsiFile, context: ProcessContext): List<EndpointInfo> {
 
-        if (!isJaxRsHttpRelevant() || !PsiUtils.isValidPsiFile(psiFile)) {
+        if (!isJaxRsHttpRelevant() || !PsiUtils.isValidPsiFile(psiFile) || !isProjectValid(project)) {
             return emptyList()
         }
 
@@ -118,10 +120,11 @@ abstract class AbstractJaxrsFrameworkEndpointDiscover(private val project: Proje
 
     override fun lookForEndpoints(searchScopeProvider: SearchScopeProvider, context: ProcessContext): List<EndpointInfo> {
 
-        if (!isJaxRsHttpRelevant()) {
+        if (!isJaxRsHttpRelevant() || !isProjectValid(project)) {
             return emptyList()
         }
 
+        //todo: IMO there should be no special handling for file , just use the search scope.
         //jax-rs need special discovery for PsiFile
         val psiFile = extractPsiFileIfFileScope(searchScopeProvider)
         if (psiFile != null && PsiUtils.isValidPsiFile(psiFile)) {
@@ -176,7 +179,7 @@ abstract class AbstractJaxrsFrameworkEndpointDiscover(private val project: Proje
                     val filesCollection = virtualFileEnumeration.filesIfCollection
                     if (filesCollection != null) {
                         val virtualFile = filesCollection.stream().findFirst().orElse(null)
-                        if (virtualFile != null) {
+                        if (isValidVirtualFile(virtualFile)) {
                             return@runInReadAccessWithResult PsiManager.getInstance(project).findFile(virtualFile)
                         }
                         return@runInReadAccessWithResult null

@@ -6,7 +6,6 @@ import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.impl.source.PsiExtensibleClass
-import com.intellij.psi.util.PsiTreeUtil
 import org.digma.intellij.plugin.common.isReadAccessAllowed
 import org.digma.intellij.plugin.common.runInReadAccessWithResult
 import org.digma.intellij.plugin.psi.LanguageService
@@ -169,7 +168,8 @@ fun getInnerClassesOf(psiClass: PsiClass): List<PsiClass> {
 }
 
 fun toFileUri(psiMethod: PsiMethod): String {
-    val containingFile: PsiFile? = PsiTreeUtil.getParentOfType(psiMethod, PsiFile::class.java)
-    val containingFileUri = PsiUtils.psiFileToUri(containingFile!!)
-    return containingFileUri
+    val containingFile = psiMethod.containingFile
+    return containingFile?.let {
+        PsiUtils.psiFileToUri(it)
+    } ?: ""
 }

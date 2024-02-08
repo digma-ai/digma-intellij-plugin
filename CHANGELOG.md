@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.257] - 2024-02-07
+## [2.0.258] - 2024-02-08
+
+- update index file by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1776
+- check if file is valid in jaxrs framework by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1779
+
+## 2.0.257 - 2024-02-07
 
 - Feature/endpoint query otimization by @ohrebeniuk in https://github.com/digma-ai/digma-intellij-plugin/pull/1761
 - Update Insights UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1771

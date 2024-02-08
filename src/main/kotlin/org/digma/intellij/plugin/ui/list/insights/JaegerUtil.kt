@@ -67,7 +67,8 @@ fun openJaegerFromRecentActivity(
         }
 
         LinkMode.Embedded -> {
-            JaegerUIService.getInstance(project).openEmbeddedJaeger(traceId, spanName, spanCodeObjectId, false)
+            val traceSample = TraceSample(spanName, traceId)
+            JaegerUIService.getInstance(project).openEmbeddedJaeger(Collections.singletonList(traceSample), spanName, spanCodeObjectId, true)
         }
     }
 

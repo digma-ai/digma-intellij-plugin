@@ -1,7 +1,7 @@
 package org.digma.intellij.plugin.idea.psi.java
 
-import org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscoveryUtils.Companion.adjustUri
-import org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscoveryUtils.Companion.combineUri
+import org.digma.intellij.plugin.idea.psi.discovery.endpoint.adjustUri
+import org.digma.intellij.plugin.idea.psi.discovery.endpoint.combineUri
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

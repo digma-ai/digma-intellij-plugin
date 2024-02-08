@@ -53,11 +53,11 @@ internal fun getSpanInfoFromWithSpanAnnotatedMethod(uMethod: UMethod): List<Span
         val spanName: String = createSpanNameForWithSpanAnnotation(uMethod, withSpanAnnotation, containingClass)
 
         val spanInfos = mutableListOf<SpanInfo>()
-        spanInfos.add(SpanInfo(createSpanIdFromInstLibraryAndSpanName(WITH_SPAN_INST_LIBRARY_1, spanName), spanName, methodId, containingFileUri));
-        spanInfos.add(SpanInfo(createSpanIdFromInstLibraryAndSpanName(WITH_SPAN_INST_LIBRARY_2, spanName), spanName, methodId, containingFileUri));
-        spanInfos.add(SpanInfo(createSpanIdFromInstLibraryAndSpanName(WITH_SPAN_INST_LIBRARY_3, spanName), spanName, methodId, containingFileUri));
-        spanInfos.add(SpanInfo(createSpanIdFromInstLibraryAndSpanName(WITH_SPAN_INST_LIBRARY_4, spanName), spanName, methodId, containingFileUri));
-        spanInfos.add(SpanInfo(createSpanIdFromInstLibraryAndSpanName(WITH_SPAN_INST_LIBRARY_5, spanName), spanName, methodId, containingFileUri));
+        spanInfos.add(SpanInfo(createSpanIdFromInstLibraryAndSpanName(WITH_SPAN_INST_LIBRARY_1, spanName), spanName, methodId, containingFileUri))
+        spanInfos.add(SpanInfo(createSpanIdFromInstLibraryAndSpanName(WITH_SPAN_INST_LIBRARY_2, spanName), spanName, methodId, containingFileUri))
+        spanInfos.add(SpanInfo(createSpanIdFromInstLibraryAndSpanName(WITH_SPAN_INST_LIBRARY_3, spanName), spanName, methodId, containingFileUri))
+        spanInfos.add(SpanInfo(createSpanIdFromInstLibraryAndSpanName(WITH_SPAN_INST_LIBRARY_4, spanName), spanName, methodId, containingFileUri))
+        spanInfos.add(SpanInfo(createSpanIdFromInstLibraryAndSpanName(WITH_SPAN_INST_LIBRARY_5, spanName), spanName, methodId, containingFileUri))
         return spanInfos
     } else {
         return emptyList()
@@ -79,7 +79,7 @@ fun getSpanInfoFromStartSpanMethodReference(project: Project, uReferenceExpressi
         //receiver is the reference to SpanBuilder , it may be spanBuilder(spanName) method call or variable
         val uExpression = uReferenceExpression.getUCallExpression()?.receiver
         if (uExpression is UReferenceExpression) {
-            return getSpanInfoFromSpanBuilderReferenceExpression(project, uExpression, methodId, containingFileUri);
+            return getSpanInfoFromSpanBuilderReferenceExpression(project, uExpression, methodId, containingFileUri)
         }
     }
 
@@ -116,8 +116,7 @@ fun getSpanInfoFromSpanBuilderMethodCallExpression(
     val spanName = getExpressionValue(spanBuilderMethodCall.getArgumentForParameter(0)!!)
     val instLibrary = spanName?.let {
 
-        val tracerReferenceExpression = spanBuilderMethodCall.receiver
-        return@let when (tracerReferenceExpression) {
+        return@let when (val tracerReferenceExpression = spanBuilderMethodCall.receiver) {
             is UReferenceExpression -> {
                 getInstLibraryFromTracerReferenceExpression(project, tracerReferenceExpression)
             }
@@ -146,7 +145,7 @@ fun getInstLibraryFromTracerReferenceExpression(project: Project, tracerReferenc
     if (psiElement != null && psiElement.toUElement() is UVariable) {
         return getInstLibraryFromTracerVariable(project, psiElement.toUElementOfType<UVariable>()!!)
     } else if (psiElement != null && psiElement.toUElement() is UMethod) {
-        return getInstLibraryFromGetTracerMethodCall(project, tracerReference.getUCallExpression()!!)
+        return getInstLibraryFromGetTracerMethodCall(tracerReference.getUCallExpression()!!)
     }
 
     return null
@@ -171,7 +170,7 @@ fun getInstLibraryFromTracerVariable(project: Project, tracerVariable: UVariable
 
         val getTracerCall = uElement?.getParentOfType<UBinaryExpression>()?.rightOperand.getUCallExpression()
         if (getTracerCall != null && getTracerCall.isMethodCall()) {
-            val instLibrary = getInstLibraryFromGetTracerMethodCall(project, getTracerCall)
+            val instLibrary = getInstLibraryFromGetTracerMethodCall(getTracerCall)
             if (instLibrary != null) {
                 return instLibrary
             }
@@ -181,7 +180,7 @@ fun getInstLibraryFromTracerVariable(project: Project, tracerVariable: UVariable
     return null
 }
 
-fun getInstLibraryFromGetTracerMethodCall(project: Project, uCallExpression: UCallExpression): String? {
+fun getInstLibraryFromGetTracerMethodCall(uCallExpression: UCallExpression): String? {
 
     val getTracerMethod = uCallExpression.resolve()?.toUElement()
     if (getTracerMethod != null && getTracerMethod is UMethod) {
@@ -189,7 +188,7 @@ fun getInstLibraryFromGetTracerMethodCall(project: Project, uCallExpression: UCa
         if (isMethodWithFirstArgumentString(getTracerMethod, "getTracer", OPENTELEMETY_FQN) ||
             isMethodWithFirstArgumentString(getTracerMethod, "getTracer", GLOBAL_OPENTELEMETY_FQN)
         ) {
-            return getExpressionValue(uCallExpression.getArgumentForParameter(0)!!);
+            return getExpressionValue(uCallExpression.getArgumentForParameter(0)!!)
         }
     }
 

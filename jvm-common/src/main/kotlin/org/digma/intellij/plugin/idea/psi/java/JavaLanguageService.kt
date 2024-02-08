@@ -16,19 +16,19 @@ import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
+import org.digma.intellij.plugin.common.runInReadAccessWithResult
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.psi.AbstractJvmLanguageService
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscovery
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.GrpcFramework
-import org.digma.intellij.plugin.idea.psi.discovery.endpoint.JaxrsJakartaFramework
-import org.digma.intellij.plugin.idea.psi.discovery.endpoint.JaxrsJavaxFramework
-import org.digma.intellij.plugin.idea.psi.discovery.endpoint.MicronautFramework
-import org.digma.intellij.plugin.idea.psi.discovery.endpoint.SpringBootFramework
+import org.digma.intellij.plugin.idea.psi.discovery.endpoint.JaxrsJakartaFrameworkEndpointDiscovery
+import org.digma.intellij.plugin.idea.psi.discovery.endpoint.JaxrsJavaxFrameworkEndpointDiscovery
+import org.digma.intellij.plugin.idea.psi.discovery.endpoint.MicronautFrameworkEndpointDiscovery
+import org.digma.intellij.plugin.idea.psi.discovery.endpoint.SpringBootFrameworkEndpointDiscovery
 import org.digma.intellij.plugin.instrumentation.CanInstrumentMethodResult
 import org.digma.intellij.plugin.instrumentation.JvmCanInstrumentMethodResult
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.psi.PsiUtils
-import org.digma.intellij.plugin.psi.runInReadAccessWithResult
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.toUElementOfType
@@ -119,11 +119,11 @@ class JavaLanguageService(project: Project) : AbstractJvmLanguageService(project
         //don't need frameworks that are definitely only used in kotlin like ktor.
         //if someone writes ktor application in java then ktor endpoints will not work but that is probably
         // a very rare case and maybe even not possible.
-        val micronautFramework = MicronautFramework(project)
-        val jaxrsJavaxFramework = JaxrsJavaxFramework(project)
-        val jaxrsJakartaFramework = JaxrsJakartaFramework(project)
+        val micronautFramework = MicronautFrameworkEndpointDiscovery(project)
+        val jaxrsJavaxFramework = JaxrsJavaxFrameworkEndpointDiscovery(project)
+        val jaxrsJakartaFramework = JaxrsJakartaFrameworkEndpointDiscovery(project)
         val grpcFramework = GrpcFramework(project)
-        val springBootFramework = SpringBootFramework(project)
+        val springBootFramework = SpringBootFrameworkEndpointDiscovery(project)
         return listOf(
             micronautFramework,
             jaxrsJavaxFramework,

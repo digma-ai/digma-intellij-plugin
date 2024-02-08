@@ -3,7 +3,12 @@ package org.digma.intellij.plugin.idea.navigation
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import org.digma.intellij.plugin.SPAN_BUILDER_FQN
+import org.digma.intellij.plugin.WITH_SPAN_ANNOTATION_FQN
 import org.digma.intellij.plugin.common.isProjectValid
+import org.digma.intellij.plugin.common.runInReadAccessInSmartModeWithResultAndRetryIgnorePCE
+import org.digma.intellij.plugin.common.runInReadAccessWithResult
+import org.digma.intellij.plugin.common.runInReadAccessWithRetryIgnorePCE
 import org.digma.intellij.plugin.idea.navigation.model.NavigationProcessContext
 import org.digma.intellij.plugin.idea.navigation.model.SpanLocation
 import org.digma.intellij.plugin.idea.psi.PsiPointers
@@ -11,12 +16,9 @@ import org.digma.intellij.plugin.idea.psi.findAnnotatedMethods
 import org.digma.intellij.plugin.idea.psi.findMethodReferences
 import org.digma.intellij.plugin.idea.psi.java.JavaSpanDiscoveryUtils
 import org.digma.intellij.plugin.model.discovery.SpanInfo
-import org.digma.intellij.plugin.psi.runInReadAccessInSmartModeIgnorePCE
-import org.digma.intellij.plugin.psi.runInReadAccessWithResult
-import org.digma.intellij.plugin.psi.runInReadAccessWithRetryIgnorePCE
 import java.util.Objects
 
-class OpenTelemetrySpanDiscovery(private val project: Project) : SpanDiscoveryProvider {
+class OpenTelemetrySpanNavigationDiscovery(private val project: Project) : SpanNavigationDiscoveryProvider {
 
     private val logger = Logger.getInstance(this::class.java)
 
@@ -57,7 +59,7 @@ class OpenTelemetrySpanDiscovery(private val project: Project) : SpanDiscoveryPr
 
         val annotatedMethods =
             executeCatchingWithResultWithRetry(context, getName(), 50, 5) {
-                val withSpanClass = psiPointers.getOtelWithSpanAnnotationPsiClass(project) ?: return@executeCatchingWithResultWithRetry listOf()
+                val withSpanClass = psiPointers.getPsiClass(project, WITH_SPAN_ANNOTATION_FQN) ?: return@executeCatchingWithResultWithRetry listOf()
                 findAnnotatedMethods(project, withSpanClass, context.searchScope)
             } ?: return mapOf()
 
@@ -78,11 +80,11 @@ class OpenTelemetrySpanDiscovery(private val project: Project) : SpanDiscoveryPr
 
                 element?.let { psiMethod ->
 
-                    val spanInfos = runInReadAccessInSmartModeIgnorePCE(project) {
+                    val spanInfos = runInReadAccessInSmartModeWithResultAndRetryIgnorePCE(project) {
                         JavaSpanDiscoveryUtils.getSpanInfoFromWithSpanAnnotatedMethod(psiMethod)
                     }
 
-                    spanInfos?.forEach { spanInfo: SpanInfo ->
+                    spanInfos.forEach { spanInfo: SpanInfo ->
                         runInReadAccessWithRetryIgnorePCE {
                             val offset = psiMethod.textOffset
                             val location = SpanLocation(spanInfo.containingFileUri, offset)
@@ -110,7 +112,7 @@ class OpenTelemetrySpanDiscovery(private val project: Project) : SpanDiscoveryPr
         val psiPointers = project.service<PsiPointers>()
 
         val startSpanReferences = executeCatchingWithResultWithRetry(context, getName(), 50, 5) {
-            val tracerBuilderClass = psiPointers.getOtelTracerBuilderPsiClass(project) ?: return@executeCatchingWithResultWithRetry listOf()
+            val tracerBuilderClass = psiPointers.getPsiClass(project, SPAN_BUILDER_FQN) ?: return@executeCatchingWithResultWithRetry listOf()
             val startSpanMethod = psiPointers.getOtelStartSpanMethod(project, tracerBuilderClass)
             Objects.requireNonNull(startSpanMethod, "startSpan method must be found in SpanBuilder class")
             startSpanMethod?.let {
@@ -128,7 +130,7 @@ class OpenTelemetrySpanDiscovery(private val project: Project) : SpanDiscoveryPr
         startSpanReferences.forEach { reference ->
 
             executeCatchingWithRetry(context, getName(), 50, 5) {
-                val spanInfo = runInReadAccessInSmartModeIgnorePCE(project) {
+                val spanInfo = runInReadAccessInSmartModeWithResultAndRetryIgnorePCE(project) {
                     JavaSpanDiscoveryUtils.getSpanInfoFromStartSpanMethodReference(project, reference)
                 }
                 spanInfo?.let {

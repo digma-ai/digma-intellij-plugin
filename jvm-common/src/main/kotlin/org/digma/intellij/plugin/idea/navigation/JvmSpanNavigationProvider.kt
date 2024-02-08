@@ -19,6 +19,7 @@ import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.common.SearchScopeProvider
 import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.common.isValidVirtualFile
+import org.digma.intellij.plugin.common.runInReadAccessWithResult
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.errorreporting.SEVERITY_LOW_NO_FIX
 import org.digma.intellij.plugin.errorreporting.SEVERITY_MEDIUM_TRY_FIX
@@ -30,7 +31,6 @@ import org.digma.intellij.plugin.idea.psi.isJvmSupportedFile
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.progress.RetryableTask
 import org.digma.intellij.plugin.psi.PsiUtils
-import org.digma.intellij.plugin.psi.runInReadAccessWithResult
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
@@ -49,8 +49,8 @@ internal class JvmSpanNavigationProvider(project: Project) : AbstractNavigationD
     //used to restrict one update thread at a time
     private val buildSpansLock = ReentrantLock()
 
-    private val spanDiscoveryProviders: List<SpanDiscoveryProvider> =
-        listOf(OpenTelemetrySpanDiscovery(project), MicrometerSpanDiscovery(project))
+    private val spanNavigationDiscoveryProviders: List<SpanNavigationDiscoveryProvider> =
+        listOf(OpenTelemetrySpanNavigationDiscovery(project), MicrometerSpanNavigationDiscovery(project))
 
 
     companion object {
@@ -113,9 +113,10 @@ internal class JvmSpanNavigationProvider(project: Project) : AbstractNavigationD
 
         var context: NavigationProcessContext? = null
         val workTask = Consumer<ProgressIndicator> {
-            context = NavigationProcessContext(searchScopeProvider, it)
+            val myContext = NavigationProcessContext(searchScopeProvider, it)
+            context = myContext
             //can prepare data here if necessary
-            buildSpanNavigation(context!!, origin, it, retry)
+            buildSpanNavigation(myContext, origin, it, retry)
         }
 
         val beforeRetryTask = Consumer<RetryableTask> { task ->
@@ -147,8 +148,6 @@ internal class JvmSpanNavigationProvider(project: Project) : AbstractNavigationD
             )
         }
 
-        //onFinish will be called for each retry , can check properties on the task to decide
-        // if all retries are finished, actually task.exhausted
         val onFinish = Consumer<RetryableTask> { task ->
 
             val hadProgressErrors = task.error != null
@@ -187,7 +186,7 @@ internal class JvmSpanNavigationProvider(project: Project) : AbstractNavigationD
             onErrorTask = onErrorTask,
             onFinish = onFinish,
             onPCETask = onPCETask,
-            maxRetries = 3, //todo: change to 10 or more
+            maxRetries = 10,
             delayBetweenRetriesMillis = 2000L
         )
 
@@ -205,7 +204,7 @@ internal class JvmSpanNavigationProvider(project: Project) : AbstractNavigationD
 
         buildSpansLock.lock()
         try {
-            spanDiscoveryProviders.forEach { provider ->
+            spanNavigationDiscoveryProviders.forEach { provider ->
 
                 executeCatchingWithRetry(context, provider.getName(), 30000, 5) {
                     val otelSpans: Map<String, SpanLocation> = provider.discover(context)

@@ -2,35 +2,19 @@ package org.digma.intellij.plugin.editor;
 
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.fileEditor.FileEditor;
-import com.intellij.openapi.fileEditor.FileEditorManager;
-import com.intellij.openapi.fileEditor.FileEditorManagerEvent;
-import com.intellij.openapi.fileEditor.FileEditorManagerListener;
-import com.intellij.openapi.project.DumbService;
-import com.intellij.openapi.project.Project;
+import com.intellij.openapi.fileEditor.*;
+import com.intellij.openapi.project.*;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiDocumentManager;
-import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiManager;
-import com.intellij.util.Alarm;
-import com.intellij.util.AlarmFactory;
-import org.digma.intellij.plugin.common.Backgroundable;
-import org.digma.intellij.plugin.common.EDT;
-import org.digma.intellij.plugin.common.FileUtils;
-import org.digma.intellij.plugin.common.SlowOperationsUtilsKt;
-import org.digma.intellij.plugin.common.VfsUtilsKt;
+import com.intellij.psi.*;
+import com.intellij.util.*;
+import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.model.discovery.DocumentInfo;
-import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
+import org.digma.intellij.plugin.model.discovery.*;
 import org.digma.intellij.plugin.navigation.NavigationModel;
-import org.digma.intellij.plugin.psi.LanguageService;
-import org.digma.intellij.plugin.psi.LanguageServiceLocator;
-import org.digma.intellij.plugin.psi.PsiAccessUtilsKt;
-import org.digma.intellij.plugin.psi.PsiUtils;
-import org.digma.intellij.plugin.ui.CaretContextService;
-import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
+import org.digma.intellij.plugin.psi.*;
+import org.digma.intellij.plugin.ui.*;
 import org.jetbrains.annotations.NotNull;
 
 import static org.digma.intellij.plugin.common.AlarmUtilsKt.addRequestWithErrorReporting;
@@ -175,11 +159,14 @@ public class EditorEventsHandler implements FileEditorManagerListener {
                         LanguageService languageService = languageServiceLocator.locate(psiFile.getLanguage());
                         Log.log(LOGGER::trace, "Found language service {} for :{}", languageService, newFile);
 
-                        DocumentInfo documentInfo = languageService.buildDocumentInfo(psiFile, newEditor);
-                        Log.log(LOGGER::trace, "got DocumentInfo for :{}", newFile);
 
-                        documentInfoService.addCodeObjects(psiFile, documentInfo);
-                        Log.log(LOGGER::trace, "documentInfoService updated with DocumentInfo for :{}", newFile);
+                        BuildDocumentInfoProcessContext.buildDocumentInfoUnderProcess(project, progressIndicator -> {
+                            var context = new BuildDocumentInfoProcessContext(progressIndicator);
+                            DocumentInfo documentInfo = languageService.buildDocumentInfo(psiFile, newEditor, context);
+                            Log.log(LOGGER::trace, "got DocumentInfo for :{}", newFile);
+                            documentInfoService.addCodeObjects(psiFile, documentInfo);
+                            Log.log(LOGGER::trace, "documentInfoService updated with DocumentInfo for :{}", newFile);
+                        });
                     }
                 } else {
                     Log.log(LOGGER::trace, "documentInfoService already contains :{}", newFile);
@@ -210,7 +197,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
 
                             Backgroundable.executeOnPooledThread(() -> {
                                 LanguageService languageService1 = languageServiceLocator.locate(psiFile1.getLanguage());
-                                MethodUnderCaret methodUnderCaret = DumbService.getInstance(project).runReadActionInSmartMode(() -> languageService1.detectMethodUnderCaret(project, psiFile1, selectedTextEditor, offset));
+                                MethodUnderCaret methodUnderCaret = languageService1.detectMethodUnderCaret(project, psiFile1, selectedTextEditor, offset);
                                 Log.log(LOGGER::trace, "Found MethodUnderCaret for :{}, '{}'", newFile, methodUnderCaret);
                                 caretContextService.contextChanged(methodUnderCaret);
                                 Log.log(LOGGER::trace, "contextChanged for :{}, '{}'", newFile, methodUnderCaret);

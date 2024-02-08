@@ -1,17 +1,23 @@
 package org.digma.intellij.plugin.idea.psi.discovery
 
+import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
+import com.intellij.psi.SmartPsiElementPointer
 import com.intellij.psi.search.GlobalSearchScope
-import com.intellij.psi.search.searches.AnnotatedElementsSearch
 import com.intellij.psi.util.PsiTreeUtil
 import org.digma.intellij.plugin.common.StringUtils
+import org.digma.intellij.plugin.common.executeCatchingIgnorePCE
+import org.digma.intellij.plugin.common.executeCatchingWithRetryIgnorePCE
+import org.digma.intellij.plugin.common.runInReadAccessWithRetryIgnorePCE
+import org.digma.intellij.plugin.idea.psi.PsiPointers
 import org.digma.intellij.plugin.idea.psi.createPsiMethodCodeObjectId
+import org.digma.intellij.plugin.idea.psi.findAnnotatedMethods
 import org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils
 import org.digma.intellij.plugin.model.discovery.SpanInfo
+import org.digma.intellij.plugin.psi.BuildDocumentInfoProcessContext
 import org.digma.intellij.plugin.psi.PsiUtils
 
 class MicrometerTracingFramework {
@@ -78,33 +84,53 @@ class MicrometerTracingFramework {
     }
 
 
-    fun discoverSpans(project: Project, psiFile: PsiFile): Collection<SpanInfo> {
+    fun discoverSpans(project: Project, psiFile: PsiFile, context: BuildDocumentInfoProcessContext): Collection<SpanInfo> {
         val spanInfos = mutableListOf<SpanInfo>()
 
-        val newSpanAnnotationSpans = newSpanAnnotationSpanDiscovery(project, psiFile)
-        spanInfos.addAll(newSpanAnnotationSpans)
+        executeCatchingWithRetryIgnorePCE({
+            val newSpanAnnotationSpans = newSpanAnnotationSpanDiscovery(project, psiFile, context)
+            spanInfos.addAll(newSpanAnnotationSpans)
+        }, { e ->
+            context.addError("newSpanAnnotationSpanDiscovery", e)
+        })
 
-        val observedAnnotationSpans = observedAnnotationSpanDiscovery(project, psiFile)
-        spanInfos.addAll(observedAnnotationSpans)
+        executeCatchingWithRetryIgnorePCE({
+            val observedAnnotationSpans = observedAnnotationSpanDiscovery(project, psiFile, context)
+            spanInfos.addAll(observedAnnotationSpans)
+        }, { e ->
+            context.addError("observedAnnotationSpanDiscovery", e)
+        })
 
         return spanInfos
     }
 
 
-    private fun newSpanAnnotationSpanDiscovery(project: Project, psiFile: PsiFile): Collection<SpanInfo> {
+    private fun newSpanAnnotationSpanDiscovery(project: Project, psiFile: PsiFile, context: BuildDocumentInfoProcessContext): Collection<SpanInfo> {
+
+        val psiPointers = project.service<PsiPointers>()
 
         val spanInfos = mutableListOf<SpanInfo>()
 
-        val newSpanClass = JavaPsiFacade.getInstance(project).findClass(NEW_SPAN_FQN, GlobalSearchScope.allScope(project))
-        //maybe the annotation is not in the classpath
-        if (newSpanClass != null) {
-            val psiMethods = AnnotatedElementsSearch.searchPsiMethods(newSpanClass, GlobalSearchScope.fileScope(psiFile))
-//            psiMethods = JavaSpanDiscoveryUtils.filterNonRelevantMethodsForSpanDiscovery(psiMethods)
-            for (it in psiMethods) {
-                val spanInfo = getSpanInfoFromNewSpanAnnotatedMethod(it)
-                spanInfo?.let {
-                    spanInfos.add(it)
-                }
+        val newSpanClass = psiPointers.getPsiClass(project, NEW_SPAN_FQN)
+
+        newSpanClass?.let {
+
+            val annotatedMethods = findAnnotatedMethods(project, newSpanClass) { GlobalSearchScope.fileScope(psiFile) }
+
+            annotatedMethods.forEach { annotatedMethod: SmartPsiElementPointer<PsiMethod> ->
+
+                executeCatchingIgnorePCE({
+                    runInReadAccessWithRetryIgnorePCE {
+                        annotatedMethod.element?.let {
+                            val spanInfo = getSpanInfoFromNewSpanAnnotatedMethod(it)
+                            spanInfo?.let { si ->
+                                spanInfos.add(si)
+                            }
+                        }
+                    }
+                }, { e ->
+                    context.addError("newSpanAnnotationSpanDiscovery", e)
+                })
             }
         }
 
@@ -112,22 +138,32 @@ class MicrometerTracingFramework {
     }
 
 
-    private fun observedAnnotationSpanDiscovery(project: Project, psiFile: PsiFile): Collection<SpanInfo> {
+    private fun observedAnnotationSpanDiscovery(project: Project, psiFile: PsiFile, context: BuildDocumentInfoProcessContext): Collection<SpanInfo> {
+
+        val psiPointers = project.service<PsiPointers>()
 
         val spanInfos = mutableListOf<SpanInfo>()
 
-        val observedAnnotationClass = JavaPsiFacade.getInstance(project).findClass(OBSERVED_FQN, GlobalSearchScope.allScope(project))
-        //maybe the annotation is not in the classpath
-        if (observedAnnotationClass != null) {
-            // TODO: search for classes/interfaces that are annotated with OBSERVED_FQN and even child classes
+        val observedAnnotationClass = psiPointers.getPsiClass(project, OBSERVED_FQN)
 
-            val psiMethods = AnnotatedElementsSearch.searchPsiMethods(observedAnnotationClass, GlobalSearchScope.fileScope(psiFile))
-//            psiMethods = JavaSpanDiscoveryUtils.filterNonRelevantMethodsForSpanDiscovery(psiMethods)
-            for (it in psiMethods) {
-                val spanInfo = getSpanInfoFromObservedAnnotatedMethod(it)
-                spanInfo?.let {
-                    spanInfos.add(it)
-                }
+        observedAnnotationClass?.let {
+
+            val annotatedMethods = findAnnotatedMethods(project, observedAnnotationClass) { GlobalSearchScope.fileScope(psiFile) }
+
+            annotatedMethods.forEach { annotatedMethod: SmartPsiElementPointer<PsiMethod> ->
+
+                executeCatchingIgnorePCE({
+                    runInReadAccessWithRetryIgnorePCE {
+                        annotatedMethod.element?.let {
+                            val spanInfo = getSpanInfoFromObservedAnnotatedMethod(it)
+                            spanInfo?.let { si ->
+                                spanInfos.add(si)
+                            }
+                        }
+                    }
+                }, { e ->
+                    context.addError("newSpanAnnotationSpanDiscovery", e)
+                })
             }
         }
 
@@ -135,8 +171,7 @@ class MicrometerTracingFramework {
     }
 
 
-
-    fun getSpanInfoFromNewSpanAnnotatedMethod(psiMethod: PsiMethod): SpanInfo? {
+    private fun getSpanInfoFromNewSpanAnnotatedMethod(psiMethod: PsiMethod): SpanInfo? {
         val newSpanAnnotation = psiMethod.getAnnotation(NEW_SPAN_FQN)
         val containingFile = PsiTreeUtil.getParentOfType(psiMethod, PsiFile::class.java)
         val containingClass = psiMethod.containingClass

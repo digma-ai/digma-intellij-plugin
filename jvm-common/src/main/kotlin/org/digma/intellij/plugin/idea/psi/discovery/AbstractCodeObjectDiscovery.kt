@@ -3,27 +3,26 @@ package org.digma.intellij.plugin.idea.psi.discovery
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.Computable
 import com.intellij.psi.PsiFile
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.common.executeCatching
-import org.digma.intellij.plugin.common.runWIthRetryWithResult
-import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import org.digma.intellij.plugin.common.executeCatchingWithResult
+import org.digma.intellij.plugin.common.executeCatchingWithResultAndRetryIgnorePCE
+import org.digma.intellij.plugin.common.isProjectValid
+import org.digma.intellij.plugin.common.runInReadAccessWithResult
+import org.digma.intellij.plugin.common.runInReadAccessWithRetryIgnorePCE
 import org.digma.intellij.plugin.idea.psi.createMethodCodeObjectId
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscovery
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscoveryService
 import org.digma.intellij.plugin.idea.psi.discovery.span.AbstractSpanDiscovery
 import org.digma.intellij.plugin.idea.psi.getClassSimpleName
 import org.digma.intellij.plugin.idea.psi.getMethodsInClass
-import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.discovery.SpanInfo
+import org.digma.intellij.plugin.psi.BuildDocumentInfoProcessContext
 import org.digma.intellij.plugin.psi.PsiUtils
-import org.digma.intellij.plugin.psi.runInReadAccessInSmartModeAndRetry
-import org.digma.intellij.plugin.psi.runInReadAccessWithResult
-import org.digma.intellij.plugin.psi.runInReadAccessWithRetry
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.UMethod
@@ -83,9 +82,11 @@ abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSp
 
      */
 
-    open fun buildDocumentInfo(project: Project, psiFile: PsiFile): DocumentInfo {
+    //todo: run under process and use org.digma.intellij.plugin.progress.ProcessContext
+    // to track errors, create a ProcessContext class for buildDocumentInfo like BuildDocumentInfoProcessContext
+    open fun buildDocumentInfo(project: Project, psiFile: PsiFile, context: BuildDocumentInfoProcessContext): DocumentInfo {
 
-        if (project.isDisposed || !PsiUtils.isValidPsiFile(psiFile)) {
+        if (!isProjectValid(project) || !PsiUtils.isValidPsiFile(psiFile)) {
             return DocumentInfo(PsiUtils.psiFileToUri(psiFile), mutableMapOf())
         }
 
@@ -115,20 +116,20 @@ abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSp
 
             val methodInfoMap = mutableMapOf<String, MethodInfo>()
 
-            val spans: Collection<SpanInfo> = collectSpans(project, psiFile)
+            val spans: Collection<SpanInfo> = collectSpans(project, psiFile, context)
 
             //if collectMethods throws exception we don't catch it, there is no use for DocumentInfo without methods.
             //the exception will be caught be caller and hopefully retry and succeed.
-            collectMethods(project, fileUri, classes, packageName, methodInfoMap, spans)
+            collectMethods(project, fileUri, classes, packageName, methodInfoMap, spans, context)
 
             val documentInfo = DocumentInfo(fileUri, methodInfoMap)
 
-            collectEndpoints(project, psiFile, documentInfo)
+            collectEndpoints(project, psiFile, documentInfo, context)
 
             return documentInfo
 
         } catch (e: Throwable) {
-            Log.warnWithException(logger, project, e, "error in buildDocumentInfo {}", e)
+            context.addError("buildDocumentInfo", e)
             throw e
         }
     }
@@ -138,25 +139,16 @@ abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSp
         project: Project,
         psiFile: PsiFile,
         documentInfo: DocumentInfo,
+        context: BuildDocumentInfoProcessContext,
     ) {
         val endpointDiscoveryList = EndpointDiscoveryService.getInstance(project).getEndpointDiscoveryForLanguage(psiFile)
         endpointDiscoveryList.forEach(Consumer { framework: EndpointDiscovery ->
             //if a framework fails catch it and continue execution so at least we have a partial document info.
-            //todo: currently running the whole framework in read access in smart mode because starting read action for every
-            // line of code in all frameworks is a lot of work.
-            // monitor errors and if we see too many errors here we may want to reduce granularity of read access and smart mode
-            // and do it locally in each framework.
-            executeCatching({
-                runInReadAccessInSmartModeAndRetry(project) {
-                    framework.endpointDiscovery(
-                        psiFile,
-                        documentInfo
-                    )
-                }
-            }) { e ->
-                Log.warnWithException(logger, project, e, "error in framework {},{}", framework.javaClass.simpleName, e)
-                ErrorReporter.getInstance().reportError("${this::class.java.simpleName}.buildDocumentInfo.${framework.javaClass.simpleName}", e)
-            }
+            executeCatchingWithResultAndRetryIgnorePCE({
+                framework.endpointDiscovery(psiFile, documentInfo, context)
+            }, { e ->
+                context.addError("collectEndpoints", e)
+            })
         })
     }
 
@@ -164,21 +156,18 @@ abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSp
     private fun collectSpans(
         project: Project,
         psiFile: PsiFile,
+        context: BuildDocumentInfoProcessContext,
     ): Collection<SpanInfo> {
         //if span discovery fails catch it and continue execution so at least we have a partial document info.
-        return executeCatching(Computable {
-            runWIthRetryWithResult({
-                spanDiscovery.discoverSpans(project, psiFile)
-            })
-        }) { e ->
-            Log.warnWithException(logger, project, e, "error in span discovery {}", e)
-            ErrorReporter.getInstance().reportError("${this::class.java.simpleName}.buildDocumentInfo.spanDiscovery", e)
+        return executeCatchingWithResultAndRetryIgnorePCE({
+            spanDiscovery.discoverSpans(project, psiFile, context)
+        }, { e ->
+            context.addError("collectSpans", e)
             listOf()
-        }
+        })
     }
 
 
-    //todo: fix inner classes
     private fun collectMethods(
         project: Project,
         fileUri: String,
@@ -186,6 +175,7 @@ abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSp
         packageName: String,
         methodInfoMap: MutableMap<String, MethodInfo>,
         spans: Collection<SpanInfo>,
+        context: BuildDocumentInfoProcessContext,
     ) {
 
         classes.forEach { uClass ->
@@ -197,7 +187,7 @@ abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSp
 
                 methods.forEach { uMethod ->
                     executeCatching({
-                        runInReadAccessWithRetry {
+                        runInReadAccessWithRetryIgnorePCE {
                             val id: String = createMethodCodeObjectId(uMethod)
                             val name: String = uMethod.name
                             val containingClassName: String = uClass.qualifiedName ?: getClassSimpleName(uClass)
@@ -212,8 +202,7 @@ abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSp
                             methodInfoMap[id] = methodInfo
                         }
                     }) { e ->
-                        Log.warnWithException(logger, project, e, "error in collectMethods {}", e)
-                        ErrorReporter.getInstance().reportError("${this::class.java.simpleName}.collectMethods", e)
+                        context.addError("collectMethods", e)
                     }
                 }
 
@@ -232,7 +221,7 @@ abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSp
 
 
                 if (innerClasses.isNotEmpty()) {
-                    collectMethods(project, fileUri, innerClasses, packageName, methodInfoMap, spans)
+                    collectMethods(project, fileUri, innerClasses, packageName, methodInfoMap, spans, context)
                 }
             }
         }
@@ -254,19 +243,18 @@ private class FileData(val fileUri: String, val uFile: UFile?, val packageName: 
 
     companion object {
         fun buildFileData(psiFile: PsiFile): FileData {
-            try {
+            return executeCatchingWithResult({
                 val fileUri = PsiUtils.psiFileToUri(psiFile)
                 //usually it will return a UFile but must consider null
                 val uFile: UFile? = psiFile.toUElementOfType<UFile>()
-                return uFile?.let {
+                uFile?.let {
                     val packageName = it.packageName
                     val classes = it.classes
                     FileData(fileUri, it, packageName, classes)
                 } ?: FileData(fileUri)
-
-            } catch (e: Throwable) {
-                return FileData()
-            }
+            }, {
+                FileData()
+            })
         }
     }
 

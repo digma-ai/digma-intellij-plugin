@@ -1,7 +1,6 @@
 package org.digma.intellij.plugin.idea.psi.java
 
 import com.intellij.codeInsight.hints.InlayHintsUtils
-import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.JavaRecursiveElementWalkingVisitor
@@ -9,8 +8,10 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
 import org.digma.intellij.plugin.codelens.AbstractCodeLensService
+import org.digma.intellij.plugin.common.runInReadAccessWithResult
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.psi.createMethodCodeObjectId
+import org.digma.intellij.plugin.psi.PsiUtils
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.toUElementOfType
 
@@ -21,13 +22,13 @@ class JavaCodeLensService(project: Project): AbstractCodeLensService(project) {
 
     override fun findMethodsByCodeObjectIds(psiFile: PsiFile, ids: Set<String>): Map<String, Pair<TextRange,PsiElement>> {
 
-        if (ids.isEmpty()){
+        if (ids.isEmpty() || !PsiUtils.isValidPsiFile(psiFile)) {
             return emptyMap()
         }
 
         try {
 
-            return ReadAction.compute<Map<String, Pair<TextRange, PsiElement>>, Exception> {
+            return runInReadAccessWithResult {
                 val methods = mutableMapOf<String, Pair<TextRange, PsiElement>>()
 
                 val visitor = object : JavaRecursiveElementWalkingVisitor() {
@@ -46,7 +47,7 @@ class JavaCodeLensService(project: Project): AbstractCodeLensService(project) {
 
                 psiFile.acceptChildren(visitor)
 
-                return@compute methods
+                return@runInReadAccessWithResult methods
             }
         } catch (e: Throwable) {
             ErrorReporter.getInstance().reportError("JavaCodeLensService.findMethodsByCodeObjectIds", e)

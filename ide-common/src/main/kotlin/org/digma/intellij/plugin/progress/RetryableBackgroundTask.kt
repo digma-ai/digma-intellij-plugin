@@ -5,6 +5,7 @@ import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
 
 /**
+ * Runs on new background thread with visible progress in status bar.
  * This task will retry on ProcessCanceledException.
  * other exceptions will not be retried, to retry on other exceptions use the regular retry utilities on different code blocks.
  */
@@ -23,6 +24,10 @@ internal class RetryableBackgroundTask(val task: RetryableTask) :
             task.processCanceledException = e
             throw e
         }
+    }
+
+    override fun onSuccess() {
+
     }
 
     //runs on EDT

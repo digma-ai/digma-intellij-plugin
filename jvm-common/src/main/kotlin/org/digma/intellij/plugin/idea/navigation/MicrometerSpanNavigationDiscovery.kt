@@ -4,15 +4,15 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.common.isProjectValid
+import org.digma.intellij.plugin.common.runInReadAccessInSmartModeWithResultAndRetryIgnorePCE
+import org.digma.intellij.plugin.common.runInReadAccessWithRetryIgnorePCE
 import org.digma.intellij.plugin.idea.navigation.model.NavigationProcessContext
 import org.digma.intellij.plugin.idea.navigation.model.SpanLocation
 import org.digma.intellij.plugin.idea.psi.PsiPointers
 import org.digma.intellij.plugin.idea.psi.discovery.MicrometerTracingFramework
 import org.digma.intellij.plugin.idea.psi.findAnnotatedMethods
-import org.digma.intellij.plugin.psi.runInReadAccessInSmartModeIgnorePCE
-import org.digma.intellij.plugin.psi.runInReadAccessWithRetry
 
-class MicrometerSpanDiscovery(private val project: Project) : SpanDiscoveryProvider {
+class MicrometerSpanNavigationDiscovery(private val project: Project) : SpanNavigationDiscoveryProvider {
 
     private val logger = Logger.getInstance(this::class.java)
 
@@ -47,7 +47,8 @@ class MicrometerSpanDiscovery(private val project: Project) : SpanDiscoveryProvi
 
         val annotatedMethods =
             executeCatchingWithResultWithRetry(context, getName(), 50, 5) {
-                val observedClass = psiPointers.getMicrometerObservedAnnotationPsiClass(project) ?: return@executeCatchingWithResultWithRetry listOf()
+                val observedClass =
+                    psiPointers.getPsiClass(project, MicrometerTracingFramework.OBSERVED_FQN) ?: return@executeCatchingWithResultWithRetry listOf()
                 findAnnotatedMethods(project, observedClass, context.searchScope)
             } ?: return mapOf()
 
@@ -64,12 +65,12 @@ class MicrometerSpanDiscovery(private val project: Project) : SpanDiscoveryProvi
             executeCatchingWithRetry(context, getName(), 50, 5) {
                 methodPointer.element?.let { psiMethod ->
 
-                    val spanInfo = runInReadAccessInSmartModeIgnorePCE(project) {
+                    val spanInfo = runInReadAccessInSmartModeWithResultAndRetryIgnorePCE(project) {
                         micrometerTracingFramework.getSpanInfoFromObservedAnnotatedMethod(psiMethod)
                     }
 
                     spanInfo?.let {
-                        runInReadAccessWithRetry {
+                        runInReadAccessWithRetryIgnorePCE {
                             val offset = psiMethod.textOffset
                             val location = SpanLocation(it.containingFileUri, offset)
                             spanLocations[it.id] = location

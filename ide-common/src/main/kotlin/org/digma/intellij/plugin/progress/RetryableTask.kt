@@ -6,7 +6,10 @@ import com.intellij.openapi.project.Project
 import java.util.function.Consumer
 import java.util.function.Supplier
 
-class RetryableTask(
+/**
+ * Runs on new background thread with visible progress in status bar
+ */
+open class RetryableTask(
     // project can not be changed.
     val project: Project,
     //title may be changed between retries in beforeRetryTask.
@@ -41,7 +44,7 @@ class RetryableTask(
     var processCanceledException: ProcessCanceledException? = null
     var error: Throwable? = null
 
-    fun runInBackground() {
+    open fun runInBackground() {
         runBackgroundTaskInProgressWithRetry(this)
     }
 
@@ -75,6 +78,38 @@ class RetryableTask(
 
     fun shouldContinueRetry(): Boolean {
         return !isExhausted() && !isStoppedBeforeExhausted()
+    }
+
+
+    class Invisible(
+        project: Project,
+        title: String,
+        workTask: Consumer<ProgressIndicator>,
+        beforeRetryTask: Consumer<RetryableTask>? = null,
+        shouldRetryTask: Supplier<Boolean>? = null,
+        onErrorTask: Consumer<Throwable>? = null,
+        onPCETask: Consumer<ProcessCanceledException>? = null,
+        onFinish: Consumer<RetryableTask>? = null,
+        maxRetries: Int = 10,
+        delayBetweenRetriesMillis: Long = 2000L,
+    ) : RetryableTask(
+        project,
+        title,
+        false,
+        workTask,
+        beforeRetryTask,
+        shouldRetryTask,
+        onErrorTask,
+        onPCETask,
+        onFinish,
+        maxRetries,
+        delayBetweenRetriesMillis
+    ) {
+        var reuseCurrentThread = true
+
+        override fun runInBackground() {
+            runInvisibleBackgroundTaskInProgressWithRetry(this)
+        }
     }
 
 }

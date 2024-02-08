@@ -7,13 +7,13 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFileManager
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.ReadActions
+import org.digma.intellij.plugin.common.runInReadAccessWithResult
 import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigation
 import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.psi.SupportedLanguages
-import org.digma.intellij.plugin.psi.runInReadAccessWithResult
 import org.digma.intellij.plugin.service.EditorService
 import org.digma.intellij.plugin.ui.ToolWindowShower
 

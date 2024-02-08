@@ -2,14 +2,10 @@ package org.digma.intellij.plugin.common;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiManager;
+import com.intellij.psi.*;
 import com.intellij.util.PlatformUtils;
 import org.digma.intellij.plugin.persistence.PersistenceService;
-import org.digma.intellij.plugin.psi.LanguageService;
-import org.digma.intellij.plugin.psi.PsiAccessUtilsKt;
-import org.digma.intellij.plugin.psi.PsiUtils;
-import org.digma.intellij.plugin.psi.SupportedLanguages;
+import org.digma.intellij.plugin.psi.*;
 import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("UnstableApiUsage")

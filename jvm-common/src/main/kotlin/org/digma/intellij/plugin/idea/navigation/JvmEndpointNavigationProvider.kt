@@ -19,6 +19,7 @@ import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.common.SearchScopeProvider
 import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.common.isValidVirtualFile
+import org.digma.intellij.plugin.common.runInReadAccessWithResult
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.errorreporting.SEVERITY_LOW_NO_FIX
 import org.digma.intellij.plugin.errorreporting.SEVERITY_MEDIUM_TRY_FIX
@@ -32,8 +33,8 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.progress.RetryableTask
 import org.digma.intellij.plugin.psi.PsiUtils
-import org.digma.intellij.plugin.psi.runInReadAccessWithResult
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CopyOnWriteArraySet
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 import java.util.function.Consumer
@@ -204,7 +205,7 @@ internal class JvmEndpointNavigationProvider(project: Project) : AbstractNavigat
             endpointDiscoveries.forEach { endpointDiscovery: EndpointDiscovery ->
 
                 executeCatchingWithRetry(context, endpointDiscovery.getName(), 30000, 5) {
-                    val endpointInfos = endpointDiscovery.lookForEndpoints(context.searchScope)
+                    val endpointInfos = endpointDiscovery.lookForEndpoints(context.searchScope, context)
                     endpointInfos?.forEach {
                         addToMethodsMap(it)
                     }
@@ -244,7 +245,7 @@ internal class JvmEndpointNavigationProvider(project: Project) : AbstractNavigat
 
 
     private fun addToMethodsMap(endpointInfo: EndpointInfo) {
-        val methods = endpointsMap.computeIfAbsent(endpointInfo.id) { mutableSetOf() }
+        val methods = endpointsMap.computeIfAbsent(endpointInfo.id) { CopyOnWriteArraySet() }
         methods.add(endpointInfo)
     }
 

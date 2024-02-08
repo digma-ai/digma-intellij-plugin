@@ -10,6 +10,7 @@ import org.digma.intellij.plugin.ui.jcef.JCefComponent
 import org.digma.intellij.plugin.ui.list.listBackground
 import org.digma.intellij.plugin.ui.panels.DisposablePanel
 import java.awt.BorderLayout
+import java.awt.Dimension
 import javax.swing.JComponent
 import javax.swing.JLabel
 
@@ -22,6 +23,8 @@ class NavigationPanel(private val project: Project) : DisposablePanel() {
         jCefComponent = createJcefComponent()
 
         val jcefUiComponent: JComponent = jCefComponent?.getComponent() ?: JLabel("JCEF not supported")
+
+        jcefUiComponent.preferredSize = Dimension(400, 140)
 
         layout = BorderLayout()
         border = JBUI.Borders.empty()

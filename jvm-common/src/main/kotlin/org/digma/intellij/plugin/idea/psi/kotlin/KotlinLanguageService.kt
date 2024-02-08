@@ -15,7 +15,7 @@ import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.psi.AbstractJvmLanguageService
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscovery
-import org.digma.intellij.plugin.idea.psi.discovery.endpoint.GrpcFramework
+import org.digma.intellij.plugin.idea.psi.discovery.endpoint.GrpcFrameworkEndpointDiscovery
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.JaxrsJakartaFrameworkEndpointDiscovery
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.JaxrsJavaxFrameworkEndpointDiscovery
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.KtorFrameworkEndpointDiscovery
@@ -161,7 +161,7 @@ class KotlinLanguageService(project: Project) : AbstractJvmLanguageService(proje
         val micronautFramework = MicronautFrameworkEndpointDiscovery(project)
         val jaxrsJavaxFramework = JaxrsJavaxFrameworkEndpointDiscovery(project)
         val jaxrsJakartaFramework = JaxrsJakartaFrameworkEndpointDiscovery(project)
-        val grpcFramework = GrpcFramework(project)
+        val grpcFramework = GrpcFrameworkEndpointDiscovery(project)
         val springBootFramework = SpringBootFrameworkEndpointDiscovery(project)
         val ktorFramework = KtorFrameworkEndpointDiscovery(project)
         return listOf(

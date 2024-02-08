@@ -20,7 +20,7 @@ import org.digma.intellij.plugin.common.runInReadAccessWithResult
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.psi.AbstractJvmLanguageService
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscovery
-import org.digma.intellij.plugin.idea.psi.discovery.endpoint.GrpcFramework
+import org.digma.intellij.plugin.idea.psi.discovery.endpoint.GrpcFrameworkEndpointDiscovery
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.JaxrsJakartaFrameworkEndpointDiscovery
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.JaxrsJavaxFrameworkEndpointDiscovery
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.MicronautFrameworkEndpointDiscovery
@@ -122,7 +122,7 @@ class JavaLanguageService(project: Project) : AbstractJvmLanguageService(project
         val micronautFramework = MicronautFrameworkEndpointDiscovery(project)
         val jaxrsJavaxFramework = JaxrsJavaxFrameworkEndpointDiscovery(project)
         val jaxrsJakartaFramework = JaxrsJakartaFrameworkEndpointDiscovery(project)
-        val grpcFramework = GrpcFramework(project)
+        val grpcFramework = GrpcFrameworkEndpointDiscovery(project)
         val springBootFramework = SpringBootFrameworkEndpointDiscovery(project)
         return listOf(
             micronautFramework,

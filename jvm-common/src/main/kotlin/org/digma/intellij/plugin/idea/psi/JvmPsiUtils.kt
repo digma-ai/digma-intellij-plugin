@@ -48,8 +48,8 @@ fun getClassSimpleName(uClass: UClass): String {
 }
 
 
-fun findMethodInClass(project: Project, cls: UClass, methodId: String): UMethod? {
-    return getMethodsInClass(project, cls).firstOrNull { uMethod: UMethod -> methodId == createMethodCodeObjectId(uMethod) }
+fun findMethodInClass(cls: UClass, methodId: String): UMethod? {
+    return getMethodsInClass(cls).firstOrNull { uMethod: UMethod -> methodId == createMethodCodeObjectId(uMethod) }
 }
 
 @Suppress("UnstableApiUsage")
@@ -64,7 +64,7 @@ fun findMethodInClass(psiClass: PsiClass, methodName: String, methodPredicate: P
 }
 
 
-fun getMethodsInClass(project: Project, cls: UClass): Collection<UMethod> {
+fun getMethodsInClass(cls: UClass): Collection<UMethod> {
 
     if (cls.sourcePsi is PsiExtensibleClass) {
 
@@ -83,7 +83,7 @@ fun getMethodsInClass(project: Project, cls: UClass): Collection<UMethod> {
 }
 
 
-fun getMethodsInClass(project: Project, psiClass: PsiClass): List<PsiMethod> {
+fun getMethodsInClass(psiClass: PsiClass): List<PsiMethod> {
     if (psiClass is PsiExtensibleClass) {
 
         // avoid cases when there are generated methods and/or constructors such as lombok creates,
@@ -149,14 +149,10 @@ fun climbUpToBaseClass(psiClass: PsiClass): PsiClass {
     var currentClass: PsiClass? = psiClass
     while (currentClass != null && !isBaseClass(currentClass)) {
         prevCLass = currentClass
-        currentClass = currentClass.superClass // recursion
+        currentClass = currentClass.superClass
     }
 
-    if (currentClass != null) {
-        return currentClass
-    } else {
-        return prevCLass
-    }
+    return currentClass ?: prevCLass
 }
 
 fun isBaseClass(psiClass: PsiClass): Boolean {
@@ -174,6 +170,6 @@ fun getInnerClassesOf(psiClass: PsiClass): List<PsiClass> {
 
 fun toFileUri(psiMethod: PsiMethod): String {
     val containingFile: PsiFile? = PsiTreeUtil.getParentOfType(psiMethod, PsiFile::class.java)
-    var containingFileUri = PsiUtils.psiFileToUri(containingFile!!)
+    val containingFileUri = PsiUtils.psiFileToUri(containingFile!!)
     return containingFileUri
 }

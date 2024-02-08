@@ -182,7 +182,7 @@ abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSp
             if (isRelevantClassType(uClass)) {
 
                 val methods: Collection<UMethod> = runInReadAccessWithResult {
-                    getMethodsInClass(project, uClass)
+                    getMethodsInClass(uClass)
                 }
 
                 methods.forEach { uMethod ->

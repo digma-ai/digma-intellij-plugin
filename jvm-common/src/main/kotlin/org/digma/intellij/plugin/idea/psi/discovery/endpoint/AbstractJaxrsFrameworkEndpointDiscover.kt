@@ -94,7 +94,7 @@ abstract class AbstractJaxrsFrameworkEndpointDiscover(private val project: Proje
             val psiClass = runInReadAccessWithResult { psiClassPointer.element }
 
             psiClass?.let { cls ->
-                val methodsInClass = runInReadAccessWithResult { getMethodsInClass(project, cls) }
+                val methodsInClass = runInReadAccessWithResult { getMethodsInClass(cls) }
 
                 methodsInClass.forEach { psiMethod ->
                     runInReadAccessWithRetryIgnorePCE {

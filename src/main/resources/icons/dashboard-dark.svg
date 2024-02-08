@@ -1,0 +1,21 @@
+<svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <g id="Dashboard" clip-path="url(#clip0_2149_1187)">
+        <path id="Vector"
+              d="M4.875 2.25H2.625C2.41789 2.25 2.25 2.41789 2.25 2.625V4.875C2.25 5.08211 2.41789 5.25 2.625 5.25H4.875C5.08211 5.25 5.25 5.08211 5.25 4.875V2.625C5.25 2.41789 5.08211 2.25 4.875 2.25Z"
+              stroke="#DADADA" stroke-linecap="round" stroke-linejoin="round"/>
+        <path id="Vector_2"
+              d="M9.375 2.25H7.125C6.91789 2.25 6.75 2.41789 6.75 2.625V4.875C6.75 5.08211 6.91789 5.25 7.125 5.25H9.375C9.58211 5.25 9.75 5.08211 9.75 4.875V2.625C9.75 2.41789 9.58211 2.25 9.375 2.25Z"
+              stroke="#DADADA" stroke-linecap="round" stroke-linejoin="round"/>
+        <path id="Vector_3"
+              d="M4.875 6.75H2.625C2.41789 6.75 2.25 6.91789 2.25 7.125V9.375C2.25 9.58211 2.41789 9.75 2.625 9.75H4.875C5.08211 9.75 5.25 9.58211 5.25 9.375V7.125C5.25 6.91789 5.08211 6.75 4.875 6.75Z"
+              stroke="#DADADA" stroke-linecap="round" stroke-linejoin="round"/>
+        <path id="Vector_4"
+              d="M9.375 6.75H7.125C6.91789 6.75 6.75 6.91789 6.75 7.125V9.375C6.75 9.58211 6.91789 9.75 7.125 9.75H9.375C9.58211 9.75 9.75 9.58211 9.75 9.375V7.125C9.75 6.91789 9.58211 6.75 9.375 6.75Z"
+              stroke="#DADADA" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <defs>
+        <clipPath id="clip0_2149_1187">
+            <rect width="12" height="12" fill="#DADADA"/>
+        </clipPath>
+    </defs>
+</svg>

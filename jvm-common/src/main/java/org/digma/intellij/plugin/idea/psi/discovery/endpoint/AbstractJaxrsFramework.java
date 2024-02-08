@@ -13,6 +13,7 @@ import com.intellij.util.Query;
 import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.idea.psi.java.*;
 import org.digma.intellij.plugin.model.discovery.*;
+import org.digma.intellij.plugin.psi.PsiUtils;
 import org.jetbrains.annotations.*;
 
 import java.util.*;
@@ -153,7 +154,7 @@ public abstract class AbstractJaxrsFramework extends EndpointDiscovery {
 
         //jax-rs need special discovery for PsiFile
         PsiFile psiFile = extractPsiFileIfFileScope(searchScopeProvider);
-        if (psiFile != null) {
+        if (PsiUtils.isValidPsiFile(psiFile)) {
             return lookForEndpoints(psiFile);
         }
 
@@ -203,7 +204,7 @@ public abstract class AbstractJaxrsFramework extends EndpointDiscovery {
                     var filesCollection = virtualFileEnumeration.getFilesIfCollection();
                     if (filesCollection != null) {
                         var virtualFile = filesCollection.stream().findFirst().orElse(null);
-                        if (virtualFile != null) {
+                        if (virtualFile != null && VfsUtilsKt.isValidVirtualFile(virtualFile)) {
                             return PsiManager.getInstance(project).findFile(virtualFile);
                         }
                         return null;

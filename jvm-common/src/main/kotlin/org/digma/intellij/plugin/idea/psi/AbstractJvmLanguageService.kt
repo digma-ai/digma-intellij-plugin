@@ -371,7 +371,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                 val uClass = findClassByClassName(className, GlobalSearchScope.projectScope(project))
 
                 return@allowSlowOperation uClass?.let { cls ->
-                    findMethodInClass(project, cls, methodId)
+                    findMethodInClass(cls, methodId)
                 }
             }
         }
@@ -496,7 +496,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                     val cls = findClassByClassName(className, GlobalSearchScope.allScope(project))
                     cls?.let {
 
-                        val method = findMethodInClass(project, it, methodId)
+                        val method = findMethodInClass(it, methodId)
                         if (method?.sourcePsi is Navigatable && (method.sourcePsi as Navigatable).canNavigate()) {
                             Log.log(logger::debug, "navigating to method {}", method)
                             EDT.ensureEDT {
@@ -534,7 +534,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                     val className = methodAndClass.first.replace('$', '.')
                     val cls = findClassByClassName(className, GlobalSearchScope.allScope(project))
                     cls?.let {
-                        val method = findMethodInClass(project, it, methodId)
+                        val method = findMethodInClass(it, methodId)
                         method?.sourcePsi
                     }
                 } catch (e: Exception) {

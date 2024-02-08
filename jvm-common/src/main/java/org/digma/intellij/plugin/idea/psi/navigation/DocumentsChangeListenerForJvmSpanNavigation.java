@@ -10,7 +10,7 @@ import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.intellij.util.*;
-import org.digma.intellij.plugin.common.VfsUtilsKt;
+import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.idea.navigation.*;
 import org.digma.intellij.plugin.idea.psi.JvmLanguageService;
@@ -26,15 +26,15 @@ import java.util.*;
  * when a document changes. waits for quite period before updating span navigation so to not call span navigation
  * processing too many times.
  */
-public class DocumentsChangeListenerForJavaSpanNavigation implements FileEditorManagerListener {
+public class DocumentsChangeListenerForJvmSpanNavigation implements FileEditorManagerListener {
 
-    private static final Logger LOGGER = Logger.getInstance(DocumentsChangeListenerForJavaSpanNavigation.class);
+    private static final Logger LOGGER = Logger.getInstance(DocumentsChangeListenerForJvmSpanNavigation.class);
 
     private final Project project;
 
     private final Map<VirtualFile, Disposable> disposables = new HashMap<>();
 
-    public DocumentsChangeListenerForJavaSpanNavigation(@NotNull Project project) {
+    public DocumentsChangeListenerForJvmSpanNavigation(@NotNull Project project) {
         this.project = project;
     }
 
@@ -44,7 +44,7 @@ public class DocumentsChangeListenerForJavaSpanNavigation implements FileEditorM
 
         try {
 
-            if (project.isDisposed() || !VfsUtilsKt.isValidVirtualFile(file)) {
+            if (!ProjectUtilsKt.isProjectValid(project) || !VfsUtilsKt.isValidVirtualFile(file)) {
                 return;
             }
 
@@ -77,27 +77,25 @@ public class DocumentsChangeListenerForJavaSpanNavigation implements FileEditorM
 
                             try {
 
-                                if (project.isDisposed()) {
+                                if (!ProjectUtilsKt.isProjectValid(project)) {
                                     return;
                                 }
 
-                                var javaSpanNavigationProvider = JvmSpanNavigationProvider.getInstance(project);
-                                var javaEndpointNavigationProvider = JvmEndpointNavigationProvider.getInstance(project);
                                 documentChangeAlarm.cancelAllRequests();
                                 documentChangeAlarm.addRequest(() -> {
                                     try {
-                                        javaSpanNavigationProvider.documentChanged(event.getDocument());
-                                        javaEndpointNavigationProvider.documentChanged(event.getDocument());
+                                        JvmSpanNavigationProvider.getInstance(project).documentChanged(event.getDocument());
+                                        JvmEndpointNavigationProvider.getInstance(project).documentChanged(event.getDocument());
                                     } catch (Throwable e) {
                                         Log.warnWithException(LOGGER, e, "Exception in documentChanged");
-                                        ErrorReporter.getInstance().reportError(project, "DocumentsChangeListenerForJavaSpanNavigation.DocumentListener.documentChanged", e);
+                                        ErrorReporter.getInstance().reportError(project, "DocumentsChangeListenerForJvmSpanNavigation.DocumentListener.documentChanged", e);
                                     }
                                 }, 5000);
 
 
                             } catch (Throwable e) {
                                 Log.warnWithException(LOGGER, e, "Exception in documentChanged");
-                                ErrorReporter.getInstance().reportError(project, "DocumentsChangeListenerForJavaSpanNavigation.DocumentListener.documentChanged", e);
+                                ErrorReporter.getInstance().reportError(project, "DocumentsChangeListenerForJvmSpanNavigation.DocumentListener.documentChanged", e);
                             }
                         }
 
@@ -107,7 +105,7 @@ public class DocumentsChangeListenerForJavaSpanNavigation implements FileEditorM
             }
         } catch (Throwable e) {
             Log.warnWithException(LOGGER, e, "Exception in fileOpened");
-            ErrorReporter.getInstance().reportError(project, "DocumentsChangeListenerForJavaSpanNavigation.fileOpened", e);
+            ErrorReporter.getInstance().reportError(project, "DocumentsChangeListenerForJvmSpanNavigation.fileOpened", e);
         }
 
     }
@@ -121,7 +119,7 @@ public class DocumentsChangeListenerForJavaSpanNavigation implements FileEditorM
                 Disposer.dispose(disposable);
             }
         } catch (Throwable e) {
-            ErrorReporter.getInstance().reportError(project, "DocumentsChangeListenerForJavaSpanNavigation.fileClosed", e);
+            ErrorReporter.getInstance().reportError(project, "DocumentsChangeListenerForJvmSpanNavigation.fileClosed", e);
         }
     }
 

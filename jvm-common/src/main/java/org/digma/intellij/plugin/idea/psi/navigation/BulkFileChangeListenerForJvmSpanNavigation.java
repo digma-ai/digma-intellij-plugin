@@ -4,6 +4,7 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.newvfs.events.*;
 import org.digma.intellij.plugin.bulklistener.AbstractBulkFileChangeListener;
+import org.digma.intellij.plugin.common.VfsUtilsKt;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.idea.navigation.*;
 import org.digma.intellij.plugin.idea.psi.JvmLanguageService;
@@ -16,9 +17,9 @@ import java.util.List;
 /**
  * listens for bulk document changes and updates span navigation.
  */
-public class BulkFileChangeListenerForJavaSpanNavigation extends AbstractBulkFileChangeListener {
+public class BulkFileChangeListenerForJvmSpanNavigation extends AbstractBulkFileChangeListener {
 
-    private static final Logger LOGGER = Logger.getInstance(BulkFileChangeListenerForJavaSpanNavigation.class);
+    private static final Logger LOGGER = Logger.getInstance(BulkFileChangeListenerForJvmSpanNavigation.class);
 
     @Override
     public void processEvents(@NotNull Project project, @NotNull List<? extends VFileEvent> events) {
@@ -32,7 +33,7 @@ public class BulkFileChangeListenerForJavaSpanNavigation extends AbstractBulkFil
             events.forEach(vFileEvent -> {
 
                 var file = vFileEvent.getFile();
-                if (file != null && file.isValid() && isRelevantFile(project, file)) {
+                if (file != null && VfsUtilsKt.isValidVirtualFile(file) && isRelevantFile(project, file)) {
                     Log.log(LOGGER::debug, "got bulk change for file  {}", vFileEvent.getFile());
                     var languageService = LanguageService.findLanguageServiceByFile(project, file);
                     //only jvm languages are supported here
@@ -51,7 +52,7 @@ public class BulkFileChangeListenerForJavaSpanNavigation extends AbstractBulkFil
             });
         } catch (Throwable e) {
             Log.warnWithException(LOGGER, e, "Exception in processEvents");
-            ErrorReporter.getInstance().reportError(project, "BulkFileChangeListenerForJavaSpanNavigation.processEvents", e);
+            ErrorReporter.getInstance().reportError(project, "BulkFileChangeListenerForJvmSpanNavigation.processEvents", e);
         }
     }
 }

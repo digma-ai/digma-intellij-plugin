@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.259] - 2024-02-08
+## [2.0.260] - 2024-02-08
+
+- refactor grpc Closes #1778 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1785
+
+## 2.0.259 - 2024-02-08
 
 - Changed openEmbeddedJaeger by @ohrebeniuk in https://github.com/digma-ai/digma-intellij-plugin/pull/1783
 - add install_status property Closes #1781 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1782

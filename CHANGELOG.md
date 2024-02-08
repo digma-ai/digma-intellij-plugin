@@ -1,6 +1,13 @@
 # Changelog
 
-## [2.0.258] - 2024-02-08
+## [2.0.259] - 2024-02-08
+
+- Changed openEmbeddedJaeger by @ohrebeniuk in https://github.com/digma-ai/digma-intellij-plugin/pull/1783
+- add install_status property Closes #1781 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1782
+- Psi pointers in endpoint frameworks Closes #1752 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1780
+- Replace svgicon Closes #1746 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1775
+
+## 2.0.258 - 2024-02-08
 
 - update index file by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1776
 - check if file is valid in jaxrs framework by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1779

@@ -36,7 +36,8 @@ class ActivityMonitor(private val project: Project) : Disposable {
             return project.getService(ActivityMonitor::class.java)
         }
     }
-    private val installStatusPropertyName: String = "install status"
+
+    private val installStatusPropertyName: String = "install_status"
     private val userId: String = UserId.userId
     private val isDevUser: Boolean = UserId.isDevUser
     private val latestUnknownRunConfigTasks = mutableMapOf<String, Instant>()
@@ -503,7 +504,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
                 "registered user uninstalled", mapOf(
                     "registered email" to (PersistenceService.getInstance().getUserRegistrationEmail() ?: ""),
                     "email" to (PersistenceService.getInstance().getUserEmail() ?: ""),
-                    "install_status" to installStatusPropertyName
+                    installStatusPropertyName to "Uninstalled"
                 )
             )
         }
@@ -522,7 +523,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
                 "registered user disabled", mapOf(
                     "registered email" to (PersistenceService.getInstance().getUserRegistrationEmail() ?: ""),
                     "email" to (PersistenceService.getInstance().getUserEmail() ?: ""),
-                    "install_status" to installStatusPropertyName
+                    installStatusPropertyName to "Disabled"
                 )
             )
         }

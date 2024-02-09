@@ -170,4 +170,12 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
         serializeAndExecuteWindowPostMessageJavaScript(browser, message)
     }
 
+    protected fun getPayloadFromRequest(requestJsonNode: JsonNode): JsonNode? {
+        val payload = requestJsonNode.get("payload")
+        return payload?.let {
+            objectMapper.readTree(it.toString())
+        }
+    }
+
+
 }

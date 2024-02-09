@@ -25,8 +25,7 @@ import org.digma.intellij.plugin.model.rest.event.CodeObjectEvent
 import org.digma.intellij.plugin.model.rest.event.FirstImportantInsightEvent
 import org.digma.intellij.plugin.model.rest.event.LatestCodeObjectEventsResponse
 import org.digma.intellij.plugin.model.rest.insights.SpanInsight
-import org.digma.intellij.plugin.navigation.HomeSwitcherService
-import org.digma.intellij.plugin.navigation.InsightsAndErrorsTabsHelper
+import org.digma.intellij.plugin.navigation.MainContentViewSwitcher
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
@@ -184,49 +183,45 @@ class GoToCodeObjectInsightsAction(
     private val environment: String
 ) :
     AnAction("Show Insights") {
-    override fun actionPerformed(e: AnActionEvent) {
+    override fun actionPerformed(e: AnActionEvent) = try {
+        Log.log(EventsNotificationsService.logger::info, "GoToCodeObjectInsightsAction action clicked for {}", codeObjectId)
 
-        try {
-            Log.log(EventsNotificationsService.logger::info, "GoToCodeObjectInsightsAction action clicked for {}", codeObjectId)
+        ActivityMonitor.getInstance(project).registerNotificationCenterEvent("$notificationName.clicked", mapOf())
 
-            ActivityMonitor.getInstance(project).registerNotificationCenterEvent("$notificationName.clicked", mapOf())
+        val canNavigate = project.service<CodeNavigator>().canNavigateToSpanOrMethod(codeObjectId, methodId)
 
-            val canNavigate = project.service<CodeNavigator>().canNavigateToSpanOrMethod(codeObjectId, methodId)
+        val environmentsSupplier: EnvironmentsSupplier = project.service<AnalyticsService>().environment
 
-            val environmentsSupplier: EnvironmentsSupplier = project.service<AnalyticsService>().environment
-
-            val runnable = Runnable {
-                MainToolWindowCardsController.getInstance(project).closeAllNotificationsIfShowing()
-                project.service<HomeSwitcherService>().switchToInsights()
-                project.service<InsightsAndErrorsTabsHelper>().switchToInsightsTab()
-                if (canNavigate) {
-                    project.service<InsightsViewOrchestrator>()
-                        .showInsightsForSpanOrMethodAndNavigateToCode(codeObjectId, methodId)
-                } else {
-                    project.service<InsightsViewOrchestrator>()
-                        .showInsightsForCodelessSpan(codeObjectId)
-                }
-            }
-
-
-            if (environmentsSupplier.getCurrent() != environment) {
-
-                environmentsSupplier.setCurrent(environment, false) {
-                    EDT.ensureEDT {
-                        runnable.run()
-                    }
-                }
-
+        val runnable = Runnable {
+            MainToolWindowCardsController.getInstance(project).closeAllNotificationsIfShowing()
+            MainContentViewSwitcher.getInstance(project).showInsights()
+            if (canNavigate) {
+                project.service<InsightsViewOrchestrator>()
+                    .showInsightsForSpanOrMethodAndNavigateToCode(codeObjectId, methodId)
             } else {
+                project.service<InsightsViewOrchestrator>()
+                    .showInsightsForCodelessSpan(codeObjectId)
+            }
+        }
+
+
+        if (environmentsSupplier.getCurrent() != environment) {
+
+            environmentsSupplier.setCurrent(environment, false) {
                 EDT.ensureEDT {
                     runnable.run()
                 }
             }
 
-            notification.expire()
-        } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("GoToCodeObjectInsightsAction.actionPerformed", e)
+        } else {
+            EDT.ensureEDT {
+                runnable.run()
+            }
         }
+
+        notification.expire()
+    } catch (e: Throwable) {
+        ErrorReporter.getInstance().reportError("GoToCodeObjectInsightsAction.actionPerformed", e)
     }
 
 }

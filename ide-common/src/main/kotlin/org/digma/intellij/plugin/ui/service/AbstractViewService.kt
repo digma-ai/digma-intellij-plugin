@@ -6,7 +6,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.util.messages.MessageBusConnection
 import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
 import org.digma.intellij.plugin.common.EDT
-import org.digma.intellij.plugin.navigation.InsightsAndErrorsTabsHelper
+import org.digma.intellij.plugin.navigation.ErrorsDetailsHelper
 import org.digma.intellij.plugin.ui.model.NOT_SUPPORTED_OBJECT_MSG
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
 
@@ -39,14 +39,14 @@ abstract class AbstractViewService(val project: Project) : Disposable {
 
 
     fun doConnectionLost() {
-        val insightsAndErrorsTabsHelper = project.service<InsightsAndErrorsTabsHelper>()
+        val errorsDetailsHelper = project.service<ErrorsDetailsHelper>()
         //if a view needs to do something when connection lost can override this method and don't forget to call super
-        if (insightsAndErrorsTabsHelper.isErrorDetailsOn()) {
-            insightsAndErrorsTabsHelper.errorDetailsOff()
+        if (errorsDetailsHelper.isErrorDetailsOn()) {
+            errorsDetailsHelper.errorDetailsOff()
             if (this is ErrorsViewService) {
                 this.closeErrorDetails()
             }
-            insightsAndErrorsTabsHelper.errorDetailsClosed()
+            errorsDetailsHelper.errorDetailsClosed()
         }
     }
 

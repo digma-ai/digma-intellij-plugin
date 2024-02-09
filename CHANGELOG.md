@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.260] - 2024-02-08
+## [2.0.261] - 2024-02-09
+
+- fix install status and micrinaut agent by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1787
+
+## 2.0.260 - 2024-02-08
 
 - refactor grpc Closes #1778 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1785
 

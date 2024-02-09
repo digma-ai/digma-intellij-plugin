@@ -20,8 +20,7 @@ import org.digma.intellij.plugin.model.discovery.EndpointFramework
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret
-import org.digma.intellij.plugin.navigation.HomeSwitcherService
-import org.digma.intellij.plugin.navigation.InsightsAndErrorsTabsHelper
+import org.digma.intellij.plugin.navigation.MainContentViewSwitcher
 import org.digma.intellij.plugin.navigation.NavigationModel
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator
 import org.digma.intellij.plugin.psi.BuildDocumentInfoProcessContext
@@ -99,11 +98,10 @@ class InsightsViewOrchestrator(val project: Project) {
             project.service<CurrentContextUpdater>().clearLatestMethod()
 
             EDT.ensureEDT {
-                project.service<MainToolWindowCardsController>().closeCoveringViewsIfNecessary()
-                project.service<ErrorsViewOrchestrator>().closeErrorDetailsBackButton()
+                MainToolWindowCardsController.getInstance(project).closeCoveringViewsIfNecessary()
+                project.service<ErrorsViewOrchestrator>().closeErrorDetails()
                 ToolWindowShower.getInstance(project).showToolWindow()
-                project.getService(HomeSwitcherService::class.java).switchToInsights()
-                project.getService(InsightsAndErrorsTabsHelper::class.java).switchToInsightsTab()
+                MainContentViewSwitcher.getInstance(project).showInsights()
             }
 
 
@@ -134,10 +132,9 @@ class InsightsViewOrchestrator(val project: Project) {
             project.service<InsightsService>().updateInsights(methodInfo)
 
             EDT.ensureEDT {
-                project.service<ErrorsViewOrchestrator>().closeErrorDetailsBackButton()
+                project.service<ErrorsViewOrchestrator>().closeErrorDetails()
                 ToolWindowShower.getInstance(project).showToolWindow()
-                project.getService(HomeSwitcherService::class.java).switchToInsights()
-                project.getService(InsightsAndErrorsTabsHelper::class.java).switchToInsightsTab()
+                MainContentViewSwitcher.getInstance(project).showInsights()
             }
 
             project.service<InsightsViewService>().updateInsightsModel(
@@ -191,13 +188,12 @@ class InsightsViewOrchestrator(val project: Project) {
 
         Backgroundable.ensurePooledThread {
 
-            project.service<InsightsService>().updateInsights(methodInfo)
+            InsightsService.getInstance(project).updateInsights(methodInfo)
 
             EDT.ensureEDT {
-                project.service<ErrorsViewOrchestrator>().closeErrorDetailsBackButton()
+                project.service<ErrorsViewOrchestrator>().closeErrorDetails()
                 ToolWindowShower.getInstance(project).showToolWindow()
-                project.getService(HomeSwitcherService::class.java).switchToInsights()
-                project.getService(InsightsAndErrorsTabsHelper::class.java).switchToInsightsTab()
+                MainContentViewSwitcher.getInstance(project).showInsights()
             }
 
             //todo: this should be removed soon
@@ -222,10 +218,9 @@ class InsightsViewOrchestrator(val project: Project) {
             project.service<InsightsService>().updateInsights(endpointInfo)
 
             EDT.ensureEDT {
-                project.service<ErrorsViewOrchestrator>().closeErrorDetailsBackButton()
+                project.service<ErrorsViewOrchestrator>().closeErrorDetails()
                 ToolWindowShower.getInstance(project).showToolWindow()
-                project.getService(HomeSwitcherService::class.java).switchToInsights()
-                project.getService(InsightsAndErrorsTabsHelper::class.java).switchToInsightsTab()
+                MainContentViewSwitcher.getInstance(project).showInsights()
             }
 
             val methodInfo = DocumentInfoService.getInstance(project).findMethodInfo(endpointInfo.containingMethodId)
@@ -257,10 +252,9 @@ class InsightsViewOrchestrator(val project: Project) {
         // we need to separate this two actions , showing insights and navigating to source code.
 
         project.service<MainToolWindowCardsController>().closeCoveringViewsIfNecessary()
-        project.service<ErrorsViewOrchestrator>().closeErrorDetailsBackButton()
+        project.service<ErrorsViewOrchestrator>().closeErrorDetails()
         ToolWindowShower.getInstance(project).showToolWindow()
-        project.getService(HomeSwitcherService::class.java).switchToInsights()
-        project.getService(InsightsAndErrorsTabsHelper::class.java).switchToInsightsTab()
+        project.getService(MainContentViewSwitcher::class.java).showInsights()
 
         //we have a situation where the target button wants to navigate to a method or span and show its insights,
         // but the caret in the editor is already on the same offset, in that case a caret event will not be fired.

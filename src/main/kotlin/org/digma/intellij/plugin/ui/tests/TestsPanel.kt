@@ -15,7 +15,7 @@ import java.awt.Insets
 import javax.swing.JComponent
 import javax.swing.JLabel
 
-class TestsTabPanel(private val project: Project) : DisposablePanel() {
+class TestsPanel(private val project: Project) : DisposablePanel() {
 
     companion object {
         const val RUN_TEST_BUTTON_NAME: String = "run-test"

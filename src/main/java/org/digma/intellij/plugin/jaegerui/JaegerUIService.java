@@ -3,48 +3,29 @@ package org.digma.intellij.plugin.jaegerui;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
-import freemarker.template.Configuration;
-import freemarker.template.Template;
-import freemarker.template.TemplateExceptionHandler;
+import freemarker.template.*;
 import org.apache.commons.collections.CollectionUtils;
-import org.digma.intellij.plugin.analytics.AnalyticsService;
-import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
-import org.digma.intellij.plugin.common.EDT;
-import org.digma.intellij.plugin.common.ReadActions;
+import org.digma.intellij.plugin.analytics.*;
+import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.insights.InsightsViewOrchestrator;
-import org.digma.intellij.plugin.jaegerui.model.incoming.GoToSpanMessage;
-import org.digma.intellij.plugin.jaegerui.model.incoming.Span;
-import org.digma.intellij.plugin.jaegerui.model.incoming.SpansMessage;
-import org.digma.intellij.plugin.jaegerui.model.outgoing.Insight;
-import org.digma.intellij.plugin.jaegerui.model.outgoing.SpanData;
+import org.digma.intellij.plugin.jaegerui.model.incoming.*;
+import org.digma.intellij.plugin.jaegerui.model.outgoing.*;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightType;
-import org.digma.intellij.plugin.navigation.HomeSwitcherService;
-import org.digma.intellij.plugin.navigation.InsightsAndErrorsTabsHelper;
-import org.digma.intellij.plugin.posthog.ActivityMonitor;
-import org.digma.intellij.plugin.posthog.MonitoredPanel;
-import org.digma.intellij.plugin.psi.LanguageService;
-import org.digma.intellij.plugin.psi.SupportedLanguages;
+import org.digma.intellij.plugin.navigation.MainContentViewSwitcher;
+import org.digma.intellij.plugin.posthog.*;
+import org.digma.intellij.plugin.psi.*;
 import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
 import org.digma.intellij.plugin.ui.model.TraceSample;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.*;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.io.StringWriter;
+import java.io.*;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
-import static org.digma.intellij.plugin.document.CodeObjectsUtil.addMethodTypeToIds;
-import static org.digma.intellij.plugin.document.CodeObjectsUtil.addSpanTypeToIds;
+import static org.digma.intellij.plugin.document.CodeObjectsUtil.*;
 
 
 public class JaegerUIService {
@@ -231,8 +212,7 @@ public class JaegerUIService {
 
         EDT.ensureEDT(() -> {
             MainToolWindowCardsController.getInstance(project).closeAllNotificationsIfShowing();
-            project.getService(HomeSwitcherService.class).switchToInsights();
-            project.getService(InsightsAndErrorsTabsHelper.class).switchToInsightsTab();
+            MainContentViewSwitcher.getInstance(project).showInsights();
             ActivityMonitor.getInstance(project).registerSpanLinkClicked(MonitoredPanel.Jaeger);
             var success = project.getService(InsightsViewOrchestrator.class).showInsightsForSpanOrMethodAndNavigateToCode(span.spanId(), span.methodId());
             if (success) {

@@ -1,46 +1,27 @@
 package org.digma.intellij.plugin.insights;
 
 import com.intellij.openapi.Disposable;
-import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.application.WriteAction;
+import com.intellij.openapi.application.*;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Disposer;
-import com.intellij.ui.jcef.JBCefApp;
-import com.intellij.ui.jcef.JBCefBrowser;
+import com.intellij.ui.jcef.*;
 import org.cef.CefApp;
-import org.cef.browser.CefBrowser;
-import org.cef.browser.CefMessageRouter;
+import org.cef.browser.*;
 import org.cef.handler.CefLifeSpanHandlerAdapter;
-import org.digma.intellij.plugin.analytics.AnalyticsService;
-import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
-import org.digma.intellij.plugin.analytics.EnvironmentChanged;
-import org.digma.intellij.plugin.analytics.NoSelectedEnvironmentException;
-import org.digma.intellij.plugin.common.Backgroundable;
-import org.digma.intellij.plugin.common.EDT;
-import org.digma.intellij.plugin.common.IDEUtilsService;
-import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator;
-import org.digma.intellij.plugin.document.DocumentInfoContainer;
-import org.digma.intellij.plugin.document.DocumentInfoService;
+import org.digma.intellij.plugin.analytics.*;
+import org.digma.intellij.plugin.common.*;
+import org.digma.intellij.plugin.document.*;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider;
-import org.digma.intellij.plugin.insights.model.outgoing.Method;
-import org.digma.intellij.plugin.insights.model.outgoing.Span;
-import org.digma.intellij.plugin.insights.model.outgoing.ViewMode;
+import org.digma.intellij.plugin.insights.model.outgoing.*;
 import org.digma.intellij.plugin.instrumentation.MethodInstrumentationPresenter;
-import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil;
-import org.digma.intellij.plugin.jcef.common.UserRegistrationEvent;
+import org.digma.intellij.plugin.jcef.common.*;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightType;
-import org.digma.intellij.plugin.model.discovery.CodeLessSpan;
-import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
-import org.digma.intellij.plugin.model.discovery.MethodInfo;
-import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
-import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsightsStatusResponse;
-import org.digma.intellij.plugin.model.rest.insights.InsightStatus;
-import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse;
-import org.digma.intellij.plugin.model.rest.insights.MethodWithInsightStatus;
+import org.digma.intellij.plugin.model.discovery.*;
+import org.digma.intellij.plugin.model.rest.insights.*;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.refreshInsightsTask.RefreshService;
@@ -48,29 +29,17 @@ import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.common.Laf;
 import org.digma.intellij.plugin.ui.jcef.DownloadHandlerAdapter;
 import org.digma.intellij.plugin.ui.list.insights.JaegerUtilKt;
-import org.digma.intellij.plugin.ui.model.CodeLessSpanScope;
-import org.digma.intellij.plugin.ui.model.DocumentScope;
-import org.digma.intellij.plugin.ui.model.EmptyScope;
-import org.digma.intellij.plugin.ui.model.EndpointScope;
-import org.digma.intellij.plugin.ui.model.MethodScope;
-import org.digma.intellij.plugin.ui.model.Scope;
-import org.digma.intellij.plugin.ui.model.UIInsightsStatus;
+import org.digma.intellij.plugin.ui.model.*;
 import org.digma.intellij.plugin.ui.recentactivity.RecentActivityService;
 import org.digma.intellij.plugin.ui.service.InsightsService;
-import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier;
-import org.digma.intellij.plugin.ui.settings.SettingsChangeListener;
-import org.digma.intellij.plugin.ui.settings.Theme;
+import org.digma.intellij.plugin.ui.settings.*;
 import org.digma.intellij.plugin.ui.tests.TestsService;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.*;
 
 import javax.swing.*;
 import java.io.InputStream;
 import java.time.Instant;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
@@ -107,7 +76,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
         this.project = project;
 
         //TestsService depends on InsightsModelReact.scope so make sure its initialized and listening.
-        // It may also be called from TestsTabPanel, whom even comes first
+        // It may also be called from TestsPanel, whom even comes first
         project.getService(TestsService.class);
 
         if (JBCefApp.isSupported()) {

@@ -2,7 +2,6 @@ package org.digma.intellij.plugin.ui.navigation
 
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
-import com.intellij.ui.JBColor
 import com.intellij.ui.jcef.JBCefApp
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.ui.jcef.DownloadHandlerAdapter
@@ -11,6 +10,7 @@ import org.digma.intellij.plugin.ui.list.listBackground
 import org.digma.intellij.plugin.ui.panels.DisposablePanel
 import java.awt.BorderLayout
 import java.awt.Dimension
+import java.awt.Insets
 import javax.swing.JComponent
 import javax.swing.JLabel
 
@@ -35,8 +35,10 @@ class NavigationPanel(private val project: Project) : DisposablePanel() {
             dispose()
         }
 
-        //todo: temporary
-        border = JBUI.Borders.customLine(JBColor.BLUE, 2)
+        jCefComponent?.let {
+            NavigationService.getInstance(project).setJCefComponent(it)
+        }
+
     }
 
 
@@ -55,10 +57,9 @@ class NavigationPanel(private val project: Project) : DisposablePanel() {
     }
 
 
-    //todo: temporary so we can see the border, uncomment
-//    override fun getInsets(): Insets {
-//        return JBUI.emptyInsets()
-//    }
+    override fun getInsets(): Insets {
+        return JBUI.emptyInsets()
+    }
 
     override fun dispose() {
         jCefComponent?.dispose()

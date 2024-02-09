@@ -18,7 +18,7 @@ import org.digma.intellij.plugin.ui.jcef.sendEnvironmentEntities
 import org.digma.intellij.plugin.ui.list.insights.openJaegerFromRecentActivity
 import org.digma.intellij.plugin.ui.list.insights.traceButtonName
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier
-import org.digma.intellij.plugin.ui.tests.TestsTabPanel.Companion.RUN_TEST_BUTTON_NAME
+import org.digma.intellij.plugin.ui.tests.TestsPanel.Companion.RUN_TEST_BUTTON_NAME
 import java.util.Collections
 
 class TestsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(project) {

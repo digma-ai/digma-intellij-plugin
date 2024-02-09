@@ -15,7 +15,8 @@ import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.discovery.CodeLessSpan
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
-import org.digma.intellij.plugin.navigation.InsightsAndErrorsTabsHelper
+import org.digma.intellij.plugin.navigation.ErrorsDetailsHelper
+import org.digma.intellij.plugin.navigation.MainContentViewSwitcher
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.model.CodeLessSpanScope
@@ -194,7 +195,7 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
     }
 
     fun showErrorList() {
-        project.service<InsightsAndErrorsTabsHelper>().switchToErrorsTab()
+        MainContentViewSwitcher.getInstance(project).showErrors()
     }
 
     fun showErrorDetails(uid: String, errorsProvider: ErrorsProvider) {
@@ -212,7 +213,7 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
 
 
     override fun canUpdateUI(): Boolean {
-        return !project.service<InsightsAndErrorsTabsHelper>().isErrorDetailsOn()
+        return !project.service<ErrorsDetailsHelper>().isErrorDetailsOn()
     }
 
     fun closeErrorDetails() {

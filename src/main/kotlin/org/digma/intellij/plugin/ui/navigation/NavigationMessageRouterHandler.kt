@@ -25,7 +25,7 @@ class NavigationMessageRouterHandler(project: Project) : BaseMessageRouterHandle
 
             "NAVIGATION/INITIALIZE" -> onInitialize(browser)
 
-            "NAVIGATION/SET_VIEW" -> changeView(requestJsonNode)
+            "NAVIGATION/CHANGE_VIEW" -> changeView(requestJsonNode)
 
             else -> {
                 Log.log(logger::warn, "got unexpected action='$action'")
@@ -53,8 +53,5 @@ class NavigationMessageRouterHandler(project: Project) : BaseMessageRouterHandle
             }
         }
     }
-
-
-
 
 }

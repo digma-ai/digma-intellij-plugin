@@ -1,6 +1,4 @@
-import common.BuildProfiles
 import common.buildVersion
-import common.currentProfile
 import common.dynamicPlatformType
 import common.logBuildProfile
 import common.platformPlugins
@@ -263,9 +261,10 @@ tasks {
         // if 241 runs with 21 then gradle-intellij-plugin will configure the test task to use this JBR,
         // but some of our tests fail with 21. so we have to make sure all our tests pass with JBR 21
         // before removing this workaround.
-        if (project.currentProfile().profile == BuildProfiles.Profiles.p241) {
-            jbrVersion = "17.0.10b1087.17"
-        }
+        //Note in build 241.11761.10 jetbrains changed the bundled JBR to 17
+//        if (project.currentProfile().profile == BuildProfiles.Profiles.p241) {
+//            jbrVersion = "17.0.10b1171.14"
+//        }
     }
 
 

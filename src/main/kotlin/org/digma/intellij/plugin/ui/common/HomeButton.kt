@@ -5,8 +5,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.ui.JBColor
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.navigation.HomeSwitcherService
-import org.digma.intellij.plugin.ui.MainToolWindowCardsController
-import java.awt.CardLayout
 import java.awt.Cursor
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
@@ -77,14 +75,14 @@ class HomeButton(val project: Project, private val cardsPanel: JPanel) : JToggle
 
 
     private fun changeState() {
-        if (isSelected) {
-            (cardsPanel.layout as CardLayout).show(cardsPanel, HOME_PROJECT_PANEL)
-            project.service<MainToolWindowCardsController>().showHome()
-        } else {
-            (cardsPanel.layout as CardLayout).show(cardsPanel, SCOPE_LINE_PANEL)
-            project.service<MainToolWindowCardsController>().showInsights()
-        }
-        cardsPanel.revalidate()
+//        if (isSelected) {
+//            (cardsPanel.layout as CardLayout).show(cardsPanel, HOME_PROJECT_PANEL)
+//            project.service<MainToolWindowCardsController>().showHome()
+//        } else {
+//            (cardsPanel.layout as CardLayout).show(cardsPanel, SCOPE_LINE_PANEL)
+//            project.service<MainToolWindowCardsController>().showInsights()
+//        }
+//        cardsPanel.revalidate()
     }
 
 }

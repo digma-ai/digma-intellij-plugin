@@ -5,7 +5,7 @@ import com.intellij.openapi.project.Project
 import com.jetbrains.rd.platform.util.lifetime
 import com.jetbrains.rdclient.util.idea.LifetimedProjectComponent
 import com.jetbrains.rider.projectView.solution
-import org.digma.intellij.plugin.navigation.HomeSwitcherService
+import org.digma.intellij.plugin.navigation.MainContentViewSwitcher
 import org.digma.intellij.plugin.ui.ToolWindowShower
 
 class ShowToolWindowHost(project: Project) : LifetimedProjectComponent(project) {
@@ -15,7 +15,7 @@ class ShowToolWindowHost(project: Project) : LifetimedProjectComponent(project) 
 
     init {
         model.showToolWindow.advise(project.lifetime){
-            project.service<HomeSwitcherService>().switchToInsights()
+            project.service<MainContentViewSwitcher>().showInsights()
             ToolWindowShower.getInstance(project).showToolWindow()
         }
     }

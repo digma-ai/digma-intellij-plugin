@@ -5,7 +5,6 @@ import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.WriteAction
-import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditorManager
@@ -23,7 +22,7 @@ import org.digma.intellij.plugin.document.CodeLensProvider
 import org.digma.intellij.plugin.document.DocumentInfoChanged
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.navigation.HomeSwitcherService
+import org.digma.intellij.plugin.navigation.MainContentViewSwitcher
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
@@ -194,9 +193,9 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
         private val elementPointer = SmartPointerManager.createPointer(element)
         override fun invoke(event: MouseEvent?, editor: Editor) {
             try {
-                project.service<MainToolWindowCardsController>().closeCoveringViewsIfNecessary()
+                MainToolWindowCardsController.getInstance(project).closeCoveringViewsIfNecessary()
                 ActivityMonitor.getInstance(project).registerLensClicked(lensTitle)
-                project.service<HomeSwitcherService>().switchToInsights()
+                MainContentViewSwitcher.getInstance(project).showInsights()
                 ToolWindowShower.getInstance(project).showToolWindow()
                 elementPointer.element?.let {
                     if (it is Navigatable && it.canNavigateToSource()) {

@@ -17,7 +17,7 @@ import javax.swing.BoxLayout
 import javax.swing.JLabel
 import javax.swing.JPanel
 
-fun createMainToolWindowPanel(project: Project, contentPanel: ContentPanel): JPanel {
+fun createMainToolWindowPanel(project: Project, mainContentPanel: MainContentPanel): JPanel {
 
     val navigationPanel = NavigationPanel(project)
 
@@ -53,8 +53,8 @@ fun createMainToolWindowPanel(project: Project, contentPanel: ContentPanel): JPa
     topPanel.layout = BoxLayout(topPanel, BoxLayout.Y_AXIS)
     topPanel.isOpaque = false
     topPanel.border = JBUI.Borders.empty()
-    topPanel.add(navigationPanel)
     topPanel.add(updatePanel)
+    topPanel.add(navigationPanel)
 
     updateIDEPanel?.let {
         topPanel.add(it)
@@ -70,7 +70,7 @@ fun createMainToolWindowPanel(project: Project, contentPanel: ContentPanel): JPa
     }
 
     result.add(topPanel, BorderLayout.NORTH)
-    result.add(contentPanel, BorderLayout.CENTER)
+    result.add(mainContentPanel, BorderLayout.CENTER)
 
     return result
 }

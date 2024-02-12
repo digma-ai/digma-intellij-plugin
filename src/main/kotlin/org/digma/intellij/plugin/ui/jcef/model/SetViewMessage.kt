@@ -5,7 +5,7 @@ import org.digma.intellij.plugin.navigation.View
 
 data class SetViewMessage(val payload: SetViewMessagePayload) {
     val type = JCefMessagesUtils.REQUEST_MESSAGE_TYPE
-    val action = JCefMessagesUtils.GLOBAL_NAVIGATION_SET_VIEWS
+    val action = "NAVIGATION/SET_VIEWS"
 }
 
 data class SetViewMessagePayload(val views: List<View>)

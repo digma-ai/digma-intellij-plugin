@@ -1,29 +1,82 @@
 package org.digma.intellij.plugin.navigation
 
-import com.fasterxml.jackson.annotation.JsonFormat
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.google.common.base.Objects
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.insights.ErrorsViewOrchestrator
+import org.digma.intellij.plugin.navigation.View.Companion.getSelected
+import org.digma.intellij.plugin.navigation.View.Companion.hideErrorDetails
+import org.digma.intellij.plugin.navigation.View.Companion.hideErrors
+import org.digma.intellij.plugin.navigation.View.Companion.setSelected
+import org.digma.intellij.plugin.navigation.View.Companion.views
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import java.awt.CardLayout
 import java.awt.Container
 
-@JsonFormat(shape = JsonFormat.Shape.OBJECT)
-enum class View(
+data class View
+private constructor(
     val title: String,
     val id: String,
+    val cardName: String,
+    @get:JsonProperty("isDisabled")
+    @param:JsonProperty("isDisabled")
+    var isDisabled: Boolean = false,
+    @get:JsonProperty("isSelected")
+    @param:JsonProperty("isSelected")
+    var isSelected: Boolean = false,
+    @get:JsonProperty("hasNewData")
+    @param:JsonProperty("hasNewData")
+    var hasNewData: Boolean = false,
+    @get:JsonProperty("isHidden")
+    @param:JsonProperty("isHidden")
+    var isHidden: Boolean = false,
 ) {
 
-    Insights("Insights", "insights"),
-    Assets("Assets", "assets"),
-    Errors("Errors", "errors"),
-    ErrorDetails("Error Details", "errors"),
-    Tests("Tests", "tests");
+    override fun equals(other: Any?): Boolean {
+        return other is View && other.id == id && other.title == title && other.cardName == cardName
+    }
+
+    override fun hashCode(): Int {
+        return Objects.hashCode(id, title)
+    }
 
     companion object {
-        fun findById(id: String?): View? {
-            return View.values().find { it.id == id }
+
+        val Insights = View(title = "Insights", id = "insights", cardName = "insights", isSelected = true)
+        val Assets = View("Assets", "assets", "assets")
+        val Errors = View("Errors", "errors", "errors")
+        val ErrorDetails = View(title = "Error Details", id = "errorsDetails", cardName = "errors", isHidden = true)
+        val Tests = View("Tests", "tests", "tests")
+
+
+        val views = listOf(Insights, Assets, Errors, ErrorDetails, Tests)
+
+        fun findById(id: String): View? {
+            return views.find { it.id == id }
+        }
+
+        fun setSelected(view: View) {
+            views.forEach { v ->
+                v.isSelected = view.id == v.id
+            }
+        }
+
+        fun getSelected(): View? {
+            return views.find { it.isSelected }
+        }
+
+        fun hideErrorDetails() {
+            views.forEach { v ->
+                v.isHidden = v == ErrorDetails
+            }
+        }
+
+        fun hideErrors() {
+            views.forEach { v ->
+                v.isHidden = v == Errors
+            }
         }
     }
 }
@@ -35,7 +88,6 @@ class MainContentViewSwitcher(val project: Project) {
     private lateinit var myLayout: CardLayout
     private lateinit var mainContentPanel: Container
 
-    var currentView: View? = null
 
     companion object {
         @JvmStatic
@@ -77,31 +129,40 @@ class MainContentViewSwitcher(val project: Project) {
 
     fun showView(view: View, fireEvent: Boolean) {
 
-        if (view == currentView) {
-            return
-        }
-
-        if (view != View.ErrorDetails) {
+        if (view == View.ErrorDetails) {
+            hideErrors()
+        } else {
             project.service<ErrorsViewOrchestrator>().closeErrorDetails()
+            hideErrorDetails()
         }
 
-        if (view == View.Insights && currentView != View.Insights) {
+        if (view == View.Insights && getSelected() != View.Insights) {
             ActivityMonitor.getInstance(project).clearLastInsightsViewed()
         }
 
 
-
-        currentView = view
-        myLayout.show(mainContentPanel, view.id)
-        currentView?.takeIf { fireEvent }?.let {
-            fireViewChanged(it)
+        setSelected(view)
+        myLayout.show(mainContentPanel, view.cardName)
+        getSelected()?.takeIf { fireEvent }?.let {
+            fireViewChanged(views)
         }
     }
 
 
-    private fun fireViewChanged(view: View) {
+    private fun fireViewChanged(views: List<View>) {
         val publisher = project.messageBus.syncPublisher(ViewChangedEvent.VIEW_CHANGED_TOPIC)
-        publisher.viewChanged(view)
+        publisher.viewChanged(views)
 
+    }
+
+    fun getSelectedView(): View? {
+        return getSelected()
+    }
+
+    fun showViewById(vuid: String) {
+        val view = View.findById(vuid)
+        view?.let { vu ->
+            showView(vu)
+        }
     }
 }

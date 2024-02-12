@@ -97,9 +97,9 @@ fun sendCurrentEnvironment(cefBrowser: CefBrowser, environment: Env) {
     )
 }
 
-fun sendCurrentView(cefBrowser: CefBrowser, view: View) {
+fun sendCurrentViewsState(cefBrowser: CefBrowser, views: List<View>) {
     serializeAndExecuteWindowPostMessageJavaScript(
         cefBrowser,
-        SetViewMessage(SetViewMessagePayload(view))
+        SetViewMessage(SetViewMessagePayload(views))
     )
 }

@@ -138,7 +138,7 @@ private constructor(
         project.messageBus.connect(observabilityChangeParentDisposable).subscribe(
             ObservabilityChanged.OBSERVABILITY_CHANGED_TOPIC, object : ObservabilityChanged {
                 override fun observabilityChanged(isObservabilityEnabled: Boolean) {
-                    `                    sendObservabilityEnabledMessage(
+                    sendObservabilityEnabledMessage(
                         jbCefBrowser.cefBrowser,
                         isObservabilityEnabled
                     )

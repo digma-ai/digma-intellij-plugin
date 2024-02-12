@@ -18,6 +18,7 @@ import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
 import org.digma.intellij.plugin.analytics.EnvironmentChanged
 import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator
 import org.digma.intellij.plugin.docker.DockerService
+import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
 import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil
@@ -119,12 +120,12 @@ private constructor(
 
         project.messageBus.connect(environmentChangeParentDisposable).subscribe(
             EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC, object : EnvironmentChanged {
-                override fun environmentChanged(newEnv: String?, refreshInsightsView: Boolean) {
+                override fun environmentChanged(newEnv: Env, refreshInsightsView: Boolean) {
                     sendCurrentEnvironment(jbCefBrowser.cefBrowser, newEnv)
                 }
 
-                override fun environmentsListChanged(newEnvironments: MutableList<String>?) {
-                    sendEnvironmentEntities(
+                override fun environmentsListChanged(newEnvironments: MutableList<Env>?) {
+                    sendEnvironmentsList(
                         jbCefBrowser.cefBrowser,
                         AnalyticsService.getInstance(project).environment.getEnvironments()
                     )

@@ -42,6 +42,7 @@ import org.digma.intellij.plugin.common.runInReadAccessWithResult
 import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.editor.EditorUtils
+import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.errorreporting.SEVERITY_MEDIUM_TRY_FIX
 import org.digma.intellij.plugin.errorreporting.SEVERITY_PROP_NAME
@@ -180,7 +181,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
     }
 
 
-    override fun environmentChanged(newEnv: String, refreshInsightsView: Boolean) {
+    override fun environmentChanged(newEnv: Env, refreshInsightsView: Boolean) {
         if (refreshInsightsView) {
             EDT.ensureEDT {
                 allowSlowOperation {

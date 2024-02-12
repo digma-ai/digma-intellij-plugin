@@ -1,8 +1,9 @@
-package org.digma.intellij.plugin.ui.model.environment
+package org.digma.intellij.plugin.env
 
 interface EnvironmentsSupplier {
 
-    fun getEnvironments(): List<String>
+    fun getEnvironments(): List<Env>
+    fun getEnvironmentsNames(): List<String>
 
     fun setCurrent(selectedItem: String?)
 
@@ -13,9 +14,9 @@ interface EnvironmentsSupplier {
      */
     fun setCurrent(selectedItem: String, refreshInsightsView: Boolean, taskToRunAfterChange: Runnable?)
 
-    fun getCurrent(): String?
+    fun getCurrent(): Env?
 
     fun refreshNowOnBackground()
 
-    fun hasUsages(env: String): Boolean
+//    fun hasUsages(env: String): Boolean
 }

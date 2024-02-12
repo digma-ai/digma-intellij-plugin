@@ -22,6 +22,11 @@ data class NavigationEntry
 @ConstructorProperties(
     "spanInfo", "closestParentSpans", "navEndpointEntry", "closestParentEntries"
 )
+//todo:
+// if spanInfo has discoverable methodId = direct link
+// if navEndpointEntry is not null and has only one discoverable endpoint, only one method has this rout = direct link
+// if navEndpointEntry has more then one method = show list
+// else each entry in closestParentSpans and closestParentEntries will produce 0 or 1 link sorted by distance
 constructor(val spanInfo: SpanInfo?, val closestParentSpans: List<SpanNavigationItem>, val navEndpointEntry: NavEndpointEntry?, val closestParentEntries: List<NavEndpointEntry>)
 
 

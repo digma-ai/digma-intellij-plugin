@@ -168,6 +168,8 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
         val message = BackendInfoMessage(about)
         Log.log(logger::trace, project, "sending {} message", JCefMessagesUtils.GLOBAL_SET_BACKEND_INFO)
         serializeAndExecuteWindowPostMessageJavaScript(browser, message)
+
+        sendEnvironmentsList(browser, AnalyticsService.getInstance(project).environment.getEnvironments())
     }
 
     protected fun getPayloadFromRequest(requestJsonNode: JsonNode): JsonNode? {

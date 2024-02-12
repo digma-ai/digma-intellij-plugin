@@ -21,6 +21,7 @@ import kotlin.Pair;
 import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.editor.EditorUtils;
+import org.digma.intellij.plugin.env.Env;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.*;
@@ -297,7 +298,7 @@ public class PythonLanguageService implements LanguageService {
     }
 
     @Override
-    public void environmentChanged(String newEnv, boolean refreshInsightsView) {
+    public void environmentChanged(Env newEnv, boolean refreshInsightsView) {
         if (refreshInsightsView) {
             EDT.ensureEDT(() -> {
                 var fileEditor = FileEditorManager.getInstance(project).getSelectedEditor();

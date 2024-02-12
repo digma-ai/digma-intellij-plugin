@@ -674,7 +674,11 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
         return Retries.retryWithResultAndDefault({
             val myRunnable = MyRunnable()
-            ProgressManager.getInstance().runProcess(myRunnable, myRunnable.progressIndicator)
+            ProgressManager.getInstance().runProcess({
+                runInReadAccess {
+                    myRunnable.run()
+                }
+            }, myRunnable.progressIndicator)
             Objects.requireNonNullElseGet(myRunnable.result) { CanInstrumentMethodResult.failure() }
         }, Throwable::class.java, 50, 5, CanInstrumentMethodResult.failure())
     }

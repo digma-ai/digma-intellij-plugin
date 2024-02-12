@@ -91,7 +91,8 @@ private fun isConfigurationTargetWsl(configuration: RunConfigurationBase<*>): Bo
 }
 
 private fun isProjectUnderWsl(configuration: RunConfiguration): Boolean {
-    return configuration.project.basePath?.startsWith("//wsl$/") == true
+    return configuration.project.basePath?.startsWith("//wsl$/") == true ||
+            configuration.project.basePath?.startsWith("//wsl.localhost/") == true
 }
 
 

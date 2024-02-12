@@ -27,6 +27,8 @@ class NavigationMessageRouterHandler(project: Project) : BaseMessageRouterHandle
 
             "NAVIGATION/CHANGE_VIEW" -> changeView(requestJsonNode)
 
+            "NAVIGATION/CHANGE_ENVIRONMENT" -> {}
+
             else -> {
                 Log.log(logger::warn, "got unexpected action='$action'")
             }

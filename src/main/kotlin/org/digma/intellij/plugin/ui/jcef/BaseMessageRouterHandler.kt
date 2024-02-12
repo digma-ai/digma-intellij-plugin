@@ -158,6 +158,15 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
                         }
                     }
 
+                    JCefMessagesUtils.GLOBAL_OPEN_INSTALLATION_WIZARD -> {
+                        ActivityMonitor.getInstance(project).registerCustomEvent("show-installation-wizard", null)
+                        EDT.ensureEDT {
+                            MainToolWindowCardsController.getInstance(project).showWizard(true)
+                            ToolWindowShower.getInstance(project).showToolWindow()
+                        }
+                    }
+
+
 
                     else -> {
                         doOnQuery(project, browser, requestJsonNode, request, action)

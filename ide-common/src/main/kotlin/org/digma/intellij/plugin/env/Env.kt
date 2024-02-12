@@ -1,16 +1,22 @@
 package org.digma.intellij.plugin.env
 
+import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import org.digma.intellij.plugin.common.CommonUtils
+import java.beans.ConstructorProperties
 
 const val LOCAL_ENV = "LOCAL"
 const val LOCAL_TESTS_ENV = "LOCAL-TESTS"
 const val SUFFIX_OF_LOCAL = "[LOCAL]"
 const val SUFFIX_OF_LOCAL_TESTS = "[LOCAL-TESTS]"
 
-
+@JsonIgnoreProperties(ignoreUnknown = true)
 //must be data class, or a class with equals and hashCode
-data class Env(
+data class Env
+@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+@ConstructorProperties("originalName", "name")
+constructor(
     val originalName: String,
     val name: String,
 ) {

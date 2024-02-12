@@ -12,6 +12,7 @@ import org.cef.handler.CefLifeSpanHandlerAdapter;
 import org.digma.intellij.plugin.analytics.*;
 import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.document.*;
+import org.digma.intellij.plugin.env.Env;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider;
 import org.digma.intellij.plugin.insights.model.outgoing.*;
@@ -125,12 +126,12 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
             project.getMessageBus().connect(this).subscribe(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC, new EnvironmentChanged() {
                 @Override
-                public void environmentChanged(@Nullable String newEnv, boolean refreshInsightsView) {
+                public void environmentChanged(Env newEnv, boolean refreshInsightsView) {
                     Backgroundable.ensurePooledThread(InsightsServiceImpl.this::pushInsightsOnEnvironmentChange);
                 }
 
                 @Override
-                public void environmentsListChanged(List<String> newEnvironments) {
+                public void environmentsListChanged(List<Env> newEnvironments) {
                     //nothing to do
                 }
             });

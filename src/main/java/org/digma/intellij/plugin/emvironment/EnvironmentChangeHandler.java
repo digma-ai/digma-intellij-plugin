@@ -4,11 +4,10 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.analytics.EnvironmentChanged;
 import org.digma.intellij.plugin.document.DocumentInfoService;
+import org.digma.intellij.plugin.env.Env;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.psi.LanguageService;
-import org.digma.intellij.plugin.psi.SupportedLanguages;
-import org.jetbrains.annotations.Nullable;
+import org.digma.intellij.plugin.psi.*;
 
 import java.util.List;
 
@@ -32,7 +31,7 @@ public class EnvironmentChangeHandler implements EnvironmentChanged {
     //environmentChanged must run in a background thread.
     //when fired by the Environment object it is on background
     @Override
-    public void environmentChanged(@Nullable String newEnv, boolean refreshInsightsView) {
+    public void environmentChanged(Env newEnv, boolean refreshInsightsView) {
 
         try {
 
@@ -64,7 +63,7 @@ public class EnvironmentChangeHandler implements EnvironmentChanged {
     }
 
     @Override
-    public void environmentsListChanged(List<String> newEnvironments) {
+    public void environmentsListChanged(List<Env> newEnvironments) {
         //nothing to do here
     }
 }

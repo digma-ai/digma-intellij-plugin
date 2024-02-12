@@ -8,6 +8,10 @@ private object CommonObjectMapper {
 }
 
 
+fun serializeObjectToJson(value: Any): String {
+    return CommonObjectMapper.objectMapper.writeValueAsString(value)
+}
+
 fun serializeAndExecuteWindowPostMessageJavaScript(browser: CefBrowser, message: Any) {
     executeWindowPostMessageJavaScript(browser, CommonObjectMapper.objectMapper.writeValueAsString(message))
 }

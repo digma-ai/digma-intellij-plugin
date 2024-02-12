@@ -13,6 +13,7 @@ import com.intellij.psi.*;
 import kotlin.Pair;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.document.DocumentInfoService;
+import org.digma.intellij.plugin.env.Env;
 import org.digma.intellij.plugin.instrumentation.CanInstrumentMethodResult;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.*;
@@ -323,7 +324,7 @@ public interface LanguageService extends Disposable {
     /**
      * let language services do something on environmentChanged. for example to update the current method context.
      */
-    void environmentChanged(String newEnv, boolean refreshInsightsView);
+    void environmentChanged(Env newEnv, boolean refreshInsightsView);
 
 
     @NotNull

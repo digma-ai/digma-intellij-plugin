@@ -40,6 +40,8 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
 
             "RECENT_ACTIVITY/INITIALIZE" -> {
                 updateDigmaEngineStatus(project, browser)
+                //todo: maybe need to refresh the environments first on current thread. in the past it was a direct call to AnalyticsService.getEnvironments
+//                project.service<AnalyticsService>().environment.refreshNow()
                 val environments = project.service<AnalyticsService>().environment.getEnvironments()
                 project.service<LiveViewUpdater>().appInitialized()
                 project.service<RecentActivityUpdater>().updateLatestActivities(environments)

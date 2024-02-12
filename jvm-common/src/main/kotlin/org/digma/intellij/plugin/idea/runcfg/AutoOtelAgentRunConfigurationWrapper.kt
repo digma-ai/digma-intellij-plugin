@@ -14,7 +14,7 @@ import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.common.FileUtils
 import org.digma.intellij.plugin.common.StringUtils.Companion.evalBoolean
-import org.digma.intellij.plugin.common.buildEnvForLocalTests
+import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.idea.deps.ModuleMetadata
 import org.digma.intellij.plugin.idea.deps.ModulesDepsService
 import org.digma.intellij.plugin.idea.psi.kotlin.isKotlinRunConfiguration
@@ -208,7 +208,7 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
         }
 
         if (isTest) {
-            val envPart = "digma.environment=${buildEnvForLocalTests()}"
+            val envPart = "digma.environment=${Env.buildEnvForLocalTests()}"
             retVal = retVal
                 .plus("-Dotel.resource.attributes=\"$envPart\"")
                 .plus(" ")

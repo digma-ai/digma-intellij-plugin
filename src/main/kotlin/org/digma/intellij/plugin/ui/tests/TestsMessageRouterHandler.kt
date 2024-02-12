@@ -7,6 +7,7 @@ import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.document.CodeObjectsUtil
+import org.digma.intellij.plugin.env.EnvironmentsSupplier
 import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.tests.FilterForLatestTests
@@ -14,10 +15,8 @@ import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.MonitoredPanel
 import org.digma.intellij.plugin.teststab.TestsRunner
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
-import org.digma.intellij.plugin.ui.jcef.sendEnvironmentEntities
 import org.digma.intellij.plugin.ui.list.insights.openJaegerFromRecentActivity
 import org.digma.intellij.plugin.ui.list.insights.traceButtonName
-import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier
 import org.digma.intellij.plugin.ui.tests.TestsPanel.Companion.RUN_TEST_BUTTON_NAME
 import java.util.Collections
 
@@ -46,7 +45,6 @@ class TestsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pro
 
     private fun initialize(project: Project, browser: CefBrowser, requestJsonNode: JsonNode) {
         Log.log(logger::info, "got TESTS/INITIALIZE")
-        sendEnvironmentEntities(browser, AnalyticsService.getInstance(project).environment.getEnvironments())
         doCommonInitialize(browser)
     }
 

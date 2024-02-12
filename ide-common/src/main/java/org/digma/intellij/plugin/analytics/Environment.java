@@ -38,6 +38,7 @@ public class Environment implements EnvironmentsSupplier {
 
 
     @Override
+    @Nullable
     public Env getCurrent() {
         return current;
     }
@@ -144,16 +145,16 @@ public class Environment implements EnvironmentsSupplier {
             Log.log(LOGGER::trace, "Refreshing Environments list");
             List<String> envsFromBackend = analyticsService.getRawEnvironments();
 
-            if (!envsFromBackend.isEmpty()) {
-                Log.log(LOGGER::trace, "Got environments {}", envsFromBackend);
-            } else {
+            if (envsFromBackend.isEmpty()) {
                 Log.log(LOGGER::warn, "Error loading environments or no environments added yet: {}", envsFromBackend);
                 envsFromBackend = new ArrayList<>();
+            } else {
+                Log.log(LOGGER::trace, "Got environments {}", envsFromBackend);
             }
 
 
-            var newEnvironments = envsFromBackend.stream().map(env ->
-                    new Env(env, Env.adjustEnvironmentDisplayName(env))).toList();
+            var newEnvironments = envsFromBackend.stream().map(Env::toEnv).toList();
+
 
             if (collectionsEquals(newEnvironments, environments)) {
                 return;

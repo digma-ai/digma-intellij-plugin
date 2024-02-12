@@ -13,6 +13,8 @@ import org.digma.intellij.plugin.navigation.View
 import org.digma.intellij.plugin.ui.jcef.model.ApiUrlPayload
 import org.digma.intellij.plugin.ui.jcef.model.DigmaEngineStatusMessage
 import org.digma.intellij.plugin.ui.jcef.model.IsMicrometerPayload
+import org.digma.intellij.plugin.ui.jcef.model.IsObservabilityEnabledMessage
+import org.digma.intellij.plugin.ui.jcef.model.IsObservabilityEnabledPayload
 import org.digma.intellij.plugin.ui.jcef.model.SetApiUrlMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetEnvironmentMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetEnvironmentMessagePayload
@@ -101,5 +103,12 @@ fun sendCurrentViewsState(cefBrowser: CefBrowser, views: List<View>) {
     serializeAndExecuteWindowPostMessageJavaScript(
         cefBrowser,
         SetViewMessage(SetViewMessagePayload(views))
+    )
+}
+
+fun sendObservabilityEnabledMessage(cefBrowser: CefBrowser, isObservabilityEnabled: Boolean) {
+    serializeAndExecuteWindowPostMessageJavaScript(
+        cefBrowser,
+        IsObservabilityEnabledMessage(IsObservabilityEnabledPayload(isObservabilityEnabled))
     )
 }

@@ -43,6 +43,13 @@ public class Environment implements EnvironmentsSupplier {
         return current;
     }
 
+
+    @Override
+    public void setCurrent(@NotNull Env env) {
+        setCurrent(env.getOriginalName());
+    }
+
+
     @Override
     public void setCurrent(@Nullable String newEnv) {
 
@@ -199,12 +206,12 @@ public class Environment implements EnvironmentsSupplier {
         }
     }
 
-    private Optional<Env> find(String preferred) {
-        return environments.stream().filter(env -> env.getOriginalName().equals(preferred)).findFirst();
+    private Optional<Env> find(String envToFind) {
+        return environments.stream().filter(env -> env.getOriginalName().equals(envToFind)).findFirst();
     }
 
-    private boolean contains(String preferred) {
-        return environments.stream().anyMatch(env -> env.getOriginalName().equals(preferred));
+    private boolean contains(String envToFind) {
+        return environments.stream().anyMatch(env -> env.getOriginalName().equals(envToFind));
     }
 
 

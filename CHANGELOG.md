@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.262] - 2024-02-12
+## [2.0.264] - 2024-02-12
+
+**Full Changelog**: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.263...v2.0.264
+fix read access in canInstrumentMethod
+
+## 2.0.262 - 2024-02-12
 
 - update eap profile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1788
 - update index files by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1789

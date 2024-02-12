@@ -28,23 +28,22 @@ class MainContentPanel(project: Project) : JPanel() {
         layout = myLayout
 
         val insightsPanel = InsightsReactPanel(project)
-        add(insightsPanel, View.Insights.id)
-        myLayout.addLayoutComponent(insightsPanel, View.Insights.id)
+        add(insightsPanel, View.Insights.cardName)
+        myLayout.addLayoutComponent(insightsPanel, View.Insights.cardName)
 
         val assetsPanel = AssetsPanel(project)
-        add(assetsPanel, View.Assets.id)
-        myLayout.addLayoutComponent(assetsPanel, View.Assets.id)
+        add(assetsPanel, View.Assets.cardName)
+        myLayout.addLayoutComponent(assetsPanel, View.Assets.cardName)
 
         val errorsPanel = createErrorsPanel(project)
-        add(errorsPanel, View.Errors.id)
-        myLayout.addLayoutComponent(errorsPanel, View.Errors.id)
+        add(errorsPanel, View.Errors.cardName)
+        myLayout.addLayoutComponent(errorsPanel, View.Errors.cardName)
 
         val testsPanel = TestsPanel(project)
-        add(testsPanel, View.Tests.id)
-        myLayout.addLayoutComponent(testsPanel, View.Tests.id)
+        add(testsPanel, View.Tests.cardName)
+        myLayout.addLayoutComponent(testsPanel, View.Tests.cardName)
 
-
-        myLayout.show(this, View.Insights.id)
+        myLayout.show(this, View.Insights.cardName)
 
         MainContentViewSwitcher.getInstance(project).setLayout(myLayout, this)
 

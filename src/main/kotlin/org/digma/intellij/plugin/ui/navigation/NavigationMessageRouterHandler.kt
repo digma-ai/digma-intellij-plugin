@@ -11,6 +11,7 @@ import org.digma.intellij.plugin.navigation.MainContentViewSwitcher
 import org.digma.intellij.plugin.navigation.View
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
 import org.digma.intellij.plugin.ui.jcef.jsonToObject
+import org.digma.intellij.plugin.ui.jcef.sendCurrentViewsState
 
 class NavigationMessageRouterHandler(project: Project) : BaseMessageRouterHandler(project) {
 
@@ -54,6 +55,7 @@ class NavigationMessageRouterHandler(project: Project) : BaseMessageRouterHandle
     private fun onInitialize(browser: CefBrowser) {
         try {
             doCommonInitialize(browser)
+            sendCurrentViewsState(browser, View.views)
         } catch (e: AnalyticsServiceException) {
             Log.warnWithException(logger, e, "error getting backend info")
         }
@@ -63,10 +65,9 @@ class NavigationMessageRouterHandler(project: Project) : BaseMessageRouterHandle
     private fun changeView(requestJsonNode: JsonNode) {
         val payload = getPayloadFromRequest(requestJsonNode)
         payload?.let {
-            val viewId = payload.get("view").asText()
-            val view = View.findById(viewId)
-            view?.let {
-                MainContentViewSwitcher.getInstance(project).showView(it, false)
+            val viewId = payload.get("view")?.asText()
+            viewId?.let { vuid ->
+                MainContentViewSwitcher.getInstance(project).showViewById(vuid)
             }
         }
     }

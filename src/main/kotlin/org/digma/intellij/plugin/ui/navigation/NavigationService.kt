@@ -7,7 +7,7 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.navigation.ViewChangedEvent
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
-import org.digma.intellij.plugin.ui.jcef.sendCurrentView
+import org.digma.intellij.plugin.ui.jcef.sendCurrentViewsState
 
 @Service(Service.Level.PROJECT)
 class NavigationService(private val project: Project) : Disposable {
@@ -26,9 +26,9 @@ class NavigationService(private val project: Project) : Disposable {
 
     init {
         project.messageBus.connect(this).subscribe(
-            ViewChangedEvent.VIEW_CHANGED_TOPIC, ViewChangedEvent { viewInfo ->
+            ViewChangedEvent.VIEW_CHANGED_TOPIC, ViewChangedEvent { views ->
                 jCefComponent?.let {
-                    sendCurrentView(it.jbCefBrowser.cefBrowser, viewInfo)
+                    sendCurrentViewsState(it.jbCefBrowser.cefBrowser, views)
                 }
             })
     }

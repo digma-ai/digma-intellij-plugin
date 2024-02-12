@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.env
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import org.digma.intellij.plugin.common.CommonUtils
 
 const val LOCAL_ENV = "LOCAL"
@@ -79,6 +80,7 @@ data class Env(
     }
 
 
+    @JsonIgnore
     fun isLocal(): Boolean {
         return isLocalEnv() || isLocalTestEnv()
     }

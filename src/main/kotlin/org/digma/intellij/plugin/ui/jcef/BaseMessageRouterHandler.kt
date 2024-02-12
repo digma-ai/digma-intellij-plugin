@@ -17,6 +17,7 @@ import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.stopWatchStart
 import org.digma.intellij.plugin.common.stopWatchStop
 import org.digma.intellij.plugin.dashboard.DashboardService
+import org.digma.intellij.plugin.documentation.DocumentationService
 import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
@@ -64,6 +65,7 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
                     JCefMessagesUtils.GLOBAL_REGISTER ->{
                         project.service<RegistrationEventHandler>().register(requestJsonNode);
                     }
+
                     JCefMessagesUtils.GLOBAL_OPEN_TROUBLESHOOTING_GUIDE -> {
                         project.service<ActivityMonitor>()
                             .registerCustomEvent("troubleshooting link clicked", mapOf("origin" to getOriginForTroubleshootingEvent()))
@@ -133,6 +135,14 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
                         val environment = getEnvironmentFromPayload(requestJsonNode)
                         environment?.let { env ->
                             DashboardService.getInstance(project).openDashboard("Dashboard Panel - ${env.name}")
+                        }
+                    }
+
+                    JCefMessagesUtils.GLOBAL_OPEN_DOCUMENTATION -> {
+                        val payload = getPayloadFromRequest(requestJsonNode)
+                        payload?.takeIf { payload.get("page") != null }?.let { pl ->
+                            val page = payload.get("page").asText()
+                            DocumentationService.getInstance(project).openDocumentation(page)
                         }
                     }
 

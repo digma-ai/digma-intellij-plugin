@@ -63,7 +63,7 @@ abstract class BaseIndexTemplateBuilder(resourceFolderName: String, private val 
             data[IS_JAEGER_ENABLED] = isJaegerButtonEnabled()
             data[USER_EMAIL_VARIABLE] = PersistenceService.getInstance().getUserEmail() ?: ""
             data[USER_REGISTRATION_EMAIL_VARIABLE] = PersistenceService.getInstance().getUserRegistrationEmail() ?: ""
-            data[IS_OBSERVABILITY_ENABLED_VARIABLE] = PersistenceService.getInstance().isAutoOtel()
+            data[IS_OBSERVABILITY_ENABLED_VARIABLE] = PersistenceService.getInstance().isObservabilityEnabled()
             data[IS_DIGMA_ENGINE_INSTALLED] = service<DockerService>().isEngineInstalled()
             data[IS_DIGMA_ENGINE_RUNNING] = service<DockerService>().isEngineRunning(project)
             data[IS_DOCKER_INSTALLED] = service<DockerService>().isDockerInstalled()

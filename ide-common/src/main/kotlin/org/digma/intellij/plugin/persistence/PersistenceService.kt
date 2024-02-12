@@ -142,12 +142,14 @@ class PersistenceService {
         state.isWorkspaceOnly = isWorkspaceOnly
     }
 
-    fun isAutoOtel(): Boolean {
-        return state.isAutoOtel
+    fun isObservabilityEnabled(): Boolean {
+        return state.isObservabilityEnabled
     }
 
-    fun setAutoOtel(isAutoOtel: Boolean) {
-        state.isAutoOtel = isAutoOtel
+    fun setObservabilityEnabled(isObservabilityEnabled: Boolean) {
+        state.isObservabilityEnabled = isObservabilityEnabled
+        //todo: remove isAutoOtel on June 2024
+        state.isAutoOtel = isObservabilityEnabled
     }
 
     fun isAlreadyPassedTheInstallationWizardForIdeaIDE(): Boolean {

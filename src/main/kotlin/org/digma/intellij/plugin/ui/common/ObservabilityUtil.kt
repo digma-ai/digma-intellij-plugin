@@ -10,7 +10,7 @@ class ObservabilityUtil {
 
         @JvmStatic
         fun updateObservabilityValue(project: Project, selected: Boolean) {
-            PersistenceService.getInstance().setAutoOtel(selected)
+            PersistenceService.getInstance().setObservabilityEnabled(selected)
             if (selected) {
                 ActivityMonitor.getInstance(project).registerObservabilityOn()
             } else {

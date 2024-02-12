@@ -18,6 +18,11 @@ data class Env(
     companion object {
 
         @JvmStatic
+        fun toEnv(env: String): Env {
+            return Env(env, adjustEnvironmentDisplayName(env))
+        }
+
+        @JvmStatic
         fun filterRawEnvironments(environments: List<String>): List<String> {
             val hostName = CommonUtils.getLocalHostname()
             return environments.filter { env -> isNotLocal(env) || isMyLocalEnvironment(env, hostName) }

@@ -75,11 +75,9 @@ abstract class BaseIndexTemplateBuilder(resourceFolderName: String, private val 
                 if (AnalyticsService.getInstance(project).environment.getCurrent() == null) {
                     AnalyticsService.getInstance(project).environment.setCurrent(currentEnvFromPersistence)
                 }
-                AnalyticsService.getInstance(project).environment.getCurrent()?.let { currentEnv ->
-                    serializeObjectToJson(currentEnv)
-                }
+                AnalyticsService.getInstance(project).environment.getCurrent()
 
-            } ?: ""
+            } ?: "undefined"
 
             addAppSpecificEnvVariable(project, data)
 

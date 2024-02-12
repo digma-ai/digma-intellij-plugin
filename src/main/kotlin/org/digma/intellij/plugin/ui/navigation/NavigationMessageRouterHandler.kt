@@ -3,11 +3,14 @@ package org.digma.intellij.plugin.ui.navigation
 import com.fasterxml.jackson.databind.JsonNode
 import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
+import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
+import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.navigation.MainContentViewSwitcher
 import org.digma.intellij.plugin.navigation.View
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
+import org.digma.intellij.plugin.ui.jcef.jsonToObject
 
 class NavigationMessageRouterHandler(project: Project) : BaseMessageRouterHandler(project) {
 
@@ -27,11 +30,23 @@ class NavigationMessageRouterHandler(project: Project) : BaseMessageRouterHandle
 
             "NAVIGATION/CHANGE_VIEW" -> changeView(requestJsonNode)
 
-            "NAVIGATION/CHANGE_ENVIRONMENT" -> {}
+            "NAVIGATION/CHANGE_ENVIRONMENT" -> {
+                changeEnvironment(requestJsonNode)
+            }
 
             else -> {
                 Log.log(logger::warn, "got unexpected action='$action'")
             }
+        }
+    }
+
+
+    private fun changeEnvironment(requestJsonNode: JsonNode) {
+        val payload = getPayloadFromRequest(requestJsonNode)
+        payload?.takeIf { payload.get("environment") != null }?.let { pl ->
+            val envAsString = objectMapper.writeValueAsString(pl.get("environment"))
+            val env: Env = jsonToObject(envAsString, Env::class.java)
+            AnalyticsService.getInstance(project).environment.setCurrent(env)
         }
     }
 

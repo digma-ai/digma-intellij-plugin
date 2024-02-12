@@ -5,8 +5,7 @@ import com.intellij.openapi.project.Project
 
 /**
  * this is a helper for the insights and errors tab, its main job is to remember if error details is
- * on so the view doesn't change when moving in the editor. and to switch between insights and errors tab.
- * it is initialized lazy when the [org.digma.intellij.plugin.ui.common.InsightsPanel] is initialized.
+ * on.
  */
 @Service(Service.Level.PROJECT)
 class ErrorsDetailsHelper(val project: Project) {
@@ -18,7 +17,7 @@ class ErrorsDetailsHelper(val project: Project) {
 
 
     fun markCurrentView() {
-        viewBeforeErrorDetails = MainContentViewSwitcher.getInstance(project).currentView
+        viewBeforeErrorDetails = MainContentViewSwitcher.getInstance(project).getSelectedView()
     }
 
 

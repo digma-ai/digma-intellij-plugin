@@ -7,7 +7,7 @@ import com.intellij.execution.configurations.RunnerSettings
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
-import org.digma.intellij.plugin.common.buildEnvForLocalTests
+import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.settings.SettingsState
 import org.jetbrains.idea.maven.execution.MavenRunConfiguration
 import org.jetbrains.plugins.gradle.service.execution.GradleRunConfiguration
@@ -81,7 +81,7 @@ class OpenLibertyRunConfigurationWrapper : RunConfigurationWrapper {
             .plus(" ")
 
         if (isTest) {
-            val envPart = "digma.environment=${buildEnvForLocalTests()}"
+            val envPart = "digma.environment=${Env.buildEnvForLocalTests()}"
             retVal = retVal
                 .plus("-Dotel.resource.attributes=\"$envPart\"")
                 .plus(" ")

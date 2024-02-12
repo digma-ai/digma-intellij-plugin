@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.PluginId
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.common.EDT
+import org.digma.intellij.plugin.env.EnvironmentsSupplier
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
 import org.digma.intellij.plugin.log.Log
@@ -30,7 +31,6 @@ import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
-import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
@@ -64,7 +64,7 @@ class EventsNotificationsService(val project: Project) : Disposable {
                     }
 
                     Log.log(logger::info, "sending getLatestEvents query with lastEventTime={}",lastEventTime)
-                    val events = project.service<AnalyticsService>().getLatestEvents(lastEventTime)
+                    val events = AnalyticsService.getInstance(project).getLatestEvents(lastEventTime)
                     Log.log(logger::info, "got latest events {}",events)
 
                     events.events.forEach {
@@ -188,9 +188,9 @@ class GoToCodeObjectInsightsAction(
 
         ActivityMonitor.getInstance(project).registerNotificationCenterEvent("$notificationName.clicked", mapOf())
 
-        val canNavigate = project.service<CodeNavigator>().canNavigateToSpanOrMethod(codeObjectId, methodId)
+        val canNavigate = CodeNavigator.getInstance(project).canNavigateToSpanOrMethod(codeObjectId, methodId)
 
-        val environmentsSupplier: EnvironmentsSupplier = project.service<AnalyticsService>().environment
+        val environmentsSupplier: EnvironmentsSupplier = AnalyticsService.getInstance(project).environment
 
         val runnable = Runnable {
             MainToolWindowCardsController.getInstance(project).closeAllNotificationsIfShowing()
@@ -205,7 +205,7 @@ class GoToCodeObjectInsightsAction(
         }
 
 
-        if (environmentsSupplier.getCurrent() != environment) {
+        if (environmentsSupplier.getCurrent()?.originalName != environment) {
 
             environmentsSupplier.setCurrent(environment, false) {
                 EDT.ensureEDT {

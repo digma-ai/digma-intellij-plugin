@@ -231,7 +231,7 @@ tasks {
         dependsOn(deleteLog)
 
         //to disable the splash screen on startup because it may interrupt when debugging.
-        //args(listOf("nosplash"))
+        args(listOf("nosplash"))
 
 //        jvmArgs("-XX:ReservedCodeCacheSize=512M")
 

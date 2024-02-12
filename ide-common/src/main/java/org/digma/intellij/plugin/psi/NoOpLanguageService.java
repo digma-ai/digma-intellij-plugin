@@ -9,6 +9,7 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import kotlin.Pair;
+import org.digma.intellij.plugin.env.Env;
 import org.digma.intellij.plugin.model.discovery.*;
 import org.jetbrains.annotations.*;
 
@@ -86,7 +87,7 @@ public class NoOpLanguageService implements LanguageService {
     }
 
     @Override
-    public void environmentChanged(String newEnv, boolean refreshInsightsView) {
+    public void environmentChanged(Env newEnv, boolean refreshInsightsView) {
         //nothing to do
     }
 

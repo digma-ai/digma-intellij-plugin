@@ -15,6 +15,7 @@ import org.cef.handler.CefMessageRouterHandlerAdapter;
 import org.digma.intellij.plugin.analytics.*;
 import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.document.CodeObjectsUtil;
+import org.digma.intellij.plugin.env.Env;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.insights.model.outgoing.*;
 import org.digma.intellij.plugin.jcef.common.*;
@@ -34,7 +35,7 @@ import org.digma.intellij.plugin.ui.jcef.persistence.JCEFPersistenceService;
 import org.digma.intellij.plugin.ui.service.InsightsService;
 import org.digma.intellij.plugin.ui.settings.Theme;
 import org.digma.intellij.plugin.vcs.VcsService;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -439,14 +440,16 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
 
     void pushInsights(List<CodeObjectInsight> insights, List<Span> spans, String assetId,
-                      String serviceName, String environment, String uiInsightsStatus, String viewMode,
+                      String serviceName, @Nullable Env environment, String uiInsightsStatus, String viewMode,
                       List<Method> methods,
                       boolean hasMissingDependency,
                       boolean canInstrumentMethod,
                       boolean needsObservabilityFix) {
 
 
-        var payload = new InsightsPayload(insights, spans, assetId, serviceName, environment, uiInsightsStatus, viewMode, methods, hasMissingDependency, canInstrumentMethod, needsObservabilityFix);
+        var currentEnvironment = environment == null ? "" : environment.getOriginalName();
+        //todo: check with Kyrylo if InsightsPayload should receive Env or string
+        var payload = new InsightsPayload(insights, spans, assetId, serviceName, currentEnvironment, uiInsightsStatus, viewMode, methods, hasMissingDependency, canInstrumentMethod, needsObservabilityFix);
 
 
         var message = new SetInsightsDataMessage("digma", "INSIGHTS/SET_DATA", payload);

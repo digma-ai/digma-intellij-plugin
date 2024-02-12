@@ -23,6 +23,7 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
 import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil
 import org.digma.intellij.plugin.jcef.common.UserRegistrationEvent
+import org.digma.intellij.plugin.observability.ObservabilityChanged
 import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.ui.jcef.model.BackendInfoMessage
 import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier
@@ -48,6 +49,7 @@ private constructor(
     private val connectionEventAlarmParentDisposable = Disposer.newDisposable()
     private val userRegistrationParentDisposable = Disposer.newDisposable()
     private val environmentChangeParentDisposable = Disposer.newDisposable()
+    private val observabilityChangeParentDisposable = Disposer.newDisposable()
 
 
     init {
@@ -133,6 +135,18 @@ private constructor(
             })
 
 
+        project.messageBus.connect(observabilityChangeParentDisposable).subscribe(
+            ObservabilityChanged.OBSERVABILITY_CHANGED_TOPIC, object : ObservabilityChanged {
+                override fun observabilityChanged(isObservabilityEnabled: Boolean) {
+                    `                    sendObservabilityEnabledMessage(
+                        jbCefBrowser.cefBrowser,
+                        isObservabilityEnabled
+                    )
+                }
+
+            }
+        )
+
     }
 
 
@@ -143,6 +157,7 @@ private constructor(
             Disposer.dispose(settingsListenerParentDisposable)
             Disposer.dispose(userRegistrationParentDisposable)
             Disposer.dispose(environmentChangeParentDisposable)
+            Disposer.dispose(observabilityChangeParentDisposable)
             jbCefBrowser.jbCefClient.removeLifeSpanHandler(lifeSpanHandler, jbCefBrowser.cefBrowser)
             jbCefBrowser.dispose()
             cefMessageRouter.dispose()

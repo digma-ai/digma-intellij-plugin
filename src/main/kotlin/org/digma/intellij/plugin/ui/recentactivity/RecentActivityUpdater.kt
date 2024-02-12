@@ -15,8 +15,6 @@ import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.icons.AppIcons
-import org.digma.intellij.plugin.jcef.common.IsObservabilityEnabledMessageRequest
-import org.digma.intellij.plugin.jcef.common.IsObservabilityEnabledPayload
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResponseEntry
@@ -108,17 +106,6 @@ class RecentActivityUpdater(val project: Project) : Disposable {
         }
     }
 
-    @Synchronized
-    fun updateSetObservability(isEnabled: Boolean) {
-        jCefComponent?.let { jcef ->
-            val isObservabilityEnabledMessageRequest = IsObservabilityEnabledMessageRequest(
-                JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
-                JCefMessagesUtils.GLOBAL_SET_IS_OBSERVABILITY_ENABLED,
-                IsObservabilityEnabledPayload(isEnabled)
-            )
-            serializeAndExecuteWindowPostMessageJavaScript(jcef.jbCefBrowser.cefBrowser, isObservabilityEnabledMessageRequest)
-        }
-    }
 
     private fun hasRecentActivity(latestActivityResult: RecentActivityResult): Boolean {
         val latestActivity: Optional<Date> = latestActivityResult.entries.stream()

@@ -1,6 +1,13 @@
 # Changelog
 
-## [2.0.261] - 2024-02-09
+## [2.0.262] - 2024-02-12
+
+- update eap profile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1788
+- update index files by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1789
+- update index files by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1790
+- fix install status and email by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1791
+
+## 2.0.261 - 2024-02-09
 
 - fix install status and micrinaut agent by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1787
 

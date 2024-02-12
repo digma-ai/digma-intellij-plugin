@@ -5,12 +5,10 @@ import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
-import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.navigation.MainContentViewSwitcher
 import org.digma.intellij.plugin.navigation.View
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
-import org.digma.intellij.plugin.ui.jcef.jsonToObject
 import org.digma.intellij.plugin.ui.jcef.sendCurrentViewsState
 
 class NavigationMessageRouterHandler(project: Project) : BaseMessageRouterHandler(project) {
@@ -43,10 +41,8 @@ class NavigationMessageRouterHandler(project: Project) : BaseMessageRouterHandle
 
 
     private fun changeEnvironment(requestJsonNode: JsonNode) {
-        val payload = getPayloadFromRequest(requestJsonNode)
-        payload?.takeIf { payload.get("environment") != null }?.let { pl ->
-            val envAsString = objectMapper.writeValueAsString(pl.get("environment"))
-            val env: Env = jsonToObject(envAsString, Env::class.java)
+        val environment = getEnvironmentFromPayload(requestJsonNode)
+        environment?.let { env ->
             AnalyticsService.getInstance(project).environment.setCurrent(env)
         }
     }

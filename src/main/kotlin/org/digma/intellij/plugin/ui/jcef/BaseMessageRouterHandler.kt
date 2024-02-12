@@ -16,6 +16,8 @@ import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.stopWatchStart
 import org.digma.intellij.plugin.common.stopWatchStop
+import org.digma.intellij.plugin.dashboard.DashboardService
+import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
 import org.digma.intellij.plugin.log.Log
@@ -127,6 +129,13 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
                         JCEFPersistenceService.getInstance(project).getFromPersistence(browser, getFromPersistenceRequest)
                     }
 
+                    JCefMessagesUtils.GLOBAL_OPEN_DASHBOARD -> {
+                        val environment = getEnvironmentFromPayload(requestJsonNode)
+                        environment?.let { env ->
+                            DashboardService.getInstance(project).openDashboard("Dashboard Panel - ${env.name}")
+                        }
+                    }
+
                     else -> {
                         doOnQuery(project, browser, requestJsonNode, request, action)
                     }
@@ -176,6 +185,16 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
         val payload = requestJsonNode.get("payload")
         return payload?.let {
             objectMapper.readTree(it.toString())
+        }
+    }
+
+
+    protected fun getEnvironmentFromPayload(requestJsonNode: JsonNode): Env? {
+        val payload = getPayloadFromRequest(requestJsonNode)
+        return payload?.takeIf { payload.get("environment") != null }?.let { pl ->
+            val envAsString = objectMapper.writeValueAsString(pl.get("environment"))
+            val env: Env = jsonToObject(envAsString, Env::class.java)
+            env
         }
     }
 

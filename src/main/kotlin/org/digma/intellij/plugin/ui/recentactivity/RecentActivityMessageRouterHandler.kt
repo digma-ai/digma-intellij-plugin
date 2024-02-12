@@ -13,7 +13,6 @@ import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.MonitoredPanel
-import org.digma.intellij.plugin.ui.common.ObservabilityUtil
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
 import org.digma.intellij.plugin.ui.jcef.RegistrationEventHandler
 import org.digma.intellij.plugin.ui.jcef.tryGetFieldFromPayload
@@ -153,13 +152,7 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
                 RegistrationEventHandler.getInstance(project).register(requestJsonNode)
             }
 
-            JCefMessagesUtils.GLOBAL_SET_OBSERVABILITY -> {
-                val isEnabledObservability = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("isObservabilityEnabled").asBoolean()
-                Log.log(logger::trace, "updateSetObservability(Boolean) called")
-                ObservabilityUtil.updateObservabilityValue(project, isEnabledObservability)
 
-                project.service<RecentActivityUpdater>().updateSetObservability(isEnabledObservability)
-            }
 
         }
     }

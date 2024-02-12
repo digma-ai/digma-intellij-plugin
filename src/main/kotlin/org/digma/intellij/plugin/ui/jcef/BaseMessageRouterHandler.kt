@@ -26,12 +26,14 @@ import org.digma.intellij.plugin.model.rest.jcef.common.SendTrackingEventRequest
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
+import org.digma.intellij.plugin.ui.common.ObservabilityUtil
 import org.digma.intellij.plugin.ui.jcef.model.BackendInfoMessage
 import org.digma.intellij.plugin.ui.jcef.model.GetFromPersistenceRequest
 import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest
 import org.digma.intellij.plugin.ui.jcef.model.OpenInInternalBrowserRequest
 import org.digma.intellij.plugin.ui.jcef.model.SaveToPersistenceRequest
 import org.digma.intellij.plugin.ui.jcef.persistence.JCEFPersistenceService
+import org.digma.intellij.plugin.ui.recentactivity.RecentActivityUpdater
 
 abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouterHandlerAdapter() {
 
@@ -145,6 +147,17 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
                             DocumentationService.getInstance(project).openDocumentation(page)
                         }
                     }
+
+                    JCefMessagesUtils.GLOBAL_SET_OBSERVABILITY -> {
+                        val payload = getPayloadFromRequest(requestJsonNode)
+                        payload?.let {
+                            val isEnabledObservability = it.get("isObservabilityEnabled").asBoolean()
+                            Log.log(logger::trace, "updateSetObservability(Boolean) called")
+                            ObservabilityUtil.updateObservabilityValue(project, isEnabledObservability)
+                            project.service<RecentActivityUpdater>().updateSetObservability(isEnabledObservability)
+                        }
+                    }
+
 
                     else -> {
                         doOnQuery(project, browser, requestJsonNode, request, action)

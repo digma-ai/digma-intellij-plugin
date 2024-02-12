@@ -75,7 +75,7 @@ abstract class BaseIndexTemplateBuilder(resourceFolderName: String, private val 
                 if (AnalyticsService.getInstance(project).environment.getCurrent() == null) {
                     AnalyticsService.getInstance(project).environment.setCurrent(currentEnvFromPersistence)
                 }
-                AnalyticsService.getInstance(project).environment.getCurrent()
+                AnalyticsService.getInstance(project).environment.getCurrent()?.let { serializeObjectToJson(it) }
 
             } ?: "undefined"
 

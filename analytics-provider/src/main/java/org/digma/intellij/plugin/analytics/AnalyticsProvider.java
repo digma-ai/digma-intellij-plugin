@@ -3,47 +3,24 @@ package org.digma.intellij.plugin.analytics;
 import org.digma.intellij.plugin.model.rest.codelens.CodeLensOfMethodsRequest;
 import org.digma.intellij.plugin.model.rest.AboutResult;
 import org.digma.intellij.plugin.model.rest.codelens.CodeLensOfMethodsResponse;
+import org.digma.intellij.plugin.model.rest.codespans.CodeContextSpan;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
-import org.digma.intellij.plugin.model.rest.env.DeleteEnvironmentRequest;
-import org.digma.intellij.plugin.model.rest.env.DeleteEnvironmentResponse;
+import org.digma.intellij.plugin.model.rest.env.*;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
-import org.digma.intellij.plugin.model.rest.event.LatestCodeObjectEventsRequest;
-import org.digma.intellij.plugin.model.rest.event.LatestCodeObjectEventsResponse;
-import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
-import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsightsStatusResponse;
-import org.digma.intellij.plugin.model.rest.insights.CustomStartTimeInsightRequest;
-import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsRequest;
-import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse;
-import org.digma.intellij.plugin.model.rest.insights.InsightsOfSingleSpanRequest;
-import org.digma.intellij.plugin.model.rest.insights.InsightsOfSingleSpanResponse;
-import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
-import org.digma.intellij.plugin.model.rest.insights.LinkTicketRequest;
-import org.digma.intellij.plugin.model.rest.insights.LinkUnlinkTicketResponse;
-import org.digma.intellij.plugin.model.rest.insights.SpanHistogramQuery;
-import org.digma.intellij.plugin.model.rest.insights.UnlinkTicketRequest;
-import org.digma.intellij.plugin.model.rest.livedata.DurationLiveData;
-import org.digma.intellij.plugin.model.rest.livedata.DurationLiveDataRequest;
-import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigation;
-import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigationRequest;
-import org.digma.intellij.plugin.model.rest.notifications.GetUnreadNotificationsCountRequest;
-import org.digma.intellij.plugin.model.rest.notifications.NotificationsRequest;
-import org.digma.intellij.plugin.model.rest.notifications.SetReadNotificationsRequest;
-import org.digma.intellij.plugin.model.rest.notifications.UnreadNotificationsCountResponse;
-import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest;
-import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
+import org.digma.intellij.plugin.model.rest.event.*;
+import org.digma.intellij.plugin.model.rest.insights.*;
+import org.digma.intellij.plugin.model.rest.livedata.*;
+import org.digma.intellij.plugin.model.rest.navigation.*;
+import org.digma.intellij.plugin.model.rest.notifications.*;
+import org.digma.intellij.plugin.model.rest.recentactivity.*;
 import org.digma.intellij.plugin.model.rest.testing.LatestTestsOfSpanRequest;
-import org.digma.intellij.plugin.model.rest.usage.EnvUsageStatusResult;
-import org.digma.intellij.plugin.model.rest.usage.EnvsUsageStatusRequest;
-import org.digma.intellij.plugin.model.rest.user.UserUsageStatsRequest;
-import org.digma.intellij.plugin.model.rest.user.UserUsageStatsResponse;
-import org.digma.intellij.plugin.model.rest.version.PerformanceMetricsResponse;
-import org.digma.intellij.plugin.model.rest.version.VersionRequest;
-import org.digma.intellij.plugin.model.rest.version.VersionResponse;
+import org.digma.intellij.plugin.model.rest.usage.*;
+import org.digma.intellij.plugin.model.rest.user.*;
+import org.digma.intellij.plugin.model.rest.version.*;
 
 import java.io.Closeable;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public interface AnalyticsProvider extends Closeable {
 
@@ -117,6 +94,8 @@ public interface AnalyticsProvider extends Closeable {
     LinkUnlinkTicketResponse linkTicket(LinkTicketRequest linkRequest);
 
     LinkUnlinkTicketResponse unlinkTicket(UnlinkTicketRequest linkRequest);
+
+    List<CodeContextSpan> getSpansForCodeLocation(String env, List<String> idsWithType);
 
     CodeLensOfMethodsResponse getCodeLensByMethods(CodeLensOfMethodsRequest codeLensOfMethodsRequest);
 }

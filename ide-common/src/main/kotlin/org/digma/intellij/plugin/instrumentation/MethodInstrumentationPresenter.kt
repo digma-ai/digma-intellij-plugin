@@ -21,10 +21,9 @@ class MethodInstrumentationPresenter(private val project: Project) {
         get() = (canInstrumentMethodResult?.failureCause as? MissingDependencyCause)?.dependency
 
     fun instrumentMethod(): Boolean {
-        return if (canInstrumentMethodResult != null)
-            project.service<InstrumentationService>().instrumentMethod(selectedMethodId, canInstrumentMethodResult!!) ?: false
-        else
-            false
+        return canInstrumentMethodResult?.let {
+            project.service<InstrumentationService>().instrumentMethod(selectedMethodId, it)
+        } ?: false
     }
 
     fun addDependencyToOtelLibAndRefresh() {

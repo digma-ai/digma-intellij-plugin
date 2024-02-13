@@ -1,7 +1,6 @@
 package org.digma.intellij.plugin.analytics;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.io.CharStreams;
 import okhttp3.Cache;
@@ -9,78 +8,37 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.ResponseBody;
 import org.digma.intellij.plugin.model.rest.codelens.CodeLensOfMethodsRequest;
+import okhttp3.*;
 import org.digma.intellij.plugin.model.rest.AboutResult;
 import org.digma.intellij.plugin.model.rest.codelens.CodeLensOfMethodsResponse;
+import org.digma.intellij.plugin.model.rest.codespans.CodeContextSpan;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
-import org.digma.intellij.plugin.model.rest.env.DeleteEnvironmentRequest;
-import org.digma.intellij.plugin.model.rest.env.DeleteEnvironmentResponse;
+import org.digma.intellij.plugin.model.rest.env.*;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
-import org.digma.intellij.plugin.model.rest.event.LatestCodeObjectEventsRequest;
-import org.digma.intellij.plugin.model.rest.event.LatestCodeObjectEventsResponse;
-import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
-import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsightsStatusResponse;
-import org.digma.intellij.plugin.model.rest.insights.CustomStartTimeInsightRequest;
-import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsRequest;
-import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse;
-import org.digma.intellij.plugin.model.rest.insights.InsightsOfSingleSpanRequest;
-import org.digma.intellij.plugin.model.rest.insights.InsightsOfSingleSpanResponse;
-import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
-import org.digma.intellij.plugin.model.rest.insights.LinkTicketRequest;
-import org.digma.intellij.plugin.model.rest.insights.LinkUnlinkTicketResponse;
-import org.digma.intellij.plugin.model.rest.insights.SpanHistogramQuery;
-import org.digma.intellij.plugin.model.rest.insights.UnlinkTicketRequest;
-import org.digma.intellij.plugin.model.rest.livedata.DurationLiveData;
-import org.digma.intellij.plugin.model.rest.livedata.DurationLiveDataRequest;
-import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigation;
-import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigationRequest;
-import org.digma.intellij.plugin.model.rest.notifications.GetUnreadNotificationsCountRequest;
-import org.digma.intellij.plugin.model.rest.notifications.NotificationsRequest;
-import org.digma.intellij.plugin.model.rest.notifications.SetReadNotificationsRequest;
-import org.digma.intellij.plugin.model.rest.notifications.UnreadNotificationsCountResponse;
-import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest;
-import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
+import org.digma.intellij.plugin.model.rest.event.*;
+import org.digma.intellij.plugin.model.rest.insights.*;
+import org.digma.intellij.plugin.model.rest.livedata.*;
+import org.digma.intellij.plugin.model.rest.navigation.*;
+import org.digma.intellij.plugin.model.rest.notifications.*;
+import org.digma.intellij.plugin.model.rest.recentactivity.*;
 import org.digma.intellij.plugin.model.rest.testing.LatestTestsOfSpanRequest;
-import org.digma.intellij.plugin.model.rest.usage.EnvUsageStatusResult;
-import org.digma.intellij.plugin.model.rest.usage.EnvsUsageStatusRequest;
-import org.digma.intellij.plugin.model.rest.user.UserUsageStatsRequest;
-import org.digma.intellij.plugin.model.rest.user.UserUsageStatsResponse;
-import org.digma.intellij.plugin.model.rest.version.PerformanceMetricsResponse;
-import org.digma.intellij.plugin.model.rest.version.VersionRequest;
-import org.digma.intellij.plugin.model.rest.version.VersionResponse;
+import org.digma.intellij.plugin.model.rest.usage.*;
+import org.digma.intellij.plugin.model.rest.user.*;
+import org.digma.intellij.plugin.model.rest.version.*;
 import retrofit2.Call;
 import retrofit2.Response;
-import retrofit2.Retrofit;
+import retrofit2.*;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import retrofit2.converter.scalars.ScalarsConverterFactory;
-import retrofit2.http.Body;
-import retrofit2.http.GET;
 import retrofit2.http.Headers;
-import retrofit2.http.POST;
-import retrofit2.http.PUT;
-import retrofit2.http.Path;
-import retrofit2.http.Query;
-import retrofit2.http.QueryMap;
-import retrofit2.http.Streaming;
+import retrofit2.http.*;
 
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-import java.io.Closeable;
-import java.io.IOException;
-import java.io.Reader;
-import java.io.UncheckedIOException;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
+import javax.net.ssl.*;
+import java.io.*;
+import java.security.*;
 import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -273,6 +231,12 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     public CodeLensOfMethodsResponse getCodeLensByMethods(CodeLensOfMethodsRequest codeLensOfMethodsRequest)
     {
         return execute(() -> client.analyticsProvider.getCodeLensByMethods(codeLensOfMethodsRequest));
+    }
+
+    @Override
+    public List<CodeContextSpan> getSpansForCodeLocation(String env, List<String> idsWithType) {
+
+        return execute(() -> client.analyticsProvider.getSpansForCodeLocation(env, idsWithType));
     }
 
     @Override
@@ -694,6 +658,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @POST("/CodeAnalytics/codeObjects/lens")
         Call<CodeLensOfMethodsResponse> getCodeLensByMethods(@Body CodeLensOfMethodsRequest codeLensOfMethodsRequest);
+
+        @Headers({
+                "Accept: text/plain",
+                "Content-Type:application/json"
+        })
+        @GET("/CodeAnalytics/code/assets")
+        Call<List<CodeContextSpan>> getSpansForCodeLocation(@Query("environment") String env, @Query("codeObjects") List<String> codeObjectIds);
     }
 
 }

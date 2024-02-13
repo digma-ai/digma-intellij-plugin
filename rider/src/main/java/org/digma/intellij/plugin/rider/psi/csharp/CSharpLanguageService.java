@@ -15,14 +15,13 @@ import com.jetbrains.rider.projectView.SolutionLifecycleHost;
 import kotlin.Pair;
 import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.common.*;
-import org.digma.intellij.plugin.editor.EditorUtils;
+import org.digma.intellij.plugin.editor.*;
 import org.digma.intellij.plugin.env.Env;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.*;
 import org.digma.intellij.plugin.psi.*;
 import org.digma.intellij.plugin.rider.protocol.*;
-import org.digma.intellij.plugin.ui.CaretContextService;
 import org.jetbrains.annotations.*;
 
 import java.util.*;

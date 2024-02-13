@@ -41,6 +41,7 @@ import org.digma.intellij.plugin.common.runInReadAccess
 import org.digma.intellij.plugin.common.runInReadAccessWithResult
 import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.document.DocumentInfoService
+import org.digma.intellij.plugin.editor.CaretContextService
 import org.digma.intellij.plugin.editor.EditorUtils
 import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
@@ -67,7 +68,6 @@ import org.digma.intellij.plugin.psi.BuildDocumentInfoProcessContext
 import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.psi.PsiFileNotFountException
 import org.digma.intellij.plugin.psi.PsiUtils
-import org.digma.intellij.plugin.ui.CaretContextService
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.UMethod

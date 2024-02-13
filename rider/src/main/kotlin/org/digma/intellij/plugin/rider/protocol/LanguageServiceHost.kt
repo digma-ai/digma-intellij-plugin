@@ -22,6 +22,7 @@ import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.isValidVirtualFile
 import org.digma.intellij.plugin.document.DocumentInfoService
+import org.digma.intellij.plugin.editor.CaretContextService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
@@ -31,7 +32,6 @@ import org.digma.intellij.plugin.psi.BuildDocumentInfoProcessContext
 import org.digma.intellij.plugin.psi.LanguageServiceLocator
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.digma.intellij.plugin.rider.psi.csharp.CSharpLanguageUtil
-import org.digma.intellij.plugin.ui.CaretContextService
 import kotlin.random.Random
 
 @Suppress("LightServiceMigrationCode")

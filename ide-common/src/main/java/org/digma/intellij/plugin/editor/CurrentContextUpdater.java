@@ -12,7 +12,6 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
 import org.digma.intellij.plugin.psi.*;
-import org.digma.intellij.plugin.ui.CaretContextService;
 import org.jetbrains.annotations.NotNull;
 
 /**

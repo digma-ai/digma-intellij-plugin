@@ -24,6 +24,15 @@ fun executeWindowPostMessageJavaScript(browser: CefBrowser, message: String) {
         browser.url,
         0
     )
+
+    //todo: temp
+    if (message.contains("SET_CODE_CONTEXT")) {
+        println("*********************************")
+        println("*********************************")
+        println("*********************************")
+        println(message)
+    }
+
 }
 
 

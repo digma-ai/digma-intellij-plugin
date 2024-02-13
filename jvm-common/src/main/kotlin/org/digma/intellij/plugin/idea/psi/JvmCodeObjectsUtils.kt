@@ -11,6 +11,7 @@ import org.jetbrains.uast.UFile
 import org.jetbrains.uast.ULiteralExpression
 import org.jetbrains.uast.ULocalVariable
 import org.jetbrains.uast.UMethod
+import org.jetbrains.uast.UPolyadicExpression
 import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.getContainingUClass
 import org.jetbrains.uast.getParentOfType
@@ -92,6 +93,18 @@ fun getExpressionValue(uExpression: UExpression): String? {
         return getReferenceExpressionValue(uExpression)
     } else if (uExpression is ULiteralExpression) {
         return getLiteralValue(uExpression)
+    } else if (uExpression is UPolyadicExpression) {
+        return getValueFromPolyadicExpression(uExpression)
+    }
+    return null
+}
+
+
+fun getValueFromPolyadicExpression(uExpression: UPolyadicExpression): String? {
+    //todo: full support for UPolyadicExpression
+    val operands = uExpression.operands
+    if (operands.size == 1) {
+        return getExpressionValue(operands.first())
     }
     return null
 }

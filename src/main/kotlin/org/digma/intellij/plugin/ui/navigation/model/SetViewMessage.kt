@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.ui.jcef.model
+package org.digma.intellij.plugin.ui.navigation.model
 
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
 import org.digma.intellij.plugin.navigation.View

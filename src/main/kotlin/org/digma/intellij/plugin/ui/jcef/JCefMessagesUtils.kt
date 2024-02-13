@@ -9,7 +9,6 @@ import org.digma.intellij.plugin.docker.DigmaInstallationStatus
 import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
-import org.digma.intellij.plugin.navigation.View
 import org.digma.intellij.plugin.ui.jcef.model.ApiUrlPayload
 import org.digma.intellij.plugin.ui.jcef.model.DigmaEngineStatusMessage
 import org.digma.intellij.plugin.ui.jcef.model.IsMicrometerPayload
@@ -22,8 +21,6 @@ import org.digma.intellij.plugin.ui.jcef.model.SetEnvironmentsMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetEnvironmentsMessagePayload
 import org.digma.intellij.plugin.ui.jcef.model.SetIsMicrometerMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetUserEmailMessage
-import org.digma.intellij.plugin.ui.jcef.model.SetViewMessage
-import org.digma.intellij.plugin.ui.jcef.model.SetViewMessagePayload
 import org.digma.intellij.plugin.ui.jcef.model.UserEmailPayload
 
 
@@ -99,12 +96,6 @@ fun sendCurrentEnvironment(cefBrowser: CefBrowser, environment: Env) {
     )
 }
 
-fun sendCurrentViewsState(cefBrowser: CefBrowser, views: List<View>) {
-    serializeAndExecuteWindowPostMessageJavaScript(
-        cefBrowser,
-        SetViewMessage(SetViewMessagePayload(views))
-    )
-}
 
 fun sendObservabilityEnabledMessage(cefBrowser: CefBrowser, isObservabilityEnabled: Boolean) {
     serializeAndExecuteWindowPostMessageJavaScript(

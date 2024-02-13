@@ -37,6 +37,7 @@ class NavigationPanel(private val project: Project) : DisposablePanel() {
 
         jCefComponent?.let {
             NavigationService.getInstance(project).setJCefComponent(it)
+            CodeButtonCaretContextService.getInstance(project).setJCefComponent(it)
         }
 
     }

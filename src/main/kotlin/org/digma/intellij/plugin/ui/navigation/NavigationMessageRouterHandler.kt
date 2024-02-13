@@ -9,7 +9,6 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.navigation.MainContentViewSwitcher
 import org.digma.intellij.plugin.navigation.View
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
-import org.digma.intellij.plugin.ui.jcef.sendCurrentViewsState
 
 class NavigationMessageRouterHandler(project: Project) : BaseMessageRouterHandler(project) {
 
@@ -31,6 +30,13 @@ class NavigationMessageRouterHandler(project: Project) : BaseMessageRouterHandle
 
             "NAVIGATION/CHANGE_ENVIRONMENT" -> {
                 changeEnvironment(requestJsonNode)
+            }
+            "NAVIGATION/AUTOFIX_MISSING_DEPENDENCY" -> {
+                fixMissingDependencies(requestJsonNode)
+            }
+
+            "NAVIGATION/ADD_ANNOTATION" -> {
+                addAnnotation(requestJsonNode)
             }
 
             else -> {
@@ -65,6 +71,23 @@ class NavigationMessageRouterHandler(project: Project) : BaseMessageRouterHandle
             viewId?.let { vuid ->
                 MainContentViewSwitcher.getInstance(project).showViewById(vuid)
             }
+        }
+    }
+
+
+    private fun fixMissingDependencies(requestJsonNode: JsonNode) {
+        val payload = getPayloadFromRequest(requestJsonNode)
+        payload?.let {
+            val methodId = payload.get("methodId").asText()
+            NavigationService.getInstance(project).fixMissingDependencies(methodId)
+        }
+    }
+
+    private fun addAnnotation(requestJsonNode: JsonNode) {
+        val payload = getPayloadFromRequest(requestJsonNode)
+        payload?.let {
+            val methodId = payload.get("methodId").asText()
+            NavigationService.getInstance(project).addAnnotation(methodId)
         }
     }
 

@@ -77,7 +77,9 @@ class NavigationService(private val project: Project) : Disposable {
             while (isActive && !canInstrument) {
 
                 delay(50)
-                methodInstrumentationPresenter.update(methodInstrumentationPresenter.selectedMethodId)
+                runInReadAccess {
+                    methodInstrumentationPresenter.update(methodInstrumentationPresenter.selectedMethodId)
+                }
                 canInstrument = methodInstrumentationPresenter.canInstrumentMethod
             }
 

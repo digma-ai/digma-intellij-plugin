@@ -7,10 +7,11 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor;
 import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.document.*;
+import org.digma.intellij.plugin.editor.CaretContextService;
 import org.digma.intellij.plugin.insights.InsightsViewOrchestrator;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.*;
-import org.digma.intellij.plugin.ui.*;
+import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
 
 /**
  * A service to implement the interactions between listeners and UI components.

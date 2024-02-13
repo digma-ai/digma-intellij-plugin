@@ -45,7 +45,7 @@
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.MainToolWindowCardsController"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.service.EditorInteractionService"
-                        serviceInterface="org.digma.intellij.plugin.ui.CaretContextService"/>
+                        serviceInterface="org.digma.intellij.plugin.editor.CaretContextService"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.analytics.AnalyticsService"/>
 

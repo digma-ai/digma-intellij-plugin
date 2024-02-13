@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.ui;
+package org.digma.intellij.plugin.editor;
 
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.project.Project;

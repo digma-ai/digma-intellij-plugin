@@ -18,7 +18,7 @@ import org.digma.intellij.plugin.psi.PsiUtils
 import org.jetbrains.kotlin.idea.stubindex.KotlinTopLevelFunctionFqnNameIndex
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.uast.UCallExpression
-import org.jetbrains.uast.ULiteralExpression
+import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.getContainingUFile
 import org.jetbrains.uast.getContainingUMethod
@@ -144,7 +144,7 @@ class KtorFrameworkEndpointDiscovery(private val project: Project) : EndpointDis
         //todo: first arg may be Regex for io/ktor/server/routing/RegexRouting.kt or Resource for io/ktor/server/resources/Routing.kt
 
         val firstArg = callExpression.valueArguments.firstOrNull()
-        return if (firstArg is ULiteralExpression) {
+        return if (firstArg is UExpression) {
             getExpressionValue(firstArg)
         } else {
             ""

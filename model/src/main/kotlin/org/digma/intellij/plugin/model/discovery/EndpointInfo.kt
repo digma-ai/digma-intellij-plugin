@@ -13,6 +13,10 @@ data class EndpointInfo(
     override fun idWithType(): String {
         return "endpoint:$id"
     }
+
+    fun buildDisplayName(): String {
+        return id.substringAfterLast(":")
+    }
 }
 
 

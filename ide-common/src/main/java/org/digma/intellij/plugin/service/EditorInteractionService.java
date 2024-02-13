@@ -17,6 +17,7 @@ import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
  * A service to implement the interactions between listeners and UI components.
  * All work should be done on EDT.
  */
+@Deprecated // not using this logic anymore
 public class EditorInteractionService implements CaretContextService, Disposable {
 
     private final Logger logger = Logger.getInstance(EditorInteractionService.class);
@@ -38,9 +39,6 @@ public class EditorInteractionService implements CaretContextService, Disposable
         insightsViewOrchestrator = project.getService(InsightsViewOrchestrator.class);
     }
 
-    public static CaretContextService getInstance(Project project) {
-        return project.getService(CaretContextService.class);
-    }
 
     @Override
     public void contextChanged(MethodUnderCaret methodUnderCaret) {

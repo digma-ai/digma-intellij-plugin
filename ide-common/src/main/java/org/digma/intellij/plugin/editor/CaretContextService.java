@@ -7,6 +7,7 @@ import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
 /**
  * CaretContextService is an orchestration service that handles a context change. context change is when the cursor is
  * moving from method to method.
+ * there must be only one service implementing this interface.
  */
 public interface CaretContextService extends Disposable {
 

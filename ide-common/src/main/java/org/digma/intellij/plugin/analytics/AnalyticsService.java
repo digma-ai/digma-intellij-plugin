@@ -18,6 +18,7 @@ import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.digma.intellij.plugin.model.discovery.SpanInfo;
 import org.digma.intellij.plugin.model.discovery.*;
 import org.digma.intellij.plugin.model.rest.AboutResult;
+import org.digma.intellij.plugin.model.rest.codespans.CodeContextSpan;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.env.*;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
@@ -225,6 +226,14 @@ public class AnalyticsService implements Disposable {
         var env = getCurrentEnvironment();
         Log.log(LOGGER::debug, "Requesting insights for span {}", spanId);
         return executeCatching(() -> analyticsProviderProxy.getInsightsForSingleSpan(new InsightsOfSingleSpanRequest(env, CodeObjectsUtil.addSpanTypeToId(spanId))));
+    }
+
+
+    @NotNull
+    public List<CodeContextSpan> getSpansForCodeLocation(@NotNull List<String> idsWithType) throws AnalyticsServiceException {
+        var env = getCurrentEnvironment();
+        Log.log(LOGGER::debug, "Requesting spans for code objects {}", idsWithType);
+        return executeCatching(() -> analyticsProviderProxy.getSpansForCodeLocation(env, idsWithType));
     }
 
 
@@ -491,6 +500,7 @@ public class AnalyticsService implements Disposable {
                 new Class[]{AnalyticsProvider.class, Closeable.class},
                 new AnalyticsInvocationHandler(obj));
     }
+
 
     /**
      * A proxy for cross-cutting concerns across all api methods.

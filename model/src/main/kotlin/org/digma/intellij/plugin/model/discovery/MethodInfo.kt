@@ -124,6 +124,20 @@ data class MethodInfo(
         innerEndpoints.add(endpoint)
     }
 
+    fun buildDisplayName(): String {
+
+        val methodName = id.substringAfter("\$_$")
+        val className = id.substringBefore("\$_$")
+
+        if (methodName == className) {
+            return methodName
+        }
+
+        val classSimpleName = className.substringAfterLast(".")
+
+        return classSimpleName.plus(".").plus(methodName)
+    }
+
 
     interface AdditionalIdsProvider {
         fun provideAdditionalIdsWithType(methodInfo: MethodInfo): List<String>

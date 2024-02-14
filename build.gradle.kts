@@ -351,7 +351,8 @@ tasks {
                 "webview/tests/testsTemplate.ftl",
                 "webview/notifications/notificationstemplate.ftl",
                 "webview/assets/assetstemplate.ftl",
-                "webview/navigation/navigationtemplate.ftl"
+                "webview/navigation/navigationtemplate.ftl",
+                "webview/insights/insightstemplate.ftl"
             )
         ) {
             filter<ReplaceTokens>("tokens" to tokens)

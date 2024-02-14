@@ -30,6 +30,7 @@ interface InsightsService : Disposable {
     fun goToTraceComparison(traceId1: String, traceName1: String, traceId2: String, traceName2: String, insightType: InsightType)
     fun addAnnotation(methodId: String)
     fun fixMissingDependencies(methodId: String)
+    fun setJCefComponent(jcefJComponent: Any)
 
     companion object {
         @JvmStatic

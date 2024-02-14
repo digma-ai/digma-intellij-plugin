@@ -3,11 +3,8 @@ package org.digma.intellij.plugin.insights;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.Disposer;
-import com.intellij.ui.jcef.*;
+import com.intellij.ui.jcef.JBCefApp;
 import org.cef.CefApp;
-import org.cef.browser.*;
-import org.cef.handler.CefLifeSpanHandlerAdapter;
 import org.digma.intellij.plugin.analytics.*;
 import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.document.*;
@@ -25,12 +22,11 @@ import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.refreshInsightsTask.RefreshService;
 import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.common.Laf;
-import org.digma.intellij.plugin.ui.jcef.DownloadHandlerAdapter;
+import org.digma.intellij.plugin.ui.jcef.JCefComponent;
 import org.digma.intellij.plugin.ui.list.insights.JaegerUtilKt;
 import org.digma.intellij.plugin.ui.model.*;
 import org.digma.intellij.plugin.ui.recentactivity.RecentActivityService;
 import org.digma.intellij.plugin.ui.service.InsightsService;
-import org.digma.intellij.plugin.ui.settings.*;
 import org.digma.intellij.plugin.ui.tests.TestsService;
 import org.jetbrains.annotations.*;
 
@@ -45,6 +41,9 @@ import static org.digma.intellij.plugin.ui.jcef.JCefMessagesUtilsKt.sendUserEmai
 public final class InsightsServiceImpl implements InsightsService, Disposable {
 
     private final Logger logger = Logger.getInstance(InsightsServiceImpl.class);
+
+
+    private JCefComponent jCefComponent = null;
 
     //todo: not implemented yet
     private static final String EMPTY_SERVICE_NAME = "";
@@ -62,10 +61,6 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
     static final Long MAX_SECONDS_WAIT_FOR_DEPENDENCY = 6L;
     static final Long WAIT_FOR_DEPENDENCY_INTERVAL_MILLIS = 250L;
 
-    private JBCefBrowser jbCefBrowser;
-    private CefMessageRouter cefMessageRouter;
-    private InsightsMessageRouterHandler messageHandler;
-
     private final ReentrantLock updateLock = new ReentrantLock();
 
 
@@ -77,48 +72,6 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
         project.getService(TestsService.class);
 
         if (JBCefApp.isSupported()) {
-
-            jbCefBrowser = JBCefBrowserBuilderCreator.create()
-                    .setUrl("http://" + DOMAIN_NAME + "/index.html")
-                    .build();
-
-            var jbCefClient = jbCefBrowser.getJBCefClient();
-            cefMessageRouter = CefMessageRouter.create();
-            messageHandler = new InsightsMessageRouterHandler(project, jbCefBrowser);
-            cefMessageRouter.addHandler(messageHandler, true);
-            jbCefClient.getCefClient().addDownloadHandler(new DownloadHandlerAdapter());
-            jbCefClient.getCefClient().addMessageRouter(cefMessageRouter);
-
-
-            var lifeSpanHandler = new CefLifeSpanHandlerAdapter() {
-                @Override
-                public void onAfterCreated(CefBrowser browser) {
-                    registerAppSchemeHandler(project);
-                }
-            };
-
-            jbCefBrowser.getJBCefClient().addLifeSpanHandler(lifeSpanHandler, jbCefBrowser.getCefBrowser());
-
-            Disposer.register(this, () -> jbCefBrowser.getJBCefClient().removeLifeSpanHandler(lifeSpanHandler, jbCefBrowser.getCefBrowser()));
-
-
-            ApplicationUISettingsChangeNotifier.getInstance(project).addSettingsChangeListener(new SettingsChangeListener() {
-                @Override
-                public void systemFontChange(@NotNull String fontName) {
-                    messageHandler.sendRequestToChangeFont(fontName);
-                }
-
-                @Override
-                public void systemThemeChange(@NotNull Theme theme) {
-                    messageHandler.sendRequestToChangeUiTheme(theme);
-                }
-
-                @Override
-                public void editorFontChange(@NotNull String fontName) {
-                    messageHandler.sendRequestToChangeCodeFont(fontName);
-                }
-            });
-
 
             project.getMessageBus().connect(this).subscribe(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC, new EnvironmentChanged() {
                 @Override
@@ -144,6 +97,14 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
             });
         }
     }
+
+
+    @Override
+    public void setJCefComponent(@NotNull Object jcefJComponent) {
+        //this casting must work, its because JcefComponent is not visible to InsightsService
+        this.jCefComponent = (JCefComponent) jcefJComponent;
+    }
+
 
     @Override
     public void dispose() {
@@ -678,5 +639,6 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
         }
         return scope;
     }
+
 
 }

@@ -30,7 +30,6 @@ import org.digma.intellij.plugin.service.EditorService
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import org.digma.intellij.plugin.ui.service.ErrorsViewService
-import org.digma.intellij.plugin.ui.service.InsightsService
 import org.digma.intellij.plugin.ui.service.InsightsViewService
 
 /**
@@ -92,7 +91,8 @@ class InsightsViewOrchestrator(val project: Project) {
 
             val stopWatch = stopWatchStart()
 
-            project.service<InsightsService>().updateInsights(span)
+            //TODODO: CHANE SCOPE
+            //project.service<InsightsService>().updateInsights(span)
 
             //clear the latest method so that if user clicks on the editor again after watching code less insights the context will change
             project.service<CurrentContextUpdater>().clearLatestMethod()
@@ -128,8 +128,8 @@ class InsightsViewOrchestrator(val project: Project) {
         Backgroundable.ensurePooledThread {
 
             val methodInfo: MethodInfo = tryFindMethodInfo(CodeObjectsUtil.stripMethodPrefix(methodCodeObjectId))
-
-            project.service<InsightsService>().updateInsights(methodInfo)
+//TODODO: CHANE SCOPE
+            // project.service<InsightsService>().updateInsights(methodInfo)
 
             EDT.ensureEDT {
                 project.service<ErrorsViewOrchestrator>().closeErrorDetails()
@@ -188,7 +188,8 @@ class InsightsViewOrchestrator(val project: Project) {
 
         Backgroundable.ensurePooledThread {
 
-            InsightsService.getInstance(project).updateInsights(methodInfo)
+            //TODODO: CHANE SCOPE
+//            InsightsService.getInstance(project).updateInsights(methodInfo)
 
             EDT.ensureEDT {
                 project.service<ErrorsViewOrchestrator>().closeErrorDetails()
@@ -215,7 +216,8 @@ class InsightsViewOrchestrator(val project: Project) {
 
         Backgroundable.ensurePooledThread {
 
-            project.service<InsightsService>().updateInsights(endpointInfo)
+            //TODODO: CHANE SCOPE
+//            project.service<InsightsService>().updateInsights(endpointInfo)
 
             EDT.ensureEDT {
                 project.service<ErrorsViewOrchestrator>().closeErrorDetails()
@@ -356,7 +358,8 @@ class InsightsViewOrchestrator(val project: Project) {
                 val documentInfo: DocumentInfoContainer? = project.service<DocumentInfoService>().getDocumentInfo(methodUnderCaret)
                 documentInfo?.let {
 
-                    project.service<InsightsService>().updateInsights(methodInfo)
+                    //TODODO: CHANE SCOPE
+//                    project.service<InsightsService>().updateInsights(methodInfo)
 
                     val methodHasNewInsights =
                         documentInfo.loadInsightsForMethod(methodUnderCaret.id) // might be long call since going to the backend
@@ -374,7 +377,8 @@ class InsightsViewOrchestrator(val project: Project) {
                 val documentInfo: DocumentInfoContainer? = project.service<DocumentInfoService>().getDocumentInfo(methodUnderCaret)
                 documentInfo?.let {
 
-                    project.service<InsightsService>().updateInsights(endpointInfo)
+                    //TODODO: CHANE SCOPE
+//                    project.service<InsightsService>().updateInsights(endpointInfo)
 
                     val methodHasNewInsights =
                         documentInfo.loadInsightsForMethod(methodUnderCaret.id) // might be long call since going to the backend
@@ -411,7 +415,8 @@ class InsightsViewOrchestrator(val project: Project) {
         currentState.set(ViewState.DocumentPreviewList)
 
         Backgroundable.ensurePooledThread {
-            project.service<InsightsService>().showDocumentPreviewList(documentInfoContainer, fileUri)
+            //TODODO: CHANE SCOPE
+//            project.service<InsightsService>().showDocumentPreviewList(documentInfoContainer, fileUri)
             project.service<InsightsViewService>().showDocumentPreviewList(documentInfoContainer, fileUri)
             project.service<ErrorsViewService>().showDocumentPreviewList(documentInfoContainer, fileUri)
 

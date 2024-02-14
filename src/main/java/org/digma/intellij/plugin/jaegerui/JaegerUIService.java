@@ -11,6 +11,7 @@ import org.digma.intellij.plugin.jaegerui.model.incoming.*;
 import org.digma.intellij.plugin.jaegerui.model.outgoing.*;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightType;
+import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator;
 import org.digma.intellij.plugin.posthog.*;
 import org.digma.intellij.plugin.psi.*;
 import org.digma.intellij.plugin.scope.*;
@@ -201,7 +202,7 @@ public class JaegerUIService {
     }
 
 
-    public void goToSpanAndNavigateToCode(GoToSpanMessage goToSpanMessage) {
+    public void navigateToCode(GoToSpanMessage goToSpanMessage) {
 
         Log.log(logger::debug, project, "goToSpan request {}", goToSpanMessage);
 
@@ -210,7 +211,9 @@ public class JaegerUIService {
         Log.log(logger::debug, project, "calling showInsightsForSpanOrMethodAndNavigateToCode from goToSpan for {}", span);
 
         ActivityMonitor.getInstance(project).registerSpanLinkClicked(MonitoredPanel.Jaeger);
-        ScopeManager.getInstance(project).changeScope(new SpanScope(span.spanId()));
+
+        CodeNavigator.getInstance(project).maybeNavigateToSpanOrMethod(span.spanCodeObjectId(), span.methodCodeObjectId());
+
     }
 
 

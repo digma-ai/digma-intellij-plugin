@@ -7,7 +7,6 @@ import freemarker.template.*;
 import org.apache.commons.collections.CollectionUtils;
 import org.digma.intellij.plugin.analytics.*;
 import org.digma.intellij.plugin.common.*;
-import org.digma.intellij.plugin.insights.InsightsViewOrchestrator;
 import org.digma.intellij.plugin.jaegerui.model.incoming.*;
 import org.digma.intellij.plugin.jaegerui.model.outgoing.*;
 import org.digma.intellij.plugin.log.Log;
@@ -15,6 +14,7 @@ import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.navigation.MainContentViewSwitcher;
 import org.digma.intellij.plugin.posthog.*;
 import org.digma.intellij.plugin.psi.*;
+import org.digma.intellij.plugin.scope.*;
 import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
 import org.digma.intellij.plugin.ui.model.TraceSample;
@@ -214,12 +214,7 @@ public class JaegerUIService {
             MainToolWindowCardsController.getInstance(project).closeAllNotificationsIfShowing();
             MainContentViewSwitcher.getInstance(project).showInsights();
             ActivityMonitor.getInstance(project).registerSpanLinkClicked(MonitoredPanel.Jaeger);
-            var success = project.getService(InsightsViewOrchestrator.class).showInsightsForSpanOrMethodAndNavigateToCode(span.spanId(), span.methodId());
-            if (success) {
-                Log.log(logger::debug, project, "showInsightsForSpanOrMethodAndNavigateToCode did navigate to span {}", span);
-            } else {
-                Log.log(logger::warn, project, "could not navigate to span in goToSpan for {}", goToSpanMessage);
-            }
+            ScopeManager.getInstance(project).changeScope(new SpanScope(span.spanId()));
         });
     }
 
@@ -233,7 +228,7 @@ public class JaegerUIService {
         //if we're here then code location was not found
         ActivityMonitor.getInstance(project).registerSpanLinkClicked(MonitoredPanel.Jaeger);
         MainToolWindowCardsController.getInstance(project).closeAllNotificationsIfShowing();
-        project.getService(InsightsViewOrchestrator.class).showInsightsForCodelessSpan(span.spanCodeObjectId());
+        ScopeManager.getInstance(project).changeScope(new SpanScope(span.spanCodeObjectId()));
     }
 
     public Map<String, SpanData> getResolvedSpans(SpansMessage spansMessage) {

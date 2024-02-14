@@ -10,15 +10,15 @@ import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.env.EnvironmentsSupplier
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
-import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult
-import org.digma.intellij.plugin.navigation.NavigationModel
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator
 import org.digma.intellij.plugin.notifications.NotificationUtil
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.MonitoredPanel
+import org.digma.intellij.plugin.scope.ScopeManager
+import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.list.insights.openJaegerFromRecentActivity
 import org.digma.intellij.plugin.ui.recentactivity.model.CloseLiveViewMessage
@@ -86,7 +86,7 @@ class RecentActivityService(val project: Project) : Disposable {
                         val environmentsSupplier: EnvironmentsSupplier = project.service<AnalyticsService>().environment
                         environmentsSupplier.setCurrent(payload.environment, false) {
                             EDT.ensureEDT {
-                                project.service<InsightsViewOrchestrator>().showInsightsForSpanOrMethodAndNavigateToCode(spanId, methodId)
+                                ScopeManager.getInstance(project).changeScope(SpanScope(spanId))
                             }
                         }
                     } else {
@@ -95,10 +95,7 @@ class RecentActivityService(val project: Project) : Disposable {
                         val environmentsSupplier: EnvironmentsSupplier = project.service<AnalyticsService>().environment
                         environmentsSupplier.setCurrent(payload.environment, false) {
                             EDT.ensureEDT {
-                                project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(payload.span.spanCodeObjectId)
-                                if (project.service<CodeNavigator>().maybeNavigateToEndpointBySpan(spanId)) {
-                                    project.service<NavigationModel>().showCodeNavigation.set(false)
-                                }
+                                ScopeManager.getInstance(project).changeScope(SpanScope(payload.span.spanCodeObjectId))
                             }
                         }
                     }
@@ -110,7 +107,6 @@ class RecentActivityService(val project: Project) : Disposable {
             }
         }
     }
-
 
 
     fun processRecentActivityGoToTraceRequest(payload: RecentActivityEntrySpanForTracePayload?) {

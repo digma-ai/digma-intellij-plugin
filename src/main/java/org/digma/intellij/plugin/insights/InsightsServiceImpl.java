@@ -10,6 +10,7 @@ import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.refreshInsightsTask.RefreshService;
+import org.digma.intellij.plugin.scope.*;
 import org.digma.intellij.plugin.ui.common.Laf;
 import org.digma.intellij.plugin.ui.list.insights.JaegerUtilKt;
 import org.digma.intellij.plugin.ui.recentactivity.RecentActivityService;
@@ -35,7 +36,7 @@ public abstract class InsightsServiceImpl implements Disposable {
 
     public void showInsight(@NotNull String spanId) {
         Log.log(logger::debug, project, "showInsight called {}", spanId);
-        project.getService(InsightsViewOrchestrator.class).showInsightsForCodelessSpan(spanId);
+        ScopeManager.getInstance(project).changeScope(new SpanScope(spanId));
     }
 
 

@@ -6,6 +6,7 @@ import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
+import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
@@ -21,8 +22,8 @@ import org.digma.intellij.plugin.idea.psi.discovery.endpoint.JaxrsJavaxFramework
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.KtorFrameworkEndpointDiscovery
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.MicronautFrameworkEndpointDiscovery
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.SpringBootFrameworkEndpointDiscovery
-import org.digma.intellij.plugin.instrumentation.CanInstrumentMethodResult
-import org.digma.intellij.plugin.instrumentation.JvmCanInstrumentMethodResult
+import org.digma.intellij.plugin.instrumentation.InstrumentationProvider
+import org.digma.intellij.plugin.instrumentation.MethodObservabilityInfo
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.jetbrains.kotlin.idea.KotlinLanguage
@@ -32,12 +33,15 @@ import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtFunction
 import org.jetbrains.kotlin.psi.KtImportDirective
+import org.jetbrains.kotlin.psi.KtImportList
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.KtPsiFactory
 import org.jetbrains.kotlin.resolve.ImportPath
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UMethod
+import org.jetbrains.uast.getContainingUFile
 import org.jetbrains.uast.toUElementOfType
+import java.util.Objects
 import java.util.function.Supplier
 
 @Suppress("LightServiceMigrationCode")
@@ -112,25 +116,42 @@ class KotlinLanguageService(project: Project) : AbstractJvmLanguageService(proje
     }
 
 
-    override fun instrumentMethod(result: CanInstrumentMethodResult): Boolean {
-        if (result !is JvmCanInstrumentMethodResult) {
-            Log.log(logger::warn, "instrumentMethod was called with failing result from canInstrumentMethod")
-            return false
-        }
+    override fun instrumentMethod(methodObservabilityInfo: MethodObservabilityInfo): Boolean {
 
         try {
-            if (result.containingFile.sourcePsi is KtFile && result.uMethod.sourcePsi is KtFunction) {
 
-                val ktFile: KtFile = result.containingFile.sourcePsi as KtFile
-                val ktFunction: KtFunction = result.uMethod.sourcePsi as KtFunction
-                val methodId: String = result.methodId
-                val withSpanClass: PsiClass = result.withSpanClass
+            if (methodObservabilityInfo.hasMissingDependency || methodObservabilityInfo.annotationClassFqn == null) {
+                Log.log(logger::warn, "instrumentMethod was called with failing result from canInstrumentMethod")
+                return false
+            }
+
+            val uMethod = findMethodByMethodCodeObjectId(methodObservabilityInfo.methodId)
+            //will be caught here so that ErrorReporter will report it
+            Objects.requireNonNull(uMethod, "can't instrument method,can't find psi method for ${methodObservabilityInfo.methodId}")
+
+            uMethod as UMethod
+
+            val ktFile = uMethod.getContainingUFile()?.sourcePsi
+            val ktFunction = uMethod.sourcePsi
+            val annotationFqn = methodObservabilityInfo.annotationClassFqn
+
+
+            if (ktFile is KtFile && ktFunction is KtFunction && annotationFqn != null) {
+
+                val withSpanClass: PsiClass? = JavaPsiFacade.getInstance(project).findClass(annotationFqn, GlobalSearchScope.allScope(project))
+                //will be caught here so that ErrorReporter will report it
+                Objects.requireNonNull(
+                    withSpanClass,
+                    "can't instrument method,can't find annotation class  ${methodObservabilityInfo.annotationClassFqn}"
+                )
+
+                withSpanClass as PsiClass
 
                 val importList = ktFile.importList
-                if (importList == null) {
-                    Log.log(logger::warn, "Failed to get ImportList from PsiFile (methodId: {})", methodId)
-                    return false
-                }
+                //will be caught here so that ErrorReporter will report it
+                Objects.requireNonNull(importList, "Failed to get ImportList from PsiFile (methodId: ${methodObservabilityInfo.methodId})")
+
+                importList as KtImportList
 
                 WriteCommandAction.runWriteCommandAction(project) {
                     val ktPsiFactory = KtPsiFactory(project)
@@ -174,4 +195,8 @@ class KotlinLanguageService(project: Project) : AbstractJvmLanguageService(proje
         )
     }
 
+
+    override fun getInstrumentationProvider(): InstrumentationProvider {
+        return KotlinInstrumentationProvider(project, this)
+    }
 }

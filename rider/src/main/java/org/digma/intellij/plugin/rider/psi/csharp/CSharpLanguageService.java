@@ -18,6 +18,7 @@ import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.editor.*;
 import org.digma.intellij.plugin.env.Env;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
+import org.digma.intellij.plugin.instrumentation.*;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.*;
 import org.digma.intellij.plugin.psi.*;
@@ -289,5 +290,10 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
     @Override
     public @Nullable PsiElement getPsiElementForClassByName(@NotNull String className) {
         return null;
+    }
+
+    @Override
+    public @NotNull InstrumentationProvider getInstrumentationProvider() {
+        return new NoOpInstrumentationProvider();
     }
 }

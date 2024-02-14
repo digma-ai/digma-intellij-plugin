@@ -10,6 +10,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import kotlin.Pair;
 import org.digma.intellij.plugin.env.Env;
+import org.digma.intellij.plugin.instrumentation.*;
 import org.digma.intellij.plugin.model.discovery.*;
 import org.jetbrains.annotations.*;
 
@@ -118,6 +119,11 @@ public class NoOpLanguageService implements LanguageService {
     @Override
     public @Nullable PsiElement getPsiElementForClassByName(@NotNull String className) {
         return null;
+    }
+
+    @Override
+    public @NotNull InstrumentationProvider getInstrumentationProvider() {
+        return new NoOpInstrumentationProvider();
     }
 
     @Override

@@ -7,9 +7,9 @@ import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.analytics.*;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.dashboard.incoming.GoToSpan;
-import org.digma.intellij.plugin.insights.InsightsViewOrchestrator;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.posthog.*;
+import org.digma.intellij.plugin.scope.*;
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
 import org.jetbrains.annotations.NotNull;
 
@@ -89,7 +89,7 @@ public final class DashboardService {
         EDT.ensureEDT(() -> {
             MainToolWindowCardsController.getInstance(project).closeAllNotificationsIfShowing();
             ActivityMonitor.getInstance(project).registerSpanLinkClicked(MonitoredPanel.Dashboard);
-            project.getService(InsightsViewOrchestrator.class).showInsightsForCodelessSpan(span.spanCodeObjectId());
+            ScopeManager.getInstance(project).changeScope(new SpanScope(span.spanCodeObjectId()));
         });
     }
 }

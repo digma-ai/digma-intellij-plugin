@@ -20,17 +20,15 @@ import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.env.EnvironmentsSupplier
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
-import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.event.CodeObjectEvent
 import org.digma.intellij.plugin.model.rest.event.FirstImportantInsightEvent
 import org.digma.intellij.plugin.model.rest.event.LatestCodeObjectEventsResponse
 import org.digma.intellij.plugin.model.rest.insights.SpanInsight
-import org.digma.intellij.plugin.navigation.MainContentViewSwitcher
-import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
-import org.digma.intellij.plugin.ui.MainToolWindowCardsController
+import org.digma.intellij.plugin.scope.ScopeManager
+import org.digma.intellij.plugin.scope.SpanScope
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
@@ -188,20 +186,10 @@ class GoToCodeObjectInsightsAction(
 
         ActivityMonitor.getInstance(project).registerNotificationCenterEvent("$notificationName.clicked", mapOf())
 
-        val canNavigate = CodeNavigator.getInstance(project).canNavigateToSpanOrMethod(codeObjectId, methodId)
-
         val environmentsSupplier: EnvironmentsSupplier = AnalyticsService.getInstance(project).environment
 
         val runnable = Runnable {
-            MainToolWindowCardsController.getInstance(project).closeAllNotificationsIfShowing()
-            MainContentViewSwitcher.getInstance(project).showInsights()
-            if (canNavigate) {
-                project.service<InsightsViewOrchestrator>()
-                    .showInsightsForSpanOrMethodAndNavigateToCode(codeObjectId, methodId)
-            } else {
-                project.service<InsightsViewOrchestrator>()
-                    .showInsightsForCodelessSpan(codeObjectId)
-            }
+            ScopeManager.getInstance(project).changeScope(SpanScope(codeObjectId))
         }
 
 

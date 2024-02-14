@@ -4,7 +4,12 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
+import org.digma.intellij.plugin.common.EDT
+import org.digma.intellij.plugin.insights.ErrorsViewOrchestrator
 import org.digma.intellij.plugin.model.code.CodeDetails
+import org.digma.intellij.plugin.navigation.MainContentViewSwitcher
+import org.digma.intellij.plugin.ui.MainToolWindowCardsController
+import org.digma.intellij.plugin.ui.ToolWindowShower
 
 @Service(Service.Level.PROJECT)
 class ScopeManager(private val project: Project) : Disposable {
@@ -32,6 +37,17 @@ class ScopeManager(private val project: Project) : Disposable {
     }
 
     private fun changeToSpanScope(scope: SpanScope) {
+
+        scope.displayName = ""
+
+
+        EDT.ensureEDT {
+            MainToolWindowCardsController.getInstance(project).closeCoveringViewsIfNecessary()
+            MainToolWindowCardsController.getInstance(project).closeAllNotificationsIfShowing()
+            project.service<ErrorsViewOrchestrator>().closeErrorDetails()
+            ToolWindowShower.getInstance(project).showToolWindow()
+            MainContentViewSwitcher.getInstance(project).showInsights()
+        }
 
         fireScopeChangedEvent(scope, true, listOf(), listOf())
     }

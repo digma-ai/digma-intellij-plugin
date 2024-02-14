@@ -223,11 +223,7 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
         }
 
         retVal = retVal
-            .plus("-Dotel.traces.exporter=otlp")
-            .plus(" ")
-            .plus("-Dotel.metrics.exporter=none")
-            .plus(" ")
-            .plus("-Dotel.instrumentation.experimental.span-suppression-strategy=none")
+            .plus(getOtelSystemProperties())
             .plus(" ")
 
         if (!serviceAlreadyDefined) {

@@ -77,10 +77,9 @@ class TomcatRunConfigurationWrapperForIdeaUltimate: RunConfigurationWrapper {
             .plus(" ")
             .plus("-Dotel.exporter.otlp.traces.endpoint=${getExporterUrl()}")
             .plus(" ")
-            .plus("-Dotel.traces.exporter=otlp")
+            .plus(getOtelSystemProperties())
             .plus(" ")
-            .plus("-Dotel.metrics.exporter=none")
-            .plus(" ")
+
 
 
         if (!serviceAlreadyDefined) {

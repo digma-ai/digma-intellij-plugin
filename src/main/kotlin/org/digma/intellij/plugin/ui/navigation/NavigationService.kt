@@ -76,7 +76,7 @@ class NavigationService(private val project: Project) : Disposable {
 
             if (isActive && observabilityInfo.hasMissingDependency) {
                 EDT.ensureEDT {
-                    NotificationUtil.notifyError(project, "Failed to add dependency after 60 seconds")
+                    NotificationUtil.notifyFadingError(project, "Failed to add dependency, Please try again")
                 }
             }
 
@@ -114,7 +114,7 @@ class NavigationService(private val project: Project) : Disposable {
             ) {
 
                 EDT.ensureEDT {
-                    NotificationUtil.notifyError(project, "Failed to add annotation after 10 seconds")
+                    NotificationUtil.notifyFadingError(project, "Failed to add annotation, Please try again")
                 }
             }
 

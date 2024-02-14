@@ -91,6 +91,10 @@
                            displayType="STICKY_BALLOON"
                            toolWindowId="Digma"/>
 
+        <notificationGroup id="Digma fading Balloon Notification Group"
+                           displayType="BALLOON"
+                           toolWindowId="Digma"/>
+
         <notificationGroup id="Digma Events Group"
                            displayType="STICKY_BALLOON"
                            toolWindowId="Digma"/>

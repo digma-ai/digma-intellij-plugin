@@ -253,7 +253,8 @@ public class EditorEventsHandler implements FileEditorManagerListener {
             return;
         }
 
-        PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
+        PsiFile psiFile = SlowOperationsUtilsKt.allowSlowOperation(() -> PsiManager.getInstance(project).findFile(file));
+
         if (PsiUtils.isValidPsiFile(psiFile) && !FileUtils.isVcsFile(file) && isRelevantFile(file)) {
 
             Log.log(LOGGER::trace, "found psi file for fileClosed {}", file);

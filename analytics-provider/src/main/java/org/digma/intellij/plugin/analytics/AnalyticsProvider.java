@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.analytics;
 import org.digma.intellij.plugin.model.rest.codelens.CodeLensOfMethodsRequest;
 import org.digma.intellij.plugin.model.rest.AboutResult;
 import org.digma.intellij.plugin.model.rest.codelens.CodeLensOfMethodsResponse;
+import org.digma.intellij.plugin.model.rest.assets.AssetDisplayInfo;
 import org.digma.intellij.plugin.model.rest.codespans.CodeContextSpan;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.env.*;
@@ -98,4 +99,6 @@ public interface AnalyticsProvider extends Closeable {
     List<CodeContextSpan> getSpansForCodeLocation(String env, List<String> idsWithType);
 
     CodeLensOfMethodsResponse getCodeLensByMethods(CodeLensOfMethodsRequest codeLensOfMethodsRequest);
+
+    AssetDisplayInfo getAssetDisplayInfo(String env, String codeObjectId);
 }

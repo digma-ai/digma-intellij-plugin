@@ -23,7 +23,10 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
 import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil
 import org.digma.intellij.plugin.jcef.common.UserRegistrationEvent
+import org.digma.intellij.plugin.model.code.CodeDetails
 import org.digma.intellij.plugin.observability.ObservabilityChanged
+import org.digma.intellij.plugin.scope.ScopeChangedEvent
+import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.ui.jcef.model.BackendInfoMessage
 import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier
@@ -50,6 +53,7 @@ private constructor(
     private val userRegistrationParentDisposable = Disposer.newDisposable()
     private val environmentChangeParentDisposable = Disposer.newDisposable()
     private val observabilityChangeParentDisposable = Disposer.newDisposable()
+    private val scopeChangeParentDisposable = Disposer.newDisposable()
 
 
     init {
@@ -147,6 +151,19 @@ private constructor(
             }
         )
 
+        project.messageBus.connect(scopeChangeParentDisposable).subscribe(
+            ScopeChangedEvent.SCOPE_CHANGED_TOPIC, object : ScopeChangedEvent {
+                override fun scopeChanged(
+                    scope: SpanScope,
+                    isAlreadyAtCode: Boolean,
+                    codeDetailsList: List<CodeDetails>,
+                    relatedCodeDetailsList: List<CodeDetails>,
+                ) {
+                    sendScopeChangedMessage(jbCefBrowser.cefBrowser, scope, isAlreadyAtCode, codeDetailsList, relatedCodeDetailsList)
+                }
+            }
+        )
+
     }
 
 
@@ -158,6 +175,7 @@ private constructor(
             Disposer.dispose(userRegistrationParentDisposable)
             Disposer.dispose(environmentChangeParentDisposable)
             Disposer.dispose(observabilityChangeParentDisposable)
+            Disposer.dispose(scopeChangeParentDisposable)
             jbCefBrowser.jbCefClient.removeLifeSpanHandler(lifeSpanHandler, jbCefBrowser.cefBrowser)
             jbCefBrowser.dispose()
             cefMessageRouter.dispose()

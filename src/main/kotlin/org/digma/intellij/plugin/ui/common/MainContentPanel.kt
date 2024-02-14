@@ -2,11 +2,11 @@ package org.digma.intellij.plugin.ui.common
 
 import com.intellij.openapi.project.Project
 import com.intellij.util.ui.JBUI
-import org.digma.intellij.plugin.insights.InsightsReactPanel
 import org.digma.intellij.plugin.navigation.MainContentViewSwitcher
 import org.digma.intellij.plugin.navigation.View
 import org.digma.intellij.plugin.ui.assets.AssetsPanel
 import org.digma.intellij.plugin.ui.errors.errorsPanel
+import org.digma.intellij.plugin.ui.insights.InsightsPanel
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
 import org.digma.intellij.plugin.ui.service.ErrorsViewService
 import org.digma.intellij.plugin.ui.tests.TestsPanel
@@ -27,7 +27,7 @@ class MainContentPanel(project: Project) : JPanel() {
         //the cards are managed by //todo: create a service
         layout = myLayout
 
-        val insightsPanel = InsightsReactPanel(project)
+        val insightsPanel = InsightsPanel(project)
         add(insightsPanel, View.Insights.cardName)
         myLayout.addLayoutComponent(insightsPanel, View.Insights.cardName)
 

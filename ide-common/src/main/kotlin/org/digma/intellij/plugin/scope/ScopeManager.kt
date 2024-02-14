@@ -53,6 +53,7 @@ class ScopeManager(private val project: Project) : Disposable {
         }
 
         scope.displayName = spanScopeInfo?.displayName ?: ""
+        scope.role = spanScopeInfo?.role
 
 
         EDT.ensureEDT {

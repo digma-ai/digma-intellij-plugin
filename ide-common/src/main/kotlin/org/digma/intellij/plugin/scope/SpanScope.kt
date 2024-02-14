@@ -1,6 +1,9 @@
 package org.digma.intellij.plugin.scope
 
-data class SpanScope(val spanCodeObjectId: String, var displayName: String? = null, val serviceName: String? = null) : AbstractScope() {
+import org.digma.intellij.plugin.model.rest.assets.Role
 
-    constructor(spanCodeObjectId: String) : this(spanCodeObjectId, null, null)
+data class SpanScope(val spanCodeObjectId: String, var displayName: String? = null, val serviceName: String? = null, var role: Role?) :
+    AbstractScope() {
+
+    constructor(spanCodeObjectId: String) : this(spanCodeObjectId, null, null, null)
 }

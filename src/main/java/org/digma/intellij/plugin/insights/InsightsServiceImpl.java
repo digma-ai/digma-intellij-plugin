@@ -1,5 +1,7 @@
 package org.digma.intellij.plugin.insights;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.*;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
@@ -40,7 +42,10 @@ import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
+import static org.digma.intellij.plugin.ui.common.UtilsKt.getQueryMapFromPayload;
+import static org.digma.intellij.plugin.ui.jcef.JCefBrowserUtilsKt.serializeAndExecuteWindowPostMessageJavaScript;
 import static org.digma.intellij.plugin.ui.jcef.JCefMessagesUtilsKt.sendUserEmail;
+import static org.digma.intellij.plugin.ui.jcef.ObjectMapperFactoryKt.createObjectMapper;
 
 public final class InsightsServiceImpl implements InsightsService, Disposable {
 
@@ -484,10 +489,8 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
         return methods;
     }
 
-
     @Override
     public void refreshInsights() {
-
         Backgroundable.ensurePooledThread(() -> withUpdateLock(() -> {
             Log.log(logger::debug, project, "refreshInsights called, scope is {}", getScopeObject(model().getScope()));
             var scope = model().getScope();
@@ -501,6 +504,26 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
                 showDocumentPreviewList((DocumentScope) scope, ((DocumentScope) scope).getDocumentInfo().getFileUri());
             } else {
                 emptyInsights();
+            }
+        }));
+    }
+
+    @Override
+    public void refreshInsightsList(JsonNode jsonNode) {
+        Backgroundable.ensurePooledThread(() -> withUpdateLock(() -> {
+            var backendQueryParams = getQueryMapFromPayload(jsonNode);
+            try {
+                var insightsResponse = AnalyticsService.getInstance(project).getInsights(backendQueryParams);
+                var mapper = createObjectMapper();
+                var msg = new SetInsightDataListMessage(mapper.readTree((insightsResponse)));
+                serializeAndExecuteWindowPostMessageJavaScript(jbCefBrowser.getCefBrowser(), msg);
+            } catch (AnalyticsServiceException e) {
+                Log.log(logger::debug, "AnalyticsServiceException for refreshInsights for {}", e.getMessage());
+                ErrorReporter.getInstance().reportError(project, "InsightsServiceImpl.refreshInsights", e);
+            } catch (JsonMappingException e) {
+                Log.log(logger::error, "Failed to map params", e.getMessage());
+            } catch (JsonProcessingException e) {
+                Log.log(logger::error, "Failed to read json response", e.getMessage());
             }
         }));
     }

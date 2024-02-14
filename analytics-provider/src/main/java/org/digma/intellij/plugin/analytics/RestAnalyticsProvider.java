@@ -210,14 +210,12 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
-    public LinkUnlinkTicketResponse linkTicket(LinkTicketRequest linkRequest)
-    {
+    public LinkUnlinkTicketResponse linkTicket(LinkTicketRequest linkRequest) {
         return execute(() -> client.analyticsProvider.linkTicket(linkRequest));
     }
 
     @Override
-    public LinkUnlinkTicketResponse unlinkTicket(UnlinkTicketRequest unlinkRequest)
-    {
+    public LinkUnlinkTicketResponse unlinkTicket(UnlinkTicketRequest unlinkRequest) {
         return execute(() -> client.analyticsProvider.unlinkTicket(unlinkRequest));
     }
 
@@ -230,6 +228,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     @Override
     public String getDashboard(Map<String, String> queryParams) {
         return execute(() -> client.analyticsProvider.getDashboard(queryParams));
+    }
+
+    @Override
+    public String getInsights(Map<String, Object> queryParams) {
+        return execute(() -> client.analyticsProvider.getInsights(queryParams));
     }
 
     protected static String readEntire(ResponseBody responseBody) {
@@ -646,6 +649,14 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @GET("/CodeAnalytics/code/assets")
         Call<List<CodeContextSpan>> getSpansForCodeLocation(@Query("environment") String env, @Query("codeObjects") List<String> codeObjectIds);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @GET("/insights/get_insights_view")
+        Call<String> getInsights(@QueryMap Map<String, Object> fields);
+
     }
 
 }

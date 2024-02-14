@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.ui.service
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
@@ -23,6 +24,7 @@ interface InsightsService : Disposable {
     fun updateInsights(methodInfo: MethodInfo)
     fun updateInsights(endpointInfo: EndpointInfo)
     fun refreshInsights()
+    fun refreshInsightsList(jsonNode:JsonNode);
     fun showDocumentPreviewList(documentInfoContainer: DocumentInfoContainer?, fileUri: String)
     fun recalculate(prefixedCodeObjectId: String, insightType: String)
     fun refresh(insightType: InsightType)

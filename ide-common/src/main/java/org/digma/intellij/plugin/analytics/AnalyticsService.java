@@ -1,6 +1,6 @@
 package org.digma.intellij.plugin.analytics;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.*;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.*;
@@ -456,6 +456,10 @@ public class AnalyticsService implements Disposable {
 
     public String getDashboard(@NotNull Map<String, String> queryParams) throws AnalyticsServiceException {
         return executeCatching(() -> analyticsProviderProxy.getDashboard(queryParams));
+    }
+
+    public String getInsights(@NotNull Map<String, Object> queryParams) throws AnalyticsServiceException {
+        return executeCatching(() ->analyticsProviderProxy.getInsights(queryParams));
     }
 
     @Override

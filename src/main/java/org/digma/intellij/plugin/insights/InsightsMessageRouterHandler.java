@@ -11,7 +11,6 @@ import com.intellij.ui.jcef.JBCefBrowser;
 import kotlin.Pair;
 import org.cef.browser.*;
 import org.cef.callback.CefQueryCallback;
-import org.cef.handler.CefMessageRouterHandlerAdapter;
 import org.digma.intellij.plugin.analytics.*;
 import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.document.CodeObjectsUtil;
@@ -29,7 +28,7 @@ import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.service.InsightsActionsService;
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
-import org.digma.intellij.plugin.ui.jcef.RegistrationEventHandler;
+import org.digma.intellij.plugin.ui.jcef.*;
 import org.digma.intellij.plugin.ui.jcef.model.*;
 import org.digma.intellij.plugin.ui.jcef.persistence.JCEFPersistenceService;
 import org.digma.intellij.plugin.ui.service.InsightsService;
@@ -44,7 +43,7 @@ import static org.digma.intellij.plugin.common.StopWatchUtilsKt.*;
 import static org.digma.intellij.plugin.ui.jcef.JCefBrowserUtilsKt.*;
 
 
-class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
+class InsightsMessageRouterHandler extends BaseMessageRouterHandler {
 
     private static final Logger LOGGER = Logger.getInstance(InsightsMessageRouterHandler.class);
 
@@ -55,6 +54,7 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
     private final ObjectMapper objectMapper;
 
     public InsightsMessageRouterHandler(Project project, JBCefBrowser jbCefBrowser) {
+        super(project);
         this.project = project;
         this.jbCefBrowser = jbCefBrowser;
         objectMapper = new ObjectMapper();

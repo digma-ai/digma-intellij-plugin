@@ -10,16 +10,13 @@ import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.env.EnvironmentsSupplier
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
-import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult
-import org.digma.intellij.plugin.navigation.NavigationModel
-import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator
-import org.digma.intellij.plugin.notifications.NotificationUtil
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.MonitoredPanel
-import org.digma.intellij.plugin.ui.MainToolWindowCardsController
+import org.digma.intellij.plugin.scope.ScopeManager
+import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.ui.list.insights.openJaegerFromRecentActivity
 import org.digma.intellij.plugin.ui.recentactivity.model.CloseLiveViewMessage
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityEntrySpanForTracePayload
@@ -79,30 +76,13 @@ class RecentActivityService(val project: Project) : Disposable {
                     // clicking a link in recent activity
 
                     val spanId = payload.span.spanCodeObjectId
-                    val methodId = payload.span.methodCodeObjectId
-                    val canNavigate = project.service<CodeNavigator>().canNavigateToSpanOrMethod(spanId, methodId)
-                    if (canNavigate) {
-                        project.service<MainToolWindowCardsController>().closeAllNotificationsIfShowing()
-                        val environmentsSupplier: EnvironmentsSupplier = project.service<AnalyticsService>().environment
-                        environmentsSupplier.setCurrent(payload.environment, false) {
-                            EDT.ensureEDT {
-                                project.service<InsightsViewOrchestrator>().showInsightsForSpanOrMethodAndNavigateToCode(spanId, methodId)
-                            }
-                        }
-                    } else {
-                        project.service<MainToolWindowCardsController>().closeAllNotificationsIfShowing()
-                        NotificationUtil.showNotification(project, "code object could not be found in the workspace")
-                        val environmentsSupplier: EnvironmentsSupplier = project.service<AnalyticsService>().environment
-                        environmentsSupplier.setCurrent(payload.environment, false) {
-                            EDT.ensureEDT {
-                                project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(payload.span.spanCodeObjectId)
-                                if (project.service<CodeNavigator>().maybeNavigateToEndpointBySpan(spanId)) {
-                                    project.service<NavigationModel>().showCodeNavigation.set(false)
-                                }
-                            }
+                    val environmentsSupplier: EnvironmentsSupplier = project.service<AnalyticsService>().environment
+                    environmentsSupplier.setCurrent(payload.environment, false) {
+                        EDT.ensureEDT {
+                            ScopeManager.getInstance(project).changeScope(SpanScope(spanId))
                         }
                     }
-                    project.service<ActivityMonitor>().registerSpanLinkClicked(MonitoredPanel.RecentActivity, canNavigate)
+                    project.service<ActivityMonitor>().registerSpanLinkClicked(MonitoredPanel.RecentActivity)
                 } catch (e: Exception) {
                     Log.warnWithException(logger, project, e, "error in processRecentActivityGoToSpanRequest")
                     ErrorReporter.getInstance().reportError(project, "RecentActivityService.processRecentActivityGoToSpanRequest", e)
@@ -110,7 +90,6 @@ class RecentActivityService(val project: Project) : Disposable {
             }
         }
     }
-
 
 
     fun processRecentActivityGoToTraceRequest(payload: RecentActivityEntrySpanForTracePayload?) {

@@ -8,11 +8,12 @@ import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.env.EnvironmentsSupplier
-import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.tests.FilterForLatestTests
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.MonitoredPanel
+import org.digma.intellij.plugin.scope.ScopeManager
+import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.teststab.TestsRunner
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
 import org.digma.intellij.plugin.ui.list.insights.openJaegerFromRecentActivity
@@ -31,7 +32,7 @@ class TestsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pro
         Log.log(logger::trace, project, "got action '$action' with message $requestJsonNode")
 
         when (action) {
-            "TESTS/INITIALIZE" -> initialize(project, browser, requestJsonNode)
+            "TESTS/INITIALIZE" -> initialize(browser)
             "TESTS/SPAN_GET_LATEST_DATA" -> handleQuerySpanGetLatestData(project, requestJsonNode)
             "TESTS/RUN_TEST" -> handleRunTest(project, requestJsonNode)
             "TESTS/GO_TO_TRACE" -> handleGoToTrace(project, requestJsonNode)
@@ -43,7 +44,7 @@ class TestsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pro
         }
     }
 
-    private fun initialize(project: Project, browser: CefBrowser, requestJsonNode: JsonNode) {
+    private fun initialize(browser: CefBrowser) {
         Log.log(logger::info, "got TESTS/INITIALIZE")
         doCommonInitialize(browser)
     }
@@ -80,26 +81,16 @@ class TestsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pro
 
     private fun handleGoToSpanOfTest(project: Project, requestJsonNode: JsonNode) {
 
-        ActivityMonitor.getInstance(project).registerSpanLinkClicked(MonitoredPanel.Tests);
+        ActivityMonitor.getInstance(project).registerSpanLinkClicked(MonitoredPanel.Tests)
 
         val payloadNode: JsonNode = objectMapper.readTree(requestJsonNode.get("payload").toString())
         val environment = payloadNode.get("environment").textValue()
         val spanCodeObjectId = payloadNode.get("spanCodeObjectId").textValue()
-        val methodCodeObjectIdNode = payloadNode.get("methodCodeObjectId")
-
-        var methodCodeObjectId: String? = null
-        if (methodCodeObjectIdNode != null && !methodCodeObjectIdNode.isNull) {
-            methodCodeObjectId = methodCodeObjectIdNode.textValue()
-        }
 
         Backgroundable.ensurePooledThread {
             val environmentsSupplier: EnvironmentsSupplier = AnalyticsService.getInstance(project).environment
             environmentsSupplier.setCurrent(environment, false) {
-                if (methodCodeObjectId != null) {
-                    project.service<InsightsViewOrchestrator>().showInsightsForMethod(methodCodeObjectId)
-                } else {
-                    project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(spanCodeObjectId)
-                }
+                ScopeManager.getInstance(project).changeScope(SpanScope(spanCodeObjectId))
             }
         }
     }

@@ -456,16 +456,12 @@ class ActivityMonitor(private val project: Project) : Disposable {
         registerUserAction("Clicked on span link from insights")
     }
 
-    fun registerSpanLinkClicked(panel: MonitoredPanel) {
-        registerSpanLinkClicked(panel, null)
-    }
 
-    fun registerSpanLinkClicked(panel: MonitoredPanel, navigable: Boolean?) {
+    fun registerSpanLinkClicked(panel: MonitoredPanel) {
         capture(
             "span-link clicked",
             mapOf(
-                "panel" to panel.name,
-                "navigable" to (navigable?.toString() ?: "unknown")
+                "panel" to panel.name
             )
         )
         registerUserAction("Clicked on span link from ${panel.name}")

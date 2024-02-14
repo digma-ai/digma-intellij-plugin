@@ -14,9 +14,10 @@ import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.UserId
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
-import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
+import org.digma.intellij.plugin.scope.ScopeManager
+import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.ui.toolwindow.ToolWindowIconChanger
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
@@ -87,15 +88,14 @@ class NotificationsService(val project: Project) : Disposable {
     }
 
 
-    fun goToInsight(spanCodeObjectId: String?, methodCodeObjectId: String?) {
+    fun goToInsight(spanCodeObjectId: String?) {
 
         EDT.assertNonDispatchThread()
 
         Log.log(logger::trace, project, "goToInsight called for {}", spanCodeObjectId)
+
         spanCodeObjectId?.let {
-            project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(spanCodeObjectId)
-        } ?: methodCodeObjectId?.let {
-            project.service<InsightsViewOrchestrator>().showInsightsForMethod(methodCodeObjectId)
+            ScopeManager.getInstance(project).changeScope(SpanScope(spanCodeObjectId))
         }
 
     }

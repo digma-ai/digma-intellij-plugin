@@ -12,9 +12,8 @@ import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.*;
-import org.digma.intellij.plugin.navigation.NavigationModel;
 import org.digma.intellij.plugin.psi.*;
-import org.digma.intellij.plugin.ui.*;
+import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
 import org.jetbrains.annotations.NotNull;
 
 import static org.digma.intellij.plugin.common.AlarmUtilsKt.addRequestWithErrorReporting;
@@ -70,7 +69,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
     public void selectionChanged(@NotNull FileEditorManagerEvent editorManagerEvent) {
         try {
             //enable code navigation every time editor tab is closed or changed
-            project.getService(NavigationModel.class).getShowCodeNavigation().set(true);
+//            project.getService(NavigationModel.class).getShowCodeNavigation().set(true);
 
             selectionChangedImpl(editorManagerEvent);
         } catch (Exception e) {

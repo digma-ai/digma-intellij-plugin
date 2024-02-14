@@ -1,6 +1,8 @@
 package org.digma.intellij.plugin.analytics;
 
+import org.digma.intellij.plugin.model.rest.codelens.CodeLensOfMethodsRequest;
 import org.digma.intellij.plugin.model.rest.AboutResult;
+import org.digma.intellij.plugin.model.rest.codelens.CodeLensOfMethodsResponse;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.env.DeleteEnvironmentRequest;
 import org.digma.intellij.plugin.model.rest.env.DeleteEnvironmentResponse;
@@ -115,4 +117,6 @@ public interface AnalyticsProvider extends Closeable {
     LinkUnlinkTicketResponse linkTicket(LinkTicketRequest linkRequest);
 
     LinkUnlinkTicketResponse unlinkTicket(UnlinkTicketRequest linkRequest);
+
+    CodeLensOfMethodsResponse getCodeLensByMethods(CodeLensOfMethodsRequest codeLensOfMethodsRequest);
 }

@@ -16,10 +16,9 @@ import org.digma.intellij.plugin.document.CodeObjectsUtil;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightType;
-import org.digma.intellij.plugin.model.discovery.EndpointInfo;
-import org.digma.intellij.plugin.model.discovery.MethodInfo;
-import org.digma.intellij.plugin.model.discovery.SpanInfo;
+import org.digma.intellij.plugin.model.discovery.*;
 import org.digma.intellij.plugin.model.rest.AboutResult;
+import org.digma.intellij.plugin.model.rest.codelens.*;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.env.DeleteEnvironmentRequest;
 import org.digma.intellij.plugin.model.rest.env.DeleteEnvironmentResponse;
@@ -307,7 +306,12 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.unlinkTicket(unlinkRequest));
     }
 
-
+    public CodeLensOfMethodsResponse getCodeLensByMethods(List<MethodWithCodeObjects> methods) throws AnalyticsServiceException {
+        var env = getCurrentEnvironment();
+        var request = new CodeLensOfMethodsRequest(env, methods);
+        var response = executeCatching(() -> analyticsProviderProxy.getCodeLensByMethods(request));
+        return response;
+    }
 
     public InsightsOfMethodsResponse getInsightsOfMethods(List<MethodInfo> methodInfos) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();

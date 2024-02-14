@@ -19,6 +19,7 @@ import org.digma.intellij.plugin.model.discovery.CodeLessSpan
 import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
+import org.digma.intellij.plugin.model.rest.navigation.NavEndpointEntry
 import org.digma.intellij.plugin.model.rest.navigation.NavItemType
 import org.digma.intellij.plugin.model.rest.navigation.SpanNavigationItem
 import org.digma.intellij.plugin.navigation.NavigationModel
@@ -220,9 +221,6 @@ class CodeNavigationButton(val project: Project) : TargetButton(project, true) {
             ActivityMonitor.getInstance(project).registerNavigationButtonClicked(true)
         }
 
-
-
-
         if (!managedToNav) {
             val closestParentItems = codeObjectNavigation.navigationEntry.closestParentSpans
                 .filter { spanNavigationItem -> spanNavigationItem.navItemType == NavItemType.ClosestParentInternal }
@@ -240,8 +238,14 @@ class CodeNavigationButton(val project: Project) : TargetButton(project, true) {
                         .canNavigateToSpanOrMethod(spanNavigationItem.spanCodeObjectId, spanNavigationItem.methodCodeObjectId)
                 }
 
+            val closestParentEntries = codeObjectNavigation.navigationEntry.closestParentEntries
+                .filter { spanNavigationItem ->
+                    codeNavigator
+                        .canNavigateToEndpoint(spanNavigationItem.endpointCodeObjectId)
+                }
+
             val hasAnyCodeLocation =
-                closestParentItems.isNotEmpty() || closestParentWithMethodItems.isNotEmpty() || methodIds.isNotEmpty()
+                closestParentItems.isNotEmpty() || closestParentWithMethodItems.isNotEmpty() || methodIds.isNotEmpty() || closestParentEntries.isNotEmpty()
 
             if (!hasAnyCodeLocation) {
                 ActivityMonitor.getInstance(project).registerNavigationButtonClicked(false)
@@ -255,7 +259,7 @@ class CodeNavigationButton(val project: Project) : TargetButton(project, true) {
                 ActivityMonitor.getInstance(project).registerNavigationButtonClicked(true)
                 EDT.ensureEDT {
                     HintManager.getInstance().showHint(
-                        NavigationList(project, methodIds, closestParentItems, closestParentWithMethodItems),
+                        NavigationList(project, methodIds, closestParentItems, closestParentWithMethodItems, closestParentEntries),
                         RelativePoint.getSouthWestOf(this),
                         HintManager.HIDE_BY_ESCAPE, 5000
                     )
@@ -306,11 +310,14 @@ class CodeNavigationButton(val project: Project) : TargetButton(project, true) {
         methodIds: List<String>,
         closestParentItems: List<SpanNavigationItem>,
         closestParentWithMethodItems: List<SpanNavigationItem>,
+        closestParentEntries: List<NavEndpointEntry>
     ) : RoundedPanel(30) {
 
         init {
 
             val panel = panel {
+
+                var codeLocationsAdded = false;
 
                 if (methodIds.isNotEmpty()) {
                     row {
@@ -328,6 +335,8 @@ class CodeNavigationButton(val project: Project) : TargetButton(project, true) {
                             }
                         }
                     }
+
+                    codeLocationsAdded = true
                 }
 
                 if (closestParentItems.isNotEmpty()) {
@@ -347,6 +356,8 @@ class CodeNavigationButton(val project: Project) : TargetButton(project, true) {
                         }
 
                     }
+
+                    codeLocationsAdded = true
                 }
 
                 if (closestParentWithMethodItems.isNotEmpty()) {
@@ -365,6 +376,30 @@ class CodeNavigationButton(val project: Project) : TargetButton(project, true) {
                             }
                         }
                     }
+
+                    codeLocationsAdded = true
+                }
+
+                // closestParentEntries should be added only
+                if (closestParentEntries.isNotEmpty() && !codeLocationsAdded) {
+                    row {
+                        @Suppress("DialogTitleCapitalization")
+                        label("Related Code Location")
+                    }
+
+                    closestParentEntries.forEach { navItem ->
+                        row {
+                            icon(Laf.Icons.General.CODE_LOCATION_LINK).gap(RightGap.SMALL)
+                            link(navItem.displayName) {
+                                project.service<CodeNavigator>()
+                                    .tryNavigateToEndpointById(CodeObjectsUtil.stripEndpointPrefix(navItem.endpointCodeObjectId))
+                                HintManager.getInstance().hideAllHints()
+                            }
+                        }
+
+                    }
+
+                    codeLocationsAdded = true
                 }
             }.andTransparent().withBorder(JBUI.Borders.empty(5))
 

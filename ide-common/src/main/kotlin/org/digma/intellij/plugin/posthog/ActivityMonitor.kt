@@ -26,6 +26,9 @@ import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
 
+private const val INSTALL_STATUS_PROPERTY_NAME = "install_status"
+
+private enum class InstallStatus { Active, Uninstalled, Disabled }
 
 @Service(Service.Level.PROJECT)
 class ActivityMonitor(private val project: Project) : Disposable {
@@ -36,7 +39,8 @@ class ActivityMonitor(private val project: Project) : Disposable {
             return project.getService(ActivityMonitor::class.java)
         }
     }
-    private val installStatusPropertyName: String = "install status"
+
+    private var currentInstallStatus = InstallStatus.Active
     private val userId: String = UserId.userId
     private val isDevUser: Boolean = UserId.isDevUser
     private val latestUnknownRunConfigTasks = mutableMapOf<String, Instant>()
@@ -99,7 +103,12 @@ class ActivityMonitor(private val project: Project) : Disposable {
 
     fun registerEmail(email: String) {
         postHog?.alias(userId, email)
-        postHog?.identify(userId, mapOf("email" to email))
+        postHog?.identify(
+            userId, mapOf(
+                "email" to getEmailForEvent(),
+                INSTALL_STATUS_PROPERTY_NAME to currentInstallStatus
+            )
+        )
     }
 
     fun registerCustomEvent(eventName: String, tags: Map<String, Any>?) {
@@ -497,26 +506,38 @@ class ActivityMonitor(private val project: Project) : Disposable {
     }
 
     fun registerPluginUninstalled(): String {
-        postHog?.capture(userId, "plugin uninstalled")
+        currentInstallStatus = InstallStatus.Uninstalled
+        capture("plugin uninstalled")
         if(PersistenceService.getInstance().hasEmail()){
-            postHog?.capture(userId, "registered user uninstalled")
+            capture(
+                "registered user uninstalled", mapOf(
+                    "email" to getEmailForEvent(),
+                    INSTALL_STATUS_PROPERTY_NAME to currentInstallStatus
+                )
+            )
         }
         postHog?.set(
             userId, mapOf(
-                installStatusPropertyName to "Uninstalled"
+                INSTALL_STATUS_PROPERTY_NAME to currentInstallStatus
             )
         )
         return userId
     }
 
     fun registerPluginDisabled(): String {
-        postHog?.capture(userId, "plugin disabled")
+        currentInstallStatus = InstallStatus.Disabled
+        capture("plugin disabled")
         if(PersistenceService.getInstance().hasEmail()){
-            postHog?.capture(userId, "registered user disabled")
+            capture(
+                "registered user disabled", mapOf(
+                    "email" to getEmailForEvent(),
+                    INSTALL_STATUS_PROPERTY_NAME to currentInstallStatus
+                )
+            )
         }
         postHog?.set(
             userId, mapOf(
-                installStatusPropertyName to "Disabled"
+                INSTALL_STATUS_PROPERTY_NAME to currentInstallStatus
             )
         )
         return userId
@@ -607,15 +628,43 @@ class ActivityMonitor(private val project: Project) : Disposable {
         )
     }
 
+
+    fun registerPythonNavigationDiscoveryEvent(eventName: String, details: Map<String, Any> = mapOf()) {
+        val enrichedDetails = details.toMutableMap()
+        enrichedDetails["type"] = "python"
+        registerNavigationDiscoveryEvent(eventName, enrichedDetails)
+    }
+
+    fun registerJvmNavigationDiscoveryEvent(eventName: String, details: Map<String, Any> = mapOf()) {
+        val enrichedDetails = details.toMutableMap()
+        enrichedDetails["type"] = "jvm"
+        registerNavigationDiscoveryEvent(eventName, enrichedDetails)
+    }
+
+
+    private fun registerNavigationDiscoveryEvent(eventName: String, details: Map<String, Any> = mapOf()) {
+        capture(
+            "NavigationDiscovery.".plus(eventName),
+            details
+        )
+    }
+
+
+
+
+
     fun hash(message: String): String {
         val bytes = message.toByteArray()
         val md = MessageDigest.getInstance("SHA-256")
         val digest = md.digest(bytes)
-        return digest.fold("", { str, it -> str + "%02x".format(it) })
+        return digest.fold("") { str, it -> str + "%02x".format(it) }
     }
 
 
     private fun registerSessionDetails() {
+
+        currentInstallStatus = InstallStatus.Active
+
         val osType = System.getProperty("os.name")
         val ideInfo = ApplicationInfo.getInstance()
         val ideName = ideInfo.versionName
@@ -634,7 +683,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
                 "plugin.version" to pluginVersion,
                 "user.type" to if (isDevUser) "internal" else "external",
                 "jcef.supported" to isJcefSupported,
-                installStatusPropertyName to "Active"
+                INSTALL_STATUS_PROPERTY_NAME to currentInstallStatus
             )
         )
     }
@@ -705,5 +754,17 @@ class ActivityMonitor(private val project: Project) : Disposable {
 
     }
 
+
+    private fun getEmailForEvent(): String {
+
+        val userRegistrationEmail = PersistenceService.getInstance().getUserRegistrationEmail()
+
+        return if (!userRegistrationEmail.isNullOrBlank()) {
+            userRegistrationEmail
+        } else {
+            PersistenceService.getInstance().getUserEmail() ?: ""
+        }
+
+    }
 
 }

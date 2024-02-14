@@ -21,6 +21,7 @@ enum class InsightType {
     EndpointDurationSlowdown,
     EndpointBreakdown,
     EndpointHighNumberOfQueries,
+    EndpointQueryOptimization,
     SpaNPlusOne,
     Unmapped,
     TopErrorFlows,

@@ -33,7 +33,8 @@ data class NormalUsageInsight
         "deactivatedCommitId",
         "reopenCount",
         "ticketLink",
-        "firstDetected"
+        "firstDetected",
+        "lastDetected"
 )
 constructor(
         override val codeObjectId: String,
@@ -60,7 +61,7 @@ constructor(
         override val deactivatedCommitId: String?,
         override val reopenCount: Int,
         override val ticketLink: String?,
-        override val firstDetected: Date?,
+        override val firstDetected: Date?, override val lastDetected: Date?,
 ) : EndpointInsight {
     override val type: InsightType = InsightType.NormalUsage
 }

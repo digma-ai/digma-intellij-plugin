@@ -7,20 +7,12 @@ import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
+import com.intellij.psi.*;
 import kotlin.Pair;
-import org.digma.intellij.plugin.model.discovery.DocumentInfo;
-import org.digma.intellij.plugin.model.discovery.EndpointInfo;
-import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.digma.intellij.plugin.model.discovery.*;
+import org.jetbrains.annotations.*;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class NoOpLanguageService implements LanguageService {
 
@@ -101,13 +93,13 @@ public class NoOpLanguageService implements LanguageService {
 
     //this method should never be called on NoOpLanguageService, calling code must be aware of that
     @Override
-    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile) {
+    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, BuildDocumentInfoProcessContext context) {
         throw new UnsupportedOperationException("should not be called");
     }
 
     //this method should never be called on NoOpLanguageService, calling code must be aware of that
     @Override
-    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, @Nullable FileEditor newEditor) {
+    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, @Nullable FileEditor newEditor, BuildDocumentInfoProcessContext context) {
         throw new UnsupportedOperationException("should not be called");
     }
 

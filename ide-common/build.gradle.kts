@@ -21,7 +21,7 @@ intellij {
 }
 
 dependencies {
-    //pretty time can be moved to the model project to it s accessible to all project classes.
+    //todo: pretty time can be moved to the model project, so it's accessible to all project classes.
     //from here the model classes can't use it
     api(libs.prettytime)
     api(libs.threeten)

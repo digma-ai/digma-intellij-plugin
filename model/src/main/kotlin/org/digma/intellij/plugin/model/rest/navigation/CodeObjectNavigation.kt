@@ -20,9 +20,9 @@ constructor(val spanCodeObjectId: String, val navigationEntry: NavigationEntry)
 data class NavigationEntry
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 @ConstructorProperties(
-    "spanInfo", "closestParentSpans", "navEndpointEntry"
+    "spanInfo", "closestParentSpans", "navEndpointEntry", "closestParentEntries"
 )
-constructor(val spanInfo: SpanInfo?, val closestParentSpans: List<SpanNavigationItem>, val navEndpointEntry: NavEndpointEntry?)
+constructor(val spanInfo: SpanInfo?, val closestParentSpans: List<SpanNavigationItem>, val navEndpointEntry: NavEndpointEntry?, val closestParentEntries: List<NavEndpointEntry>)
 
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -56,10 +56,12 @@ data class NavEndpointEntry
 @ConstructorProperties(
     "endpointCodeObjectId",
     "methodCodeObjectId",
+    "displayName"
 )
 constructor(
     val endpointCodeObjectId: String,
     val methodCodeObjectId: String?,
+    val displayName: String
 )
 
 enum class NavItemType {

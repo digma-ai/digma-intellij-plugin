@@ -3,21 +3,15 @@ package org.digma.intellij.plugin.editor;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiManager;
-import com.intellij.util.Alarm;
-import com.intellij.util.AlarmFactory;
-import org.digma.intellij.plugin.common.EDT;
+import com.intellij.psi.*;
+import com.intellij.util.*;
+import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
-import org.digma.intellij.plugin.psi.LanguageService;
-import org.digma.intellij.plugin.psi.LanguageServiceLocator;
-import org.digma.intellij.plugin.psi.PsiAccessUtilsKt;
-import org.digma.intellij.plugin.psi.PsiUtils;
+import org.digma.intellij.plugin.psi.*;
 import org.digma.intellij.plugin.ui.CaretContextService;
 import org.jetbrains.annotations.NotNull;
 
@@ -99,7 +93,7 @@ public class CurrentContextUpdater implements Disposable {
         LanguageService languageService = languageServiceLocator.locate(psiFile.getLanguage());
         Log.log(LOGGER::debug, "found language service {} for file: {}", languageService, psiFile.getVirtualFile());
 
-        MethodUnderCaret methodUnderCaret = DumbService.getInstance(project).runReadActionInSmartMode(() -> languageService.detectMethodUnderCaret(project, psiFile, editor, caretOffset));
+        MethodUnderCaret methodUnderCaret = languageService.detectMethodUnderCaret(project, psiFile, editor, caretOffset);
 
         Log.log(LOGGER::debug, "found MethodUnderCaret for file: {},'{}", psiFile.getVirtualFile(), methodUnderCaret);
         //don't call contextChange if the caret is still on the same method or in same lambda scope. when moving between

@@ -2,7 +2,7 @@ package org.digma.intellij.plugin.ui.common
 
 import com.intellij.openapi.project.Project
 import com.intellij.util.ui.JBUI
-import org.digma.intellij.plugin.assets.AssetsPanel
+import org.digma.intellij.plugin.ui.assets.AssetsPanel
 import java.awt.BorderLayout
 import java.awt.Component
 import javax.swing.JPanel

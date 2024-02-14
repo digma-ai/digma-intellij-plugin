@@ -51,7 +51,7 @@ rdgen {
     classpath(rdLibDirectory(project).canonicalPath + "/rider-model.jar")
     logger.lifecycle("rdLibDirectory is ${rdLibDirectory(project).canonicalPath}")
     sources("${modelDir.canonicalPath}/rider/model")
-    hashFolder = buildDir.canonicalPath
+    hashFolder = project.layout.buildDirectory.asFile.get().canonicalPath
     packages = "rider.model"
 
     generator {

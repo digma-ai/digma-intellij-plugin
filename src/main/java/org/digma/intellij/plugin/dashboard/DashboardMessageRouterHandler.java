@@ -1,39 +1,29 @@
 package org.digma.intellij.plugin.dashboard;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.*;
 import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.jcef.JBCefBrowser;
-import org.cef.browser.CefBrowser;
-import org.cef.browser.CefFrame;
+import org.cef.browser.*;
 import org.cef.callback.CefQueryCallback;
 import org.cef.handler.CefMessageRouterHandlerAdapter;
-import org.digma.intellij.plugin.analytics.AnalyticsService;
-import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
+import org.digma.intellij.plugin.analytics.*;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.dashboard.incoming.GoToSpan;
-import org.digma.intellij.plugin.dashboard.outgoing.BackendInfoMessage;
-import org.digma.intellij.plugin.dashboard.outgoing.DashboardData;
-import org.digma.intellij.plugin.dashboard.outgoing.DashboardError;
+import org.digma.intellij.plugin.dashboard.outgoing.*;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.rest.AboutResult;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
-import org.digma.intellij.plugin.ui.jcef.model.ErrorPayload;
-import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest;
-import org.digma.intellij.plugin.ui.jcef.model.Payload;
+import org.digma.intellij.plugin.ui.jcef.model.*;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
-import static org.digma.intellij.plugin.common.StopWatchUtilsKt.stopWatchStart;
-import static org.digma.intellij.plugin.common.StopWatchUtilsKt.stopWatchStop;
-import static org.digma.intellij.plugin.ui.jcef.JCefBrowserUtilsKt.executeWindowPostMessageJavaScript;
-import static org.digma.intellij.plugin.ui.jcef.JCefBrowserUtilsKt.serializeAndExecuteWindowPostMessageJavaScript;
+import static org.digma.intellij.plugin.common.StopWatchUtilsKt.*;
+import static org.digma.intellij.plugin.ui.jcef.JCefBrowserUtilsKt.*;
 
 public class DashboardMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
@@ -115,6 +105,10 @@ public class DashboardMessageRouterHandler extends CefMessageRouterHandlerAdapte
                         GoToSpan goToSpan = objectMapper.treeToValue(jsonNode, GoToSpan.class);
                         DashboardService.getInstance(project).goToSpanAndNavigateToCode(goToSpan);
                     }
+                    case "GLOBAL/GET_BACKEND_INFO" -> {
+                        //do nothing, dashboard app sends that for some reason but it's not necessary
+                    }
+
                     default -> throw new IllegalStateException("Unexpected value: " + action);
                 }
 
@@ -145,9 +139,7 @@ public class DashboardMessageRouterHandler extends CefMessageRouterHandlerAdapte
     private void onInitialize(CefBrowser browser) {
         try {
             AboutResult about = AnalyticsService.getInstance(project).getAbout();
-            var message = new BackendInfoMessage(
-                    JCefMessagesUtils.REQUEST_MESSAGE_TYPE, JCefMessagesUtils.GLOBAL_SET_BACKEND_INFO,
-                    about);
+            var message = new BackendInfoMessage(about);
 
             Log.log(logger::trace, project, "sending {} message",JCefMessagesUtils.GLOBAL_SET_BACKEND_INFO);
             serializeAndExecuteWindowPostMessageJavaScript(browser, message);

@@ -4,43 +4,31 @@ import com.intellij.codeInsight.codeVision.CodeVisionEntry;
 import com.intellij.lang.Language;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.fileEditor.FileEditor;
-import com.intellij.openapi.fileEditor.FileEditorManager;
+import com.intellij.openapi.fileEditor.*;
 import com.intellij.openapi.progress.ProgressManager;
-import com.intellij.openapi.project.DumbService;
-import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.*;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiManager;
+import com.intellij.psi.*;
 import com.jetbrains.rdclient.util.idea.LifetimedProjectComponent;
 import com.jetbrains.rider.projectView.SolutionLifecycleHost;
 import kotlin.Pair;
 import org.apache.commons.lang3.time.StopWatch;
-import org.digma.intellij.plugin.common.EDT;
-import org.digma.intellij.plugin.common.ReadActions;
-import org.digma.intellij.plugin.common.VfsUtilsKt;
+import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.editor.EditorUtils;
+import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.model.discovery.DocumentInfo;
-import org.digma.intellij.plugin.model.discovery.EndpointInfo;
-import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
-import org.digma.intellij.plugin.psi.LanguageService;
-import org.digma.intellij.plugin.psi.PsiAccessUtilsKt;
-import org.digma.intellij.plugin.psi.PsiUtils;
-import org.digma.intellij.plugin.rider.protocol.CodeLensHost;
-import org.digma.intellij.plugin.rider.protocol.LanguageServiceHost;
+import org.digma.intellij.plugin.model.discovery.*;
+import org.digma.intellij.plugin.psi.*;
+import org.digma.intellij.plugin.rider.protocol.*;
 import org.digma.intellij.plugin.ui.CaretContextService;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.*;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+
+import static org.digma.intellij.plugin.common.CatchingUtilsKt.executeCatchingWithResult;
+import static org.digma.intellij.plugin.common.PsiAccessUtilsKt.runInReadAccessWithResult;
 
 public class CSharpLanguageService extends LifetimedProjectComponent implements LanguageService {
 
@@ -114,7 +102,7 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
             return false;
         }
 
-        PsiFile psiFile = PsiAccessUtilsKt.runInReadAccessWithResult(() -> PsiManager.getInstance(project).findFile(newFile));
+        PsiFile psiFile = runInReadAccessWithResult(() -> PsiManager.getInstance(project).findFile(newFile));
         if (!PsiUtils.isValidPsiFile(psiFile)) {
             return false;
         }
@@ -135,8 +123,17 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
     @Override
     @NotNull
     public MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, @Nullable Editor selectedEditor, int caretOffset) {
-        return LanguageServiceHost.getInstance(project).detectMethodUnderCaret(psiFile, selectedEditor, caretOffset);
+
+        //detectMethodUnderCaret should run very fast and return a result,
+        // this operation may become invalid very soon if user clicks somewhere else.
+        // no retry because it needs to complete very fast
+        //it may be called from EDT or background, runInReadAccessWithResult will acquire read access if necessary.
+        return executeCatchingWithResult(() -> PsiAccessUtilsKt.runInReadAccessWithResult(() -> LanguageServiceHost.getInstance(project).detectMethodUnderCaret(psiFile, selectedEditor, caretOffset)), throwable -> {
+            ErrorReporter.getInstance().reportError(getClass().getSimpleName() + ".detectMethodUnderCaret", throwable);
+            return new MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), caretOffset, null, false);
+        });
     }
+
 
     @Override
     public void navigateToMethod(String methodId) {
@@ -215,12 +212,12 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
 
 
     @Override
-    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile) {
-        return buildDocumentInfo(psiFile, null);
+    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, BuildDocumentInfoProcessContext context) {
+        return buildDocumentInfo(psiFile, null, context);
     }
 
     @Override
-    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, @Nullable FileEditor newEditor) {
+    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, @Nullable FileEditor newEditor, BuildDocumentInfoProcessContext context) {
 
         Log.log(LOGGER::debug, "got buildDocumentInfo request for {}", psiFile);
         //must be PsiJavaFile , this method should be called only for java files

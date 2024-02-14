@@ -1,9 +1,7 @@
 package org.digma.intellij.plugin.insights;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.util.StdDateFormat;
 import com.intellij.ide.BrowserUtil;
@@ -11,61 +9,38 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.jcef.JBCefBrowser;
 import kotlin.Pair;
-import org.cef.browser.CefBrowser;
-import org.cef.browser.CefFrame;
+import org.cef.browser.*;
 import org.cef.callback.CefQueryCallback;
 import org.cef.handler.CefMessageRouterHandlerAdapter;
-import org.digma.intellij.plugin.analytics.AnalyticsProviderException;
-import org.digma.intellij.plugin.analytics.AnalyticsService;
-import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
-import org.digma.intellij.plugin.common.Backgroundable;
-import org.digma.intellij.plugin.common.EDT;
-import org.digma.intellij.plugin.dashboard.outgoing.BackendInfoMessage;
+import org.digma.intellij.plugin.analytics.*;
+import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.document.CodeObjectsUtil;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
-import org.digma.intellij.plugin.insights.model.outgoing.CommitInfo;
-import org.digma.intellij.plugin.insights.model.outgoing.InsightsPayload;
-import org.digma.intellij.plugin.insights.model.outgoing.Method;
-import org.digma.intellij.plugin.insights.model.outgoing.SetCodeLocationData;
-import org.digma.intellij.plugin.insights.model.outgoing.SetCodeLocationMessage;
-import org.digma.intellij.plugin.insights.model.outgoing.SetCommitInfoData;
-import org.digma.intellij.plugin.insights.model.outgoing.SetCommitInfoMessage;
-import org.digma.intellij.plugin.insights.model.outgoing.SetInsightsDataMessage;
-import org.digma.intellij.plugin.insights.model.outgoing.SetLinkUnlinkResponseMessage;
-import org.digma.intellij.plugin.insights.model.outgoing.SetSpanInsightData;
-import org.digma.intellij.plugin.insights.model.outgoing.SetSpanInsightMessage;
-import org.digma.intellij.plugin.insights.model.outgoing.Span;
-import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil;
-import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils;
+import org.digma.intellij.plugin.insights.model.outgoing.*;
+import org.digma.intellij.plugin.jcef.common.*;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.model.rest.AboutResult;
-import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
-import org.digma.intellij.plugin.model.rest.insights.InsightsOfSingleSpanResponse;
+import org.digma.intellij.plugin.model.rest.insights.*;
 import org.digma.intellij.plugin.model.rest.jcef.common.SendTrackingEventRequest;
-import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigation;
-import org.digma.intellij.plugin.model.rest.navigation.SpanNavigationItem;
+import org.digma.intellij.plugin.model.rest.navigation.*;
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.service.InsightsActionsService;
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
 import org.digma.intellij.plugin.ui.jcef.RegistrationEventHandler;
-import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest;
+import org.digma.intellij.plugin.ui.jcef.model.*;
+import org.digma.intellij.plugin.ui.jcef.persistence.JCEFPersistenceService;
 import org.digma.intellij.plugin.ui.service.InsightsService;
 import org.digma.intellij.plugin.ui.settings.Theme;
 import org.digma.intellij.plugin.vcs.VcsService;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.digma.intellij.plugin.common.StopWatchUtilsKt.stopWatchStart;
-import static org.digma.intellij.plugin.common.StopWatchUtilsKt.stopWatchStop;
-import static org.digma.intellij.plugin.ui.jcef.JCefBrowserUtilsKt.serializeAndExecuteWindowPostMessageJavaScript;
+import static org.digma.intellij.plugin.common.StopWatchUtilsKt.*;
+import static org.digma.intellij.plugin.ui.jcef.JCefBrowserUtilsKt.*;
 
 
 class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
@@ -156,6 +131,16 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
                     case "INSIGHTS/GET_COMMIT_INFO" -> getCommitInfo(jsonNode);
 
                     case JCefMessagesUtils.GLOBAL_REGISTER -> RegistrationEventHandler.getInstance(project).register(jsonNode);
+
+                    case JCefMessagesUtils.GLOBAL_SAVE_TO_PERSISTENCE -> {
+                        var saveToPersistenceRequest = jsonToObject(request, SaveToPersistenceRequest.class);
+                        JCEFPersistenceService.getInstance(project).saveToPersistence(saveToPersistenceRequest);
+                    }
+
+                    case JCefMessagesUtils.GLOBAL_GET_FROM_PERSISTENCE -> {
+                        var getFromPersistenceRequest = jsonToObject(request, GetFromPersistenceRequest.class);
+                        JCEFPersistenceService.getInstance(project).getFromPersistence(browser, getFromPersistenceRequest);
+                    }
 
                     default -> throw new IllegalStateException("Unexpected value: " + action);
                 }
@@ -430,9 +415,7 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
     private void onInitialize(CefBrowser browser) {
         try {
             AboutResult about = AnalyticsService.getInstance(project).getAbout();
-            var message = new BackendInfoMessage(
-                    JCefMessagesUtils.REQUEST_MESSAGE_TYPE, JCefMessagesUtils.GLOBAL_SET_BACKEND_INFO,
-                    about);
+            var message = new BackendInfoMessage(about);
 
             Log.log(LOGGER::trace, project, "sending {} message",JCefMessagesUtils.GLOBAL_SET_BACKEND_INFO);
             serializeAndExecuteWindowPostMessageJavaScript(browser, message);

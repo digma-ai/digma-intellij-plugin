@@ -28,6 +28,7 @@ class SpanQueryOptimizationInsight
         "dbStatement",
         "serviceName",
         "dbName",
+        "endpoints",
         "severity",
         "impact",
         "criticality",
@@ -36,7 +37,8 @@ class SpanQueryOptimizationInsight
         "deactivatedCommitId",
         "reopenCount",
         "ticketLink",
-        "firstDetected"
+        "firstDetected",
+        "lastDetected"
 )
 constructor(
         override val codeObjectId: String,
@@ -58,6 +60,7 @@ constructor(
         val dbStatement: String,
         val serviceName: String?,
         val dbName: String?,
+        val endpoints: List<QueryOptimizationEndpoints>,
         override val severity: Double,
         override val impact: Double,
         override val criticality: Double,
@@ -67,6 +70,7 @@ constructor(
         override val reopenCount: Int,
         override val ticketLink: String?,
         override val firstDetected: Date?,
+        override val lastDetected: Date?,
 ) : SpanInsight {
     override val type: InsightType = InsightType.SpanQueryOptimization
 }

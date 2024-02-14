@@ -22,7 +22,11 @@ plugins {
 
 kotlin {
     jvmToolchain {
-        this.languageVersion.set(JavaLanguageVersion.of(project.currentProfile().javaVersion))
+        languageVersion.set(JavaLanguageVersion.of(project.currentProfile().javaVersion))
+        //don't configure 'vendor = JvmVendorSpec.JETBRAINS'
+        // see this issue: https://github.com/JetBrains/gradle-intellij-plugin/issues/1538
+
+        vendor = JvmVendorSpec.AMAZON
     }
 }
 
@@ -37,10 +41,12 @@ tasks {
     withType<KotlinCompile> {
 
         doFirst {
+            logger.lifecycle("compiling kotlin with jdk: ${kotlinJavaToolchain.javaVersion}")
             logger.lifecycle("Compiling kotlin with jvmTarget:${kotlinOptions.jvmTarget},apiVersion:${kotlinOptions.apiVersion},languageVersion:${kotlinOptions.languageVersion}")
         }
 
         kotlinOptions {
+            verbose = true
             jvmTarget = project.currentProfile().javaVersion
             apiVersion = project.currentProfile().kotlinTarget
             languageVersion = project.currentProfile().kotlinTarget

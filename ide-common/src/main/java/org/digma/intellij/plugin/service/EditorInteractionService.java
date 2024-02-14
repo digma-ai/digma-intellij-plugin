@@ -5,15 +5,12 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor;
-import org.digma.intellij.plugin.common.Backgroundable;
-import org.digma.intellij.plugin.document.DocumentInfoContainer;
-import org.digma.intellij.plugin.document.DocumentInfoService;
+import org.digma.intellij.plugin.common.*;
+import org.digma.intellij.plugin.document.*;
 import org.digma.intellij.plugin.insights.InsightsViewOrchestrator;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.model.discovery.MethodInfo;
-import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
-import org.digma.intellij.plugin.ui.CaretContextService;
-import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
+import org.digma.intellij.plugin.model.discovery.*;
+import org.digma.intellij.plugin.ui.*;
 
 /**
  * A service to implement the interactions between listeners and UI components.
@@ -49,7 +46,7 @@ public class EditorInteractionService implements CaretContextService, Disposable
 
         Log.log(logger::debug, "contextChanged called for '{}'", methodUnderCaret);
 
-        if (project.isDisposed()) {
+        if (!ProjectUtilsKt.isProjectValid(project)) {
             Log.log(logger::debug, "project is disposed in contextChanged for '{}'", methodUnderCaret.getId());
             return;
         }

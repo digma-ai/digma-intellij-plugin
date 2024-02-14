@@ -10,7 +10,6 @@ import com.intellij.util.ui.JBUI.emptyInsets
 import com.intellij.util.ui.JBUI.insets
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.MonitoredPanel
-import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.Links
 import java.awt.BorderLayout
@@ -34,65 +33,65 @@ fun createStartupEmptyStatePanel(project: Project):JPanel{
         "Navigate to any code file in your workspace,<br>or click a recent activity,<br>to see runtime data and insights here.")
 }
 
-fun createNoFileEmptyStatePanel(project: Project):JPanel{
-    val icon = if (JBColor.isBright()) {
-        Laf.Icons.Common.FileLight
-    } else {
-        Laf.Icons.Common.FileDark
-    }
-    return createCommonEmptyStateWithIconTitleAndParagraphAndSlackLink(project,icon,"No File Opened",
-        "Navigate to any code file in your workspace<br>to see runtime data and insights here.")
-}
+//fun createNoFileEmptyStatePanel(project: Project):JPanel{
+//    val icon = if (JBColor.isBright()) {
+//        Laf.Icons.Common.FileLight
+//    } else {
+//        Laf.Icons.Common.FileDark
+//    }
+//    return createCommonEmptyStateWithIconTitleAndParagraphAndSlackLink(project,icon,"No File Opened",
+//        "Navigate to any code file in your workspace<br>to see runtime data and insights here.")
+//}
 
 
-fun createNonSupportedEmptyStatePanel(project: Project):JPanel{
-    val icon = if (JBColor.isBright()) {
-        Laf.Icons.Common.FileLight
-    } else {
-        Laf.Icons.Common.FileDark
-    }
-    return createCommonEmptyStateWithIconTitleAndParagraphAndSlackLink(project,icon,"File Type is Not Supported",
-        "Navigate to any code file in your workspace<br>to see runtime data and insights here.")
-}
+//fun createNonSupportedEmptyStatePanel(project: Project):JPanel{
+//    val icon = if (JBColor.isBright()) {
+//        Laf.Icons.Common.FileLight
+//    } else {
+//        Laf.Icons.Common.FileDark
+//    }
+//    return createCommonEmptyStateWithIconTitleAndParagraphAndSlackLink(project,icon,"File Type is Not Supported",
+//        "Navigate to any code file in your workspace<br>to see runtime data and insights here.")
+//}
 
-fun createNoDataYetEmptyStatePanel(project: Project): JPanel {
-    val icon = if (JBColor.isBright()){
-        Laf.Icons.Common.NoDataYetLight
-    }else{
-        Laf.Icons.Common.NoDataYetDark
-    }
-    val messagePanel = createCommonEmptyStateWithIconTitleAndParagraph(
-        icon,
-        "No Data Yet",
-        "Trigger actions that call this code<br>object to learn more about it's<br>runtime behavior."
-    )
-
-
-    val componentsPanel = JPanel(GridBagLayout())
-    componentsPanel.isOpaque = false
-    componentsPanel.border = JBUI.Borders.empty()
-
-    val constraints = GridBagConstraints()
-    constraints.gridx = 0
-    constraints.gridy = 0
-    constraints.ipady = 20
-    componentsPanel.add(messagePanel, constraints)
-
-
-    val link = ActionLink("Not Seeing Your Application Data?") {
-        ActivityMonitor.getInstance(project).registerCustomEvent("troubleshooting link clicked",
-            mapOf(
-                "origin" to "NoDataYetEmptyStatePane"
-            ))
-        MainToolWindowCardsController.getInstance(project).showTroubleshooting()
-    }
-
-    constraints.gridx = 0
-    constraints.gridy = 1
-    constraints.ipady = 0
-    componentsPanel.add(link, constraints)
-    return componentsPanel
-}
+//fun createNoDataYetEmptyStatePanel(project: Project): JPanel {
+//    val icon = if (JBColor.isBright()){
+//        Laf.Icons.Common.NoDataYetLight
+//    }else{
+//        Laf.Icons.Common.NoDataYetDark
+//    }
+//    val messagePanel = createCommonEmptyStateWithIconTitleAndParagraph(
+//        icon,
+//        "No Data Yet",
+//        "Trigger actions that call this code<br>object to learn more about it's<br>runtime behavior."
+//    )
+//
+//
+//    val componentsPanel = JPanel(GridBagLayout())
+//    componentsPanel.isOpaque = false
+//    componentsPanel.border = JBUI.Borders.empty()
+//
+//    val constraints = GridBagConstraints()
+//    constraints.gridx = 0
+//    constraints.gridy = 0
+//    constraints.ipady = 20
+//    componentsPanel.add(messagePanel, constraints)
+//
+//
+//    val link = ActionLink("Not Seeing Your Application Data?") {
+//        ActivityMonitor.getInstance(project).registerCustomEvent("troubleshooting link clicked",
+//            mapOf(
+//                "origin" to "NoDataYetEmptyStatePane"
+//            ))
+//        MainToolWindowCardsController.getInstance(project).showTroubleshooting()
+//    }
+//
+//    constraints.gridx = 0
+//    constraints.gridy = 1
+//    constraints.ipady = 0
+//    componentsPanel.add(link, constraints)
+//    return componentsPanel
+//}
 
 
 
@@ -118,11 +117,11 @@ fun createCommonEmptyStateWithIconTwoTitlesAndParagraph(icon: Icon, firstTitle: 
     return wrapWithScrollable(componentsPanel)
 }
 
-fun createCommonEmptyStateWithIconTitleAndParagraph(icon: Icon, title: String, paragraph: String): JPanel {
-    val textPane = createTextPaneWithHtmlTitleAndParagraph(title,paragraph)
-    val componentsPanel = createCommonEmptyStatePanelWIthIconAndTextPane(icon, textPane)
-    return wrapWithScrollable(componentsPanel)
-}
+//fun createCommonEmptyStateWithIconTitleAndParagraph(icon: Icon, title: String, paragraph: String): JPanel {
+//    val textPane = createTextPaneWithHtmlTitleAndParagraph(title,paragraph)
+//    val componentsPanel = createCommonEmptyStatePanelWIthIconAndTextPane(icon, textPane)
+//    return wrapWithScrollable(componentsPanel)
+//}
 
 fun createCommonEmptyStateWithIconTitleAndParagraphAndSlackLink(project: Project,icon: Icon, title: String,paragraph: String): JPanel {
     val textPane = createTextPaneWithHtmlTitleAndParagraph(title,paragraph)
@@ -231,9 +230,9 @@ fun createSlackLinkPanel(project: Project): JPanel {
 // https://www.infoworld.com/article/2077472/java-tip-109--display-images-using-jeditorpane.html
 //}
 
-fun createTextPaneWithHtmlParagraph(paragraph: String): JTextPane {
-    return createTextPaneWithHtml(getHtmlWithParagraphCenterAlign(paragraph))
-}
+//fun createTextPaneWithHtmlParagraph(paragraph: String): JTextPane {
+//    return createTextPaneWithHtml(getHtmlWithParagraphCenterAlign(paragraph))
+//}
 
 fun createTextPaneWithHtmlTitleAndParagraph(title: String,paragraph: String): JTextPane {
     return createTextPaneWithHtml(getHtmlWithTitleAndParagraphCenterAlign(title,paragraph))
@@ -295,16 +294,16 @@ fun getHtmlWithTitleAndParagraphCenterAlign(title: String,paragraph: String): St
             "</html>"
 }
 
-fun getHtmlWithParagraphCenterAlign(paragraph: String): String{
-    return "<html>" +
-            "<head>" +
-            "<style>" +
-            "p {text-align: center;}" +
-            "div {text-align: center;}" +
-            "</style>" +
-            "</head>" +
-            "<body>" +
-            "<p>$paragraph</p>" +
-            "</body>" +
-            "</html>"
-}
+//fun getHtmlWithParagraphCenterAlign(paragraph: String): String{
+//    return "<html>" +
+//            "<head>" +
+//            "<style>" +
+//            "p {text-align: center;}" +
+//            "div {text-align: center;}" +
+//            "</style>" +
+//            "</head>" +
+//            "<body>" +
+//            "<p>$paragraph</p>" +
+//            "</body>" +
+//            "</html>"
+//}

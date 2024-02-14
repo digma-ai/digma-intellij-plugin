@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.insights.view;
 
 import org.digma.intellij.plugin.model.InsightType;
+import org.digma.intellij.plugin.model.rest.insights.EndpointQueryOptimizationInsight;
 import org.digma.intellij.plugin.model.rest.insights.SpanNexusInsight;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.insights.EPNPlusSpansInsight;
@@ -85,6 +86,8 @@ public class BuildersHolder {
                 return new GroupListViewItemBuilder<SlowEndpointInsight>(InsightGroupType.HttpEndpoint, SlowEndpointInsight::getRoute, SlowEndpointInsight::endpointSpanName);
             case EndpointSpaNPlusOne:
                 return new GroupListViewItemBuilder<EPNPlusSpansInsight>(InsightGroupType.HttpEndpoint, EPNPlusSpansInsight::getRoute, EPNPlusSpansInsight::endpointSpanName);
+            case EndpointQueryOptimization:
+                return new GroupListViewItemBuilder<EndpointQueryOptimizationInsight>(InsightGroupType.HttpEndpoint, EndpointQueryOptimizationInsight::getRoute, EndpointQueryOptimizationInsight::endpointSpanName);
             case EndpointChattyApi:
                 return new GroupListViewItemBuilder<EndpointChattyApiInsight>(InsightGroupType.HttpEndpoint, EndpointChattyApiInsight::getRoute, EndpointChattyApiInsight::endpointSpanName);
             case EndpointSessionInView:

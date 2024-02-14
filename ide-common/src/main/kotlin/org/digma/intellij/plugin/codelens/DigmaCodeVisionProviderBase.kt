@@ -9,10 +9,13 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiFile
+import org.digma.intellij.plugin.common.isProjectValid
+import org.digma.intellij.plugin.common.isValidVirtualFile
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.psi.LanguageServiceLocator
+import org.digma.intellij.plugin.psi.PsiUtils
 
 abstract class DigmaCodeVisionProviderBase: DaemonBoundCodeVisionProvider {
 
@@ -30,11 +33,22 @@ abstract class DigmaCodeVisionProviderBase: DaemonBoundCodeVisionProvider {
 
 
     override fun computeForEditor(editor: Editor, file: PsiFile): List<Pair<TextRange, CodeVisionEntry>> {
+
         try {
+
+            if (editor.isDisposed || !PsiUtils.isValidPsiFile(file)) {
+                return empty
+            }
+
 
             Log.log(logger::trace, "got request to computeForEditor code lens for {}", file.virtualFile)
 
             val project: Project = editor.project ?: return emptyList()
+
+            if (!isProjectValid(project)) {
+                return empty
+            }
+
 
             val languageService = LanguageServiceLocator.getInstance(project).locate(file.language)
             Log.log(logger::trace, "found LanguageService for for {}, {}", file.virtualFile, languageService)
@@ -45,15 +59,15 @@ abstract class DigmaCodeVisionProviderBase: DaemonBoundCodeVisionProvider {
             }
 
             Log.log(logger::trace, "returning empty code lens list for {}", file.virtualFile)
-            return emptyList()
+            return empty
         } catch (e: Throwable) {
             ErrorReporter.getInstance().reportError("DigmaCodeVisionProviderBase.computeForEditor", e)
-            return emptyList()
+            return empty
         }
     }
 
     private fun computeLenses(editor: Editor, psiFile: PsiFile, languageService: LanguageService): List<Pair<TextRange, CodeVisionEntry>> {
-        if (psiFile.virtualFile == null) {
+        if (!isValidVirtualFile(psiFile.virtualFile)) {
             return empty
         }
         editor.project?.let {
@@ -61,7 +75,7 @@ abstract class DigmaCodeVisionProviderBase: DaemonBoundCodeVisionProvider {
                 return languageService.getCodeLens(psiFile)
             }
         }
-        return emptyList()
+        return empty
     }
 
 }

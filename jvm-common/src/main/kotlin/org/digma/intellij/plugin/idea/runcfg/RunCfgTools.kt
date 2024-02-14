@@ -20,8 +20,8 @@ import com.intellij.psi.PsiClass
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.util.keyFMap.KeyFMap
 import org.digma.intellij.plugin.common.allowSlowOperation
+import org.digma.intellij.plugin.common.runInReadAccessInSmartModeWithResultAndRetryIgnorePCE
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.psi.runInReadAccessInSmartModeWithResultAndRetry
 import org.jetbrains.annotations.VisibleForTesting
 import org.jetbrains.idea.maven.execution.MavenRunConfiguration
 import org.jetbrains.plugins.gradle.service.execution.GradleRunConfiguration
@@ -91,7 +91,8 @@ private fun isConfigurationTargetWsl(configuration: RunConfigurationBase<*>): Bo
 }
 
 private fun isProjectUnderWsl(configuration: RunConfiguration): Boolean {
-    return configuration.project.basePath?.startsWith("//wsl$/") == true
+    return configuration.project.basePath?.startsWith("//wsl$/") == true ||
+            configuration.project.basePath?.startsWith("//wsl.localhost/") == true
 }
 
 
@@ -140,7 +141,7 @@ private abstract class RunCfgFlavor<T : RunConfiguration>(protected val runCfgBa
 
             val module: Module? = allowSlowOperation(Supplier {
 
-                val psiClass = runInReadAccessInSmartModeWithResultAndRetry(project) {
+                val psiClass = runInReadAccessInSmartModeWithResultAndRetryIgnorePCE(project) {
                     var cls: PsiClass? = psiFacade.findClass(mainClassFqn, searchScope)
                     if (cls == null) {
                         // try shorter name, since maybe the last part is method name

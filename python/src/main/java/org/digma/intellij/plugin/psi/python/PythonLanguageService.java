@@ -5,50 +5,32 @@ import com.intellij.lang.Language;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.fileEditor.FileEditor;
-import com.intellij.openapi.fileEditor.FileEditorManager;
-import com.intellij.openapi.progress.EmptyProgressIndicator;
-import com.intellij.openapi.progress.ProgressManager;
-import com.intellij.openapi.project.DumbService;
-import com.intellij.openapi.project.Project;
+import com.intellij.openapi.fileEditor.*;
+import com.intellij.openapi.progress.*;
+import com.intellij.openapi.project.*;
 import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiManager;
+import com.intellij.psi.*;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.jetbrains.python.PythonLanguage;
-import com.jetbrains.python.psi.PyClass;
-import com.jetbrains.python.psi.PyFile;
-import com.jetbrains.python.psi.PyFunction;
-import com.jetbrains.python.psi.stubs.PyClassNameIndex;
-import com.jetbrains.python.psi.stubs.PyFunctionNameIndex;
+import com.jetbrains.python.psi.*;
+import com.jetbrains.python.psi.stubs.*;
 import kotlin.Pair;
-import org.digma.intellij.plugin.common.EDT;
-import org.digma.intellij.plugin.common.ReadActions;
-import org.digma.intellij.plugin.common.Retries;
-import org.digma.intellij.plugin.common.SlowOperationsUtilsKt;
-import org.digma.intellij.plugin.common.VfsUtilsKt;
+import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.editor.EditorUtils;
+import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.model.discovery.DocumentInfo;
-import org.digma.intellij.plugin.model.discovery.EndpointInfo;
-import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
-import org.digma.intellij.plugin.psi.LanguageService;
-import org.digma.intellij.plugin.psi.PsiAccessUtilsKt;
-import org.digma.intellij.plugin.psi.PsiUtils;
+import org.digma.intellij.plugin.model.discovery.*;
+import org.digma.intellij.plugin.psi.*;
 import org.digma.intellij.plugin.ui.CaretContextService;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.*;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+
+import static org.digma.intellij.plugin.common.CatchingUtilsKt.executeCatchingWithResult;
 
 public class PythonLanguageService implements LanguageService {
 
@@ -133,24 +115,35 @@ public class PythonLanguageService implements LanguageService {
     @Override
     @NotNull
     public MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, Editor selectedEditor, int caretOffset) {
-        return Retries.retryWithResult(() -> ReadAction.compute(() -> {
-            if (!isSupportedFile(psiFile)) {
-                return new MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), caretOffset, null, false);
-            }
-            PsiElement underCaret = psiFile.findElementAt(caretOffset);
-            if (underCaret == null) {
-                return new MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), caretOffset, null, true);
-            }
-            PyFunction pyFunction = PsiTreeUtil.getParentOfType(underCaret, PyFunction.class);
-            if (pyFunction != null) {
-                var methodId = PythonLanguageUtils.createPythonMethodCodeObjectId(project, pyFunction);
-                var name = pyFunction.getName() == null ? "" : pyFunction.getName();
-                var containingClass = pyFunction.getContainingClass();
-                var className = containingClass == null ? "" : containingClass.getName() + ".";
-                return new MethodUnderCaret(methodId, name, className, "", PsiUtils.psiFileToUri(psiFile), caretOffset);
-            }
-            return new MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), caretOffset);
-        }), Throwable.class, 50, 5);
+
+        //detectMethodUnderCaret should run very fast and return a result,
+        // this operation may become invalid very soon if user clicks somewhere else.
+        // no retry because it needs to complete very fast
+        //it may be called from EDT or background, runInReadAccessWithResult will acquire read access if necessary.
+        return executeCatchingWithResult(() -> PsiAccessUtilsKt.runInReadAccessWithResult(() -> detectMethodUnderCaret(project, psiFile, caretOffset)), throwable -> {
+            ErrorReporter.getInstance().reportError(getClass().getSimpleName() + ".detectMethodUnderCaret", throwable);
+            return new MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), caretOffset, null, false);
+        });
+    }
+
+    private MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, int caretOffset) {
+
+        if (!isSupportedFile(psiFile)) {
+            return new MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), caretOffset, null, false);
+        }
+        PsiElement underCaret = psiFile.findElementAt(caretOffset);
+        if (underCaret == null) {
+            return new MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), caretOffset, null, true);
+        }
+        PyFunction pyFunction = PsiTreeUtil.getParentOfType(underCaret, PyFunction.class);
+        if (pyFunction != null) {
+            var methodId = PythonLanguageUtils.createPythonMethodCodeObjectId(project, pyFunction);
+            var name = pyFunction.getName() == null ? "" : pyFunction.getName();
+            var containingClass = pyFunction.getContainingClass();
+            var className = containingClass == null ? "" : containingClass.getName() + ".";
+            return new MethodUnderCaret(methodId, name, className, "", PsiUtils.psiFileToUri(psiFile), caretOffset);
+        }
+        return new MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), caretOffset);
     }
 
     /**
@@ -330,7 +323,7 @@ public class PythonLanguageService implements LanguageService {
 
 
     @Override
-    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile) {
+    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, BuildDocumentInfoProcessContext context) {
         Log.log(LOGGER::debug, "got buildDocumentInfo request for {}", psiFile);
         if (psiFile instanceof PyFile pyFile) {
 
@@ -344,8 +337,8 @@ public class PythonLanguageService implements LanguageService {
     }
 
     @Override
-    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, @Nullable FileEditor newEditor) {
-        return buildDocumentInfo(psiFile);
+    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, @Nullable FileEditor newEditor, BuildDocumentInfoProcessContext context) {
+        return buildDocumentInfo(psiFile, context);
     }
 
 

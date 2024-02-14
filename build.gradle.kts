@@ -22,9 +22,9 @@ fun properties(key: String) = properties(key,project)
 plugins {
     id("semantic-version")
     id("plugin-project")
-    id("org.jetbrains.changelog") version "2.1.0"
+    id("org.jetbrains.changelog") version "2.2.0"
     id("org.jetbrains.qodana") version "0.1.13"
-    id("org.jetbrains.kotlinx.kover") version "0.6.1"
+    id("org.jetbrains.kotlinx.kover") version "0.7.5"
 
 }
 
@@ -51,26 +51,32 @@ val riderDotNetObjects: Configuration by configurations.creating {
 }
 
 dependencies {
+
+    //todo: enable instrumentedJar : https://github.com/digma-ai/digma-intellij-plugin/issues/1729
+
     implementation(libs.commons.lang3)
+    implementation(libs.freemarker)
     implementation(project(":model"))
     implementation(project(":analytics-provider"))
     implementation(project(":ide-common"))
     implementation(project(":jvm-common"))
     implementation(project(":python"))
     implementation(project(":rider"))
-// todo: jetbrains recommend using the instrumented jar but there is a bug.
-// https://github.com/digma-ai/digma-intellij-plugin/issues/1017
-//    implementation(project(":ide-common", "instrumentedJar"))
-//    implementation(project(":jvm-common", "instrumentedJar"))
-//    implementation(project(":python", "instrumentedJar"))
-//    implementation(project(":rider", "instrumentedJar"))
-
-
-    implementation(libs.freemarker)
 
     riderDotNetObjects(project(mapOf(
         "path" to ":rider",
         "configuration" to "riderDotNetObjects")))
+}
+
+configurations {
+    runtimeClasspath {
+        //make sure we never package kotlin-stdlib-jdk8 or kotlin-stdlib-jdk7 because its is supplied by the IDE.
+        //see more in
+        //buildSrc/src/main/kotlin/digma-base.gradle.kts
+        //settings.gradle.kts
+        exclude("org.jetbrains.kotlin", "kotlin-stdlib-jdk8")
+        exclude("org.jetbrains.kotlin", "kotlin-stdlib-jdk7")
+    }
 }
 
 
@@ -88,7 +94,7 @@ intellij {
     version.set(platformVersion)
     type.set(platformType)
     plugins.set(platformPlugins)
-    downloadSources.set(project.shouldDownloadSources())
+    downloadSources.set(project.shouldDownloadSources()) //todo: probably not necessary because the default is to check CI env
 
     pluginsRepositories {
         marketplace()
@@ -134,7 +140,6 @@ project.afterEvaluate{
 
 
 tasks {
-
 
     prepareSandbox{
         //copy rider dlls to the plugin sandbox so it is packaged in the zip
@@ -221,11 +226,14 @@ tasks {
         }
     }
 
+
     runIde {
         dependsOn(deleteLog)
 
         //to disable the splash screen on startup because it may interrupt when debugging.
         //args(listOf("nosplash"))
+
+//        jvmArgs("-XX:ReservedCodeCacheSize=512M")
 
         maxHeapSize = "2g"
         // Rider's backend doesn't support dynamic plugins. It might be possible to work with auto-reload of the frontend
@@ -235,8 +243,28 @@ tasks {
             "idea.log.trace.categories" to "#org.digma",
             "idea.log.debug.categories" to "#org.digma",
             //make large idea.log because the default rotates every 10M and makes it difficult to follow messages with tail
-            "idea.log.limit" to "999999999"
+            "idea.log.limit" to "999999999",
+//            "idea.ProcessCanceledException" to "disabled"
         )
+
+
+        //todo: this is a workaround for these issues:
+        // 241 should run with JBR 21. but currently there is a bug in gradle-intellij-plugin that downloads
+        // a 21 JBR without jcef support.
+        // see this issue:
+        // https://github.com/JetBrains/gradle-intellij-plugin/issues/1534
+        // and this PR fixes it
+        // https://github.com/JetBrains/gradle-intellij-plugin/pull/1535
+        // when gradle-intellij-plugin has a new release including the above fix it will download the right 21 JBR.
+        // but then there is this issue:
+        // https://github.com/digma-ai/digma-intellij-plugin/issues/1734
+        // if 241 runs with 21 then gradle-intellij-plugin will configure the test task to use this JBR,
+        // but some of our tests fail with 21. so we have to make sure all our tests pass with JBR 21
+        // before removing this workaround.
+        //Note in build 241.11761.10 jetbrains changed the bundled JBR to 17
+//        if (project.currentProfile().profile == BuildProfiles.Profiles.p241) {
+//            jbrVersion = "17.0.10b1171.14"
+//        }
     }
 
 
@@ -281,6 +309,7 @@ tasks {
 
 
     publishPlugin {
+
         if (System.getenv("PUBLISH_TOKEN") != null) {
             token.set(System.getenv("PUBLISH_TOKEN").trim())
         }
@@ -288,8 +317,9 @@ tasks {
         // the version is based on the SemVer (https://semver.org) and supports pre-release labels, like 2.1.7-alpha.3
         // Specify pre-release label to publish the plugin in a custom Release Channel automatically. Read more:
         // https://plugins.jetbrains.com/docs/intellij/deployment.html#specifying-a-release-channel
-        channels.set(listOf(project.buildVersion().split('-').getOrElse(1) { "default" }
-            .split('.').first()))
+        channels.set(listOf("default"))
+//        channels.set(listOf(project.buildVersion().split('-').getOrElse(1) { "default" }
+//            .split('.').first()))
     }
 
 
@@ -319,7 +349,8 @@ tasks {
             listOf(
                 "webview/recentactivity/recentActivityTemplate.ftl",
                 "webview/tests/testsTemplate.ftl",
-                "webview/notifications/notificationstemplate.ftl"
+                "webview/notifications/notificationstemplate.ftl",
+                "webview/assets/assetstemplate.ftl"
             )
         ) {
             filter<ReplaceTokens>("tokens" to tokens)

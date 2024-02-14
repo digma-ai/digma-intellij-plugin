@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.ui.list.insights
 
+import com.google.common.io.CharStreams
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.common.CommonUtils
@@ -10,83 +11,13 @@ import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.settings.LinkMode
 import org.digma.intellij.plugin.settings.SettingsState
-import org.digma.intellij.plugin.ui.list.ListItemActionButton
 import org.digma.intellij.plugin.ui.model.TraceSample
+import java.io.InputStreamReader
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.util.Collections
-import javax.swing.JButton
 
 const val traceButtonName: String = "show-in-jaeger"
-
-// if cannot create the button then would return null
-fun buildButtonToJaeger(
-    project: Project, linkCaption: String, spanName: String, traceSamples: List<TraceSample?>, insightType: InsightType,
-): JButton? {
-
-    //todo: delete , not in use, was used with swing UI
-
-    val filteredTraces = traceSamples.filter { traceSample -> traceSample != null && traceSample.hasTraceId() }
-
-    if (!isJaegerButtonEnabled() || filteredTraces.isEmpty()){
-        return null
-    }
-
-    val button = ListItemActionButton(linkCaption)
-    button.addActionListener{
-
-        ActivityMonitor.getInstance(project).registerButtonClicked(traceButtonName, insightType)
-
-        val settingsState = SettingsState.getInstance()
-        val jaegerBaseUrl = settingsState.jaegerUrl?.trim()?.trimEnd('/')
-        val jaegerUrl: String
-        val embedPart = "&uiEmbed=v0"
-
-        val trace1 = filteredTraces[0]!!.traceId?.lowercase()
-        jaegerUrl = if (filteredTraces.size == 1) {
-            "${jaegerBaseUrl}/trace/${trace1}?cohort=${trace1}${embedPart}"
-        } else {
-            // assuming it has (at least) size of 2
-            val trace2 = filteredTraces[1]!!.traceId?.lowercase()
-            "${jaegerBaseUrl}/trace/${trace1}...${trace2}?cohort=${trace1}&cohort=${trace2}${embedPart}"
-        }
-
-
-        when(settingsState.jaegerLinkMode){
-
-            LinkMode.Internal -> {
-
-                val caption: String = if (filteredTraces.size == 1) {
-                    "A sample ${filteredTraces[0]!!.traceName} trace"
-                } else {
-                    "Comparing: A sample ${filteredTraces[0]!!.traceName} trace with a ${filteredTraces[1]!!.traceName} trace"
-                }
-
-                val htmlContent = SpanPanels.JAEGER_EMBEDDED_HTML_TEMPLATE
-                    .replace("__JAEGER_EMBEDDED_URL__", jaegerUrl)
-                    .replace("__CAPTION__", caption)
-                val editorTitle = "Jaeger sample traces of Span $spanName"
-                EDT.ensureEDT {
-                    DigmaHTMLEditorProvider.openEditor(project, editorTitle, htmlContent)
-                }
-            }
-            LinkMode.External -> {
-                EDT.ensureEDT{
-                    BrowserUtil.browse(jaegerUrl, project)
-                }
-            }
-            LinkMode.Embedded -> {
-                JaegerUIService.getInstance(project).openEmbeddedJaeger(filteredTraces, spanName, null, true)
-            }
-        }
-    }
-
-
-    return button
-}
-
-
-
 
 
 
@@ -121,7 +52,7 @@ fun openJaegerFromRecentActivity(
 
         LinkMode.Internal -> {
             val caption = "A sample $spanName trace"
-            val htmlContent = SpanPanels.JAEGER_EMBEDDED_HTML_TEMPLATE
+            val htmlContent = JaegerEmbeddedHtmlTemplate.JAEGER_EMBEDDED_HTML_TEMPLATE
                 .replace("__JAEGER_EMBEDDED_URL__", jaegerUrl)
                 .replace("__CAPTION__", caption)
             val editorTitle = "Jaeger sample traces of Span $spanName"
@@ -136,7 +67,8 @@ fun openJaegerFromRecentActivity(
         }
 
         LinkMode.Embedded -> {
-            JaegerUIService.getInstance(project).openEmbeddedJaeger(traceId, spanName, spanCodeObjectId, false)
+            val traceSample = TraceSample(spanName, traceId)
+            JaegerUIService.getInstance(project).openEmbeddedJaeger(Collections.singletonList(traceSample), spanName, spanCodeObjectId, true)
         }
     }
 
@@ -158,7 +90,7 @@ fun openJaegerFromInsight(
     var jaegerUrl: String
     val embedPart = "&uiEmbed=v0"
 
-    val trace1 = traceId.lowercase();
+    val trace1 = traceId.lowercase()
     if (settingsState.jaegerLinkMode==LinkMode.External && jaegerBaseUrl!=null && jaegerBaseUrl.contains("\${TRACE_ID}")){
         jaegerUrl = jaegerBaseUrl.replace("\${TRACE_ID}", trace1)
     }
@@ -174,9 +106,9 @@ fun openJaegerFromInsight(
 
         LinkMode.Internal -> {
 
-            val caption = "A sample ${traceName} trace"
+            val caption = "A sample $traceName trace"
 
-            val htmlContent = SpanPanels.JAEGER_EMBEDDED_HTML_TEMPLATE
+            val htmlContent = JaegerEmbeddedHtmlTemplate.JAEGER_EMBEDDED_HTML_TEMPLATE
                 .replace("__JAEGER_EMBEDDED_URL__", jaegerUrl)
                 .replace("__CAPTION__", caption)
             val editorTitle = "Jaeger sample traces of Span $traceName"
@@ -192,7 +124,7 @@ fun openJaegerFromInsight(
         }
 
         LinkMode.Embedded -> {
-            val traceSample = TraceSample(traceName, traceId);
+            val traceSample = TraceSample(traceName, traceId)
             JaegerUIService.getInstance(project).openEmbeddedJaeger(Collections.singletonList(traceSample), traceName, spanCodeObjectId, true)
         }
     }
@@ -222,9 +154,9 @@ fun openJaegerComparisonFromInsight(
 
         LinkMode.Internal -> {
 
-            val caption = "Comparing: A sample ${traceName1} trace with a ${traceName2} trace"
+            val caption = "Comparing: A sample $traceName1 trace with a $traceName2 trace"
 
-            val htmlContent = SpanPanels.JAEGER_EMBEDDED_HTML_TEMPLATE
+            val htmlContent = JaegerEmbeddedHtmlTemplate.JAEGER_EMBEDDED_HTML_TEMPLATE
                 .replace("__JAEGER_EMBEDDED_URL__", jaegerUrl)
                 .replace("__CAPTION__", caption)
             val editorTitle = "Jaeger sample traces of Span $traceName1"
@@ -240,8 +172,8 @@ fun openJaegerComparisonFromInsight(
         }
 
         LinkMode.Embedded -> {
-            val traceSample1 = TraceSample(traceName1, traceId1);
-            val traceSample2 = TraceSample(traceName2, traceId2);
+            val traceSample1 = TraceSample(traceName1, traceId1)
+            val traceSample2 = TraceSample(traceName2, traceId2)
             val traces = listOf(traceSample1, traceSample2)
             JaegerUIService.getInstance(project).openEmbeddedJaeger(traces, traceName1, null, true)
         }
@@ -271,5 +203,15 @@ fun getJaegerUrl(): String? {
         LinkMode.Embedded -> {
             jaegerQueryUrl
         }
+    }
+}
+
+
+private class JaegerEmbeddedHtmlTemplate {
+
+    companion object {
+        val JAEGER_EMBEDDED_HTML_TEMPLATE: String = this::class.java.getResourceAsStream("/templates/Jaeger-embedded-template.html")?.let {
+            CharStreams.toString(InputStreamReader(it))
+        }.toString()
     }
 }

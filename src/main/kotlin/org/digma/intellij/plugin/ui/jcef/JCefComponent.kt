@@ -154,7 +154,7 @@ private constructor(
         project.messageBus.connect(scopeChangeParentDisposable).subscribe(
             ScopeChangedEvent.SCOPE_CHANGED_TOPIC, object : ScopeChangedEvent {
                 override fun scopeChanged(
-                    scope: SpanScope,
+                    scope: SpanScope?,
                     isAlreadyAtCode: Boolean,
                     codeDetailsList: List<CodeDetails>,
                     relatedCodeDetailsList: List<CodeDetails>,

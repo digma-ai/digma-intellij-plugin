@@ -31,8 +31,9 @@ enum class InsightType {
     SpanScaling,
     SpanScalingRootCause,
     SpanNexus,
-    SpanQueryOptimization
-    ;
+    SpanQueryOptimization,
+    SpanScalingInsufficientData,
+    SpanScalingWell;
 }
 
 enum class InsightImportance(val priority: Int) {

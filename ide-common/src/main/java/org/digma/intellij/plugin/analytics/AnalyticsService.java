@@ -1,13 +1,12 @@
 package org.digma.intellij.plugin.analytics;
 
-import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.*;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.JBColor;
 import com.intellij.util.Alarm;
-import kotlinx.serialization.json.Json;
 import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.document.CodeObjectsUtil;
@@ -473,7 +472,7 @@ public class AnalyticsService implements Disposable {
     }
 
     public String getInsights(@NotNull Map<String, Object> queryParams) throws AnalyticsServiceException {
-        return executeCatching(() ->analyticsProviderProxy.getInsights(queryParams));
+        return executeCatching(() -> analyticsProviderProxy.getInsights(queryParams));
     }
 
     @Override

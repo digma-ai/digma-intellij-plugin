@@ -30,6 +30,11 @@ class ScopeManager(private val project: Project) : Disposable {
     }
 
 
+    fun changeToHome() {
+
+        fireScopeChangedEvent(null, true, listOf(), listOf())
+    }
+
     fun changeScope(scope: Scope) {
 
         when (scope) {
@@ -63,7 +68,7 @@ class ScopeManager(private val project: Project) : Disposable {
 
 
     private fun fireScopeChangedEvent(
-        scope: SpanScope,
+        scope: SpanScope?,
         isAlreadyAtCode: Boolean,
         codeDetailsList: List<CodeDetails>,
         relatedCodeDetailsList: List<CodeDetails>,

@@ -3,7 +3,6 @@ package org.digma.intellij.plugin.document;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
-import org.apache.commons.collections4.CollectionUtils;
 import org.digma.intellij.plugin.analytics.*;
 import org.digma.intellij.plugin.common.Unicodes;
 import org.digma.intellij.plugin.log.Log;
@@ -11,15 +10,11 @@ import org.digma.intellij.plugin.model.InsightImportance;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.lens.CodeLens;
 import org.digma.intellij.plugin.model.rest.codelens.*;
-import org.digma.intellij.plugin.model.rest.insights.*;
-import org.digma.intellij.plugin.recentactivity.RecentActivityLogic;
+import org.digma.intellij.plugin.model.rest.insights.MethodWithCodeObjects;
 import org.jetbrains.annotations.NotNull;
 
-import java.sql.Array;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static org.ini4j.Config.getEnvironment;
 
 public class CodeLensProvider {
 

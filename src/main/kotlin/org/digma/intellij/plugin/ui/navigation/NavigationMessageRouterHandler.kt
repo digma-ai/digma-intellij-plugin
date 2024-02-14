@@ -8,6 +8,8 @@ import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.navigation.MainContentViewSwitcher
 import org.digma.intellij.plugin.navigation.View
+import org.digma.intellij.plugin.scope.ScopeManager
+import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
 
 class NavigationMessageRouterHandler(project: Project) : BaseMessageRouterHandler(project) {
@@ -31,6 +33,7 @@ class NavigationMessageRouterHandler(project: Project) : BaseMessageRouterHandle
             "NAVIGATION/CHANGE_ENVIRONMENT" -> {
                 changeEnvironment(requestJsonNode)
             }
+
             "NAVIGATION/AUTOFIX_MISSING_DEPENDENCY" -> {
                 fixMissingDependencies(requestJsonNode)
             }
@@ -39,9 +42,31 @@ class NavigationMessageRouterHandler(project: Project) : BaseMessageRouterHandle
                 addAnnotation(requestJsonNode)
             }
 
+            "NAVIGATION/CHANGE_SCOPE" -> {
+                changeScope(requestJsonNode)
+            }
+
             else -> {
                 Log.log(logger::warn, "got unexpected action='$action'")
             }
+        }
+    }
+
+    private fun changeScope(requestJsonNode: JsonNode) {
+        val payload = getPayloadFromRequest(requestJsonNode)
+        payload?.let { pl ->
+            val span = pl.get("span")
+            val spanScope: SpanScope? = span?.let { sp ->
+                val spanObj = objectMapper.readTree(sp.asText())
+                val spanId = spanObj.get("spanCodeObjectId").asText()
+                val serviceName = spanObj.get("serviceName").asText()
+                SpanScope(spanId, null, serviceName)
+            }
+
+            spanScope?.let {
+                ScopeManager.getInstance(project).changeScope(it)
+            } ?: ScopeManager.getInstance(project).changeToHome()
+
         }
     }
 

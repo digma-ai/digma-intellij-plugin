@@ -111,7 +111,7 @@ fun sendObservabilityEnabledMessage(cefBrowser: CefBrowser, isObservabilityEnabl
 
 fun sendScopeChangedMessage(
     cefBrowser: CefBrowser,
-    scope: SpanScope,
+    scope: SpanScope?,
     isAlreadyAtCode: Boolean,
     codeDetailsList: List<CodeDetails>,
     relatedCodeDetailsList: List<CodeDetails>,

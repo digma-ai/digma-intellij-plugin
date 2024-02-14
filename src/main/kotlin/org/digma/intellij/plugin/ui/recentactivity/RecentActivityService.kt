@@ -78,9 +78,7 @@ class RecentActivityService(val project: Project) : Disposable {
                     val spanId = payload.span.spanCodeObjectId
                     val environmentsSupplier: EnvironmentsSupplier = project.service<AnalyticsService>().environment
                     environmentsSupplier.setCurrent(payload.environment, false) {
-                        EDT.ensureEDT {
-                            ScopeManager.getInstance(project).changeScope(SpanScope(spanId))
-                        }
+                        ScopeManager.getInstance(project).changeScope(SpanScope(spanId))
                     }
                     project.service<ActivityMonitor>().registerSpanLinkClicked(MonitoredPanel.RecentActivity)
                 } catch (e: Exception) {

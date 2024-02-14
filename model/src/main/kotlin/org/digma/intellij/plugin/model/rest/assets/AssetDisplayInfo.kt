@@ -9,6 +9,10 @@ data class AssetDisplayInfo
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 @ConstructorProperties(
     "displayName",
-    "methodCodeObjectId"
+    "methodCodeObjectId",
+    "role"
 )
-constructor(val displayName: String, val methodCodeObjectId: String?)
+constructor(val displayName: String, val methodCodeObjectId: String? = null, val role: Role)
+
+
+enum class Role { Entry, Internal, Unknown }

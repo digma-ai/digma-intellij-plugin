@@ -12,7 +12,7 @@ data class SetScopeMessage(val payload: SetScopeMessagePayload) {
 }
 
 data class SetScopeMessagePayload(
-    val span: SpanScope,
+    val span: SpanScope?,
     val code: CodeLocation,
 )
 

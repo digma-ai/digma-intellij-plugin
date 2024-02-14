@@ -16,5 +16,5 @@ interface ScopeChangedEvent {
     }
 
 
-    fun scopeChanged(scope: SpanScope, isAlreadyAtCode: Boolean, codeDetailsList: List<CodeDetails>, relatedCodeDetailsList: List<CodeDetails>)
+    fun scopeChanged(scope: SpanScope?, isAlreadyAtCode: Boolean, codeDetailsList: List<CodeDetails>, relatedCodeDetailsList: List<CodeDetails>)
 }

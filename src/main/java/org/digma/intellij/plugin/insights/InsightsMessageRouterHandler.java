@@ -101,10 +101,17 @@ public class InsightsMessageRouterHandler extends BaseMessageRouterHandler {
 
             case "INSIGHTS/GET_COMMIT_INFO" -> getCommitInfo(browser, jsonNode);
 
+            case "INSIGHTS/GET_DATA_LIST" -> pushInsightsListData(jsonNode);
+
+
             default -> Log.log(LOGGER::warn, "got unexpected action='$action'");
         }
     }
 
+    private void pushInsightsListData(JsonNode jsonNode) {
+        Log.log(LOGGER::debug, project, "got INSIGHTS/GET_DATA_LIST message");
+        InsightsService.getInstance(project).refreshInsightsList(jsonNode);
+    }
 
     private void getCommitInfo(@NotNull CefBrowser browser, JsonNode jsonNode) throws JsonProcessingException {
 

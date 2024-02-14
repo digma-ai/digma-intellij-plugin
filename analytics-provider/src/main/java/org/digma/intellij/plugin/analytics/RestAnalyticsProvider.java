@@ -235,6 +235,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
+    public String getInsights(Map<String, Object> queryParams) {
+        return execute(() -> client.analyticsProvider.getInsights(queryParams));
+    }
+
+    @Override
     public String getDashboard(Map<String, String> queryParams) {
         return execute(() -> client.analyticsProvider.getDashboard(queryParams));
     }
@@ -660,6 +665,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @GET("/assets/display_info")
         Call<AssetDisplayInfo> getAssetDisplayInfo(@Query("environment") String environment, @Query("codeObjectId") String codeObjectId);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @GET("/insights/get_insights_view")
+        Call<String> getInsights(@QueryMap Map<String, Object> fields);
     }
 
 }

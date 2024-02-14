@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.analytics;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.digma.intellij.plugin.model.rest.AboutResult;
 import org.digma.intellij.plugin.model.rest.assets.AssetDisplayInfo;
 import org.digma.intellij.plugin.model.rest.codespans.CodeContextSpan;
@@ -97,4 +98,6 @@ public interface AnalyticsProvider extends Closeable {
     List<CodeContextSpan> getSpansForCodeLocation(String env, List<String> idsWithType);
 
     AssetDisplayInfo getAssetDisplayInfo(String env, String codeObjectId);
+
+    String getInsights(Map<String, Object> queryParams);
 }

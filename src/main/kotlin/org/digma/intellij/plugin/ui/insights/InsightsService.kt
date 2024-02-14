@@ -3,7 +3,6 @@ package org.digma.intellij.plugin.ui.insights
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.JsonMappingException
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
@@ -18,9 +17,8 @@ import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil
 import org.digma.intellij.plugin.jcef.common.UserRegistrationEvent
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.settings.SettingsState
-import org.digma.intellij.plugin.ui.common.getQueryMapFromPayload
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
-import org.digma.intellij.plugin.ui.jcef.createObjectMapper
+import org.digma.intellij.plugin.ui.jcef.getQueryMapFromPayload
 import org.digma.intellij.plugin.ui.jcef.sendUserEmail
 import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
 import org.digma.intellij.plugin.ui.tests.TestsService

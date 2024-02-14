@@ -2,7 +2,6 @@ package org.digma.intellij.plugin.ui.assets
 
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.ObjectNode
 import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
@@ -12,8 +11,8 @@ import org.digma.intellij.plugin.ui.assets.model.SetAssetsDataFiltersMessage
 import org.digma.intellij.plugin.ui.assets.model.SetAssetsDataMessage
 import org.digma.intellij.plugin.ui.assets.model.SetCategoriesDataMessage
 import org.digma.intellij.plugin.ui.assets.model.SetServicesDataMessage
-import org.digma.intellij.plugin.ui.common.getQueryMapFromPayload
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
+import org.digma.intellij.plugin.ui.jcef.getQueryMapFromPayload
 import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
 
 class AssetsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(project) {

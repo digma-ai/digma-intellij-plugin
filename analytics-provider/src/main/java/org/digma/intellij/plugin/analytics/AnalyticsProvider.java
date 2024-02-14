@@ -1,9 +1,8 @@
 package org.digma.intellij.plugin.analytics;
 
-import org.digma.intellij.plugin.model.rest.codelens.CodeLensOfMethodsRequest;
 import org.digma.intellij.plugin.model.rest.AboutResult;
-import org.digma.intellij.plugin.model.rest.codelens.CodeLensOfMethodsResponse;
 import org.digma.intellij.plugin.model.rest.assets.AssetDisplayInfo;
+import org.digma.intellij.plugin.model.rest.codelens.*;
 import org.digma.intellij.plugin.model.rest.codespans.CodeContextSpan;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.env.*;

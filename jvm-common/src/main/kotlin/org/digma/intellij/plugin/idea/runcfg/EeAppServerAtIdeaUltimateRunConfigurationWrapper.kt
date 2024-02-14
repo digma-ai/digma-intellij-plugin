@@ -99,9 +99,7 @@ class EeAppServerAtIdeaUltimateRunConfigurationWrapper : RunConfigurationWrapper
             .plus(" ")
             .plus("-Dotel.exporter.otlp.traces.endpoint=${getExporterUrl()}")
             .plus(" ")
-            .plus("-Dotel.traces.exporter=otlp")
-            .plus(" ")
-            .plus("-Dotel.metrics.exporter=none")
+            .plus(getOtelSystemProperties())
             .plus(" ")
 
 

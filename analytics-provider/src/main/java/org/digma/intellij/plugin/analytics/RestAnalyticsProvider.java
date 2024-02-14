@@ -6,6 +6,7 @@ import com.google.common.io.CharStreams;
 import okhttp3.*;
 import org.digma.intellij.plugin.model.rest.AboutResult;
 import org.digma.intellij.plugin.model.rest.assets.AssetDisplayInfo;
+import org.digma.intellij.plugin.model.rest.codelens.*;
 import org.digma.intellij.plugin.model.rest.codespans.CodeContextSpan;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.env.*;
@@ -220,6 +221,12 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     public LinkUnlinkTicketResponse unlinkTicket(UnlinkTicketRequest unlinkRequest)
     {
         return execute(() -> client.analyticsProvider.unlinkTicket(unlinkRequest));
+    }
+
+    @Override
+    public CodeLensOfMethodsResponse getCodeLensByMethods(CodeLensOfMethodsRequest codeLensOfMethodsRequest)
+    {
+        return execute(() -> client.analyticsProvider.getCodeLensByMethods(codeLensOfMethodsRequest));
     }
 
     @Override
@@ -651,6 +658,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @PUT("/insightsActions/unlink-ticket")
         Call<LinkUnlinkTicketResponse> unlinkTicket(@Body UnlinkTicketRequest linkRequest);
+
+        @Headers({
+                "Accept: text/plain",
+                "Content-Type:application/json"
+        })
+        @POST("/CodeAnalytics/codeObjects/lens")
+        Call<CodeLensOfMethodsResponse> getCodeLensByMethods(@Body CodeLensOfMethodsRequest codeLensOfMethodsRequest);
 
         @Headers({
                 "Accept: text/plain",

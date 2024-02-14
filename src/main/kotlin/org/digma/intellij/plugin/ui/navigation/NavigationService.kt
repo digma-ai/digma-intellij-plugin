@@ -21,6 +21,7 @@ import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.psi.LanguageServiceLocator
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
+import org.digma.intellij.plugin.ui.navigation.model.InstrumentationResult
 import java.time.Instant
 
 @Service(Service.Level.PROJECT)
@@ -75,6 +76,9 @@ class NavigationService(private val project: Project) : Disposable {
             }
 
             if (isActive && observabilityInfo.hasMissingDependency) {
+                jCefComponent?.let {
+                    sendAutoFixResultMessage(it.jbCefBrowser.cefBrowser, InstrumentationResult.failure, "Failed to add dependency")
+                }
                 EDT.ensureEDT {
                     NotificationUtil.notifyFadingError(project, "Failed to add dependency, Please try again")
                 }
@@ -112,7 +116,9 @@ class NavigationService(private val project: Project) : Disposable {
             if (isActive &&
                 (methodInfo == null || !methodInfo.hasRelatedCodeObjectIds())
             ) {
-
+                jCefComponent?.let {
+                    sendAddAnnotationResultMessage(it.jbCefBrowser.cefBrowser, InstrumentationResult.failure, "Failed to add annotation")
+                }
                 EDT.ensureEDT {
                     NotificationUtil.notifyFadingError(project, "Failed to add annotation, Please try again")
                 }

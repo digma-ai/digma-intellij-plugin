@@ -107,9 +107,13 @@ class AssetsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pr
     @Throws(JsonProcessingException::class)
     private fun goToAsset(requestJsonNode: JsonNode) {
         Log.log(logger::trace, project, "got ASSETS/GO_TO_ASSET message")
-        val spanId = objectMapper.readTree(requestJsonNode["payload"].toString())["spanCodeObjectId"].asText()
-        Log.log(logger::trace, project, "got span id {}", spanId)
-        AssetsService.getInstance(project).showAsset(spanId)
+        val payload = getPayloadFromRequest(requestJsonNode)
+        payload?.let { pl ->
+            val spanId = pl.get("spanCodeObjectId").asText()
+            Log.log(logger::trace, project, "got span id {}", spanId)
+            AssetsService.getInstance(project).showAsset(spanId)
+        }
+
     }
 
 

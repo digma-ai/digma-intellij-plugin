@@ -46,6 +46,7 @@ public class JCefMessagesUtils {
     public static final String GLOBAL_SET_FROM_PERSISTENCE = "GLOBAL/SET_FROM_PERSISTENCE";
     public static final String GLOBAL_OPEN_DASHBOARD = "GLOBAL/OPEN_DASHBOARD";
     public static final String GLOBAL_OPEN_INSTALLATION_WIZARD = "GLOBAL/OPEN_INSTALLATION_WIZARD";
+    public static final String GLOBAL_SET_SCOPE = "GLOBAL/SET_SCOPE";
 
 
     //todo: replace with org.digma.intellij.plugin.ui.jcef.JCefBrowserUtilsKt.jsonToObject

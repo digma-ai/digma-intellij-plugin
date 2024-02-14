@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.analytics;
 
 import org.digma.intellij.plugin.model.rest.AboutResult;
+import org.digma.intellij.plugin.model.rest.assets.AssetDisplayInfo;
 import org.digma.intellij.plugin.model.rest.codespans.CodeContextSpan;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.env.*;
@@ -94,4 +95,6 @@ public interface AnalyticsProvider extends Closeable {
     LinkUnlinkTicketResponse unlinkTicket(UnlinkTicketRequest linkRequest);
 
     List<CodeContextSpan> getSpansForCodeLocation(String env, List<String> idsWithType);
+
+    AssetDisplayInfo getAssetDisplayInfo(String env, String codeObjectId);
 }

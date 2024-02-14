@@ -5,6 +5,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.io.CharStreams;
 import okhttp3.*;
 import org.digma.intellij.plugin.model.rest.AboutResult;
+import org.digma.intellij.plugin.model.rest.assets.AssetDisplayInfo;
 import org.digma.intellij.plugin.model.rest.codespans.CodeContextSpan;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.env.*;
@@ -225,6 +226,12 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     public List<CodeContextSpan> getSpansForCodeLocation(String env, List<String> idsWithType) {
 
         return execute(() -> client.analyticsProvider.getSpansForCodeLocation(env, idsWithType));
+    }
+
+    @Override
+    public AssetDisplayInfo getAssetDisplayInfo(String env, String codeObjectId) {
+
+        return execute(() -> client.analyticsProvider.getAssetDisplayInfo(env, codeObjectId));
     }
 
     @Override
@@ -646,6 +653,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @GET("/CodeAnalytics/code/assets")
         Call<List<CodeContextSpan>> getSpansForCodeLocation(@Query("environment") String env, @Query("codeObjects") List<String> codeObjectIds);
+
+        @Headers({
+                "Accept: text/plain",
+                "Content-Type:application/json"
+        })
+        @GET("/assets/display_info")
+        Call<AssetDisplayInfo> getAssetDisplayInfo(@Query("environment") String environment, @Query("codeObjectId") String codeObjectId);
     }
 
 }

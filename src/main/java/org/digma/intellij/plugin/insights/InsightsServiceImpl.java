@@ -1,7 +1,6 @@
 package org.digma.intellij.plugin.insights;
 
 import com.intellij.openapi.Disposable;
-import com.intellij.openapi.application.*;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Disposer;
@@ -16,14 +15,12 @@ import org.digma.intellij.plugin.env.Env;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider;
 import org.digma.intellij.plugin.insights.model.outgoing.*;
-import org.digma.intellij.plugin.instrumentation.MethodInstrumentationPresenter;
 import org.digma.intellij.plugin.jcef.common.*;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.digma.intellij.plugin.model.discovery.*;
 import org.digma.intellij.plugin.model.rest.insights.*;
-import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.refreshInsightsTask.RefreshService;
 import org.digma.intellij.plugin.settings.SettingsState;
@@ -39,7 +36,6 @@ import org.jetbrains.annotations.*;
 
 import javax.swing.*;
 import java.io.InputStream;
-import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
@@ -317,11 +313,11 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
             try {
 
-                var methodInstrumentationPresenter = new MethodInstrumentationPresenter(project);
-                ApplicationManager.getApplication().runReadAction(() -> methodInstrumentationPresenter.update(methodInfo.getId()));
-                var hasMissingDependency = methodInstrumentationPresenter.getCannotBecauseMissingDependency();
-                var canInstrumentMethod = methodInstrumentationPresenter.getCanInstrumentMethod();
-                model().addProperty(MODEL_PROP_INSTRUMENTATION, methodInstrumentationPresenter);
+//                var methodInstrumentationPresenter = new MethodInstrumentationPresenter(project);
+//                ApplicationManager.getApplication().runReadAction(() -> methodInstrumentationPresenter.update(methodInfo.getId()));
+//                var hasMissingDependency = methodInstrumentationPresenter.getCannotBecauseMissingDependency();
+//                var canInstrumentMethod = methodInstrumentationPresenter.getCanInstrumentMethod();
+//                model().addProperty(MODEL_PROP_INSTRUMENTATION, methodInstrumentationPresenter);
 
                 var insights = getInsightsByMethodInfo(methodInfo);
 
@@ -342,7 +338,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
                 messageHandler.pushInsights(insights, spans, methodInfo.getId(), EMPTY_SERVICE_NAME,
                         AnalyticsService.getInstance(project).getEnvironment().getCurrent(), statusToUse,
-                        ViewMode.INSIGHTS.name(), Collections.emptyList(), hasMissingDependency, canInstrumentMethod, needsObservabilityFix);
+                        ViewMode.INSIGHTS.name(), Collections.emptyList(), false, false, needsObservabilityFix);
 
             } catch (Exception e) {
                 Log.warnWithException(logger, project, e, "error in updateInsightsImpl for ", methodInfo.getId());
@@ -534,52 +530,34 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
     @Override
     public void addAnnotation(@NotNull String methodId) {
-        if (model().getScope() instanceof MethodScope methodScope && methodScope.getMethodInfo().getId().equals(methodId)) {
-            MethodInstrumentationPresenter methodInstrumentationPresenter = (MethodInstrumentationPresenter) model().getProperty(MODEL_PROP_INSTRUMENTATION);
-            if (methodInstrumentationPresenter != null) {
-                EDT.ensureEDT(() -> {
-                    var succeeded = WriteAction.compute(methodInstrumentationPresenter::instrumentMethod);
-                    if (succeeded) {
-                        refreshInsights();
-                    } else {
-                        NotificationUtil.notifyError(project, "Failed to add annotation");
-                    }
-                });
-            }
-        }
+//        if (model().getScope() instanceof MethodScope methodScope && methodScope.getMethodInfo().getId().equals(methodId)) {
+//            MethodInstrumentationPresenter methodInstrumentationPresenter = (MethodInstrumentationPresenter) model().getProperty(MODEL_PROP_INSTRUMENTATION);
+//            if (methodInstrumentationPresenter != null) {
+//                EDT.ensureEDT(() -> {
+//                    var succeeded = WriteAction.compute(methodInstrumentationPresenter::instrumentMethod);
+//                    if (succeeded) {
+//                        refreshInsights();
+//                    } else {
+//                        NotificationUtil.notifyError(project, "Failed to add annotation");
+//                    }
+//                });
+//            }
+//        }
     }
 
     @Override
     public void fixMissingDependencies(@NotNull String methodId) {
-        if (model().getScope() instanceof MethodScope methodScope && methodScope.getMethodInfo().getId().equals(methodId)) {
-            MethodInstrumentationPresenter methodInstrumentationPresenter = (MethodInstrumentationPresenter) model().getProperty(MODEL_PROP_INSTRUMENTATION);
-            if (methodInstrumentationPresenter != null) {
-
-                EDT.ensureEDT(() -> WriteAction.run(methodInstrumentationPresenter::addDependencyToOtelLibAndRefresh));
-
-                Backgroundable.executeOnPooledThread(() -> waitForOtelDependencyToBeAvailable(methodInstrumentationPresenter));
-            }
-        }
+//        if (model().getScope() instanceof MethodScope methodScope && methodScope.getMethodInfo().getId().equals(methodId)) {
+//            MethodInstrumentationPresenter methodInstrumentationPresenter = (MethodInstrumentationPresenter) model().getProperty(MODEL_PROP_INSTRUMENTATION);
+//            if (methodInstrumentationPresenter != null) {
+//
+//                EDT.ensureEDT(() -> WriteAction.run(methodInstrumentationPresenter::addDependencyToOtelLibAndRefresh));
+//
+//                Backgroundable.executeOnPooledThread(() -> waitForOtelDependencyToBeAvailable(methodInstrumentationPresenter));
+//            }
+//        }
     }
 
-    private void waitForOtelDependencyToBeAvailable(MethodInstrumentationPresenter methodInstrumentationPresenter) {
-        var startPollingTimeSeconds = Instant.now().getEpochSecond();
-        var canInstrument = methodInstrumentationPresenter.getCanInstrumentMethod();
-        while (!canInstrument) {
-            var nowTimeSeconds = Instant.now().getEpochSecond();
-            if (nowTimeSeconds >= startPollingTimeSeconds + MAX_SECONDS_WAIT_FOR_DEPENDENCY) {
-                break;
-            }
-            try {
-                Thread.sleep(WAIT_FOR_DEPENDENCY_INTERVAL_MILLIS);
-            } catch (InterruptedException e) {
-                //ignore
-            }
-
-            methodInstrumentationPresenter.update(methodInstrumentationPresenter.getSelectedMethodId());
-            canInstrument = methodInstrumentationPresenter.getCanInstrumentMethod();
-        }
-    }
 
 
     //todo: need to make sure that DocumentInfoService already refreshed its insights cache.

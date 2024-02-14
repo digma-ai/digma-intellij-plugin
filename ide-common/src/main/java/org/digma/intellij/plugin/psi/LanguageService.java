@@ -14,7 +14,7 @@ import kotlin.Pair;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.env.Env;
-import org.digma.intellij.plugin.instrumentation.CanInstrumentMethodResult;
+import org.digma.intellij.plugin.instrumentation.*;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.*;
 import org.jetbrains.annotations.*;
@@ -159,7 +159,7 @@ public interface LanguageService extends Disposable {
     /**
      * This method is used to find the LanguageService to use in situations where we don't have a context like
      * MethodInfo or a file.
-     */
+     * */
     @NotNull
     static LanguageService findLanguageServiceByMethodCodeObjectId(@NotNull Project project, @Nullable String methodCodeObjectId) {
 
@@ -347,15 +347,15 @@ public interface LanguageService extends Disposable {
     @NotNull List<Pair<TextRange, CodeVisionEntry>> getCodeLens(@NotNull PsiFile psiFile);
 
     @NotNull
-    default CanInstrumentMethodResult canInstrumentMethod(@NotNull Project project, @Nullable String methodId) {
-        return CanInstrumentMethodResult.failure();
+    default MethodObservabilityInfo canInstrumentMethod(@NotNull String methodId) {
+        return new MethodObservabilityInfo(methodId, false, false, null);
     }
 
-    default boolean instrumentMethod(@NotNull CanInstrumentMethodResult result) {
+    default boolean instrumentMethod(@NotNull MethodObservabilityInfo methodObservabilityInfo) {
         return false;
     }
 
-    default void addDependencyToOtelLib(@NotNull Project project, @NotNull String methodId) {
+    default void addDependencyToOtelLib(@NotNull String methodId) {
         //only relevant for jvm languages
         //todo: maybe throw non supported operation ?
     }
@@ -368,5 +368,8 @@ public interface LanguageService extends Disposable {
 
     @Nullable
     PsiElement getPsiElementForClassByName(@NotNull String className);
+
+    @NotNull
+    InstrumentationProvider getInstrumentationProvider();
 
 }

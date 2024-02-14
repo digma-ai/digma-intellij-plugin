@@ -77,7 +77,7 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
                     case "INSIGHTS/INITIALIZE" -> onInitialize(browser);
 
-                    case "INSIGHTS/GET_DATA" -> pushInsightsFromGetData();
+                    case "INSIGHTS/GET_DATA" -> pushInsightsListData();
 
                     case "INSIGHTS/GO_TO_ASSET" -> goToInsight(jsonNode);
 
@@ -108,6 +108,8 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
                     case "INSIGHTS/LINK_TICKET" -> linkTicket(jsonNode);
 
                     case "INSIGHTS/UNLINK_TICKET" -> unlinkTicket(jsonNode);
+
+                    case "INSIGHTS/GET_DATA_LIST" -> pushInsightsListData(jsonNode);
 
                     case JCefMessagesUtils.GLOBAL_OPEN_TROUBLESHOOTING_GUIDE ->
                             EDT.ensureEDT(() -> MainToolWindowCardsController.getInstance(project).showTroubleshooting());
@@ -408,9 +410,14 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
     }
 
 
-    private void pushInsightsFromGetData() {
+    private void pushInsightsListData() {
         Log.log(LOGGER::debug, project, "got INSIGHTS/GET_DATA message");
         InsightsService.getInstance(project).refreshInsights();
+    }
+
+    private void pushInsightsListData(JsonNode jsonNode) {
+        Log.log(LOGGER::debug, project, "got INSIGHTS/GET_DATA_LIST message");
+        InsightsService.getInstance(project).refreshInsightsList(jsonNode);
     }
 
     private void onInitialize(CefBrowser browser) {
@@ -437,7 +444,6 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
     void sendRequestToChangeCodeFont(String fontName) {
         JCefBrowserUtil.sendRequestToChangeCodeFont(fontName, jbCefBrowser);
     }
-
 
     void pushInsights(List<CodeObjectInsight> insights, List<Span> spans, String assetId,
                       String serviceName, @Nullable Env environment, String uiInsightsStatus, String viewMode,

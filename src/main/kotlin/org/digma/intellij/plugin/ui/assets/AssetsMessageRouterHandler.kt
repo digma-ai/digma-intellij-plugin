@@ -12,6 +12,7 @@ import org.digma.intellij.plugin.ui.assets.model.SetAssetsDataFiltersMessage
 import org.digma.intellij.plugin.ui.assets.model.SetAssetsDataMessage
 import org.digma.intellij.plugin.ui.assets.model.SetCategoriesDataMessage
 import org.digma.intellij.plugin.ui.assets.model.SetServicesDataMessage
+import org.digma.intellij.plugin.ui.common.getQueryMapFromPayload
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
 import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
 
@@ -148,34 +149,5 @@ class AssetsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pr
         }
 
         return services
-    }
-
-
-    private fun getQueryMapFromPayload(requestJsonNode: JsonNode): Map<String, Any> {
-
-        val payloadNode: JsonNode = objectMapper.readTree(requestJsonNode.get("payload").toString())
-        val payloadQuery: JsonNode = objectMapper.readTree(payloadNode.get("query").toString())
-
-        val backendQueryParams = mutableMapOf<String, Any>()
-
-        if (payloadQuery is ObjectNode) {
-
-            val payloadQueryAsMap = objectMapper.convertValue(payloadQuery, Map::class.java)
-
-            payloadQueryAsMap.forEach { entry: Map.Entry<Any?, Any?> ->
-                entry.key?.let {
-                    val value = entry.value
-                    if (value is List<*>) {
-                        backendQueryParams[it.toString()] = value.joinToString(",")
-                    } else {
-                        backendQueryParams[it.toString()] = value.toString()
-                    }
-
-                }
-            }
-        }
-
-        backendQueryParams["environment"] = PersistenceService.getInstance().getCurrentEnv() ?: ""
-        return backendQueryParams
     }
 }

@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.ui.navigation
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.NullNode
 import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.analytics.AnalyticsService
@@ -56,11 +57,11 @@ class NavigationMessageRouterHandler(project: Project) : BaseMessageRouterHandle
         val payload = getPayloadFromRequest(requestJsonNode)
         payload?.let { pl ->
             val span = pl.get("span")
-            val spanScope: SpanScope? = span?.let { sp ->
+            val spanScope: SpanScope? = span?.takeIf { span !is NullNode }?.let { sp ->
                 val spanObj = objectMapper.readTree(sp.asText())
                 val spanId = spanObj.get("spanCodeObjectId").asText()
                 val serviceName = spanObj.get("serviceName").asText()
-                SpanScope(spanId, null, serviceName)
+                SpanScope(spanId, null, serviceName, null)
             }
 
             spanScope?.let {

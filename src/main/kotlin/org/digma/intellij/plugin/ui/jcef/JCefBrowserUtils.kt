@@ -1,7 +1,10 @@
 package org.digma.intellij.plugin.ui.jcef
 
+import com.intellij.openapi.diagnostic.Logger
 import org.cef.browser.CefBrowser
+import org.digma.intellij.plugin.log.Log
 
+val logger = Logger.getInstance("org.digma.intellij.plugin.ui.jcef.JCefBrowserUtils")
 
 private object CommonObjectMapper {
     var objectMapper = createObjectMapper()
@@ -18,6 +21,8 @@ fun serializeAndExecuteWindowPostMessageJavaScript(browser: CefBrowser, message:
 
 
 fun executeWindowPostMessageJavaScript(browser: CefBrowser, message: String) {
+
+    Log.log(logger::trace, "sending message to jcef app {}, message {}", browser.url, message)
 
     browser.executeJavaScript(
         "window.postMessage($message);",

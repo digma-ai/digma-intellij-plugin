@@ -7,5 +7,5 @@ import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
 
 data class SetInsightDataListMessage( @JsonRawValue val payload: String) {
     val type = JCefMessagesUtils.REQUEST_MESSAGE_TYPE
-    val action = "INSIGHT/SET_DATA_LIST"
+    val action = "INSIGHTS/SET_DATA_LIST"
 }

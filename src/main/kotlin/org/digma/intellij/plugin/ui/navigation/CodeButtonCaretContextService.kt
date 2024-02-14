@@ -7,16 +7,16 @@ import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.IDEUtilsService
 import org.digma.intellij.plugin.common.isProjectValid
-import org.digma.intellij.plugin.common.runInReadAccess
 import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.editor.CaretContextService
-import org.digma.intellij.plugin.instrumentation.MethodInstrumentationPresenter
+import org.digma.intellij.plugin.instrumentation.MethodObservabilityInfo
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.EndpointFramework
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret
 import org.digma.intellij.plugin.model.rest.codespans.CodeContextSpan
+import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
 import org.digma.intellij.plugin.ui.navigation.model.CodeContextMessage
 import org.digma.intellij.plugin.ui.navigation.model.CodeContextMessagePayload
@@ -107,12 +107,9 @@ class CodeButtonCaretContextService(private val project: Project) : CaretContext
                     val needsObservabilityFix: Boolean = checkObservability(methodInfo, spans)
                     if (needsObservabilityFix) {
                         isInstrumented = false
-                        val methodInstrumentationPresenter = MethodInstrumentationPresenter(project)
-                        runInReadAccess {
-                            methodInstrumentationPresenter.update(methodInfo.id)
-                        }
-                        hasMissingDependency = methodInstrumentationPresenter.cannotBecauseMissingDependency
-                        canInstrumentMethod = methodInstrumentationPresenter.canInstrumentMethod
+                        val observabilityInfo = getMethodObservabilityInfo(method.id)
+                        hasMissingDependency = observabilityInfo.hasMissingDependency
+                        canInstrumentMethod = observabilityInfo.canInstrumentMethod
                     }
 
 
@@ -163,6 +160,14 @@ class CodeButtonCaretContextService(private val project: Project) : CaretContext
                     endpointInfo.framework == EndpointFramework.Ktor
         }
     }
+
+
+    private fun getMethodObservabilityInfo(methodId: String): MethodObservabilityInfo {
+        val languageService = LanguageService.findLanguageServiceByMethodCodeObjectId(project, methodId)
+        val instrumentationProvider = languageService.instrumentationProvider
+        return instrumentationProvider.buildMethodObservabilityInfo(methodId)
+    }
+
 
 
     private fun checkObservability(methodInfo: MethodInfo, spans: MutableList<CodeContextSpan>): Boolean {

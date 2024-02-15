@@ -64,7 +64,7 @@ public class CodeLensProvider {
 
         var methodsInfo = documentInfoContainer.getDocumentInfo().getMethods().values();
 
-        List<MethodWithCodeObjects> methods = new ArrayList();
+        List<MethodWithCodeObjects> methods = new ArrayList<>();
 
         for (MethodInfo methodInfo : methodsInfo) {
             List<String> relatedSpansCodeObjectIds = methodInfo.getSpans().stream().map(x -> x.getId()).toList();
@@ -77,21 +77,8 @@ public class CodeLensProvider {
 
         var methodsWithCodeLens = analyticsService.getCodeLensByMethods(methods).getMethodWithCodeLens();
 
-        Set<String> methodWithCodeLensIds = new HashSet<>(methodsWithCodeLens.stream().distinct().map(x -> x.getMethodCodeObjectId()).toList());
-        Set<String> requestedMethods = new HashSet<>(methods.stream().distinct().map(x -> x.getCodeObjectId()).toList());
-
-        Set<String> methodsWithoutData = requestedMethods.stream().filter(method -> !methodWithCodeLensIds.contains(method)).collect(Collectors.toSet());
-
-        for (String methodWithoutData : methodsWithoutData) {
-            var codeObjectId = CodeObjectsUtil.stripMethodPrefix(methodWithoutData);
-            CodeLens codeLen = new CodeLens(codeObjectId, "Never Reached", 7);
-            codeLen.setLensDescription("No tracing data for this code object");
-            codeLen.setAnchor("Top");
-            codeLensList.add(codeLen);
-        }
-
         for (MethodWithCodeLens methodWithCodeLens : methodsWithCodeLens) {
-            var codeObjectId = CodeObjectsUtil.stripMethodPrefix(methodWithCodeLens.getMethodCodeObjectId());
+            var codeObjectId = CodeObjectsUtil.stripPrefix(methodWithCodeLens.getMethodCodeObjectId());
             var decorators = methodWithCodeLens.getDecorators();
 
             if (methodWithCodeLens.isAlive()) {
@@ -99,35 +86,30 @@ public class CodeLensProvider {
                 codeLensList.add(codeLens);
             }
 
-            if (decorators.length == 0) {
-                CodeLens codeLens = new CodeLens(codeObjectId, "Runtime Data", 8);
-                codeLens.setLensDescription("Runtime data available");
+            for (Decorator decorator : decorators) {
+                String envComponent = "";
+                Integer importance = decorator.getImportance().getPriority();
+
+                // not in use for now, will be used for navigation to the asset
+                String decoratorCodeObjectId = CodeObjectsUtil.stripPrefix(decorator.getCodeObjectId());
+
+                if (environmentPrefix) {
+                    envComponent = "[" + environment + "]";
+                }
+
+                String priorityEmoji = "";
+                if (isImportant(importance)) {
+                    priorityEmoji = "❗️";
+                }
+
+                String title = priorityEmoji + decorator.getTitle() + " " + envComponent;
+
+                CodeLens codeLens = new CodeLens(codeObjectId, title, importance);
+                codeLens.setLensDescription(decorator.getDescription());
+                codeLens.setLensMoreText("Go to " + title);
                 codeLens.setAnchor("Top");
 
                 codeLensList.add(codeLens);
-            } else {
-                for (Decorator decorator : decorators) {
-                    String envComponent = "";
-                    Integer importance = decorator.getImportance().getPriority();
-
-                    if (environmentPrefix) {
-                        envComponent = "[" + environment + "]";
-                    }
-
-                    String priorityEmoji = "";
-                    if (isImportant(importance)) {
-                        priorityEmoji = "❗️";
-                    }
-
-                    String title = priorityEmoji + decorator.getTitle() + " " + envComponent;
-
-                    CodeLens codeLens = new CodeLens(codeObjectId, title, importance);
-                    codeLens.setLensDescription(decorator.getDescription());
-                    codeLens.setLensMoreText("Go to " + title);
-                    codeLens.setAnchor("Top");
-
-                    codeLensList.add(codeLens);
-                }
             }
         }
 

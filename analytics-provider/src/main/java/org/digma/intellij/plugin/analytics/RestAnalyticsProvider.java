@@ -48,6 +48,7 @@ import org.digma.intellij.plugin.model.rest.user.UserUsageStatsResponse;
 import org.digma.intellij.plugin.model.rest.version.PerformanceMetricsResponse;
 import org.digma.intellij.plugin.model.rest.version.VersionRequest;
 import org.digma.intellij.plugin.model.rest.version.VersionResponse;
+import org.digma.intellij.plugin.model.rest.version.LoadStatusResponse;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -250,6 +251,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     @Override
     public PerformanceMetricsResponse getPerformanceMetrics() {
         return execute(client.analyticsProvider::getPerformanceMetrics);
+    }
+
+    @Override
+    public LoadStatusResponse getLoadStatus() {
+        return execute(client.analyticsProvider::getLoadStatus);
     }
 
     @Override
@@ -658,6 +664,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @GET("/performanceMetrics")
         Call<PerformanceMetricsResponse> getPerformanceMetrics();
+
+       @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @GET("/performanceMetrics/load-status")
+        Call<LoadStatusResponse> getLoadStatus();
 
 
         @Headers({

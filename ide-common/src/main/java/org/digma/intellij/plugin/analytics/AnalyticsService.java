@@ -59,6 +59,7 @@ import org.digma.intellij.plugin.model.rest.user.UserUsageStatsResponse;
 import org.digma.intellij.plugin.model.rest.version.PerformanceMetricsResponse;
 import org.digma.intellij.plugin.model.rest.version.VersionRequest;
 import org.digma.intellij.plugin.model.rest.version.VersionResponse;
+import org.digma.intellij.plugin.model.rest.version.LoadStatusResponse;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
@@ -489,6 +490,9 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.getPerformanceMetrics());
     }
 
+    public LoadStatusResponse getLoadStatus() throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.getLoadStatus());
+    }
 
     public AboutResult getAbout() throws AnalyticsServiceException {
         return executeCatching(() -> analyticsProviderProxy.getAbout());

@@ -103,6 +103,7 @@ public class CurrentContextUpdater implements Disposable {
         }
         latestMethodUnderCaret = methodUnderCaret;
         Log.log(LOGGER::debug, "contextChanged for file: {}, with method under caret '{}", psiFile.getVirtualFile(), methodUnderCaret);
+        LatestMethodUnderCaretHolder.getInstance(project).saveLatestMethodUnderCaret(project, languageService, methodUnderCaret.getId());
         caretContextService.contextChanged(methodUnderCaret);
     }
 

@@ -198,20 +198,20 @@ public class EditorEventsHandler implements FileEditorManagerListener {
                                 LanguageService languageService1 = languageServiceLocator.locate(psiFile1.getLanguage());
                                 MethodUnderCaret methodUnderCaret = languageService1.detectMethodUnderCaret(project, psiFile1, selectedTextEditor, offset);
                                 Log.log(LOGGER::trace, "Found MethodUnderCaret for :{}, '{}'", newFile, methodUnderCaret);
-                                caretContextService.contextChanged(methodUnderCaret);
                                 LatestMethodUnderCaretHolder.getInstance(project).saveLatestMethodUnderCaret(project, languageService1, methodUnderCaret.getId());
+                                caretContextService.contextChanged(methodUnderCaret);
                                 Log.log(LOGGER::trace, "contextChanged for :{}, '{}'", newFile, methodUnderCaret);
                             });
 
 
                         } else if (psiFile1 != null) {
                             Log.log(LOGGER::trace, "file not supported :{}, calling contextEmptyNonSupportedFile", newFile);
-                            caretContextService.contextEmptyNonSupportedFile(psiFile1.getVirtualFile().getPath());
                             LatestMethodUnderCaretHolder.getInstance(project).clearLatestMethodInfo();
+                            caretContextService.contextEmptyNonSupportedFile(psiFile1.getVirtualFile().getPath());
                         } else {
                             Log.log(LOGGER::trace, "calling contextEmpty for {}", newFile);
-                            caretContextService.contextEmpty();
                             LatestMethodUnderCaretHolder.getInstance(project).clearLatestMethodInfo();
+                            caretContextService.contextEmpty();
                         }
                     } else {
                         Log.log(LOGGER::trace, "No selected editor for :{}", newFile);

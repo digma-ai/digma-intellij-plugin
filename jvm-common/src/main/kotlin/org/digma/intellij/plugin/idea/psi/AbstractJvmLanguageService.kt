@@ -195,6 +195,8 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                                 if (selectedTextEditor != null) {
                                     val offset = selectedTextEditor.caretModel.offset
                                     val methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedTextEditor, offset)
+                                    LatestMethodUnderCaretHolder.getInstance(project)
+                                        .saveLatestMethodUnderCaret(project, this, methodUnderCaret.id)
                                     CaretContextService.getInstance(project).contextChanged(methodUnderCaret)
                                 }
                             }

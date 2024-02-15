@@ -18,9 +18,10 @@ fun buildCodeLocation(
     project: Project,
     spanCodeObjectId: String,
     displayName: String,
+    methodCodeObjectId: String?,
 ): CodeLocation {
 
-    val isAlreadyAtCode = isAlreadyAtCodeLocation(project, spanCodeObjectId)
+    val isAlreadyAtCode = isAlreadyAtCodeLocation(project, spanCodeObjectId, methodCodeObjectId)
     if (isAlreadyAtCode) {
         //no need for navigation
         return CodeLocation(true, listOf(), listOf())
@@ -143,7 +144,11 @@ private fun buildFromRelatedCodeLocation(project: Project, assetNavigation: Asse
         result.addAll(it[0].second)
     }
 
-    return result
+    return if (result.size > 8) {
+        result.subList(0, 8)
+    } else {
+        result
+    }
 }
 
 
@@ -165,7 +170,7 @@ private fun getSpanDisplayName(project: Project, spanCodeObjectId: String): Stri
 }
 
 
-private fun isAlreadyAtCodeLocation(project: Project, spanCodeObjectId: String): Boolean {
+private fun isAlreadyAtCodeLocation(project: Project, spanCodeObjectId: String, methodCodeObjectId: String?): Boolean {
 
     val codeNavigator = CodeNavigator.getInstance(project)
 
@@ -176,5 +181,11 @@ private fun isAlreadyAtCodeLocation(project: Project, spanCodeObjectId: String):
             return true
         }
     }
+
+
+    if (latestMethodInfo != null && methodCodeObjectId != null) {
+        return latestMethodInfo.methodId == CodeObjectsUtil.stripMethodPrefix(methodCodeObjectId)
+    }
     return false
+
 }

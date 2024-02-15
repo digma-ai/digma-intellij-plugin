@@ -199,6 +199,7 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
                             if (selectedTextEditor != null) {
                                 int offset = selectedTextEditor.getCaretModel().getOffset();
                                 var methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedTextEditor, offset);
+                                LatestMethodUnderCaretHolder.getInstance(project).saveLatestMethodUnderCaret(project, this, methodUnderCaret.getId());
                                 CaretContextService.getInstance(project).contextChanged(methodUnderCaret);
                             }
                         }
@@ -263,6 +264,7 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
     @Override
     public void refreshMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, @Nullable Editor selectedEditor, int offset) {
         MethodUnderCaret methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedEditor, offset);
+        LatestMethodUnderCaretHolder.getInstance(project).saveLatestMethodUnderCaret(project, this, methodUnderCaret.getId());
         CaretContextService.getInstance(project).contextChanged(methodUnderCaret);
     }
 

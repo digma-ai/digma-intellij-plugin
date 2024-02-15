@@ -53,7 +53,8 @@ class ScopeManager(private val project: Project) : Disposable {
         }
 
 
-        val codeLocation: CodeLocation = buildCodeLocation(project, scope.spanCodeObjectId, spanScopeInfo?.displayName ?: "")
+        val codeLocation: CodeLocation =
+            buildCodeLocation(project, scope.spanCodeObjectId, spanScopeInfo?.displayName ?: "", spanScopeInfo?.methodCodeObjectId)
 
 
         scope.displayName = spanScopeInfo?.displayName ?: ""

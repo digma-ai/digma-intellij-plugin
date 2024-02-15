@@ -9,13 +9,14 @@ import org.digma.intellij.plugin.common.IDEUtilsService
 import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.editor.CaretContextService
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.instrumentation.MethodObservabilityInfo
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.EndpointFramework
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret
-import org.digma.intellij.plugin.model.rest.codespans.CodeContextSpan
+import org.digma.intellij.plugin.model.rest.codespans.CodeContextSpans
 import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
 import org.digma.intellij.plugin.ui.navigation.model.CodeContextMessage
@@ -46,7 +47,7 @@ class CodeButtonCaretContextService(private val project: Project) : CaretContext
 
     override fun contextChanged(methodUnderCaret: MethodUnderCaret) {
 
-        Log.log(logger::trace, "contextChanged called for '{}'", methodUnderCaret);
+        Log.log(logger::trace, "contextChanged called for '{}'", methodUnderCaret)
 
         if (!isProjectValid(project)) {
             Log.log(logger::info, "project is disposed in contextChanged for '{}'", methodUnderCaret.id)
@@ -59,6 +60,9 @@ class CodeButtonCaretContextService(private val project: Project) : CaretContext
             val stopWatch = StopWatch.createStarted()
             try {
                 contextChangedImpl(methodUnderCaret)
+            } catch (e: Throwable) {
+                Log.warnWithException(logger, project, e, "error in contextChangedImpl")
+                ErrorReporter.getInstance().reportError("CodeButtonCaretContextService.contextChanged", e)
             } finally {
                 stopWatch.stop()
                 Log.log(logger::trace, "contextChangedImpl time took {} milliseconds", stopWatch.getTime(TimeUnit.MILLISECONDS))
@@ -83,13 +87,13 @@ class CodeButtonCaretContextService(private val project: Project) : CaretContext
                 val endpointInfo = getFocusedEndpoint(methodUnderCaret, method)
                 //endpoint info is currently only for ktor support
                 if (endpointInfo != null) {
-                    val spans = AnalyticsService.getInstance(project).getSpansForCodeLocation(listOf(endpointInfo.idWithType()))
+                    val codeContextSpans = AnalyticsService.getInstance(project).getSpansForCodeLocation(listOf(endpointInfo.idWithType()))
                     val displayName = endpointInfo.buildDisplayName()
 
                     val codeContextMessage = CodeContextMessage(
                         CodeContextMessagePayload(
                             displayName,
-                            spans,
+                            codeContextSpans,
                             true,
                             method.id
                         )
@@ -98,13 +102,13 @@ class CodeButtonCaretContextService(private val project: Project) : CaretContext
 
                 } else {
                     val allIds = method.allIdsWithType().plus(method.getRelatedCodeObjectIdsWithType())
-                    val spans = AnalyticsService.getInstance(project).getSpansForCodeLocation(allIds)
+                    val codeContextSpans = AnalyticsService.getInstance(project).getSpansForCodeLocation(allIds)
                     val displayName = method.buildDisplayName()
 
                     var hasMissingDependency: Boolean? = null
                     var canInstrumentMethod: Boolean? = null
                     var isInstrumented: Boolean? = true
-                    val needsObservabilityFix: Boolean = checkObservability(methodInfo, spans)
+                    val needsObservabilityFix: Boolean = checkObservability(methodInfo, codeContextSpans)
                     if (needsObservabilityFix) {
                         isInstrumented = false
                         val observabilityInfo = getMethodObservabilityInfo(method.id)
@@ -116,7 +120,7 @@ class CodeButtonCaretContextService(private val project: Project) : CaretContext
                     val codeContextMessage = CodeContextMessage(
                         CodeContextMessagePayload(
                             displayName,
-                            spans,
+                            codeContextSpans,
                             isInstrumented,
                             method.id,
                             hasMissingDependency,
@@ -146,7 +150,7 @@ class CodeButtonCaretContextService(private val project: Project) : CaretContext
             val codeContextMessage = CodeContextMessage(
                 CodeContextMessagePayload(
                     "",
-                    listOf()
+                    CodeContextSpans(listOf(), null)
                 )
             )
             sendCodeContext(it.jbCefBrowser.cefBrowser, codeContextMessage)
@@ -169,11 +173,10 @@ class CodeButtonCaretContextService(private val project: Project) : CaretContext
     }
 
 
-
-    private fun checkObservability(methodInfo: MethodInfo, spans: MutableList<CodeContextSpan>): Boolean {
+    private fun checkObservability(methodInfo: MethodInfo, codeContextSpans: CodeContextSpans): Boolean {
         if (!IDEUtilsService.getInstance(project).isJavaProject) return false
         if (methodInfo.hasRelatedCodeObjectIds()) return false
-        if (spans.isNotEmpty()) return false
+        if (codeContextSpans.assets.isNotEmpty()) return false
         return true
     }
 

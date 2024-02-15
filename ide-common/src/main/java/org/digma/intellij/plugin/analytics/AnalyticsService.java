@@ -20,7 +20,7 @@ import org.digma.intellij.plugin.model.discovery.*;
 import org.digma.intellij.plugin.model.rest.AboutResult;
 import org.digma.intellij.plugin.model.rest.assets.AssetDisplayInfo;
 import org.digma.intellij.plugin.model.rest.codelens.*;
-import org.digma.intellij.plugin.model.rest.codespans.CodeContextSpan;
+import org.digma.intellij.plugin.model.rest.codespans.CodeContextSpans;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.env.*;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
@@ -232,7 +232,7 @@ public class AnalyticsService implements Disposable {
 
 
     @NotNull
-    public List<CodeContextSpan> getSpansForCodeLocation(@NotNull List<String> idsWithType) throws AnalyticsServiceException {
+    public CodeContextSpans getSpansForCodeLocation(@NotNull List<String> idsWithType) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
         Log.log(LOGGER::debug, "Requesting spans for code objects {}", idsWithType);
         return executeCatching(() -> analyticsProviderProxy.getSpansForCodeLocation(env, idsWithType));

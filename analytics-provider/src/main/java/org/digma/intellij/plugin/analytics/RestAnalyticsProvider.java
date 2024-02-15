@@ -7,7 +7,7 @@ import okhttp3.*;
 import org.digma.intellij.plugin.model.rest.AboutResult;
 import org.digma.intellij.plugin.model.rest.assets.AssetDisplayInfo;
 import org.digma.intellij.plugin.model.rest.codelens.*;
-import org.digma.intellij.plugin.model.rest.codespans.CodeContextSpan;
+import org.digma.intellij.plugin.model.rest.codespans.CodeContextSpans;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.env.*;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
@@ -230,7 +230,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
-    public List<CodeContextSpan> getSpansForCodeLocation(String env, List<String> idsWithType) {
+    public CodeContextSpans getSpansForCodeLocation(String env, List<String> idsWithType) {
 
         return execute(() -> client.analyticsProvider.getSpansForCodeLocation(env, idsWithType));
     }
@@ -671,7 +671,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Content-Type:application/json"
         })
         @GET("/CodeAnalytics/code/assets")
-        Call<List<CodeContextSpan>> getSpansForCodeLocation(@Query("environment") String env, @Query("codeObjects") List<String> codeObjectIds);
+        Call<CodeContextSpans> getSpansForCodeLocation(@Query("environment") String env, @Query("codeObjects") List<String> codeObjectIds);
 
         @Headers({
                 "Accept: text/plain",

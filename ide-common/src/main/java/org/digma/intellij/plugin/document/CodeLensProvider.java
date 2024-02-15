@@ -3,23 +3,20 @@ package org.digma.intellij.plugin.document;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
-import org.apache.commons.collections4.CollectionUtils;
 import org.digma.intellij.plugin.analytics.*;
 import org.digma.intellij.plugin.common.Unicodes;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightImportance;
+import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
+import org.digma.intellij.plugin.model.discovery.SpanInfo;
 import org.digma.intellij.plugin.model.lens.CodeLens;
 import org.digma.intellij.plugin.model.rest.codelens.*;
 import org.digma.intellij.plugin.model.rest.insights.*;
-import org.digma.intellij.plugin.recentactivity.RecentActivityLogic;
 import org.jetbrains.annotations.NotNull;
-
-import java.sql.Array;
 import java.util.*;
-import java.util.stream.Collectors;
 
-import static org.ini4j.Config.getEnvironment;
+import static java.util.stream.Collectors.groupingBy;
 
 public class CodeLensProvider {
 
@@ -67,8 +64,8 @@ public class CodeLensProvider {
         List<MethodWithCodeObjects> methods = new ArrayList<>();
 
         for (MethodInfo methodInfo : methodsInfo) {
-            List<String> relatedSpansCodeObjectIds = methodInfo.getSpans().stream().map(x -> x.getId()).toList();
-            List<String> relatedEndpointCodeObjectIds = methodInfo.getEndpoints().stream().map(x -> x.getId()).toList();
+            List<String> relatedSpansCodeObjectIds = methodInfo.getSpans().stream().map(SpanInfo::getId).toList();
+            List<String> relatedEndpointCodeObjectIds = methodInfo.getEndpoints().stream().map(EndpointInfo::getId).toList();
 
             for (String id : methodInfo.allIdsWithType()) {
                 methods.add(new MethodWithCodeObjects(id, relatedSpansCodeObjectIds, relatedEndpointCodeObjectIds));
@@ -78,7 +75,7 @@ public class CodeLensProvider {
         var methodsWithCodeLens = analyticsService.getCodeLensByMethods(methods).getMethodWithCodeLens();
 
         for (MethodWithCodeLens methodWithCodeLens : methodsWithCodeLens) {
-            var codeObjectId = CodeObjectsUtil.stripPrefix(methodWithCodeLens.getMethodCodeObjectId());
+            var codeObjectId = CodeObjectsUtil.stripMethodPrefix(methodWithCodeLens.getMethodCodeObjectId());
             var decorators = methodWithCodeLens.getDecorators();
 
             if (methodWithCodeLens.isAlive()) {
@@ -86,12 +83,15 @@ public class CodeLensProvider {
                 codeLensList.add(codeLens);
             }
 
-            for (Decorator decorator : decorators) {
-                String envComponent = "";
-                Integer importance = decorator.getImportance().getPriority();
+            var decoratorsGroups = Arrays.stream(decorators).collect(groupingBy(Decorator::getTitle));
 
-                // not in use for now, will be used for navigation to the asset
-                String decoratorCodeObjectId = CodeObjectsUtil.stripPrefix(decorator.getCodeObjectId());
+            for (Map.Entry<String, List<Decorator>> decoratorsGroup : decoratorsGroups.entrySet()) {
+                var groupTitle = decoratorsGroup.getKey();
+                var decorator = decoratorsGroup.getValue().stream()
+                        .max(Comparator.comparingInt(d -> d.getImportance().getPriority())).get();
+
+                String envComponent = "";
+                int importance = decorator.getImportance().getPriority();
 
                 if (environmentPrefix) {
                     envComponent = "[" + environment + "]";
@@ -102,7 +102,7 @@ public class CodeLensProvider {
                     priorityEmoji = "❗️";
                 }
 
-                String title = priorityEmoji + decorator.getTitle() + " " + envComponent;
+                String title = priorityEmoji + groupTitle + " " + envComponent;
 
                 CodeLens codeLens = new CodeLens(codeObjectId, title, importance);
                 codeLens.setLensDescription(decorator.getDescription());

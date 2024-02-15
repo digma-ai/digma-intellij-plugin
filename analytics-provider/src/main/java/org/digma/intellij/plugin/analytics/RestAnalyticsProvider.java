@@ -247,6 +247,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
+    public AssetNavigationResponse getAssetNavigation(String env, String spanCodeObjectId) {
+        return execute(() -> client.analyticsProvider.getAssetNavigation(env, spanCodeObjectId));
+    }
+
+    @Override
     public String getDashboard(Map<String, String> queryParams) {
         return execute(() -> client.analyticsProvider.getDashboard(queryParams));
     }
@@ -686,6 +691,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @GET("/insights/get_insights_view")
         Call<String> getInsights(@QueryMap Map<String, Object> fields);
+
+        @Headers({
+                "Accept: text/plain",
+                "Content-Type:application/json"
+        })
+        @GET("/assets/navigation")
+        Call<AssetNavigationResponse> getAssetNavigation(@Query("environment") String environment, @Query("spanCodeObjectId") String spanCodeObjectId);
     }
 
 }

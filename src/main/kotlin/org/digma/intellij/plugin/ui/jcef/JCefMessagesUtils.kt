@@ -9,10 +9,9 @@ import org.digma.intellij.plugin.docker.DigmaInstallationStatus
 import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
-import org.digma.intellij.plugin.model.code.CodeDetails
+import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
 import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.ui.jcef.model.ApiUrlPayload
-import org.digma.intellij.plugin.ui.jcef.model.CodeLocation
 import org.digma.intellij.plugin.ui.jcef.model.DigmaEngineStatusMessage
 import org.digma.intellij.plugin.ui.jcef.model.IsMicrometerPayload
 import org.digma.intellij.plugin.ui.jcef.model.IsObservabilityEnabledMessage
@@ -111,12 +110,9 @@ fun sendObservabilityEnabledMessage(cefBrowser: CefBrowser, isObservabilityEnabl
 
 fun sendScopeChangedMessage(
     cefBrowser: CefBrowser,
-    scope: SpanScope?,
-    isAlreadyAtCode: Boolean,
-    codeDetailsList: List<CodeDetails>,
-    relatedCodeDetailsList: List<CodeDetails>,
+    scope: SpanScope?, codeLocation: CodeLocation,
 ) {
     serializeAndExecuteWindowPostMessageJavaScript(
-        cefBrowser, SetScopeMessage(SetScopeMessagePayload(scope, CodeLocation(isAlreadyAtCode, codeDetailsList, relatedCodeDetailsList)))
+        cefBrowser, SetScopeMessage(SetScopeMessagePayload(scope, codeLocation))
     )
 }

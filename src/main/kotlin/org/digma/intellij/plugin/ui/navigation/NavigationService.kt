@@ -15,7 +15,9 @@ import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.isValidVirtualFile
 import org.digma.intellij.plugin.document.DocumentInfoService
+import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.navigation.ViewChangedEvent
+import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator
 import org.digma.intellij.plugin.notifications.NotificationUtil
 import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.psi.LanguageServiceLocator
@@ -147,6 +149,22 @@ class NavigationService(private val project: Project) : Disposable {
                         languageService.refreshMethodUnderCaret(project, pFile, textEditor, textEditor.caretModel.offset)
                     }
                 }
+            }
+        }
+    }
+
+    fun navigateToCode(codeObjectId: String?) {
+        codeObjectId?.let {
+            val success = if (it.startsWith("method:")) {
+                CodeNavigator.getInstance(project).maybeNavigateToMethod(it)
+            } else if (it.startsWith("span:")) {
+                CodeNavigator.getInstance(project).maybeNavigateToSpan(it)
+            } else {
+                CodeNavigator.getInstance(project).maybeNavigateToSpanOrMethod(it, it)
+            }
+
+            if (!success) {
+                Log.log(logger::warn, "can't navigate to code object {}", it)
             }
         }
     }

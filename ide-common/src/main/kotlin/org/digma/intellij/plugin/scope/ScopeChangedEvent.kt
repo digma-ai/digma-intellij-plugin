@@ -1,7 +1,7 @@
 package org.digma.intellij.plugin.scope
 
 import com.intellij.util.messages.Topic
-import org.digma.intellij.plugin.model.code.CodeDetails
+import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
 
 
 interface ScopeChangedEvent {
@@ -16,5 +16,5 @@ interface ScopeChangedEvent {
     }
 
 
-    fun scopeChanged(scope: SpanScope?, isAlreadyAtCode: Boolean, codeDetailsList: List<CodeDetails>, relatedCodeDetailsList: List<CodeDetails>)
+    fun scopeChanged(scope: SpanScope?, codeLocation: CodeLocation)
 }

@@ -475,6 +475,12 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.getInsights(queryParams));
     }
 
+    @NotNull
+    public AssetNavigationResponse getAssetNavigation(@NotNull String spanCodeObjectId) throws AnalyticsServiceException {
+        var env = getCurrentEnvironment();
+        return executeCatching(() -> analyticsProviderProxy.getAssetNavigation(env, spanCodeObjectId));
+    }
+
     @Override
     public void dispose() {
         try {

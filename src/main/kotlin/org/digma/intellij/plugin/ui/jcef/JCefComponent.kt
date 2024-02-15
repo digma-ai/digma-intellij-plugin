@@ -23,7 +23,7 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
 import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil
 import org.digma.intellij.plugin.jcef.common.UserRegistrationEvent
-import org.digma.intellij.plugin.model.code.CodeDetails
+import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
 import org.digma.intellij.plugin.observability.ObservabilityChanged
 import org.digma.intellij.plugin.scope.ScopeChangedEvent
 import org.digma.intellij.plugin.scope.SpanScope
@@ -154,12 +154,9 @@ private constructor(
         project.messageBus.connect(scopeChangeParentDisposable).subscribe(
             ScopeChangedEvent.SCOPE_CHANGED_TOPIC, object : ScopeChangedEvent {
                 override fun scopeChanged(
-                    scope: SpanScope?,
-                    isAlreadyAtCode: Boolean,
-                    codeDetailsList: List<CodeDetails>,
-                    relatedCodeDetailsList: List<CodeDetails>,
+                    scope: SpanScope?, codeLocation: CodeLocation,
                 ) {
-                    sendScopeChangedMessage(jbCefBrowser.cefBrowser, scope, isAlreadyAtCode, codeDetailsList, relatedCodeDetailsList)
+                    sendScopeChangedMessage(jbCefBrowser.cefBrowser, scope, codeLocation)
                 }
             }
         )

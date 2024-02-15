@@ -274,6 +274,34 @@ public interface LanguageService extends Disposable {
     }
 
 
+    @Nullable
+    public static Set<EndpointInfo> getEndpointInfos(Project project, String endpointCodeObjectId) {
+        for (SupportedLanguages value : SupportedLanguages.values()) {
+
+            try {
+                Class<? extends LanguageService> clazz = (Class<? extends LanguageService>) Class.forName(value.getLanguageServiceClassName());
+                LanguageService languageService = project.getService(clazz);
+                var endpointInfos = languageService.lookForDiscoveredEndpoints(endpointCodeObjectId);
+                if (endpointInfos != null && !endpointInfos.isEmpty()) {
+                    return endpointInfos;
+                }
+
+            } catch (Throwable e) {
+                //catch Throwable because there may be errors.
+                //ignore: some classes will fail to load , for example the CSharpLanguageService
+                //will fail to load if it's not rider because it depends on rider classes.
+                //JavaLanguageService will fail to load on rider, etc.
+                //don't log, it will happen too many times
+            }
+        }
+
+        return null;
+    }
+    
+    
+    
+    
+
     /**
      * This method should be a last resort to find language as it is slow and not reliable.
      * try to find the language by method code object id.

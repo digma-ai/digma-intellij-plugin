@@ -199,6 +199,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
                                 MethodUnderCaret methodUnderCaret = languageService1.detectMethodUnderCaret(project, psiFile1, selectedTextEditor, offset);
                                 Log.log(LOGGER::trace, "Found MethodUnderCaret for :{}, '{}'", newFile, methodUnderCaret);
                                 caretContextService.contextChanged(methodUnderCaret);
+                                LatestMethodUnderCaretHolder.getInstance(project).saveLatestMethodUnderCaret(project, languageService1, methodUnderCaret.getId());
                                 Log.log(LOGGER::trace, "contextChanged for :{}, '{}'", newFile, methodUnderCaret);
                             });
 
@@ -206,9 +207,11 @@ public class EditorEventsHandler implements FileEditorManagerListener {
                         } else if (psiFile1 != null) {
                             Log.log(LOGGER::trace, "file not supported :{}, calling contextEmptyNonSupportedFile", newFile);
                             caretContextService.contextEmptyNonSupportedFile(psiFile1.getVirtualFile().getPath());
+                            LatestMethodUnderCaretHolder.getInstance(project).clearLatestMethodInfo();
                         } else {
                             Log.log(LOGGER::trace, "calling contextEmpty for {}", newFile);
                             caretContextService.contextEmpty();
+                            LatestMethodUnderCaretHolder.getInstance(project).clearLatestMethodInfo();
                         }
                     } else {
                         Log.log(LOGGER::trace, "No selected editor for :{}", newFile);
@@ -306,14 +309,17 @@ public class EditorEventsHandler implements FileEditorManagerListener {
                 } else {
                     Log.log(LOGGER::trace, "updateContextAfterFileClosed no psi file for {}, calling contextEmptyNonSupportedFile", selectedFile);
                     addRequestWithErrorReporting(contextChangeAlarmAfterFileClosed, () -> caretContextService.contextEmptyNonSupportedFile(selectedFile.getPath()), 200, "EditorEventsHandler.updateContextAfterFileClosed");
+                    LatestMethodUnderCaretHolder.getInstance(project).clearLatestMethodInfo();
                 }
             } else {
                 Log.log(LOGGER::trace, "updateContextAfterFileClosed selected file is not relevant {}, calling contextEmptyNonSupportedFile", selectedFile);
                 addRequestWithErrorReporting(contextChangeAlarmAfterFileClosed, () -> caretContextService.contextEmptyNonSupportedFile(selectedFile.getPath()), 200, "EditorEventsHandler.updateContextAfterFileClosed");
+                LatestMethodUnderCaretHolder.getInstance(project).clearLatestMethodInfo();
             }
         } else {
             Log.log(LOGGER::trace, "updateContextAfterFileClosed selected no selected editor, calling contextEmpty");
             addRequestWithErrorReporting(contextChangeAlarmAfterFileClosed, caretContextService::contextEmpty, 200, "EditorEventsHandler.updateContextAfterFileClosed");
+            LatestMethodUnderCaretHolder.getInstance(project).clearLatestMethodInfo();
         }
     }
 

@@ -44,6 +44,7 @@ import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.editor.CaretContextService
 import org.digma.intellij.plugin.editor.EditorUtils
+import org.digma.intellij.plugin.editor.LatestMethodUnderCaretHolder
 import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.errorreporting.SEVERITY_MEDIUM_TRY_FIX
@@ -583,6 +584,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
     override fun refreshMethodUnderCaret(project: Project, psiFile: PsiFile, selectedEditor: Editor?, offset: Int) {
         val methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedEditor, offset)
+        LatestMethodUnderCaretHolder.getInstance(project).saveLatestMethodUnderCaret(project, this, methodUnderCaret.id)
         CaretContextService.getInstance(project).contextChanged(methodUnderCaret)
     }
 

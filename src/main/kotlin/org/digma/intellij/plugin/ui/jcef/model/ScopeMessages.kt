@@ -1,8 +1,7 @@
 package org.digma.intellij.plugin.ui.jcef.model
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
-import org.digma.intellij.plugin.model.code.CodeDetails
+import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
 import org.digma.intellij.plugin.scope.SpanScope
 
 
@@ -14,13 +13,5 @@ data class SetScopeMessage(val payload: SetScopeMessagePayload) {
 data class SetScopeMessagePayload(
     val span: SpanScope?,
     val code: CodeLocation,
-)
-
-data class CodeLocation(
-    @get:JsonProperty("isAlreadyAtCode")
-    @param:JsonProperty("isAlreadyAtCode")
-    val isAlreadyAtCode: Boolean,
-    val codeDetailsList: List<CodeDetails> = listOf(),
-    val relatedCodeDetailsList: List<CodeDetails> = listOf(),
 )
 

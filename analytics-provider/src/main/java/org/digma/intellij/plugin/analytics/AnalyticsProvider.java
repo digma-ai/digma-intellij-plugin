@@ -102,4 +102,6 @@ public interface AnalyticsProvider extends Closeable {
     AssetDisplayInfo getAssetDisplayInfo(String env, String codeObjectId);
 
     String getInsights(Map<String, Object> queryParams);
+
+    AssetNavigationResponse getAssetNavigation(String env, String spanCodeObjectId);
 }

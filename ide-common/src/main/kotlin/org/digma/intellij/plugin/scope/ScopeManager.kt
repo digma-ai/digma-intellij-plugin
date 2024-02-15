@@ -8,7 +8,7 @@ import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.insights.ErrorsViewOrchestrator
-import org.digma.intellij.plugin.model.code.CodeDetails
+import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
 import org.digma.intellij.plugin.navigation.MainContentViewSwitcher
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
@@ -32,7 +32,7 @@ class ScopeManager(private val project: Project) : Disposable {
 
     fun changeToHome() {
 
-        fireScopeChangedEvent(null, true, listOf(), listOf())
+        fireScopeChangedEvent(null, CodeLocation(true, listOf(), listOf()))
     }
 
     fun changeScope(scope: Scope) {
@@ -52,6 +52,10 @@ class ScopeManager(private val project: Project) : Disposable {
             null
         }
 
+
+        val codeLocation: CodeLocation = buildCodeLocation(project, scope.spanCodeObjectId, spanScopeInfo?.displayName ?: "")
+
+
         scope.displayName = spanScopeInfo?.displayName ?: ""
         scope.role = spanScopeInfo?.role
 
@@ -64,19 +68,15 @@ class ScopeManager(private val project: Project) : Disposable {
             MainContentViewSwitcher.getInstance(project).showInsights()
         }
 
-        fireScopeChangedEvent(scope, true, listOf(), listOf())
+        fireScopeChangedEvent(scope, codeLocation)
     }
 
 
     private fun fireScopeChangedEvent(
-        scope: SpanScope?,
-        isAlreadyAtCode: Boolean,
-        codeDetailsList: List<CodeDetails>,
-        relatedCodeDetailsList: List<CodeDetails>,
+        scope: SpanScope?, codeLocation: CodeLocation,
     ) {
         project.messageBus.syncPublisher(ScopeChangedEvent.SCOPE_CHANGED_TOPIC)
-            .scopeChanged(scope, isAlreadyAtCode, codeDetailsList, relatedCodeDetailsList)
+            .scopeChanged(scope, codeLocation)
     }
-
 
 }

@@ -2,8 +2,8 @@ package org.digma.intellij.plugin.ui.jcef
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.NullNode
 import com.intellij.ide.BrowserUtil
-import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.fileEditor.impl.HTMLEditorProvider
 import com.intellij.openapi.project.Project
@@ -23,7 +23,10 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.jcef.common.SendTrackingEventRequest
+import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.scope.ScopeManager
+import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import org.digma.intellij.plugin.ui.common.updateObservabilityValue
@@ -64,15 +67,15 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
                 //do common messages for all apps, or call doOnQuery
                 when (action) {
                     JCefMessagesUtils.GLOBAL_REGISTER ->{
-                        project.service<RegistrationEventHandler>().register(requestJsonNode);
+                        RegistrationEventHandler.getInstance(project).register(requestJsonNode)
                     }
 
                     JCefMessagesUtils.GLOBAL_OPEN_TROUBLESHOOTING_GUIDE -> {
-                        project.service<ActivityMonitor>()
+                        ActivityMonitor.getInstance(project)
                             .registerCustomEvent("troubleshooting link clicked", mapOf("origin" to getOriginForTroubleshootingEvent()))
                         EDT.ensureEDT {
-                            project.service<ToolWindowShower>().showToolWindow()
-                            project.service<MainToolWindowCardsController>().showTroubleshooting()
+                            ToolWindowShower.getInstance(project).showToolWindow()
+                            MainToolWindowCardsController.getInstance(project).showTroubleshooting()
                         }
                     }
 
@@ -142,7 +145,7 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
                     JCefMessagesUtils.GLOBAL_OPEN_DOCUMENTATION -> {
                         val payload = getPayloadFromRequest(requestJsonNode)
                         payload?.takeIf { payload.get("page") != null }?.let { pl ->
-                            val page = payload.get("page").asText()
+                            val page = pl.get("page").asText()
                             DocumentationService.getInstance(project).openDocumentation(page)
                         }
                     }
@@ -164,6 +167,9 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
                         }
                     }
 
+                    JCefMessagesUtils.GLOBAL_CHANGE_SCOPE -> {
+                        changeScope(requestJsonNode)
+                    }
 
 
                     else -> {
@@ -210,7 +216,7 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
 
         sendEnvironmentsList(browser, AnalyticsService.getInstance(project).environment.getEnvironments())
 
-        sendScopeChangedMessage(browser, null, true, listOf(), listOf())
+        sendScopeChangedMessage(browser, null, CodeLocation(true, listOf(), listOf()))
     }
 
     protected fun getPayloadFromRequest(requestJsonNode: JsonNode): JsonNode? {
@@ -230,5 +236,24 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
         }
     }
 
+
+    fun changeScope(requestJsonNode: JsonNode) {
+        val payload = getPayloadFromRequest(requestJsonNode)
+        payload?.let { pl ->
+            val span = pl.get("span")
+            val spanScope: SpanScope? = span?.takeIf { span !is NullNode }?.let { sp ->
+                val spanObj = objectMapper.readTree(sp.toString())
+                val spanId = if (spanObj.get("spanCodeObjectId") is NullNode) null else spanObj.get("spanCodeObjectId").asText()
+                spanId?.let {
+                    SpanScope(it, null, null, null)
+                }
+            }
+
+            spanScope?.let {
+                ScopeManager.getInstance(project).changeScope(it)
+            } ?: ScopeManager.getInstance(project).changeToHome()
+
+        }
+    }
 
 }

@@ -9,8 +9,6 @@ import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.navigation.MainContentViewSwitcher
 import org.digma.intellij.plugin.navigation.View
-import org.digma.intellij.plugin.scope.ScopeManager
-import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
 
 class NavigationMessageRouterHandler(project: Project) : BaseMessageRouterHandler(project) {
@@ -47,28 +45,25 @@ class NavigationMessageRouterHandler(project: Project) : BaseMessageRouterHandle
                 changeScope(requestJsonNode)
             }
 
+            "NAVIGATION/GO_TO_CODE_LOCATION" -> {
+                goToCode(requestJsonNode)
+            }
+
             else -> {
                 Log.log(logger::warn, "got unexpected action='$action'")
             }
         }
     }
 
-    private fun changeScope(requestJsonNode: JsonNode) {
+    private fun goToCode(requestJsonNode: JsonNode) {
         val payload = getPayloadFromRequest(requestJsonNode)
         payload?.let { pl ->
-            val span = pl.get("span")
-            val spanScope: SpanScope? = span?.takeIf { span !is NullNode }?.let { sp ->
-                val spanObj = objectMapper.readTree(sp.toString())
-                val spanId = if (spanObj.get("spanCodeObjectId") is NullNode) null else spanObj.get("spanCodeObjectId").asText()
-                spanId?.let {
-                    SpanScope(it, null, null, null)
-                }
+            val codeDetails = pl.get("codeDetails")
+            codeDetails?.takeIf { codeDetails !is NullNode }.let { cd ->
+                val codeDetailsObj = objectMapper.readTree(cd.toString())
+                val codeObjectId = codeDetailsObj.get("codeObjectId").asText()
+                NavigationService.getInstance(project).navigateToCode(codeObjectId)
             }
-
-            spanScope?.let {
-                ScopeManager.getInstance(project).changeScope(it)
-            } ?: ScopeManager.getInstance(project).changeToHome()
-
         }
     }
 

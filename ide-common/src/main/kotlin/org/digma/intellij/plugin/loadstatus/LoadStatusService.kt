@@ -12,6 +12,7 @@ import org.digma.intellij.plugin.analytics.AnalyticsProviderException
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.common.EDT
+import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.version.LoadStatusResponse
@@ -52,7 +53,7 @@ class LoadStatusService(private val project: Project) : Disposable {
 
     private fun periodicAction() {
 
-        if (project.isDisposed) return
+        if (!isProjectValid(project)) return
 
         val analyticsService = AnalyticsService.getInstance(project)
 

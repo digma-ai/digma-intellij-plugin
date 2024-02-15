@@ -25,6 +25,7 @@ import java.security.MessageDigest
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
+import java.util.Date
 
 private const val INSTALL_STATUS_PROPERTY_NAME = "install_status"
 
@@ -700,6 +701,16 @@ class ActivityMonitor(private val project: Project) : Disposable {
         capture(
             "Notifications.".plus(eventName),
             eventDetails
+        )
+    }
+
+    fun registerLoadWarning(loadType: String, lastOccurred: Date) {
+        capture(
+            "load-warning-appeared",
+            mapOf(
+                "load-type" to loadType,
+                "last-occurred" to lastOccurred,
+            )
         )
     }
 

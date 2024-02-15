@@ -209,6 +209,8 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
         serializeAndExecuteWindowPostMessageJavaScript(browser, message)
 
         sendEnvironmentsList(browser, AnalyticsService.getInstance(project).environment.getEnvironments())
+
+        sendScopeChangedMessage(browser, null, true, listOf(), listOf())
     }
 
     protected fun getPayloadFromRequest(requestJsonNode: JsonNode): JsonNode? {

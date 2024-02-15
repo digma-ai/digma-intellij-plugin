@@ -60,9 +60,8 @@ class NavigationMessageRouterHandler(project: Project) : BaseMessageRouterHandle
             val spanScope: SpanScope? = span?.takeIf { span !is NullNode }?.let { sp ->
                 val spanObj = objectMapper.readTree(sp.toString())
                 val spanId = if (spanObj.get("spanCodeObjectId") is NullNode) null else spanObj.get("spanCodeObjectId").asText()
-                val serviceName = if (spanObj.get("serviceName") is NullNode) null else spanObj.get("serviceName").asText()
                 spanId?.let {
-                    SpanScope(it, null, serviceName, null)
+                    SpanScope(it, null, null, null)
                 }
             }
 

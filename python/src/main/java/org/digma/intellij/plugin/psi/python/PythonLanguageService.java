@@ -325,6 +325,12 @@ public class PythonLanguageService implements LanguageService {
 
 
     @Override
+    public void refreshCodeLens() {
+        PythonCodeLensService.getInstance(project).refreshCodeLens();
+    }
+
+
+    @Override
     public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, BuildDocumentInfoProcessContext context) {
         Log.log(LOGGER::debug, "got buildDocumentInfo request for {}", psiFile);
         if (psiFile instanceof PyFile pyFile) {

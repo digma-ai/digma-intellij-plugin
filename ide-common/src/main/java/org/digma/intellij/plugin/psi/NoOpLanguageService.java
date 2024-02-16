@@ -150,4 +150,9 @@ public class NoOpLanguageService implements LanguageService {
     public @NotNull List<Pair<TextRange, CodeVisionEntry>> getCodeLens(@NotNull PsiFile psiFile) {
         throw new UnsupportedOperationException("should not be called for NoOPLanguageService");
     }
+
+    @Override
+    public void refreshCodeLens() {
+
+    }
 }

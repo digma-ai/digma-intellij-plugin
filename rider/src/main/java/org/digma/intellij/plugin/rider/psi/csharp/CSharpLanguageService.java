@@ -279,6 +279,12 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
     }
 
     @Override
+    public void refreshCodeLens() {
+        //todo:implement
+//        CodeLensHost.getInstance(project).refreshCodeLens();
+    }
+
+    @Override
     public @Nullable PsiElement getPsiElementForMethod(@NotNull String methodId) {
         //todo: implement
         return null;

@@ -1,9 +1,11 @@
 package org.digma.intellij.plugin.document;
 
+import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
 import org.digma.intellij.plugin.analytics.*;
+import org.digma.intellij.plugin.codelens.CodeLensRefresh;
 import org.digma.intellij.plugin.common.Unicodes;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightImportance;
@@ -14,9 +16,8 @@ import org.digma.intellij.plugin.model.rest.insights.MethodWithCodeObjects;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
-public class CodeLensProvider {
+public class CodeLensProvider implements Disposable {
 
     private static final Logger LOGGER = Logger.getInstance(CodeLensProvider.class);
 
@@ -27,8 +28,14 @@ public class CodeLensProvider {
 
         documentInfoService = project.getService(DocumentInfoService.class);
         analyticsService = project.getService(AnalyticsService.class);
+
+        new CodeLensRefresh(project, this).start();
     }
 
+    @Override
+    public void dispose() {
+        //nothing to do , used as parent disposable
+    }
 
     @NotNull
     public Set<CodeLens> provideCodeLens(@NotNull PsiFile psiFile) throws AnalyticsServiceException {
@@ -121,5 +128,6 @@ public class CodeLensProvider {
     private static boolean isImportant(Integer importanceLevel) {
         return importanceLevel <= InsightImportance.HighlyImportant.getPriority() && importanceLevel >= InsightImportance.ShowStopper.getPriority();
     }
+
 
 }

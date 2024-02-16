@@ -374,6 +374,8 @@ public interface LanguageService extends Disposable {
 
     @NotNull List<Pair<TextRange, CodeVisionEntry>> getCodeLens(@NotNull PsiFile psiFile);
 
+    void refreshCodeLens();
+
     @NotNull
     default MethodObservabilityInfo canInstrumentMethod(@NotNull String methodId) {
         return new MethodObservabilityInfo(methodId, false, false, null);

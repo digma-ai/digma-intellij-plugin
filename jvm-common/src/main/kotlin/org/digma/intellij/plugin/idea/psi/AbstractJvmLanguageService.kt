@@ -105,8 +105,6 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
     //It's a different search for each jvm language.
     abstract fun findClassByClassName(className: String, scope: GlobalSearchScope): UClass?
 
-    abstract fun refreshCodeLens()
-
     abstract fun findParentMethod(psiElement: PsiElement): UMethod?
 
     override fun ensureStartupOnEDT(project: Project) {

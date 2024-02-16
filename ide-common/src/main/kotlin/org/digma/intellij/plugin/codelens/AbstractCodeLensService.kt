@@ -19,6 +19,7 @@ import com.intellij.psi.SmartPointerManager
 import com.intellij.util.messages.MessageBusConnection
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
+import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.document.CodeLensProvider
 import org.digma.intellij.plugin.document.DocumentInfoChanged
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
@@ -145,7 +146,7 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
         // doing it the way bellow works, but seems a waste to clear and refresh all when we need to refresh only one file.
         // try to find a replacement for CodeVisionPassFactory.clearModificationStamp and refresh only one by one.
 
-        if(project.isDisposed){
+        if (!isProjectValid(project)) {
             return
         }
 

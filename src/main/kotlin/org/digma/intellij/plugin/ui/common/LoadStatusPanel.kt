@@ -85,7 +85,7 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
             if(!isVisible){
                 isVisible = true
                 ActivityMonitor.getInstance(project).registerLoadWarning(
-                    service.lastLoadStatus.description,
+                    service.lastLoadStatus.description ?: "",
                     service.lastLoadStatus.lastUpdated)
             }
             toolTipText = service.lastLoadStatus.description +

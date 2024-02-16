@@ -58,14 +58,13 @@ class LoadStatusService(private val project: Project) : Disposable {
         val analyticsService = AnalyticsService.getInstance(project)
 
         try {
-            lastLoadStatus = analyticsService.loadStatus
-            Log.log(logger::debug,"got load status response {}", lastLoadStatus)
-        } catch (ase: AnalyticsServiceException) {
-            // look if got HTTP Error Code 404 (https://en.wikipedia.org/wiki/HTTP_404), it means that backend is too old
-            val cause = ase.cause
-            if (cause !is AnalyticsProviderException || cause.responseCode != 404) {
-                Log.log(logger::debug, "AnalyticsServiceException for getLoadStatus: {}", ase.message)
+            val response = analyticsService.loadStatus
+            if(!response.isEmpty){
+                lastLoadStatus = response.get()
+                Log.log(logger::debug,"got load status response {}", lastLoadStatus)
             }
+        } catch (e: Throwable) {
+            Log.log(logger::debug, "AnalyticsServiceException for getLoadStatus: {}", e.message)
         }
 
         EDT.ensureEDT {

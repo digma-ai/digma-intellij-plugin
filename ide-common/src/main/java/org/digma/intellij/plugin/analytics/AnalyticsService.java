@@ -76,13 +76,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
@@ -490,7 +484,7 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.getPerformanceMetrics());
     }
 
-    public LoadStatusResponse getLoadStatus() throws AnalyticsServiceException {
+    public Optional<LoadStatusResponse> getLoadStatus() throws AnalyticsServiceException {
         return executeCatching(() -> analyticsProviderProxy.getLoadStatus());
     }
 

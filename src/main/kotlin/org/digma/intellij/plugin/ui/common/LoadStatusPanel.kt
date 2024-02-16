@@ -24,19 +24,19 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
     private val logger: Logger = Logger.getInstance(this::class.java)
 
     private var service = project.service<LoadStatusService>()
-    private val lastOccurrenceTextProperty = AtomicProperty("")
+//    private val lastOccurrenceTextProperty = AtomicProperty("")
 
     init {
         service.affectedPanel = this
         isOpaque = false
         layout = BoxLayout(this, BoxLayout.X_AXIS)
         isVisible = false
-        lastOccurrenceTextProperty.afterChange(project.service<LoadStatusService>()) {
-            toolTipText =
-                "Digma is handling too many spans in parallel and is throttling incoming spans to avoid CPU spikes on your machine"+
-                "<br/>" +
-                lastOccurrenceTextProperty.get()
-        }
+//        lastOccurrenceTextProperty.afterChange(project.service<LoadStatusService>()) {
+//            toolTipText =
+//                "Digma is handling too many spans in parallel and is throttling incoming spans to avoid CPU spikes on your machine"+
+//                "<br/>" +
+//                lastOccurrenceTextProperty.get()
+//        }
 
         buildItemsInPanel()
     }
@@ -93,10 +93,12 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
             if(!isVisible){
                 isVisible = true
                 ActivityMonitor.getInstance(project).registerLoadWarning(
-                    service.lastLoadStatus.loadType,
-                    service.lastLoadStatus.lastOccurred)
+                    service.lastLoadStatus.description,
+                    service.lastLoadStatus.lastUpdated)
             }
-            lastOccurrenceTextProperty.set("Last Occurred at " + service.lastLoadStatus.lastOccurred)
+            toolTipText = service.lastLoadStatus.description +
+                    "<br/>" +
+                    "Last occurred at " + service.lastLoadStatus.lastUpdated;
         }
         else{
             isVisible = false

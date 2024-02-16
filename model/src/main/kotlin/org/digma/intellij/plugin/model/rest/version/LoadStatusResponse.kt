@@ -9,10 +9,10 @@ import java.util.Date
 data class LoadStatusResponse
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 @ConstructorProperties(
-    "loadType",
-    "lastOccurred",
+    "description",
+    "lastUpdated",
     "occurredRecently"
 )
-constructor(val loadType: String,
-            val lastOccurred: Date,
+constructor(val description: String,
+            val lastUpdated: Date,
             val occurredRecently: Boolean)

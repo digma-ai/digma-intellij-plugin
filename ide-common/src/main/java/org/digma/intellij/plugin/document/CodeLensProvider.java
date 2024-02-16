@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.document;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
+import org.apache.commons.collections.CollectionUtils;
 import org.digma.intellij.plugin.analytics.*;
 import org.digma.intellij.plugin.common.Unicodes;
 import org.digma.intellij.plugin.log.Log;
@@ -13,7 +14,9 @@ import org.digma.intellij.plugin.model.discovery.SpanInfo;
 import org.digma.intellij.plugin.model.lens.CodeLens;
 import org.digma.intellij.plugin.model.rest.codelens.*;
 import org.digma.intellij.plugin.model.rest.insights.*;
+import org.digma.intellij.plugin.recentactivity.RecentActivityLogic;
 import org.jetbrains.annotations.NotNull;
+
 import java.util.*;
 
 import static java.util.stream.Collectors.groupingBy;
@@ -61,59 +64,89 @@ public class CodeLensProvider {
 
         var methodsInfo = documentInfoContainer.getDocumentInfo().getMethods().values();
 
-        List<MethodWithCodeObjects> methods = new ArrayList<>();
-
         for (MethodInfo methodInfo : methodsInfo) {
-            List<String> relatedSpansCodeObjectIds = methodInfo.getSpans().stream().map(SpanInfo::getId).toList();
-            List<String> relatedEndpointCodeObjectIds = methodInfo.getEndpoints().stream().map(EndpointInfo::getId).toList();
+            final var insights = documentInfoContainer.getInsightsForMethod(methodInfo.getId());
+            final var hasInsights = CollectionUtils.isNotEmpty(insights);
 
-            for (String id : methodInfo.allIdsWithType()) {
-                methods.add(new MethodWithCodeObjects(id, relatedSpansCodeObjectIds, relatedEndpointCodeObjectIds));
+            if (!hasInsights) {
+                if (methodInfo.hasRelatedCodeObjectIds()) {
+                    CodeLens codeLen = new CodeLens(methodInfo.getId(), "Never Reached", 7);
+                    codeLen.setLensDescription("No tracing data for this code object");
+                    codeLen.setAnchor("Top");
+
+                    codeLensList.add(codeLen);
+                }
+                continue; // to next method
             }
-        }
 
-        var methodsWithCodeLens = analyticsService.getCodeLensByMethods(methods).getMethodWithCodeLens();
-
-        for (MethodWithCodeLens methodWithCodeLens : methodsWithCodeLens) {
-            var codeObjectId = CodeObjectsUtil.stripMethodPrefix(methodWithCodeLens.getMethodCodeObjectId());
-            var decorators = methodWithCodeLens.getDecorators();
-
-            if (methodWithCodeLens.isAlive()) {
-                CodeLens codeLens = buildCodeLensOfActive(codeObjectId);
+            if (hasRecentActivity(insights)) {
+                CodeLens codeLens = buildCodeLensOfActive(methodInfo.getId());
                 codeLensList.add(codeLens);
             }
 
-            var decoratorsGroups = Arrays.stream(decorators).collect(groupingBy(Decorator::getTitle));
-
-            for (Map.Entry<String, List<Decorator>> decoratorsGroup : decoratorsGroups.entrySet()) {
-                var groupTitle = decoratorsGroup.getKey();
-                var decorator = decoratorsGroup.getValue().stream()
-                        .max(Comparator.comparingInt(d -> d.getImportance().getPriority())).get();
-
-                String envComponent = "";
-                int importance = decorator.getImportance().getPriority();
-
-                if (environmentPrefix) {
-                    envComponent = "[" + environment + "]";
-                }
-
-                String priorityEmoji = "";
-                if (isImportant(importance)) {
-                    priorityEmoji = "❗️";
-                }
-
-                String title = priorityEmoji + groupTitle + " " + envComponent;
-
-                CodeLens codeLens = new CodeLens(codeObjectId, title, importance);
-                codeLens.setLensDescription(decorator.getDescription());
-                codeLens.setLensMoreText("Go to " + title);
+            final boolean haveDecorators = evalHaveDecorators(insights);
+            if (!haveDecorators) {
+                CodeLens codeLens = new CodeLens(methodInfo.getId(), "Runtime Data", 8);
+                codeLens.setLensDescription("Runtime data available");
                 codeLens.setAnchor("Top");
 
                 codeLensList.add(codeLens);
+                continue; // to next method
             }
-        }
+
+            for (CodeObjectInsight insight : insights) {
+                if (!insight.hasDecorators()) {
+                    continue;
+                }
+
+                for (CodeObjectDecorator decorator : insight.getDecorators()) {
+                    String envComponent = "";
+                    if (environmentPrefix) {
+                        envComponent = "[" + insight.getEnvironment() + "]";
+                    }
+
+                    String priorityEmoji = "";
+                    if (isImportant(insight.getImportance())) {
+                        priorityEmoji = "❗️";
+                    }
+
+                    String title = priorityEmoji + decorator.getTitle() + " " + envComponent;
+
+                    CodeLens codeLens = new CodeLens(methodInfo.getId(), title, insight.getImportance());
+                    codeLens.setLensDescription(decorator.getDescription());
+                    codeLens.setLensMoreText("Go to " + title);
+                    codeLens.setAnchor("Top");
+
+                    codeLensList.add(codeLens);
+                }
+            }
+        } // end of forEach method
 
         return codeLensList;
+
+    }
+
+    private static boolean evalHaveDecorators(List<CodeObjectInsight> insights) {
+        if (CollectionUtils.isEmpty(insights)) {
+            return false;
+        }
+
+        Optional<CodeObjectInsight> optional = insights.stream()
+                .filter(CodeObjectInsight::hasDecorators)
+                .findFirst();
+        return optional.isPresent();
+    }
+
+    private static boolean hasRecentActivity(List<CodeObjectInsight> insights) {
+        Optional<SpanDurationsInsight> optInsight = insights.stream()
+                .filter(it -> it instanceof SpanDurationsInsight)
+                .map(it -> (SpanDurationsInsight) it)
+                .filter(it -> it.getLastSpanInstanceInfo() != null
+                        // for debug, comment out the line below (with isRecentTime)
+                        && RecentActivityLogic.isRecentTime(it.getLastSpanInstanceInfo().getStartTime())
+                )
+                .findFirst();
+        return optInsight.isPresent();
     }
 
     private static CodeLens buildCodeLensOfActive(String methodId) {

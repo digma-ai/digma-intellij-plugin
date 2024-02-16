@@ -3,7 +3,6 @@ package org.digma.intellij.plugin.scope
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.document.CodeObjectsUtil
-import org.digma.intellij.plugin.editor.LatestMethodUnderCaretHolder
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.model.code.CodeDetails
 import org.digma.intellij.plugin.model.rest.navigation.AssetCodeLocation
@@ -21,17 +20,18 @@ fun buildCodeLocation(
     methodCodeObjectId: String?,
 ): CodeLocation {
 
-    val isAlreadyAtCode = isAlreadyAtCodeLocation(project, spanCodeObjectId, methodCodeObjectId)
-    if (isAlreadyAtCode) {
-        //no need for navigation
-        return CodeLocation(true, listOf(), listOf())
-    }
-
     val codeNavigator = CodeNavigator.getInstance(project)
+
     if (codeNavigator.canNavigateToSpan(spanCodeObjectId)) {
         val codeDetails = CodeDetails(displayName, spanCodeObjectId)
         //direct navigation
-        return CodeLocation(false, listOf(codeDetails), listOf())
+        return CodeLocation(listOf(codeDetails), listOf())
+    }
+
+    if (methodCodeObjectId != null && codeNavigator.canNavigateToMethod(methodCodeObjectId)) {
+        val codeDetails = CodeDetails(displayName, methodCodeObjectId)
+        //direct navigation
+        return CodeLocation(listOf(codeDetails), listOf())
     }
 
 
@@ -42,12 +42,11 @@ fun buildCodeLocation(
         null
     }
 
-
     return assetNavigation?.let { an ->
 
         buildCodeLocationFromAssetNavigation(project, an)
 
-    } ?: CodeLocation(false, listOf(), listOf())
+    } ?: CodeLocation(listOf(), listOf())
 }
 
 
@@ -59,13 +58,13 @@ private fun buildCodeLocationFromAssetNavigation(
     val codeDetailsList = buildFromCodeLocation(project, assetNavigation.codeLocation)
     //if has code locations no need to continue
     if (codeDetailsList.isNotEmpty()) {
-        return CodeLocation(false, codeDetailsList, listOf())
+        return CodeLocation(codeDetailsList, listOf())
     }
 
     val relatedCodeDetailsList = buildFromRelatedCodeLocation(project, assetNavigation)
 
 
-    return CodeLocation(false, listOf(), relatedCodeDetailsList)
+    return CodeLocation(listOf(), relatedCodeDetailsList)
 
 }
 
@@ -170,22 +169,21 @@ private fun getSpanDisplayName(project: Project, spanCodeObjectId: String): Stri
 }
 
 
-private fun isAlreadyAtCodeLocation(project: Project, spanCodeObjectId: String, methodCodeObjectId: String?): Boolean {
-
-    val codeNavigator = CodeNavigator.getInstance(project)
-
-    val spanLocation: Pair<String, Int>? = codeNavigator.getSpanLocation(spanCodeObjectId)
-    val latestMethodInfo = LatestMethodUnderCaretHolder.getInstance(project).latestMethodInfo
-    if (latestMethodInfo != null && spanLocation != null) {
-        if (spanLocation.second >= latestMethodInfo.startOffset && spanLocation.second <= latestMethodInfo.endOffset) {
-            return true
-        }
-    }
-
-
-    if (latestMethodInfo != null && methodCodeObjectId != null) {
-        return latestMethodInfo.methodId == CodeObjectsUtil.stripMethodPrefix(methodCodeObjectId)
-    }
-    return false
-
-}
+//private fun isAlreadyAtCodeLocation(project: Project, spanCodeObjectId: String, methodCodeObjectId: String?): Boolean {
+//
+//    val codeNavigator = CodeNavigator.getInstance(project)
+//
+//    val spanLocation: Pair<String, Int>? = codeNavigator.getSpanLocation(spanCodeObjectId)
+//    val latestMethodInfo = LatestMethodUnderCaretHolder.getInstance(project).latestMethodInfo
+//    if (latestMethodInfo != null && spanLocation != null) {
+//        if (spanLocation.second >= latestMethodInfo.startOffset && spanLocation.second <= latestMethodInfo.endOffset) {
+//            return true
+//        }
+//    }
+//
+//    if (latestMethodInfo != null && methodCodeObjectId != null) {
+//        return latestMethodInfo.methodId == CodeObjectsUtil.stripMethodPrefix(methodCodeObjectId)
+//    }
+//    return false
+//
+//}

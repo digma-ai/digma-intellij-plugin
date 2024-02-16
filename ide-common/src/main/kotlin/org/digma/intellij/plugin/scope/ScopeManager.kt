@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.scope
 
-import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
@@ -14,7 +13,7 @@ import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
 
 @Service(Service.Level.PROJECT)
-class ScopeManager(private val project: Project) : Disposable {
+class ScopeManager(private val project: Project) {
 
 
     companion object {
@@ -24,21 +23,23 @@ class ScopeManager(private val project: Project) : Disposable {
         }
     }
 
-
-    override fun dispose() {
-        //nothing to do, used as parent disposable
-    }
-
-
     fun changeToHome() {
 
-        fireScopeChangedEvent(null, CodeLocation(true, listOf(), listOf()))
+        fireScopeChangedEvent(null, CodeLocation(listOf(), listOf()))
     }
 
     fun changeScope(scope: Scope) {
 
-        when (scope) {
-            is SpanScope -> changeToSpanScope(scope)
+        try {
+            when (scope) {
+                is SpanScope -> changeToSpanScope(scope)
+
+                else -> {
+
+                }
+            }
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError("ScopeManager.changeScope", e)
         }
 
     }
@@ -52,13 +53,13 @@ class ScopeManager(private val project: Project) : Disposable {
             null
         }
 
-
-        val codeLocation: CodeLocation =
-            buildCodeLocation(project, scope.spanCodeObjectId, spanScopeInfo?.displayName ?: "", spanScopeInfo?.methodCodeObjectId)
-
-
+        scope.methodId = spanScopeInfo?.methodCodeObjectId
         scope.displayName = spanScopeInfo?.displayName ?: ""
         scope.role = spanScopeInfo?.role
+
+
+        val codeLocation: CodeLocation =
+            buildCodeLocation(project, scope.spanCodeObjectId, scope.displayName ?: "", scope.methodId)
 
 
         EDT.ensureEDT {

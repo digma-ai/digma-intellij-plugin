@@ -79,7 +79,7 @@ public class CurrentContextUpdater implements Disposable {
         //there is no need to check if file is supported, we install caret listener only on editors of supported files.
         Log.log(LOGGER::debug, "updateCurrentContext for editor:{}, file: {}", editor, file);
 
-        PsiFile psiFile = PsiAccessUtilsKt.runInReadAccessInSmartModeWithResult(project, () -> PsiManager.getInstance(project).findFile(file));
+        PsiFile psiFile = PsiAccessUtilsKt.runInReadAccessWithResult(() -> PsiManager.getInstance(project).findFile(file));
 
         if (!PsiUtils.isValidPsiFile(psiFile)) {
             Log.log(LOGGER::debug, "psi file not found or is not valid for file: {}", file);

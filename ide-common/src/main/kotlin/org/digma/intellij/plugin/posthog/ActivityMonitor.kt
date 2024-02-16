@@ -704,12 +704,12 @@ class ActivityMonitor(private val project: Project) : Disposable {
         )
     }
 
-    fun registerLoadWarning(loadType: String, lastOccurred: Date) {
+    fun registerLoadWarning(description: String, lastUpdated: Date) {
         capture(
             "load-warning-appeared",
             mapOf(
-                "load-type" to loadType,
-                "last-occurred" to lastOccurred,
+                "description" to description,
+                "last-updated" to lastUpdated,
             )
         )
     }

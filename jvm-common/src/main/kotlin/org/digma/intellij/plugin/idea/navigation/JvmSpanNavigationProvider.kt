@@ -32,6 +32,7 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.progress.RetryableTask
 import org.digma.intellij.plugin.psi.PsiUtils
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 import java.util.function.Consumer
@@ -41,6 +42,8 @@ import java.util.function.Supplier
 internal class JvmSpanNavigationProvider(project: Project) : AbstractNavigationDiscovery(project), Disposable {
 
     private val logger = Logger.getInstance(this::class.java)
+
+    private val mySemaphore = Semaphore(1, true)
 
     private val spanLocations = ConcurrentHashMap(mutableMapOf<String, SpanLocation>())
 
@@ -81,11 +84,11 @@ internal class JvmSpanNavigationProvider(project: Project) : AbstractNavigationD
 
 
     fun buildSpanNavigation() {
-        schedule({ GlobalSearchScope.projectScope(project) }, Origin.Startup)
+        schedule({ GlobalSearchScope.projectScope(project) }, Origin.Startup, "all")
     }
 
 
-    private fun schedule(searchScopeProvider: SearchScopeProvider, origin: Origin, delayMillis: Long = 0, retry: Int = 0) {
+    private fun schedule(searchScopeProvider: SearchScopeProvider, origin: Origin, name: String, delayMillis: Long = 0, retry: Int = 0) {
 
         if (!isProjectValid(project)) {
             return
@@ -97,12 +100,21 @@ internal class JvmSpanNavigationProvider(project: Project) : AbstractNavigationD
         }
 
         scheduledExecutorService.schedule({
-            buildSpanNavigationUnderProgress(searchScopeProvider, origin, retry)
+            //this semaphore is a simple way to limit the number of concurrent tasks.
+            //a permit is acquired here and released by the task on its onFinish callback.
+            //scheduledExecutorService is limited to one thread , buildSpanNavigationUnderProgress actually
+            // starts another thread to execute the task, so this thread will wait here until the task thread is finished
+            // and then will launch the next task.
+            //mySemaphore.release() must be called or it will get stuck here forever.
+            //this is a local handling of thread limits and not part of RetryableBackgroundTask which is agnostic
+            //to the number of threads running it.
+            mySemaphore.acquire()
+            buildSpanNavigationUnderProgress(searchScopeProvider, origin, name, retry)
         }, delayMillis, TimeUnit.MILLISECONDS)
     }
 
 
-    private fun buildSpanNavigationUnderProgress(searchScopeProvider: SearchScopeProvider, origin: Origin, retry: Int) {
+    private fun buildSpanNavigationUnderProgress(searchScopeProvider: SearchScopeProvider, origin: Origin, name: String, retry: Int) {
 
         if (!isProjectValid(project)) {
             return
@@ -116,7 +128,7 @@ internal class JvmSpanNavigationProvider(project: Project) : AbstractNavigationD
             val myContext = NavigationProcessContext(searchScopeProvider, it)
             context = myContext
             //can prepare data here if necessary
-            buildSpanNavigation(myContext, origin, it, retry)
+            buildSpanNavigation(myContext, origin, name, it, retry)
         }
 
         val beforeRetryTask = Consumer<RetryableTask> { task ->
@@ -150,6 +162,8 @@ internal class JvmSpanNavigationProvider(project: Project) : AbstractNavigationD
 
         val onFinish = Consumer<RetryableTask> { task ->
 
+            mySemaphore.release()
+
             val hadProgressErrors = task.error != null
             val hadPCE = task.processCanceledException != null
             val success = task.isCompletedSuccessfully()
@@ -168,7 +182,7 @@ internal class JvmSpanNavigationProvider(project: Project) : AbstractNavigationD
                 }
 
                 //if no success schedule a retry in some minutes
-                schedule(searchScopeProvider, origin, TimeUnit.MINUTES.toMillis(2L), retry + 1)
+                schedule(searchScopeProvider, origin, name, TimeUnit.MINUTES.toMillis(2L), retry + 1)
             }
 
             val time = stopWatch.getTime(TimeUnit.MILLISECONDS)
@@ -179,7 +193,7 @@ internal class JvmSpanNavigationProvider(project: Project) : AbstractNavigationD
 
         val task = RetryableTask(
             project = project,
-            title = "Digma span navigation - $origin:$retry",
+            title = "Digma span navigation - $origin:$name:$retry",
             workTask = workTask,
             beforeRetryTask = beforeRetryTask,
             shouldRetryTask = shouldRetryTask,
@@ -194,7 +208,7 @@ internal class JvmSpanNavigationProvider(project: Project) : AbstractNavigationD
     }
 
 
-    private fun buildSpanNavigation(context: NavigationProcessContext, origin: Origin, indicator: ProgressIndicator, retry: Int) {
+    private fun buildSpanNavigation(context: NavigationProcessContext, origin: Origin, name: String, indicator: ProgressIndicator, retry: Int) {
 
         EDT.assertNonDispatchThread()
         //should not run in read action so that every section can wait for smart mode
@@ -238,7 +252,7 @@ internal class JvmSpanNavigationProvider(project: Project) : AbstractNavigationD
 
             //todo: check the errors and decide if need to retry, probably useless to retry on some errors like project disposed,
             // but retry on IndexNotReadyException
-            schedule(context.searchScope, origin, TimeUnit.MINUTES.toMillis(2L), retry + 1)
+            schedule(context.searchScope, origin, name, TimeUnit.MINUTES.toMillis(2L), retry + 1)
         }
     }
 
@@ -286,7 +300,7 @@ internal class JvmSpanNavigationProvider(project: Project) : AbstractNavigationD
             try {
                 virtualFile?.takeIf { isValidVirtualFile(virtualFile) }?.let { vf ->
                     removeDocumentSpans(vf)
-                    schedule({ GlobalSearchScope.fileScope(project, virtualFile) }, Origin.FileChanged)
+                    schedule({ GlobalSearchScope.fileScope(project, virtualFile) }, Origin.FileChanged, virtualFile.name)
                 }
             } catch (e: Throwable) {
                 Log.warnWithException(logger, e, "Exception in fileChanged")

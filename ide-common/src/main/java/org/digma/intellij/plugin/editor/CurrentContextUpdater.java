@@ -77,6 +77,10 @@ public class CurrentContextUpdater implements Disposable {
 
         EDT.assertNonDispatchThread();
 
+        if (!VfsUtilsKt.isValidVirtualFile(file)) {
+            return;
+        }
+
         //there is no need to check if file is supported, we install caret listener only on editors of supported files.
         Log.log(LOGGER::debug, "updateCurrentContext for editor:{}, file: {}", editor, file);
 

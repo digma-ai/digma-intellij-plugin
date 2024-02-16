@@ -43,8 +43,7 @@ import org.digma.intellij.plugin.model.rest.version.VersionResponse;
 import org.digma.intellij.plugin.model.rest.version.LoadStatusResponse;
 
 import java.io.Closeable;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public interface AnalyticsProvider extends Closeable {
 
@@ -110,7 +109,7 @@ public interface AnalyticsProvider extends Closeable {
 
     PerformanceMetricsResponse getPerformanceMetrics();
 
-    LoadStatusResponse getLoadStatus();
+    Optional<LoadStatusResponse> getLoadStatus();
 
     DeleteEnvironmentResponse deleteEnvironment(DeleteEnvironmentRequest deleteEnvironmentRequest);
 

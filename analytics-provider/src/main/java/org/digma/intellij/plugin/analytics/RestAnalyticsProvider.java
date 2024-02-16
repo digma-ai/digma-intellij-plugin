@@ -78,10 +78,7 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -254,8 +251,15 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
-    public LoadStatusResponse getLoadStatus() {
-        return execute(client.analyticsProvider::getLoadStatus);
+    public Optional<LoadStatusResponse> getLoadStatus() {
+        try {
+            return Optional.of(execute(client.analyticsProvider::getLoadStatus));
+        }
+        catch(AnalyticsProviderException e){
+            if(e.getResponseCode() == 404)
+                return Optional.empty();
+            throw e;
+        }
     }
 
     @Override

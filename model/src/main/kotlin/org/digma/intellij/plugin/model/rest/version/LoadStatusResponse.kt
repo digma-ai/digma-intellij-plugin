@@ -13,6 +13,6 @@ data class LoadStatusResponse
     "lastUpdated",
     "occurredRecently"
 )
-constructor(val description: String,
+constructor(val description: String?,
             val lastUpdated: Date,
             val occurredRecently: Boolean)

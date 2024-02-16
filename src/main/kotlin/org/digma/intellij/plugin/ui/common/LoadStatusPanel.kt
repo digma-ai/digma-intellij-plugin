@@ -24,20 +24,12 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
     private val logger: Logger = Logger.getInstance(this::class.java)
 
     private var service = project.service<LoadStatusService>()
-//    private val lastOccurrenceTextProperty = AtomicProperty("")
 
     init {
         service.affectedPanel = this
         isOpaque = false
         layout = BoxLayout(this, BoxLayout.X_AXIS)
         isVisible = false
-//        lastOccurrenceTextProperty.afterChange(project.service<LoadStatusService>()) {
-//            toolTipText =
-//                "Digma is handling too many spans in parallel and is throttling incoming spans to avoid CPU spikes on your machine"+
-//                "<br/>" +
-//                lastOccurrenceTextProperty.get()
-//        }
-
         buildItemsInPanel()
     }
 

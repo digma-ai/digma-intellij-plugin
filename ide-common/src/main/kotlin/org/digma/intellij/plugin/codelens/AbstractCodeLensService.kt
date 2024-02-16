@@ -17,16 +17,17 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
 import com.intellij.psi.SmartPointerManager
 import com.intellij.util.messages.MessageBusConnection
+import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.document.CodeLensProvider
 import org.digma.intellij.plugin.document.DocumentInfoChanged
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.navigation.MainContentViewSwitcher
+import org.digma.intellij.plugin.model.lens.CodeLens
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.psi.PsiUtils
-import org.digma.intellij.plugin.ui.MainToolWindowCardsController
-import org.digma.intellij.plugin.ui.ToolWindowShower
+import org.digma.intellij.plugin.scope.ScopeManager
+import org.digma.intellij.plugin.scope.SpanScope
 import java.awt.event.MouseEvent
 import java.util.concurrent.ConcurrentHashMap
 import java.util.stream.Collectors
@@ -101,12 +102,12 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
 
         val codeLenses = codeLensProvider.provideCodeLens(psiFile)
         val methods: Map<String, Pair<TextRange, PsiElement>> =
-            findMethodsByCodeObjectIds(psiFile, codeLenses.stream().map { it.codeObjectId }.collect(Collectors.toSet()))
+            findMethodsByCodeObjectIds(psiFile, codeLenses.stream().map { it.codeMethod }.collect(Collectors.toSet()))
 
         val usedGenericProviders: MutableList<String> = ArrayList<String>()
         codeLenses.forEach { lens ->
 
-            val methodPair = methods[lens.codeObjectId]
+            val methodPair = methods[lens.codeMethod]
             methodPair?.let {
                 val method = methodPair.second
                 val textRange = methodPair.first
@@ -114,7 +115,7 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
                 val entry = ClickableTextCodeVisionEntry(
                     lens.lensTitle,
                     codeLensProviderFactory.getProviderId(lens.lensTitle, usedGenericProviders),
-                    ClickHandler(method, lens.lensTitle, project),
+                    ClickHandler(method, lens, project),
                     null, // icon was set already on previous step inside CodeLensProvider.buildCodeLens()
                     lens.lensMoreText,
                     lens.lensDescription
@@ -186,17 +187,14 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
 
     private class ClickHandler(
         element: PsiElement,
-        private val lensTitle: String,
+        private val lens: CodeLens,
         private val project: Project,
     ) : (MouseEvent?, Editor) -> Unit {
         private val logger: Logger = Logger.getInstance(this::class.java)
         private val elementPointer = SmartPointerManager.createPointer(element)
         override fun invoke(event: MouseEvent?, editor: Editor) {
             try {
-                MainToolWindowCardsController.getInstance(project).closeCoveringViewsIfNecessary()
-                ActivityMonitor.getInstance(project).registerLensClicked(lensTitle)
-                MainContentViewSwitcher.getInstance(project).showInsights()
-                ToolWindowShower.getInstance(project).showToolWindow()
+                ActivityMonitor.getInstance(project).registerLensClicked(lens.lensTitle)
                 elementPointer.element?.let {
                     if (it is Navigatable && it.canNavigateToSource()) {
                         it.navigate(true)
@@ -210,6 +208,12 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
                         selectedEditor?.caretModel?.moveToOffset(elementPointer.element!!.textOffset)
                     }
                 }
+                Backgroundable.ensurePooledThread{
+                    if(lens.scopeCodeObjectId.startsWith("span:")){
+                        ScopeManager.getInstance(project).changeScope(SpanScope(lens.scopeCodeObjectId))
+                    }
+                }
+
             } catch (e: Exception) {
                 Log.warnWithException(logger, project, e, "error in ClickHandler {}", e)
                 ErrorReporter.getInstance().reportError(project, "AbstractCodeLensService.ClickHandler.invoke", e)

@@ -11,10 +11,12 @@ data class Decorator
 @ConstructorProperties(
     "title",
     "description",
+    "codeObjectId",
     "importance"
 )
 constructor(
     val title: String,
     val description: String,
+    val codeObjectId: String,
     val importance: InsightImportance
 )

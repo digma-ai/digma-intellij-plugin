@@ -41,17 +41,16 @@ public class CodeLensProvider {
             return Collections.emptySet();
         }
 
-        var codeLens = buildCodeLens(documentInfo, false);
+        var codeLens = buildCodeLens(documentInfo);
 
         Log.log(LOGGER::trace, "Got code lens for {}, {}", psiFile.getVirtualFile(), codeLens);
         return codeLens;
     }
 
     @NotNull
-    private Set<CodeLens> buildCodeLens(@NotNull DocumentInfoContainer documentInfoContainer, boolean environmentPrefix) throws AnalyticsServiceException {
+    private Set<CodeLens> buildCodeLens(@NotNull DocumentInfoContainer documentInfoContainer) throws AnalyticsServiceException {
         Set<CodeLens> codeLensList = new LinkedHashSet<>();
 
-        var environment = analyticsService.getEnvironment();
 
         if (documentInfoContainer.getDocumentInfo() == null) {
             return Collections.emptySet();
@@ -72,67 +71,48 @@ public class CodeLensProvider {
 
         var methodsWithCodeLens = analyticsService.getCodeLensByMethods(methods).getMethodWithCodeLens();
 
-        Set<String> methodWithCodeLensIds = new HashSet<>(methodsWithCodeLens.stream().distinct().map(x -> x.getMethodCodeObjectId()).toList());
-        Set<String> requestedMethods = new HashSet<>(methods.stream().distinct().map(x -> x.getCodeObjectId()).toList());
-
-        Set<String> methodsWithoutData = requestedMethods.stream().filter(method -> !methodWithCodeLensIds.contains(method)).collect(Collectors.toSet());
-
-        for (String methodWithoutData : methodsWithoutData) {
-            var codeObjectId = CodeObjectsUtil.stripMethodPrefix(methodWithoutData);
-            CodeLens codeLen = new CodeLens(codeObjectId, "Never Reached", 7);
-            codeLen.setLensDescription("No tracing data for this code object");
-            codeLen.setAnchor("Top");
-            codeLensList.add(codeLen);
-        }
-
         for (MethodWithCodeLens methodWithCodeLens : methodsWithCodeLens) {
             var codeObjectId = CodeObjectsUtil.stripMethodPrefix(methodWithCodeLens.getMethodCodeObjectId());
             var decorators = methodWithCodeLens.getDecorators();
 
-            if (methodWithCodeLens.isAlive()) {
-                CodeLens codeLens = buildCodeLensOfActive(codeObjectId);
+            var liveDecorator =
+                    decorators.stream().filter(d-> d.getTitle().equals("Live")).findFirst()
+                            .orElse(null);
+
+            if(liveDecorator != null){
+                var codeLens = buildCodeLensOfActive(codeObjectId, liveDecorator);
+                decorators.remove(liveDecorator);
                 codeLensList.add(codeLens);
             }
 
-            if (decorators.length == 0) {
-                CodeLens codeLens = new CodeLens(codeObjectId, "Runtime Data", 8);
-                codeLens.setLensDescription("Runtime data available");
+            for (Decorator decorator : decorators) {
+
+                Integer importance = decorator.getImportance().getPriority();
+
+                String priorityEmoji = "";
+                if (isImportant(importance)) {
+                    priorityEmoji = "❗️";
+                }
+
+                String title = priorityEmoji + decorator.getTitle();
+
+                CodeLens codeLens = new CodeLens(codeObjectId, decorator.getCodeObjectId(), title, importance);
+                codeLens.setLensDescription(decorator.getDescription());
+                codeLens.setLensMoreText("Go to " + title);
                 codeLens.setAnchor("Top");
 
                 codeLensList.add(codeLens);
-            } else {
-                for (Decorator decorator : decorators) {
-                    String envComponent = "";
-                    Integer importance = decorator.getImportance().getPriority();
-
-                    if (environmentPrefix) {
-                        envComponent = "[" + environment + "]";
-                    }
-
-                    String priorityEmoji = "";
-                    if (isImportant(importance)) {
-                        priorityEmoji = "❗️";
-                    }
-
-                    String title = priorityEmoji + decorator.getTitle() + " " + envComponent;
-
-                    CodeLens codeLens = new CodeLens(codeObjectId, title, importance);
-                    codeLens.setLensDescription(decorator.getDescription());
-                    codeLens.setLensMoreText("Go to " + title);
-                    codeLens.setAnchor("Top");
-
-                    codeLensList.add(codeLens);
-                }
             }
+
         }
 
         return codeLensList;
     }
 
-    private static CodeLens buildCodeLensOfActive(String methodId) {
+    private static CodeLens buildCodeLensOfActive(String methodId, Decorator liveDecorator) {
         var title = Unicodes.getLIVE_CIRCLE();
-        CodeLens codeLens = new CodeLens(methodId, title, 1);
-        codeLens.setLensDescription("Live data available");
+        CodeLens codeLens = new CodeLens(methodId,liveDecorator.getCodeObjectId(), title, 1);
+        codeLens.setLensDescription(liveDecorator.getDescription());
         codeLens.setAnchor("Top");
 
         return codeLens;

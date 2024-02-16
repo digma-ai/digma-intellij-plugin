@@ -98,8 +98,8 @@ class CodeLensHost(project: Project) : LifetimedProjectComponent(project) {
 
             //add code lens to the rider protocol
             codeLenses.forEach(Consumer { codeLens ->
-                model.codeLens.computeIfAbsent(codeLens.codeObjectId) { LensPerObjectId() }
-                model.codeLens[codeLens.codeObjectId]?.lens?.add(codeLens.toRiderCodeLensInfo(psiUri))
+                model.codeLens.computeIfAbsent(codeLens.codeMethod) { LensPerObjectId() }
+                model.codeLens[codeLens.codeMethod]?.lens?.add(codeLens.toRiderCodeLensInfo(psiUri))
             })
 
             Log.log(logger::debug, "Calling reanalyze for {}", psiId)
@@ -109,7 +109,7 @@ class CodeLensHost(project: Project) : LifetimedProjectComponent(project) {
 
 
     private fun CodeLens.toRiderCodeLensInfo(psiUri: String) = RiderCodeLensInfo(
-        codeObjectId = codeObjectId,
+        codeObjectId = codeMethod,
         lensTitle = lensTitle,
         lensDescription = lensDescription,
         moreText = lensMoreText,

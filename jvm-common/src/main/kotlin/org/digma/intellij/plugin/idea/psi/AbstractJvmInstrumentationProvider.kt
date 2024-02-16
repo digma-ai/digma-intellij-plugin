@@ -25,7 +25,7 @@ abstract class AbstractJvmInstrumentationProvider(private val project: Project, 
                 }
             }
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("AbstractJvmInstrumentationProvider.addObservabilityDependency", e)
+            ErrorReporter.getInstance().reportError(project, "AbstractJvmInstrumentationProvider.addObservabilityDependency", e)
         }
     }
 
@@ -39,7 +39,7 @@ abstract class AbstractJvmInstrumentationProvider(private val project: Project, 
                 }
             }
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("AbstractJvmInstrumentationProvider.addObservability", e)
+            ErrorReporter.getInstance().reportError(project, "AbstractJvmInstrumentationProvider.addObservability", e)
         }
     }
 }

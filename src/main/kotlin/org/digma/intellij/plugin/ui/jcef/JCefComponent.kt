@@ -87,7 +87,7 @@ private constructor(
                             val status = service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionLost()
                             updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
                         } catch (e: Exception) {
-                            ErrorReporter.getInstance().reportError("JCefComponent.connectionLost", e)
+                            ErrorReporter.getInstance().reportError(project, "JCefComponent.connectionLost", e)
                         }
                     }, 2000)
                 }
@@ -105,7 +105,7 @@ private constructor(
                             serializeAndExecuteWindowPostMessageJavaScript(jbCefBrowser.cefBrowser, message)
 
                         } catch (e: Exception) {
-                            ErrorReporter.getInstance().reportError("JCefComponent.connectionGained", e)
+                            ErrorReporter.getInstance().reportError(project, "JCefComponent.connectionGained", e)
                         }
                     }, 2000)
                 }

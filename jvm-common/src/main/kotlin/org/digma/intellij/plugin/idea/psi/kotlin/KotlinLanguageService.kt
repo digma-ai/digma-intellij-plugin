@@ -95,7 +95,7 @@ class KotlinLanguageService(project: Project) : AbstractJvmLanguageService(proje
                 return classes.firstOrNull()?.toUElementOfType<UClass>()
             }
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("KotlinLanguageService.findClassByClassName", e)
+            ErrorReporter.getInstance().reportError(project, "KotlinLanguageService.findClassByClassName", e)
             return null
         }
     }
@@ -172,7 +172,7 @@ class KotlinLanguageService(project: Project) : AbstractJvmLanguageService(proje
                 return false
             }
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("KotlinLanguageService.instrumentMethod", e)
+            ErrorReporter.getInstance().reportError(project, "KotlinLanguageService.instrumentMethod", e)
             return false
         }
 

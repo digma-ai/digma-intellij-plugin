@@ -38,7 +38,7 @@ fun buildCodeLocation(
     val assetNavigation = try {
         AnalyticsService.getInstance(project).getAssetNavigation(spanCodeObjectId)
     } catch (e: Throwable) {
-        ErrorReporter.getInstance().reportError("ScopeManager.changeToSpanScope", e)
+        ErrorReporter.getInstance().reportError(project, "ScopeManager.changeToSpanScope", e)
         null
     }
 
@@ -161,7 +161,7 @@ private fun getSpanDisplayName(project: Project, spanCodeObjectId: String): Stri
     val spanScopeInfo = try {
         AnalyticsService.getInstance(project).getAssetDisplayInfo(spanCodeObjectId)
     } catch (e: Throwable) {
-        ErrorReporter.getInstance().reportError("ScopeManager.changeToSpanScope", e)
+        ErrorReporter.getInstance().reportError(project, "ScopeManager.changeToSpanScope", e)
         null
     }
 

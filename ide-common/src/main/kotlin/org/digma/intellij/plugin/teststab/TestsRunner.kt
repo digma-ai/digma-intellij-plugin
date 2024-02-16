@@ -46,7 +46,7 @@ class TestsRunner(val project: Project) {
             } ?: false
 
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("TestsRunner.executeTestMethod", e)
+            ErrorReporter.getInstance().reportError(project, "TestsRunner.executeTestMethod", e)
             false
         }
     }
@@ -74,7 +74,7 @@ class TestsRunner(val project: Project) {
             } ?: false
 
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("TestsRunner.executeTestClassByMethodId", e)
+            ErrorReporter.getInstance().reportError(project, "TestsRunner.executeTestClassByMethodId", e)
             false
         }
     }
@@ -103,7 +103,7 @@ class TestsRunner(val project: Project) {
             } ?: false
 
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("TestsRunner.executeTestClassByClassName", e)
+            ErrorReporter.getInstance().reportError(project, "TestsRunner.executeTestClassByClassName", e)
             false
         }
     }
@@ -142,7 +142,7 @@ class TestsRunner(val project: Project) {
             //that doesn't mean the execution succeeded , only that there was no exception un to this line
             return true
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("TestsRunner.runTestAction", e)
+            ErrorReporter.getInstance().reportError(project, "TestsRunner.runTestAction", e)
             return false
         }
     }

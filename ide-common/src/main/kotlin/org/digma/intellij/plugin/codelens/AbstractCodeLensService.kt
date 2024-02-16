@@ -212,7 +212,7 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
                 }
             } catch (e: Exception) {
                 Log.warnWithException(logger, project, e, "error in ClickHandler {}", e)
-                ErrorReporter.getInstance().reportError("AbstractCodeLensService.ClickHandler.invoke", e)
+                ErrorReporter.getInstance().reportError(project, "AbstractCodeLensService.ClickHandler.invoke", e)
             }
         }
     }

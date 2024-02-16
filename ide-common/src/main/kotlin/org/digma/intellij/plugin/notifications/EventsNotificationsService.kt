@@ -209,7 +209,7 @@ class GoToCodeObjectInsightsAction(
 
         notification.expire()
     } catch (e: Throwable) {
-        ErrorReporter.getInstance().reportError("GoToCodeObjectInsightsAction.actionPerformed", e)
+        ErrorReporter.getInstance().reportError(project, "GoToCodeObjectInsightsAction.actionPerformed", e)
     }
 
 }

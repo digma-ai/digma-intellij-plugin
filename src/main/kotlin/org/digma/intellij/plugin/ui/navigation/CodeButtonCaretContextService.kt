@@ -62,7 +62,7 @@ class CodeButtonCaretContextService(private val project: Project) : CaretContext
                 contextChangedImpl(methodUnderCaret)
             } catch (e: Throwable) {
                 Log.warnWithException(logger, project, e, "error in contextChangedImpl")
-                ErrorReporter.getInstance().reportError("CodeButtonCaretContextService.contextChanged", e)
+                ErrorReporter.getInstance().reportError(project, "CodeButtonCaretContextService.contextChanged", e)
             } finally {
                 stopWatch.stop()
                 Log.log(logger::trace, "contextChangedImpl time took {} milliseconds", stopWatch.getTime(TimeUnit.MILLISECONDS))

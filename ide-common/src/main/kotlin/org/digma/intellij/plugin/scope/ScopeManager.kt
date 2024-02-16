@@ -35,11 +35,11 @@ class ScopeManager(private val project: Project) {
                 is SpanScope -> changeToSpanScope(scope)
 
                 else -> {
-
+//                    ErrorReporter.getInstance().reportError(project,"ScopeManager.changeScope","")
                 }
             }
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("ScopeManager.changeScope", e)
+            ErrorReporter.getInstance().reportError(project, "ScopeManager.changeScope", e)
         }
 
     }
@@ -49,7 +49,7 @@ class ScopeManager(private val project: Project) {
         val spanScopeInfo = try {
             AnalyticsService.getInstance(project).getAssetDisplayInfo(scope.spanCodeObjectId)
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("ScopeManager.changeToSpanScope", e)
+            ErrorReporter.getInstance().reportError(project, "ScopeManager.changeToSpanScope", e)
             null
         }
 

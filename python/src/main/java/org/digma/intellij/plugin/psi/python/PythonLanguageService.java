@@ -122,7 +122,7 @@ public class PythonLanguageService implements LanguageService {
         // no retry because it needs to complete very fast
         //it may be called from EDT or background, runInReadAccessWithResult will acquire read access if necessary.
         return executeCatchingWithResult(() -> PsiAccessUtilsKt.runInReadAccessWithResult(() -> detectMethodUnderCaret(project, psiFile, caretOffset)), throwable -> {
-            ErrorReporter.getInstance().reportError(getClass().getSimpleName() + ".detectMethodUnderCaret", throwable);
+            ErrorReporter.getInstance().reportError(project, getClass().getSimpleName() + ".detectMethodUnderCaret", throwable);
             return new MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), caretOffset, null, false);
         });
     }

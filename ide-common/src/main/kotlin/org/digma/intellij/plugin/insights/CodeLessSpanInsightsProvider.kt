@@ -48,7 +48,7 @@ class CodeLessSpanInsightsProvider(private val codeLessSpan: CodeLessSpan, priva
             return CodelessSpanInsightsContainer(insightsContainer, insightsResponse)
 
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("CodeLessSpanInsightsProvider.getInsights", e)
+            ErrorReporter.getInstance().reportError(project, "CodeLessSpanInsightsProvider.getInsights", e)
             Log.debugWithException(logger, e, "Cannot load insights for {} Because: {}", getObject(), e.message)
             return null
         }
@@ -90,7 +90,7 @@ class CodeLessSpanInsightsProvider(private val codeLessSpan: CodeLessSpan, priva
 
             return CodelessSpanErrorsContainer(errorsListContainer, insightsResponse)
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("CodeLessSpanInsightsProvider.getErrors", e)
+            ErrorReporter.getInstance().reportError(project, "CodeLessSpanInsightsProvider.getErrors", e)
             Log.debugWithException(logger, e, "Cannot load errors for {} Because: {}", getObject(), e.message)
             return null
         }

@@ -88,7 +88,7 @@ abstract class BaseIndexTemplateBuilder(resourceFolderName: String, private val 
 
         } catch (e: Exception) {
             Log.debugWithException(logger, e, "error creating template for index.html")
-            ErrorReporter.getInstance().reportError("BaseIndexTemplateBuilder.build", e)
+            ErrorReporter.getInstance().reportError(project, "BaseIndexTemplateBuilder.build", e)
             null
         }
     }

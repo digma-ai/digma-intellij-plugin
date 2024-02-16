@@ -130,7 +130,7 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
         // no retry because it needs to complete very fast
         //it may be called from EDT or background, runInReadAccessWithResult will acquire read access if necessary.
         return executeCatchingWithResult(() -> PsiAccessUtilsKt.runInReadAccessWithResult(() -> LanguageServiceHost.getInstance(project).detectMethodUnderCaret(psiFile, selectedEditor, caretOffset)), throwable -> {
-            ErrorReporter.getInstance().reportError(getClass().getSimpleName() + ".detectMethodUnderCaret", throwable);
+            ErrorReporter.getInstance().reportError(project, getClass().getSimpleName() + ".detectMethodUnderCaret", throwable);
             return new MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), caretOffset, null, false);
         });
     }

@@ -90,7 +90,7 @@ public class JaegerUIMessageRouterHandler extends CefMessageRouterHandlerAdapter
 
             } catch (Throwable e) {
                 Log.debugWithException(LOGGER,e,"Exception in onQuery "+request);
-                ErrorReporter.getInstance().reportError("JaegerUIMessageRouterHandler.onQuery", e);
+                ErrorReporter.getInstance().reportError(project, "JaegerUIMessageRouterHandler.onQuery", e);
             }
         });
 

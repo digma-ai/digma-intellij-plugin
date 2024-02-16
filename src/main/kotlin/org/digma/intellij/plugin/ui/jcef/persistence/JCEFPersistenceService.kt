@@ -44,7 +44,7 @@ class JCEFPersistenceService(private val project: Project) {
             val value = JCEFProjectPersistence.getInstance(project).get(fromPersistenceRequest.payload.key)
             sendPersistenceValue(browser, fromPersistenceRequest, value)
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("JCEFPersistenceService.getFromProjectPersistence", e)
+            ErrorReporter.getInstance().reportError(project, "JCEFPersistenceService.getFromProjectPersistence", e)
             sendError(fromPersistenceRequest.payload.key, fromPersistenceRequest.payload.scope, e, browser)
         }
     }
@@ -54,7 +54,7 @@ class JCEFPersistenceService(private val project: Project) {
             val value = JCEFApplicationPersistence.getInstance().get(fromPersistenceRequest.payload.key)
             sendPersistenceValue(browser, fromPersistenceRequest, value)
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("JCEFPersistenceService.getFromApplicationPersistence", e)
+            ErrorReporter.getInstance().reportError(project, "JCEFPersistenceService.getFromApplicationPersistence", e)
             sendError(fromPersistenceRequest.payload.key, fromPersistenceRequest.payload.scope, e, browser)
         }
     }
@@ -72,7 +72,7 @@ class JCEFPersistenceService(private val project: Project) {
             )
             serializeAndExecuteWindowPostMessageJavaScript(browser, message)
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("JCEFPersistenceService.sendPersistenceValue", e)
+            ErrorReporter.getInstance().reportError(project, "JCEFPersistenceService.sendPersistenceValue", e)
             sendError(fromPersistenceRequest.payload.key, fromPersistenceRequest.payload.scope, e, browser)
         }
     }
@@ -110,7 +110,7 @@ class JCEFPersistenceService(private val project: Project) {
                 }
             }
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("JCEFPersistenceService.saveToPersistence", e)
+            ErrorReporter.getInstance().reportError(project, "JCEFPersistenceService.saveToPersistence", e)
         }
     }
 }

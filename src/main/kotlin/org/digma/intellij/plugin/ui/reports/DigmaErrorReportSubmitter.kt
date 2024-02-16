@@ -59,7 +59,7 @@ class DigmaErrorReportSubmitter : ErrorReportSubmitter() {
                     consumer.consume(SubmittedReportInfo(SubmittedReportInfo.SubmissionStatus.NEW_ISSUE))
                 }
             } catch (e: Throwable) {
-                ErrorReporter.getInstance().reportError("DigmaErrorReportSubmitter.submit", e)
+                ErrorReporter.getInstance().reportError(project, "DigmaErrorReportSubmitter.submit", e)
                 EDT.ensureEDT {
                     consumer.consume(SubmittedReportInfo(SubmittedReportInfo.SubmissionStatus.FAILED))
                 }

@@ -124,7 +124,7 @@ class JavaLanguageService(project: Project) : AbstractJvmLanguageService(project
                 return false
             }
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("JavaLanguageService.instrumentMethod", e)
+            ErrorReporter.getInstance().reportError(project, "JavaLanguageService.instrumentMethod", e)
             return false
         }
     }

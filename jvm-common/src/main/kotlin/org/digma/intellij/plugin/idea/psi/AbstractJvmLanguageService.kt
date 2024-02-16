@@ -426,7 +426,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                 }
             }
         }, { e ->
-            ErrorReporter.getInstance().reportError("${this::class.java.simpleName}.detectMethodUnderCaret", e)
+            ErrorReporter.getInstance().reportError(project, "${this::class.java.simpleName}.detectMethodUnderCaret", e)
             MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), caretOffset, null, false)
         })
     }
@@ -508,7 +508,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                         }
                     }
                 } catch (e: Throwable) {
-                    ErrorReporter.getInstance().reportError("${this::class.java.simpleName}.navigateToMethod", e)
+                    ErrorReporter.getInstance().reportError(project, "${this::class.java.simpleName}.navigateToMethod", e)
                 }
             }
         }
@@ -540,7 +540,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                         method?.sourcePsi
                     }
                 } catch (e: Exception) {
-                    ErrorReporter.getInstance().reportError("AbstractJvmLanguageService.getPsiElementForMethod", e)
+                    ErrorReporter.getInstance().reportError(project, "AbstractJvmLanguageService.getPsiElementForMethod", e)
                     null
                 }
             }
@@ -576,7 +576,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                     val uClass = findClassByClassName(classNameToFind, GlobalSearchScope.allScope(project))
                     return@allowSlowOperation uClass?.sourcePsi
                 } catch (e: Exception) {
-                    ErrorReporter.getInstance().reportError("AbstractJvmLanguageService.getPsiElementForClassByName", e)
+                    ErrorReporter.getInstance().reportError(project, "AbstractJvmLanguageService.getPsiElementForClassByName", e)
                     null
                 }
             }
@@ -665,7 +665,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                 } catch (e: ProcessCanceledException) {
                     throw e
                 } catch (e: Throwable) {
-                    ErrorReporter.getInstance().reportError("AbstractJvmLanguageService.canInstrumentMethod", e)
+                    ErrorReporter.getInstance().reportError(project, "AbstractJvmLanguageService.canInstrumentMethod", e)
                 }
 
                 return MethodObservabilityInfo(methodId, hasMissingDependency = false, canInstrumentMethod = false)

@@ -33,7 +33,7 @@ class RunConfigurationStartupActivity : StartupActivity {
             ActivityMonitor.getInstance(project).reportSupportedRunConfigDetected(details)
 
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("RunConfigurationStartupActivity.runActivity", e)
+            ErrorReporter.getInstance().reportError(project, "RunConfigurationStartupActivity.runActivity", e)
         }
     }
 

@@ -99,7 +99,7 @@ public class Environment implements EnvironmentsSupplier {
 
             Backgroundable.ensureBackground(project, "Digma: environment changed " + newEnv, task);
         } catch (Throwable e) {
-            ErrorReporter.getInstance().reportError("Environment.setCurrent", e);
+            ErrorReporter.getInstance().reportError(project, "Environment.setCurrent", e);
         }
     }
 

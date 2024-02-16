@@ -48,6 +48,9 @@ public class JCefMessagesUtils {
     public static final String GLOBAL_OPEN_INSTALLATION_WIZARD = "GLOBAL/OPEN_INSTALLATION_WIZARD";
     public static final String GLOBAL_SET_SCOPE = "GLOBAL/SET_SCOPE";
     public static final String GLOBAL_CHANGE_SCOPE = "GLOBAL/CHANGE_SCOPE";
+    public static final String GLOBAL_SET_STATE = "GLOBAL/SET_STATE";
+    public static final String GLOBAL_UPDATE_STATE = "GLOBAL/UPDATE_STATE";
+    public static final String GLOBAL_GET_STATE = "GLOBAL/GET_STATE";
 
 
     //todo: replace with org.digma.intellij.plugin.ui.jcef.JCefBrowserUtilsKt.jsonToObject

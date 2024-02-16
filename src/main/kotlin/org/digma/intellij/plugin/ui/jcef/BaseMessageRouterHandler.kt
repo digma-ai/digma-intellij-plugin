@@ -36,6 +36,7 @@ import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest
 import org.digma.intellij.plugin.ui.jcef.model.OpenInInternalBrowserRequest
 import org.digma.intellij.plugin.ui.jcef.model.SaveToPersistenceRequest
 import org.digma.intellij.plugin.ui.jcef.persistence.JCEFPersistenceService
+import org.digma.intellij.plugin.ui.jcef.state.JCEFStateManager
 
 abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouterHandlerAdapter() {
 
@@ -172,6 +173,15 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
                     }
 
 
+                    JCefMessagesUtils.GLOBAL_UPDATE_STATE -> {
+                        updateState(requestJsonNode)
+                    }
+
+                    JCefMessagesUtils.GLOBAL_GET_STATE -> {
+                        getState(browser)
+                    }
+
+
                     else -> {
                         doOnQuery(project, browser, requestJsonNode, request, action)
                     }
@@ -193,6 +203,18 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
         //return success regardless of the background thread
         callback.success("")
         return true
+    }
+
+    private fun getState(browser: CefBrowser) {
+        val state = JCEFStateManager.getInstance(project).getState()
+        sendJcefStateMessage(browser, state)
+    }
+
+    private fun updateState(requestJsonNode: JsonNode) {
+        val payload = getPayloadFromRequest(requestJsonNode)
+        payload?.let {
+            JCEFStateManager.getInstance(project).updateState(it)
+        }
     }
 
     abstract fun getOriginForTroubleshootingEvent(): String

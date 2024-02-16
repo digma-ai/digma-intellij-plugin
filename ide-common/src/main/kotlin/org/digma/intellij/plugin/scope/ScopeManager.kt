@@ -8,11 +8,13 @@ import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.errorreporting.SEVERITY_HIGH_TRY_FIX
 import org.digma.intellij.plugin.errorreporting.SEVERITY_PROP_NAME
-import org.digma.intellij.plugin.insights.ErrorsViewOrchestrator
 import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
 import org.digma.intellij.plugin.navigation.MainContentViewSwitcher
+import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
+import org.digma.intellij.plugin.ui.service.ErrorsViewOrchestrator
+import org.digma.intellij.plugin.ui.service.ErrorsViewService
 
 @Service(Service.Level.PROJECT)
 class ScopeManager(private val project: Project) {
@@ -60,7 +62,7 @@ class ScopeManager(private val project: Project) {
             null
         }
 
-        scope.methodId = spanScopeInfo?.methodCodeObjectId
+        scope.methodId = spanScopeInfo?.methodCodeObjectId ?: tryGetMethodIdForSpan(scope.spanCodeObjectId)
         scope.displayName = spanScopeInfo?.displayName ?: ""
         scope.role = spanScopeInfo?.role
 
@@ -78,6 +80,19 @@ class ScopeManager(private val project: Project) {
         }
 
         fireScopeChangedEvent(scope, codeLocation)
+
+        tryPopulateErrors(scope)
+
+    }
+
+    private fun tryPopulateErrors(scope: SpanScope) {
+        scope.methodId?.let {
+            ErrorsViewService.getInstance(project).updateErrors(it)
+        } ?: ErrorsViewService.getInstance(project).empty()
+    }
+
+    private fun tryGetMethodIdForSpan(spanCodeObjectId: String): String? {
+        return CodeNavigator.getInstance(project).findMethodCodeObjectId(spanCodeObjectId)
     }
 
 

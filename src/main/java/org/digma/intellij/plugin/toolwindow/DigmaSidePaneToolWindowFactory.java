@@ -2,7 +2,7 @@ package org.digma.intellij.plugin.toolwindow;
 
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.project.*;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.*;
 import com.intellij.ui.content.ContentFactory;
 import com.intellij.util.ui.JBUI;
@@ -18,7 +18,6 @@ import org.digma.intellij.plugin.ui.common.MainContentPanel;
 import org.digma.intellij.plugin.ui.common.statuspanels.NoConnectionPanelKt;
 import org.digma.intellij.plugin.ui.notifications.AllNotificationsPanel;
 import org.digma.intellij.plugin.ui.panels.DisposablePanel;
-import org.digma.intellij.plugin.ui.service.*;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -106,11 +105,6 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
             ActivityMonitor.getInstance(project).registerCustomEvent("skip-installation-wizard", null);
         }
 
-
-        //todo: runWhenSmart is ok for java,python , but in Rider runWhenSmart does not guarantee that the solution
-        // is fully loaded. consider replacing that with LanguageService.runWhenSmartForAll so that C# language service
-        // can run this task when the solution is fully loaded.
-        DumbService.getInstance(project).runWhenSmart(() -> initializeWhenSmart(project));
     }
 
     private JPanel createCardsPanel(@NotNull Project project, @NotNull JPanel mainPanel, Disposable parentDisposable) {
@@ -136,21 +130,4 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
     }
 
 
-    private void initializeWhenSmart(@NotNull Project project) {
-
-        Log.log(LOGGER::debug, "in initializeWhenSmart, dumb mode is {}", DumbService.isDumb(project));
-
-        //sometimes the views models are updated before the tool window is initialized.
-        //it happens when files are re-opened early before the tool window, and CaretContextService.contextChanged
-        //is invoked and updates the models.
-        //only at this stage the panels are constructed already. just calling updateUi() for all view services
-        // will actually update the UI.
-        //todo: probably not necessary, EditorEventsHandler.selectionChanged loads DocumentInfo and
-        // calls contextChanged only in smart mode. and in smart mode the panels should be constructed already.
-        // needs some testing.
-        // on the other hand if the tool window is opened after EditorEventsHandler.selectionChanged then the
-        // models will be populated with data but updateUi was not invoked
-        project.getService(InsightsViewService.class).updateUi();
-        project.getService(ErrorsViewService.class).updateUi();
-    }
 }

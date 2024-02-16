@@ -54,10 +54,6 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.service.InsightsViewService"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.refreshInsightsTask.RefreshService"/>
-
-        <projectService serviceImplementation="org.digma.intellij.plugin.ui.service.ErrorsViewService"/>
-
         <projectService serviceImplementation="org.digma.intellij.plugin.insights.InsightsProvider"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.errors.ErrorsProvider"/>
@@ -167,9 +163,6 @@
         <listener
                 class="org.digma.intellij.plugin.debugger.DebuggerListener"
                 topic="com.intellij.xdebugger.XDebuggerManagerListener"/>
-        <listener
-                class="org.digma.intellij.plugin.editor.GeneralFileEditorListener"
-                topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
         <listener
                 class="org.digma.intellij.plugin.toolwindow.DigmaToolWindowsListener"
                 topic="com.intellij.openapi.wm.ex.ToolWindowManagerListener"/>

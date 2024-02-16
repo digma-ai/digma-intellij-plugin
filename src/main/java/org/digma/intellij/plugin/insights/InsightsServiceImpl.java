@@ -9,7 +9,6 @@ import org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
-import org.digma.intellij.plugin.refreshInsightsTask.RefreshService;
 import org.digma.intellij.plugin.scope.*;
 import org.digma.intellij.plugin.ui.common.Laf;
 import org.digma.intellij.plugin.ui.list.insights.JaegerUtilKt;
@@ -94,8 +93,6 @@ public abstract class InsightsServiceImpl implements Disposable {
     }
 
     public void refresh(@NotNull InsightType insightType) {
-        //TODO: do a real refresh, after refactoring the RefreshService, refresh the insights
-        RefreshService.getInstance(project).refreshAllInBackground();
         ActivityMonitor.getInstance(project).registerButtonClicked("refresh", insightType);
     }
 

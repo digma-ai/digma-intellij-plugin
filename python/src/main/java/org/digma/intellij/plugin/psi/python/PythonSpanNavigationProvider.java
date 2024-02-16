@@ -5,37 +5,26 @@ import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
-import com.intellij.openapi.progress.EmptyProgressIndicator;
-import com.intellij.openapi.progress.ProgressManager;
-import com.intellij.openapi.project.DumbService;
-import com.intellij.openapi.project.Project;
+import com.intellij.openapi.progress.*;
+import com.intellij.openapi.project.*;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiDocumentManager;
-import com.intellij.psi.PsiReference;
-import com.intellij.psi.search.GlobalSearchScope;
-import com.intellij.psi.search.SearchScope;
+import com.intellij.psi.*;
+import com.intellij.psi.search.*;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Query;
 import com.jetbrains.python.PythonLanguage;
-import com.jetbrains.python.psi.PyCallExpression;
-import com.jetbrains.python.psi.PyFunction;
+import com.jetbrains.python.psi.*;
 import com.jetbrains.python.psi.stubs.PyFunctionNameIndex;
 import kotlin.Pair;
-import org.digma.intellij.plugin.common.Backgroundable;
-import org.digma.intellij.plugin.common.Retries;
+import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.SpanInfo;
 import org.digma.intellij.plugin.psi.PsiUtils;
-import org.digma.intellij.plugin.ui.service.ErrorsViewService;
-import org.digma.intellij.plugin.ui.service.InsightsViewService;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -112,17 +101,6 @@ public class PythonSpanNavigationProvider implements Disposable {
                 buildSpansLock.unlock();
             }
         }
-
-
-        //todo: is this necessary after the new react app ?
-        //trigger a refresh after span navigation is built. this is necessary because the insights and errors
-        //views may be populated before span navigation is ready and spans links can not be built.
-        //for example is the IDE is closed when the cursor is on a method with Duration Breakdown that
-        // has span links, then start the IDE again, the insights view is populated already, without this refresh
-        // there will be no links.
-        InsightsViewService.getInstance(project).refreshInsightsModel();
-        ErrorsViewService.getInstance(project).refreshErrorsModel();
-
     }
 
 

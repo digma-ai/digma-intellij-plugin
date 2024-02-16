@@ -18,10 +18,8 @@ import org.digma.intellij.plugin.ui.list.listBackground
 import org.digma.intellij.plugin.ui.model.UIInsightsStatus
 import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
 import org.digma.intellij.plugin.ui.model.errors.ErrorsTabCard
-import org.digma.intellij.plugin.ui.model.insights.InsightsModel
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
 import org.digma.intellij.plugin.ui.service.ErrorsViewService
-import org.digma.intellij.plugin.ui.service.InsightsViewService
 import java.awt.BorderLayout
 import java.awt.CardLayout
 import javax.swing.JComponent
@@ -38,7 +36,6 @@ fun errorsPanel(project: Project): DigmaTabPanel {
     //so components can bind to them, but not to members of them, the model instance is the same on but the
     //members change , like the various lists. or bind to a function of the mode like getScope.
     val errorsModel = ErrorsViewService.getInstance(project).model
-    val insightsModel = InsightsViewService.getInstance(project).model
 
     val errorsList = ScrollablePanelList(ErrorsPanelList(project, errorsModel.listViewItems))
     val previewList = ScrollablePanelList(PreviewList(project, errorsModel.getMethodNamesWithErrors()))
@@ -94,7 +91,7 @@ fun errorsPanel(project: Project): DigmaTabPanel {
     result.add(myCardPanel, BorderLayout.CENTER)
     result.background = listBackground()
 
-    return wrapWithEmptyStatuses(project,result, errorsModel, insightsModel)
+    return wrapWithEmptyStatuses(project, result, errorsModel)
 }
 
 
@@ -104,7 +101,6 @@ private fun wrapWithEmptyStatuses(
     project: Project,
     errorsPanel: DigmaTabPanel,
     errorsModel: ErrorsModel,
-    insightsModel: InsightsModel
 ): DigmaTabPanel {
 
     //using the insights model status to change to empty state card
@@ -154,32 +150,50 @@ private fun wrapWithEmptyStatuses(
 
             errorsPanel.reset()
 
-            if (insightsModel.status == UIInsightsStatus.Startup){
-                emptyStatusesCardsLayout.show(emptyStatusesCardsPanel,UIInsightsStatus.Startup.name)
-            }else if (errorsModel.card == ErrorsTabCard.ERROR_DETAILS){
-                Log.log(logger::debug, project, "Changing to error default")
-                emptyStatusesCardsLayout.show(emptyStatusesCardsPanel,UIInsightsStatus.Default.name )
-            }else if (listOf(UIInsightsStatus.Loading,UIInsightsStatus.InsightPending).contains(insightsModel.status)){
-                Log.log(logger::debug, project, "Changing to card  ${insightsModel.status.name}")
-                emptyStatusesCardsLayout.show(emptyStatusesCardsPanel, insightsModel.status.name)
-            }else{
-                var cardToShow = UIInsightsStatus.Default.name
+            var cardToShow = UIInsightsStatus.Default.name
 
-                if (errorsModel.listViewItems.isNotEmpty() &&
-                    listOf(UIInsightsStatus.NoSpanData,UIInsightsStatus.NoObservability,UIInsightsStatus.NoInsights).contains(insightsModel.status)){
-                    cardToShow = noErrorsCardName
-                }
-
-                if (errorsModel.listViewItems.isEmpty() && errorsModel.card == ErrorsTabCard.ERRORS_LIST){
-                    cardToShow = noErrorsCardName
-                }
-                if (!errorsModel.hasErrors() && errorsModel.card == ErrorsTabCard.PREVIEW_LIST){
-                    cardToShow = noErrorsCardName
-                }
-
-                Log.log(logger::debug, project, "Changing to card  $cardToShow")
-                emptyStatusesCardsLayout.show(emptyStatusesCardsPanel, cardToShow)
+            if (errorsModel.listViewItems.isEmpty()) {
+                cardToShow = noErrorsCardName
             }
+
+//            if (errorsModel.listViewItems.isEmpty() && errorsModel.card == ErrorsTabCard.ERRORS_LIST){
+//                cardToShow = noErrorsCardName
+//            }
+            if (!errorsModel.hasErrors() && errorsModel.card == ErrorsTabCard.PREVIEW_LIST) {
+                cardToShow = noErrorsCardName
+            }
+
+            Log.log(logger::debug, project, "Changing to card  $cardToShow")
+            emptyStatusesCardsLayout.show(emptyStatusesCardsPanel, cardToShow)
+
+
+//            if (insightsModel.status == UIInsightsStatus.Startup){
+//                emptyStatusesCardsLayout.show(emptyStatusesCardsPanel,UIInsightsStatus.Startup.name)
+//            }else
+//            if (errorsModel.card == ErrorsTabCard.ERROR_DETAILS){
+//                Log.log(logger::debug, project, "Changing to error default")
+//                emptyStatusesCardsLayout.show(emptyStatusesCardsPanel,UIInsightsStatus.Default.name )
+//            }else if (listOf(UIInsightsStatus.Loading,UIInsightsStatus.InsightPending).contains(insightsModel.status)){
+//                Log.log(logger::debug, project, "Changing to card  ${insightsModel.status.name}")
+//                emptyStatusesCardsLayout.show(emptyStatusesCardsPanel, insightsModel.status.name)
+//            }else{
+//                var cardToShow = UIInsightsStatus.Default.name
+//
+//                if (errorsModel.listViewItems.isNotEmpty() &&
+//                    listOf(UIInsightsStatus.NoSpanData,UIInsightsStatus.NoObservability,UIInsightsStatus.NoInsights).contains(insightsModel.status)){
+//                    cardToShow = noErrorsCardName
+//                }
+//
+//                if (errorsModel.listViewItems.isEmpty() && errorsModel.card == ErrorsTabCard.ERRORS_LIST){
+//                    cardToShow = noErrorsCardName
+//                }
+//                if (!errorsModel.hasErrors() && errorsModel.card == ErrorsTabCard.PREVIEW_LIST){
+//                    cardToShow = noErrorsCardName
+//                }
+//
+//                Log.log(logger::debug, project, "Changing to card  $cardToShow")
+//                emptyStatusesCardsLayout.show(emptyStatusesCardsPanel, cardToShow)
+//            }
         }
     }
 

@@ -5,13 +5,13 @@ import com.google.common.base.Objects
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
-import org.digma.intellij.plugin.insights.ErrorsViewOrchestrator
 import org.digma.intellij.plugin.navigation.View.Companion.getSelected
 import org.digma.intellij.plugin.navigation.View.Companion.hideErrorDetails
 import org.digma.intellij.plugin.navigation.View.Companion.hideErrors
 import org.digma.intellij.plugin.navigation.View.Companion.setSelected
 import org.digma.intellij.plugin.navigation.View.Companion.views
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.ui.service.ErrorsViewOrchestrator
 import java.awt.CardLayout
 import java.awt.Container
 

@@ -79,7 +79,7 @@ class NavigationMessageRouterHandler(project: Project) : BaseMessageRouterHandle
     private fun onInitialize(browser: CefBrowser) {
         try {
             doCommonInitialize(browser)
-            sendCurrentViewsState(browser, View.views)
+            sendCurrentViewsState(browser, View.views, false)
         } catch (e: AnalyticsServiceException) {
             Log.warnWithException(logger, e, "error getting backend info")
         }
@@ -91,7 +91,7 @@ class NavigationMessageRouterHandler(project: Project) : BaseMessageRouterHandle
         payload?.let {
             val viewId = payload.get("view")?.asText()
             viewId?.let { vuid ->
-                MainContentViewSwitcher.getInstance(project).showViewById(vuid)
+                MainContentViewSwitcher.getInstance(project).showViewById(vuid, true)
             }
         }
     }

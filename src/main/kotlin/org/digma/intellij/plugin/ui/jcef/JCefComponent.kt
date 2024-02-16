@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.ui.jcef
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
@@ -29,6 +30,7 @@ import org.digma.intellij.plugin.scope.ScopeChangedEvent
 import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.ui.jcef.model.BackendInfoMessage
+import org.digma.intellij.plugin.ui.jcef.state.StateChangedEvent
 import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier
 import org.digma.intellij.plugin.ui.settings.SettingsChangeListener
 import org.digma.intellij.plugin.ui.settings.Theme
@@ -54,6 +56,7 @@ private constructor(
     private val environmentChangeParentDisposable = Disposer.newDisposable()
     private val observabilityChangeParentDisposable = Disposer.newDisposable()
     private val scopeChangeParentDisposable = Disposer.newDisposable()
+    private val stateChangeParentDisposable = Disposer.newDisposable()
 
 
     init {
@@ -161,6 +164,14 @@ private constructor(
             }
         )
 
+        project.messageBus.connect(stateChangeParentDisposable).subscribe(
+            StateChangedEvent.JCEF_STATE_CHANGED_TOPIC, object : StateChangedEvent {
+                override fun stateChanged(state: JsonNode) {
+                    sendJcefStateMessage(jbCefBrowser.cefBrowser, state)
+                }
+            }
+        )
+
     }
 
 
@@ -173,6 +184,7 @@ private constructor(
             Disposer.dispose(environmentChangeParentDisposable)
             Disposer.dispose(observabilityChangeParentDisposable)
             Disposer.dispose(scopeChangeParentDisposable)
+            Disposer.dispose(stateChangeParentDisposable)
             jbCefBrowser.jbCefClient.removeLifeSpanHandler(lifeSpanHandler, jbCefBrowser.cefBrowser)
             jbCefBrowser.dispose()
             cefMessageRouter.dispose()

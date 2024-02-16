@@ -24,6 +24,7 @@ import org.digma.intellij.plugin.ui.jcef.model.SetEnvironmentsMessagePayload
 import org.digma.intellij.plugin.ui.jcef.model.SetIsMicrometerMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetScopeMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetScopeMessagePayload
+import org.digma.intellij.plugin.ui.jcef.model.SetStateMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetUserEmailMessage
 import org.digma.intellij.plugin.ui.jcef.model.UserEmailPayload
 
@@ -114,5 +115,11 @@ fun sendScopeChangedMessage(
 ) {
     serializeAndExecuteWindowPostMessageJavaScript(
         cefBrowser, SetScopeMessage(SetScopeMessagePayload(scope, codeLocation))
+    )
+}
+
+fun sendJcefStateMessage(cefBrowser: CefBrowser, state: JsonNode?) {
+    serializeAndExecuteWindowPostMessageJavaScript(
+        cefBrowser, SetStateMessage(state)
     )
 }

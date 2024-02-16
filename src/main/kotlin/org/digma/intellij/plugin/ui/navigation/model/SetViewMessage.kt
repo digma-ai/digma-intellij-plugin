@@ -8,5 +8,5 @@ data class SetViewMessage(val payload: SetViewMessagePayload) {
     val action = "NAVIGATION/SET_VIEWS"
 }
 
-data class SetViewMessagePayload(val views: List<View>)
+data class SetViewMessagePayload(val views: List<View>, val isTriggeredByJcef: Boolean)
 

@@ -10,5 +10,5 @@ public interface ViewChangedEvent {
     @Topic.ProjectLevel
     Topic<ViewChangedEvent> VIEW_CHANGED_TOPIC = Topic.create("VIEW_CHANGED_TOPIC", ViewChangedEvent.class);
 
-    void viewChanged(@NotNull List<View> views);
+    void viewChanged(@NotNull List<View> views, boolean isTriggeredByJcef);
 }

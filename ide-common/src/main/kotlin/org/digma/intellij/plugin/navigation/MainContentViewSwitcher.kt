@@ -123,11 +123,11 @@ class MainContentViewSwitcher(val project: Project) {
     }
 
 
-    fun showView(view: View) {
-        showView(view, true)
+    fun showView(view: View, isTriggeredByJcef: Boolean = false) {
+        showView(view, fireEvent = true, isTriggeredByJcef = isTriggeredByJcef)
     }
 
-    fun showView(view: View, fireEvent: Boolean) {
+    private fun showView(view: View, fireEvent: Boolean, isTriggeredByJcef: Boolean) {
 
         if (view == View.ErrorDetails) {
             hideErrors()
@@ -144,14 +144,14 @@ class MainContentViewSwitcher(val project: Project) {
         setSelected(view)
         myLayout.show(mainContentPanel, view.cardName)
         getSelected()?.takeIf { fireEvent }?.let {
-            fireViewChanged(views)
+            fireViewChanged(views, isTriggeredByJcef)
         }
     }
 
 
-    private fun fireViewChanged(views: List<View>) {
+    private fun fireViewChanged(views: List<View>, isTriggeredByJcef: Boolean) {
         val publisher = project.messageBus.syncPublisher(ViewChangedEvent.VIEW_CHANGED_TOPIC)
-        publisher.viewChanged(views)
+        publisher.viewChanged(views, isTriggeredByJcef)
 
     }
 
@@ -159,10 +159,10 @@ class MainContentViewSwitcher(val project: Project) {
         return getSelected()
     }
 
-    fun showViewById(vuid: String) {
+    fun showViewById(vuid: String, isTriggeredByJcef: Boolean = false) {
         val view = View.findById(vuid)
         view?.let { vu ->
-            showView(vu)
+            showView(vu, isTriggeredByJcef = isTriggeredByJcef)
         }
     }
 }

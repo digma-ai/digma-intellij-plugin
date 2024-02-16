@@ -12,10 +12,10 @@ import org.digma.intellij.plugin.ui.navigation.model.SetViewMessage
 import org.digma.intellij.plugin.ui.navigation.model.SetViewMessagePayload
 
 
-fun sendCurrentViewsState(cefBrowser: CefBrowser, views: List<View>) {
+fun sendCurrentViewsState(cefBrowser: CefBrowser, views: List<View>, isTriggeredByJcef: Boolean) {
     serializeAndExecuteWindowPostMessageJavaScript(
         cefBrowser,
-        SetViewMessage(SetViewMessagePayload(views))
+        SetViewMessage(SetViewMessagePayload(views, isTriggeredByJcef))
     )
 }
 

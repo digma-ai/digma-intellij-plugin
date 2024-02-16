@@ -26,7 +26,6 @@ class ErrorsDetailsHelper(val project: Project) {
             viewBeforeErrorDetails?.let {
                 MainContentViewSwitcher.getInstance(project).showView(it)
             }
-
         }
         viewBeforeErrorDetails = null
     }

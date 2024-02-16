@@ -62,6 +62,19 @@ class ErrorReporter {
         )
     }
 
+    //this method is used to report an error that is not an exception. it should contain some details to say what the error is
+    fun reportError(project: Project?, message: String, details: Map<String, String>) {
+
+        val projectToUse = project ?: findActiveProject()
+
+        projectToUse?.let {
+            if (it.isDisposed) return
+            ActivityMonitor.getInstance(it).registerError(null, message, details)
+        }
+    }
+
+
+
     fun reportError(project: Project?, message: String, throwable: Throwable, extraDetails: Map<String, String>) {
 
         try {

@@ -134,8 +134,11 @@ class OTELJarProvider {
         val runnable = Runnable {
 
             try {
-                downloadAndCopyJar(URL(OTEL_AGENT_JAR_URL), getOtelAgentJar())
-                downloadAndCopyJar(URL(DIGMA_AGENT_EXTENSION_JAR_URL), getDigmaAgentExtensionJar())
+                val otelUrl = System.getProperty("org.digma.otel.agentUrl",OTEL_AGENT_JAR_URL)
+                val extensionUrl = System.getProperty("org.digma.otel.extensionUrl",DIGMA_AGENT_EXTENSION_JAR_URL)
+
+                downloadAndCopyJar(URL(otelUrl), getOtelAgentJar())
+                downloadAndCopyJar(URL(extensionUrl), getDigmaAgentExtensionJar())
             } catch (e: Exception) {
                 Log.warnWithException(logger, e, "could not download latest otel jars")
             }

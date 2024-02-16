@@ -46,6 +46,7 @@ internal class RetryableBackgroundTask(val task: RetryableTask) :
     //runs on EDT
     override fun onFinished() {
 
+        //onFinished runs on EDT so do our work on background
         org.digma.intellij.plugin.common.Backgroundable.executeOnPooledThread {
 
             if (canceled) {

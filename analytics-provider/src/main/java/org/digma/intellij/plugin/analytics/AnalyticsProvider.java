@@ -86,6 +86,8 @@ public interface AnalyticsProvider extends Closeable {
 
     PerformanceMetricsResponse getPerformanceMetrics();
 
+    Optional<LoadStatusResponse> getLoadStatus();
+
     DeleteEnvironmentResponse deleteEnvironment(DeleteEnvironmentRequest deleteEnvironmentRequest);
 
     // queryParams: (limit, 5), (pageSize, 5) etc

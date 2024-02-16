@@ -1,6 +1,18 @@
 # Changelog
 
-## [2.0.264] - 2024-02-12
+## [2.0.265] - 2024-02-16
+
+- fatal error - allow-slow-operations-in-file-closed by @shalom938
+  in https://github.com/digma-ai/digma-intellij-plugin/pull/1795
+- Feature/support otel 1.3.2 by @doppleware in https://github.com/digma-ai/digma-intellij-plugin/pull/1799
+- Integration with a code lens api by @ohrebeniuk in https://github.com/digma-ai/digma-intellij-plugin/pull/1800
+- Fixed integration with codelens API by @ohrebeniuk in https://github.com/digma-ai/digma-intellij-plugin/pull/1804
+- Load warning by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1805
+- Better load status by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1808
+- Rollback codelens by @ohrebeniuk in https://github.com/digma-ai/digma-intellij-plugin/pull/1811
+- limit concurrent discovery tasks by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1810
+
+## 2.0.264 - 2024-02-12
 
 **Full Changelog**: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.263...v2.0.264
 fix read access in canInstrumentMethod

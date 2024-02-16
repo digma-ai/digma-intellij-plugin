@@ -207,6 +207,17 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
+    public Optional<LoadStatusResponse> getLoadStatus() {
+        try {
+            return Optional.of(execute(client.analyticsProvider::getLoadStatus));
+        } catch (AnalyticsProviderException e) {
+            if (e.getResponseCode() == 404)
+                return Optional.empty();
+            throw e;
+        }
+    }
+
+    @Override
     public DeleteEnvironmentResponse deleteEnvironment(DeleteEnvironmentRequest deleteEnvironmentRequest) {
         return execute(() -> client.analyticsProvider.deleteEnvironment(deleteEnvironmentRequest));
     }
@@ -634,6 +645,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @GET("/performanceMetrics")
         Call<PerformanceMetricsResponse> getPerformanceMetrics();
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @GET("/performanceMetrics/load-status")
+        Call<LoadStatusResponse> getLoadStatus();
 
 
         @Headers({

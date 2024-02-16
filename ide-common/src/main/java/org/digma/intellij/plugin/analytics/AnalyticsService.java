@@ -458,6 +458,9 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.getPerformanceMetrics());
     }
 
+    public Optional<LoadStatusResponse> getLoadStatus() throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.getLoadStatus());
+    }
 
     public AboutResult getAbout() throws AnalyticsServiceException {
         return executeCatching(() -> analyticsProviderProxy.getAbout());

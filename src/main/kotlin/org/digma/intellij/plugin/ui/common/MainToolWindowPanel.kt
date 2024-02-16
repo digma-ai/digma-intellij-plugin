@@ -30,6 +30,8 @@ fun createMainToolWindowPanel(project: Project, mainContentPanel: MainContentPan
     // button is clicked it enables updatePanel again.
     val updateIDEPanel: JPanel? = createUpdateIntellijNotificationWrapper(updatePanel,project)
 
+    val loadStatusPanel = LoadStatusPanel(project)
+
     val quarkusConfigureDepsPanel: JPanel? =
         if (IDEUtilsService.getInstance(project).isJavaProject()) {
             QuarkusConfigureDepsPanel(project)
@@ -55,6 +57,7 @@ fun createMainToolWindowPanel(project: Project, mainContentPanel: MainContentPan
     topPanel.border = JBUI.Borders.empty()
     topPanel.add(updatePanel)
     topPanel.add(navigationPanel)
+    topPanel.add(loadStatusPanel)
 
     updateIDEPanel?.let {
         topPanel.add(it)

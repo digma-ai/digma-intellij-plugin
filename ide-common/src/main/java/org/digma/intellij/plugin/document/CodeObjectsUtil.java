@@ -58,7 +58,7 @@ public class CodeObjectsUtil {
     }
 
 
-    private static String stripPrefix(@NotNull String codeObjectId) {
+    public static String stripPrefix(@NotNull String codeObjectId) {
         if (codeObjectId.startsWith("method:")) {
             return codeObjectId.substring("method:".length());
         } else if (codeObjectId.startsWith("span:")) {

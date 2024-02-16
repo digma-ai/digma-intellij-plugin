@@ -347,6 +347,11 @@ object Laf {
 
                 @JvmStatic
                 val NavPrevLightPressed: Icon = IconsUtil.loadAndScaleIconObjectByFactor("/icons/nav-prev-light.svg", 1.6)
+
+                @JvmStatic
+                val Info: Icon = if (JBColor.isBright())
+                    IconsUtil.loadIcon("/icons/info-light.svg")
+                else IconsUtil.loadIcon("/icons/info-dark.svg")
             }
         }
 

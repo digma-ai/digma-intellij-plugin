@@ -29,6 +29,16 @@ class ScopeManager(private val project: Project) {
 
     fun changeToHome() {
 
+        ErrorsViewService.getInstance(project).empty()
+
+        EDT.ensureEDT {
+            MainToolWindowCardsController.getInstance(project).closeAllNotificationsIfShowing()
+            MainToolWindowCardsController.getInstance(project).closeCoveringViewsIfNecessary()
+            project.service<ErrorsViewOrchestrator>().closeErrorDetails()
+            ToolWindowShower.getInstance(project).showToolWindow()
+            MainContentViewSwitcher.getInstance(project).showInsights()
+        }
+
         fireScopeChangedEvent(null, CodeLocation(listOf(), listOf()))
     }
 

@@ -15,10 +15,11 @@ const val SUFFIX_OF_LOCAL_TESTS = "[LOCAL-TESTS]"
 //must be data class, or a class with equals and hashCode
 data class Env
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-@ConstructorProperties("originalName", "name")
+@ConstructorProperties("originalName", "name", "type")
 constructor(
     val originalName: String,
     val name: String,
+    val type: String,
 ) {
 
 
@@ -26,7 +27,13 @@ constructor(
 
         @JvmStatic
         fun toEnv(env: String): Env {
-            return Env(env, adjustEnvironmentDisplayName(env))
+            val name = adjustEnvironmentDisplayName(env)
+            val type = if (isLocalEnvName(name)) {
+                "local"
+            } else {
+                "shared"
+            }
+            return Env(env, name, type)
         }
 
         @JvmStatic
@@ -82,6 +89,11 @@ constructor(
             } else {
                 envName
             }
+        }
+
+        @JvmStatic
+        fun isLocalEnvName(env: String): Boolean {
+            return env == LOCAL_ENV || env == LOCAL_TESTS_ENV
         }
     }
 

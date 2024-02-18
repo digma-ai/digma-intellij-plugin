@@ -77,15 +77,15 @@ public final class DashboardService {
         return AnalyticsService.getInstance(project).getDashboard(queryParams);
     }
 
-    public void goToSpanAndNavigateToCode(GoToSpan goToSpan) {
+    public void goToSpan(GoToSpan goToSpan) {
 
         Log.log(logger::debug, project, "goToSpan request {}", goToSpan);
 
+        ActivityMonitor.getInstance(project).registerSpanLinkClicked(MonitoredPanel.Dashboard);
+
         var span = goToSpan.payload();
 
-        Log.log(logger::debug, project, "calling showInsightsForSpanOrMethodAndNavigateToCode from goToSpan for {}", span);
-
-        ActivityMonitor.getInstance(project).registerSpanLinkClicked(MonitoredPanel.Dashboard);
-        ScopeManager.getInstance(project).changeScope(new SpanScope(span.spanCodeObjectId()));
+        var environmentsSupplier = AnalyticsService.getInstance(project).getEnvironment();
+        environmentsSupplier.setCurrent(span.environment(), false, () -> ScopeManager.getInstance(project).changeScope(new SpanScope(span.spanCodeObjectId())));
     }
 }

@@ -103,7 +103,7 @@ public class DashboardMessageRouterHandler extends CefMessageRouterHandlerAdapte
                     }
                     case "DASHBOARD/GO_TO_SPAN" -> {
                         GoToSpan goToSpan = objectMapper.treeToValue(jsonNode, GoToSpan.class);
-                        DashboardService.getInstance(project).goToSpanAndNavigateToCode(goToSpan);
+                        DashboardService.getInstance(project).goToSpan(goToSpan);
                     }
                     case "GLOBAL/GET_BACKEND_INFO" -> {
                         //do nothing, dashboard app sends that for some reason but it's not necessary

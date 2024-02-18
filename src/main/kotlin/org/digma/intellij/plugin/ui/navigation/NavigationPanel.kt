@@ -24,7 +24,7 @@ class NavigationPanel(private val project: Project) : DisposablePanel() {
 
         val jcefUiComponent: JComponent = jCefComponent?.getComponent() ?: JLabel("JCEF not supported")
 
-        jcefUiComponent.preferredSize = Dimension(400, 140)
+        jcefUiComponent.preferredSize = Dimension(400, 112)
 
         layout = BorderLayout()
         border = JBUI.Borders.empty()

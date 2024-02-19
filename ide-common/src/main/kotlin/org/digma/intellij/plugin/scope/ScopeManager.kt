@@ -5,6 +5,7 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.common.EDT
+import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.errorreporting.SEVERITY_HIGH_TRY_FIX
 import org.digma.intellij.plugin.errorreporting.SEVERITY_PROP_NAME
@@ -72,7 +73,10 @@ class ScopeManager(private val project: Project) {
             null
         }
 
-        scope.methodId = spanScopeInfo?.methodCodeObjectId ?: tryGetMethodIdForSpan(scope.spanCodeObjectId)
+        val methodId = spanScopeInfo?.methodCodeObjectId ?: tryGetMethodIdForSpan(scope.spanCodeObjectId)
+        methodId?.let {
+            scope.methodId = CodeObjectsUtil.addMethodTypeToId(it)
+        }
         scope.displayName = spanScopeInfo?.displayName ?: ""
         scope.role = spanScopeInfo?.role
 
@@ -98,7 +102,7 @@ class ScopeManager(private val project: Project) {
 
     private fun tryPopulateErrors(scope: SpanScope): Boolean {
         return scope.methodId?.let {
-            ErrorsViewService.getInstance(project).updateErrors(it)
+            ErrorsViewService.getInstance(project).updateErrors(CodeObjectsUtil.stripMethodPrefix(it))
         } ?: ErrorsViewService.getInstance(project).empty()
     }
 

@@ -238,7 +238,7 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
 
         sendEnvironmentsList(browser, AnalyticsService.getInstance(project).environment.getEnvironments())
 
-        sendScopeChangedMessage(browser, null, CodeLocation(listOf(), listOf()))
+        sendScopeChangedMessage(browser, null, CodeLocation(listOf(), listOf()), false)
     }
 
     protected fun getPayloadFromRequest(requestJsonNode: JsonNode): JsonNode? {

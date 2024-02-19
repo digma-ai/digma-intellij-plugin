@@ -157,9 +157,9 @@ private constructor(
         project.messageBus.connect(scopeChangeParentDisposable).subscribe(
             ScopeChangedEvent.SCOPE_CHANGED_TOPIC, object : ScopeChangedEvent {
                 override fun scopeChanged(
-                    scope: SpanScope?, codeLocation: CodeLocation,
+                    scope: SpanScope?, codeLocation: CodeLocation, hasErrors: Boolean,
                 ) {
-                    sendScopeChangedMessage(jbCefBrowser.cefBrowser, scope, codeLocation)
+                    sendScopeChangedMessage(jbCefBrowser.cefBrowser, scope, codeLocation, hasErrors)
                 }
             }
         )

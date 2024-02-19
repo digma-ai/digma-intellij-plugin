@@ -111,10 +111,10 @@ fun sendObservabilityEnabledMessage(cefBrowser: CefBrowser, isObservabilityEnabl
 
 fun sendScopeChangedMessage(
     cefBrowser: CefBrowser,
-    scope: SpanScope?, codeLocation: CodeLocation,
+    scope: SpanScope?, codeLocation: CodeLocation, hasErrors: Boolean,
 ) {
     serializeAndExecuteWindowPostMessageJavaScript(
-        cefBrowser, SetScopeMessage(SetScopeMessagePayload(scope, codeLocation))
+        cefBrowser, SetScopeMessage(SetScopeMessagePayload(scope, codeLocation, hasErrors))
     )
 }
 

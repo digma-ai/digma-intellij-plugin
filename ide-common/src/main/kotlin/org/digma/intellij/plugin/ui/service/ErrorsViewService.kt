@@ -45,17 +45,17 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
     }
 
 
-    fun updateErrors(methodId: String) {
+    fun updateErrors(methodId: String): Boolean {
         val methodInfo = tryFindMethodInfo(methodId)
 
-        updateErrorsModel(methodInfo)
+        return updateErrorsModel(methodInfo)
     }
 
 
-    private fun updateErrorsModel(methodInfo: MethodInfo) {
+    private fun updateErrorsModel(methodInfo: MethodInfo): Boolean {
         lock.lock()
         try {
-            updateErrorsModelImpl(methodInfo)
+            return updateErrorsModelImpl(methodInfo)
         }finally {
             if (lock.isHeldByCurrentThread) {
                 lock.unlock()
@@ -64,19 +64,21 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
     }
 
 
-    private fun updateErrorsModelImpl(methodInfo: MethodInfo) {
+    private fun updateErrorsModelImpl(methodInfo: MethodInfo): Boolean {
 
         val errorsProvider: ErrorsProvider = project.getService(ErrorsProvider::class.java)
-        updateErrorsModelWithErrorsProvider(methodInfo, errorsProvider)
+        return updateErrorsModelWithErrorsProvider(methodInfo, errorsProvider)
     }
 
-    private fun updateErrorsModelWithErrorsProvider(methodInfo: MethodInfo, errorsProvider: ErrorsProvider) {
+    private fun updateErrorsModelWithErrorsProvider(methodInfo: MethodInfo, errorsProvider: ErrorsProvider): Boolean {
         lock.lock()
         Log.log(logger::debug, "Lock acquired for contextChanged to {}. ", methodInfo)
+        val hasErrors: Boolean
         try {
             Log.log(logger::debug, "contextChanged to {}. ", methodInfo)
 
             val errorsListContainer = errorsProvider.getErrors(methodInfo)
+            hasErrors = errorsListContainer.listViewItems?.isNotEmpty() ?: false
 
             model.listViewItems = errorsListContainer.listViewItems ?: listOf()
             model.previewListViewItems = ArrayList()
@@ -85,12 +87,15 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
             model.errorsCount = errorsListContainer.count
 
             updateUi()
+
         } finally {
             if (lock.isHeldByCurrentThread) {
                 lock.unlock()
                 Log.log(logger::debug, "Lock released for contextChanged to {}. ", methodInfo)
             }
         }
+
+        return hasErrors
     }
 
     fun showErrorDetails(uid: String) {
@@ -125,7 +130,7 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
      * empty should be called only when there is no file opened in the editor and not in
      * any other case.
      */
-    fun empty() {
+    fun empty(): Boolean {
 
         Log.log(logger::debug, "empty called")
 
@@ -136,6 +141,8 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
         model.errorsCount = 0
 
         updateUi()
+
+        return false
     }
 
 

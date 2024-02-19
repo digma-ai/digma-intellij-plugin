@@ -39,7 +39,7 @@ class ScopeManager(private val project: Project) {
             MainContentViewSwitcher.getInstance(project).showInsights()
         }
 
-        fireScopeChangedEvent(null, CodeLocation(listOf(), listOf()))
+        fireScopeChangedEvent(null, CodeLocation(listOf(), listOf()), false)
     }
 
     fun changeScope(scope: Scope) {
@@ -89,14 +89,15 @@ class ScopeManager(private val project: Project) {
             MainContentViewSwitcher.getInstance(project).showInsights()
         }
 
-        fireScopeChangedEvent(scope, codeLocation)
+        val hasErrors = tryPopulateErrors(scope)
 
-        tryPopulateErrors(scope)
+        fireScopeChangedEvent(scope, codeLocation, hasErrors)
+
 
     }
 
-    private fun tryPopulateErrors(scope: SpanScope) {
-        scope.methodId?.let {
+    private fun tryPopulateErrors(scope: SpanScope): Boolean {
+        return scope.methodId?.let {
             ErrorsViewService.getInstance(project).updateErrors(it)
         } ?: ErrorsViewService.getInstance(project).empty()
     }
@@ -107,10 +108,10 @@ class ScopeManager(private val project: Project) {
 
 
     private fun fireScopeChangedEvent(
-        scope: SpanScope?, codeLocation: CodeLocation,
+        scope: SpanScope?, codeLocation: CodeLocation, hasErrors: Boolean,
     ) {
         project.messageBus.syncPublisher(ScopeChangedEvent.SCOPE_CHANGED_TOPIC)
-            .scopeChanged(scope, codeLocation)
+            .scopeChanged(scope, codeLocation, hasErrors)
     }
 
 }

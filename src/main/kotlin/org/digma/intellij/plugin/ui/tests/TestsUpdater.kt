@@ -10,6 +10,7 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.tests.FilterForLatestTests
 import org.digma.intellij.plugin.model.rest.tests.TestsScopeRequest
+import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
 import org.digma.intellij.plugin.ui.jcef.createObjectMapper
 import org.digma.intellij.plugin.ui.jcef.model.ErrorPayload
@@ -35,14 +36,14 @@ class TestsUpdater(private val project: Project) {
         this.jCefComponent = jCefComponent
     }
 
-    fun updateTestsData(scopeRequest: TestsScopeRequest) {
+    /*fun updateTestsData(scopeRequest: TestsScopeRequest) {
         //This method is called from outside, when the scope is changed,
         // so need to reset pageNumber to 1
         lastKnownFilterForLatestTests.pageNumber = 1
         updateTestsData(scopeRequest, lastKnownFilterForLatestTests)
-    }
+    }*/
 
-    fun updateTestsData(scopeRequest: TestsScopeRequest, filter: FilterForLatestTests) {
+    fun updateTestsData(scope: SpanScope ?, filter: FilterForLatestTests) {
         //keep the last filter for next use when calling updateTestsData(scopeRequest: ScopeRequest)
         this.lastKnownFilterForLatestTests = filter
 
@@ -51,11 +52,18 @@ class TestsUpdater(private val project: Project) {
             Log.log(logger::warn, "updateTestsData was called but cefBrowser is null")
             return
         }
-
+        if(scope == null) {
+            serializeAndExecuteWindowPostMessageJavaScript(cefBrowser, SetLatestTestsMessage(Payload(null)))
+            return
+        }
 
         try {
+            var spanCodeObjectIds: Set<String> = setOf()
+            if(scope.spanCodeObjectId.isNotEmpty())
+                spanCodeObjectIds = setOf(scope.spanCodeObjectId)
+
             //todo: should check if scopeRequest.isEmpty() and return json representing empty state in case of Document scope, no need to call the backend
-            val testsOfSpanJson = project.service<TestsService>().getLatestTestsOfSpan(scopeRequest, lastKnownFilterForLatestTests)
+            val testsOfSpanJson = project.service<TestsService>().getLatestTestsOfSpan(TestsScopeRequest(spanCodeObjectIds, scope.methodId, null), lastKnownFilterForLatestTests)
             Log.log(logger::trace, project, "got tests of span {}", testsOfSpanJson)
             val payload = objectMapper.readTree(testsOfSpanJson)
             val message = SetLatestTestsMessage(Payload(payload))

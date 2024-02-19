@@ -52,8 +52,7 @@ class TestsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pro
     private fun handleQuerySpanGetLatestData(project: Project, requestJsonNode: JsonNode) {
 
         //inner local method
-        fun buildFilterForLatestTests(requestJsonNode: JsonNode): FilterForLatestTests {
-            val payloadNode: JsonNode = objectMapper.readTree(requestJsonNode.get("payload").toString())
+        fun buildFilterForLatestTests(payloadNode: JsonNode): FilterForLatestTests {
             val pageNumber: Int = payloadNode.get("pageNumber").intValue()
 
             var environments: Set<String> = Collections.emptySet()
@@ -65,9 +64,14 @@ class TestsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pro
             return FilterForLatestTests(environments, pageNumber)
         }
 
-        val filter = buildFilterForLatestTests(requestJsonNode)
-        val scopeRequest = project.service<TestsService>().getScopeRequest()
-        project.service<TestsUpdater>().updateTestsData(scopeRequest, filter)
+        val payloadNode: JsonNode = objectMapper.readTree(requestJsonNode.get("payload").toString())
+        val filter = buildFilterForLatestTests(payloadNode)
+        val spanScopeNode = payloadNode.get("scope")
+        var spanScope:SpanScope? = null
+        spanScopeNode?.let{
+            spanScope = objectMapper.treeToValue(spanScopeNode, SpanScope::class.java)
+        }
+        project.service<TestsUpdater>().updateTestsData(spanScope, filter)
     }
 
     private fun handleRunTest(project: Project, requestJsonNode: JsonNode) {

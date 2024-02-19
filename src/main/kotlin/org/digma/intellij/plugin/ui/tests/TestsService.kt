@@ -33,7 +33,7 @@ class TestsService(val project: Project) : Disposable, InsightsScopeChangeListen
 
 
     override fun scopeChanged(scope: Scope) {
-        updateTests()
+        //updateTests()
     }
 
     override fun dispose() {
@@ -45,12 +45,12 @@ class TestsService(val project: Project) : Disposable, InsightsScopeChangeListen
         return InsightsModelReact.getInstance(project).scope
     }
 
-    private fun updateTests() {
+    /*private fun updateTests() {
         Backgroundable.ensurePooledThread {
             val scopeRequest = getScopeRequest()
             project.service<TestsUpdater>().updateTestsData(scopeRequest)
         }
-    }
+    }*/
 
 
     fun getScopeRequest(): TestsScopeRequest {

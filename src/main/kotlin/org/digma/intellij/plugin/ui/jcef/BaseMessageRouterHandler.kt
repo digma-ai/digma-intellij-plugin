@@ -231,10 +231,14 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
 
 
     protected fun doCommonInitialize(browser: CefBrowser) {
-        val about = AnalyticsService.getInstance(project).about
-        val message = BackendInfoMessage(about)
-        Log.log(logger::trace, project, "sending {} message", JCefMessagesUtils.GLOBAL_SET_BACKEND_INFO)
-        serializeAndExecuteWindowPostMessageJavaScript(browser, message)
+        try {
+            val about = AnalyticsService.getInstance(project).about
+            val message = BackendInfoMessage(about)
+            Log.log(logger::trace, project, "sending {} message", JCefMessagesUtils.GLOBAL_SET_BACKEND_INFO)
+            serializeAndExecuteWindowPostMessageJavaScript(browser, message)
+        } catch (e: Exception) {
+            Log.debugWithException(logger, project, e, "jcef query canceled")
+        }
 
         sendEnvironmentsList(browser, AnalyticsService.getInstance(project).environment.getEnvironments())
 

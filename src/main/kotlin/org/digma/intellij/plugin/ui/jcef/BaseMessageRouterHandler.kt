@@ -161,11 +161,17 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
                     }
 
                     JCefMessagesUtils.GLOBAL_OPEN_INSTALLATION_WIZARD -> {
-                        ActivityMonitor.getInstance(project).registerCustomEvent("show-installation-wizard", null)
-                        EDT.ensureEDT {
-                            MainToolWindowCardsController.getInstance(project).showWizard(true)
-                            ToolWindowShower.getInstance(project).showToolWindow()
+                        val payload = getPayloadFromRequest(requestJsonNode)
+
+                        payload?.let{
+                            val skipInstallationStep = it.get("skipInstallationStep").asBoolean()
+                            ActivityMonitor.getInstance(project).registerCustomEvent("show-installation-wizard", null)
+                            EDT.ensureEDT {
+                                MainToolWindowCardsController.getInstance(project).showWizard(skipInstallationStep)
+                                ToolWindowShower.getInstance(project).showToolWindow()
+                            }
                         }
+
                     }
 
                     JCefMessagesUtils.GLOBAL_CHANGE_SCOPE -> {
@@ -236,6 +242,8 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
             val message = BackendInfoMessage(about)
             Log.log(logger::trace, project, "sending {} message", JCefMessagesUtils.GLOBAL_SET_BACKEND_INFO)
             serializeAndExecuteWindowPostMessageJavaScript(browser, message)
+
+            updateDigmaEngineStatus(project, browser)
         } catch (e: Exception) {
             Log.debugWithException(logger, project, e, "jcef query canceled")
         }

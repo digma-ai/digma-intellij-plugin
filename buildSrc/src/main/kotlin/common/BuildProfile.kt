@@ -127,9 +127,9 @@ object BuildProfiles {
 
         Profiles.p231 to BuildProfile(
             profile = Profiles.p231,
-            platformVersion = "2023.1.5",
+            platformVersion = "2023.1.6",
             riderVersion = "2023.1.4",
-            pycharmVersion = "2023.1.4",
+            pycharmVersion = "2023.1.5",
             riderResharperVersion = "2023.1.4",
             riderResharperVersionConstant = "PROFILE_2023_1",
             pythonPluginVersion = "231.9225.4",
@@ -143,10 +143,10 @@ object BuildProfiles {
 
         Profiles.p232 to BuildProfile(
             profile = Profiles.p232,
-            platformVersion = "2023.2.5",
+            platformVersion = "2023.2.6",
             riderVersion = "2023.2.3",
-            pycharmVersion = "2023.2.5",
-            riderResharperVersion = "2023.2.5",
+            pycharmVersion = "2023.2.6",
+            riderResharperVersion = "2023.2.3",
             riderResharperVersionConstant = "PROFILE_2023_2",
             pythonPluginVersion = "232.9559.62",
             platformVersionCode = "232",
@@ -161,7 +161,7 @@ object BuildProfiles {
         Profiles.p233 to BuildProfile(
 
             profile = Profiles.p233,
-            platformVersion = "2023.3.3",
+            platformVersion = "2023.3.4",
             riderVersion = "2023.3.3",
             pycharmVersion = "2023.3.3",
             riderResharperVersion = "2023.3.3",
@@ -180,12 +180,12 @@ object BuildProfiles {
 
             profile = Profiles.p241,
             isEAP = true,
-            platformVersion = "241.11761-EAP-CANDIDATE-SNAPSHOT",
-            riderVersion = "2024.1-EAP3-SNAPSHOT",
-            pycharmVersion = "241.11761-EAP-CANDIDATE-SNAPSHOT",
-            riderResharperVersion = "2024.1-eap03",
+            platformVersion = "241.12662-EAP-CANDIDATE-SNAPSHOT",
+            riderVersion = "2024.1-EAP5-SNAPSHOT",
+            pycharmVersion = "241.12662-EAP-CANDIDATE-SNAPSHOT",
+            riderResharperVersion = "2024.1-eap05",
             riderResharperVersionConstant = "PROFILE_2023_2",
-            pythonPluginVersion = "241.11761.10",
+            pythonPluginVersion = "241.12662.62",
             platformVersionCode = "241",
             pluginSinceBuild = "241",
             pluginUntilBuild = "241.*",

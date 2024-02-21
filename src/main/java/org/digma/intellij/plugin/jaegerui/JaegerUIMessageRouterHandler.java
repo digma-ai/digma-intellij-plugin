@@ -1,30 +1,24 @@
 package org.digma.intellij.plugin.jaegerui;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.jcef.JBCefBrowser;
-import org.cef.browser.CefBrowser;
-import org.cef.browser.CefFrame;
+import org.cef.browser.*;
 import org.cef.callback.CefQueryCallback;
 import org.cef.handler.CefMessageRouterHandlerAdapter;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
-import org.digma.intellij.plugin.jaegerui.model.incoming.GoToSpanMessage;
-import org.digma.intellij.plugin.jaegerui.model.incoming.SpansMessage;
-import org.digma.intellij.plugin.jaegerui.model.outgoing.SpanData;
-import org.digma.intellij.plugin.jaegerui.model.outgoing.SpansWithResolvedLocationMessage;
+import org.digma.intellij.plugin.jaegerui.model.incoming.*;
+import org.digma.intellij.plugin.jaegerui.model.outgoing.*;
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest;
 
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 
-import static org.digma.intellij.plugin.common.StopWatchUtilsKt.stopWatchStart;
-import static org.digma.intellij.plugin.common.StopWatchUtilsKt.stopWatchStop;
+import static org.digma.intellij.plugin.common.StopWatchUtilsKt.*;
 
 public class JaegerUIMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
@@ -76,7 +70,7 @@ public class JaegerUIMessageRouterHandler extends CefMessageRouterHandlerAdapter
                     }
                     case "GO_TO_SPAN" -> {
                         GoToSpanMessage goToSpanMessage = objectMapper.treeToValue(jsonNode, GoToSpanMessage.class);
-                        JaegerUIService.getInstance(project).goToSpanAndNavigateToCode(goToSpanMessage);
+                        JaegerUIService.getInstance(project).navigateToCode(goToSpanMessage);
                     }
                     case "GO_TO_INSIGHTS" -> {
                         //it's the same message as go to span
@@ -96,7 +90,7 @@ public class JaegerUIMessageRouterHandler extends CefMessageRouterHandlerAdapter
 
             } catch (Throwable e) {
                 Log.debugWithException(LOGGER,e,"Exception in onQuery "+request);
-                ErrorReporter.getInstance().reportError("JaegerUIMessageRouterHandler.onQuery", e);
+                ErrorReporter.getInstance().reportError(project, "JaegerUIMessageRouterHandler.onQuery", e);
             }
         });
 

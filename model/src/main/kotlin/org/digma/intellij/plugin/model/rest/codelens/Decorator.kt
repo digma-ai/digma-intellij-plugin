@@ -9,14 +9,14 @@ import java.beans.ConstructorProperties
 data class Decorator
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 @ConstructorProperties(
-    "codeObjectId",
     "title",
     "description",
+    "codeObjectId",
     "importance"
 )
 constructor(
-    val codeObjectId: String,
     val title: String,
     val description: String,
+    val codeObjectId: String,
     val importance: InsightImportance
 )

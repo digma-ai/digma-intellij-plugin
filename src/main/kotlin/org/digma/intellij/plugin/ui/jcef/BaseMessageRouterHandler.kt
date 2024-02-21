@@ -2,8 +2,8 @@ package org.digma.intellij.plugin.ui.jcef
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.NullNode
 import com.intellij.ide.BrowserUtil
-import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.fileEditor.impl.HTMLEditorProvider
 import com.intellij.openapi.project.Project
@@ -16,19 +16,27 @@ import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.stopWatchStart
 import org.digma.intellij.plugin.common.stopWatchStop
+import org.digma.intellij.plugin.dashboard.DashboardService
+import org.digma.intellij.plugin.documentation.DocumentationService
+import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.jcef.common.SendTrackingEventRequest
+import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.scope.ScopeManager
+import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
+import org.digma.intellij.plugin.ui.common.updateObservabilityValue
 import org.digma.intellij.plugin.ui.jcef.model.BackendInfoMessage
 import org.digma.intellij.plugin.ui.jcef.model.GetFromPersistenceRequest
 import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest
 import org.digma.intellij.plugin.ui.jcef.model.OpenInInternalBrowserRequest
 import org.digma.intellij.plugin.ui.jcef.model.SaveToPersistenceRequest
 import org.digma.intellij.plugin.ui.jcef.persistence.JCEFPersistenceService
+import org.digma.intellij.plugin.ui.jcef.state.JCEFStateManager
 
 abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouterHandlerAdapter() {
 
@@ -60,14 +68,15 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
                 //do common messages for all apps, or call doOnQuery
                 when (action) {
                     JCefMessagesUtils.GLOBAL_REGISTER ->{
-                        project.service<RegistrationEventHandler>().register(requestJsonNode);
+                        RegistrationEventHandler.getInstance(project).register(requestJsonNode)
                     }
+
                     JCefMessagesUtils.GLOBAL_OPEN_TROUBLESHOOTING_GUIDE -> {
-                        project.service<ActivityMonitor>()
+                        ActivityMonitor.getInstance(project)
                             .registerCustomEvent("troubleshooting link clicked", mapOf("origin" to getOriginForTroubleshootingEvent()))
                         EDT.ensureEDT {
-                            project.service<ToolWindowShower>().showToolWindow()
-                            project.service<MainToolWindowCardsController>().showTroubleshooting()
+                            ToolWindowShower.getInstance(project).showToolWindow()
+                            MainToolWindowCardsController.getInstance(project).showTroubleshooting()
                         }
                     }
 
@@ -127,6 +136,58 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
                         JCEFPersistenceService.getInstance(project).getFromPersistence(browser, getFromPersistenceRequest)
                     }
 
+                    JCefMessagesUtils.GLOBAL_OPEN_DASHBOARD -> {
+                        val environment = getEnvironmentFromPayload(requestJsonNode)
+                        environment?.let { env ->
+                            DashboardService.getInstance(project).openDashboard("Dashboard Panel - ${env.name}")
+                        }
+                    }
+
+                    JCefMessagesUtils.GLOBAL_OPEN_DOCUMENTATION -> {
+                        val payload = getPayloadFromRequest(requestJsonNode)
+                        payload?.takeIf { payload.get("page") != null }?.let { pl ->
+                            val page = pl.get("page").asText()
+                            DocumentationService.getInstance(project).openDocumentation(page)
+                        }
+                    }
+
+                    JCefMessagesUtils.GLOBAL_SET_OBSERVABILITY -> {
+                        val payload = getPayloadFromRequest(requestJsonNode)
+                        payload?.let {
+                            val isEnabledObservability = it.get("isObservabilityEnabled").asBoolean()
+                            Log.log(logger::trace, "updateSetObservability(Boolean) called")
+                            updateObservabilityValue(project, isEnabledObservability)
+                        }
+                    }
+
+                    JCefMessagesUtils.GLOBAL_OPEN_INSTALLATION_WIZARD -> {
+                        val payload = getPayloadFromRequest(requestJsonNode)
+
+                        payload?.let{
+                            val skipInstallationStep = it.get("skipInstallationStep").asBoolean()
+                            ActivityMonitor.getInstance(project).registerCustomEvent("show-installation-wizard", null)
+                            EDT.ensureEDT {
+                                MainToolWindowCardsController.getInstance(project).showWizard(skipInstallationStep)
+                                ToolWindowShower.getInstance(project).showToolWindow()
+                            }
+                        }
+
+                    }
+
+                    JCefMessagesUtils.GLOBAL_CHANGE_SCOPE -> {
+                        changeScope(requestJsonNode)
+                    }
+
+
+                    JCefMessagesUtils.GLOBAL_UPDATE_STATE -> {
+                        updateState(requestJsonNode)
+                    }
+
+                    JCefMessagesUtils.GLOBAL_GET_STATE -> {
+                        getState(browser)
+                    }
+
+
                     else -> {
                         doOnQuery(project, browser, requestJsonNode, request, action)
                     }
@@ -150,6 +211,18 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
         return true
     }
 
+    private fun getState(browser: CefBrowser) {
+        val state = JCEFStateManager.getInstance(project).getState()
+        sendJcefStateMessage(browser, state)
+    }
+
+    private fun updateState(requestJsonNode: JsonNode) {
+        val payload = getPayloadFromRequest(requestJsonNode)
+        payload?.let {
+            JCEFStateManager.getInstance(project).updateState(it)
+        }
+    }
+
     abstract fun getOriginForTroubleshootingEvent(): String
 
     /**
@@ -164,10 +237,57 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
 
 
     protected fun doCommonInitialize(browser: CefBrowser) {
-        val about = AnalyticsService.getInstance(project).about
-        val message = BackendInfoMessage(about)
-        Log.log(logger::trace, project, "sending {} message", JCefMessagesUtils.GLOBAL_SET_BACKEND_INFO)
-        serializeAndExecuteWindowPostMessageJavaScript(browser, message)
+        try {
+            val about = AnalyticsService.getInstance(project).about
+            val message = BackendInfoMessage(about)
+            Log.log(logger::trace, project, "sending {} message", JCefMessagesUtils.GLOBAL_SET_BACKEND_INFO)
+            serializeAndExecuteWindowPostMessageJavaScript(browser, message)
+
+            updateDigmaEngineStatus(project, browser)
+        } catch (e: Exception) {
+            Log.debugWithException(logger, project, e, "jcef query canceled")
+        }
+
+        sendEnvironmentsList(browser, AnalyticsService.getInstance(project).environment.getEnvironments())
+
+        sendScopeChangedMessage(browser, null, CodeLocation(listOf(), listOf()), false)
+    }
+
+    protected fun getPayloadFromRequest(requestJsonNode: JsonNode): JsonNode? {
+        val payload = requestJsonNode.get("payload")
+        return payload?.let {
+            objectMapper.readTree(it.toString())
+        }
+    }
+
+
+    protected fun getEnvironmentFromPayload(requestJsonNode: JsonNode): Env? {
+        val payload = getPayloadFromRequest(requestJsonNode)
+        return payload?.takeIf { payload.get("environment") != null }?.let { pl ->
+            val envAsString = objectMapper.writeValueAsString(pl.get("environment"))
+            val env: Env = jsonToObject(envAsString, Env::class.java)
+            env
+        }
+    }
+
+
+    fun changeScope(requestJsonNode: JsonNode) {
+        val payload = getPayloadFromRequest(requestJsonNode)
+        payload?.let { pl ->
+            val span = pl.get("span")
+            val spanScope: SpanScope? = span?.takeIf { span !is NullNode }?.let { sp ->
+                val spanObj = objectMapper.readTree(sp.toString())
+                val spanId = if (spanObj.get("spanCodeObjectId") is NullNode) null else spanObj.get("spanCodeObjectId").asText()
+                spanId?.let {
+                    SpanScope(it, null, null, null)
+                }
+            }
+
+            spanScope?.let {
+                ScopeManager.getInstance(project).changeScope(it)
+            } ?: ScopeManager.getInstance(project).changeToHome()
+
+        }
     }
 
 }

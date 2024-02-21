@@ -203,7 +203,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
     }
 
 
-    fun registerError(exception: Throwable, message: String, extraDetails: Map<String, String>? = mapOf()) {
+    fun registerError(exception: Throwable?, message: String, extraDetails: Map<String, String>? = mapOf()) {
 
         try {
             val osType = System.getProperty("os.name")
@@ -215,19 +215,10 @@ class ActivityMonitor(private val project: Project) : Disposable {
 
             //Don't call directly, use ErrorReporter.reportError
 
-            val stringWriter = StringWriter()
-            exception.printStackTrace(PrintWriter(stringWriter))
-
-            val exceptionMessage: String? = ExceptionUtils.getNonEmptyMessage(exception)
-
             val details = mutableMapOf(
                 "error.source" to "plugin",
                 "action" to "unknown",
                 "message" to message,
-                "exception.type" to exception.javaClass.name,
-                "cause.exception.type" to ExceptionUtils.getFirstRealExceptionCauseTypeName(exception),
-                "exception.message" to exceptionMessage.toString(),
-                "exception.stack-trace" to stringWriter.toString(),
                 "os.type" to osType,
                 "ide.name" to ideName,
                 "ide.version" to ideVersion,
@@ -235,6 +226,27 @@ class ActivityMonitor(private val project: Project) : Disposable {
                 "plugin.version" to pluginVersion,
                 "user.type" to if (isDevUser) "internal" else "external"
             )
+
+
+            exception?.let {
+                val exceptionStackTrace = it.let {
+                    val stringWriter = StringWriter()
+                    exception.printStackTrace(PrintWriter(stringWriter))
+                    stringWriter.toString()
+                }
+
+                val exceptionMessage: String = it.let {
+                    ExceptionUtils.getNonEmptyMessage(it)
+                } ?: ""
+
+                val causeExceptionType = ExceptionUtils.getFirstRealExceptionCauseTypeName(it)
+
+                details["exception.message"] = exceptionMessage
+                details["exception.stack-trace"] = exceptionStackTrace
+                details["cause.exception.type"] = causeExceptionType
+                details["exception.type"] = it.javaClass.name
+            }
+
 
             extraDetails?.let {
                 details.putAll(it)
@@ -457,16 +469,12 @@ class ActivityMonitor(private val project: Project) : Disposable {
         registerUserAction("Clicked on span link from insights")
     }
 
-    fun registerSpanLinkClicked(panel: MonitoredPanel) {
-        registerSpanLinkClicked(panel, null)
-    }
 
-    fun registerSpanLinkClicked(panel: MonitoredPanel, navigable: Boolean?) {
+    fun registerSpanLinkClicked(panel: MonitoredPanel) {
         capture(
             "span-link clicked",
             mapOf(
-                "panel" to panel.name,
-                "navigable" to (navigable?.toString() ?: "unknown")
+                "panel" to panel.name
             )
         )
         registerUserAction("Clicked on span link from ${panel.name}")

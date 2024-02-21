@@ -30,6 +30,10 @@ internal open class PersistenceState : PersistentStateComponent<PersistenceData>
     // after automatically loading our save state,  we will keep reference to it
     override fun loadState(state: PersistenceData) {
         myPersistenceData = state
+
+        //todo: backwards compatibility, we want to change the name to isObservabilityEnabled.
+        // remove isAutoOtel after some versions, can remove in June 2024 when probably all users updated the plugin
+        myPersistenceData.isObservabilityEnabled = myPersistenceData.isAutoOtel
     }
 
 

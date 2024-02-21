@@ -1,35 +1,27 @@
 package org.digma.intellij.plugin.ui.service
 
+import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import org.apache.commons.lang3.builder.EqualsBuilder
-import org.digma.intellij.plugin.common.Backgroundable
-import org.digma.intellij.plugin.document.DocumentInfoContainer
-import org.digma.intellij.plugin.errors.ErrorsListContainer
+import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.errors.ErrorsProvider
-import org.digma.intellij.plugin.insights.CodeLessSpanInsightsProvider
-import org.digma.intellij.plugin.insights.CodelessSpanErrorsContainer
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.model.InsightType
-import org.digma.intellij.plugin.model.discovery.CodeLessSpan
-import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
-import org.digma.intellij.plugin.navigation.InsightsAndErrorsTabsHelper
+import org.digma.intellij.plugin.navigation.ErrorsDetailsHelper
 import org.digma.intellij.plugin.persistence.PersistenceService
-import org.digma.intellij.plugin.ui.MainToolWindowCardsController
-import org.digma.intellij.plugin.ui.model.CodeLessSpanScope
-import org.digma.intellij.plugin.ui.model.DocumentScope
+import org.digma.intellij.plugin.psi.BuildDocumentInfoProcessContext
+import org.digma.intellij.plugin.psi.LanguageService
+import org.digma.intellij.plugin.psi.PsiUtils
 import org.digma.intellij.plugin.ui.model.EmptyScope
-import org.digma.intellij.plugin.ui.model.EndpointScope
 import org.digma.intellij.plugin.ui.model.MethodScope
 import org.digma.intellij.plugin.ui.model.errors.ErrorDetailsModel
 import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
-import org.digma.intellij.plugin.ui.model.errors.ErrorsPreviewListItem
 import org.digma.intellij.plugin.ui.model.errors.ErrorsTabCard
 import java.util.Collections
 import java.util.concurrent.locks.ReentrantLock
 
+@Service(Service.Level.PROJECT)
 class ErrorsViewService(project: Project) : AbstractViewService(project) {
 
     private val logger: Logger = Logger.getInstance(ErrorsViewService::class.java)
@@ -53,27 +45,17 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
     }
 
 
+    fun updateErrors(methodId: String): Boolean {
+        val methodInfo = tryFindMethodInfo(methodId)
 
-    //todo: quick and dirty prevent race condition with refresh task until we have time to re-write it
-    fun updateErrorsModelFromRefresh(codeLessSpan: CodeLessSpan) {
-        lock.lock()
-        try {
-            //don't let the refresh task update if it's not the same CodeLessSpan
-            if ( model.scope is CodeLessSpanScope && codeLessSpan == (model.scope as CodeLessSpanScope).getSpan()) {
-                updateErrorsModelImpl(codeLessSpan)
-            }
-        }finally {
-            if (lock.isHeldByCurrentThread) {
-                lock.unlock()
-            }
-        }
+        return updateErrorsModel(methodInfo)
     }
 
-    //todo: quick and dirty prevent race condition with refresh task until we have time to re-write it
-    fun updateErrorsModel(codeLessSpan: CodeLessSpan) {
+
+    private fun updateErrorsModel(methodInfo: MethodInfo): Boolean {
         lock.lock()
         try {
-            updateErrorsModelImpl(codeLessSpan)
+            return updateErrorsModelImpl(methodInfo)
         }finally {
             if (lock.isHeldByCurrentThread) {
                 lock.unlock()
@@ -82,125 +64,44 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
     }
 
 
-    private fun updateErrorsModelImpl(codeLessSpan: CodeLessSpan) {
-
-        project.service<MainToolWindowCardsController>().showMainPanel()
-
-        val codeLessInsightsProvider = CodeLessSpanInsightsProvider(codeLessSpan,project)
-
-        Log.log(logger::debug, "updateInsightsModel to {}. ", codeLessSpan)
-
-        val codelessSpanErrorsContainer: CodelessSpanErrorsContainer? = codeLessInsightsProvider.getErrors()
-
-        val errorsListContainer: ErrorsListContainer? = codelessSpanErrorsContainer?.errorsContainer
-
-        if (errorsListContainer?.listViewItems.isNullOrEmpty()){
-            Log.log(logger::debug,project, "could not load errors for {}, see logs for details",codeLessSpan )
-        }
-
-        //todo: this is temporary, flickering happens because the UI is rebuilt on every refresh, when
-        // UI components are changed to bind to models flickering should not happen and we can just
-        // update the UI even with same data, it should be faster and more correct then deep equals of the data.
-        //this is the way to prevent updating the UI if insights list didn't change between refresh
-        // and by the way prevent flickering
-        //kotlin equality doesn't work for listViewItems because ListViewItem does not implement equals
-        // so only the expensive reflectionEquals works here
-        if (model.scope is CodeLessSpanScope &&
-            (model.scope as CodeLessSpanScope).getSpan() == codeLessSpan &&
-            EqualsBuilder.reflectionEquals(errorsListContainer?.listViewItems,model.listViewItems)) {
-            return
-        }
-
-
-        model.listViewItems = errorsListContainer?.listViewItems ?: listOf()
-        model.previewListViewItems = ArrayList()
-        model.scope = CodeLessSpanScope(codeLessSpan, codelessSpanErrorsContainer?.insightsResponse?.spanInfo)
-        model.card = ErrorsTabCard.ERRORS_LIST
-        model.errorsCount = errorsListContainer?.count ?: 0
-
-        updateUi()
-    }
-
-
-    //todo: quick and dirty prevent race condition with refresh task until we have time to re-write it
-    fun updateErrorsModelFromRefresh(methodInfo: MethodInfo) {
-        lock.lock()
-        try {
-            //don't let the refresh task update if it's not the same methodInfo
-            if ( model.scope is MethodScope && methodInfo == (model.scope as MethodScope).getMethodInfo()) {
-                updateErrorsModelImpl(methodInfo, null)
-            }
-        }finally {
-            if (lock.isHeldByCurrentThread) {
-                lock.unlock()
-            }
-        }
-    }
-
-    //todo: quick and dirty prevent race condition with refresh task until we have time to re-write it
-    fun updateErrorsModel(methodInfo: MethodInfo, endpointInfo: EndpointInfo? = null) {
-        lock.lock()
-        try {
-            updateErrorsModelImpl(methodInfo, endpointInfo)
-        }finally {
-            if (lock.isHeldByCurrentThread) {
-                lock.unlock()
-            }
-        }
-    }
-
-
-    private fun updateErrorsModelImpl(methodInfo: MethodInfo, endpointInfo: EndpointInfo?) {
+    private fun updateErrorsModelImpl(methodInfo: MethodInfo): Boolean {
 
         val errorsProvider: ErrorsProvider = project.getService(ErrorsProvider::class.java)
-        updateErrorsModelWithErrorsProvider(methodInfo, errorsProvider, endpointInfo)
+        return updateErrorsModelWithErrorsProvider(methodInfo, errorsProvider)
     }
 
-    private fun updateErrorsModelWithErrorsProvider(methodInfo: MethodInfo, errorsProvider: ErrorsProvider, endpointInfo: EndpointInfo?) {
+    private fun updateErrorsModelWithErrorsProvider(methodInfo: MethodInfo, errorsProvider: ErrorsProvider): Boolean {
         lock.lock()
         Log.log(logger::debug, "Lock acquired for contextChanged to {}. ", methodInfo)
+        val hasErrors: Boolean
         try {
             Log.log(logger::debug, "contextChanged to {}. ", methodInfo)
 
             val errorsListContainer = errorsProvider.getErrors(methodInfo)
+            hasErrors = errorsListContainer.listViewItems?.isNotEmpty() ?: false
 
             model.listViewItems = errorsListContainer.listViewItems ?: listOf()
             model.previewListViewItems = ArrayList()
-            model.scope = if (endpointInfo == null) MethodScope(methodInfo) else EndpointScope(endpointInfo)
+            model.scope = MethodScope(methodInfo)
             model.card = ErrorsTabCard.ERRORS_LIST
             model.errorsCount = errorsListContainer.count
 
             updateUi()
+
         } finally {
             if (lock.isHeldByCurrentThread) {
                 lock.unlock()
                 Log.log(logger::debug, "Lock released for contextChanged to {}. ", methodInfo)
             }
         }
+
+        return hasErrors
     }
 
-
-    fun contextChangeNoMethodInfo(dummy: MethodInfo) {
-
-        Log.log(logger::debug, "contextChangeNoMethodInfo to {}. ", dummy)
-
-        model.listViewItems = ArrayList()
-        model.previewListViewItems = ArrayList()
-        model.scope = MethodScope(dummy)
-        model.card = ErrorsTabCard.ERRORS_LIST
-        model.errorsCount = 0
-
-        updateUi()
-    }
-
-    fun showErrorList() {
-        project.service<InsightsAndErrorsTabsHelper>().switchToErrorsTab()
-    }
-
-    fun showErrorDetails(uid: String, errorsProvider: ErrorsProvider) {
+    fun showErrorDetails(uid: String) {
 
         Log.log(logger::debug, "showDocumentPreviewList for {}. ", uid)
-
+        val errorsProvider = project.service<ErrorsProvider>()
         val errorDetails = errorsProvider.getErrorDetails(uid)
         errorDetails.flowStacks.isWorkspaceOnly = PersistenceService.getInstance().isWorkspaceOnly()
         model.errorDetails = errorDetails
@@ -212,7 +113,7 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
 
 
     override fun canUpdateUI(): Boolean {
-        return !project.service<InsightsAndErrorsTabsHelper>().isErrorDetailsOn()
+        return !project.service<ErrorsDetailsHelper>().isErrorDetailsOn()
     }
 
     fun closeErrorDetails() {
@@ -229,87 +130,21 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
      * empty should be called only when there is no file opened in the editor and not in
      * any other case.
      */
-    @Deprecated("for removal")
-    fun empty() {
+    fun empty(): Boolean {
 
-    //Note: we do not empty the model anymore
+        Log.log(logger::debug, "empty called")
 
-//        Log.log(logger::debug, "empty called")
-//
-//        model.listViewItems = Collections.emptyList()
-//        model.previewListViewItems = ArrayList()
-//        model.usageStatusResult = EmptyUsageStatusResult
-//        model.scope = EmptyScope("")
-//        model.card = ErrorsTabCard.ERRORS_LIST
-//        model.errorsCount = 0
-//
-//        updateUi()
-    }
-
-    @Deprecated("for removal")
-    fun emptyNonSupportedFile(fileUri: String) {
-
-        //Note: we do not empty the model anymore
-
-//        Log.log(logger::debug, "emptyNonSupportedFile called")
-//
-//        model.listViewItems = Collections.emptyList()
-//        model.previewListViewItems = ArrayList()
-//        model.usageStatusResult = EmptyUsageStatusResult
-//        model.scope = EmptyScope(getNonSupportedFileScopeMessage(fileUri))
-//        model.card = ErrorsTabCard.ERRORS_LIST
-//        model.errorsCount = 0
-//
-//        updateUi()
-    }
-
-
-
-    fun showDocumentPreviewList(
-        documentInfoContainer: DocumentInfoContainer?,
-        fileUri: String
-    ) {
-
-        Log.log(logger::debug, "showDocumentPreviewList for {}. ", fileUri)
-
-        if (documentInfoContainer == null) {
-            model.scope = EmptyScope(fileUri.substringAfterLast('/'))
-            model.listViewItems = ArrayList()
-            model.errorsCount = 0
-            model.previewListViewItems = ArrayList()
-            model.card = ErrorsTabCard.PREVIEW_LIST
-        } else {
-            model.scope = DocumentScope(documentInfoContainer.documentInfo)
-            model.listViewItems = ArrayList()
-            model.errorsCount = computeErrorsPreviewCount(documentInfoContainer)
-            model.previewListViewItems = getDocumentPreviewItems(documentInfoContainer)
-            model.card = ErrorsTabCard.PREVIEW_LIST
-        }
+        model.listViewItems = Collections.emptyList()
+        model.previewListViewItems = ArrayList()
+        model.scope = EmptyScope("")
+        model.card = ErrorsTabCard.ERRORS_LIST
+        model.errorsCount = 0
 
         updateUi()
+
+        return false
     }
 
-
-
-    private fun getDocumentPreviewItems(documentInfoContainer: DocumentInfoContainer): List<ErrorsPreviewListItem> {
-
-        val listViewItems = ArrayList<ErrorsPreviewListItem>()
-        documentInfoContainer.documentInfo.methods.forEach { (id, methodInfo) ->
-            listViewItems.add(ErrorsPreviewListItem(methodInfo.id, documentInfoContainer.hasErrors(id), methodInfo.getRelatedCodeObjectIds().any()))
-        }
-
-        //sort by name of the function, it will be sorted later by sortIndex when added to a PanelListModel, but
-        // because they all have the same sortIndex then positions will not change
-        Collections.sort(listViewItems, Comparator.comparing { it.name })
-        return listViewItems
-
-    }
-
-
-
-    private fun computeErrorsPreviewCount(documentInfoContainer: DocumentInfoContainer): Int {
-        return documentInfoContainer.countInsightsByType(InsightType.Errors)
-    }
 
     private fun createEmptyErrorDetails(): ErrorDetailsModel {
         val emptyErrorDetails = ErrorDetailsModel()
@@ -317,12 +152,35 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
         return emptyErrorDetails
     }
 
-    fun refreshErrorsModel() {
-        val scope = model.scope
-        if (scope is MethodScope) {
-            Backgroundable.ensureBackground(project, "Refresh errors list") {
-                updateErrorsModel(scope.getMethodInfo())
+
+    //todo: best effort to find MethodInfo. not the best way to do it.
+    // need to implement language service methods to do method discovery from methodCodeObjectId
+    private fun tryFindMethodInfo(methodCodeObjectId: String): MethodInfo {
+
+        val methodClassAndName: Pair<String, String> = CodeObjectsUtil.getMethodClassAndName(methodCodeObjectId)
+        val defaultResult = MethodInfo(methodCodeObjectId, methodClassAndName.second, methodClassAndName.first, "", "", 0)
+
+        return try {
+            val languageService = LanguageService.findLanguageServiceByMethodCodeObjectId(project, methodCodeObjectId)
+            val workspaceUris = languageService.findWorkspaceUrisForMethodCodeObjectIds(listOf(methodCodeObjectId))
+            val fileUri = workspaceUris[methodCodeObjectId]?.first
+            if (fileUri != null) {
+                val psiFile = PsiUtils.uriToPsiFile(fileUri, project)
+                if (PsiUtils.isValidPsiFile(psiFile)) {
+                    BuildDocumentInfoProcessContext.buildDocumentInfoUnderProcessOnCurrentThreadNoRetry { pi ->
+                        val context = BuildDocumentInfoProcessContext(pi)
+                        val documentInfo = languageService.buildDocumentInfo(psiFile, context)
+                        documentInfo.methods[methodCodeObjectId] ?: defaultResult
+                    }
+
+                } else {
+                    return defaultResult
+                }
+            } else {
+                return defaultResult
             }
+        } catch (e: Throwable) {
+            defaultResult
         }
     }
 

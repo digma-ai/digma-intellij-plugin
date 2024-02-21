@@ -2,7 +2,8 @@
 
 ## [2.0.265] - 2024-02-16
 
-- fatal error - allow-slow-operations-in-file-closed by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1795
+- fatal error - allow-slow-operations-in-file-closed by @shalom938
+  in https://github.com/digma-ai/digma-intellij-plugin/pull/1795
 - Feature/support otel 1.3.2 by @doppleware in https://github.com/digma-ai/digma-intellij-plugin/pull/1799
 - Integration with a code lens api by @ohrebeniuk in https://github.com/digma-ai/digma-intellij-plugin/pull/1800
 - Fixed integration with codelens API by @ohrebeniuk in https://github.com/digma-ai/digma-intellij-plugin/pull/1804

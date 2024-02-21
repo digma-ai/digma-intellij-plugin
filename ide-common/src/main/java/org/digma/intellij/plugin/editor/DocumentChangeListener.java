@@ -80,7 +80,7 @@ class DocumentChangeListener {
 
                 try {
 
-                    if (project.isDisposed()) {
+                    if (!ProjectUtilsKt.isProjectValid(project)) {
                         return;
                     }
 

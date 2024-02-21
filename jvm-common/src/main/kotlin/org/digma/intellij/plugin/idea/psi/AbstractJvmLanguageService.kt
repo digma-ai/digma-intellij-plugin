@@ -18,6 +18,7 @@ import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectFileIndex
+import com.intellij.openapi.util.Computable
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.pom.Navigatable
 import com.intellij.psi.JavaPsiFacade
@@ -41,7 +42,10 @@ import org.digma.intellij.plugin.common.runInReadAccess
 import org.digma.intellij.plugin.common.runInReadAccessWithResult
 import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.document.DocumentInfoService
+import org.digma.intellij.plugin.editor.CaretContextService
 import org.digma.intellij.plugin.editor.EditorUtils
+import org.digma.intellij.plugin.editor.LatestMethodUnderCaretHolder
+import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.errorreporting.SEVERITY_MEDIUM_TRY_FIX
 import org.digma.intellij.plugin.errorreporting.SEVERITY_PROP_NAME
@@ -53,9 +57,7 @@ import org.digma.intellij.plugin.idea.navigation.JvmEndpointNavigationProvider
 import org.digma.intellij.plugin.idea.navigation.JvmSpanNavigationProvider
 import org.digma.intellij.plugin.idea.psi.discovery.AbstractCodeObjectDiscovery
 import org.digma.intellij.plugin.idea.psi.discovery.MicrometerTracingFramework
-import org.digma.intellij.plugin.instrumentation.CanInstrumentMethodResult
-import org.digma.intellij.plugin.instrumentation.JvmCanInstrumentMethodResult
-import org.digma.intellij.plugin.instrumentation.MissingDependencyCause
+import org.digma.intellij.plugin.instrumentation.MethodObservabilityInfo
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
@@ -66,14 +68,12 @@ import org.digma.intellij.plugin.psi.BuildDocumentInfoProcessContext
 import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.psi.PsiFileNotFountException
 import org.digma.intellij.plugin.psi.PsiUtils
-import org.digma.intellij.plugin.ui.CaretContextService
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.getContainingUFile
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.toUElementOfType
-import java.util.Objects
 import java.util.function.Consumer
 
 @Suppress("MemberVisibilityCanBePrivate")
@@ -104,8 +104,6 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
     //It's a different search for each jvm language.
     abstract fun findClassByClassName(className: String, scope: GlobalSearchScope): UClass?
-
-    abstract fun refreshCodeLens()
 
     abstract fun findParentMethod(psiElement: PsiElement): UMethod?
 
@@ -180,7 +178,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
     }
 
 
-    override fun environmentChanged(newEnv: String, refreshInsightsView: Boolean) {
+    override fun environmentChanged(newEnv: Env, refreshInsightsView: Boolean) {
         if (refreshInsightsView) {
             EDT.ensureEDT {
                 allowSlowOperation {
@@ -195,6 +193,8 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                                 if (selectedTextEditor != null) {
                                     val offset = selectedTextEditor.caretModel.offset
                                     val methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedTextEditor, offset)
+                                    LatestMethodUnderCaretHolder.getInstance(project)
+                                        .saveLatestMethodUnderCaret(project, this, methodUnderCaret.id)
                                     CaretContextService.getInstance(project).contextChanged(methodUnderCaret)
                                 }
                             }
@@ -350,7 +350,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
     }
 
 
-    fun findMethodByMethodCodeObjectId(methodId: String?): UMethod? {
+    override fun findMethodByMethodCodeObjectId(methodId: String?): UMethod? {
         if (methodId == null) return null
 
         if (!methodId.contains("\$_$")) {
@@ -424,7 +424,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                 }
             }
         }, { e ->
-            ErrorReporter.getInstance().reportError("${this::class.java.simpleName}.detectMethodUnderCaret", e)
+            ErrorReporter.getInstance().reportError(project, "${this::class.java.simpleName}.detectMethodUnderCaret", e)
             MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), caretOffset, null, false)
         })
     }
@@ -506,7 +506,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                         }
                     }
                 } catch (e: Throwable) {
-                    ErrorReporter.getInstance().reportError("${this::class.java.simpleName}.navigateToMethod", e)
+                    ErrorReporter.getInstance().reportError(project, "${this::class.java.simpleName}.navigateToMethod", e)
                 }
             }
         }
@@ -538,7 +538,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                         method?.sourcePsi
                     }
                 } catch (e: Exception) {
-                    ErrorReporter.getInstance().reportError("AbstractJvmLanguageService.getPsiElementForMethod", e)
+                    ErrorReporter.getInstance().reportError(project, "AbstractJvmLanguageService.getPsiElementForMethod", e)
                     null
                 }
             }
@@ -574,7 +574,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                     val uClass = findClassByClassName(classNameToFind, GlobalSearchScope.allScope(project))
                     return@allowSlowOperation uClass?.sourcePsi
                 } catch (e: Exception) {
-                    ErrorReporter.getInstance().reportError("AbstractJvmLanguageService.getPsiElementForClassByName", e)
+                    ErrorReporter.getInstance().reportError(project, "AbstractJvmLanguageService.getPsiElementForClassByName", e)
                     null
                 }
             }
@@ -584,46 +584,40 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
     override fun refreshMethodUnderCaret(project: Project, psiFile: PsiFile, selectedEditor: Editor?, offset: Int) {
         val methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedEditor, offset)
+        LatestMethodUnderCaretHolder.getInstance(project).saveLatestMethodUnderCaret(project, this, methodUnderCaret.id)
         CaretContextService.getInstance(project).contextChanged(methodUnderCaret)
     }
 
 
-    override fun canInstrumentMethod(project: Project, methodId: String?): CanInstrumentMethodResult {
+    override fun canInstrumentMethod(methodId: String): MethodObservabilityInfo {
 
-        if (methodId == null) {
-            return CanInstrumentMethodResult.failure()
-        }
+        class MyComputable : Computable<MethodObservabilityInfo> {
 
-        class MyRunnable : Runnable {
             val progressIndicator: ProgressIndicator = EmptyProgressIndicator()
 
-            var result: CanInstrumentMethodResult? = null
+            override fun compute(): MethodObservabilityInfo {
 
-            override fun run() {
                 try {
                     val uMethod = findMethodByMethodCodeObjectId(methodId)
                     if (uMethod?.sourcePsi == null) {
-                        Log.log(logger::warn, "Failed to get Method from method id '{}'", methodId)
-                        result = CanInstrumentMethodResult.failure()
-                        return
+                        Log.log(logger::trace, "Failed to get Method from method id '{}'", methodId)
+                        return MethodObservabilityInfo(methodId, hasMissingDependency = false, canInstrumentMethod = false)
                     }
 
                     progressIndicator.checkCanceled()
 
                     val psiFile = uMethod.getContainingUFile()
                     if (psiFile == null || !isSupportedFile(psiFile.sourcePsi)) {
-                        Log.log(logger::warn, "Method's file is not supported file (methodId: {})", methodId)
-                        result = CanInstrumentMethodResult.failure()
-                        return
+                        Log.log(logger::trace, "Method's file is not supported file (methodId: {})", methodId)
+                        return MethodObservabilityInfo(methodId, hasMissingDependency = false, canInstrumentMethod = false)
                     }
 
                     progressIndicator.checkCanceled()
 
                     val module = ModuleUtilCore.findModuleForPsiElement(uMethod.sourcePsi!!)
                     if (module == null) {
-                        Log.log(logger::warn, "Failed to get module from PsiMethod '{}'", methodId)
-                        result = CanInstrumentMethodResult.failure()
-                        return
+                        Log.log(logger::trace, "Failed to get module from PsiMethod '{}'", methodId)
+                        return MethodObservabilityInfo(methodId, hasMissingDependency = false, canInstrumentMethod = false)
                     }
 
                     progressIndicator.checkCanceled()
@@ -639,14 +633,12 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                         val modulesDepsService = ModulesDepsService.getInstance(project)
                         val moduleExt = modulesDepsService.getModuleExt(module.name)
                         if (moduleExt == null) {
-                            Log.log(logger::warn, "Failed to not lookup module ext by module name='{}'", module.name)
-                            result = CanInstrumentMethodResult.failure()
-                            return
+                            Log.log(logger::trace, "Failed to not lookup module ext by module name='{}'", module.name)
+                            return MethodObservabilityInfo(methodId, hasMissingDependency = false, canInstrumentMethod = false)
                         }
                         val hasDeps = modulesDepsService.isModuleHasNeededDependenciesForSpringBootWithMicrometer(moduleExt.metadata)
                         if (!hasDeps) {
-                            result = CanInstrumentMethodResult(MissingDependencyCause(dependencyCause))
-                            return
+                            return MethodObservabilityInfo(methodId, hasMissingDependency = true, canInstrumentMethod = false)
                         }
                     }
 
@@ -657,30 +649,38 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                         GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module, false)
                     )
                     if (annotationPsiClass == null) {
-                        Log.log(logger::warn, "Cannot find WithSpan PsiClass (methodId: {}) (module:{})", methodId, module)
-                        result = CanInstrumentMethodResult(MissingDependencyCause(dependencyCause))
-                        return
+                        Log.log(logger::trace, "Cannot find WithSpan PsiClass (methodId: {}) (module:{})", methodId, module)
+                        return MethodObservabilityInfo(methodId, hasMissingDependency = true, canInstrumentMethod = false)
                     }
 
-                    result = JvmCanInstrumentMethodResult(methodId, uMethod, annotationPsiClass, psiFile)
+                    return MethodObservabilityInfo(
+                        methodId,
+                        hasMissingDependency = false,
+                        canInstrumentMethod = true,
+                        annotationClassFqn = annotationClassFqn
+                    )
+
                 } catch (e: ProcessCanceledException) {
                     throw e
                 } catch (e: Throwable) {
-                    ErrorReporter.getInstance().reportError("AbstractJvmLanguageService.canInstrumentMethod", e)
+                    ErrorReporter.getInstance().reportError(project, "AbstractJvmLanguageService.canInstrumentMethod", e)
                 }
+
+                return MethodObservabilityInfo(methodId, hasMissingDependency = false, canInstrumentMethod = false)
             }
+
         }
 
 
         return Retries.retryWithResultAndDefault({
-            val myRunnable = MyRunnable()
-            ProgressManager.getInstance().runProcess({
-                runInReadAccess {
-                    myRunnable.run()
+            val myComputable = MyComputable()
+            val result = ProgressManager.getInstance().runProcess(Computable {
+                runInReadAccessWithResult {
+                    myComputable.compute()
                 }
-            }, myRunnable.progressIndicator)
-            Objects.requireNonNullElseGet(myRunnable.result) { CanInstrumentMethodResult.failure() }
-        }, Throwable::class.java, 50, 5, CanInstrumentMethodResult.failure())
+            }, myComputable.progressIndicator)
+            return@retryWithResultAndDefault result
+        }, Throwable::class.java, 50, 5, MethodObservabilityInfo(methodId, hasMissingDependency = false, canInstrumentMethod = false))
     }
 
 
@@ -693,7 +693,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
 
     @Suppress("UnstableApiUsage")
-    override fun addDependencyToOtelLib(project: Project, methodId: String) {
+    override fun addDependencyToOtelLib(methodId: String) {
         val module = getModuleOfMethodId(methodId)
         if (module == null) {
             Log.log(logger::warn, "Failed to add dependencies OTEL lib since could not lookup module by methodId='{}'", methodId)
@@ -748,4 +748,5 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
         val springBootMicrometerConfigureDepsService = SpringBootMicrometerConfigureDepsService.getInstance(project)
         springBootMicrometerConfigureDepsService.addMissingDependenciesForSpringBootObservability(moduleExt)
     }
+
 }

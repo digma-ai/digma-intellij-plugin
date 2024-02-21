@@ -9,6 +9,8 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import kotlin.Pair;
+import org.digma.intellij.plugin.env.Env;
+import org.digma.intellij.plugin.instrumentation.*;
 import org.digma.intellij.plugin.model.discovery.*;
 import org.jetbrains.annotations.*;
 
@@ -86,7 +88,7 @@ public class NoOpLanguageService implements LanguageService {
     }
 
     @Override
-    public void environmentChanged(String newEnv, boolean refreshInsightsView) {
+    public void environmentChanged(Env newEnv, boolean refreshInsightsView) {
         //nothing to do
     }
 
@@ -120,6 +122,11 @@ public class NoOpLanguageService implements LanguageService {
     }
 
     @Override
+    public @NotNull InstrumentationProvider getInstrumentationProvider() {
+        return new NoOpInstrumentationProvider();
+    }
+
+    @Override
     public boolean isRelevant(VirtualFile file) {
         return false;
     }
@@ -142,5 +149,10 @@ public class NoOpLanguageService implements LanguageService {
     @Override
     public @NotNull List<Pair<TextRange, CodeVisionEntry>> getCodeLens(@NotNull PsiFile psiFile) {
         throw new UnsupportedOperationException("should not be called for NoOPLanguageService");
+    }
+
+    @Override
+    public void refreshCodeLens() {
+
     }
 }

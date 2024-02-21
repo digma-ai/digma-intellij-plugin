@@ -231,7 +231,7 @@ tasks {
         dependsOn(deleteLog)
 
         //to disable the splash screen on startup because it may interrupt when debugging.
-        //args(listOf("nosplash"))
+        args(listOf("nosplash"))
 
 //        jvmArgs("-XX:ReservedCodeCacheSize=512M")
 
@@ -350,7 +350,9 @@ tasks {
                 "webview/recentactivity/recentActivityTemplate.ftl",
                 "webview/tests/testsTemplate.ftl",
                 "webview/notifications/notificationstemplate.ftl",
-                "webview/assets/assetstemplate.ftl"
+                "webview/assets/assetstemplate.ftl",
+                "webview/navigation/navigationtemplate.ftl",
+                "webview/insights/insightstemplate.ftl"
             )
         ) {
             filter<ReplaceTokens>("tokens" to tokens)

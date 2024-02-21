@@ -12,6 +12,7 @@ import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementFactory
 import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiImportList
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.search.GlobalSearchScope
@@ -25,13 +26,15 @@ import org.digma.intellij.plugin.idea.psi.discovery.endpoint.JaxrsJakartaFramewo
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.JaxrsJavaxFrameworkEndpointDiscovery
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.MicronautFrameworkEndpointDiscovery
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.SpringBootFrameworkEndpointDiscovery
-import org.digma.intellij.plugin.instrumentation.CanInstrumentMethodResult
-import org.digma.intellij.plugin.instrumentation.JvmCanInstrumentMethodResult
+import org.digma.intellij.plugin.instrumentation.InstrumentationProvider
+import org.digma.intellij.plugin.instrumentation.MethodObservabilityInfo
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UMethod
+import org.jetbrains.uast.getContainingUFile
 import org.jetbrains.uast.toUElementOfType
+import java.util.Objects
 
 @Suppress("LightServiceMigrationCode")
 class JavaLanguageService(project: Project) : AbstractJvmLanguageService(project, project.service<JavaCodeObjectDiscovery>()) {
@@ -68,28 +71,40 @@ class JavaLanguageService(project: Project) : AbstractJvmLanguageService(project
         return PsiTreeUtil.getParentOfType(psiElement, PsiMethod::class.java)?.toUElementOfType<UMethod>()
     }
 
-    override fun instrumentMethod(result: CanInstrumentMethodResult): Boolean {
+    override fun instrumentMethod(methodObservabilityInfo: MethodObservabilityInfo): Boolean {
 
         try {
-            if (result !is JvmCanInstrumentMethodResult) {
+            if (methodObservabilityInfo.hasMissingDependency || methodObservabilityInfo.annotationClassFqn == null) {
                 Log.log(logger::warn, "instrumentMethod was called with failing result from canInstrumentMethod")
                 return false
             }
 
+            val uMethod = findMethodByMethodCodeObjectId(methodObservabilityInfo.methodId)
+            //will be caught here so that ErrorReporter will report it
+            Objects.requireNonNull(uMethod, "can't instrument method,can't find psi method for ${methodObservabilityInfo.methodId}")
 
-            if (result.containingFile.sourcePsi is PsiJavaFile && result.uMethod.sourcePsi is PsiMethod) {
+            uMethod as UMethod
 
+            val psiJavaFile = uMethod.getContainingUFile()?.sourcePsi
+            val psiMethod = uMethod.sourcePsi
+            val annotationFqn = methodObservabilityInfo.annotationClassFqn
 
-                val psiJavaFile: PsiJavaFile = result.containingFile.sourcePsi as PsiJavaFile
-                val psiMethod: PsiMethod = result.uMethod.sourcePsi as PsiMethod
-                val methodId: String = result.methodId
-                val withSpanClass: PsiClass = result.withSpanClass
+            if (psiJavaFile is PsiJavaFile && psiMethod is PsiMethod && annotationFqn != null) {
+
+                val withSpanClass: PsiClass? = JavaPsiFacade.getInstance(project).findClass(annotationFqn, GlobalSearchScope.allScope(project))
+                //will be caught here so that ErrorReporter will report it
+                Objects.requireNonNull(
+                    withSpanClass,
+                    "can't instrument method,can't find annotation class  ${methodObservabilityInfo.annotationClassFqn}"
+                )
+
+                withSpanClass as PsiClass
 
                 val importList = psiJavaFile.importList
-                if (importList == null) {
-                    Log.log(logger::warn, "Failed to get ImportList from PsiFile (methodId: {})", methodId)
-                    return false
-                }
+                //will be caught here so that ErrorReporter will report it
+                Objects.requireNonNull(importList, "Failed to get ImportList from PsiFile (methodId: ${methodObservabilityInfo.methodId})")
+
+                importList as PsiImportList
 
                 WriteCommandAction.runWriteCommandAction(project) {
                     val psiFactory = PsiElementFactory.getInstance(project)
@@ -109,7 +124,7 @@ class JavaLanguageService(project: Project) : AbstractJvmLanguageService(project
                 return false
             }
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("JavaLanguageService.instrumentMethod", e)
+            ErrorReporter.getInstance().reportError(project, "JavaLanguageService.instrumentMethod", e)
             return false
         }
     }
@@ -131,5 +146,10 @@ class JavaLanguageService(project: Project) : AbstractJvmLanguageService(project
             grpcFramework,
             springBootFramework
         )
+    }
+
+
+    override fun getInstrumentationProvider(): InstrumentationProvider {
+        return JavaInstrumentationProvider(project, this)
     }
 }

@@ -176,7 +176,7 @@ class ShowTypeformAction(
             openTypeform(project, formName)
             notification.expire()
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("ShowTypeformAction.actionPerformed", e)
+            ErrorReporter.getInstance().reportError(project, "ShowTypeformAction.actionPerformed", e)
         }
     }
 
@@ -216,7 +216,7 @@ class GoAwayAction(
             ActivityMonitor.getInstance(project).registerNotificationCenterEvent("$notificationName.clicked", mapOf())
             notification.expire()
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("GoAwayAction.actionPerformed", e)
+            ErrorReporter.getInstance().reportError(project, "GoAwayAction.actionPerformed", e)
         }
     }
 }

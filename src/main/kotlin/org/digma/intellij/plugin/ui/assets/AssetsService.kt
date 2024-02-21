@@ -9,10 +9,11 @@ import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.analytics.NoSelectedEnvironmentException
 import org.digma.intellij.plugin.common.EDT
-import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.MonitoredPanel
+import org.digma.intellij.plugin.scope.ScopeManager
+import org.digma.intellij.plugin.scope.SpanScope
 
 @Service(Service.Level.PROJECT)
 class AssetsService(private val project: Project) : Disposable {
@@ -99,12 +100,11 @@ class AssetsService(private val project: Project) : Disposable {
     }
 
 
-    fun showAsset(spanId: String?) {
+    fun showAsset(spanId: String) {
         EDT.assertNonDispatchThread()
-
         Log.log(logger::trace, project, "showAsset called for {}", spanId)
         ActivityMonitor.getInstance(project).registerSpanLinkClicked(MonitoredPanel.Assets)
-        project.getService(InsightsViewOrchestrator::class.java).showInsightsForCodelessSpan(spanId!!)
+        ScopeManager.getInstance(project).changeScope(SpanScope(spanId))
     }
 
     override fun dispose() {

@@ -9,6 +9,7 @@ import com.jetbrains.rider.projectView.solution
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.document.CodeLensProvider
 import org.digma.intellij.plugin.document.DocumentInfoService
+import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.lens.CodeLens
 import org.digma.intellij.plugin.psi.PsiFileNotFountException
@@ -20,7 +21,7 @@ class CodeLensHost(project: Project) : LifetimedProjectComponent(project) {
 
     private val logger = Logger.getInstance(CodeLensHost::class.java)
 
-    private val documentInfoService: DocumentInfoService = project.getService(DocumentInfoService::class.java)
+    private val documentInfoService: DocumentInfoService = DocumentInfoService.getInstance(project)
     private val codeLensProvider: CodeLensProvider = project.getService(CodeLensProvider::class.java)
 
     //always use getInstance instead of injecting directly to other services.
@@ -39,7 +40,7 @@ class CodeLensHost(project: Project) : LifetimedProjectComponent(project) {
         return model.protocol!! //protocol is nullable in 2023.2, remove when 2023.2 is our base
     }
 
-    fun environmentChanged(newEnv: String) {
+    fun environmentChanged(newEnv: Env) {
         Log.log(logger::debug, "Got environmentChanged {}", newEnv)
 
 
@@ -97,8 +98,8 @@ class CodeLensHost(project: Project) : LifetimedProjectComponent(project) {
 
             //add code lens to the rider protocol
             codeLenses.forEach(Consumer { codeLens ->
-                model.codeLens.computeIfAbsent(codeLens.codeObjectId) { LensPerObjectId() }
-                model.codeLens[codeLens.codeObjectId]?.lens?.add(codeLens.toRiderCodeLensInfo(psiUri))
+                model.codeLens.computeIfAbsent(codeLens.codeMethod) { LensPerObjectId() }
+                model.codeLens[codeLens.codeMethod]?.lens?.add(codeLens.toRiderCodeLensInfo(psiUri))
             })
 
             Log.log(logger::debug, "Calling reanalyze for {}", psiId)
@@ -108,7 +109,7 @@ class CodeLensHost(project: Project) : LifetimedProjectComponent(project) {
 
 
     private fun CodeLens.toRiderCodeLensInfo(psiUri: String) = RiderCodeLensInfo(
-        codeObjectId = codeObjectId,
+        codeObjectId = codeMethod,
         lensTitle = lensTitle,
         lensDescription = lensDescription,
         moreText = lensMoreText,

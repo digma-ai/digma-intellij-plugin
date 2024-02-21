@@ -35,7 +35,7 @@ class ShowTroubleshootingAction(
             MainToolWindowCardsController.getInstance(project).showTroubleshooting()
             notification.expire()
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("ShowTroubleshootingAction.actionPerformed", e)
+            ErrorReporter.getInstance().reportError(project, "ShowTroubleshootingAction.actionPerformed", e)
         }
     }
 }

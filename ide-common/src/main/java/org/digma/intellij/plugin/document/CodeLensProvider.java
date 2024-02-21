@@ -1,27 +1,23 @@
 package org.digma.intellij.plugin.document;
 
+import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
-import org.apache.commons.collections.CollectionUtils;
 import org.digma.intellij.plugin.analytics.*;
+import org.digma.intellij.plugin.codelens.CodeLensRefresh;
 import org.digma.intellij.plugin.common.Unicodes;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightImportance;
-import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
-import org.digma.intellij.plugin.model.discovery.SpanInfo;
 import org.digma.intellij.plugin.model.lens.CodeLens;
 import org.digma.intellij.plugin.model.rest.codelens.*;
-import org.digma.intellij.plugin.model.rest.insights.*;
-import org.digma.intellij.plugin.recentactivity.RecentActivityLogic;
+import org.digma.intellij.plugin.model.rest.insights.MethodWithCodeObjects;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
-import static java.util.stream.Collectors.groupingBy;
-
-public class CodeLensProvider {
+public class CodeLensProvider implements Disposable {
 
     private static final Logger LOGGER = Logger.getInstance(CodeLensProvider.class);
 
@@ -32,8 +28,14 @@ public class CodeLensProvider {
 
         documentInfoService = project.getService(DocumentInfoService.class);
         analyticsService = project.getService(AnalyticsService.class);
+
+        new CodeLensRefresh(project, this).start();
     }
 
+    @Override
+    public void dispose() {
+        //nothing to do , used as parent disposable
+    }
 
     @NotNull
     public Set<CodeLens> provideCodeLens(@NotNull PsiFile psiFile) throws AnalyticsServiceException {
@@ -46,17 +48,16 @@ public class CodeLensProvider {
             return Collections.emptySet();
         }
 
-        var codeLens = buildCodeLens(documentInfo, false);
+        var codeLens = buildCodeLens(documentInfo);
 
         Log.log(LOGGER::trace, "Got code lens for {}, {}", psiFile.getVirtualFile(), codeLens);
         return codeLens;
     }
 
     @NotNull
-    private Set<CodeLens> buildCodeLens(@NotNull DocumentInfoContainer documentInfoContainer, boolean environmentPrefix) throws AnalyticsServiceException {
+    private Set<CodeLens> buildCodeLens(@NotNull DocumentInfoContainer documentInfoContainer) throws AnalyticsServiceException {
         Set<CodeLens> codeLensList = new LinkedHashSet<>();
 
-        var environment = analyticsService.getEnvironment();
 
         if (documentInfoContainer.getDocumentInfo() == null) {
             return Collections.emptySet();
@@ -64,95 +65,61 @@ public class CodeLensProvider {
 
         var methodsInfo = documentInfoContainer.getDocumentInfo().getMethods().values();
 
+        List<MethodWithCodeObjects> methods = new ArrayList();
+
         for (MethodInfo methodInfo : methodsInfo) {
-            final var insights = documentInfoContainer.getInsightsForMethod(methodInfo.getId());
-            final var hasInsights = CollectionUtils.isNotEmpty(insights);
+            List<String> relatedSpansCodeObjectIds = methodInfo.getSpans().stream().map(x -> x.getId()).toList();
+            List<String> relatedEndpointCodeObjectIds = methodInfo.getEndpoints().stream().map(x -> x.getId()).toList();
 
-            if (!hasInsights) {
-                if (methodInfo.hasRelatedCodeObjectIds()) {
-                    CodeLens codeLen = new CodeLens(methodInfo.getId(), "Never Reached", 7);
-                    codeLen.setLensDescription("No tracing data for this code object");
-                    codeLen.setAnchor("Top");
-
-                    codeLensList.add(codeLen);
-                }
-                continue; // to next method
+            for (String id : methodInfo.allIdsWithType()) {
+                methods.add(new MethodWithCodeObjects(id, relatedSpansCodeObjectIds, relatedEndpointCodeObjectIds));
             }
+        }
 
-            if (hasRecentActivity(insights)) {
-                CodeLens codeLens = buildCodeLensOfActive(methodInfo.getId());
+        var methodsWithCodeLens = analyticsService.getCodeLensByMethods(methods).getMethodWithCodeLens();
+
+        for (MethodWithCodeLens methodWithCodeLens : methodsWithCodeLens) {
+            var codeObjectId = CodeObjectsUtil.stripMethodPrefix(methodWithCodeLens.getMethodCodeObjectId());
+            var decorators = methodWithCodeLens.getDecorators();
+
+            var liveDecorator =
+                    decorators.stream().filter(d-> d.getTitle().equals("Live")).findFirst()
+                            .orElse(null);
+
+            if(liveDecorator != null){
+                var codeLens = buildCodeLensOfActive(codeObjectId, liveDecorator);
+                decorators.remove(liveDecorator);
                 codeLensList.add(codeLens);
             }
 
-            final boolean haveDecorators = evalHaveDecorators(insights);
-            if (!haveDecorators) {
-                CodeLens codeLens = new CodeLens(methodInfo.getId(), "Runtime Data", 8);
-                codeLens.setLensDescription("Runtime data available");
+            for (Decorator decorator : decorators) {
+
+                Integer importance = decorator.getImportance().getPriority();
+
+                String priorityEmoji = "";
+                if (isImportant(importance)) {
+                    priorityEmoji = "❗️";
+                }
+
+                String title = priorityEmoji + decorator.getTitle();
+
+                CodeLens codeLens = new CodeLens(codeObjectId, decorator.getCodeObjectId(), title, importance);
+                codeLens.setLensDescription(decorator.getDescription());
+                codeLens.setLensMoreText("Go to " + title);
                 codeLens.setAnchor("Top");
 
                 codeLensList.add(codeLens);
-                continue; // to next method
             }
 
-            for (CodeObjectInsight insight : insights) {
-                if (!insight.hasDecorators()) {
-                    continue;
-                }
-
-                for (CodeObjectDecorator decorator : insight.getDecorators()) {
-                    String envComponent = "";
-                    if (environmentPrefix) {
-                        envComponent = "[" + insight.getEnvironment() + "]";
-                    }
-
-                    String priorityEmoji = "";
-                    if (isImportant(insight.getImportance())) {
-                        priorityEmoji = "❗️";
-                    }
-
-                    String title = priorityEmoji + decorator.getTitle() + " " + envComponent;
-
-                    CodeLens codeLens = new CodeLens(methodInfo.getId(), title, insight.getImportance());
-                    codeLens.setLensDescription(decorator.getDescription());
-                    codeLens.setLensMoreText("Go to " + title);
-                    codeLens.setAnchor("Top");
-
-                    codeLensList.add(codeLens);
-                }
-            }
-        } // end of forEach method
-
-        return codeLensList;
-
-    }
-
-    private static boolean evalHaveDecorators(List<CodeObjectInsight> insights) {
-        if (CollectionUtils.isEmpty(insights)) {
-            return false;
         }
 
-        Optional<CodeObjectInsight> optional = insights.stream()
-                .filter(CodeObjectInsight::hasDecorators)
-                .findFirst();
-        return optional.isPresent();
+        return codeLensList;
     }
 
-    private static boolean hasRecentActivity(List<CodeObjectInsight> insights) {
-        Optional<SpanDurationsInsight> optInsight = insights.stream()
-                .filter(it -> it instanceof SpanDurationsInsight)
-                .map(it -> (SpanDurationsInsight) it)
-                .filter(it -> it.getLastSpanInstanceInfo() != null
-                        // for debug, comment out the line below (with isRecentTime)
-                        && RecentActivityLogic.isRecentTime(it.getLastSpanInstanceInfo().getStartTime())
-                )
-                .findFirst();
-        return optInsight.isPresent();
-    }
-
-    private static CodeLens buildCodeLensOfActive(String methodId) {
+    private static CodeLens buildCodeLensOfActive(String methodId, Decorator liveDecorator) {
         var title = Unicodes.getLIVE_CIRCLE();
-        CodeLens codeLens = new CodeLens(methodId, title, 1);
-        codeLens.setLensDescription("Live data available");
+        CodeLens codeLens = new CodeLens(methodId,liveDecorator.getCodeObjectId(), title, 1);
+        codeLens.setLensDescription(liveDecorator.getDescription());
         codeLens.setAnchor("Top");
 
         return codeLens;
@@ -161,5 +128,6 @@ public class CodeLensProvider {
     private static boolean isImportant(Integer importanceLevel) {
         return importanceLevel <= InsightImportance.HighlyImportant.getPriority() && importanceLevel >= InsightImportance.ShowStopper.getPriority();
     }
+
 
 }

@@ -7,22 +7,14 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
+import org.digma.intellij.plugin.env.Env;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.model.discovery.DocumentInfo;
-import org.digma.intellij.plugin.model.discovery.MethodInfo;
-import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
+import org.digma.intellij.plugin.model.discovery.*;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.psi.PsiUtils;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.*;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -78,7 +70,7 @@ public class DocumentInfoService {
     }
 
 
-    public void environmentChanged(String newEnv) {
+    public void environmentChanged(Env newEnv) {
         Log.log(LOGGER::debug, "Got environmentChanged event {}", newEnv);
 
         //refresh all backend data.

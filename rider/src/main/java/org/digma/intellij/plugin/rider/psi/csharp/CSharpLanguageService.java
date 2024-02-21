@@ -15,13 +15,14 @@ import com.jetbrains.rider.projectView.SolutionLifecycleHost;
 import kotlin.Pair;
 import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.common.*;
-import org.digma.intellij.plugin.editor.EditorUtils;
+import org.digma.intellij.plugin.editor.*;
+import org.digma.intellij.plugin.env.Env;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
+import org.digma.intellij.plugin.instrumentation.*;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.*;
 import org.digma.intellij.plugin.psi.*;
 import org.digma.intellij.plugin.rider.protocol.*;
-import org.digma.intellij.plugin.ui.CaretContextService;
 import org.jetbrains.annotations.*;
 
 import java.util.*;
@@ -129,7 +130,7 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
         // no retry because it needs to complete very fast
         //it may be called from EDT or background, runInReadAccessWithResult will acquire read access if necessary.
         return executeCatchingWithResult(() -> PsiAccessUtilsKt.runInReadAccessWithResult(() -> LanguageServiceHost.getInstance(project).detectMethodUnderCaret(psiFile, selectedEditor, caretOffset)), throwable -> {
-            ErrorReporter.getInstance().reportError(getClass().getSimpleName() + ".detectMethodUnderCaret", throwable);
+            ErrorReporter.getInstance().reportError(project, getClass().getSimpleName() + ".detectMethodUnderCaret", throwable);
             return new MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), caretOffset, null, false);
         });
     }
@@ -184,7 +185,7 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
     }
 
     @Override
-    public void environmentChanged(String newEnv, boolean refreshInsightsView) {
+    public void environmentChanged(Env newEnv, boolean refreshInsightsView) {
 
         if (refreshInsightsView) {
             EDT.ensureEDT(() -> {
@@ -198,6 +199,7 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
                             if (selectedTextEditor != null) {
                                 int offset = selectedTextEditor.getCaretModel().getOffset();
                                 var methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedTextEditor, offset);
+                                LatestMethodUnderCaretHolder.getInstance(project).saveLatestMethodUnderCaret(project, this, methodUnderCaret.getId());
                                 CaretContextService.getInstance(project).contextChanged(methodUnderCaret);
                             }
                         }
@@ -262,6 +264,7 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
     @Override
     public void refreshMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, @Nullable Editor selectedEditor, int offset) {
         MethodUnderCaret methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedEditor, offset);
+        LatestMethodUnderCaretHolder.getInstance(project).saveLatestMethodUnderCaret(project, this, methodUnderCaret.getId());
         CaretContextService.getInstance(project).contextChanged(methodUnderCaret);
     }
 
@@ -273,6 +276,12 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
     @Override
     public @NotNull List<Pair<TextRange, CodeVisionEntry>> getCodeLens(@NotNull PsiFile psiFile) {
         throw new UnsupportedOperationException("should not be called for CSharpLanguageService");
+    }
+
+    @Override
+    public void refreshCodeLens() {
+        //todo:implement
+//        CodeLensHost.getInstance(project).refreshCodeLens();
     }
 
     @Override
@@ -289,5 +298,10 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
     @Override
     public @Nullable PsiElement getPsiElementForClassByName(@NotNull String className) {
         return null;
+    }
+
+    @Override
+    public @NotNull InstrumentationProvider getInstrumentationProvider() {
+        return new NoOpInstrumentationProvider();
     }
 }

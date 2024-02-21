@@ -5,38 +5,25 @@ import com.intellij.openapi.project.Project;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.common.Backgroundable;
+import org.digma.intellij.plugin.env.*;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.model.rest.usage.CodeObjectUsageStatus;
 import org.digma.intellij.plugin.persistence.PersistenceService;
-import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.*;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.Collectors;
 
 public class Environment implements EnvironmentsSupplier {
 
     private static final Logger LOGGER = Logger.getInstance(Environment.class);
     private static final String NO_ENVIRONMENTS_MESSAGE = "No Environments";
 
-    private String current;
+    private Env current;
 
     @NotNull
-    private List<String> environments = new ArrayList<>();
-
-    @NotNull
-    private Set<String> environmentsWithUsages = new HashSet<>();
-
+    private List<Env> environments = new ArrayList<>();
 
 
     private final Project project;
@@ -51,9 +38,17 @@ public class Environment implements EnvironmentsSupplier {
 
 
     @Override
-    public String getCurrent() {
+    @Nullable
+    public Env getCurrent() {
         return current;
     }
+
+
+    @Override
+    public void setCurrent(@NotNull Env env) {
+        setCurrent(env.getOriginalName());
+    }
+
 
     @Override
     public void setCurrent(@Nullable String newEnv) {
@@ -85,7 +80,7 @@ public class Environment implements EnvironmentsSupplier {
                 envChangeLock.lock();
                 try {
                     //run both refreshEnvironments and updateCurrentEnv under same lock
-                    if (environments.isEmpty() || !environments.contains(newEnv)) {
+                    if (environments.isEmpty() || !contains(newEnv)) {
                         refreshEnvironments();
                     }
                     updateCurrentEnv(newEnv, refreshInsightsView);
@@ -104,21 +99,23 @@ public class Environment implements EnvironmentsSupplier {
 
             Backgroundable.ensureBackground(project, "Digma: environment changed " + newEnv, task);
         } catch (Throwable e) {
-            ErrorReporter.getInstance().reportError("Environment.setCurrent", e);
+            ErrorReporter.getInstance().reportError(project, "Environment.setCurrent", e);
         }
     }
 
 
     @NotNull
     @Override
-    public List<String> getEnvironments() {
+    public List<Env> getEnvironments() {
         return environments;
     }
 
+    @NotNull
     @Override
-    public boolean hasUsages(@NotNull String env) {
-        return environmentsWithUsages.contains(env);
+    public List<String> getEnvironmentsNames() {
+        return getEnvironments().stream().map(Env::getOriginalName).toList();
     }
+
 
     @Override
     public void refreshNowOnBackground() {
@@ -153,21 +150,24 @@ public class Environment implements EnvironmentsSupplier {
             Log.log(LOGGER::trace, "Refresh Environments called");
 
             Log.log(LOGGER::trace, "Refreshing Environments list");
-            var newEnvironments = analyticsService.getEnvironments();
-            var newEnvsWithUsages = getEnvsWithUsages();
-            if (newEnvironments != null && !newEnvironments.isEmpty()) {
-                Log.log(LOGGER::trace, "Got environments {}", newEnvironments);
+            List<String> envsFromBackend = analyticsService.getRawEnvironments();
+
+            if (envsFromBackend.isEmpty()) {
+                Log.log(LOGGER::warn, "Error loading environments or no environments added yet: {}", envsFromBackend);
+                envsFromBackend = new ArrayList<>();
             } else {
-                Log.log(LOGGER::warn, "Error loading environments or no environments added yet: {}", newEnvironments);
-                newEnvironments = new ArrayList<>();
+                Log.log(LOGGER::trace, "Got environments {}", envsFromBackend);
             }
 
-            if (collectionsEquals(newEnvironments, environments) && collectionsEquals(newEnvsWithUsages, environmentsWithUsages)) {
+
+            var newEnvironments = envsFromBackend.stream().map(Env::toEnv).toList();
+
+
+            if (collectionsEquals(newEnvironments, environments)) {
                 return;
             }
 
             this.environments = newEnvironments;
-            this.environmentsWithUsages = newEnvsWithUsages;
             notifyEnvironmentsListChange();
 
         } finally {
@@ -181,24 +181,16 @@ public class Environment implements EnvironmentsSupplier {
         }
     }
 
-    private Set<String> getEnvsWithUsages() {
 
-        try {
-            var usageStatusResult = analyticsService.getEnvironmentsUsageStatus();
-            return usageStatusResult.getCodeObjectStatuses().stream().map(CodeObjectUsageStatus::getEnvironment).collect(Collectors.toSet());
-        } catch (AnalyticsServiceException e) {
-            ErrorReporter.getInstance().reportError(project, "Environment.getEnvsWithUsages", e);
-            return Collections.emptySet();
-        }
-    }
 
 
     private void updateCurrentEnv(@Nullable String preferred, boolean refreshInsightsView) {
 
         var oldEnv = current;
 
-        if (preferred != null && this.environments.contains(preferred)) {
-            current = preferred;
+        var optionalEnv = find(preferred);
+        if (optionalEnv.isPresent()) {
+            current = optionalEnv.get();
         } else if (current == null || !this.environments.contains(current)) {
             current = environments.isEmpty() ? null : environments.get(0);
         }
@@ -206,7 +198,7 @@ public class Environment implements EnvironmentsSupplier {
         if (current != null) {
             //don't update the persistent data with null,null will happen on connection lost,
             //so when connection is back the current env can be restored to the last one.
-            PersistenceService.getInstance().setCurrentEnv(current);
+            PersistenceService.getInstance().setCurrentEnv(current.getOriginalName());
         }
 
         if (!Objects.equals(oldEnv, current)) {
@@ -214,14 +206,23 @@ public class Environment implements EnvironmentsSupplier {
         }
     }
 
+    private Optional<Env> find(String envToFind) {
+        return environments.stream().filter(env -> env.getOriginalName().equals(envToFind)).findFirst();
+    }
 
-    private boolean collectionsEquals(Collection<String> envs1, Collection<String> envs2) {
+    private boolean contains(String envToFind) {
+        return environments.stream().anyMatch(env -> env.getOriginalName().equals(envToFind));
+    }
+
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private boolean collectionsEquals(Collection envs1, Collection envs2) {
         if (envs1 == null && envs2 == null) {
             return true;
         }
 
         if (envs1 != null && envs2 != null && envs1.size() == envs2.size()) {
-            return new HashSet<>(envs1).containsAll(envs2);
+            return new HashSet(envs1).containsAll(envs2);
         }
 
         return false;
@@ -243,7 +244,7 @@ public class Environment implements EnvironmentsSupplier {
     }
 
 
-    private void notifyEnvironmentChanged(String oldEnv, String newEnv, boolean refreshInsightsView) {
+    private void notifyEnvironmentChanged(Env oldEnv, Env newEnv, boolean refreshInsightsView) {
         Log.log(LOGGER::trace, "Firing EnvironmentChanged event for {}", newEnv);
         if (project.isDisposed()) {
             return;
@@ -256,13 +257,6 @@ public class Environment implements EnvironmentsSupplier {
             EnvironmentChanged publisher = project.getMessageBus().syncPublisher(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC);
             publisher.environmentChanged(newEnv, refreshInsightsView);
         });
-    }
-
-
-    //this method is for internal use of the package
-    void notifyChange(String oldEnv) {
-        notifyEnvironmentsListChange();
-        notifyEnvironmentChanged(oldEnv,current,true);
     }
 
 

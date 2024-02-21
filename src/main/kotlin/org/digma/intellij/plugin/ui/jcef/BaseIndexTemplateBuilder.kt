@@ -7,6 +7,7 @@ import com.intellij.openapi.project.Project
 import freemarker.template.Configuration
 import freemarker.template.Template
 import freemarker.template.TemplateExceptionHandler
+import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
@@ -62,7 +63,7 @@ abstract class BaseIndexTemplateBuilder(resourceFolderName: String, private val 
             data[IS_JAEGER_ENABLED] = isJaegerButtonEnabled()
             data[USER_EMAIL_VARIABLE] = PersistenceService.getInstance().getUserEmail() ?: ""
             data[USER_REGISTRATION_EMAIL_VARIABLE] = PersistenceService.getInstance().getUserRegistrationEmail() ?: ""
-            data[IS_OBSERVABILITY_ENABLED_VARIABLE] = PersistenceService.getInstance().isAutoOtel()
+            data[IS_OBSERVABILITY_ENABLED_VARIABLE] = PersistenceService.getInstance().isObservabilityEnabled()
             data[IS_DIGMA_ENGINE_INSTALLED] = service<DockerService>().isEngineInstalled()
             data[IS_DIGMA_ENGINE_RUNNING] = service<DockerService>().isEngineRunning(project)
             data[IS_DOCKER_INSTALLED] = service<DockerService>().isDockerInstalled()
@@ -70,7 +71,13 @@ abstract class BaseIndexTemplateBuilder(resourceFolderName: String, private val 
             data[DIGMA_API_URL] = SettingsState.getInstance().apiUrl
             data[JAEGER_URL] = getJaegerUrl() ?: ""
             data[IS_MICROMETER_PROJECT] = SpringBootMicrometerConfigureDepsService.isSpringBootWithMicrometer()
-            data[ENVIRONMENT] = PersistenceService.getInstance().getCurrentEnv() ?: ""
+            data[ENVIRONMENT] = PersistenceService.getInstance().getCurrentEnv()?.let { currentEnvFromPersistence ->
+                if (AnalyticsService.getInstance(project).environment.getCurrent() == null) {
+                    AnalyticsService.getInstance(project).environment.setCurrent(currentEnvFromPersistence)
+                }
+                AnalyticsService.getInstance(project).environment.getCurrent()?.let { serializeObjectToJson(it) }
+
+            } ?: "undefined"
 
             addAppSpecificEnvVariable(project, data)
 
@@ -81,7 +88,7 @@ abstract class BaseIndexTemplateBuilder(resourceFolderName: String, private val 
 
         } catch (e: Exception) {
             Log.debugWithException(logger, e, "error creating template for index.html")
-            ErrorReporter.getInstance().reportError("BaseIndexTemplateBuilder.build", e)
+            ErrorReporter.getInstance().reportError(project, "BaseIndexTemplateBuilder.build", e)
             null
         }
     }

@@ -8,9 +8,7 @@ import com.intellij.openapi.project.Project
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import org.digma.intellij.plugin.analytics.AnalyticsProviderException
 import org.digma.intellij.plugin.analytics.AnalyticsService
-import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
@@ -59,9 +57,9 @@ class LoadStatusService(private val project: Project) : Disposable {
 
         try {
             val response = analyticsService.loadStatus
-            if(!response.isEmpty){
+            if (!response.isEmpty) {
                 lastLoadStatus = response.get()
-                Log.log(logger::debug,"got load status response {}", lastLoadStatus)
+                Log.log(logger::debug, "got load status response {}", lastLoadStatus)
             }
         } catch (e: Throwable) {
             Log.log(logger::debug, "AnalyticsServiceException for getLoadStatus: {}", e.message)
@@ -71,6 +69,7 @@ class LoadStatusService(private val project: Project) : Disposable {
             affectedPanel?.reset()
         }
     }
+
     override fun dispose() {
     }
 }

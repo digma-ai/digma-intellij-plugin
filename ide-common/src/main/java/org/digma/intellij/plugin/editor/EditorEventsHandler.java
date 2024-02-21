@@ -12,9 +12,8 @@ import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.*;
-import org.digma.intellij.plugin.navigation.NavigationModel;
 import org.digma.intellij.plugin.psi.*;
-import org.digma.intellij.plugin.ui.*;
+import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
 import org.jetbrains.annotations.NotNull;
 
 import static org.digma.intellij.plugin.common.AlarmUtilsKt.addRequestWithErrorReporting;
@@ -69,11 +68,13 @@ public class EditorEventsHandler implements FileEditorManagerListener {
     @Override
     public void selectionChanged(@NotNull FileEditorManagerEvent editorManagerEvent) {
         try {
-            //enable code navigation every time editor tab is closed or changed
-            project.getService(NavigationModel.class).getShowCodeNavigation().set(true);
+
+            if (!ProjectUtilsKt.isProjectValid(project)) {
+                return;
+            }
 
             selectionChangedImpl(editorManagerEvent);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             Log.warnWithException(LOGGER, e, "Exception in selectionChanged");
             ErrorReporter.getInstance().reportError(project, "EditorEventsHandler.selectionChanged", e);
         }
@@ -140,8 +141,11 @@ public class EditorEventsHandler implements FileEditorManagerListener {
             //info or to discover spans. and anyway our tool window will not be shown on dumb mode.
             Backgroundable.executeOnPooledThread(() -> {
 
+                if (!VfsUtilsKt.isValidVirtualFile(newFile)) {
+                    return;
+                }
 
-                PsiFile psiFile = PsiAccessUtilsKt.runInReadAccessInSmartModeWithResult(project, () -> PsiManager.getInstance(project).findFile(newFile));
+                PsiFile psiFile = PsiAccessUtilsKt.runInReadAccessWithResult(() -> PsiManager.getInstance(project).findFile(newFile));
 
                 if (!PsiUtils.isValidPsiFile(psiFile)) {
                     Log.log(LOGGER::trace, "No psi file for :{}", newFile);
@@ -199,6 +203,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
                                 LanguageService languageService1 = languageServiceLocator.locate(psiFile1.getLanguage());
                                 MethodUnderCaret methodUnderCaret = languageService1.detectMethodUnderCaret(project, psiFile1, selectedTextEditor, offset);
                                 Log.log(LOGGER::trace, "Found MethodUnderCaret for :{}, '{}'", newFile, methodUnderCaret);
+                                LatestMethodUnderCaretHolder.getInstance(project).saveLatestMethodUnderCaret(project, languageService1, methodUnderCaret.getId());
                                 caretContextService.contextChanged(methodUnderCaret);
                                 Log.log(LOGGER::trace, "contextChanged for :{}, '{}'", newFile, methodUnderCaret);
                             });
@@ -206,9 +211,11 @@ public class EditorEventsHandler implements FileEditorManagerListener {
 
                         } else if (psiFile1 != null) {
                             Log.log(LOGGER::trace, "file not supported :{}, calling contextEmptyNonSupportedFile", newFile);
+                            LatestMethodUnderCaretHolder.getInstance(project).clearLatestMethodInfo();
                             caretContextService.contextEmptyNonSupportedFile(psiFile1.getVirtualFile().getPath());
                         } else {
                             Log.log(LOGGER::trace, "calling contextEmpty for {}", newFile);
+                            LatestMethodUnderCaretHolder.getInstance(project).clearLatestMethodInfo();
                             caretContextService.contextEmpty();
                         }
                     } else {
@@ -307,14 +314,17 @@ public class EditorEventsHandler implements FileEditorManagerListener {
                 } else {
                     Log.log(LOGGER::trace, "updateContextAfterFileClosed no psi file for {}, calling contextEmptyNonSupportedFile", selectedFile);
                     addRequestWithErrorReporting(contextChangeAlarmAfterFileClosed, () -> caretContextService.contextEmptyNonSupportedFile(selectedFile.getPath()), 200, "EditorEventsHandler.updateContextAfterFileClosed");
+                    LatestMethodUnderCaretHolder.getInstance(project).clearLatestMethodInfo();
                 }
             } else {
                 Log.log(LOGGER::trace, "updateContextAfterFileClosed selected file is not relevant {}, calling contextEmptyNonSupportedFile", selectedFile);
                 addRequestWithErrorReporting(contextChangeAlarmAfterFileClosed, () -> caretContextService.contextEmptyNonSupportedFile(selectedFile.getPath()), 200, "EditorEventsHandler.updateContextAfterFileClosed");
+                LatestMethodUnderCaretHolder.getInstance(project).clearLatestMethodInfo();
             }
         } else {
             Log.log(LOGGER::trace, "updateContextAfterFileClosed selected no selected editor, calling contextEmpty");
             addRequestWithErrorReporting(contextChangeAlarmAfterFileClosed, caretContextService::contextEmpty, 200, "EditorEventsHandler.updateContextAfterFileClosed");
+            LatestMethodUnderCaretHolder.getInstance(project).clearLatestMethodInfo();
         }
     }
 

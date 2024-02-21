@@ -4,6 +4,7 @@ import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 
+//todo: delete
 open class InsightListViewItem<INSIGHT : CodeObjectInsight>(insight: INSIGHT) :
     ListViewItem<INSIGHT>(insight, sortIndexOf(insight.type)) {
 
@@ -27,6 +28,8 @@ open class InsightListViewItem<INSIGHT : CodeObjectInsight>(insight: INSIGHT) :
                 InsightType.SpanDurationBreakdown -> 68
                 InsightType.SpanNexus -> 69
                 InsightType.SpanQueryOptimization -> 70
+                InsightType.SpanScalingInsufficientData -> 80
+                InsightType.SpanScalingWell -> 90
 
                 // HTTP Endpoints
                 InsightType.EndpointSpaNPlusOne -> 55

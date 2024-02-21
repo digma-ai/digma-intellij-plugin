@@ -3,10 +3,8 @@ package org.digma.intellij.plugin.service;
 import com.intellij.lang.Language;
 import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.document.DocumentInfoService;
-import org.digma.intellij.plugin.psi.LanguageService;
-import org.digma.intellij.plugin.psi.LanguageServiceLocator;
-import org.digma.intellij.plugin.ui.service.ErrorsViewService;
-import org.digma.intellij.plugin.ui.service.InsightsViewService;
+import org.digma.intellij.plugin.psi.*;
+import org.digma.intellij.plugin.ui.service.*;
 import org.jetbrains.annotations.NotNull;
 
 public class InsightsActionsService {
@@ -28,10 +26,10 @@ public class InsightsActionsService {
         languageServiceLocator = project.getService(LanguageServiceLocator.class);
     }
 
-
-    public void showErrorsTab() {
-        errorsViewService.showErrorList();
-    }
+//
+//    public void showErrorsTab() {
+//        errorsViewService.showErrorList();
+//    }
 
     /**
      * This method is called from the functions list panel and should navigate to a function.

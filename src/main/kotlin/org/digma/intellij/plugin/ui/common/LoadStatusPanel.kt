@@ -3,7 +3,6 @@ package org.digma.intellij.plugin.ui.common
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.observable.properties.AtomicProperty
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
 import com.intellij.util.ui.JBUI
@@ -49,7 +48,7 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
         infoIconWrapper.isOpaque = false
         infoIconWrapper.border = JBUI.Borders.empty(2, 0, 0, 5)
         val infoIcon = JLabel(Laf.Icons.Common.Info)
-         infoIconWrapper.add(infoIcon)
+        infoIconWrapper.add(infoIcon)
 
         val linesPanel = JPanel(GridLayout(2, 1, 5, 3))
         linesPanel.isOpaque = false
@@ -57,13 +56,13 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
         val line1Panel = JPanel()
         line1Panel.layout = BoxLayout(line1Panel, BoxLayout.X_AXIS)
         line1Panel.isOpaque = false
-        line1Panel.add(JLabel(asHtml(spanBold("Digma is overloaded")) , SwingConstants.LEFT))
+        line1Panel.add(JLabel(asHtml(spanBold("Digma is overloaded")), SwingConstants.LEFT))
 
         val line2Panel = JPanel()
         line2Panel.layout = BoxLayout(line2Panel, BoxLayout.X_AXIS)
         line2Panel.isOpaque = false
         line2Panel.add(JLabel("Please consider deploying Digma ", SwingConstants.LEFT))
-        line2Panel.add(ActionLink("centrally"){
+        line2Panel.add(ActionLink("centrally") {
             ActivityMonitor.getInstance(project).registerButtonClicked(MonitoredPanel.Notifications, "digma-for-teams-link")
             BrowserUtil.browse(Links.DIGMA_FOR_TEAMS_URL, project)
         })
@@ -81,18 +80,18 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
     }
 
     override fun reset() {
-        if(service.lastLoadStatus.occurredRecently){
-            if(!isVisible){
+        if (service.lastLoadStatus.occurredRecently) {
+            if (!isVisible) {
                 isVisible = true
                 ActivityMonitor.getInstance(project).registerLoadWarning(
                     service.lastLoadStatus.description ?: "",
-                    service.lastLoadStatus.lastUpdated)
+                    service.lastLoadStatus.lastUpdated
+                )
             }
             toolTipText = service.lastLoadStatus.description +
                     "<br/>" +
                     "Last occurred at " + service.lastLoadStatus.lastUpdated;
-        }
-        else{
+        } else {
             isVisible = false
         }
     }

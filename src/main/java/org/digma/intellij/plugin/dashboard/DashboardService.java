@@ -4,23 +4,16 @@ import com.intellij.openapi.components.Service;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
-
-import org.digma.intellij.plugin.analytics.AnalyticsService;
-import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
+import org.digma.intellij.plugin.analytics.*;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.dashboard.incoming.GoToSpan;
-import org.digma.intellij.plugin.insights.InsightsViewOrchestrator;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.navigation.HomeSwitcherService;
-import org.digma.intellij.plugin.navigation.InsightsAndErrorsTabsHelper;
-import org.digma.intellij.plugin.posthog.ActivityMonitor;
-import org.digma.intellij.plugin.posthog.MonitoredPanel;
-import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
+import org.digma.intellij.plugin.posthog.*;
+import org.digma.intellij.plugin.scope.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.InputStream;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 @Service(Service.Level.PROJECT)
 public final class DashboardService {
@@ -84,20 +77,15 @@ public final class DashboardService {
         return AnalyticsService.getInstance(project).getDashboard(queryParams);
     }
 
-    public void goToSpanAndNavigateToCode(GoToSpan goToSpan) {
+    public void goToSpan(GoToSpan goToSpan) {
 
         Log.log(logger::debug, project, "goToSpan request {}", goToSpan);
 
+        ActivityMonitor.getInstance(project).registerSpanLinkClicked(MonitoredPanel.Dashboard);
+
         var span = goToSpan.payload();
 
-        Log.log(logger::debug, project, "calling showInsightsForSpanOrMethodAndNavigateToCode from goToSpan for {}", span);
-
-        EDT.ensureEDT(() -> {
-            MainToolWindowCardsController.getInstance(project).closeAllNotificationsIfShowing();
-            project.getService(HomeSwitcherService.class).switchToInsights();
-            project.getService(InsightsAndErrorsTabsHelper.class).switchToInsightsTab();
-            ActivityMonitor.getInstance(project).registerSpanLinkClicked(MonitoredPanel.Dashboard);
-            project.getService(InsightsViewOrchestrator.class).showInsightsForCodelessSpan(span.spanCodeObjectId());
-        });
+        var environmentsSupplier = AnalyticsService.getInstance(project).getEnvironment();
+        environmentsSupplier.setCurrent(span.environment(), false, () -> ScopeManager.getInstance(project).changeScope(new SpanScope(span.spanCodeObjectId())));
     }
 }

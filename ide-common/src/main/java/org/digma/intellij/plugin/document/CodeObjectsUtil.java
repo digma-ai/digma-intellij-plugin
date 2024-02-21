@@ -3,8 +3,7 @@ package org.digma.intellij.plugin.document;
 import kotlin.Pair;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 
 public class CodeObjectsUtil {
@@ -81,6 +80,7 @@ public class CodeObjectsUtil {
         return shortPart.replace("$_$", ".");
     }
 
+
     @NotNull
     public static Pair<String, String> getMethodClassAndName(@NotNull String methodId) {
 
@@ -95,4 +95,5 @@ public class CodeObjectsUtil {
 
         return new Pair<>(className, methodName);
     }
+
 }

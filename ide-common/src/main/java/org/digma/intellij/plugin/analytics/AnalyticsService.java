@@ -3,78 +3,48 @@ package org.digma.intellij.plugin.analytics;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.diagnostic.RuntimeExceptionWithAttachments;
+import com.intellij.openapi.diagnostic.*;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.JBColor;
 import com.intellij.util.Alarm;
 import org.apache.commons.lang3.time.StopWatch;
-import org.digma.intellij.plugin.common.CommonUtils;
-import org.digma.intellij.plugin.common.EDT;
-import org.digma.intellij.plugin.common.ExceptionUtils;
+import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.document.CodeObjectsUtil;
+import org.digma.intellij.plugin.env.Env;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightType;
+import org.digma.intellij.plugin.model.discovery.EndpointInfo;
+import org.digma.intellij.plugin.model.discovery.SpanInfo;
 import org.digma.intellij.plugin.model.discovery.*;
 import org.digma.intellij.plugin.model.rest.AboutResult;
+import org.digma.intellij.plugin.model.rest.assets.AssetDisplayInfo;
 import org.digma.intellij.plugin.model.rest.codelens.*;
+import org.digma.intellij.plugin.model.rest.codespans.CodeContextSpans;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
-import org.digma.intellij.plugin.model.rest.env.DeleteEnvironmentRequest;
-import org.digma.intellij.plugin.model.rest.env.DeleteEnvironmentResponse;
+import org.digma.intellij.plugin.model.rest.env.*;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
-import org.digma.intellij.plugin.model.rest.event.LatestCodeObjectEventsRequest;
-import org.digma.intellij.plugin.model.rest.event.LatestCodeObjectEventsResponse;
-import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
-import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsightsStatusResponse;
-import org.digma.intellij.plugin.model.rest.insights.CustomStartTimeInsightRequest;
-import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsRequest;
-import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse;
-import org.digma.intellij.plugin.model.rest.insights.InsightsOfSingleSpanRequest;
-import org.digma.intellij.plugin.model.rest.insights.InsightsOfSingleSpanResponse;
-import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
-import org.digma.intellij.plugin.model.rest.insights.LinkTicketRequest;
-import org.digma.intellij.plugin.model.rest.insights.LinkUnlinkTicketResponse;
-import org.digma.intellij.plugin.model.rest.insights.MethodWithCodeObjects;
-import org.digma.intellij.plugin.model.rest.insights.SpanHistogramQuery;
-import org.digma.intellij.plugin.model.rest.insights.UnlinkTicketRequest;
-import org.digma.intellij.plugin.model.rest.livedata.DurationLiveData;
-import org.digma.intellij.plugin.model.rest.livedata.DurationLiveDataRequest;
-import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigation;
-import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigationRequest;
-import org.digma.intellij.plugin.model.rest.notifications.GetUnreadNotificationsCountRequest;
-import org.digma.intellij.plugin.model.rest.notifications.NotificationsRequest;
-import org.digma.intellij.plugin.model.rest.notifications.SetReadNotificationsRequest;
-import org.digma.intellij.plugin.model.rest.notifications.UnreadNotificationsCountResponse;
-import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest;
-import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
+import org.digma.intellij.plugin.model.rest.event.*;
+import org.digma.intellij.plugin.model.rest.insights.*;
+import org.digma.intellij.plugin.model.rest.livedata.*;
+import org.digma.intellij.plugin.model.rest.navigation.*;
+import org.digma.intellij.plugin.model.rest.notifications.*;
+import org.digma.intellij.plugin.model.rest.recentactivity.*;
 import org.digma.intellij.plugin.model.rest.testing.LatestTestsOfSpanRequest;
-import org.digma.intellij.plugin.model.rest.tests.FilterForLatestTests;
-import org.digma.intellij.plugin.model.rest.tests.TestsScopeRequest;
-import org.digma.intellij.plugin.model.rest.usage.EnvUsageStatusResult;
-import org.digma.intellij.plugin.model.rest.usage.EnvsUsageStatusRequest;
-import org.digma.intellij.plugin.model.rest.user.UserUsageStatsRequest;
-import org.digma.intellij.plugin.model.rest.user.UserUsageStatsResponse;
-import org.digma.intellij.plugin.model.rest.version.PerformanceMetricsResponse;
-import org.digma.intellij.plugin.model.rest.version.VersionRequest;
-import org.digma.intellij.plugin.model.rest.version.VersionResponse;
-import org.digma.intellij.plugin.model.rest.version.LoadStatusResponse;
+import org.digma.intellij.plugin.model.rest.tests.*;
+import org.digma.intellij.plugin.model.rest.usage.*;
+import org.digma.intellij.plugin.model.rest.user.*;
+import org.digma.intellij.plugin.model.rest.version.*;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.VisibleForTesting;
+import org.jetbrains.annotations.*;
 
-import java.io.Closeable;
-import java.io.IOException;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.UndeclaredThrowableException;
+import java.io.*;
+import java.lang.reflect.*;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -84,14 +54,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static org.digma.intellij.plugin.analytics.EnvironmentRefreshSchedulerKt.scheduleEnvironmentRefresh;
-import static org.digma.intellij.plugin.common.EnvironmentUtilKt.isEnvironmentLocal;
-import static org.digma.intellij.plugin.common.EnvironmentUtilKt.isEnvironmentLocalTests;
-import static org.digma.intellij.plugin.common.EnvironmentUtilKt.isLocalEnvironmentMine;
-import static org.digma.intellij.plugin.common.ExceptionUtils.getConnectExceptionMessage;
-import static org.digma.intellij.plugin.common.ExceptionUtils.getSslExceptionMessage;
-import static org.digma.intellij.plugin.common.ExceptionUtils.isConnectionException;
-import static org.digma.intellij.plugin.common.ExceptionUtils.isEOFException;
-import static org.digma.intellij.plugin.common.ExceptionUtils.isSslConnectionException;
+import static org.digma.intellij.plugin.common.ExceptionUtils.*;
 
 
 public class AnalyticsService implements Disposable {
@@ -198,28 +161,26 @@ public class AnalyticsService implements Disposable {
     }
 
 
-    @Nullable
-    public List<String> getEnvironments() {
+    @NotNull
+    public List<String> getRawEnvironments() {
         try {
+
             var environments = analyticsProviderProxy.getEnvironments();
-            var hostName = CommonUtils.getLocalHostname();
-            //filter out other LOCAL environments, keep only mine LOCAL
-            return environments.stream()
-                    .filter(env -> (!isEnvironmentLocal(env) && !isEnvironmentLocalTests(env)) || isLocalEnvironmentMine(env, hostName))
-                    .toList();
+
+            return Env.filterRawEnvironments(environments);
+
         } catch (Exception e) {
             //getEnvironments should never throw exception.
-            // it is called only from this class or from the Environment object and both can handle null.
-            return null;
+            return Collections.emptyList();
         }
     }
 
     private String getCurrentEnvironment() throws AnalyticsServiceException {
-        String currentEnv = environment.getCurrent();
-        if (currentEnv == null || currentEnv.isEmpty()) {
+        Env currentEnv = environment.getCurrent();
+        if (currentEnv == null || currentEnv.getOriginalName().isEmpty()) {
             throw new NoSelectedEnvironmentException("No selected environment");
         }
-        return currentEnv;
+        return currentEnv.getOriginalName();
     }
 
 
@@ -232,7 +193,7 @@ public class AnalyticsService implements Disposable {
 
 
     public LatestCodeObjectEventsResponse getLatestEvents(@NotNull String lastReceivedTime) throws AnalyticsServiceException {
-        return executeCatching(() -> analyticsProviderProxy.getLatestEvents(new LatestCodeObjectEventsRequest(environment.getEnvironments(), lastReceivedTime)));
+        return executeCatching(() -> analyticsProviderProxy.getLatestEvents(new LatestCodeObjectEventsRequest(environment.getEnvironmentsNames(), lastReceivedTime)));
     }
 
 
@@ -267,6 +228,14 @@ public class AnalyticsService implements Disposable {
         var env = getCurrentEnvironment();
         Log.log(LOGGER::debug, "Requesting insights for span {}", spanId);
         return executeCatching(() -> analyticsProviderProxy.getInsightsForSingleSpan(new InsightsOfSingleSpanRequest(env, CodeObjectsUtil.addSpanTypeToId(spanId))));
+    }
+
+
+    @NotNull
+    public CodeContextSpans getSpansForCodeLocation(@NotNull List<String> idsWithType) throws AnalyticsServiceException {
+        var env = getCurrentEnvironment();
+        Log.log(LOGGER::debug, "Requesting spans for code objects {}", idsWithType);
+        return executeCatching(() -> analyticsProviderProxy.getSpansForCodeLocation(env, idsWithType));
     }
 
 
@@ -306,6 +275,12 @@ public class AnalyticsService implements Disposable {
         var request = new CodeLensOfMethodsRequest(env, methods);
         var response = executeCatching(() -> analyticsProviderProxy.getCodeLensByMethods(request));
         return response;
+    }
+
+
+    public AssetDisplayInfo getAssetDisplayInfo(String codeObjectId) throws AnalyticsServiceException {
+        var env = getCurrentEnvironment();
+        return executeCatching(() -> analyticsProviderProxy.getAssetDisplayInfo(env, codeObjectId));
     }
 
     public InsightsOfMethodsResponse getInsightsOfMethods(List<MethodInfo> methodInfos) throws AnalyticsServiceException {
@@ -434,7 +409,6 @@ public class AnalyticsService implements Disposable {
     }
 
     public String getAssetFilters(@NotNull Map<String, Object> queryParams) throws AnalyticsServiceException {
-        var env = getCurrentEnvironment();
         return executeCatching(() ->
                 analyticsProviderProxy.getAssetFilters(queryParams));
     }
@@ -500,6 +474,16 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.getDashboard(queryParams));
     }
 
+    public String getInsights(@NotNull Map<String, Object> queryParams) throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.getInsights(queryParams));
+    }
+
+    @NotNull
+    public AssetNavigationResponse getAssetNavigation(@NotNull String spanCodeObjectId) throws AnalyticsServiceException {
+        var env = getCurrentEnvironment();
+        return executeCatching(() -> analyticsProviderProxy.getAssetNavigation(env, spanCodeObjectId));
+    }
+
     @Override
     public void dispose() {
         try {
@@ -542,6 +526,7 @@ public class AnalyticsService implements Disposable {
                 new Class[]{AnalyticsProvider.class, Closeable.class},
                 new AnalyticsInvocationHandler(obj));
     }
+
 
     /**
      * A proxy for cross-cutting concerns across all api methods.

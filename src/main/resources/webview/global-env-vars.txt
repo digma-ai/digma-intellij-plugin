@@ -15,3 +15,4 @@
       window.digmaApiUrl = "${digmaApiUrl}";
       window.jaegerURL = "${jaegerURL}";
       window.isMicrometerProject = ${isMicrometerProject?string('true', 'false')};
+      window.environment = ${environment};

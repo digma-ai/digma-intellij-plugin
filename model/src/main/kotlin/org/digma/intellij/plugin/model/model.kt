@@ -31,20 +31,20 @@ enum class InsightType {
     SpanScaling,
     SpanScalingRootCause,
     SpanNexus,
-    SpanQueryOptimization
-    ;
+    SpanQueryOptimization,
+    SpanScalingInsufficientData,
+    SpanScalingWell;
 }
 
 enum class InsightImportance(val priority: Int) {
-    Spam(9),
-    Clutter(8),
-    NotInteresting(7),
-    Info(6),
-
-    Interesting(5),
-    Important(4),
-
-    HighlyImportant(3),
+    HCF(0),
+    ShowStopper(1),
     Critical(2),
-    ShowStopper(1)
+    HighlyImportant(3),
+    Important(4),
+    Interesting(5),
+    Info(6),
+    NotInteresting(7),
+    Clutter(8),
+    Spam(9)
 }

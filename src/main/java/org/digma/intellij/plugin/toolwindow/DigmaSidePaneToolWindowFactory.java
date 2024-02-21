@@ -2,10 +2,8 @@ package org.digma.intellij.plugin.toolwindow;
 
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.wm.ToolWindow;
-import com.intellij.openapi.wm.ToolWindowFactory;
+import com.intellij.openapi.wm.*;
 import com.intellij.ui.content.ContentFactory;
 import com.intellij.util.ui.JBUI;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
@@ -15,20 +13,16 @@ import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.troubleshooting.TroubleshootingPanel;
-import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
-import org.digma.intellij.plugin.ui.ToolWindowShower;
-import org.digma.intellij.plugin.ui.common.ContentPanel;
+import org.digma.intellij.plugin.ui.*;
+import org.digma.intellij.plugin.ui.common.MainContentPanel;
 import org.digma.intellij.plugin.ui.common.statuspanels.NoConnectionPanelKt;
 import org.digma.intellij.plugin.ui.notifications.AllNotificationsPanel;
 import org.digma.intellij.plugin.ui.panels.DisposablePanel;
-import org.digma.intellij.plugin.ui.service.ErrorsViewService;
-import org.digma.intellij.plugin.ui.service.InsightsViewService;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.function.*;
 
 import static org.digma.intellij.plugin.ui.common.InstallationWizardSidePanelWindowPanelKt.createInstallationWizardSidePanelWindowPanel;
 import static org.digma.intellij.plugin.ui.common.MainToolWindowPanelKt.createMainToolWindowPanel;
@@ -72,14 +66,17 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
 
         ToolWindowShower.getInstance(project).setToolWindow(toolWindow);
 
-        var contentPanel = new ContentPanel(project);
+        //contentPanel contains the main views, insights,assets,errors and tests
+        var contentPanel = new MainContentPanel(project);
+        //mainToolWindowPanel contains the navigation and update panels and the contentPanel
         var mainToolWindowPanel = createMainToolWindowPanel(project,contentPanel);
-        var cardsPanel = createCardsPanel(project,mainToolWindowPanel,AnalyticsService.getInstance(project));
-        var mainContent =  ContentFactory.getInstance().createContent(cardsPanel, null, false);
+        //mainCardsPanel contains the mainToolWindowPanel and no connection panel
+        var mainCardsPanel = createCardsPanel(project, mainToolWindowPanel, AnalyticsService.getInstance(project));
+        //mainContent contains the mainCardsPanel ,MainToolWindowCardsController switches between no connection and mainToolWindowPanel
+        var mainContent = ContentFactory.getInstance().createContent(mainCardsPanel, null, false);
+
         toolWindow.getContentManager().addContent(mainContent);
 
-        //start at home
-        MainToolWindowCardsController.getInstance(project).showHome();
 
         //the mainContent is added by default to the tool window. it will be replaced if we need to show
         // the wizard.
@@ -95,7 +92,7 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
 
         Supplier<DisposablePanel> allNotificationsPanelBuilder = () -> new AllNotificationsPanel(project);
 
-        MainToolWindowCardsController.getInstance(project).initComponents(toolWindow, mainContent, cardsPanel, contentPanel,
+        MainToolWindowCardsController.getInstance(project).initComponents(toolWindow, mainContent, mainCardsPanel,
                 wizardPanelBuilder,
                 troubleshootingPanelBuilder,
                 allNotificationsPanelBuilder);
@@ -108,11 +105,6 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
             ActivityMonitor.getInstance(project).registerCustomEvent("skip-installation-wizard", null);
         }
 
-
-        //todo: runWhenSmart is ok for java,python , but in Rider runWhenSmart does not guarantee that the solution
-        // is fully loaded. consider replacing that with LanguageService.runWhenSmartForAll so that C# language service
-        // can run this task when the solution is fully loaded.
-        DumbService.getInstance(project).runWhenSmart(() -> initializeWhenSmart(project));
     }
 
     private JPanel createCardsPanel(@NotNull Project project, @NotNull JPanel mainPanel, Disposable parentDisposable) {
@@ -138,21 +130,4 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
     }
 
 
-    private void initializeWhenSmart(@NotNull Project project) {
-
-        Log.log(LOGGER::debug, "in initializeWhenSmart, dumb mode is {}", DumbService.isDumb(project));
-
-        //sometimes the views models are updated before the tool window is initialized.
-        //it happens when files are re-opened early before the tool window, and CaretContextService.contextChanged
-        //is invoked and updates the models.
-        //only at this stage the panels are constructed already. just calling updateUi() for all view services
-        // will actually update the UI.
-        //todo: probably not necessary, EditorEventsHandler.selectionChanged loads DocumentInfo and
-        // calls contextChanged only in smart mode. and in smart mode the panels should be constructed already.
-        // needs some testing.
-        // on the other hand if the tool window is opened after EditorEventsHandler.selectionChanged then the
-        // models will be populated with data but updateUi was not invoked
-        project.getService(InsightsViewService.class).updateUi();
-        project.getService(ErrorsViewService.class).updateUi();
-    }
 }

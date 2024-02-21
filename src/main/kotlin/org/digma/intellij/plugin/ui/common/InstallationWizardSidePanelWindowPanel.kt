@@ -59,13 +59,11 @@ import org.digma.intellij.plugin.persistence.updateInstallationWizardFlag
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
-import org.digma.intellij.plugin.ui.common.ObservabilityUtil.Companion.updateObservabilityValue
 import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest
 import org.digma.intellij.plugin.ui.jcef.updateDigmaEngineStatus
 import org.digma.intellij.plugin.ui.list.insights.isJaegerButtonEnabled
 import org.digma.intellij.plugin.ui.panels.DisposablePanel
 import org.digma.intellij.plugin.ui.recentactivity.RecentActivityToolWindowShower
-import org.digma.intellij.plugin.ui.recentactivity.RecentActivityUpdater
 import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier
 import org.digma.intellij.plugin.ui.settings.SettingsChangeListener
 import org.digma.intellij.plugin.ui.settings.Theme
@@ -109,7 +107,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
     val indexTemplateData = mutableMapOf<String, Any>(
         ENV_VARIABLE_IDE to ApplicationNamesInfo.getInstance().productName, //Available values: "IDEA", "Rider", "PyCharm"
         USER_EMAIL_VARIABLE to (PersistenceService.getInstance().getUserEmail() ?: ""),
-        IS_OBSERVABILITY_ENABLED_VARIABLE to PersistenceService.getInstance().isAutoOtel(),
+        IS_OBSERVABILITY_ENABLED_VARIABLE to PersistenceService.getInstance().isObservabilityEnabled(),
         IS_DOCKER_INSTALLED to service<DockerService>().isDockerInstalled(),
         IS_DOCKER_COMPOSE_INSTALLED to service<DockerService>().isDockerInstalled(),
         IS_DIGMA_ENGINE_INSTALLED to service<DockerService>().isEngineInstalled(),
@@ -187,7 +185,6 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                 )
                 if (payload != null) {
                     updateObservabilityValue(project, payload.isObservabilityEnabled)
-                    project.service<RecentActivityUpdater>().updateSetObservability(payload.isObservabilityEnabled)
                 }
             }
             if (JCefMessagesUtils.INSTALLATION_WIZARD_FINISH.equals(action, ignoreCase = true)) {
@@ -519,7 +516,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                     val status = service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionLost()
                     updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
                 } catch (e: Exception) {
-                    ErrorReporter.getInstance().reportError("createInstallationWizardSidePanelWindowPanel.connectionLost", e)
+                    ErrorReporter.getInstance().reportError(project, "createInstallationWizardSidePanelWindowPanel.connectionLost", e)
                 }
             }
 
@@ -531,7 +528,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                     val status = service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionGained()
                     updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
                 } catch (e: Exception) {
-                    ErrorReporter.getInstance().reportError("createInstallationWizardSidePanelWindowPanel.connectionGained", e)
+                    ErrorReporter.getInstance().reportError(project, "createInstallationWizardSidePanelWindowPanel.connectionGained", e)
                 }
             }
         })

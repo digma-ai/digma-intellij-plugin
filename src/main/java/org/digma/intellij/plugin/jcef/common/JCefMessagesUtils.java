@@ -1,8 +1,6 @@
 package org.digma.intellij.plugin.jcef.common;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 
 //todo: move all to src/main/kotlin/org/digma/intellij/plugin/ui/jcef/JCEFGlobalConstants.kt
 public class JCefMessagesUtils {
@@ -46,6 +44,13 @@ public class JCefMessagesUtils {
     public static final String GLOBAL_SAVE_TO_PERSISTENCE = "GLOBAL/SAVE_TO_PERSISTENCE";
     public static final String GLOBAL_GET_FROM_PERSISTENCE = "GLOBAL/GET_FROM_PERSISTENCE";
     public static final String GLOBAL_SET_FROM_PERSISTENCE = "GLOBAL/SET_FROM_PERSISTENCE";
+    public static final String GLOBAL_OPEN_DASHBOARD = "GLOBAL/OPEN_DASHBOARD";
+    public static final String GLOBAL_OPEN_INSTALLATION_WIZARD = "GLOBAL/OPEN_INSTALLATION_WIZARD";
+    public static final String GLOBAL_SET_SCOPE = "GLOBAL/SET_SCOPE";
+    public static final String GLOBAL_CHANGE_SCOPE = "GLOBAL/CHANGE_SCOPE";
+    public static final String GLOBAL_SET_STATE = "GLOBAL/SET_STATE";
+    public static final String GLOBAL_UPDATE_STATE = "GLOBAL/UPDATE_STATE";
+    public static final String GLOBAL_GET_STATE = "GLOBAL/GET_STATE";
 
 
     //todo: replace with org.digma.intellij.plugin.ui.jcef.JCefBrowserUtilsKt.jsonToObject

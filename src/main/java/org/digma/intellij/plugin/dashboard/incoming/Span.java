@@ -1,10 +1,6 @@
 package org.digma.intellij.plugin.dashboard.incoming;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -13,7 +9,8 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 @JsonSerialize
 public record Span(
         @JsonProperty(value = "spanCodeObjectId") String spanCodeObjectId,
-        @JsonProperty(value = "type") String type
+        @JsonProperty(value = "type") String type,
+        @JsonProperty(value = "environment") String environment
 ) {
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)

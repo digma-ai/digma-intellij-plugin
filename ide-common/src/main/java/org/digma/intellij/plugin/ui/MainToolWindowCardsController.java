@@ -4,11 +4,8 @@ import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
-import com.intellij.ui.content.Content;
-import com.intellij.ui.content.ContentFactory;
-import org.digma.intellij.plugin.analytics.AnalyticsService;
-import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent;
-import org.digma.intellij.plugin.analytics.BackendConnectionMonitor;
+import com.intellij.ui.content.*;
+import org.digma.intellij.plugin.analytics.*;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.ui.panels.DisposablePanel;
@@ -17,14 +14,13 @@ import org.jetbrains.annotations.NotNull;
 import javax.swing.*;
 import java.awt.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.function.*;
 
 import static org.digma.intellij.plugin.persistence.PersistenceUtilsKt.updateInstallationWizardFlag;
 
 /**
  * Controls the current view in digma tool window.
- * there is a main content and wizard content, home view and insights view.
+ * there is a main content, wizard,troubleshooting ,notifications and no connection.
  * the main content has a no connection empty card and the main card.
  * the tool window should have only one content.
  * Not handling any exceptions in this class. if an exception is thrown we must know that because it's probably a serious bug.
@@ -38,10 +34,6 @@ public class MainToolWindowCardsController implements Disposable {
         MAIN, NO_CONNECTION
     }
 
-    public enum ContentCard {
-        HOME, INSIGHTS
-    }
-
 
     private final Project project;
 
@@ -53,8 +45,6 @@ public class MainToolWindowCardsController implements Disposable {
     //the main card panel, our main view and no-connection panel
     private JPanel cardsPanel;
 
-    //the home and insights cards
-    private JPanel contentPanel;
 
     //wizard content is created and disposed when necessary. WizardComponents keeps the reference to the content and the panel.
     private final WizardComponents wizard = new WizardComponents();
@@ -110,7 +100,6 @@ public class MainToolWindowCardsController implements Disposable {
     public void initComponents(@NotNull ToolWindow toolWindow,
                                @NotNull Content mainContent,
                                @NotNull JPanel mainCardsPanel,
-                               @NotNull JPanel contentPanel,
                                @NotNull Function<Boolean, DisposablePanel> wizardPanelBuilder,
                                Supplier<DisposablePanel> troubleshootingPanelBuilder,
                                Supplier<DisposablePanel> allNotificationsPanelBuilder) {
@@ -124,9 +113,6 @@ public class MainToolWindowCardsController implements Disposable {
         this.mainContent = mainContent;
         Log.log(LOGGER::debug, "got cardPanel {}", mainCardsPanel);
         this.cardsPanel = mainCardsPanel;
-
-        Log.log(LOGGER::debug, "got contentPanel {}", contentPanel);
-        this.contentPanel = contentPanel;
 
         this.wizardPanelBuilder = wizardPanelBuilder;
 
@@ -321,27 +307,6 @@ public class MainToolWindowCardsController implements Disposable {
         } else {
             //FileEditorManager must be called on EDT
             EDT.ensureEDT(() -> showCard(MainWindowCard.MAIN));
-        }
-    }
-
-
-    public void showHome() {
-        showMainPanel();
-        if (contentPanel == null) {
-            Log.log(LOGGER::debug, project, "showHome was called but contentPanel is null");
-        } else {
-            Log.log(LOGGER::debug, project, "Showing home");
-            EDT.ensureEDT(() -> ((CardLayout) contentPanel.getLayout()).show(contentPanel, ContentCard.HOME.name()));
-        }
-    }
-
-    public void showInsights() {
-        showMainPanel();
-        if (contentPanel == null) {
-            Log.log(LOGGER::debug, project, "showInsights was called but contentPanel is null");
-        } else {
-            Log.log(LOGGER::debug, project, "Showing insights");
-            EDT.ensureEDT(() -> ((CardLayout) contentPanel.getLayout()).show(contentPanel, ContentCard.INSIGHTS.name()));
         }
     }
 

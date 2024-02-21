@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.ui.jcef
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
@@ -18,12 +19,18 @@ import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
 import org.digma.intellij.plugin.analytics.EnvironmentChanged
 import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator
 import org.digma.intellij.plugin.docker.DockerService
+import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
 import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil
 import org.digma.intellij.plugin.jcef.common.UserRegistrationEvent
+import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
+import org.digma.intellij.plugin.observability.ObservabilityChanged
+import org.digma.intellij.plugin.scope.ScopeChangedEvent
+import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.ui.jcef.model.BackendInfoMessage
+import org.digma.intellij.plugin.ui.jcef.state.StateChangedEvent
 import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier
 import org.digma.intellij.plugin.ui.settings.SettingsChangeListener
 import org.digma.intellij.plugin.ui.settings.Theme
@@ -47,6 +54,9 @@ private constructor(
     private val connectionEventAlarmParentDisposable = Disposer.newDisposable()
     private val userRegistrationParentDisposable = Disposer.newDisposable()
     private val environmentChangeParentDisposable = Disposer.newDisposable()
+    private val observabilityChangeParentDisposable = Disposer.newDisposable()
+    private val scopeChangeParentDisposable = Disposer.newDisposable()
+    private val stateChangeParentDisposable = Disposer.newDisposable()
 
 
     init {
@@ -80,7 +90,7 @@ private constructor(
                             val status = service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionLost()
                             updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
                         } catch (e: Exception) {
-                            ErrorReporter.getInstance().reportError("JCefComponent.connectionLost", e)
+                            ErrorReporter.getInstance().reportError(project, "JCefComponent.connectionLost", e)
                         }
                     }, 2000)
                 }
@@ -98,7 +108,7 @@ private constructor(
                             serializeAndExecuteWindowPostMessageJavaScript(jbCefBrowser.cefBrowser, message)
 
                         } catch (e: Exception) {
-                            ErrorReporter.getInstance().reportError("JCefComponent.connectionGained", e)
+                            ErrorReporter.getInstance().reportError(project, "JCefComponent.connectionGained", e)
                         }
                     }, 2000)
                 }
@@ -119,17 +129,48 @@ private constructor(
 
         project.messageBus.connect(environmentChangeParentDisposable).subscribe(
             EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC, object : EnvironmentChanged {
-                override fun environmentChanged(newEnv: String?, refreshInsightsView: Boolean) {
+                override fun environmentChanged(newEnv: Env, refreshInsightsView: Boolean) {
                     sendCurrentEnvironment(jbCefBrowser.cefBrowser, newEnv)
                 }
 
-                override fun environmentsListChanged(newEnvironments: MutableList<String>?) {
-                    sendEnvironmentEntities(
+                override fun environmentsListChanged(newEnvironments: MutableList<Env>?) {
+                    sendEnvironmentsList(
                         jbCefBrowser.cefBrowser,
                         AnalyticsService.getInstance(project).environment.getEnvironments()
                     )
                 }
             })
+
+
+        project.messageBus.connect(observabilityChangeParentDisposable).subscribe(
+            ObservabilityChanged.OBSERVABILITY_CHANGED_TOPIC, object : ObservabilityChanged {
+                override fun observabilityChanged(isObservabilityEnabled: Boolean) {
+                    sendObservabilityEnabledMessage(
+                        jbCefBrowser.cefBrowser,
+                        isObservabilityEnabled
+                    )
+                }
+
+            }
+        )
+
+        project.messageBus.connect(scopeChangeParentDisposable).subscribe(
+            ScopeChangedEvent.SCOPE_CHANGED_TOPIC, object : ScopeChangedEvent {
+                override fun scopeChanged(
+                    scope: SpanScope?, codeLocation: CodeLocation, hasErrors: Boolean,
+                ) {
+                    sendScopeChangedMessage(jbCefBrowser.cefBrowser, scope, codeLocation, hasErrors)
+                }
+            }
+        )
+
+        project.messageBus.connect(stateChangeParentDisposable).subscribe(
+            StateChangedEvent.JCEF_STATE_CHANGED_TOPIC, object : StateChangedEvent {
+                override fun stateChanged(state: JsonNode) {
+                    sendJcefStateMessage(jbCefBrowser.cefBrowser, state)
+                }
+            }
+        )
 
     }
 
@@ -141,6 +182,9 @@ private constructor(
             Disposer.dispose(settingsListenerParentDisposable)
             Disposer.dispose(userRegistrationParentDisposable)
             Disposer.dispose(environmentChangeParentDisposable)
+            Disposer.dispose(observabilityChangeParentDisposable)
+            Disposer.dispose(scopeChangeParentDisposable)
+            Disposer.dispose(stateChangeParentDisposable)
             jbCefBrowser.jbCefClient.removeLifeSpanHandler(lifeSpanHandler, jbCefBrowser.cefBrowser)
             jbCefBrowser.dispose()
             cefMessageRouter.dispose()

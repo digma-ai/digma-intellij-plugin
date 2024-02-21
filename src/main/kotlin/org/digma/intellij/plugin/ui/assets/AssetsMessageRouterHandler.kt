@@ -2,7 +2,6 @@ package org.digma.intellij.plugin.ui.assets
 
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.ObjectNode
 import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
@@ -13,9 +12,9 @@ import org.digma.intellij.plugin.ui.assets.model.SetAssetsDataMessage
 import org.digma.intellij.plugin.ui.assets.model.SetCategoriesDataMessage
 import org.digma.intellij.plugin.ui.assets.model.SetServicesDataMessage
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
+import org.digma.intellij.plugin.ui.jcef.getQueryMapFromPayload
 import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
 
-@Suppress("VulnerableCodeUsages") // todo: fix, there is an issue
 class AssetsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(project) {
 
 
@@ -108,9 +107,13 @@ class AssetsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pr
     @Throws(JsonProcessingException::class)
     private fun goToAsset(requestJsonNode: JsonNode) {
         Log.log(logger::trace, project, "got ASSETS/GO_TO_ASSET message")
-        val spanId = objectMapper.readTree(requestJsonNode["payload"].toString())["spanCodeObjectId"].asText()
-        Log.log(logger::trace, project, "got span id {}", spanId)
-        AssetsService.getInstance(project).showAsset(spanId)
+        val payload = getPayloadFromRequest(requestJsonNode)
+        payload?.let { pl ->
+            val spanId = pl.get("spanCodeObjectId").asText()
+            Log.log(logger::trace, project, "got span id {}", spanId)
+            AssetsService.getInstance(project).showAsset(spanId)
+        }
+
     }
 
 
@@ -149,34 +152,5 @@ class AssetsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pr
         }
 
         return services
-    }
-
-
-    private fun getQueryMapFromPayload(requestJsonNode: JsonNode): Map<String, Any> {
-
-        val payloadNode: JsonNode = objectMapper.readTree(requestJsonNode.get("payload").toString())
-        val payloadQuery: JsonNode = objectMapper.readTree(payloadNode.get("query").toString())
-
-        val backendQueryParams = mutableMapOf<String, Any>()
-
-        if (payloadQuery is ObjectNode) {
-
-            val payloadQueryAsMap = objectMapper.convertValue(payloadQuery, Map::class.java)
-
-            payloadQueryAsMap.forEach { entry: Map.Entry<Any?, Any?> ->
-                entry.key?.let {
-                    val value = entry.value
-                    if (value is List<*>) {
-                        backendQueryParams[it.toString()] = value.joinToString(",")
-                    } else {
-                        backendQueryParams[it.toString()] = value.toString()
-                    }
-
-                }
-            }
-        }
-
-        backendQueryParams["environment"] = PersistenceService.getInstance().getCurrentEnv() ?: ""
-        return backendQueryParams
     }
 }

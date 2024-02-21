@@ -13,7 +13,8 @@ import com.intellij.psi.*;
 import kotlin.Pair;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.document.DocumentInfoService;
-import org.digma.intellij.plugin.instrumentation.CanInstrumentMethodResult;
+import org.digma.intellij.plugin.env.Env;
+import org.digma.intellij.plugin.instrumentation.*;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.*;
 import org.jetbrains.annotations.*;
@@ -158,7 +159,7 @@ public interface LanguageService extends Disposable {
     /**
      * This method is used to find the LanguageService to use in situations where we don't have a context like
      * MethodInfo or a file.
-     */
+     * */
     @NotNull
     static LanguageService findLanguageServiceByMethodCodeObjectId(@NotNull Project project, @Nullable String methodCodeObjectId) {
 
@@ -273,6 +274,34 @@ public interface LanguageService extends Disposable {
     }
 
 
+    @Nullable
+    public static Set<EndpointInfo> getEndpointInfos(Project project, String endpointCodeObjectId) {
+        for (SupportedLanguages value : SupportedLanguages.values()) {
+
+            try {
+                Class<? extends LanguageService> clazz = (Class<? extends LanguageService>) Class.forName(value.getLanguageServiceClassName());
+                LanguageService languageService = project.getService(clazz);
+                var endpointInfos = languageService.lookForDiscoveredEndpoints(endpointCodeObjectId);
+                if (endpointInfos != null && !endpointInfos.isEmpty()) {
+                    return endpointInfos;
+                }
+
+            } catch (Throwable e) {
+                //catch Throwable because there may be errors.
+                //ignore: some classes will fail to load , for example the CSharpLanguageService
+                //will fail to load if it's not rider because it depends on rider classes.
+                //JavaLanguageService will fail to load on rider, etc.
+                //don't log, it will happen too many times
+            }
+        }
+
+        return null;
+    }
+    
+    
+    
+    
+
     /**
      * This method should be a last resort to find language as it is slow and not reliable.
      * try to find the language by method code object id.
@@ -323,7 +352,7 @@ public interface LanguageService extends Disposable {
     /**
      * let language services do something on environmentChanged. for example to update the current method context.
      */
-    void environmentChanged(String newEnv, boolean refreshInsightsView);
+    void environmentChanged(Env newEnv, boolean refreshInsightsView);
 
 
     @NotNull
@@ -345,16 +374,18 @@ public interface LanguageService extends Disposable {
 
     @NotNull List<Pair<TextRange, CodeVisionEntry>> getCodeLens(@NotNull PsiFile psiFile);
 
+    void refreshCodeLens();
+
     @NotNull
-    default CanInstrumentMethodResult canInstrumentMethod(@NotNull Project project, @Nullable String methodId) {
-        return CanInstrumentMethodResult.failure();
+    default MethodObservabilityInfo canInstrumentMethod(@NotNull String methodId) {
+        return new MethodObservabilityInfo(methodId, false, false, null);
     }
 
-    default boolean instrumentMethod(@NotNull CanInstrumentMethodResult result) {
+    default boolean instrumentMethod(@NotNull MethodObservabilityInfo methodObservabilityInfo) {
         return false;
     }
 
-    default void addDependencyToOtelLib(@NotNull Project project, @NotNull String methodId) {
+    default void addDependencyToOtelLib(@NotNull String methodId) {
         //only relevant for jvm languages
         //todo: maybe throw non supported operation ?
     }
@@ -367,5 +398,8 @@ public interface LanguageService extends Disposable {
 
     @Nullable
     PsiElement getPsiElementForClassByName(@NotNull String className);
+
+    @NotNull
+    InstrumentationProvider getInstrumentationProvider();
 
 }

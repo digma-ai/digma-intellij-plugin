@@ -104,14 +104,7 @@ abstract class NotificationsMessageRouterHandler(project: Project) : BaseMessage
                     null
                 }
 
-                val methodCodeObjectId: String? = try {
-                    objectMapper.readTree(requestJsonNode.get("payload").toString()).get("methodCodeObjectId").asText()
-                } catch (e: Exception) {
-                    null
-                }
-
-
-                project.service<NotificationsService>().goToInsight(spanCodeObjectId, methodCodeObjectId)
+                project.service<NotificationsService>().goToInsight(spanCodeObjectId)
             }
 
             "NOTIFICATIONS/CLOSE" -> {

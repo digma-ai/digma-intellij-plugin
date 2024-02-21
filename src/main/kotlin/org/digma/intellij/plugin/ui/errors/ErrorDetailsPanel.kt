@@ -14,7 +14,6 @@ import com.intellij.ui.dsl.gridLayout.VerticalAlign
 import com.intellij.util.ui.JBUI.Borders
 import com.intellij.util.ui.WrapLayout
 import org.digma.intellij.plugin.common.CommonUtils.prettyTimeOf
-import org.digma.intellij.plugin.insights.ErrorsViewOrchestrator
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError
 import org.digma.intellij.plugin.persistence.PersistenceService
@@ -36,6 +35,7 @@ import org.digma.intellij.plugin.ui.list.errordetails.ErrorFramesPanelList
 import org.digma.intellij.plugin.ui.list.listBackground
 import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
+import org.digma.intellij.plugin.ui.service.ErrorsViewOrchestrator
 import java.awt.BorderLayout
 import java.awt.Dimension
 import java.awt.FlowLayout

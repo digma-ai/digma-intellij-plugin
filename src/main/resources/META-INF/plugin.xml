@@ -44,8 +44,6 @@
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.ToolWindowShower"/>
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.MainToolWindowCardsController"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.service.EditorInteractionService"
-                        serviceInterface="org.digma.intellij.plugin.ui.CaretContextService"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.analytics.AnalyticsService"/>
 
@@ -55,10 +53,6 @@
         <projectService serviceImplementation="org.digma.intellij.plugin.document.CodeLensProvider"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.service.InsightsViewService"/>
-
-        <projectService serviceImplementation="org.digma.intellij.plugin.refreshInsightsTask.RefreshService"/>
-
-        <projectService serviceImplementation="org.digma.intellij.plugin.ui.service.ErrorsViewService"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.insights.InsightsProvider"/>
 
@@ -81,12 +75,20 @@
         <projectService serviceInterface="org.digma.intellij.plugin.ui.service.InsightsService"
                         serviceImplementation="org.digma.intellij.plugin.insights.InsightsServiceImpl"/>
 
+        <projectService serviceImplementation="org.digma.intellij.plugin.ui.navigation.CodeButtonCaretContextService"
+                        serviceInterface="org.digma.intellij.plugin.editor.CaretContextService"/>
+
+
         <notificationGroup id="Digma Hidden Notification Group"
                            displayType="NONE"
                            toolWindowId="Digma"/>
 
         <notificationGroup id="Digma Sticky Balloon Notification Group"
                            displayType="STICKY_BALLOON"
+                           toolWindowId="Digma"/>
+
+        <notificationGroup id="Digma fading Balloon Notification Group"
+                           displayType="BALLOON"
                            toolWindowId="Digma"/>
 
         <notificationGroup id="Digma Events Group"
@@ -161,9 +163,6 @@
         <listener
                 class="org.digma.intellij.plugin.debugger.DebuggerListener"
                 topic="com.intellij.xdebugger.XDebuggerManagerListener"/>
-        <listener
-                class="org.digma.intellij.plugin.editor.GeneralFileEditorListener"
-                topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
         <listener
                 class="org.digma.intellij.plugin.toolwindow.DigmaToolWindowsListener"
                 topic="com.intellij.openapi.wm.ex.ToolWindowManagerListener"/>

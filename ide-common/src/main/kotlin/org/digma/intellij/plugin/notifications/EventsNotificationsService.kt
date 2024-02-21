@@ -18,20 +18,17 @@ import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.PluginId
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.common.EDT
+import org.digma.intellij.plugin.env.EnvironmentsSupplier
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
-import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.event.CodeObjectEvent
 import org.digma.intellij.plugin.model.rest.event.FirstImportantInsightEvent
 import org.digma.intellij.plugin.model.rest.event.LatestCodeObjectEventsResponse
 import org.digma.intellij.plugin.model.rest.insights.SpanInsight
-import org.digma.intellij.plugin.navigation.HomeSwitcherService
-import org.digma.intellij.plugin.navigation.InsightsAndErrorsTabsHelper
-import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
-import org.digma.intellij.plugin.ui.MainToolWindowCardsController
-import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier
+import org.digma.intellij.plugin.scope.ScopeManager
+import org.digma.intellij.plugin.scope.SpanScope
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
@@ -65,7 +62,7 @@ class EventsNotificationsService(val project: Project) : Disposable {
                     }
 
                     Log.log(logger::info, "sending getLatestEvents query with lastEventTime={}",lastEventTime)
-                    val events = project.service<AnalyticsService>().getLatestEvents(lastEventTime)
+                    val events = AnalyticsService.getInstance(project).getLatestEvents(lastEventTime)
                     Log.log(logger::info, "got latest events {}",events)
 
                     events.events.forEach {
@@ -184,49 +181,35 @@ class GoToCodeObjectInsightsAction(
     private val environment: String
 ) :
     AnAction("Show Insights") {
-    override fun actionPerformed(e: AnActionEvent) {
+    override fun actionPerformed(e: AnActionEvent) = try {
+        Log.log(EventsNotificationsService.logger::info, "GoToCodeObjectInsightsAction action clicked for {}", codeObjectId)
 
-        try {
-            Log.log(EventsNotificationsService.logger::info, "GoToCodeObjectInsightsAction action clicked for {}", codeObjectId)
+        ActivityMonitor.getInstance(project).registerNotificationCenterEvent("$notificationName.clicked", mapOf())
 
-            ActivityMonitor.getInstance(project).registerNotificationCenterEvent("$notificationName.clicked", mapOf())
+        val environmentsSupplier: EnvironmentsSupplier = AnalyticsService.getInstance(project).environment
 
-            val canNavigate = project.service<CodeNavigator>().canNavigateToSpanOrMethod(codeObjectId, methodId)
-
-            val environmentsSupplier: EnvironmentsSupplier = project.service<AnalyticsService>().environment
-
-            val runnable = Runnable {
-                MainToolWindowCardsController.getInstance(project).closeAllNotificationsIfShowing()
-                project.service<HomeSwitcherService>().switchToInsights()
-                project.service<InsightsAndErrorsTabsHelper>().switchToInsightsTab()
-                if (canNavigate) {
-                    project.service<InsightsViewOrchestrator>()
-                        .showInsightsForSpanOrMethodAndNavigateToCode(codeObjectId, methodId)
-                } else {
-                    project.service<InsightsViewOrchestrator>()
-                        .showInsightsForCodelessSpan(codeObjectId)
-                }
-            }
+        val runnable = Runnable {
+            ScopeManager.getInstance(project).changeScope(SpanScope(codeObjectId))
+        }
 
 
-            if (environmentsSupplier.getCurrent() != environment) {
+        if (environmentsSupplier.getCurrent()?.originalName != environment) {
 
-                environmentsSupplier.setCurrent(environment, false) {
-                    EDT.ensureEDT {
-                        runnable.run()
-                    }
-                }
-
-            } else {
+            environmentsSupplier.setCurrent(environment, false) {
                 EDT.ensureEDT {
                     runnable.run()
                 }
             }
 
-            notification.expire()
-        } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("GoToCodeObjectInsightsAction.actionPerformed", e)
+        } else {
+            EDT.ensureEDT {
+                runnable.run()
+            }
         }
+
+        notification.expire()
+    } catch (e: Throwable) {
+        ErrorReporter.getInstance().reportError(project, "GoToCodeObjectInsightsAction.actionPerformed", e)
     }
 
 }

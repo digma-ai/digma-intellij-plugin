@@ -68,11 +68,13 @@ public class EditorEventsHandler implements FileEditorManagerListener {
     @Override
     public void selectionChanged(@NotNull FileEditorManagerEvent editorManagerEvent) {
         try {
-            //enable code navigation every time editor tab is closed or changed
-//            project.getService(NavigationModel.class).getShowCodeNavigation().set(true);
+
+            if (!ProjectUtilsKt.isProjectValid(project)) {
+                return;
+            }
 
             selectionChangedImpl(editorManagerEvent);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             Log.warnWithException(LOGGER, e, "Exception in selectionChanged");
             ErrorReporter.getInstance().reportError(project, "EditorEventsHandler.selectionChanged", e);
         }
@@ -139,8 +141,11 @@ public class EditorEventsHandler implements FileEditorManagerListener {
             //info or to discover spans. and anyway our tool window will not be shown on dumb mode.
             Backgroundable.executeOnPooledThread(() -> {
 
+                if (!VfsUtilsKt.isValidVirtualFile(newFile)) {
+                    return;
+                }
 
-                PsiFile psiFile = PsiAccessUtilsKt.runInReadAccessInSmartModeWithResult(project, () -> PsiManager.getInstance(project).findFile(newFile));
+                PsiFile psiFile = PsiAccessUtilsKt.runInReadAccessWithResult(() -> PsiManager.getInstance(project).findFile(newFile));
 
                 if (!PsiUtils.isValidPsiFile(psiFile)) {
                     Log.log(LOGGER::trace, "No psi file for :{}", newFile);

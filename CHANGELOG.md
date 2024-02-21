@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.265] - 2024-02-16
+## [2.0.266] - 2024-02-21
+
+- Fixed backwards compatibility for load status by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1814
+- New Navigation by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1817
+
+## 2.0.265 - 2024-02-16
 
 - fatal error - allow-slow-operations-in-file-closed by @shalom938
   in https://github.com/digma-ai/digma-intellij-plugin/pull/1795

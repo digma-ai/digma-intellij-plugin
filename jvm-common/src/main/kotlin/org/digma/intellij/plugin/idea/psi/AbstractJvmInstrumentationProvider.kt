@@ -34,8 +34,10 @@ abstract class AbstractJvmInstrumentationProvider(private val project: Project, 
             EDT.ensureEDT {
                 WriteAction.run<RuntimeException> {
                     val observabilityInfo = languageService.canInstrumentMethod(methodId)
-                    languageService.instrumentMethod(observabilityInfo)
-                    ProjectRefreshAction.refreshProject(project)
+                    if (!observabilityInfo.hasAnnotation) {
+                        languageService.instrumentMethod(observabilityInfo)
+                        ProjectRefreshAction.refreshProject(project)
+                    }
                 }
             }
         } catch (e: Throwable) {

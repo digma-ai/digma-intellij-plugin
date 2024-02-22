@@ -5,6 +5,7 @@ class MethodObservabilityInfo(
     val hasMissingDependency: Boolean,
     val canInstrumentMethod: Boolean,
     val annotationClassFqn: String? = null,
+    val hasAnnotation: Boolean,
 ) {
 
 }

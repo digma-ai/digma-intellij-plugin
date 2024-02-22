@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.idea.psi
 
-import com.google.common.collect.ImmutableMap
 import com.intellij.buildsystem.model.unified.UnifiedCoordinates
 import com.intellij.buildsystem.model.unified.UnifiedDependency
 import com.intellij.externalSystem.DependencyModifierService
@@ -86,15 +85,11 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
     private val otelDependencyVersion = "1.26.0"
     private val otelCoordinates =
         UnifiedCoordinates("io.opentelemetry.instrumentation", "opentelemetry-instrumentation-annotations", otelDependencyVersion)
-    private val mapBuildSystem2Dependency: ImmutableMap<JavaBuildSystem, UnifiedDependency>
-
-    init {
-        val builder: ImmutableMap.Builder<JavaBuildSystem, UnifiedDependency> = ImmutableMap.Builder()
-        builder.put(JavaBuildSystem.UNKNOWN, UnifiedDependency(otelCoordinates, "compile"))
-        builder.put(JavaBuildSystem.MAVEN, UnifiedDependency(otelCoordinates, null))
-        builder.put(JavaBuildSystem.GRADLE, UnifiedDependency(otelCoordinates, "implementation"))
-        mapBuildSystem2Dependency = builder.build()
-    }
+    private val mapBuildSystem2Dependency: Map<JavaBuildSystem, UnifiedDependency> = mapOf(
+        JavaBuildSystem.UNKNOWN to UnifiedDependency(otelCoordinates, "compile"),
+        JavaBuildSystem.MAVEN to UnifiedDependency(otelCoordinates, null),
+        JavaBuildSystem.GRADLE to UnifiedDependency(otelCoordinates, "implementation")
+    )
 
 
     companion object {
@@ -601,7 +596,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                     val uMethod = findMethodByMethodCodeObjectId(methodId)
                     if (uMethod?.sourcePsi == null) {
                         Log.log(logger::trace, "Failed to get Method from method id '{}'", methodId)
-                        return MethodObservabilityInfo(methodId, hasMissingDependency = false, canInstrumentMethod = false)
+                        return MethodObservabilityInfo(methodId, hasMissingDependency = false, canInstrumentMethod = false, hasAnnotation = false)
                     }
 
                     progressIndicator.checkCanceled()
@@ -609,7 +604,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                     val psiFile = uMethod.getContainingUFile()
                     if (psiFile == null || !isSupportedFile(psiFile.sourcePsi)) {
                         Log.log(logger::trace, "Method's file is not supported file (methodId: {})", methodId)
-                        return MethodObservabilityInfo(methodId, hasMissingDependency = false, canInstrumentMethod = false)
+                        return MethodObservabilityInfo(methodId, hasMissingDependency = false, canInstrumentMethod = false, hasAnnotation = false)
                     }
 
                     progressIndicator.checkCanceled()
@@ -617,7 +612,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                     val module = ModuleUtilCore.findModuleForPsiElement(uMethod.sourcePsi!!)
                     if (module == null) {
                         Log.log(logger::trace, "Failed to get module from PsiMethod '{}'", methodId)
-                        return MethodObservabilityInfo(methodId, hasMissingDependency = false, canInstrumentMethod = false)
+                        return MethodObservabilityInfo(methodId, hasMissingDependency = false, canInstrumentMethod = false, hasAnnotation = false)
                     }
 
                     progressIndicator.checkCanceled()
@@ -634,11 +629,11 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                         val moduleExt = modulesDepsService.getModuleExt(module.name)
                         if (moduleExt == null) {
                             Log.log(logger::trace, "Failed to not lookup module ext by module name='{}'", module.name)
-                            return MethodObservabilityInfo(methodId, hasMissingDependency = false, canInstrumentMethod = false)
+                            return MethodObservabilityInfo(methodId, hasMissingDependency = false, canInstrumentMethod = false, hasAnnotation = false)
                         }
                         val hasDeps = modulesDepsService.isModuleHasNeededDependenciesForSpringBootWithMicrometer(moduleExt.metadata)
                         if (!hasDeps) {
-                            return MethodObservabilityInfo(methodId, hasMissingDependency = true, canInstrumentMethod = false)
+                            return MethodObservabilityInfo(methodId, hasMissingDependency = true, canInstrumentMethod = false, hasAnnotation = false)
                         }
                     }
 
@@ -650,14 +645,17 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                     )
                     if (annotationPsiClass == null) {
                         Log.log(logger::trace, "Cannot find WithSpan PsiClass (methodId: {}) (module:{})", methodId, module)
-                        return MethodObservabilityInfo(methodId, hasMissingDependency = true, canInstrumentMethod = false)
+                        return MethodObservabilityInfo(methodId, hasMissingDependency = true, canInstrumentMethod = false, hasAnnotation = false)
                     }
+
+                    val hasAnnotation = uMethod.uAnnotations.any { uAnnotation -> uAnnotation.qualifiedName == annotationClassFqn }
 
                     return MethodObservabilityInfo(
                         methodId,
                         hasMissingDependency = false,
                         canInstrumentMethod = true,
-                        annotationClassFqn = annotationClassFqn
+                        annotationClassFqn = annotationClassFqn,
+                        hasAnnotation = hasAnnotation
                     )
 
                 } catch (e: ProcessCanceledException) {
@@ -666,7 +664,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                     ErrorReporter.getInstance().reportError(project, "AbstractJvmLanguageService.canInstrumentMethod", e)
                 }
 
-                return MethodObservabilityInfo(methodId, hasMissingDependency = false, canInstrumentMethod = false)
+                return MethodObservabilityInfo(methodId, hasMissingDependency = false, canInstrumentMethod = false, hasAnnotation = false)
             }
 
         }
@@ -680,7 +678,12 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                 }
             }, myComputable.progressIndicator)
             return@retryWithResultAndDefault result
-        }, Throwable::class.java, 50, 5, MethodObservabilityInfo(methodId, hasMissingDependency = false, canInstrumentMethod = false))
+        },
+            Throwable::class.java,
+            50,
+            5,
+            MethodObservabilityInfo(methodId, hasMissingDependency = false, canInstrumentMethod = false, hasAnnotation = false)
+        )
     }
 
 

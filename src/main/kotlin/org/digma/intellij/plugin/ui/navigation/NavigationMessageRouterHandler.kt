@@ -6,6 +6,7 @@ import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
+import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.navigation.MainContentViewSwitcher
 import org.digma.intellij.plugin.navigation.View
@@ -101,7 +102,7 @@ class NavigationMessageRouterHandler(project: Project) : BaseMessageRouterHandle
         val payload = getPayloadFromRequest(requestJsonNode)
         payload?.let {
             val methodId = payload.get("methodId").asText()
-            NavigationService.getInstance(project).fixMissingDependencies(methodId)
+            NavigationService.getInstance(project).fixMissingDependencies(CodeObjectsUtil.stripMethodPrefix(methodId))
         }
     }
 
@@ -109,7 +110,7 @@ class NavigationMessageRouterHandler(project: Project) : BaseMessageRouterHandle
         val payload = getPayloadFromRequest(requestJsonNode)
         payload?.let {
             val methodId = payload.get("methodId").asText()
-            NavigationService.getInstance(project).addAnnotation(methodId)
+            NavigationService.getInstance(project).addAnnotation(CodeObjectsUtil.stripMethodPrefix(methodId))
         }
     }
 

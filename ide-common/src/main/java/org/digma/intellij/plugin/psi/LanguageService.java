@@ -378,7 +378,7 @@ public interface LanguageService extends Disposable {
 
     @NotNull
     default MethodObservabilityInfo canInstrumentMethod(@NotNull String methodId) {
-        return new MethodObservabilityInfo(methodId, false, false, null);
+        return new MethodObservabilityInfo(methodId, false, false, null, false);
     }
 
     default boolean instrumentMethod(@NotNull MethodObservabilityInfo methodObservabilityInfo) {

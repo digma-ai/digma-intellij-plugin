@@ -95,13 +95,13 @@ class CodeButtonCaretContextService(private val project: Project) : CaretContext
                             displayName,
                             codeContextSpans,
                             true,
-                            method.id
+                            method.idWithType()
                         )
                     )
                     sendCodeContext(jcefComp.jbCefBrowser.cefBrowser, codeContextMessage)
 
                 } else {
-                    val allIds = method.allIdsWithType().plus(method.getRelatedCodeObjectIdsWithType())
+                    val allIds = listOf(method.idWithType()).plus(method.getRelatedCodeObjectIdsWithType())
                     val codeContextSpans = AnalyticsService.getInstance(project).getSpansForCodeLocation(allIds)
                     val displayName = method.buildDisplayName()
 
@@ -122,7 +122,7 @@ class CodeButtonCaretContextService(private val project: Project) : CaretContext
                             displayName,
                             codeContextSpans,
                             isInstrumented,
-                            method.id,
+                            method.idWithType(),
                             hasMissingDependency,
                             canInstrumentMethod
                         )

@@ -102,7 +102,7 @@ public class InsightsMessageRouterHandler extends BaseMessageRouterHandler {
             case "INSIGHTS/GET_DATA_LIST" -> pushInsightsListData(jsonNode);
 
 
-            default -> Log.log(LOGGER::warn, "got unexpected action='$action'");
+            default -> Log.log(LOGGER::warn, "got unexpected action='{}'", action);
         }
     }
 

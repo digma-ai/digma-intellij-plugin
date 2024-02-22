@@ -124,7 +124,6 @@
         <postStartupActivity implementation="org.digma.intellij.plugin.posthog.ContainerEngineStartupActivity"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.notifications.NotificationsStartupActivity"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.analytics.AnalyticsServiceStarter"/>
-        <postStartupActivity implementation="org.digma.intellij.plugin.ui.toolwindow.ToolWindowBadgeChanger"/>
         <postStartupActivity
                 implementation="org.digma.intellij.plugin.posthog.PerformanceMetricsPosthogEventStartupActivity"/>
 

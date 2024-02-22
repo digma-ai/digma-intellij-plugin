@@ -1,0 +1,102 @@
+package org.digma.intellij.plugin.ui.toolwindow
+
+import com.intellij.openapi.components.Service
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.wm.ToolWindow
+import com.intellij.openapi.wm.ToolWindowManager
+import org.digma.intellij.plugin.PluginId
+import org.digma.intellij.plugin.common.EDT
+import org.digma.intellij.plugin.icons.AppIcons
+import org.digma.intellij.plugin.icons.IconsUtil
+import javax.swing.Icon
+
+/**
+ * This service can be used to add a red badge to the tool window icon
+ */
+@Service(Service.Level.PROJECT)
+class ToolWindowIconChanger(val project: Project) {
+
+
+    private var toolWindowIcon: Icon? = null
+    private var toolWindowBadgeIcon: Icon? = null
+
+    private fun getToolWindow(): ToolWindow? {
+        return ToolWindowManager.getInstance(project).getToolWindow(PluginId.TOOL_WINDOW_ID)
+    }
+
+
+    fun changeToBadgeIcon() {
+
+        EDT.ensureEDT {
+            val toolWindow = getToolWindow()
+
+            toolWindow?.let { tw ->
+                val badgeIcon = getBadgeIcon(tw)
+                tw.setIcon(badgeIcon)
+            }
+        }
+
+    }
+
+    fun changeToRegularIcon() {
+
+        EDT.ensureEDT {
+            val toolWindow = getToolWindow()
+
+            toolWindow?.let { tw ->
+                val icon = getIcon(tw)
+                tw.setIcon(icon)
+            }
+        }
+
+    }
+
+    private fun getIcon(toolWindow: ToolWindow): Icon {
+        if (toolWindowIcon == null) {
+            toolWindowIcon = toolWindow.icon
+        }
+
+        if (toolWindowIcon == null) {
+            toolWindowIcon = AppIcons.TOOL_WINDOW
+        }
+
+        return toolWindowIcon!!
+    }
+
+    private fun getBadgeIcon(toolWindow: ToolWindow): Icon {
+
+        if (toolWindowBadgeIcon == null) {
+            toolWindowBadgeIcon = IconsUtil.createRedDotBadgeIcon(getIcon(toolWindow), 13)
+        }
+        return toolWindowBadgeIcon!!
+    }
+
+//    private fun createBadgeIcon(icon: Icon): Icon {
+//
+//        //will put the badge at the bottom of the icon
+//        ////return ExecutionUtil.getIndicator(icon,icon.iconWidth,icon.iconHeight,JBUI.CurrentTheme.IconBadge.ERROR)
+//
+//        @Suppress("UnstableApiUsage")
+//        return BadgeIcon(icon, JBUI.CurrentTheme.IconBadge.ERROR, object : BadgeDotProvider() {
+//            override fun getRadius(): Double {
+//                return 1.5 / icon.iconWidth
+//                //in new UI the badge is a buit small, can check if new UI and make the radius bigger
+////                return if (ExperimentalUI.isNewUI()){
+////                    2.0 / icon.iconWidth
+////                }else{
+////                    1.5 / icon.iconWidth
+////                }
+//
+//            }
+//
+//            override fun getX(): Double {
+//                return 0.7
+//            }
+//
+//            override fun getY(): Double {
+//                return 0.2
+//            }
+//        })
+//    }
+
+}

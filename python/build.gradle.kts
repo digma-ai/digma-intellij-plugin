@@ -1,7 +1,6 @@
 import common.IdeFlavor
 import common.currentProfile
 import common.logBuildProfile
-import common.platformVersion
 
 plugins {
     id("plugin-library")
@@ -15,7 +14,8 @@ dependencies {
 }
 
 //python module should always build with IC or PC
-val platformType by extra(IdeFlavor.IC.name)
+//val platformType by extra(IdeFlavor.IC.name)
+val platformType by extra(IdeFlavor.PC.name)
 
 logBuildProfile(project)
 
@@ -38,7 +38,9 @@ intellij {
 //   version.set("$platformType-${project.currentProfile().pycharmVersion}")
 //   plugins.set(listOf("PythonCore"))
 
-    version.set("$platformType-${project.platformVersion()}")
-    plugins.set(listOf("PythonCore:${project.currentProfile().pythonPluginVersion}"))
+//    version.set("$platformType-${project.platformVersion()}")
+//    plugins.set(listOf("PythonCore:${project.currentProfile().pythonPluginVersion}"))
+    version.set("$platformType-${project.currentProfile().pycharmVersion}")
+    plugins.set(listOf("PythonCore"))
 
 }

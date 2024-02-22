@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.267] - 2024-02-21
+## [2.0.268] - 2024-02-22
+
+- updated to otel latest by @doppleware in https://github.com/digma-ai/digma-intellij-plugin/pull/1823
+
+## 2.0.267 - 2024-02-21
 
 - update ui by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1822
 

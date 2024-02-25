@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.idea.psi.kotlin
 
 import com.intellij.codeInsight.hints.InlayHintsUtils
+import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
@@ -51,7 +52,11 @@ class KotlinCodeLensService(project: Project) : AbstractCodeLensService(project)
             }
 
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("KotlinCodeLensService.findMethodsByCodeObjectIds", e)
+            //don't report ProcessCanceledException here , we have nothing to do about it,
+            // the code vision infrastructure will retry
+            if (e !is ProcessCanceledException) {
+                ErrorReporter.getInstance().reportError("KotlinCodeLensService.findMethodsByCodeObjectIds", e)
+            }
             return mapOf()
         }
 

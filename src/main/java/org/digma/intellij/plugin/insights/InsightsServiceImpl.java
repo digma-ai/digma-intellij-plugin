@@ -17,6 +17,7 @@ import org.jetbrains.annotations.*;
 
 import java.util.Collections;
 
+//todo: convert to kotlin and move to org.digma.intellij.plugin.ui.insights
 public abstract class InsightsServiceImpl implements Disposable {
 
     private final Logger logger = Logger.getInstance(InsightsServiceImpl.class);

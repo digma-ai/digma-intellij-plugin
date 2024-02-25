@@ -189,8 +189,10 @@ public class EditorEventsHandler implements FileEditorManagerListener {
 
                     if (selectedTextEditor != null) {
                         Log.log(LOGGER::trace, "Found selected editor for :{}", newFile);
-                        PsiFile psiFile1 = PsiDocumentManager.getInstance(project).getPsiFile(selectedTextEditor.getDocument());
-                        if (PsiUtils.isValidPsiFile(psiFile1) && isRelevantFile(psiFile1.getVirtualFile())) {
+                        PsiFile selectedPsiFile = SlowOperationsUtilsKt.allowSlowOperation(() ->
+                                PsiDocumentManager.getInstance(project).getPsiFile(selectedTextEditor.getDocument()));
+
+                        if (PsiUtils.isValidPsiFile(selectedPsiFile) && isRelevantFile(selectedPsiFile.getVirtualFile())) {
                             Log.log(LOGGER::trace, "Found relevant psi file for :{}", newFile);
                             caretListener.maybeAddCaretListener(selectedTextEditor);
                             documentChangeListener.maybeAddDocumentListener(selectedTextEditor);
@@ -200,8 +202,8 @@ public class EditorEventsHandler implements FileEditorManagerListener {
                             int offset = selectedTextEditor.getCaretModel().getOffset();
 
                             Backgroundable.executeOnPooledThread(() -> {
-                                LanguageService languageService1 = languageServiceLocator.locate(psiFile1.getLanguage());
-                                MethodUnderCaret methodUnderCaret = languageService1.detectMethodUnderCaret(project, psiFile1, selectedTextEditor, offset);
+                                LanguageService languageService1 = languageServiceLocator.locate(selectedPsiFile.getLanguage());
+                                MethodUnderCaret methodUnderCaret = languageService1.detectMethodUnderCaret(project, selectedPsiFile, selectedTextEditor, offset);
                                 Log.log(LOGGER::trace, "Found MethodUnderCaret for :{}, '{}'", newFile, methodUnderCaret);
                                 LatestMethodUnderCaretHolder.getInstance(project).saveLatestMethodUnderCaret(project, languageService1, methodUnderCaret.getId());
                                 caretContextService.contextChanged(methodUnderCaret);
@@ -209,10 +211,10 @@ public class EditorEventsHandler implements FileEditorManagerListener {
                             });
 
 
-                        } else if (psiFile1 != null) {
+                        } else if (selectedPsiFile != null) {
                             Log.log(LOGGER::trace, "file not supported :{}, calling contextEmptyNonSupportedFile", newFile);
                             LatestMethodUnderCaretHolder.getInstance(project).clearLatestMethodInfo();
-                            caretContextService.contextEmptyNonSupportedFile(psiFile1.getVirtualFile().getPath());
+                            caretContextService.contextEmptyNonSupportedFile(selectedPsiFile.getVirtualFile().getPath());
                         } else {
                             Log.log(LOGGER::trace, "calling contextEmpty for {}", newFile);
                             LatestMethodUnderCaretHolder.getInstance(project).clearLatestMethodInfo();

@@ -139,7 +139,7 @@ class DocumentChangeListener {
         LanguageService languageService = LanguageServiceLocator.getInstance(project).locate(psiFile.getLanguage());
 
         if (fileEditor.isValid()) {
-            BuildDocumentInfoProcessContext.buildDocumentInfoUnderProcess(project, progressIndicator -> {
+            BuildDocumentInfoProcessContext.buildDocumentInfoUnderProcess(project, psiFile.getName(), progressIndicator -> {
                 var context = new BuildDocumentInfoProcessContext(progressIndicator);
                 DocumentInfo documentInfo = languageService.buildDocumentInfo(psiFile, fileEditor, context);
                 Log.log(LOGGER::debug, "got DocumentInfo for {}", psiFile.getVirtualFile());

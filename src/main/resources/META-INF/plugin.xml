@@ -15,7 +15,13 @@
 
     <xi:include href="/META-INF/org.digma.intellij-with-intellij-platform.xml" xpointer="xpointer(/idea-plugin/*)"/>
 
+
+    <!--
+     Python support is currently disabled. the python module still builds and packaged but python is considered
+       non-supported language
     <depends optional="true" config-file="org.digma.intellij-with-python.xml">com.intellij.modules.python</depends>
+    -->
+
     <depends optional="true" config-file="org.digma.intellij-with-jvm.xml">com.intellij.modules.java</depends>
     <depends optional="true" config-file="org.digma.intellij-with-kotlin.xml">org.jetbrains.kotlin</depends>
     <depends optional="true" config-file="org.digma.intellij-with-rider.xml">com.intellij.modules.rider</depends>
@@ -71,9 +77,6 @@
         <projectService serviceImplementation="org.digma.intellij.plugin.common.IDEUtilsService"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider"/>
-
-        <projectService serviceInterface="org.digma.intellij.plugin.ui.service.InsightsService"
-                        serviceImplementation="org.digma.intellij.plugin.insights.InsightsServiceImpl"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.navigation.CodeButtonCaretContextService"
                         serviceInterface="org.digma.intellij.plugin.editor.CaretContextService"/>

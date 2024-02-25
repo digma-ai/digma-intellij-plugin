@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.insights.model.outgoing
+package org.digma.intellij.plugin.ui.insights.model
 
 import org.digma.intellij.plugin.model.rest.insights.LinkUnlinkTicketResponse
 

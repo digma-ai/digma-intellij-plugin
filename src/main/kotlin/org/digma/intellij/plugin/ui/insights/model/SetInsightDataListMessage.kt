@@ -1,8 +1,6 @@
-package org.digma.intellij.plugin.insights.model.outgoing
+package org.digma.intellij.plugin.ui.insights.model
 
 import com.fasterxml.jackson.annotation.JsonRawValue
-import com.fasterxml.jackson.databind.JsonNode
-import kotlinx.serialization.json.JsonObject
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
 
 data class SetInsightDataListMessage( @JsonRawValue val payload: String) {

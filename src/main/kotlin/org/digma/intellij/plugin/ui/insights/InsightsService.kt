@@ -12,12 +12,11 @@ import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.insights.InsightsServiceImpl
-import org.digma.intellij.plugin.insights.model.outgoing.SetInsightDataListMessage
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.ui.insights.model.SetInsightDataListMessage
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
 import org.digma.intellij.plugin.ui.jcef.getQueryMapFromPayload
 import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
-import org.digma.intellij.plugin.ui.tests.TestsService
 
 
 @Service(Service.Level.PROJECT)
@@ -32,13 +31,6 @@ class InsightsService(val project: Project) : InsightsServiceImpl(project) {
         fun getInstance(project: Project): InsightsService {
             return project.service<InsightsService>()
         }
-    }
-
-    init {
-        //TestsService depends on InsightsModelReact.scope so make sure its initialized and listening.
-        // It may also be called from TestsPanel, whom even comes first
-        project.getService(TestsService::class.java)
-
     }
 
     fun setJCefComponent(jCefComponent: JCefComponent?) {

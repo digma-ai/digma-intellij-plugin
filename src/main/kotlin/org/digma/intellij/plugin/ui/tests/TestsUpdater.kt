@@ -62,7 +62,6 @@ class TestsUpdater(private val project: Project) {
             if(scope.spanCodeObjectId.isNotEmpty())
                 spanCodeObjectIds = setOf(scope.spanCodeObjectId)
 
-            //todo: should check if scopeRequest.isEmpty() and return json representing empty state in case of Document scope, no need to call the backend
             val testsOfSpanJson = project.service<TestsService>().getLatestTestsOfSpan(TestsScopeRequest(spanCodeObjectIds, scope.methodId, null), lastKnownFilterForLatestTests)
             Log.log(logger::trace, project, "got tests of span {}", testsOfSpanJson)
             val payload = objectMapper.readTree(testsOfSpanJson)

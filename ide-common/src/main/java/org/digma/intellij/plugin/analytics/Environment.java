@@ -74,7 +74,7 @@ public class Environment implements EnvironmentsSupplier {
                 return;
             }
 
-            //this setCurrent method is called from RecentActivityService, it may send an env that does not exist in  the
+            //this setCurrent method may send an env that does not exist in the
             // list of environments. so refresh if necessary.
             Runnable task = () -> {
                 envChangeLock.lock();
@@ -94,10 +94,10 @@ public class Environment implements EnvironmentsSupplier {
                 if (taskToRunAfterChange != null) {
                     taskToRunAfterChange.run();
                 }
-
             };
 
             Backgroundable.ensureBackground(project, "Digma: environment changed " + newEnv, task);
+
         } catch (Throwable e) {
             ErrorReporter.getInstance().reportError(project, "Environment.setCurrent", e);
         }

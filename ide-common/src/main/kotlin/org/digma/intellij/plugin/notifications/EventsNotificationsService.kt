@@ -17,7 +17,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.PluginId
 import org.digma.intellij.plugin.analytics.AnalyticsService
-import org.digma.intellij.plugin.common.EDT
+import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.env.EnvironmentsSupplier
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
@@ -61,9 +61,9 @@ class EventsNotificationsService(val project: Project) : Disposable {
                         lastEventTime = ZonedDateTime.now().minus(7, ChronoUnit.DAYS).withZoneSameInstant(ZoneOffset.UTC).toString()
                     }
 
-                    Log.log(logger::info, "sending getLatestEvents query with lastEventTime={}",lastEventTime)
+                    Log.log(logger::info, "sending getLatestEvents query with lastEventTime={}", lastEventTime)
                     val events = AnalyticsService.getInstance(project).getLatestEvents(lastEventTime)
-                    Log.log(logger::info, "got latest events {}",events)
+                    Log.log(logger::info, "got latest events {}", events)
 
                     events.events.forEach {
                         when (it) {
@@ -85,7 +85,7 @@ class EventsNotificationsService(val project: Project) : Disposable {
 
     private fun updateLastEventTime(events: LatestCodeObjectEventsResponse) {
 
-        if (events.events.isEmpty()){
+        if (events.events.isEmpty()) {
             return
         }
 
@@ -99,7 +99,7 @@ class EventsNotificationsService(val project: Project) : Disposable {
 
     private fun showNotificationForFirstImportantInsight(importantInsight: FirstImportantInsightEvent) {
 
-        Log.log(logger::info, "got FirstImportantInsightEvent {}",importantInsight)
+        Log.log(logger::info, "got FirstImportantInsightEvent {}", importantInsight)
 
         var codeObjectId = importantInsight.codeObjectId
         var methodId = importantInsight.codeObjectId
@@ -110,10 +110,10 @@ class EventsNotificationsService(val project: Project) : Disposable {
 
         if (codeObjectId != null) {
 
-            Log.log(logger::info, "showing Notification For FirstImportantInsight {}",importantInsight)
+            Log.log(logger::info, "showing Notification For FirstImportantInsight {}", importantInsight)
 
 
-            ActivityMonitor.getInstance(project).registerNotificationCenterEvent("Show.FirstImportantInsightNotification",mapOf())
+            ActivityMonitor.getInstance(project).registerNotificationCenterEvent("Show.FirstImportantInsightNotification", mapOf())
 
             showFirstImportantInsightNotification(
                 project,
@@ -121,8 +121,8 @@ class EventsNotificationsService(val project: Project) : Disposable {
                 methodId,
                 importantInsight.environment
             )
-        }else{
-            Log.log(logger::info, "Not showing Notification For FirstImportantInsight because codeObjectId is null {}",importantInsight)
+        } else {
+            Log.log(logger::info, "Not showing Notification For FirstImportantInsight because codeObjectId is null {}", importantInsight)
         }
     }
 
@@ -151,13 +151,22 @@ class EventsNotificationsService(val project: Project) : Disposable {
         val notification = NotificationGroupManager.getInstance().getNotificationGroup(EVENTS_NOTIFICATION_GROUP)
             .createNotification("First important insight!", "In analyzing your code Digma found the following insight:", NotificationType.INFORMATION)
 
-        notification.addAction(GoToCodeObjectInsightsAction(project,notification,"FirstImportantInsightNotification", codeObjectId, methodId, environment))
+        notification.addAction(
+            GoToCodeObjectInsightsAction(
+                project,
+                notification,
+                "FirstImportantInsightNotification",
+                codeObjectId,
+                methodId,
+                environment
+            )
+        )
 
         notification.setImportant(true)
         notification.setToolWindowId(PluginId.TOOL_WINDOW_ID)
 
         notification.notify(this.project)
-        notification.balloon?.addListener(object: JBPopupListener {
+        notification.balloon?.addListener(object : JBPopupListener {
             override fun onClosed(event: LightweightWindowEvent) {
                 notification.expire()
             }
@@ -178,7 +187,7 @@ class GoToCodeObjectInsightsAction(
     private val notificationName: String,
     private val codeObjectId: String,
     private val methodId: String?,
-    private val environment: String
+    private val environment: String,
 ) :
     AnAction("Show Insights") {
     override fun actionPerformed(e: AnActionEvent) = try {
@@ -189,22 +198,19 @@ class GoToCodeObjectInsightsAction(
         val environmentsSupplier: EnvironmentsSupplier = AnalyticsService.getInstance(project).environment
 
         val runnable = Runnable {
-            ScopeManager.getInstance(project).changeScope(SpanScope(codeObjectId))
+            Backgroundable.ensurePooledThread {
+                ScopeManager.getInstance(project).changeScope(SpanScope(codeObjectId))
+            }
         }
-
 
         if (environmentsSupplier.getCurrent()?.originalName != environment) {
 
             environmentsSupplier.setCurrent(environment, false) {
-                EDT.ensureEDT {
-                    runnable.run()
-                }
+                runnable.run()
             }
 
         } else {
-            EDT.ensureEDT {
-                runnable.run()
-            }
+            runnable.run()
         }
 
         notification.expire()

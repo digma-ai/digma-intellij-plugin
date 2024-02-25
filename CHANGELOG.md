@@ -1,6 +1,16 @@
 # Changelog
 
-## [2.0.268] - 2024-02-22
+## [2.0.269] - 2024-02-25
+
+- remove notification dot in tool window icon Closes #1816 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1825
+- update build profiles to latest EAP by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1829
+- add method: prefix in CodeContextMessagePayload Closes #1820 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1826
+- Fix add annotation by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1830
+- Scaling insight ticket by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1828
+- add-throws-in-base-router-handler by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1833
+- change-some-messages-to-global by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1834
+
+## 2.0.268 - 2024-02-22
 
 - updated to otel latest by @doppleware in https://github.com/digma-ai/digma-intellij-plugin/pull/1823
 

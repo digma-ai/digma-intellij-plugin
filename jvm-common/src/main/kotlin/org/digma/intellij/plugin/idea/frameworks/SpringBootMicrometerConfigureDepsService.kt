@@ -147,12 +147,16 @@ class SpringBootMicrometerConfigureDepsService(private val project: Project) : D
     }
 
     private fun addMissingDependenciesToRelevantModules() {
-        val modulesDepsService = ModulesDepsService.getInstance(project)
+        try {
+            val modulesDepsService = ModulesDepsService.getInstance(project)
 
-        val springBootModules = modulesDepsService.getSpringBootModulesWithoutObservabilityDeps()
+            val springBootModules = modulesDepsService.getSpringBootModulesWithoutObservabilityDeps()
 
-        springBootModules.forEach {
-            addMissingDependenciesForSpringBootObservability(it)
+            springBootModules.forEach {
+                addMissingDependenciesForSpringBootObservability(it)
+            }
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError("SpringBootMicrometerConfigureDepsService.addMissingDependenciesToRelevantModules", e)
         }
     }
 
@@ -224,8 +228,12 @@ class SpringBootMicrometerConfigureDepsService(private val project: Project) : D
             }
         }
 
-        WriteAction.run<Exception> {
-            addMissingDependenciesToRelevantModules()
+        try {
+            WriteAction.run<Exception> {
+                addMissingDependenciesToRelevantModules()
+            }
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError("SpringBootMicrometerConfigureDepsService.buttonClicked.writeAction", e)
         }
 
         Backgroundable.executeOnPooledThread {

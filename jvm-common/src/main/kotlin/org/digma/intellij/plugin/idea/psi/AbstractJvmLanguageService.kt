@@ -702,7 +702,10 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
             Log.log(logger::warn, "Failed to add dependencies OTEL lib since could not lookup module by methodId='{}'", methodId)
             return
         }
-        if (!isSpringBootAndMicrometer(module)) {
+
+        if (isSpringBootAndMicrometer(module)) {
+            addDepsForSpringBootAndMicrometer(module)
+        } else {
             val moduleBuildSystem = determineBuildSystem(module)
             val dependencyLib = mapBuildSystem2Dependency[moduleBuildSystem]
 
@@ -711,11 +714,8 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
             if (dependencyLib != null) {
                 dependencyModifierService.addDependency(module, dependencyLib)
             }
-            return
         }
 
-        // handling spring boot with micrometer tracing
-        addDepsForSpringBootAndMicrometer(module)
     }
 
 

@@ -10,8 +10,7 @@ import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.scope.*;
-import org.digma.intellij.plugin.ui.common.Laf;
-import org.digma.intellij.plugin.ui.list.insights.JaegerUtilKt;
+import org.digma.intellij.plugin.ui.common.*;
 import org.digma.intellij.plugin.ui.recentactivity.RecentActivityService;
 import org.jetbrains.annotations.*;
 

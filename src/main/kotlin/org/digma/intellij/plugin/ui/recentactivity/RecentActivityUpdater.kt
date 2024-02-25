@@ -20,7 +20,6 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResponseEntry
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult
 import org.digma.intellij.plugin.posthog.ActivityMonitor
-import org.digma.intellij.plugin.recentactivity.RecentActivityLogic.Companion.isRecentTime
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
 import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
 import org.digma.intellij.plugin.ui.recentactivity.model.EnvironmentType
@@ -28,6 +27,8 @@ import org.digma.intellij.plugin.ui.recentactivity.model.PendingEnvironment
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivitiesMessagePayload
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivitiesMessageRequest
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityEnvironment
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.Date
 import java.util.Optional
 import javax.swing.Icon
@@ -113,6 +114,12 @@ class RecentActivityUpdater(val project: Project) : Disposable {
             .max { obj: Date, anotherDate: Date? -> obj.compareTo(anotherDate) }
 
         return latestActivity.isPresent && isRecentTime(latestActivity.get())
+    }
+
+
+    private fun isRecentTime(date: Date?): Boolean {
+        if (date == null) return false
+        return date.toInstant().plus(RECENT_EXPIRATION_LIMIT_MILLIS, ChronoUnit.MILLIS).isAfter(Instant.now())
     }
 
 

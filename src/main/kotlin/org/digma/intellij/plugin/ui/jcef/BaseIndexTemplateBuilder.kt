@@ -15,8 +15,8 @@ import org.digma.intellij.plugin.jcef.common.JCefTemplateUtils
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.settings.SettingsState
-import org.digma.intellij.plugin.ui.list.insights.getJaegerUrl
-import org.digma.intellij.plugin.ui.list.insights.isJaegerButtonEnabled
+import org.digma.intellij.plugin.ui.common.getJaegerUrl
+import org.digma.intellij.plugin.ui.common.isJaegerButtonEnabled
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.io.StringWriter

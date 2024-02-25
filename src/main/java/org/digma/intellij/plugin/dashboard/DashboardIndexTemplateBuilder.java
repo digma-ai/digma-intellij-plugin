@@ -9,7 +9,7 @@ import org.digma.intellij.plugin.jcef.common.JCefTemplateUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.settings.SettingsState;
-import org.digma.intellij.plugin.ui.list.insights.JaegerUtilKt;
+import org.digma.intellij.plugin.ui.common.JaegerUtilKt;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;

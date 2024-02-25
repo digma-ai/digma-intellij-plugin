@@ -17,7 +17,7 @@ import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.MonitoredPanel
 import org.digma.intellij.plugin.scope.ScopeManager
 import org.digma.intellij.plugin.scope.SpanScope
-import org.digma.intellij.plugin.ui.list.insights.openJaegerFromRecentActivity
+import org.digma.intellij.plugin.ui.common.openJaegerFromRecentActivity
 import org.digma.intellij.plugin.ui.recentactivity.model.CloseLiveViewMessage
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityEntrySpanForTracePayload
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityEntrySpanPayload

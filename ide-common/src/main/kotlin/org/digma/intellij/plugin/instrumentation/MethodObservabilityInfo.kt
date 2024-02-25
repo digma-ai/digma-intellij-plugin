@@ -6,6 +6,4 @@ class MethodObservabilityInfo(
     val canInstrumentMethod: Boolean,
     val annotationClassFqn: String? = null,
     val hasAnnotation: Boolean,
-) {
-
-}
+)

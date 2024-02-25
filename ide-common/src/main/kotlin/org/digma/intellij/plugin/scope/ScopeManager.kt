@@ -4,8 +4,8 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.analytics.AnalyticsService
+import org.digma.intellij.plugin.common.CodeObjectsUtil
 import org.digma.intellij.plugin.common.EDT
-import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.errorreporting.SEVERITY_HIGH_TRY_FIX
 import org.digma.intellij.plugin.errorreporting.SEVERITY_PROP_NAME

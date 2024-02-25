@@ -6,7 +6,7 @@ import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
-import org.digma.intellij.plugin.document.CodeObjectsUtil
+import org.digma.intellij.plugin.common.CodeObjectsUtil
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.navigation.MainContentViewSwitcher
 import org.digma.intellij.plugin.navigation.View

@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.ui.common.statuspanels
 
-import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
@@ -16,7 +15,6 @@ import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import org.digma.intellij.plugin.ui.common.Laf
-import org.digma.intellij.plugin.ui.common.Links.DIGMA_DOCKER_APP_URL
 import java.awt.BorderLayout
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout

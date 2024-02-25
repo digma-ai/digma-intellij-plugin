@@ -8,7 +8,7 @@ import org.cef.misc.IntRef
 import org.cef.misc.StringRef
 import org.cef.network.CefRequest
 import org.cef.network.CefResponse
-import org.digma.intellij.plugin.ui.list.insights.isJaegerButtonEnabled
+import org.digma.intellij.plugin.ui.common.isJaegerButtonEnabled
 import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.io.InputStream

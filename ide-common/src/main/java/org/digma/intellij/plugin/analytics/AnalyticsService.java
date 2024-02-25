@@ -9,7 +9,6 @@ import com.intellij.ui.JBColor;
 import com.intellij.util.Alarm;
 import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.common.*;
-import org.digma.intellij.plugin.document.CodeObjectsUtil;
 import org.digma.intellij.plugin.env.Env;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;

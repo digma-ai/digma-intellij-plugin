@@ -25,7 +25,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-import static org.digma.intellij.plugin.document.CodeObjectsUtil.*;
+import static org.digma.intellij.plugin.common.CodeObjectsUtil.*;
 
 
 public class JaegerUIService {

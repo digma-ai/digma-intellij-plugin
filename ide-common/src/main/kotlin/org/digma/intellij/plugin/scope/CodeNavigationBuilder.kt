@@ -2,7 +2,7 @@ package org.digma.intellij.plugin.scope
 
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.analytics.AnalyticsService
-import org.digma.intellij.plugin.document.CodeObjectsUtil
+import org.digma.intellij.plugin.common.CodeObjectsUtil
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.model.code.CodeDetails
 import org.digma.intellij.plugin.model.rest.navigation.AssetCodeLocation

@@ -7,7 +7,6 @@ import com.intellij.util.messages.MessageBusConnection
 import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.navigation.ErrorsDetailsHelper
-import org.digma.intellij.plugin.ui.model.NOT_SUPPORTED_OBJECT_MSG
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
 
 
@@ -54,8 +53,6 @@ abstract class AbstractViewService(val project: Project) : Disposable {
         //if a view needs to do something when connection gained can override this method and don't forget to call super
     }
 
-    abstract fun getViewDisplayName(): String
-
     //in some situation the UI should not be updated, for example if the error details is On then nothing changes
     //in the view until its closed.
     open fun canUpdateUI(): Boolean {
@@ -90,10 +87,6 @@ abstract class AbstractViewService(val project: Project) : Disposable {
 
             EDT.ensureEDT(r)
         }
-    }
-
-    protected fun getNonSupportedFileScopeMessage(fileUri: String?): String {
-        return NOT_SUPPORTED_OBJECT_MSG + " " + fileUri?.substringAfterLast('/', fileUri)
     }
 
 

@@ -8,7 +8,7 @@ import com.intellij.openapi.project.Project;
 import kotlin.Pair;
 import org.cef.browser.CefBrowser;
 import org.digma.intellij.plugin.analytics.*;
-import org.digma.intellij.plugin.document.CodeObjectsUtil;
+import org.digma.intellij.plugin.common.CodeObjectsUtil;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.model.rest.insights.*;
@@ -54,20 +54,11 @@ public class InsightsMessageRouterHandler extends BaseMessageRouterHandler {
 
             case "INSIGHTS/INITIALIZE" -> onInitialize(browser);
 
-            //should be replaced
-            //case "INSIGHTS/GET_DATA" -> pushInsightsFromGetData();
-
             case "INSIGHTS/GO_TO_ASSET" -> goToInsight(jsonNode);
 
             case "INSIGHTS/OPEN_LIVE_VIEW" -> openLiveView(jsonNode);
 
             case "INSIGHTS/OPEN_HISTOGRAM" -> openHistogram(jsonNode);
-
-//            case "INSIGHTS/GO_TO_ERRORS" -> goToErrors();
-//
-//            case "INSIGHTS/GO_TO_ERROR" -> goToError(jsonNode);
-
-//            case "INSIGHTS/GO_TO_METHOD" -> goToMethod(jsonNode);
 
             case "INSIGHTS/RECALCULATE" -> recalculate(jsonNode);
 
@@ -287,21 +278,6 @@ public class InsightsMessageRouterHandler extends BaseMessageRouterHandler {
         InsightsService.getInstance(project).openLiveView(prefixedCodeObjectId);
     }
 
-//    private void goToErrors() {
-//        project.getService(InsightsActionsService.class).showErrorsTab();
-//        ActivityMonitor.getInstance(project).registerButtonClicked("expand-errors", InsightType.Errors);
-//    }
-
-//    private void goToError(JsonNode jsonNode) throws JsonProcessingException {
-//        ActivityMonitor.getInstance(project).registerCustomEvent("error-insight top-error-clicked", null);
-//        var errorUid = getObjectMapper().readTree(jsonNode.get("payload").toString()).get("errorId").asText();
-//        project.getService(ErrorsViewOrchestrator.class).showErrorDetails(errorUid);
-//    }
-
-//    private void goToMethod(JsonNode jsonNode) throws JsonProcessingException {
-//        var methodId = getObjectMapper().readTree(jsonNode.get("payload").toString()).get("id").asText();
-//        EDT.ensureEDT(() -> project.getService(InsightsActionsService.class).navigateToMethodFromFunctionsListPanel(methodId));
-//    }
 
     private void recalculate(JsonNode jsonNode) throws JsonProcessingException {
         var prefixedCodeObjectId = getObjectMapper().readTree(jsonNode.get("payload").toString()).get("prefixedCodeObjectId").asText();

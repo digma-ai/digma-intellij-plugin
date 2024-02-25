@@ -11,6 +11,7 @@ import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
 import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
 import org.digma.intellij.plugin.scope.SpanScope
+import org.digma.intellij.plugin.ui.common.isJaegerButtonEnabled
 import org.digma.intellij.plugin.ui.jcef.model.ApiUrlPayload
 import org.digma.intellij.plugin.ui.jcef.model.DigmaEngineStatusMessage
 import org.digma.intellij.plugin.ui.jcef.model.IsJaegerButtonEnabledMessage
@@ -29,7 +30,6 @@ import org.digma.intellij.plugin.ui.jcef.model.SetScopeMessagePayload
 import org.digma.intellij.plugin.ui.jcef.model.SetStateMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetUserEmailMessage
 import org.digma.intellij.plugin.ui.jcef.model.UserEmailPayload
-import org.digma.intellij.plugin.ui.list.insights.isJaegerButtonEnabled
 
 
 /**

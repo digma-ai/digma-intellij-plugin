@@ -29,6 +29,7 @@ import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
 import org.digma.intellij.plugin.WITH_SPAN_ANNOTATION_FQN
 import org.digma.intellij.plugin.WITH_SPAN_DEPENDENCY_DESCRIPTION
+import org.digma.intellij.plugin.common.CodeObjectsUtil
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.common.Retries
@@ -39,7 +40,6 @@ import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.common.isValidVirtualFile
 import org.digma.intellij.plugin.common.runInReadAccess
 import org.digma.intellij.plugin.common.runInReadAccessWithResult
-import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.editor.CaretContextService
 import org.digma.intellij.plugin.editor.EditorUtils

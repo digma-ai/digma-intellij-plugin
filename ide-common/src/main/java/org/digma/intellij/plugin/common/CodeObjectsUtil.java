@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.document;
+package org.digma.intellij.plugin.common;
 
 import kotlin.Pair;
 import org.jetbrains.annotations.NotNull;

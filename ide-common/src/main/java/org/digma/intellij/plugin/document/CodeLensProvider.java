@@ -6,7 +6,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
 import org.digma.intellij.plugin.analytics.*;
 import org.digma.intellij.plugin.codelens.CodeLensRefresh;
-import org.digma.intellij.plugin.common.Unicodes;
+import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightImportance;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
@@ -65,7 +65,7 @@ public class CodeLensProvider implements Disposable {
 
         var methodsInfo = documentInfoContainer.getDocumentInfo().getMethods().values();
 
-        List<MethodWithCodeObjects> methods = new ArrayList();
+        List<MethodWithCodeObjects> methods = new ArrayList<>();
 
         for (MethodInfo methodInfo : methodsInfo) {
             List<String> relatedSpansCodeObjectIds = methodInfo.getSpans().stream().map(x -> x.getId()).toList();

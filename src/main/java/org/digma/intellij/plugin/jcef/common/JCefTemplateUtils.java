@@ -3,7 +3,7 @@ package org.digma.intellij.plugin.jcef.common;
 import com.intellij.openapi.editor.colors.impl.AppEditorFontOptions;
 import com.intellij.ui.JBColor;
 import com.intellij.util.ui.UIUtil;
-import org.digma.intellij.plugin.ui.list.insights.JaegerUtilKt;
+import org.digma.intellij.plugin.ui.common.JaegerUtilKt;
 import org.digma.intellij.plugin.ui.settings.Theme;
 
 import java.util.Map;

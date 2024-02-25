@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.ui.list.insights
+package org.digma.intellij.plugin.ui.common
 
 import com.google.common.io.CharStreams
 import com.intellij.ide.BrowserUtil

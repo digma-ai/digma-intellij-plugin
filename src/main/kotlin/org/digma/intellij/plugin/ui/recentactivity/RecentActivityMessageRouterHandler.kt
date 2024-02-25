@@ -13,11 +13,11 @@ import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.MonitoredPanel
+import org.digma.intellij.plugin.ui.common.traceButtonName
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
 import org.digma.intellij.plugin.ui.jcef.RegistrationEventHandler
 import org.digma.intellij.plugin.ui.jcef.tryGetFieldFromPayload
 import org.digma.intellij.plugin.ui.jcef.updateDigmaEngineStatus
-import org.digma.intellij.plugin.ui.list.insights.traceButtonName
 import org.digma.intellij.plugin.ui.recentactivity.model.CloseLiveViewMessage
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityGoToSpanRequest
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityGoToTraceRequest

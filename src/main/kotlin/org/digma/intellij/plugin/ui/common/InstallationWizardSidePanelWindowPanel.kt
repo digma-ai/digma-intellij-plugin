@@ -61,7 +61,6 @@ import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest
 import org.digma.intellij.plugin.ui.jcef.updateDigmaEngineStatus
-import org.digma.intellij.plugin.ui.list.insights.isJaegerButtonEnabled
 import org.digma.intellij.plugin.ui.panels.DisposablePanel
 import org.digma.intellij.plugin.ui.recentactivity.RecentActivityToolWindowShower
 import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier

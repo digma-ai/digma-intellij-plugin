@@ -19,5 +19,4 @@ interface EnvironmentsSupplier {
     fun refreshNowOnBackground()
     fun setCurrent(env: Env)
 
-//    fun hasUsages(env: String): Boolean
 }

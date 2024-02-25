@@ -50,12 +50,12 @@ class JavaCodeLensService(project: Project): AbstractCodeLensService(project) {
 
                 return@runInReadAccessWithResult methods
             }
-        } catch (e: Throwable) {
-            //don't report ProcessCanceledException here , we have nothing to do about it,
+        } catch (pce: ProcessCanceledException) {
+            //don't swallow or report ProcessCanceledException here , we have nothing to do about it,
             // the code vision infrastructure will retry
-            if (e !is ProcessCanceledException) {
-                ErrorReporter.getInstance().reportError("JavaCodeLensService.findMethodsByCodeObjectIds", e)
-            }
+            throw pce
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError("JavaCodeLensService.findMethodsByCodeObjectIds", e)
             return mapOf()
         }
     }

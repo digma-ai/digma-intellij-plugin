@@ -18,7 +18,7 @@ import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.psi.LanguageServiceLocator
 import org.digma.intellij.plugin.psi.PsiUtils
 
-abstract class DigmaCodeVisionProviderBase: DaemonBoundCodeVisionProvider {
+abstract class DigmaCodeVisionProviderBase : DaemonBoundCodeVisionProvider {
 
     private val logger: Logger = Logger.getInstance(DigmaCodeVisionProviderBase::class.java)
 
@@ -61,12 +61,12 @@ abstract class DigmaCodeVisionProviderBase: DaemonBoundCodeVisionProvider {
 
             Log.log(logger::trace, "returning empty code lens list for {}", file.virtualFile)
             return empty
-        } catch (e: Throwable) {
-            //don't report ProcessCanceledException here , we have nothing to do about it,
+        } catch (pce: ProcessCanceledException) {
+            //don't swallow or report ProcessCanceledException here , we have nothing to do about it,
             // the code vision infrastructure will retry
-            if (e !is ProcessCanceledException) {
-                ErrorReporter.getInstance().reportError("DigmaCodeVisionProviderBase.computeForEditor", e)
-            }
+            throw pce
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError("DigmaCodeVisionProviderBase.computeForEditor", e)
             return empty
         }
     }
@@ -76,7 +76,7 @@ abstract class DigmaCodeVisionProviderBase: DaemonBoundCodeVisionProvider {
             return empty
         }
         editor.project?.let {
-            if (languageService.isCodeVisionSupported){
+            if (languageService.isCodeVisionSupported) {
                 return languageService.getCodeLens(psiFile)
             }
         }

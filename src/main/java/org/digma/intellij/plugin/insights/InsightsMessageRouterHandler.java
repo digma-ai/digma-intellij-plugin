@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 
 import static org.digma.intellij.plugin.ui.jcef.JCefBrowserUtilsKt.serializeAndExecuteWindowPostMessageJavaScript;
 
-
+//todo: convert to kotlin and move to org.digma.intellij.plugin.ui.insights
 public class InsightsMessageRouterHandler extends BaseMessageRouterHandler {
 
     private final Logger LOGGER = Logger.getInstance(getClass());
@@ -45,19 +45,9 @@ public class InsightsMessageRouterHandler extends BaseMessageRouterHandler {
         return "insights";
     }
 
+
     @Override
-    public void doOnQuery(@NotNull Project project, @NotNull CefBrowser browser, @NotNull JsonNode requestJsonNode, @NotNull String rawRequest, @NotNull String action) {
-        try {
-            doOnQueryImpl(project, browser, requestJsonNode, rawRequest, action);
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
-        }
-
-    }
-
-
-    private void doOnQueryImpl(@NotNull Project project, @NotNull CefBrowser browser, @NotNull JsonNode requestJsonNode, @NotNull String rawRequest, @NotNull String action) throws JsonProcessingException, AnalyticsServiceException {
-
+    public void doOnQuery(@NotNull Project project, @NotNull CefBrowser browser, @NotNull JsonNode requestJsonNode, @NotNull String rawRequest, @NotNull String action) throws Exception {
 
         var jsonNode = getObjectMapper().readTree(rawRequest);
         switch (action) {

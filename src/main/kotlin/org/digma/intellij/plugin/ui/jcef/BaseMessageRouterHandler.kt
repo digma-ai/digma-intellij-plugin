@@ -228,6 +228,7 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
     /**
      * each app router handler should implement this method for specific app messages
      */
+    @Throws(Exception::class) // this is necessary for implementations in java that may throw exceptions
     abstract fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String)
 
 

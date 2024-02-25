@@ -78,9 +78,6 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider"/>
 
-        <projectService serviceInterface="org.digma.intellij.plugin.ui.service.InsightsService"
-                        serviceImplementation="org.digma.intellij.plugin.insights.InsightsServiceImpl"/>
-
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.navigation.CodeButtonCaretContextService"
                         serviceInterface="org.digma.intellij.plugin.editor.CaretContextService"/>
 

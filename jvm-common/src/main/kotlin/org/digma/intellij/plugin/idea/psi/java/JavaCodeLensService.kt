@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.idea.psi.java
 
 import com.intellij.codeInsight.hints.InlayHintsUtils
+import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.JavaRecursiveElementWalkingVisitor
@@ -50,7 +51,11 @@ class JavaCodeLensService(project: Project): AbstractCodeLensService(project) {
                 return@runInReadAccessWithResult methods
             }
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("JavaCodeLensService.findMethodsByCodeObjectIds", e)
+            //don't report ProcessCanceledException here , we have nothing to do about it,
+            // the code vision infrastructure will retry
+            if (e !is ProcessCanceledException) {
+                ErrorReporter.getInstance().reportError("JavaCodeLensService.findMethodsByCodeObjectIds", e)
+            }
             return mapOf()
         }
     }

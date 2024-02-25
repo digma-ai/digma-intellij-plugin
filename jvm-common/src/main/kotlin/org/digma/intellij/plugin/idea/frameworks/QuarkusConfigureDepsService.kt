@@ -151,12 +151,20 @@ class QuarkusConfigureDepsService(private val project: Project) : Disposable {
         @Suppress("UnstableApiUsage")
         disposingScope().launch {
             delay(TimeUnit.SECONDS.toMillis(blackoutDurationSeconds) + 500)
-
-            periodicAction()
+            try {
+                periodicAction()
+            } catch (e: Exception) {
+                Log.warnWithException(logger, e, "Exception in periodicAction")
+                ErrorReporter.getInstance().reportError(project, "QuarkusConfigureDepsService.periodicAction", e)
+            }
         }
 
-        WriteAction.run<Exception> {
-            addDependenciesOfQuarkusOtelToRelevantModules()
+        try {
+            WriteAction.run<Exception> {
+                addDependenciesOfQuarkusOtelToRelevantModules()
+            }
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError("QuarkusConfigureDepsService.buttonClicked.writeAction", e)
         }
 
         Backgroundable.executeOnPooledThread {

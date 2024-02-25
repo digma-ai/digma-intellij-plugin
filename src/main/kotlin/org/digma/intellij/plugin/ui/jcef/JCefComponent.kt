@@ -119,12 +119,15 @@ private constructor(
             val apiUrl = settings.apiUrl
             sendApiUrl(jbCefBrowser.cefBrowser, apiUrl)
             sendIsMicrometerProject(jbCefBrowser.cefBrowser, SpringBootMicrometerConfigureDepsService.isSpringBootWithMicrometer())
+            sendIsJaegerButtonEnabledMessage(jbCefBrowser.cefBrowser)
         }, settingsListenerParentDisposable)
 
 
         project.messageBus.connect(userRegistrationParentDisposable).subscribe(
             UserRegistrationEvent.USER_REGISTRATION_TOPIC,
-            UserRegistrationEvent { email -> sendUserEmail(jbCefBrowser.cefBrowser, email) })
+            UserRegistrationEvent { email ->
+                sendUserEmail(jbCefBrowser.cefBrowser, email)
+            })
 
 
         project.messageBus.connect(environmentChangeParentDisposable).subscribe(

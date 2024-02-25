@@ -1,20 +1,12 @@
 package org.digma.intellij.plugin.jcef.common;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.util.StdDateFormat;
 import com.intellij.ui.jcef.JBCefBrowser;
-import org.digma.intellij.plugin.ui.jcef.model.JaegerUrlChangedPayload;
-import org.digma.intellij.plugin.ui.jcef.model.JaegerUrlChangedRequest;
-import org.digma.intellij.plugin.ui.list.insights.JaegerUtilKt;
 import org.digma.intellij.plugin.ui.settings.Theme;
 import org.jetbrains.annotations.NotNull;
 
-import static org.digma.intellij.plugin.jcef.common.JCefMessagesUtils.GLOBAL_SET_IS_JAEGER_ENABLED;
-import static org.digma.intellij.plugin.jcef.common.JCefMessagesUtils.GLOBAL_SET_UI_CODE_FONT;
-import static org.digma.intellij.plugin.jcef.common.JCefMessagesUtils.GLOBAL_SET_UI_MAIN_FONT;
-import static org.digma.intellij.plugin.jcef.common.JCefMessagesUtils.GLOBAL_SET_UI_THEME;
-import static org.digma.intellij.plugin.jcef.common.JCefMessagesUtils.REQUEST_MESSAGE_TYPE;
+import static org.digma.intellij.plugin.jcef.common.JCefMessagesUtils.*;
 
 public class JCefBrowserUtil {
 
@@ -49,17 +41,6 @@ public class JCefBrowserUtil {
                         REQUEST_MESSAGE_TYPE,
                         GLOBAL_SET_UI_CODE_FONT,
                         new UiCodeFontPayload(font)
-                ));
-        JCefBrowserUtil.postJSMessage(requestMessage, jbCefBrowser);
-    }
-
-
-    public static void sendRequestToChangeTraceButtonEnabled(JBCefBrowser jbCefBrowser) {
-        String requestMessage = JCefBrowserUtil.resultToString(
-                new JaegerUrlChangedRequest(
-                        REQUEST_MESSAGE_TYPE,
-                        GLOBAL_SET_IS_JAEGER_ENABLED,
-                        new JaegerUrlChangedPayload(JaegerUtilKt.isJaegerButtonEnabled())
                 ));
         JCefBrowserUtil.postJSMessage(requestMessage, jbCefBrowser);
     }

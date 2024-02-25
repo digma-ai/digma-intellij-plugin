@@ -30,6 +30,8 @@ class ScopeManager(private val project: Project) {
 
     fun changeToHome() {
 
+        EDT.assertNonDispatchThread()
+
         ErrorsViewService.getInstance(project).empty()
 
         EDT.ensureEDT {
@@ -44,6 +46,8 @@ class ScopeManager(private val project: Project) {
     }
 
     fun changeScope(scope: Scope) {
+
+        EDT.assertNonDispatchThread()
 
         try {
             when (scope) {

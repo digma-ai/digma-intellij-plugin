@@ -1,6 +1,16 @@
 # Changelog
 
-## [2.0.269] - 2024-02-25
+## [2.0.270] - 2024-02-25
+
+- remove-insights-model-react by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1835
+- Disable python support Closes #1824 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1836
+- remove insights view service Closes #1758 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1837
+- dont-call-change-scope-on-edt Closes #1840 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1841
+- catch-errors-in-add-observability by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1839
+- add allow slow operations by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1838
+- dont-report-PCE-in-codelens-service by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1842
+
+## 2.0.269 - 2024-02-25
 
 - remove notification dot in tool window icon Closes #1816 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1825
 - update build profiles to latest EAP by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1829

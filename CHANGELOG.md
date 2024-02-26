@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.270] - 2024-02-25
+## [2.0.271] - 2024-02-26
+
+- Navigation discovery invisible process Closes #1843 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1844
+
+## 2.0.270 - 2024-02-25
 
 - remove-insights-model-react by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1835
 - Disable python support Closes #1824 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1836

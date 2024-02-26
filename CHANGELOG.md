@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.273] - 2024-02-26
+## [2.0.274] - 2024-02-26
+
+- remove unnecessary try catch by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1832
+- fix environment query param usage Closes #1831 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1848
+
+## 2.0.273 - 2024-02-26
 
 - remove highlighter if already exists for method by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1847
 

@@ -93,7 +93,7 @@ class TestsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pro
 
         Backgroundable.ensurePooledThread {
             val environmentsSupplier: EnvironmentsSupplier = AnalyticsService.getInstance(project).environment
-            environmentsSupplier.setCurrent(environment, false) {
+            environmentsSupplier.setCurrent(environment) {
                 ScopeManager.getInstance(project).changeScope(SpanScope(spanCodeObjectId))
             }
         }

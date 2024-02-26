@@ -132,7 +132,7 @@ private constructor(
 
         project.messageBus.connect(environmentChangeParentDisposable).subscribe(
             EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC, object : EnvironmentChanged {
-                override fun environmentChanged(newEnv: Env, refreshInsightsView: Boolean) {
+                override fun environmentChanged(newEnv: Env) {
                     sendCurrentEnvironment(jbCefBrowser.cefBrowser, newEnv)
                 }
 

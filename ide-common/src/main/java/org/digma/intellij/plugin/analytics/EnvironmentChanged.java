@@ -10,7 +10,7 @@ public interface EnvironmentChanged {
     @com.intellij.util.messages.Topic.ProjectLevel
     Topic<EnvironmentChanged> ENVIRONMENT_CHANGED_TOPIC = Topic.create("ENVIRONMENT_CHANGED_TOPIC", EnvironmentChanged.class);
 
-    void environmentChanged(Env newEnv, boolean refreshInsightsView);
+    void environmentChanged(Env newEnv);
 
     void environmentsListChanged(List<Env> newEnvironments);
 

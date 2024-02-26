@@ -173,25 +173,23 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
     }
 
 
-    override fun environmentChanged(newEnv: Env, refreshInsightsView: Boolean) {
-        if (refreshInsightsView) {
-            EDT.ensureEDT {
-                allowSlowOperation {
-                    val fileEditor = FileEditorManager.getInstance(project).selectedEditor
-                    if (fileEditor != null) {
-                        val file = fileEditor.file
-                        if (isValidVirtualFile(file)) {
-                            val psiFile = PsiManager.getInstance(project).findFile(file)
-                            if (PsiUtils.isValidPsiFile(psiFile) && psiFile != null && isRelevant(psiFile.virtualFile)) {
-                                val selectedTextEditor =
-                                    EditorUtils.getSelectedTextEditorForFile(file, FileEditorManager.getInstance(project))
-                                if (selectedTextEditor != null) {
-                                    val offset = selectedTextEditor.caretModel.offset
-                                    val methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedTextEditor, offset)
-                                    LatestMethodUnderCaretHolder.getInstance(project)
-                                        .saveLatestMethodUnderCaret(project, this, methodUnderCaret.id)
-                                    CaretContextService.getInstance(project).contextChanged(methodUnderCaret)
-                                }
+    override fun environmentChanged(newEnv: Env) {
+        EDT.ensureEDT {
+            allowSlowOperation {
+                val fileEditor = FileEditorManager.getInstance(project).selectedEditor
+                if (fileEditor != null) {
+                    val file = fileEditor.file
+                    if (isValidVirtualFile(file)) {
+                        val psiFile = PsiManager.getInstance(project).findFile(file)
+                        if (PsiUtils.isValidPsiFile(psiFile) && psiFile != null && isRelevant(psiFile.virtualFile)) {
+                            val selectedTextEditor =
+                                EditorUtils.getSelectedTextEditorForFile(file, FileEditorManager.getInstance(project))
+                            if (selectedTextEditor != null) {
+                                val offset = selectedTextEditor.caretModel.offset
+                                val methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedTextEditor, offset)
+                                LatestMethodUnderCaretHolder.getInstance(project)
+                                    .saveLatestMethodUnderCaret(project, this, methodUnderCaret.id)
+                                CaretContextService.getInstance(project).contextChanged(methodUnderCaret)
                             }
                         }
                     }

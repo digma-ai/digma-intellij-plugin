@@ -185,29 +185,26 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
     }
 
     @Override
-    public void environmentChanged(Env newEnv, boolean refreshInsightsView) {
+    public void environmentChanged(Env newEnv) {
 
-        if (refreshInsightsView) {
-            EDT.ensureEDT(() -> {
-                var fileEditor = FileEditorManager.getInstance(project).getSelectedEditor();
-                if (fileEditor != null) {
-                    var file = fileEditor.getFile();
-                    if (VfsUtilsKt.isValidVirtualFile(file)) {
-                        var psiFile = PsiManager.getInstance(project).findFile(file);
-                        if (PsiUtils.isValidPsiFile(psiFile) && isRelevant(psiFile.getVirtualFile())) {
-                            var selectedTextEditor = EditorUtils.getSelectedTextEditorForFile(file, FileEditorManager.getInstance(project));
-                            if (selectedTextEditor != null) {
-                                int offset = selectedTextEditor.getCaretModel().getOffset();
-                                var methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedTextEditor, offset);
-                                LatestMethodUnderCaretHolder.getInstance(project).saveLatestMethodUnderCaret(project, this, methodUnderCaret.getId());
-                                CaretContextService.getInstance(project).contextChanged(methodUnderCaret);
-                            }
+        EDT.ensureEDT(() -> {
+            var fileEditor = FileEditorManager.getInstance(project).getSelectedEditor();
+            if (fileEditor != null) {
+                var file = fileEditor.getFile();
+                if (VfsUtilsKt.isValidVirtualFile(file)) {
+                    var psiFile = PsiManager.getInstance(project).findFile(file);
+                    if (PsiUtils.isValidPsiFile(psiFile) && isRelevant(psiFile.getVirtualFile())) {
+                        var selectedTextEditor = EditorUtils.getSelectedTextEditorForFile(file, FileEditorManager.getInstance(project));
+                        if (selectedTextEditor != null) {
+                            int offset = selectedTextEditor.getCaretModel().getOffset();
+                            var methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedTextEditor, offset);
+                            LatestMethodUnderCaretHolder.getInstance(project).saveLatestMethodUnderCaret(project, this, methodUnderCaret.getId());
+                            CaretContextService.getInstance(project).contextChanged(methodUnderCaret);
                         }
                     }
                 }
-            });
-        }
-
+            }
+        });
 
         CodeLensHost.getInstance(project).environmentChanged(newEnv);
     }

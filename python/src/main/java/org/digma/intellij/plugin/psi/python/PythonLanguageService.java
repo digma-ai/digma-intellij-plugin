@@ -298,27 +298,25 @@ public class PythonLanguageService implements LanguageService {
     }
 
     @Override
-    public void environmentChanged(Env newEnv, boolean refreshInsightsView) {
-        if (refreshInsightsView) {
-            EDT.ensureEDT(() -> {
-                var fileEditor = FileEditorManager.getInstance(project).getSelectedEditor();
-                if (fileEditor != null) {
-                    var file = fileEditor.getFile();
-                    if (VfsUtilsKt.isValidVirtualFile(file)) {
-                        var psiFile = PsiManager.getInstance(project).findFile(file);
-                        if (PsiUtils.isValidPsiFile(psiFile) && isRelevant(psiFile)) {
-                            var selectedTextEditor = FileEditorManager.getInstance(project).getSelectedTextEditor();
-                            if (selectedTextEditor != null) {
-                                int offset = selectedTextEditor.getCaretModel().getOffset();
-                                var methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedTextEditor, offset);
-                                LatestMethodUnderCaretHolder.getInstance(project).saveLatestMethodUnderCaret(project, this, methodUnderCaret.getId());
-                                CaretContextService.getInstance(project).contextChanged(methodUnderCaret);
-                            }
+    public void environmentChanged(Env newEnv) {
+        EDT.ensureEDT(() -> {
+            var fileEditor = FileEditorManager.getInstance(project).getSelectedEditor();
+            if (fileEditor != null) {
+                var file = fileEditor.getFile();
+                if (VfsUtilsKt.isValidVirtualFile(file)) {
+                    var psiFile = PsiManager.getInstance(project).findFile(file);
+                    if (PsiUtils.isValidPsiFile(psiFile) && isRelevant(psiFile)) {
+                        var selectedTextEditor = FileEditorManager.getInstance(project).getSelectedTextEditor();
+                        if (selectedTextEditor != null) {
+                            int offset = selectedTextEditor.getCaretModel().getOffset();
+                            var methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedTextEditor, offset);
+                            LatestMethodUnderCaretHolder.getInstance(project).saveLatestMethodUnderCaret(project, this, methodUnderCaret.getId());
+                            CaretContextService.getInstance(project).contextChanged(methodUnderCaret);
                         }
                     }
                 }
-            });
-        }
+            }
+        });
 
         PythonCodeLensService.getInstance(project).refreshCodeLens();
     }

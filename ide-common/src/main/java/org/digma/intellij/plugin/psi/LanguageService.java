@@ -352,7 +352,7 @@ public interface LanguageService extends Disposable {
     /**
      * let language services do something on environmentChanged. for example to update the current method context.
      */
-    void environmentChanged(Env newEnv, boolean refreshInsightsView);
+    void environmentChanged(Env newEnv);
 
 
     @NotNull

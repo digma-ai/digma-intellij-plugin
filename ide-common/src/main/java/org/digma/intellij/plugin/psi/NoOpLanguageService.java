@@ -88,7 +88,7 @@ public class NoOpLanguageService implements LanguageService {
     }
 
     @Override
-    public void environmentChanged(Env newEnv, boolean refreshInsightsView) {
+    public void environmentChanged(Env newEnv) {
         //nothing to do
     }
 

@@ -86,6 +86,6 @@ public final class DashboardService {
         var span = goToSpan.payload();
 
         var environmentsSupplier = AnalyticsService.getInstance(project).getEnvironment();
-        environmentsSupplier.setCurrent(span.environment(), false, () -> ScopeManager.getInstance(project).changeScope(new SpanScope(span.spanCodeObjectId())));
+        environmentsSupplier.setCurrent(span.environment(), () -> ScopeManager.getInstance(project).changeScope(new SpanScope(span.spanCodeObjectId())));
     }
 }

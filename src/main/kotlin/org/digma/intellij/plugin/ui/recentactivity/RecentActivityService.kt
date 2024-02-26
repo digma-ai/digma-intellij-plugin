@@ -77,7 +77,7 @@ class RecentActivityService(val project: Project) : Disposable {
 
                     val spanId = payload.span.spanCodeObjectId
                     val environmentsSupplier: EnvironmentsSupplier = project.service<AnalyticsService>().environment
-                    environmentsSupplier.setCurrent(payload.environment, false) {
+                    environmentsSupplier.setCurrent(payload.environment) {
                         ScopeManager.getInstance(project).changeScope(SpanScope(spanId))
                     }
                     project.service<ActivityMonitor>().registerSpanLinkClicked(MonitoredPanel.RecentActivity)

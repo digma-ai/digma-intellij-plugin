@@ -92,10 +92,6 @@ public abstract class InsightsServiceImpl implements Disposable {
         ActivityMonitor.getInstance(project).registerButtonClicked("recalculate", InsightType.valueOf(insightType));
     }
 
-    public void refresh(@NotNull InsightType insightType) {
-        ActivityMonitor.getInstance(project).registerButtonClicked("refresh", insightType);
-    }
-
 
     public void goToTrace(@NotNull String traceId, @NotNull String traceName, @NotNull InsightType insightType, @Nullable String spanCodeObjectId) {
         JaegerUtilKt.openJaegerFromInsight(project, traceId, traceName, insightType, spanCodeObjectId);

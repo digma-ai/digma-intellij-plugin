@@ -62,8 +62,6 @@ public class InsightsMessageRouterHandler extends BaseMessageRouterHandler {
 
             case "INSIGHTS/RECALCULATE" -> recalculate(jsonNode);
 
-            case "INSIGHTS/REFRESH_ALL" -> refresh(jsonNode);
-
             case "INSIGHTS/GO_TO_TRACE" -> goToTrace(jsonNode);
 
             case "INSIGHTS/GO_TO_TRACE_COMPARISON" -> goToTraceComparison(jsonNode);
@@ -283,11 +281,6 @@ public class InsightsMessageRouterHandler extends BaseMessageRouterHandler {
         var prefixedCodeObjectId = getObjectMapper().readTree(jsonNode.get("payload").toString()).get("prefixedCodeObjectId").asText();
         var insightType = getObjectMapper().readTree(jsonNode.get("payload").toString()).get("insightType").asText();
         InsightsService.getInstance(project).recalculate(prefixedCodeObjectId, insightType);
-    }
-
-    private void refresh(JsonNode jsonNode) throws JsonProcessingException {
-        var insightType = getObjectMapper().readTree(jsonNode.get("payload").toString()).get("insightType").asText();
-        InsightsService.getInstance(project).refresh(InsightType.valueOf(insightType));
     }
 
     private void goToTrace(JsonNode jsonNode) throws JsonProcessingException {

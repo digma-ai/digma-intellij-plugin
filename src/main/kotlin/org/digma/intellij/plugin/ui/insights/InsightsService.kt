@@ -6,6 +6,7 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.analytics.AnalyticsService
+import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.insights.InsightsServiceImpl
 import org.digma.intellij.plugin.ui.insights.model.SetInsightDataListMessage
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
@@ -33,13 +34,17 @@ class InsightsService(val project: Project) : InsightsServiceImpl(project) {
 
 
     fun refreshInsightsList(jsonNode: JsonNode) {
-        val backendQueryParams: Map<String, Any> = getQueryMapFromPayload(jsonNode)
-        val insightsResponse = AnalyticsService.getInstance(project).getInsights(backendQueryParams)
+
+        val insightsResponse = try {
+            val backendQueryParams: Map<String, Any> = getQueryMapFromPayload(jsonNode)
+            AnalyticsService.getInstance(project).getInsights(backendQueryParams)
+        } catch (_: AnalyticsServiceException) {
+            "{\"totalCount\":0,\"insights\":[]}"
+        }
+
         val msg = SetInsightDataListMessage(insightsResponse)
         jCefComponent?.let {
             serializeAndExecuteWindowPostMessageJavaScript(it.jbCefBrowser.cefBrowser, msg)
         }
     }
-
-
 }

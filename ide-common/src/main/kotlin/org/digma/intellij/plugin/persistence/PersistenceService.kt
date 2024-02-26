@@ -25,7 +25,7 @@ class PersistenceService {
         return state.currentEnv
     }
 
-    fun setCurrentEnv(env: String) {
+    fun setCurrentEnv(env: String?) {
         state.currentEnv = env
     }
 

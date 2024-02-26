@@ -46,12 +46,12 @@ class UpdateVersionPanel(
 
     private val logger: Logger = Logger.getInstance(this::class.java)
 
-    private var updateState = project.service<UpdatesService>().evalAndGetState()
+    private var updateState = UpdatesService.getInstance(project).evalAndGetState()
 
     private val updateTextProperty = AtomicProperty("")
 
     init {
-        project.service<UpdatesService>().affectedPanel = this
+        UpdatesService.getInstance(project).affectedPanel = this
         isOpaque = false
         layout = BoxLayout(this, BoxLayout.X_AXIS)
         isVisible = false
@@ -68,7 +68,7 @@ class UpdateVersionPanel(
 
     override fun reset() {
         if (tempEnableReset) {
-            updateState = project.service<UpdatesService>().evalAndGetState()
+            updateState = UpdatesService.getInstance(project).evalAndGetState()
             Log.log(logger::debug,"resetting panel, update state {}",updateState)
             changeState()
         }
@@ -94,7 +94,7 @@ class UpdateVersionPanel(
         contentPanel.add(icon)
         contentPanel.add(Box.createHorizontalStrut(5))
         val updateTextLabel = JLabel(updateTextProperty.get())
-        updateTextProperty.afterChange(project.service<UpdatesService>()) {
+        updateTextProperty.afterChange(UpdatesService.getInstance(project)) {
             updateTextLabel.text = updateTextProperty.get()
         }
 
@@ -123,13 +123,13 @@ class UpdateVersionPanel(
                     }
 
                     BackendDeploymentType.DockerCompose -> {
-                        if(project.service<DockerService>().isEngineInstalled()){
+                        if (service<DockerService>().isEngineInstalled()) {
                             val upgradePopupLabel = JLabel(asHtml("<p>" +
                                     "<b>The Digma local engine is being updated</b>" +
                                     "</p><p>This can take a few minutes in which Digma may be offline</p>"))
                             upgradePopupLabel.border = JBUI.Borders.empty(3)
                             HintManager.getInstance().showHint(upgradePopupLabel, RelativePoint.getNorthWestOf(updateButton), HintManager.HIDE_BY_ESCAPE, 3000)
-                            project.service<DockerService>().upgradeEngine(project);
+                            service<DockerService>().upgradeEngine(project)
                         }
                         else{
                             EditorService.getInstance(project).openClasspathResourceReadOnly(UPDATE_GUIDE_DOCKER_COMPOSE_NAME,UPDATE_GUIDE_DOCKER_COMPOSE_PATH)
@@ -152,7 +152,7 @@ class UpdateVersionPanel(
             }
 
             // post click
-            project.service<UpdatesService>().updateButtonClicked()
+            UpdatesService.getInstance(project).updateButtonClicked()
             this.isVisible = false
         }
 

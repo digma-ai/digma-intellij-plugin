@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.PluginId
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.common.Backgroundable
+import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.env.EnvironmentsSupplier
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
@@ -203,9 +204,9 @@ class GoToCodeObjectInsightsAction(
             }
         }
 
-        if (environmentsSupplier.getCurrent()?.originalName != environment) {
+        if (Env.getCurrentEnv(project) != environment) {
 
-            environmentsSupplier.setCurrent(environment, false) {
+            environmentsSupplier.setCurrent(environment) {
                 runnable.run()
             }
 

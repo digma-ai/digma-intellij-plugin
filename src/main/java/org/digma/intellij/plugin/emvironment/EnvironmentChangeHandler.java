@@ -31,7 +31,7 @@ public class EnvironmentChangeHandler implements EnvironmentChanged {
     //environmentChanged must run in a background thread.
     //when fired by the Environment object it is on background
     @Override
-    public void environmentChanged(Env newEnv, boolean refreshInsightsView) {
+    public void environmentChanged(Env newEnv) {
 
         try {
 
@@ -47,7 +47,7 @@ public class EnvironmentChangeHandler implements EnvironmentChanged {
                     Class<? extends LanguageService> clazz = (Class<? extends LanguageService>) Class.forName(value.getLanguageServiceClassName());
                     LanguageService languageService = project.getService(clazz);
                     if (languageService != null) {
-                        languageService.environmentChanged(newEnv, refreshInsightsView);
+                        languageService.environmentChanged(newEnv);
                     }
                 } catch (Throwable e) {
                     //catch Throwable because there may be errors.

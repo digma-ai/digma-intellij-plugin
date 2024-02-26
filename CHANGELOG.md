@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.271] - 2024-02-26
+## [2.0.272] - 2024-02-26
+
+- Feature/highlight method by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1846
+
+## 2.0.271 - 2024-02-26
 
 - Navigation discovery invisible process Closes #1843 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1844
 

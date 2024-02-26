@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.272] - 2024-02-26
+## [2.0.273] - 2024-02-26
+
+- remove highlighter if already exists for method by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1847
+
+## 2.0.272 - 2024-02-26
 
 - Feature/highlight method by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1846
 

@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.editor
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.colors.EditorColors
@@ -15,11 +16,15 @@ import com.intellij.psi.PsiElement
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
 import org.digma.intellij.plugin.common.EDT
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.psi.LanguageServiceLocator
 import java.util.concurrent.locks.ReentrantLock
 
 @Service(Service.Level.PROJECT)
 class EditorRangeHighlighter(private val project: Project) : Disposable {
+
+    private val logger = Logger.getInstance(this::class.java)
 
     private val highlighters = mutableMapOf<String, Pair<Editor, RangeHighlighter>>()
 
@@ -42,10 +47,16 @@ class EditorRangeHighlighter(private val project: Project) : Disposable {
 
         EDT.ensureEDT {
             try {
+
+                Log.log(logger::trace, "adding highlighter for {}", methodId)
+
                 //locking to make sure we don't miss a clearHighlighter.
                 // in case clearHighlighter is called before this method completes we may miss the clear
                 // and the highlighter will stay on
                 myLock.lock()
+
+                //first clear in case this method already has a highlighter
+                clearHighlighter(methodId)
 
                 val selectedTextEditor = FileEditorManager.getInstance(project).selectedTextEditor
 
@@ -62,10 +73,14 @@ class EditorRangeHighlighter(private val project: Project) : Disposable {
                             HighlighterTargetArea.EXACT_RANGE
                         )
 
+                        Log.log(logger::trace, "highlighter for {} added", methodId)
                         highlighters[methodId] = Pair(editor, rangeHighlighter)
                     }
                 }
 
+            } catch (e: Throwable) {
+                Log.warnWithException(logger, project, e, "error adding highlighter {}", e)
+                ErrorReporter.getInstance().reportError("", e)
             } finally {
                 if (myLock.isHeldByCurrentThread) {
                     myLock.unlock()
@@ -78,41 +93,29 @@ class EditorRangeHighlighter(private val project: Project) : Disposable {
 
     fun clearHighlighter(methodId: String) {
 
-        try {
-
-            myLock.lock()
-
-            EDT.ensureEDT {
-                highlighters[methodId]?.let {
+        EDT.ensureEDT {
+            try {
+                myLock.lock()
+                highlighters.remove(methodId)?.let {
+                    Log.log(logger::trace, "removing highlighter for {}", methodId)
                     removeHighlighter(it.first, it.second)
                 }
-            }
-        } finally {
-            if (myLock.isHeldByCurrentThread) {
-                myLock.unlock()
+            } catch (e: Throwable) {
+                Log.warnWithException(logger, project, e, "error removing highlighter {}", e)
+                ErrorReporter.getInstance().reportError("", e)
+            } finally {
+                if (myLock.isHeldByCurrentThread) {
+                    myLock.unlock()
+                }
             }
         }
     }
 
 
     fun clearAllHighlighters() {
-
-        try {
-
-            myLock.lock()
-
-            EDT.ensureEDT {
-                highlighters.forEach { entry ->
-                    entry.value.let {
-                        removeHighlighter(it.first, it.second)
-                    }
-                }
-            }
-        } finally {
-            if (myLock.isHeldByCurrentThread) {
-                myLock.unlock()
-            }
-        }
+        Log.log(logger::trace, "removing all highlighters")
+        //create a new list to avoid concurrent modification
+        highlighters.keys.toList().forEach { clearHighlighter(it) }
     }
 
 

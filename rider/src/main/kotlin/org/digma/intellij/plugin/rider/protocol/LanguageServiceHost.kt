@@ -69,7 +69,7 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
     }
 
     private fun getProtocol(model: LanguageServiceModel): IProtocol {
-        return model.protocol!! //protocol is nullable in 2023.2, remove when 2023.2 is our base
+        return model.protocol!! //don't remove null assertion, protocol is nullable in 2023.2, remove when 2023.2 is our base
     }
 
     /*
@@ -113,7 +113,10 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
 
                                 Backgroundable.executeOnPooledThread {
 
-                                    BuildDocumentInfoProcessContext.buildDocumentInfoUnderProcess(project) { progressIndicator: ProgressIndicator ->
+                                    BuildDocumentInfoProcessContext.buildDocumentInfoUnderProcess(
+                                        project,
+                                        psiFile.name
+                                    ) { progressIndicator: ProgressIndicator ->
                                         val context = BuildDocumentInfoProcessContext(progressIndicator)
                                         val documentInfoService = DocumentInfoService.getInstance(project)
                                         val documentInfo = languageService.buildDocumentInfo(psiFile, selectedEditor, context)

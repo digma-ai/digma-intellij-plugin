@@ -164,7 +164,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
                         Log.log(LOGGER::trace, "Found language service {} for :{}", languageService, newFile);
 
 
-                        BuildDocumentInfoProcessContext.buildDocumentInfoUnderProcess(project, progressIndicator -> {
+                        BuildDocumentInfoProcessContext.buildDocumentInfoUnderProcess(project, psiFile.getName(), progressIndicator -> {
                             var context = new BuildDocumentInfoProcessContext(progressIndicator);
                             DocumentInfo documentInfo = languageService.buildDocumentInfo(psiFile, newEditor, context);
                             Log.log(LOGGER::trace, "got DocumentInfo for :{}", newFile);

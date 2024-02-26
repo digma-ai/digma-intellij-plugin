@@ -27,7 +27,7 @@ public class BuildDocumentInfoProcessContext extends ProcessContext {
     }
 
 
-    public static void buildDocumentInfoUnderProcess(@NotNull Project project, Consumer<ProgressIndicator> buildTask) {
+    public static void buildDocumentInfoUnderProcess(@NotNull Project project, @NotNull String fileName, Consumer<ProgressIndicator> buildTask) {
         DumbService.getInstance(project).waitForSmartMode();
 
         var workTask = new java.util.function.Consumer<ProgressIndicator>() {
@@ -105,7 +105,7 @@ public class BuildDocumentInfoProcessContext extends ProcessContext {
 
         var task = new RetryableTask.Invisible(
                 project,
-                "Digma span navigation - $origin:$retry",
+                "Build document info " + fileName,
                 workTask,
                 null,
                 null,

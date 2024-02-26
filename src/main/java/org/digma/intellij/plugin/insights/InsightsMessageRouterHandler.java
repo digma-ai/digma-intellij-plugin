@@ -24,6 +24,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static org.digma.intellij.plugin.ui.jcef.JCEFUtilsKt.getQueryMapFromPayload;
 import static org.digma.intellij.plugin.ui.jcef.JCefBrowserUtilsKt.serializeAndExecuteWindowPostMessageJavaScript;
 
 //todo: convert to kotlin and move to org.digma.intellij.plugin.ui.insights
@@ -87,7 +88,8 @@ public class InsightsMessageRouterHandler extends BaseMessageRouterHandler {
 
     private void pushInsightsListData(JsonNode jsonNode) {
         Log.log(LOGGER::debug, project, "got INSIGHTS/GET_DATA_LIST message");
-        InsightsService.getInstance(project).refreshInsightsList(jsonNode);
+        Map<String, Object> backendQueryParams = getQueryMapFromPayload(jsonNode, getObjectMapper());
+        InsightsService.getInstance(project).refreshInsightsList(backendQueryParams);
     }
 
     private void getCommitInfo(@NotNull CefBrowser browser, JsonNode jsonNode) throws JsonProcessingException {

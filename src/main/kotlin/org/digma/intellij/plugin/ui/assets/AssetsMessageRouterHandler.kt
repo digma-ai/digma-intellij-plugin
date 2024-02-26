@@ -61,7 +61,7 @@ class AssetsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pr
 
         Log.log(logger::trace, project, "pushCategories called")
 
-        val backendQueryParams = getQueryMapFromPayload(requestJsonNode)
+        val backendQueryParams = getQueryMapFromPayload(requestJsonNode, objectMapper)
         val payload = objectMapper.readTree(AssetsService.getInstance(project).getAssetCategories(backendQueryParams))
         val message = SetCategoriesDataMessage(payload)
         Log.log(logger::trace, project, "sending ASSETS/SET_CATEGORIES_DATA message")
@@ -82,7 +82,7 @@ class AssetsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pr
     @Throws(JsonProcessingException::class)
     private fun pushAssets(browser: CefBrowser, requestJsonNode: JsonNode) {
 
-        val backendQueryParams: Map<String, Any> = getQueryMapFromPayload(requestJsonNode)
+        val backendQueryParams = getQueryMapFromPayload(requestJsonNode, objectMapper)
         Log.log(logger::trace, project, "pushAssets called")
         val payload = objectMapper.readTree(AssetsService.getInstance(project).getAssets(backendQueryParams))
         val message = SetAssetsDataMessage(payload)
@@ -94,7 +94,7 @@ class AssetsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pr
     @Throws(JsonProcessingException::class)
     private fun pushAssetFilters(browser: CefBrowser, requestJsonNode: JsonNode) {
 
-        val backendQueryParams: Map<String, Any> = getQueryMapFromPayload(requestJsonNode)
+        val backendQueryParams = getQueryMapFromPayload(requestJsonNode, objectMapper)
 
         Log.log(logger::trace, project, "pushAssetsFilters called")
         val payload = objectMapper.readTree(AssetsService.getInstance(project).getAssetFilters(backendQueryParams))

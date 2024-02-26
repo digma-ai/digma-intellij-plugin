@@ -204,7 +204,7 @@ class GoToCodeObjectInsightsAction(
             }
         }
 
-        if (Env.getCurrentEnv(project) != environment) {
+        if (Env.getCurrentEnvName(project) != environment) {
 
             environmentsSupplier.setCurrent(environment) {
                 runnable.run()

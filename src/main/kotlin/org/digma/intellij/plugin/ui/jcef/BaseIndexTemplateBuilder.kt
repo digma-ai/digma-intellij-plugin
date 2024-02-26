@@ -71,7 +71,7 @@ abstract class BaseIndexTemplateBuilder(resourceFolderName: String, private val 
             data[DIGMA_API_URL] = SettingsState.getInstance().apiUrl
             data[JAEGER_URL] = getJaegerUrl() ?: ""
             data[IS_MICROMETER_PROJECT] = SpringBootMicrometerConfigureDepsService.isSpringBootWithMicrometer()
-            data[ENVIRONMENT] = Env.getCurrentEnv(project)?.let { serializeObjectToJson(it) } ?: "undefined"
+            data[ENVIRONMENT] = Env.getCurrentEnv(project)?.let { it: Env -> serializeObjectToJson(it) } ?: "undefined"
 
             addAppSpecificEnvVariable(project, data)
 

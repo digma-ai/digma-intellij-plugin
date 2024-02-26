@@ -60,7 +60,7 @@ public class DashboardIndexTemplateBuilder {
             data.put(DIGMA_API_URL, SettingsState.getInstance().apiUrl);
 
             data.put(DASHBOARD_REFRESH_INTERVAL, 10*1000);
-            data.put(DASHBOARD_ENVIRONMENT, Env.getCurrentEnv(project));
+            data.put(DASHBOARD_ENVIRONMENT, Env.getCurrentEnvName(project));
 
             Template template = freemarketConfiguration.getTemplate(INDEX_TEMPLATE_NAME);
             StringWriter stringWriter = new StringWriter();

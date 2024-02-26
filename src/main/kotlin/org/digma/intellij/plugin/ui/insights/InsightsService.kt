@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.ui.insights
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
@@ -8,9 +7,9 @@ import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.insights.InsightsServiceImpl
+import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.ui.insights.model.SetInsightDataListMessage
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
-import org.digma.intellij.plugin.ui.jcef.getQueryMapFromPayload
 import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
 
 
@@ -33,12 +32,12 @@ class InsightsService(val project: Project) : InsightsServiceImpl(project) {
     }
 
 
-    fun refreshInsightsList(jsonNode: JsonNode) {
+    fun refreshInsightsList(backendQueryParams: MutableMap<String, Any>) {
 
         val insightsResponse = try {
-            val backendQueryParams: Map<String, Any> = getQueryMapFromPayload(jsonNode)
             AnalyticsService.getInstance(project).getInsights(backendQueryParams)
-        } catch (_: AnalyticsServiceException) {
+        } catch (e: AnalyticsServiceException) {
+            Log.warnWithException(logger, project, e, "Error loading insights {}", e.message)
             "{\"totalCount\":0,\"insights\":[]}"
         }
 

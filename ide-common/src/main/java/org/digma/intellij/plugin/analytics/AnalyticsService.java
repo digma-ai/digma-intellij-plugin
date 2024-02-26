@@ -58,6 +58,8 @@ import static org.digma.intellij.plugin.common.ExceptionUtils.*;
 
 public class AnalyticsService implements Disposable {
 
+    public static final String ENVIRONMENT_QUERY_PARAM_NAME = "environment";
+
     private static final Logger LOGGER = Logger.getInstance(AnalyticsService.class);
 
     private final Environment environment;
@@ -272,8 +274,7 @@ public class AnalyticsService implements Disposable {
     public CodeLensOfMethodsResponse getCodeLensByMethods(List<MethodWithCodeObjects> methods) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
         var request = new CodeLensOfMethodsRequest(env, methods);
-        var response = executeCatching(() -> analyticsProviderProxy.getCodeLensByMethods(request));
-        return response;
+        return executeCatching(() -> analyticsProviderProxy.getCodeLensByMethods(request));
     }
 
 
@@ -383,36 +384,29 @@ public class AnalyticsService implements Disposable {
     }
 
     public String getAssetCategories(@NotNull Map<String, Object> queryParams) throws AnalyticsServiceException {
+        var env = getCurrentEnvironment();
+        queryParams.put(ENVIRONMENT_QUERY_PARAM_NAME, env);
         return executeCatching(() ->
                 analyticsProviderProxy.getAssetCategories(queryParams));
     }
 
-    public void checkInsightExists() throws AnalyticsServiceException {
-        var env = getCurrentEnvironment();
-        var response = executeCatching(() ->
-                analyticsProviderProxy.insightExists(env));
 
-        try {
-            if (!PersistenceService.getInstance().isFirstTimeAssetsReceived()) {
-                var objectMapper = new ObjectMapper();
-                var payload = objectMapper.readTree(response);
-                if (!payload.isMissingNode() &&
-                        payload.get("insightExists").asBoolean()) {
-                    ActivityMonitor.getInstance(project).registerFirstAssetsReceived();
-                    PersistenceService.getInstance().setFirstTimeAssetsReceived();
-                }
-            }
-        } catch (Exception e) {
-            Log.warnWithException(LOGGER, project, e, "error reporting FirstTimeAssetsReceived {}", e);
-        }
+    public String getInsightsExist() throws AnalyticsServiceException {
+        var env = getCurrentEnvironment();
+        return executeCatching(() -> analyticsProviderProxy.insightExists(env));
     }
 
+
     public String getAssetFilters(@NotNull Map<String, Object> queryParams) throws AnalyticsServiceException {
+        var env = getCurrentEnvironment();
+        queryParams.put(ENVIRONMENT_QUERY_PARAM_NAME, env);
         return executeCatching(() ->
                 analyticsProviderProxy.getAssetFilters(queryParams));
     }
 
     public String getAssets(@NotNull Map<String, Object> queryParams) throws AnalyticsServiceException {
+        var env = getCurrentEnvironment();
+        queryParams.put(ENVIRONMENT_QUERY_PARAM_NAME, env);
         return executeCatching(() ->
                 analyticsProviderProxy.getAssets(queryParams));
     }
@@ -474,6 +468,8 @@ public class AnalyticsService implements Disposable {
     }
 
     public String getInsights(@NotNull Map<String, Object> queryParams) throws AnalyticsServiceException {
+        var env = getCurrentEnvironment();
+        queryParams.put(ENVIRONMENT_QUERY_PARAM_NAME, env);
         return executeCatching(() -> analyticsProviderProxy.getInsights(queryParams));
     }
 

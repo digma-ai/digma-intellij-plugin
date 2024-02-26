@@ -3,12 +3,10 @@ package org.digma.intellij.plugin.ui.jcef
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
-import org.digma.intellij.plugin.persistence.PersistenceService
 
 
-fun getQueryMapFromPayload(requestJsonNode: JsonNode): Map<String, Any> {
+fun getQueryMapFromPayload(requestJsonNode: JsonNode, objectMapper: ObjectMapper): MutableMap<String, Any> {
 
-    val objectMapper: ObjectMapper = createObjectMapper()
     val payloadNode: JsonNode = objectMapper.readTree(requestJsonNode.get("payload").toString())
     val payloadQuery: JsonNode = objectMapper.readTree(payloadNode.get("query").toString())
 
@@ -32,6 +30,5 @@ fun getQueryMapFromPayload(requestJsonNode: JsonNode): Map<String, Any> {
         }
     }
 
-    backendQueryParams["environment"] = PersistenceService.getInstance().getCurrentEnv() ?: ""
     return backendQueryParams
 }

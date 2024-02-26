@@ -28,8 +28,13 @@ constructor(
     companion object {
 
         @JvmStatic
-        fun getCurrentEnv(project: Project): String? {
+        fun getCurrentEnvName(project: Project): String? {
             return AnalyticsService.getInstance(project).environment.getCurrent()?.originalName
+        }
+
+        @JvmStatic
+        fun getCurrentEnv(project: Project): Env? {
+            return AnalyticsService.getInstance(project).environment.getCurrent()
         }
 
         @JvmStatic

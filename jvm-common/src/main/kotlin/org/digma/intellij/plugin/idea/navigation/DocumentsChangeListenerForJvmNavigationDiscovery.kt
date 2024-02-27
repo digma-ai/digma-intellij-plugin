@@ -59,6 +59,7 @@ class DocumentsChangeListenerForJvmNavigationDiscovery(private val project: Proj
         }
     }
 
+
     private fun installDocumentListener(file: VirtualFile, languageService: LanguageService) {
 
         val psiFile = PsiManager.getInstance(project).findFile(file)

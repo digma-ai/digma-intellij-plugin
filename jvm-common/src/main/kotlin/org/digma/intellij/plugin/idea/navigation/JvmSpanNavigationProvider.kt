@@ -4,6 +4,7 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.util.Urls
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.idea.navigation.model.NavigationProcessContext
@@ -83,10 +84,17 @@ internal class JvmSpanNavigationProvider(project: Project) : AbstractNavigationD
 
 
     override fun removeDiscoveryForFile(file: VirtualFile) {
-        //find all spans that are in virtualFile and remove them
-        val fileSpans: Set<String> = spanLocations.entries.filter { it.value.fileUri == file.url }.map { it.key }.toSet()
-        fileSpans.forEach(Consumer { key: String -> spanLocations.remove(key) })
+        removeDiscoveryForUrl(file.url)
     }
 
 
+    override fun removeDiscoveryForPath(path: String) {
+        val url = Urls.newUri("file", path).toString()
+        removeDiscoveryForUrl(url)
+    }
+
+    private fun removeDiscoveryForUrl(url: String) {
+        val fileSpans: Set<String> = spanLocations.entries.filter { it.value.fileUri == url }.map { it.key }.toSet()
+        fileSpans.forEach(Consumer { key: String -> spanLocations.remove(key) })
+    }
 }

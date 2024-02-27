@@ -2,8 +2,7 @@ package org.digma.intellij.plugin.psi.python;
 
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.vfs.newvfs.events.VFileDeleteEvent;
-import com.intellij.openapi.vfs.newvfs.events.VFileEvent;
+import com.intellij.openapi.vfs.newvfs.events.*;
 import org.digma.intellij.plugin.bulklistener.AbstractBulkFileChangeListener;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
@@ -11,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
+//TODO: currently python is not supported. when python is revived fix this listener to work the same way as java/kotlin
 /**
  * listens for bulk document changes and updates span navigation.
  */

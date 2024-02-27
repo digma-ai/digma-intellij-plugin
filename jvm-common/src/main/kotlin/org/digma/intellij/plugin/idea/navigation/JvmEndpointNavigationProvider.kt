@@ -4,6 +4,7 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.util.Urls
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.idea.navigation.model.NavigationProcessContext
@@ -87,18 +88,26 @@ internal class JvmEndpointNavigationProvider(project: Project) : AbstractNavigat
 
 
     override fun removeDiscoveryForFile(file: VirtualFile) {
-        val filePredicate = FilePredicate(file.url)
+        removeDiscoveryForUrl(file.url)
+    }
+
+
+    override fun removeDiscoveryForPath(path: String) {
+        val url = Urls.newUri("file", path).toString()
+        removeDiscoveryForUrl(url)
+    }
+
+    private fun removeDiscoveryForUrl(url: String) {
+        val urlPredicate = UrlPredicate(url)
         for (methods in endpointsMap.values) {
-            methods.removeIf(filePredicate)
+            methods.removeIf(urlPredicate)
         }
     }
 
 
-    private class FilePredicate(private val theFileUri: String) : Predicate<EndpointInfo> {
+    private class UrlPredicate(private val theFileUri: String) : Predicate<EndpointInfo> {
         override fun test(endpointInfo: EndpointInfo): Boolean {
             return theFileUri == endpointInfo.containingFileUri
         }
     }
-
-
 }

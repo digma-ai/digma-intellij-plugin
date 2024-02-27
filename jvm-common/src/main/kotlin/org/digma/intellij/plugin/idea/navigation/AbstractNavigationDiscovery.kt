@@ -57,6 +57,8 @@ abstract class AbstractNavigationDiscovery(protected val project: Project) : Dis
 
     abstract fun removeDiscoveryForFile(file: VirtualFile)
 
+    abstract fun removeDiscoveryForPath(path: String)
+
     abstract fun getTask(myContext: NavigationProcessContext, origin: Origin, name: String, indicator: ProgressIndicator, retry: Int): Runnable
 
 
@@ -255,10 +257,9 @@ abstract class AbstractNavigationDiscovery(protected val project: Project) : Dis
     */
     fun fileChanged(virtualFile: VirtualFile?) {
 
-        //this method may be called on EDT,it should be very fast and only schedule a task for the changed file.
-        //it's called on EDT from BulkFileChangeListenerForJvmSpanNavigation.processEvents because we don't want to
-        // start a new thread for every file.
-        //it's called on background when called from documentChanged
+        //this method should be very fast and only schedule a task for the changed file.
+        //it's called on background from BulkFileChangeListenerForJvmNavigationDiscovery.processEvents.
+        //it's called on background from documentChanged
 
         if (!isProjectValid(project) || !isValidVirtualFile(virtualFile)) {
             return
@@ -291,6 +292,22 @@ abstract class AbstractNavigationDiscovery(protected val project: Project) : Dis
                 } finally {
                     buildLock.unlock()
                 }
+            }
+        }
+    }
+
+    fun pathDeleted(path: String) {
+
+        if (!isProjectValid(project)) {
+            return
+        }
+
+        Backgroundable.ensurePooledThread {
+            buildLock.lock()
+            try {
+                removeDiscoveryForPath(path)
+            } finally {
+                buildLock.unlock()
             }
         }
     }

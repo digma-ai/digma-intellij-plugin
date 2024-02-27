@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.275] - 2024-02-27
+## [2.0.276] - 2024-02-27
+
+- Improve bulk listener by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1850
+
+## 2.0.275 - 2024-02-27
 
 - Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1849
 

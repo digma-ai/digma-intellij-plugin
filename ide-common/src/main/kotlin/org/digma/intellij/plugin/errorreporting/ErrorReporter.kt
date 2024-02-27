@@ -69,13 +69,22 @@ class ErrorReporter {
 
         projectToUse?.let {
             if (it.isDisposed) return
-            ActivityMonitor.getInstance(it).registerError(null, message, details)
+
+            //add SEVERITY_HIGH_TRY_FIX if severity doesn't exist
+            val detailsToSend = if (details.containsKey(SEVERITY_PROP_NAME)) {
+                details
+            } else {
+                val mm = details.toMutableMap()
+                mm[SEVERITY_PROP_NAME] = SEVERITY_HIGH_TRY_FIX
+                mm
+            }
+
+            ActivityMonitor.getInstance(it).registerError(null, message, detailsToSend)
         }
     }
 
 
-
-    fun reportError(project: Project?, message: String, throwable: Throwable, extraDetails: Map<String, String>) {
+    fun reportError(project: Project?, message: String, throwable: Throwable, details: Map<String, String>) {
 
         try {
             //many times the exception is no-connection exception, and that may happen too many times.
@@ -95,7 +104,16 @@ class ErrorReporter {
 
             projectToUse?.let {
                 if (it.isDisposed) return
-                ActivityMonitor.getInstance(it).registerError(throwable, message, extraDetails)
+
+                //add SEVERITY_HIGH_TRY_FIX if severity doesn't exist
+                val detailsToSend = if (details.containsKey(SEVERITY_PROP_NAME)) {
+                    details
+                } else {
+                    val mm = details.toMutableMap()
+                    mm[SEVERITY_PROP_NAME] = SEVERITY_HIGH_TRY_FIX
+                    mm
+                }
+                ActivityMonitor.getInstance(it).registerError(throwable, message, detailsToSend)
             }
         } catch (e: Exception) {
             Log.warnWithException(logger, e, "error in error reporter")

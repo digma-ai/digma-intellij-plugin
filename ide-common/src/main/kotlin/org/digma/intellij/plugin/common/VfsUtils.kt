@@ -4,5 +4,7 @@ import com.intellij.openapi.vfs.VirtualFile
 
 
 fun isValidVirtualFile(file: VirtualFile?): Boolean {
-    return file?.isValid ?: false
+    return file?.let {
+        it.isValid && !it.isDirectory
+    } ?: false
 }

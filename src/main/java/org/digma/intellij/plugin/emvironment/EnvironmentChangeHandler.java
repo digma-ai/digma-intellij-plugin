@@ -3,7 +3,6 @@ package org.digma.intellij.plugin.emvironment;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.analytics.EnvironmentChanged;
-import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.env.Env;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
@@ -21,11 +20,8 @@ public class EnvironmentChangeHandler implements EnvironmentChanged {
 
     private final Project project;
 
-    private final DocumentInfoService documentInfoService;
-
     public EnvironmentChangeHandler(Project project) {
         this.project = project;
-        documentInfoService = project.getService(DocumentInfoService.class);
     }
 
     //environmentChanged must run in a background thread.
@@ -34,9 +30,6 @@ public class EnvironmentChangeHandler implements EnvironmentChanged {
     public void environmentChanged(Env newEnv) {
 
         try {
-
-            //for all languages and IDEs documentInfoService needs to refresh its data
-            documentInfoService.environmentChanged(newEnv);
 
             //find any registered language service and call its environmentChanged method in case it has something to do
             // that is specific for that language.

@@ -41,7 +41,7 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
         val contentPanel = JPanel(BorderLayout())
         contentPanel.background = Laf.Colors.EDITOR_BACKGROUND
         contentPanel.isOpaque = true
-        contentPanel.border = JBUI.Borders.empty(6, 10, 6, 10)
+        contentPanel.border = JBUI.Borders.empty(6, 10)
 
         val infoIconWrapper = JPanel()
         infoIconWrapper.layout = BoxLayout(infoIconWrapper, BoxLayout.Y_AXIS)
@@ -90,7 +90,7 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
             }
             toolTipText = service.lastLoadStatus.description +
                     "<br/>" +
-                    "Last occurred at " + service.lastLoadStatus.lastUpdated;
+                    "Last occurred at " + service.lastLoadStatus.lastUpdated
         } else {
             isVisible = false
         }

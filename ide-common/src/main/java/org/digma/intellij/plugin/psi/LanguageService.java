@@ -275,7 +275,7 @@ public interface LanguageService extends Disposable {
 
 
     @Nullable
-    public static Set<EndpointInfo> getEndpointInfos(Project project, String endpointCodeObjectId) {
+    static Set<EndpointInfo> getEndpointInfos(Project project, String endpointCodeObjectId) {
         for (SupportedLanguages value : SupportedLanguages.values()) {
 
             try {

@@ -208,7 +208,7 @@ private constructor(
         private var url: String? = null
         private var messageRouterHandler: BaseMessageRouterHandler? = null
         private var schemeHandlerFactory: BaseSchemeHandlerFactory? = null
-        private var downloadAdapter: CefDownloadHandler? = null;
+        private var downloadAdapter: CefDownloadHandler? = null
 
 
         fun build(): JCefComponent {
@@ -245,7 +245,7 @@ private constructor(
             }
 
             downloadAdapter?.let {
-                jbCefClient.cefClient.addDownloadHandler(it);
+                jbCefClient.cefClient.addDownloadHandler(it)
             }
 
             return jCefComponent
@@ -279,7 +279,7 @@ private constructor(
 
         fun withDownloadAdapter(adapter: CefDownloadHandler): JCefComponentBuilder {
             this.downloadAdapter = adapter
-            return this;
+            return this
         }
     }
 }

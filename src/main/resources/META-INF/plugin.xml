@@ -64,8 +64,6 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.service.EditorService"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.common.DumbAwareNotifier"/>
-
         <projectService serviceImplementation="org.digma.intellij.plugin.psi.LanguageServiceLocator"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.common.IDEUtilsService"/>
@@ -115,7 +113,6 @@
         <editorNotificationProvider implementation="org.digma.intellij.plugin.notifications.DigmaEditorNotificationProvider"
                                     id="org.digma.intellij.plugin.notifications.DigmaEditorNotificationProvider"/>
 
-        <postStartupActivity implementation="org.digma.intellij.plugin.common.DumbAwareStartupActivity"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.common.StartupStartupActivity"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.ui.recentactivity.RecentActivitiesStartup"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.posthog.ContainerEngineStartupActivity"/>

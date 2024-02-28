@@ -26,7 +26,7 @@ class RecentActivityToolWindowFactory : ToolWindowFactory {
 
         val recentActivityPanel = RecentActivityPanel(project)
 
-        val content = ContentFactory.getInstance().createContent(recentActivityPanel, null, false);
+        val content = ContentFactory.getInstance().createContent(recentActivityPanel, null, false)
 
         toolWindow.contentManager.addContent(content)
 

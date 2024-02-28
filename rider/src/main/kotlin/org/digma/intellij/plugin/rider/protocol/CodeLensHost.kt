@@ -44,9 +44,9 @@ class CodeLensHost(project: Project) : LifetimedProjectComponent(project) {
         Log.log(logger::debug, "Got environmentChanged {}", newEnv)
 
 
-        documentInfoService.allKeys().forEach(Consumer { psiFileUri: String? ->
+        documentInfoService.allKeys().forEach(Consumer { psiFileUri: String ->
             try {
-                val psiFile = PsiUtils.uriToPsiFile(psiFileUri!!, project)
+                val psiFile = PsiUtils.uriToPsiFile(psiFileUri, project)
                 Log.log(logger::debug, "Requesting code lens for {}", psiFile.virtualFile)
                 val codeLens: Set<CodeLens> = codeLensProvider.provideCodeLens(psiFile)
                 Log.log(logger::debug, "Got codeLens for {}: {}", psiFile.virtualFile, codeLens)

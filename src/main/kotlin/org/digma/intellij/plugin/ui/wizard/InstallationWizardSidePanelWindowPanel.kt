@@ -34,7 +34,6 @@ import org.digma.intellij.plugin.docker.DigmaInstallationStatus
 import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.jcef.common.CustomSchemeHandlerFactory
-import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.notifications.AppNotificationCenter
 import org.digma.intellij.plugin.persistence.PersistenceService
@@ -44,6 +43,7 @@ import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import org.digma.intellij.plugin.ui.common.isJaegerButtonEnabled
 import org.digma.intellij.plugin.ui.common.updateObservabilityValue
+import org.digma.intellij.plugin.ui.jcef.JCEFGlobalConstants
 import org.digma.intellij.plugin.ui.jcef.jsonToObject
 import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest
 import org.digma.intellij.plugin.ui.jcef.model.SendTrackingEventRequest
@@ -175,19 +175,19 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                     MainToolWindowCardsController.getInstance(project).wizardFinished()
                 }
             }
-            if (JCefMessagesUtils.GLOBAL_SEND_TRACKING_EVENT.equals(action, ignoreCase = true)) {
+            if (JCEFGlobalConstants.GLOBAL_SEND_TRACKING_EVENT.equals(action, ignoreCase = true)) {
                 val (_, payload) = jsonToObject(request, SendTrackingEventRequest::class.java)
                 if (payload != null) {
                     ActivityMonitor.getInstance(project).registerCustomEvent(payload.eventName, payload.data)
                 }
             }
-            if (JCefMessagesUtils.INSTALLATION_WIZARD_SET_OBSERVABILITY.equals(action, ignoreCase = true)) {
+            if (JCEFGlobalConstants.INSTALLATION_WIZARD_SET_OBSERVABILITY.equals(action, ignoreCase = true)) {
                 val (_, payload) = jsonToObject(request, SetObservabilityRequest::class.java)
                 if (payload != null) {
                     updateObservabilityValue(project, payload.isObservabilityEnabled)
                 }
             }
-            if (JCefMessagesUtils.INSTALLATION_WIZARD_FINISH.equals(action, ignoreCase = true)) {
+            if (JCEFGlobalConstants.INSTALLATION_WIZARD_FINISH.equals(action, ignoreCase = true)) {
                 digmaStatusUpdater.stop()
                 val (_, payload) = jsonToObject(request, FinishRequest::class.java)
                 val email = payload?.email
@@ -202,7 +202,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                     project.service<RecentActivityToolWindowShower>().showToolWindow()
                 }
             }
-            if (JCefMessagesUtils.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER.equals(action, ignoreCase = true)) {
+            if (JCEFGlobalConstants.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER.equals(action, ignoreCase = true)) {
                 val (_, payload) = jsonToObject(request, OpenInDefaultBrowserRequest::class.java)
                 if (payload != null) {
                     ApplicationManager.getApplication().invokeLater {
@@ -212,7 +212,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                     }
                 }
             }
-            if (JCefMessagesUtils.INSTALLATION_WIZARD_CHECK_CONNECTION.equals(action, ignoreCase = true)) {
+            if (JCEFGlobalConstants.INSTALLATION_WIZARD_CHECK_CONNECTION.equals(action, ignoreCase = true)) {
                 val connectionCheckMessagePayload: ConnectionCheckMessagePayload =
                     if (BackendConnectionMonitor.getInstance(project).isConnectionOk()) {
                         ConnectionCheckMessagePayload(ConnectionCheckResult.SUCCESS.value)
@@ -223,7 +223,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                 val message = ConnectionCheckMessageRequest(connectionCheckMessagePayload)
                 serializeAndExecuteWindowPostMessageJavaScript(jbCefBrowser.cefBrowser, message)
             }
-            if (JCefMessagesUtils.INSTALLATION_WIZARD_INSTALL_DIGMA_ENGINE.equals(action, ignoreCase = true)) {
+            if (JCEFGlobalConstants.INSTALLATION_WIZARD_INSTALL_DIGMA_ENGINE.equals(action, ignoreCase = true)) {
 
                 localEngineOperationRunning.set(true)
 
@@ -267,7 +267,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                                 ConnectionCheckResult.SUCCESS.value,
                                 "",
                                 jbCefBrowser,
-                                JCefMessagesUtils.INSTALLATION_WIZARD_SET_INSTALL_DIGMA_ENGINE_RESULT
+                                JCEFGlobalConstants.INSTALLATION_WIZARD_SET_INSTALL_DIGMA_ENGINE_RESULT
                             )
                             sendIsDigmaEngineInstalled(true, jbCefBrowser)
                             sendIsDigmaEngineRunning(true, jbCefBrowser)
@@ -280,7 +280,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                                 ConnectionCheckResult.FAILURE.value,
                                 "Could not install engine",
                                 jbCefBrowser,
-                                JCefMessagesUtils.INSTALLATION_WIZARD_SET_INSTALL_DIGMA_ENGINE_RESULT
+                                JCEFGlobalConstants.INSTALLATION_WIZARD_SET_INSTALL_DIGMA_ENGINE_RESULT
                             )
                             sendIsDigmaEngineInstalled(false, jbCefBrowser)
                             sendIsDigmaEngineRunning(false, jbCefBrowser)
@@ -310,7 +310,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
 
                 }
             }
-            if (JCefMessagesUtils.INSTALLATION_WIZARD_UNINSTALL_DIGMA_ENGINE.equals(action, ignoreCase = true)) {
+            if (JCEFGlobalConstants.INSTALLATION_WIZARD_UNINSTALL_DIGMA_ENGINE.equals(action, ignoreCase = true)) {
                 localEngineOperationRunning.set(true)
                 service<DockerService>().removeEngine(project) { exitValue ->
 
@@ -329,7 +329,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                                 ConnectionCheckResult.SUCCESS.value,
                                 "",
                                 jbCefBrowser,
-                                JCefMessagesUtils.INSTALLATION_WIZARD_SET_UNINSTALL_DIGMA_ENGINE_RESULT
+                                JCEFGlobalConstants.INSTALLATION_WIZARD_SET_UNINSTALL_DIGMA_ENGINE_RESULT
                             )
                             sendIsDigmaEngineRunning(false, jbCefBrowser)
                             sendIsDigmaEngineInstalled(false, jbCefBrowser)
@@ -340,7 +340,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                                 ConnectionCheckResult.FAILURE.value,
                                 "Could not uninstall engine",
                                 jbCefBrowser,
-                                JCefMessagesUtils.INSTALLATION_WIZARD_SET_UNINSTALL_DIGMA_ENGINE_RESULT
+                                JCEFGlobalConstants.INSTALLATION_WIZARD_SET_UNINSTALL_DIGMA_ENGINE_RESULT
                             )
                         }
                     }
@@ -349,7 +349,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                     localEngineOperationRunning.set(false)
                 }
             }
-            if (JCefMessagesUtils.INSTALLATION_WIZARD_START_DIGMA_ENGINE.equals(action, ignoreCase = true)) {
+            if (JCEFGlobalConstants.INSTALLATION_WIZARD_START_DIGMA_ENGINE.equals(action, ignoreCase = true)) {
                 localEngineOperationRunning.set(true)
                 service<DockerService>().startEngine(project) { exitValue ->
 
@@ -391,7 +391,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                                 ConnectionCheckResult.SUCCESS.value,
                                 "",
                                 jbCefBrowser,
-                                JCefMessagesUtils.INSTALLATION_WIZARD_SET_START_DIGMA_ENGINE_RESULT
+                                JCEFGlobalConstants.INSTALLATION_WIZARD_SET_START_DIGMA_ENGINE_RESULT
                             )
                             sendIsDigmaEngineInstalled(true, jbCefBrowser)
                             sendIsDigmaEngineRunning(true, jbCefBrowser)
@@ -402,7 +402,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                                 ConnectionCheckResult.FAILURE.value,
                                 "Could not start engine",
                                 jbCefBrowser,
-                                JCefMessagesUtils.INSTALLATION_WIZARD_SET_START_DIGMA_ENGINE_RESULT
+                                JCEFGlobalConstants.INSTALLATION_WIZARD_SET_START_DIGMA_ENGINE_RESULT
                             )
                             sendIsDigmaEngineInstalled(true, jbCefBrowser)
                             sendIsDigmaEngineRunning(false, jbCefBrowser)
@@ -415,7 +415,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
 
                 }
             }
-            if (JCefMessagesUtils.INSTALLATION_WIZARD_STOP_DIGMA_ENGINE.equals(action, ignoreCase = true)) {
+            if (JCEFGlobalConstants.INSTALLATION_WIZARD_STOP_DIGMA_ENGINE.equals(action, ignoreCase = true)) {
                 localEngineOperationRunning.set(true)
                 service<DockerService>().stopEngine(project) { exitValue ->
 
@@ -434,7 +434,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                                 ConnectionCheckResult.SUCCESS.value,
                                 "",
                                 jbCefBrowser,
-                                JCefMessagesUtils.INSTALLATION_WIZARD_SET_STOP_DIGMA_ENGINE_RESULT
+                                JCEFGlobalConstants.INSTALLATION_WIZARD_SET_STOP_DIGMA_ENGINE_RESULT
                             )
                             sendIsDigmaEngineRunning(false, jbCefBrowser)
                         } else {
@@ -443,7 +443,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                                 ConnectionCheckResult.FAILURE.value,
                                 "Could not stop engine",
                                 jbCefBrowser,
-                                JCefMessagesUtils.INSTALLATION_WIZARD_SET_STOP_DIGMA_ENGINE_RESULT
+                                JCEFGlobalConstants.INSTALLATION_WIZARD_SET_STOP_DIGMA_ENGINE_RESULT
                             )
                         }
                     }
@@ -532,7 +532,7 @@ private fun sendDockerResult(result: String, errorMsg: String, jbCefBrowser: JBC
     val payload = JcefDockerResultPayload(result, errorMsg)
 
     val message = JcefDockerResultRequest(
-        JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
+        JCEFGlobalConstants.REQUEST_MESSAGE_TYPE,
         messageType,
         payload
     )
@@ -543,8 +543,8 @@ private fun sendDockerResult(result: String, errorMsg: String, jbCefBrowser: JBC
 fun sendIsDigmaEngineInstalled(result: Boolean, jbCefBrowser: JBCefBrowser) {
     val payload = JcefDockerIsDigmaEngineInstalledPayload(result)
     val message = JcefDockerIsDigmaEngineInstalledRequest(
-        JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
-        JCefMessagesUtils.GLOBAL_SET_IS_DIGMA_ENGINE_INSTALLED,
+        JCEFGlobalConstants.REQUEST_MESSAGE_TYPE,
+        JCEFGlobalConstants.GLOBAL_SET_IS_DIGMA_ENGINE_INSTALLED,
         payload
     )
     serializeAndExecuteWindowPostMessageJavaScript(jbCefBrowser.cefBrowser, message)
@@ -555,8 +555,8 @@ fun sendIsDigmaEngineRunning(success: Boolean, jbCefBrowser: JBCefBrowser) {
 
     val payload = JcefDockerIsDigmaEngineRunningPayload(success)
     val message = JcefDockerIsDigmaEngineRunningRequest(
-        JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
-        JCefMessagesUtils.GLOBAL_SET_IS_DIGMA_ENGINE_RUNNING,
+        JCEFGlobalConstants.REQUEST_MESSAGE_TYPE,
+        JCEFGlobalConstants.GLOBAL_SET_IS_DIGMA_ENGINE_RUNNING,
         payload
     )
     serializeAndExecuteWindowPostMessageJavaScript(jbCefBrowser.cefBrowser, message)
@@ -566,8 +566,8 @@ fun sendIsDigmaEngineRunning(success: Boolean, jbCefBrowser: JBCefBrowser) {
 fun sendIsDockerInstalled(result: Boolean, jbCefBrowser: JBCefBrowser) {
     val isDockerInstalledPayload = JcefDockerIsDockerInstalledPayload(result)
     val message = JcefDockerIsDockerInstalledRequest(
-        JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
-        JCefMessagesUtils.GLOBAL_SET_IS_DOCKER_INSTALLED,
+        JCEFGlobalConstants.REQUEST_MESSAGE_TYPE,
+        JCEFGlobalConstants.GLOBAL_SET_IS_DOCKER_INSTALLED,
         isDockerInstalledPayload
     )
     serializeAndExecuteWindowPostMessageJavaScript(jbCefBrowser.cefBrowser, message)
@@ -577,8 +577,8 @@ fun sendIsDockerInstalled(result: Boolean, jbCefBrowser: JBCefBrowser) {
 fun sendIsDockerComposeInstalled(result: Boolean, jbCefBrowser: JBCefBrowser) {
     val isDockerComposeInstalledPayload = JcefDockerIsDockerComposeInstalledPayload(result)
     val message = JcefDockerIsDockerComposeInstalledRequest(
-        JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
-        JCefMessagesUtils.GLOBAL_SET_IS_DOCKER_COMPOSE_INSTALLED,
+        JCEFGlobalConstants.REQUEST_MESSAGE_TYPE,
+        JCEFGlobalConstants.GLOBAL_SET_IS_DOCKER_COMPOSE_INSTALLED,
         isDockerComposeInstalledPayload
     )
     serializeAndExecuteWindowPostMessageJavaScript(jbCefBrowser.cefBrowser, message)

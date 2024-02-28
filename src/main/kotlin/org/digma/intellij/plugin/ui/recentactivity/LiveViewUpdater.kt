@@ -13,9 +13,9 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
-import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.livedata.DurationLiveData
+import org.digma.intellij.plugin.ui.jcef.JCEFGlobalConstants
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
 import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
 import org.digma.intellij.plugin.ui.recentactivity.model.LiveDataMessage
@@ -129,7 +129,7 @@ class LiveViewUpdater(val project: Project) : Disposable {
 
                 Log.log(logger::debug, project, "sending live data for {}", durationData.codeObjectId)
                 val liveDataMessage = LiveDataMessage(
-                    JCefMessagesUtils.REQUEST_MESSAGE_TYPE, RECENT_ACTIVITY_SET_LIVE_DATA,
+                    JCEFGlobalConstants.REQUEST_MESSAGE_TYPE, RECENT_ACTIVITY_SET_LIVE_DATA,
                     LiveDataPayload(durationLiveData.liveDataRecords, durationData)
                 )
 

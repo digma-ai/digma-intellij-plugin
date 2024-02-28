@@ -21,7 +21,6 @@ import org.digma.intellij.plugin.dashboard.DashboardService
 import org.digma.intellij.plugin.documentation.DocumentationService
 import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
-import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
 import org.digma.intellij.plugin.posthog.ActivityMonitor
@@ -68,11 +67,11 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
 
                 //do common messages for all apps, or call doOnQuery
                 when (action) {
-                    JCefMessagesUtils.GLOBAL_REGISTER ->{
+                    JCEFGlobalConstants.GLOBAL_REGISTER -> {
                         RegistrationEventHandler.getInstance(project).register(requestJsonNode)
                     }
 
-                    JCefMessagesUtils.GLOBAL_OPEN_TROUBLESHOOTING_GUIDE -> {
+                    JCEFGlobalConstants.GLOBAL_OPEN_TROUBLESHOOTING_GUIDE -> {
                         ActivityMonitor.getInstance(project)
                             .registerCustomEvent("troubleshooting link clicked", mapOf("origin" to getOriginForTroubleshootingEvent()))
                         EDT.ensureEDT {
@@ -81,7 +80,7 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
                         }
                     }
 
-                    JCefMessagesUtils.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER -> {
+                    JCEFGlobalConstants.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER -> {
                         val openBrowserRequest = jsonToObject(request, OpenInDefaultBrowserRequest::class.java)
                         openBrowserRequest.let {
                             it.payload.url.let { url ->
@@ -90,7 +89,7 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
                         }
                     }
 
-                    JCefMessagesUtils.GLOBAL_OPEN_URL_IN_EDITOR_TAB -> {
+                    JCEFGlobalConstants.GLOBAL_OPEN_URL_IN_EDITOR_TAB -> {
                         val openInInternalBrowserRequest = jsonToObject(request, OpenInInternalBrowserRequest::class.java)
                         EDT.ensureEDT {
                             HTMLEditorProvider.openEditor(
@@ -118,7 +117,7 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
                         }
                     }
 
-                    JCefMessagesUtils.GLOBAL_SEND_TRACKING_EVENT -> {
+                    JCEFGlobalConstants.GLOBAL_SEND_TRACKING_EVENT -> {
                         val trackingRequest = jsonToObject(request, SendTrackingEventRequest::class.java)
                         trackingRequest.let {
                             it.payload?.let { pl ->
@@ -127,24 +126,24 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
                         }
                     }
 
-                    JCefMessagesUtils.GLOBAL_SAVE_TO_PERSISTENCE -> {
+                    JCEFGlobalConstants.GLOBAL_SAVE_TO_PERSISTENCE -> {
                         val saveToPersistenceRequest = jsonToObject(request, SaveToPersistenceRequest::class.java)
                         JCEFPersistenceService.getInstance(project).saveToPersistence(saveToPersistenceRequest)
                     }
 
-                    JCefMessagesUtils.GLOBAL_GET_FROM_PERSISTENCE -> {
+                    JCEFGlobalConstants.GLOBAL_GET_FROM_PERSISTENCE -> {
                         val getFromPersistenceRequest = jsonToObject(request, GetFromPersistenceRequest::class.java)
                         JCEFPersistenceService.getInstance(project).getFromPersistence(browser, getFromPersistenceRequest)
                     }
 
-                    JCefMessagesUtils.GLOBAL_OPEN_DASHBOARD -> {
+                    JCEFGlobalConstants.GLOBAL_OPEN_DASHBOARD -> {
                         val environment = getEnvironmentFromPayload(requestJsonNode)
                         environment?.let { env ->
                             DashboardService.getInstance(project).openDashboard("Dashboard Panel - ${env.name}")
                         }
                     }
 
-                    JCefMessagesUtils.GLOBAL_OPEN_DOCUMENTATION -> {
+                    JCEFGlobalConstants.GLOBAL_OPEN_DOCUMENTATION -> {
                         val payload = getPayloadFromRequest(requestJsonNode)
                         payload?.takeIf { payload.get("page") != null }?.let { pl ->
                             val page = pl.get("page").asText()
@@ -152,7 +151,7 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
                         }
                     }
 
-                    JCefMessagesUtils.GLOBAL_SET_OBSERVABILITY -> {
+                    JCEFGlobalConstants.GLOBAL_SET_OBSERVABILITY -> {
                         val payload = getPayloadFromRequest(requestJsonNode)
                         payload?.let {
                             val isEnabledObservability = it.get("isObservabilityEnabled").asBoolean()
@@ -161,7 +160,7 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
                         }
                     }
 
-                    JCefMessagesUtils.GLOBAL_OPEN_INSTALLATION_WIZARD -> {
+                    JCEFGlobalConstants.GLOBAL_OPEN_INSTALLATION_WIZARD -> {
                         val payload = getPayloadFromRequest(requestJsonNode)
 
                         payload?.let{
@@ -175,16 +174,16 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
 
                     }
 
-                    JCefMessagesUtils.GLOBAL_CHANGE_SCOPE -> {
+                    JCEFGlobalConstants.GLOBAL_CHANGE_SCOPE -> {
                         changeScope(requestJsonNode)
                     }
 
 
-                    JCefMessagesUtils.GLOBAL_UPDATE_STATE -> {
+                    JCEFGlobalConstants.GLOBAL_UPDATE_STATE -> {
                         updateState(requestJsonNode)
                     }
 
-                    JCefMessagesUtils.GLOBAL_GET_STATE -> {
+                    JCEFGlobalConstants.GLOBAL_GET_STATE -> {
                         getState(browser)
                     }
 
@@ -242,7 +241,7 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
         try {
             val about = AnalyticsService.getInstance(project).about
             val message = BackendInfoMessage(about)
-            Log.log(logger::trace, project, "sending {} message", JCefMessagesUtils.GLOBAL_SET_BACKEND_INFO)
+            Log.log(logger::trace, project, "sending {} message", JCEFGlobalConstants.GLOBAL_SET_BACKEND_INFO)
             serializeAndExecuteWindowPostMessageJavaScript(browser, message)
 
             updateDigmaEngineStatus(project, browser)

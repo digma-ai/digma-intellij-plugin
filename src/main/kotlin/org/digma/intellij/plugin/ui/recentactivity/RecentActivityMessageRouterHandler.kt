@@ -9,12 +9,12 @@ import org.digma.intellij.plugin.analytics.ConnectionTestResult
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
-import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.MonitoredPanel
 import org.digma.intellij.plugin.ui.common.traceButtonName
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
+import org.digma.intellij.plugin.ui.jcef.JCEFGlobalConstants
 import org.digma.intellij.plugin.ui.jcef.RegistrationEventHandler
 import org.digma.intellij.plugin.ui.jcef.jsonToObject
 import org.digma.intellij.plugin.ui.jcef.tryGetFieldFromPayload
@@ -149,7 +149,7 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
                     project.service<RecentActivityUpdater>().updateLatestActivities()
                 }
             }
-            JCefMessagesUtils.GLOBAL_REGISTER -> {
+            JCEFGlobalConstants.GLOBAL_REGISTER -> {
                 RegistrationEventHandler.getInstance(project).register(requestJsonNode)
             }
 

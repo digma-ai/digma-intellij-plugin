@@ -10,11 +10,10 @@ import org.cef.callback.CefQueryCallback;
 import org.cef.handler.CefMessageRouterHandlerAdapter;
 import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.documentation.DocumentationService;
-import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
-import org.digma.intellij.plugin.ui.jcef.JCefMessagesUtilsKt;
+import org.digma.intellij.plugin.ui.jcef.*;
 import org.digma.intellij.plugin.ui.jcef.model.*;
 import org.digma.intellij.plugin.ui.settings.Theme;
 import org.jetbrains.annotations.NotNull;
@@ -47,22 +46,22 @@ class TroubleshootingMessageRouterHandler extends CefMessageRouterHandlerAdapter
                 switch (action) {
                     case "TROUBLESHOOTING/CLOSE" -> EDT.ensureEDT(() -> MainToolWindowCardsController.getInstance(project).troubleshootingFinished());
 
-                    case JCefMessagesUtils.GLOBAL_OPEN_DOCUMENTATION -> {
-                        Log.log(LOGGER::trace, project, "got {} message", JCefMessagesUtils.GLOBAL_OPEN_DOCUMENTATION);
+                    case JCEFGlobalConstants.GLOBAL_OPEN_DOCUMENTATION -> {
+                        Log.log(LOGGER::trace, project, "got {} message", JCEFGlobalConstants.GLOBAL_OPEN_DOCUMENTATION);
                         var page = objectMapper.readTree(jsonNode.get("payload").toString()).get("page").asText();
                         Log.log(LOGGER::trace, project, "got page {}", page);
                         DocumentationService.getInstance(project).openDocumentation(page);
                     }
 
 
-                    case JCefMessagesUtils.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER -> {
+                    case JCEFGlobalConstants.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER -> {
                         OpenInDefaultBrowserRequest openBrowserRequest = jsonToObject(request, OpenInDefaultBrowserRequest.class);
                         if (openBrowserRequest != null && openBrowserRequest.getPayload() != null) {
                             BrowserUtil.browse(openBrowserRequest.getPayload().getUrl());
                         }
                     }
 
-                    case JCefMessagesUtils.GLOBAL_SEND_TRACKING_EVENT -> {
+                    case JCEFGlobalConstants.GLOBAL_SEND_TRACKING_EVENT -> {
                         SendTrackingEventRequest trackingRequest = jsonToObject(request, SendTrackingEventRequest.class);
                         if (trackingRequest != null && trackingRequest.getPayload() != null) {
                             ActivityMonitor.getInstance(project).registerCustomEvent(trackingRequest.getPayload().getEventName(), trackingRequest.getPayload().getData());

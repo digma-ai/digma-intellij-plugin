@@ -2,7 +2,7 @@ package org.digma.intellij.plugin.ui.wizard.model
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
+import org.digma.intellij.plugin.ui.jcef.JCEFGlobalConstants
 import java.beans.ConstructorProperties
 
 
@@ -13,8 +13,8 @@ data class ConnectionCheckMessageRequest
 constructor(
     val payload: ConnectionCheckMessagePayload?,
 ) {
-    val type = JCefMessagesUtils.REQUEST_MESSAGE_TYPE
-    val action = JCefMessagesUtils.INSTALLATION_WIZARD_SET_CHECK_CONNECTION
+    val type = JCEFGlobalConstants.REQUEST_MESSAGE_TYPE
+    val action = JCEFGlobalConstants.INSTALLATION_WIZARD_SET_CHECK_CONNECTION
 }
 
 

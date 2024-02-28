@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.document;
 import com.intellij.lang.Language;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.psi.*;
+import org.digma.intellij.plugin.common.PsiAccessUtilsKt;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.*;
 import org.jetbrains.annotations.*;
@@ -22,7 +23,7 @@ public class DocumentInfoContainer {
     private DocumentInfo documentInfo;
 
     public DocumentInfoContainer(@NotNull PsiFile psiFile) {
-        this.psiFilePointer = SmartPointerManager.createPointer(psiFile);
+        this.psiFilePointer = PsiAccessUtilsKt.runInReadAccessWithResult(() -> SmartPointerManager.createPointer(psiFile));
         language = psiFile.getLanguage();
     }
 

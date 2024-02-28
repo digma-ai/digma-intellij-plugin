@@ -10,7 +10,6 @@ import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.jaegerui.model.incoming.*;
 import org.digma.intellij.plugin.jaegerui.model.outgoing.*;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator;
 import org.digma.intellij.plugin.posthog.*;
 import org.digma.intellij.plugin.psi.*;
@@ -230,12 +229,11 @@ public class JaegerUIService implements Disposable {
         var insights = new HashMap<String, List<Insight>>();
 
         try {
-            var insightsFromBackend = AnalyticsService.getInstance(project).getInsights(ids).
-                    stream().filter(codeObjectInsight -> codeObjectInsight.getType() != InsightType.Unmapped);
+            var insightsFromBackend = AnalyticsService.getInstance(project).getInsightsInfo(ids);
             insightsFromBackend.forEach(codeObjectInsight -> {
                 var id = codeObjectInsight.getCodeObjectId();
                 var objectInsights = insights.computeIfAbsent(id, s -> new ArrayList<>());
-                objectInsights.add(new Insight(codeObjectInsight.getType().name(), codeObjectInsight.getImportance()));
+                objectInsights.add(new Insight(codeObjectInsight.getType(), codeObjectInsight.getImportance()));
             });
             return insights;
         } catch (AnalyticsServiceException e) {

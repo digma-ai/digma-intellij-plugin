@@ -66,6 +66,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
+    public List<InsightInfo> getInsightsInfo(InsightsRequest insightsRequest) {
+        return execute(() -> client.analyticsProvider.getInsightsInfo(insightsRequest));
+    }
+
+    @Override
     public List<CodeObjectInsight> getInsights(InsightsRequest insightsRequest) {
         return execute(() -> client.analyticsProvider.getInsights(insightsRequest));
     }
@@ -381,6 +386,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
             //objectMapper can be configured here is necessary
             objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
             objectMapper.disable(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES);
+            objectMapper.enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE);
             return objectMapper;
         }
 
@@ -447,6 +453,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @GET("/CodeAnalytics/environments")
         Call<List<String>> getEnvironments();
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/CodeAnalytics/codeObjects/insights")
+        Call<List<InsightInfo>> getInsightsInfo(@Body InsightsRequest insightsRequest);
 
         @Headers({
                 "Accept: application/+json",

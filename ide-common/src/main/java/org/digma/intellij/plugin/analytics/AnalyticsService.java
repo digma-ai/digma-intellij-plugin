@@ -198,23 +198,34 @@ public class AnalyticsService implements Disposable {
     }
 
 
-    /**
-     * removed deprecation because its necessary for JaegerUIService#getImportance(java.util.List)
-     */
-    //@deprecated This method is deprecated and will be removed in a future release.
-    //Use {@link #getInsightsOfMethods(List<MethodInfo>)} instead.
-    public List<CodeObjectInsight> getInsights(List<String> objectIds) throws AnalyticsServiceException {
+    public List<InsightInfo> getInsightsInfo(List<String> objectIds) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
-        Log.log(LOGGER::trace, "Requesting insights for next objectIds {} and next environment {}", objectIds, env);
-        var insights = executeCatching(() -> analyticsProviderProxy.getInsights(new InsightsRequest(env, objectIds)));
+        var insights = executeCatching(() -> analyticsProviderProxy.getInsightsInfo(new InsightsRequest(env, objectIds)));
         if (insights == null) {
             insights = Collections.emptyList();
-        } else {
-            onInsightReceived(insights);
         }
         return insights;
     }
 
+
+//    /**
+//     * removed deprecation because its necessary for JaegerUIService#getImportance(java.util.List)
+//     */
+//    //@deprecated This method is deprecated and will be removed in a future release.
+//    //Use {@link #getInsightsOfMethods(List<MethodInfo>)} instead.
+//    public List<CodeObjectInsight> getInsights(List<String> objectIds) throws AnalyticsServiceException {
+//        var env = getCurrentEnvironment();
+//        Log.log(LOGGER::trace, "Requesting insights for next objectIds {} and next environment {}", objectIds, env);
+//        var insights = executeCatching(() -> analyticsProviderProxy.getInsights(new InsightsRequest(env, objectIds)));
+//        if (insights == null) {
+//            insights = Collections.emptyList();
+//        } else {
+//            onInsightReceived(insights);
+//        }
+//        return insights;
+//    }
+
+    //todo: remove
     private <TInsight> void onInsightReceived(List<TInsight> insightsOrMethodsWithInsights) {
         if (insightsOrMethodsWithInsights != null &&
                 !insightsOrMethodsWithInsights.isEmpty() &&
@@ -248,16 +259,16 @@ public class AnalyticsService implements Disposable {
     }
 
 
-    public InsightsOfMethodsResponse getInsightsForSingleEndpoint(String endpointId) throws AnalyticsServiceException {
-        var env = getCurrentEnvironment();
-        MethodWithCodeObjects methodWithCodeObjects = new MethodWithCodeObjects("", Collections.emptyList(), Collections.singletonList(endpointId));
-        InsightsOfMethodsResponse insightsOfMethodsResponse = executeCatching(() -> analyticsProviderProxy.getInsightsOfMethods(new InsightsOfMethodsRequest(env, Collections.singletonList(methodWithCodeObjects))));
-        if (insightsOfMethodsResponse != null && !insightsOfMethodsResponse.getMethodsWithInsights().isEmpty()) {
-            onInsightReceived(insightsOfMethodsResponse.getMethodsWithInsights());
-        }
-        return insightsOfMethodsResponse;
-
-    }
+//    public InsightsOfMethodsResponse getInsightsForSingleEndpoint(String endpointId) throws AnalyticsServiceException {
+//        var env = getCurrentEnvironment();
+//        MethodWithCodeObjects methodWithCodeObjects = new MethodWithCodeObjects("", Collections.emptyList(), Collections.singletonList(endpointId));
+//        InsightsOfMethodsResponse insightsOfMethodsResponse = executeCatching(() -> analyticsProviderProxy.getInsightsOfMethods(new InsightsOfMethodsRequest(env, Collections.singletonList(methodWithCodeObjects))));
+//        if (insightsOfMethodsResponse != null && !insightsOfMethodsResponse.getMethodsWithInsights().isEmpty()) {
+//            onInsightReceived(insightsOfMethodsResponse.getMethodsWithInsights());
+//        }
+//        return insightsOfMethodsResponse;
+//
+//    }
 
     public LinkUnlinkTicketResponse linkTicket(String codeObjectId, String insightType, String ticketLink) throws AnalyticsServiceException{
         var env = getCurrentEnvironment();
@@ -283,6 +294,7 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.getAssetDisplayInfo(env, codeObjectId));
     }
 
+    //todo: remove
     public InsightsOfMethodsResponse getInsightsOfMethods(List<MethodInfo> methodInfos) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
         Log.log(LOGGER::trace, "Requesting insights for next methodInfos {} and next environment {}", methodInfos, env);
@@ -306,13 +318,13 @@ public class AnalyticsService implements Disposable {
         return errors;
     }
 
-    public CodeObjectInsightsStatusResponse getCodeObjectInsightStatus(List<MethodInfo> methodInfos) throws AnalyticsServiceException {
-        var env = getCurrentEnvironment();
-        var methodWithCodeObjects = methodInfos.stream()
-                .map(AnalyticsService::toMethodWithCodeObjects)
-                .toList();
-        return executeCatching(() -> analyticsProviderProxy.getCodeObjectInsightStatus(new InsightsOfMethodsRequest(env, methodWithCodeObjects)));
-    }
+//    public CodeObjectInsightsStatusResponse getCodeObjectInsightStatus(List<MethodInfo> methodInfos) throws AnalyticsServiceException {
+//        var env = getCurrentEnvironment();
+//        var methodWithCodeObjects = methodInfos.stream()
+//                .map(AnalyticsService::toMethodWithCodeObjects)
+//                .toList();
+//        return executeCatching(() -> analyticsProviderProxy.getCodeObjectInsightStatus(new InsightsOfMethodsRequest(env, methodWithCodeObjects)));
+//    }
 
     @VisibleForTesting
     public static MethodWithCodeObjects toMethodWithCodeObjects(MethodInfo methodInfo) {

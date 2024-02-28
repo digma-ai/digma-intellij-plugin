@@ -39,7 +39,8 @@
       window.global = {};
     </script>
     <script>
-      window.platform = "JetBrains";
+      @GLOBAL_ENV_VARS@
+
       window.apiBaseUrl = "${jaeger_url}";
       window.initialRoutePath = "${initial_route}";
       window.embeddedMode = true;

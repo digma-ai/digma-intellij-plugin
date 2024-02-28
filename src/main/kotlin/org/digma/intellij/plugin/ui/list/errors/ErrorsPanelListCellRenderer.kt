@@ -5,8 +5,8 @@ import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBUI
+import org.digma.intellij.plugin.common.CodeObjectsUtil
 import org.digma.intellij.plugin.common.CommonUtils.prettyTimeOf
-import org.digma.intellij.plugin.model.discovery.CodeObjectInfo.Companion.extractMethodName
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError
 import org.digma.intellij.plugin.ui.common.CopyableLabelHtml
 import org.digma.intellij.plugin.ui.common.TraceButton
@@ -52,7 +52,7 @@ private fun createSingleErrorPanel(project: Project, model: CodeObjectError): JP
     val relativeFrom = if (model.startsHere) {
         "me"
     } else {
-        extractMethodName(model.sourceCodeObjectId)
+        CodeObjectsUtil.extractMethodName(model.sourceCodeObjectId)
     }
 
     val linkText = buildLinkTextWithGrayedAndDefaultLabelColorPart(model.name, "from", relativeFrom)

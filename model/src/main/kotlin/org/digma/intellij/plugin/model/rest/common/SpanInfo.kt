@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.model.rest.insights
+package org.digma.intellij.plugin.model.rest.common
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties

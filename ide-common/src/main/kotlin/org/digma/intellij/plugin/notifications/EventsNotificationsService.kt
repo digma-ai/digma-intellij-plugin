@@ -24,10 +24,10 @@ import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.env.EnvironmentsSupplier
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.model.rest.common.SpanInfo
 import org.digma.intellij.plugin.model.rest.event.CodeObjectEvent
 import org.digma.intellij.plugin.model.rest.event.FirstImportantInsightEvent
 import org.digma.intellij.plugin.model.rest.event.LatestCodeObjectEventsResponse
-import org.digma.intellij.plugin.model.rest.insights.SpanInfo
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.scope.ScopeManager

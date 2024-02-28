@@ -1,11 +1,10 @@
-package org.digma.intellij.plugin.notifications;
+package org.digma.intellij.plugin.editor;
 
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.ui.EditorNotificationPanel;
-import com.intellij.ui.EditorNotificationProvider;
+import com.intellij.ui.*;
 import org.digma.intellij.plugin.service.EditorService;
 import org.jetbrains.annotations.NotNull;
 

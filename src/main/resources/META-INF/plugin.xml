@@ -110,8 +110,8 @@
 
         <applicationService serviceImplementation="org.digma.intellij.plugin.persistence.PersistenceState"/>
 
-        <editorNotificationProvider implementation="org.digma.intellij.plugin.notifications.DigmaEditorNotificationProvider"
-                                    id="org.digma.intellij.plugin.notifications.DigmaEditorNotificationProvider"/>
+        <editorNotificationProvider implementation="org.digma.intellij.plugin.editor.DigmaEditorNotificationProvider"
+                                    id="org.digma.intellij.plugin.editor.DigmaEditorNotificationProvider"/>
 
         <postStartupActivity implementation="org.digma.intellij.plugin.common.StartupStartupActivity"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.ui.recentactivity.RecentActivitiesStartup"/>

@@ -150,7 +150,7 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
         val namePanel = JPanel()
         namePanel.layout = BorderLayout()
         namePanel.isOpaque = false
-        namePanel.border = Borders.empty(0, 5, 0, 0)
+        namePanel.border = Borders.emptyLeft(5)
         namePanel.add(name, BorderLayout.WEST)
 
         val result = JPanel()

@@ -98,11 +98,11 @@ public class CodeObjectsUtil {
 
 
     public static String extractMethodName(String codeObjectId) {
-        return codeObjectId.split("$_$")[1];
+        return stripPrefix(codeObjectId).split("\\$_\\$")[1];
     }
 
     public static String extractFqnClassName(String codeObjectId) {
-        return codeObjectId.split("$_$")[0];
+        return stripPrefix(codeObjectId).split("\\$_\\$")[0];
     }
 
 }

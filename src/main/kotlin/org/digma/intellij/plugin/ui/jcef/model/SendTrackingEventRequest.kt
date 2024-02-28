@@ -1,23 +1,23 @@
-package org.digma.intellij.plugin.model.rest.jcef.installationwizard
+package org.digma.intellij.plugin.ui.jcef.model
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import java.beans.ConstructorProperties
 
-data class FinishRequest
+data class SendTrackingEventRequest
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ConstructorProperties("action", "payload")
 constructor(
     val action: String,
-    val payload: FinishPayload?
+    val payload: SendTrackingEventRequestPayload?
 )
 
-
-data class FinishPayload
+data class SendTrackingEventRequestPayload
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@ConstructorProperties("email")
+@ConstructorProperties("eventName", "data")
 constructor(
-    val email: String?
+    val eventName: String,
+    val data: Map<String, Any>
 )

@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.model.rest.jcef.installationwizard
+package org.digma.intellij.plugin.ui.wizard.model
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties

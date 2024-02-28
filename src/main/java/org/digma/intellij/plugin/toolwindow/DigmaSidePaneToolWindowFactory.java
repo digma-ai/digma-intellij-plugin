@@ -24,8 +24,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.function.*;
 
-import static org.digma.intellij.plugin.ui.common.InstallationWizardSidePanelWindowPanelKt.createInstallationWizardSidePanelWindowPanel;
 import static org.digma.intellij.plugin.ui.common.MainToolWindowPanelKt.createMainToolWindowPanel;
+import static org.digma.intellij.plugin.ui.wizard.InstallationWizardSidePanelWindowPanelKt.createInstallationWizardSidePanelWindowPanel;
 
 
 /**

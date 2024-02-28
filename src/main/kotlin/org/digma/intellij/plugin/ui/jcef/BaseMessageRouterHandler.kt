@@ -23,7 +23,6 @@ import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.model.rest.jcef.common.SendTrackingEventRequest
 import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.scope.ScopeManager
@@ -36,6 +35,7 @@ import org.digma.intellij.plugin.ui.jcef.model.GetFromPersistenceRequest
 import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest
 import org.digma.intellij.plugin.ui.jcef.model.OpenInInternalBrowserRequest
 import org.digma.intellij.plugin.ui.jcef.model.SaveToPersistenceRequest
+import org.digma.intellij.plugin.ui.jcef.model.SendTrackingEventRequest
 import org.digma.intellij.plugin.ui.jcef.persistence.JCEFPersistenceService
 import org.digma.intellij.plugin.ui.jcef.state.JCEFStateManager
 

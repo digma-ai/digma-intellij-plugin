@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.ui.common
+package org.digma.intellij.plugin.ui.wizard
 
 import com.intellij.collaboration.async.disposingScope
 import com.intellij.ide.BrowserUtil
@@ -50,22 +50,24 @@ import org.digma.intellij.plugin.jcef.common.JcefDockerResultPayload
 import org.digma.intellij.plugin.jcef.common.JcefDockerResultRequest
 import org.digma.intellij.plugin.jcef.common.JcefMessageRequest
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.model.rest.jcef.common.SendTrackingEventRequest
-import org.digma.intellij.plugin.model.rest.jcef.installationwizard.FinishRequest
-import org.digma.intellij.plugin.model.rest.jcef.installationwizard.SetObservabilityRequest
 import org.digma.intellij.plugin.notifications.AppNotificationCenter
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.persistence.updateInstallationWizardFlag
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
+import org.digma.intellij.plugin.ui.common.isJaegerButtonEnabled
+import org.digma.intellij.plugin.ui.common.updateObservabilityValue
 import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest
+import org.digma.intellij.plugin.ui.jcef.model.SendTrackingEventRequest
 import org.digma.intellij.plugin.ui.jcef.updateDigmaEngineStatus
 import org.digma.intellij.plugin.ui.panels.DisposablePanel
 import org.digma.intellij.plugin.ui.recentactivity.RecentActivityToolWindowShower
 import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier
 import org.digma.intellij.plugin.ui.settings.SettingsChangeListener
 import org.digma.intellij.plugin.ui.settings.Theme
+import org.digma.intellij.plugin.ui.wizard.model.FinishRequest
+import org.digma.intellij.plugin.ui.wizard.model.SetObservabilityRequest
 import org.digma.intellij.plugin.wizard.InstallationWizardService
 import java.awt.BorderLayout
 import java.util.concurrent.atomic.AtomicBoolean

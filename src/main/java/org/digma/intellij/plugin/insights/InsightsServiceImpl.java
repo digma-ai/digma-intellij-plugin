@@ -7,7 +7,7 @@ import org.digma.intellij.plugin.analytics.*;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.model.InsightType;
+import org.digma.intellij.plugin.model.rest.insights.InsightType;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.scope.*;
 import org.digma.intellij.plugin.ui.common.*;

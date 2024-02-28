@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.model.discovery
 
-import org.digma.intellij.plugin.model.ElementUnderCaretType
 import java.util.Objects
 
 data class MethodUnderCaret(

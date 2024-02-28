@@ -2,7 +2,7 @@ package org.digma.intellij.plugin.model.rest.codelens
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import org.digma.intellij.plugin.model.InsightImportance
+import org.digma.intellij.plugin.model.rest.insights.InsightImportance
 import java.beans.ConstructorProperties
 
 @JsonIgnoreProperties(ignoreUnknown = true)

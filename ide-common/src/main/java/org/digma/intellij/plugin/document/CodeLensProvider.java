@@ -8,11 +8,11 @@ import org.digma.intellij.plugin.analytics.*;
 import org.digma.intellij.plugin.codelens.CodeLensRefresh;
 import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.model.InsightImportance;
+import org.digma.intellij.plugin.model.discovery.SpanInfo;
 import org.digma.intellij.plugin.model.discovery.*;
 import org.digma.intellij.plugin.model.lens.CodeLens;
 import org.digma.intellij.plugin.model.rest.codelens.*;
-import org.digma.intellij.plugin.model.rest.insights.MethodWithCodeObjects;
+import org.digma.intellij.plugin.model.rest.insights.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;

@@ -10,7 +10,7 @@ import org.cef.browser.CefBrowser;
 import org.digma.intellij.plugin.analytics.*;
 import org.digma.intellij.plugin.common.CodeObjectsUtil;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.model.InsightType;
+import org.digma.intellij.plugin.model.rest.insights.InsightType;
 import org.digma.intellij.plugin.model.rest.navigation.*;
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;

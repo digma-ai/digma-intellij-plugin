@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.276] - 2024-02-27
+## [2.0.277] - 2024-02-28
+
+- add severity to errors by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1851
+- remove-latest-method-holder by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1852
+
+## 2.0.276 - 2024-02-27
 
 - Improve bulk listener by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1850
 

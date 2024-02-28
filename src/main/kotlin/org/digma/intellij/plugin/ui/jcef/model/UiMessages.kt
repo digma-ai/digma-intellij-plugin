@@ -4,9 +4,9 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import java.beans.ConstructorProperties
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class UICodeFontRequest
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-@JsonIgnoreProperties(ignoreUnknown = true)
 @ConstructorProperties("type", "action", "payload")
 constructor(
         val type: String?,
@@ -18,9 +18,9 @@ data class UiCodeFontPayload
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 constructor(val codeFont: String)
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class UIFontRequest
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-@JsonIgnoreProperties(ignoreUnknown = true)
 @ConstructorProperties("type", "action", "payload")
 constructor(
         val type: String?,
@@ -32,9 +32,9 @@ data class UiFontPayload
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 constructor(val mainFont: String)
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class UIThemeRequest
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-@JsonIgnoreProperties(ignoreUnknown = true)
 @ConstructorProperties("type", "action", "payload")
 constructor(
         val type: String?,

@@ -6,9 +6,9 @@ import org.digma.intellij.plugin.ui.jcef.JCEFGlobalConstants
 import java.beans.ConstructorProperties
 
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class ConnectionCheckMessageRequest
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-@JsonIgnoreProperties(ignoreUnknown = true)
 @ConstructorProperties("payload")
 constructor(
     val payload: ConnectionCheckMessagePayload?,
@@ -20,6 +20,7 @@ constructor(
 
 data class ConnectionCheckMessagePayload
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+@ConstructorProperties("result")
 constructor(val result: String)
 
 

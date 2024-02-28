@@ -2,14 +2,9 @@ package org.digma.intellij.plugin.ui.jcef
 
 import com.intellij.openapi.diagnostic.Logger
 import org.cef.browser.CefBrowser
-import org.digma.intellij.plugin.common.createObjectMapper
 import org.digma.intellij.plugin.log.Log
 
 val logger = Logger.getInstance("org.digma.intellij.plugin.ui.jcef.JCefBrowserUtils")
-
-private object CommonObjectMapper {
-    var objectMapper = createObjectMapper()
-}
 
 
 fun serializeObjectToJson(value: Any): String {

@@ -39,9 +39,9 @@ constructor(
 )
 
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class JcefDockerResultRequest
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-@JsonIgnoreProperties(ignoreUnknown = true)
 @ConstructorProperties("type", "action", "payload")
 constructor(
     val type: String?,
@@ -54,9 +54,9 @@ data class JcefDockerResultPayload
 constructor(val result: String, val error: String)
 
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class JcefDockerIsDigmaEngineInstalledRequest
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-@JsonIgnoreProperties(ignoreUnknown = true)
 @ConstructorProperties("type", "action", "payload")
 constructor(
     val type: String?,
@@ -65,9 +65,9 @@ constructor(
 )
 
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class JcefDockerIsDigmaEngineRunningRequest
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-@JsonIgnoreProperties(ignoreUnknown = true)
 @ConstructorProperties("type", "action", "payload")
 constructor(
     val type: String?,
@@ -75,9 +75,9 @@ constructor(
     val payload: JcefDockerIsDigmaEngineRunningPayload?,
 )
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class JcefDockerIsDockerInstalledRequest
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-@JsonIgnoreProperties(ignoreUnknown = true)
 @ConstructorProperties("type", "action", "payload")
 constructor(
     val type: String?,
@@ -85,9 +85,9 @@ constructor(
     val payload: JcefDockerIsDockerInstalledPayload?,
 )
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class JcefDockerIsDockerComposeInstalledRequest
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-@JsonIgnoreProperties(ignoreUnknown = true)
 @ConstructorProperties("type", "action", "payload")
 constructor(
     val type: String?,

@@ -14,6 +14,7 @@ import org.cef.handler.CefMessageRouterHandlerAdapter
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
+import org.digma.intellij.plugin.common.createObjectMapper
 import org.digma.intellij.plugin.common.stopWatchStart
 import org.digma.intellij.plugin.common.stopWatchStop
 import org.digma.intellij.plugin.dashboard.DashboardService

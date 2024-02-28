@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import java.beans.ConstructorProperties
 
-// SpanInfo attached to SpanInsight
 @JsonIgnoreProperties(ignoreUnknown = true)
 open class SpanInfo
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)

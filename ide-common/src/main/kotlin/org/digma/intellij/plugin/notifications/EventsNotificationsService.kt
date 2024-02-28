@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.notifications
 
+import com.fasterxml.jackson.databind.node.ObjectNode
 import com.intellij.collaboration.async.disposingScope
 import com.intellij.notification.Notification
 import com.intellij.notification.NotificationGroupManager
@@ -18,6 +19,7 @@ import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.PluginId
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.common.Backgroundable
+import org.digma.intellij.plugin.common.createObjectMapper
 import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.env.EnvironmentsSupplier
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
@@ -25,7 +27,7 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.event.CodeObjectEvent
 import org.digma.intellij.plugin.model.rest.event.FirstImportantInsightEvent
 import org.digma.intellij.plugin.model.rest.event.LatestCodeObjectEventsResponse
-import org.digma.intellij.plugin.model.rest.insights.SpanInsight
+import org.digma.intellij.plugin.model.rest.insights.SpanInfo
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.scope.ScopeManager
@@ -39,6 +41,8 @@ const val EVENTS_NOTIFICATION_GROUP = "Digma Events Group"
 
 @Service(Service.Level.PROJECT)
 class EventsNotificationsService(val project: Project) : Disposable {
+
+    val objectMapper = createObjectMapper()
 
     companion object {
         val logger = Logger.getInstance(this::class.java)
@@ -104,9 +108,13 @@ class EventsNotificationsService(val project: Project) : Disposable {
 
         var codeObjectId = importantInsight.codeObjectId
         var methodId = importantInsight.codeObjectId
-        if (importantInsight.codeObjectId == null && importantInsight.insight is SpanInsight) {
-            codeObjectId = (importantInsight.insight as SpanInsight).spanInfo.spanCodeObjectId
-            methodId = (importantInsight.insight as SpanInsight).spanInfo.methodCodeObjectId
+        if (importantInsight.codeObjectId == null) {
+            val spanInfoNode = importantInsight.insight.get("spanInfo")
+            if (spanInfoNode != null && spanInfoNode is ObjectNode) {
+                val spanInfo = objectMapper.treeToValue(spanInfoNode, SpanInfo::class.java)
+                codeObjectId = spanInfo.spanCodeObjectId
+                methodId = spanInfo.methodCodeObjectId ?: codeObjectId
+            }
         }
 
         if (codeObjectId != null) {

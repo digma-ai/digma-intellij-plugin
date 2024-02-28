@@ -6,6 +6,7 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
+import org.digma.intellij.plugin.common.createObjectMapper
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.insights.InsightsServiceImpl
 import org.digma.intellij.plugin.log.Log
@@ -13,7 +14,6 @@ import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.insights.model.SetInsightDataListMessage
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
-import org.digma.intellij.plugin.ui.jcef.createObjectMapper
 import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
 
 

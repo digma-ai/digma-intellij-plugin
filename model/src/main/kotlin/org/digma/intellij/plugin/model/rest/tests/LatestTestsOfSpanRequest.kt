@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.model.rest.testing
+package org.digma.intellij.plugin.model.rest.tests
 
 import com.fasterxml.jackson.annotation.JsonCreator
 

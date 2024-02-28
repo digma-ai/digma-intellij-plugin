@@ -76,11 +76,14 @@ class RecentActivityService(val project: Project) : Disposable {
                     // clicking a link in recent activity
 
                     val spanId = payload.span.spanCodeObjectId
-                    val environmentsSupplier: EnvironmentsSupplier = project.service<AnalyticsService>().environment
-                    environmentsSupplier.setCurrent(payload.environment) {
-                        ScopeManager.getInstance(project).changeScope(SpanScope(spanId))
+                    spanId?.let {
+                        val environmentsSupplier: EnvironmentsSupplier = project.service<AnalyticsService>().environment
+                        environmentsSupplier.setCurrent(payload.environment) {
+                            ScopeManager.getInstance(project).changeScope(SpanScope(spanId))
+                        }
+                        project.service<ActivityMonitor>().registerSpanLinkClicked(MonitoredPanel.RecentActivity)
                     }
-                    project.service<ActivityMonitor>().registerSpanLinkClicked(MonitoredPanel.RecentActivity)
+
                 } catch (e: Exception) {
                     Log.warnWithException(logger, project, e, "error in processRecentActivityGoToSpanRequest")
                     ErrorReporter.getInstance().reportError(project, "RecentActivityService.processRecentActivityGoToSpanRequest", e)

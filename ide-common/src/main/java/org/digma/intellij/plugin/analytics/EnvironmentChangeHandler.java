@@ -1,8 +1,7 @@
-package org.digma.intellij.plugin.emvironment;
+package org.digma.intellij.plugin.analytics;
 
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
-import org.digma.intellij.plugin.analytics.EnvironmentChanged;
 import org.digma.intellij.plugin.env.Env;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;

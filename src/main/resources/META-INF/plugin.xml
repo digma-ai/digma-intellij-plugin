@@ -151,7 +151,7 @@
 
     <projectListeners>
         <listener
-                class="org.digma.intellij.plugin.emvironment.EnvironmentChangeHandler"
+                class="org.digma.intellij.plugin.analytics.EnvironmentChangeHandler"
                 topic="org.digma.intellij.plugin.analytics.EnvironmentChanged"/>
         <listener
                 class="org.digma.intellij.plugin.debugger.DebuggerListener"

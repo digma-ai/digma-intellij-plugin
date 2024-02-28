@@ -5,7 +5,7 @@ import org.digma.intellij.plugin.ui.jcef.BaseIndexTemplateBuilder
 
 class NavigationIndexTemplateBuilder : BaseIndexTemplateBuilder(NAVIGATION_APP_RESOURCE_FOLDER_NAME, NAVIGATION_APP_INDEX_TEMPLATE_NAME) {
 
-    override fun addAppSpecificEnvVariable(project: Project, data: HashMap<String, Any>) {
+    override fun addAppSpecificEnvVariable(project: Project, data: MutableMap<String, Any>) {
         //add data here
     }
 }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
+import com.intellij.ui.jcef.JBCefBrowser
 import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.docker.DigmaInstallationStatus
 import org.digma.intellij.plugin.docker.DockerService
@@ -29,8 +30,43 @@ import org.digma.intellij.plugin.ui.jcef.model.SetScopeMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetScopeMessagePayload
 import org.digma.intellij.plugin.ui.jcef.model.SetStateMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetUserEmailMessage
+import org.digma.intellij.plugin.ui.jcef.model.UICodeFontRequest
+import org.digma.intellij.plugin.ui.jcef.model.UIFontRequest
+import org.digma.intellij.plugin.ui.jcef.model.UIThemeRequest
+import org.digma.intellij.plugin.ui.jcef.model.UiCodeFontPayload
+import org.digma.intellij.plugin.ui.jcef.model.UiFontPayload
+import org.digma.intellij.plugin.ui.jcef.model.UiThemePayload
 import org.digma.intellij.plugin.ui.jcef.model.UserEmailPayload
+import org.digma.intellij.plugin.ui.settings.Theme
 
+
+fun sendRequestToChangeUiTheme(uiTheme: Theme, jbCefBrowser: JBCefBrowser) {
+    val message = UIThemeRequest(
+        JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
+        JCefMessagesUtils.GLOBAL_SET_UI_THEME,
+        UiThemePayload(uiTheme.themeName)
+    )
+    serializeAndExecuteWindowPostMessageJavaScript(jbCefBrowser.cefBrowser, message)
+}
+
+
+fun sendRequestToChangeFont(font: String?, jbCefBrowser: JBCefBrowser) {
+    val message = UIFontRequest(
+        JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
+        JCefMessagesUtils.GLOBAL_SET_UI_MAIN_FONT,
+        UiFontPayload(font!!)
+    )
+    serializeAndExecuteWindowPostMessageJavaScript(jbCefBrowser.cefBrowser, message)
+}
+
+fun sendRequestToChangeCodeFont(font: String?, jbCefBrowser: JBCefBrowser) {
+    val message = UICodeFontRequest(
+        JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
+        JCefMessagesUtils.GLOBAL_SET_UI_CODE_FONT,
+        UiCodeFontPayload(font!!)
+    )
+    serializeAndExecuteWindowPostMessageJavaScript(jbCefBrowser.cefBrowser, message)
+}
 
 /**
  * try to find a field in the payload without throwing NPE.

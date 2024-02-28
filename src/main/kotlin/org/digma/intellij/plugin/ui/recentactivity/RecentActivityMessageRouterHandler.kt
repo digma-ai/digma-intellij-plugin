@@ -16,6 +16,7 @@ import org.digma.intellij.plugin.posthog.MonitoredPanel
 import org.digma.intellij.plugin.ui.common.traceButtonName
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
 import org.digma.intellij.plugin.ui.jcef.RegistrationEventHandler
+import org.digma.intellij.plugin.ui.jcef.jsonToObject
 import org.digma.intellij.plugin.ui.jcef.tryGetFieldFromPayload
 import org.digma.intellij.plugin.ui.jcef.updateDigmaEngineStatus
 import org.digma.intellij.plugin.ui.recentactivity.model.CloseLiveViewMessage
@@ -48,19 +49,19 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
             }
 
             "RECENT_ACTIVITY/GO_TO_SPAN" -> {
-                val recentActivityGoToSpanRequest = JCefMessagesUtils.parseJsonToObject(rawRequest, RecentActivityGoToSpanRequest::class.java)
+                val recentActivityGoToSpanRequest = jsonToObject(rawRequest, RecentActivityGoToSpanRequest::class.java)
                 project.service<RecentActivityService>().processRecentActivityGoToSpanRequest(recentActivityGoToSpanRequest.payload)
             }
 
             "RECENT_ACTIVITY/GO_TO_TRACE" -> {
                 project.service<ActivityMonitor>().registerButtonClicked(MonitoredPanel.RecentActivity, traceButtonName)
-                val recentActivityGoToTraceRequest = JCefMessagesUtils.parseJsonToObject(rawRequest, RecentActivityGoToTraceRequest::class.java)
+                val recentActivityGoToTraceRequest = jsonToObject(rawRequest, RecentActivityGoToTraceRequest::class.java)
                 project.service<RecentActivityService>().processRecentActivityGoToTraceRequest(recentActivityGoToTraceRequest.payload)
             }
 
             "RECENT_ACTIVITY/CLOSE_LIVE_VIEW" -> {
                 try {
-                    val closeLiveViewMessage = JCefMessagesUtils.parseJsonToObject(rawRequest, CloseLiveViewMessage::class.java)
+                    val closeLiveViewMessage = jsonToObject(rawRequest, CloseLiveViewMessage::class.java)
                     project.service<RecentActivityService>().liveViewClosed(closeLiveViewMessage)
                 } catch (e: Exception) {
                     //we can't miss the close message because then the live view will stay open.

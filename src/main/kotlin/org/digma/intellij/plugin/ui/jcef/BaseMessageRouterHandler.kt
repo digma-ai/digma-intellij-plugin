@@ -82,8 +82,8 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
                     }
 
                     JCefMessagesUtils.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER -> {
-                        val openBrowserRequest = JCefMessagesUtils.parseJsonToObject(request, OpenInDefaultBrowserRequest::class.java)
-                        openBrowserRequest?.let {
+                        val openBrowserRequest = jsonToObject(request, OpenInDefaultBrowserRequest::class.java)
+                        openBrowserRequest.let {
                             it.payload.url.let { url ->
                                 BrowserUtil.browse(url)
                             }
@@ -119,8 +119,8 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
                     }
 
                     JCefMessagesUtils.GLOBAL_SEND_TRACKING_EVENT -> {
-                        val trackingRequest = JCefMessagesUtils.parseJsonToObject(request, SendTrackingEventRequest::class.java)
-                        trackingRequest?.let {
+                        val trackingRequest = jsonToObject(request, SendTrackingEventRequest::class.java)
+                        trackingRequest.let {
                             it.payload?.let { pl ->
                                 ActivityMonitor.getInstance(project).registerCustomEvent(pl.eventName, pl.data)
                             }

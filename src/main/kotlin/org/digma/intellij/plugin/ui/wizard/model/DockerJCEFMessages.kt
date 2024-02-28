@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.jcef.common
+package org.digma.intellij.plugin.ui.wizard.model
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
@@ -48,6 +48,10 @@ constructor(
     val action: String,
     val payload: JcefDockerResultPayload?,
 )
+
+data class JcefDockerResultPayload
+@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+constructor(val result: String, val error: String)
 
 
 data class JcefDockerIsDigmaEngineInstalledRequest

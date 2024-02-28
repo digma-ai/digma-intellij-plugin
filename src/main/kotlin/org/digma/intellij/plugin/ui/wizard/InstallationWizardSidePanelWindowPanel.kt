@@ -29,26 +29,12 @@ import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator
+import org.digma.intellij.plugin.common.createObjectMapper
 import org.digma.intellij.plugin.docker.DigmaInstallationStatus
 import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
-import org.digma.intellij.plugin.jcef.common.ConnectionCheckResult
 import org.digma.intellij.plugin.jcef.common.CustomSchemeHandlerFactory
-import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
-import org.digma.intellij.plugin.jcef.common.JcefConnectionCheckMessagePayload
-import org.digma.intellij.plugin.jcef.common.JcefConnectionCheckMessageRequest
-import org.digma.intellij.plugin.jcef.common.JcefDockerIsDigmaEngineInstalledPayload
-import org.digma.intellij.plugin.jcef.common.JcefDockerIsDigmaEngineInstalledRequest
-import org.digma.intellij.plugin.jcef.common.JcefDockerIsDigmaEngineRunningPayload
-import org.digma.intellij.plugin.jcef.common.JcefDockerIsDigmaEngineRunningRequest
-import org.digma.intellij.plugin.jcef.common.JcefDockerIsDockerComposeInstalledPayload
-import org.digma.intellij.plugin.jcef.common.JcefDockerIsDockerComposeInstalledRequest
-import org.digma.intellij.plugin.jcef.common.JcefDockerIsDockerInstalledPayload
-import org.digma.intellij.plugin.jcef.common.JcefDockerIsDockerInstalledRequest
-import org.digma.intellij.plugin.jcef.common.JcefDockerResultPayload
-import org.digma.intellij.plugin.jcef.common.JcefDockerResultRequest
-import org.digma.intellij.plugin.jcef.common.JcefMessageRequest
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.notifications.AppNotificationCenter
 import org.digma.intellij.plugin.persistence.PersistenceService
@@ -58,15 +44,33 @@ import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import org.digma.intellij.plugin.ui.common.isJaegerButtonEnabled
 import org.digma.intellij.plugin.ui.common.updateObservabilityValue
+import org.digma.intellij.plugin.ui.jcef.jsonToObject
 import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest
 import org.digma.intellij.plugin.ui.jcef.model.SendTrackingEventRequest
+import org.digma.intellij.plugin.ui.jcef.sendRequestToChangeCodeFont
+import org.digma.intellij.plugin.ui.jcef.sendRequestToChangeFont
+import org.digma.intellij.plugin.ui.jcef.sendRequestToChangeUiTheme
+import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
 import org.digma.intellij.plugin.ui.jcef.updateDigmaEngineStatus
 import org.digma.intellij.plugin.ui.panels.DisposablePanel
 import org.digma.intellij.plugin.ui.recentactivity.RecentActivityToolWindowShower
 import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier
 import org.digma.intellij.plugin.ui.settings.SettingsChangeListener
 import org.digma.intellij.plugin.ui.settings.Theme
+import org.digma.intellij.plugin.ui.wizard.model.ConnectionCheckMessagePayload
+import org.digma.intellij.plugin.ui.wizard.model.ConnectionCheckMessageRequest
+import org.digma.intellij.plugin.ui.wizard.model.ConnectionCheckResult
 import org.digma.intellij.plugin.ui.wizard.model.FinishRequest
+import org.digma.intellij.plugin.ui.wizard.model.JcefDockerIsDigmaEngineInstalledPayload
+import org.digma.intellij.plugin.ui.wizard.model.JcefDockerIsDigmaEngineInstalledRequest
+import org.digma.intellij.plugin.ui.wizard.model.JcefDockerIsDigmaEngineRunningPayload
+import org.digma.intellij.plugin.ui.wizard.model.JcefDockerIsDigmaEngineRunningRequest
+import org.digma.intellij.plugin.ui.wizard.model.JcefDockerIsDockerComposeInstalledPayload
+import org.digma.intellij.plugin.ui.wizard.model.JcefDockerIsDockerComposeInstalledRequest
+import org.digma.intellij.plugin.ui.wizard.model.JcefDockerIsDockerInstalledPayload
+import org.digma.intellij.plugin.ui.wizard.model.JcefDockerIsDockerInstalledRequest
+import org.digma.intellij.plugin.ui.wizard.model.JcefDockerResultPayload
+import org.digma.intellij.plugin.ui.wizard.model.JcefDockerResultRequest
 import org.digma.intellij.plugin.ui.wizard.model.SetObservabilityRequest
 import org.digma.intellij.plugin.wizard.InstallationWizardService
 import java.awt.BorderLayout
@@ -91,6 +95,8 @@ private val logger: Logger =
 
 
 fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipInstallationStep: Boolean): DisposablePanel? {
+
+    val objectMapper = createObjectMapper()
 
     val digmaStatusUpdater = DigmaStatusUpdater()
 
@@ -157,43 +163,33 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
         ): Boolean {
             Log.log(logger::debug, "request: {}", request)
 
-            val (_, action) = JCefMessagesUtils.parseJsonToObject(
-                request,
-                JcefMessageRequest::class.java
-            )
+            val requestJsonNode = objectMapper.readTree(request)
+            val action: String = requestJsonNode["action"].asText()
+
             if ("INSTALLATION_WIZARD/INITIALIZE".equals(action, ignoreCase = true)) {
                 digmaStatusUpdater.start(project, jbCefBrowser.cefBrowser)
             }
             if ("INSTALLATION_WIZARD/CLOSE".equals(action, ignoreCase = true)) {
                 EDT.ensureEDT {
-                    digmaStatusUpdater.stop(project)
+                    digmaStatusUpdater.stop()
                     MainToolWindowCardsController.getInstance(project).wizardFinished()
                 }
             }
             if (JCefMessagesUtils.GLOBAL_SEND_TRACKING_EVENT.equals(action, ignoreCase = true)) {
-                val (_, payload) = JCefMessagesUtils.parseJsonToObject(
-                    request,
-                    SendTrackingEventRequest::class.java
-                )
+                val (_, payload) = jsonToObject(request, SendTrackingEventRequest::class.java)
                 if (payload != null) {
                     ActivityMonitor.getInstance(project).registerCustomEvent(payload.eventName, payload.data)
                 }
             }
             if (JCefMessagesUtils.INSTALLATION_WIZARD_SET_OBSERVABILITY.equals(action, ignoreCase = true)) {
-                val (_, payload) = JCefMessagesUtils.parseJsonToObject(
-                    request,
-                    SetObservabilityRequest::class.java
-                )
+                val (_, payload) = jsonToObject(request, SetObservabilityRequest::class.java)
                 if (payload != null) {
                     updateObservabilityValue(project, payload.isObservabilityEnabled)
                 }
             }
             if (JCefMessagesUtils.INSTALLATION_WIZARD_FINISH.equals(action, ignoreCase = true)) {
-                digmaStatusUpdater.stop(project)
-                val (_, payload) = JCefMessagesUtils.parseJsonToObject(
-                    request,
-                    FinishRequest::class.java
-                )
+                digmaStatusUpdater.stop()
+                val (_, payload) = jsonToObject(request, FinishRequest::class.java)
                 val email = payload?.email
                 PersistenceService.getInstance().setUserEmail(email)
                 if (email != null) {
@@ -207,10 +203,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                 }
             }
             if (JCefMessagesUtils.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER.equals(action, ignoreCase = true)) {
-                val (_, payload) = JCefMessagesUtils.parseJsonToObject(
-                    request,
-                    OpenInDefaultBrowserRequest::class.java
-                )
+                val (_, payload) = jsonToObject(request, OpenInDefaultBrowserRequest::class.java)
                 if (payload != null) {
                     ApplicationManager.getApplication().invokeLater {
                         BrowserUtil.browse(
@@ -220,21 +213,15 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                 }
             }
             if (JCefMessagesUtils.INSTALLATION_WIZARD_CHECK_CONNECTION.equals(action, ignoreCase = true)) {
-                val jcefConnectionCheckMessagePayload: JcefConnectionCheckMessagePayload =
+                val connectionCheckMessagePayload: ConnectionCheckMessagePayload =
                     if (BackendConnectionMonitor.getInstance(project).isConnectionOk()) {
-                        JcefConnectionCheckMessagePayload(ConnectionCheckResult.SUCCESS.value)
+                        ConnectionCheckMessagePayload(ConnectionCheckResult.SUCCESS.value)
                     } else {
                         AnalyticsService.getInstance(project).environment.refreshNowOnBackground()
-                        JcefConnectionCheckMessagePayload(ConnectionCheckResult.FAILURE.value)
+                        ConnectionCheckMessagePayload(ConnectionCheckResult.FAILURE.value)
                     }
-                val requestMessage = JCefBrowserUtil.resultToString(
-                    JcefConnectionCheckMessageRequest(
-                        JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
-                        JCefMessagesUtils.INSTALLATION_WIZARD_SET_CHECK_CONNECTION,
-                        jcefConnectionCheckMessagePayload
-                    )
-                )
-                JCefBrowserUtil.postJSMessage(requestMessage, jbCefBrowser)
+                val message = ConnectionCheckMessageRequest(connectionCheckMessagePayload)
+                serializeAndExecuteWindowPostMessageJavaScript(jbCefBrowser.cefBrowser, message)
             }
             if (JCefMessagesUtils.INSTALLATION_WIZARD_INSTALL_DIGMA_ENGINE.equals(action, ignoreCase = true)) {
 
@@ -480,7 +467,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
 
     val jcefDigmaPanel = object: DisposablePanel(){
         override fun dispose() {
-            digmaStatusUpdater.stop(project)
+            digmaStatusUpdater.stop()
             jbCefBrowser.dispose()
             jbCefClient.dispose()
             msgRouter.dispose()
@@ -493,15 +480,15 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
 
     ApplicationUISettingsChangeNotifier.getInstance(project).addSettingsChangeListener(object : SettingsChangeListener {
         override fun systemFontChange(fontName: String) {
-            JCefBrowserUtil.sendRequestToChangeFont(fontName, jbCefBrowser)
+            sendRequestToChangeFont(fontName, jbCefBrowser)
         }
 
         override fun systemThemeChange(theme: Theme) {
-            JCefBrowserUtil.sendRequestToChangeUiTheme(theme, jbCefBrowser)
+            sendRequestToChangeUiTheme(theme, jbCefBrowser)
         }
 
         override fun editorFontChange(fontName: String) {
-            JCefBrowserUtil.sendRequestToChangeCodeFont(fontName, jbCefBrowser)
+            sendRequestToChangeCodeFont(fontName, jbCefBrowser)
         }
     })
 
@@ -540,74 +527,61 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
 }
 
 
-
-
 private fun sendDockerResult(result: String, errorMsg: String, jbCefBrowser: JBCefBrowser, messageType: String) {
 
     val payload = JcefDockerResultPayload(result, errorMsg)
 
-    val requestMessage = JCefBrowserUtil.resultToString(
-        JcefDockerResultRequest(
-            JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
-            messageType,
-            payload
-        )
+    val message = JcefDockerResultRequest(
+        JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
+        messageType,
+        payload
     )
-    JCefBrowserUtil.postJSMessage(requestMessage, jbCefBrowser)
+    serializeAndExecuteWindowPostMessageJavaScript(jbCefBrowser.cefBrowser, message)
 }
 
 
 fun sendIsDigmaEngineInstalled(result: Boolean, jbCefBrowser: JBCefBrowser) {
     val payload = JcefDockerIsDigmaEngineInstalledPayload(result)
-    val requestMessage = JCefBrowserUtil.resultToString(
-        JcefDockerIsDigmaEngineInstalledRequest(
-            JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
-            JCefMessagesUtils.GLOBAL_SET_IS_DIGMA_ENGINE_INSTALLED,
-            payload
-        )
+    val message = JcefDockerIsDigmaEngineInstalledRequest(
+        JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
+        JCefMessagesUtils.GLOBAL_SET_IS_DIGMA_ENGINE_INSTALLED,
+        payload
     )
-    JCefBrowserUtil.postJSMessage(requestMessage, jbCefBrowser)
+    serializeAndExecuteWindowPostMessageJavaScript(jbCefBrowser.cefBrowser, message)
 }
 
 
 fun sendIsDigmaEngineRunning(success: Boolean, jbCefBrowser: JBCefBrowser) {
 
     val payload = JcefDockerIsDigmaEngineRunningPayload(success)
-    val requestMessage = JCefBrowserUtil.resultToString(
-        JcefDockerIsDigmaEngineRunningRequest(
-            JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
-            JCefMessagesUtils.GLOBAL_SET_IS_DIGMA_ENGINE_RUNNING,
-            payload
-        )
+    val message = JcefDockerIsDigmaEngineRunningRequest(
+        JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
+        JCefMessagesUtils.GLOBAL_SET_IS_DIGMA_ENGINE_RUNNING,
+        payload
     )
-    JCefBrowserUtil.postJSMessage(requestMessage, jbCefBrowser)
+    serializeAndExecuteWindowPostMessageJavaScript(jbCefBrowser.cefBrowser, message)
 }
-
-
 
 
 fun sendIsDockerInstalled(result: Boolean, jbCefBrowser: JBCefBrowser) {
     val isDockerInstalledPayload = JcefDockerIsDockerInstalledPayload(result)
-    val isDockerInstalledRequestMessage = JCefBrowserUtil.resultToString(
-        JcefDockerIsDockerInstalledRequest(
-            JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
-            JCefMessagesUtils.GLOBAL_SET_IS_DOCKER_INSTALLED,
-            isDockerInstalledPayload
-        )
+    val message = JcefDockerIsDockerInstalledRequest(
+        JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
+        JCefMessagesUtils.GLOBAL_SET_IS_DOCKER_INSTALLED,
+        isDockerInstalledPayload
     )
-    JCefBrowserUtil.postJSMessage(isDockerInstalledRequestMessage, jbCefBrowser)
+    serializeAndExecuteWindowPostMessageJavaScript(jbCefBrowser.cefBrowser, message)
+
 }
 
 fun sendIsDockerComposeInstalled(result: Boolean, jbCefBrowser: JBCefBrowser) {
     val isDockerComposeInstalledPayload = JcefDockerIsDockerComposeInstalledPayload(result)
-    val isDockerComposeInstalledRequestMessage = JCefBrowserUtil.resultToString(
-        JcefDockerIsDockerComposeInstalledRequest(
-            JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
-            JCefMessagesUtils.GLOBAL_SET_IS_DOCKER_COMPOSE_INSTALLED,
-            isDockerComposeInstalledPayload
-        )
+    val message = JcefDockerIsDockerComposeInstalledRequest(
+        JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
+        JCefMessagesUtils.GLOBAL_SET_IS_DOCKER_COMPOSE_INSTALLED,
+        isDockerComposeInstalledPayload
     )
-    JCefBrowserUtil.postJSMessage(isDockerComposeInstalledRequestMessage, jbCefBrowser)
+    serializeAndExecuteWindowPostMessageJavaScript(jbCefBrowser.cefBrowser, message)
 }
 
 
@@ -661,7 +635,7 @@ class DigmaStatusUpdater {
         }
     }
 
-    fun stop(project: Project) {
+    fun stop() {
         myDisposable?.let {
             Disposer.dispose(it)
         }

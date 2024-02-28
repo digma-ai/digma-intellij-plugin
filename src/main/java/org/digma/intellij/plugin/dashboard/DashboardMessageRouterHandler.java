@@ -52,7 +52,7 @@ public class DashboardMessageRouterHandler extends CefMessageRouterHandlerAdapte
                 switch (action) {
                     case "DASHBOARD/INITIALIZE" -> onInitialize(browser);
                     case JCefMessagesUtils.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER -> {
-                        OpenInDefaultBrowserRequest openBrowserRequest = JCefMessagesUtils.parseJsonToObject(request, OpenInDefaultBrowserRequest.class);
+                        OpenInDefaultBrowserRequest openBrowserRequest = jsonToObject(request, OpenInDefaultBrowserRequest.class);
                         if (openBrowserRequest != null && openBrowserRequest.getPayload() != null) {
                             BrowserUtil.browse(openBrowserRequest.getPayload().getUrl());
                         }

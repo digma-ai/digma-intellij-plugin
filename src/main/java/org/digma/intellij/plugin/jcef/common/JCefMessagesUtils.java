@@ -1,7 +1,5 @@
 package org.digma.intellij.plugin.jcef.common;
 
-import com.google.gson.*;
-
 //todo: move all to src/main/kotlin/org/digma/intellij/plugin/ui/jcef/JCEFGlobalConstants.kt
 public class JCefMessagesUtils {
 
@@ -53,9 +51,4 @@ public class JCefMessagesUtils {
     public static final String GLOBAL_GET_STATE = "GLOBAL/GET_STATE";
 
 
-    //todo: replace with org.digma.intellij.plugin.ui.jcef.JCefBrowserUtilsKt.jsonToObject
-    public static <T> T parseJsonToObject(String jsonString, Class<T> jcefMessageRequestClass) {
-        JsonObject object = JsonParser.parseString(jsonString).getAsJsonObject();
-        return new Gson().fromJson(object, jcefMessageRequestClass);
-    }
 }

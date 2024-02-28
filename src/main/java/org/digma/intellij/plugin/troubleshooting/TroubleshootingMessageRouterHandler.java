@@ -10,13 +10,16 @@ import org.cef.callback.CefQueryCallback;
 import org.cef.handler.CefMessageRouterHandlerAdapter;
 import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.documentation.DocumentationService;
-import org.digma.intellij.plugin.jcef.common.*;
+import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
+import org.digma.intellij.plugin.ui.jcef.JCefMessagesUtilsKt;
 import org.digma.intellij.plugin.ui.jcef.model.*;
 import org.digma.intellij.plugin.ui.settings.Theme;
 import org.jetbrains.annotations.NotNull;
+
+import static org.digma.intellij.plugin.ui.jcef.JCefBrowserUtilsKt.jsonToObject;
 
 class TroubleshootingMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
@@ -53,14 +56,14 @@ class TroubleshootingMessageRouterHandler extends CefMessageRouterHandlerAdapter
 
 
                     case JCefMessagesUtils.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER -> {
-                        OpenInDefaultBrowserRequest openBrowserRequest = JCefMessagesUtils.parseJsonToObject(request, OpenInDefaultBrowserRequest.class);
+                        OpenInDefaultBrowserRequest openBrowserRequest = jsonToObject(request, OpenInDefaultBrowserRequest.class);
                         if (openBrowserRequest != null && openBrowserRequest.getPayload() != null) {
                             BrowserUtil.browse(openBrowserRequest.getPayload().getUrl());
                         }
                     }
 
                     case JCefMessagesUtils.GLOBAL_SEND_TRACKING_EVENT -> {
-                        SendTrackingEventRequest trackingRequest = JCefMessagesUtils.parseJsonToObject(request, SendTrackingEventRequest.class);
+                        SendTrackingEventRequest trackingRequest = jsonToObject(request, SendTrackingEventRequest.class);
                         if (trackingRequest != null && trackingRequest.getPayload() != null) {
                             ActivityMonitor.getInstance(project).registerCustomEvent(trackingRequest.getPayload().getEventName(), trackingRequest.getPayload().getData());
                         }
@@ -81,15 +84,15 @@ class TroubleshootingMessageRouterHandler extends CefMessageRouterHandlerAdapter
 
 
     void sendRequestToChangeUiTheme(@NotNull Theme theme) {
-        JCefBrowserUtil.sendRequestToChangeUiTheme(theme, jbCefBrowser);
+        JCefMessagesUtilsKt.sendRequestToChangeUiTheme(theme, jbCefBrowser);
     }
 
     void sendRequestToChangeFont(String fontName) {
-        JCefBrowserUtil.sendRequestToChangeFont(fontName, jbCefBrowser);
+        JCefMessagesUtilsKt.sendRequestToChangeFont(fontName, jbCefBrowser);
     }
 
     void sendRequestToChangeCodeFont(String fontName) {
-        JCefBrowserUtil.sendRequestToChangeCodeFont(fontName, jbCefBrowser);
+        JCefMessagesUtilsKt.sendRequestToChangeCodeFont(fontName, jbCefBrowser);
     }
 
 

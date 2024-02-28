@@ -1,5 +1,7 @@
 package org.digma.intellij.plugin.model
 
+import com.fasterxml.jackson.annotation.JsonEnumDefaultValue
+
 
 enum class ElementUnderCaretType {
     Method
@@ -23,7 +25,6 @@ enum class InsightType {
     EndpointHighNumberOfQueries,
     EndpointQueryOptimization,
     SpaNPlusOne,
-    Unmapped,
     TopErrorFlows,
     SpanDurationChange,
     SpanEndpointBottleneck,
@@ -33,7 +34,10 @@ enum class InsightType {
     SpanNexus,
     SpanQueryOptimization,
     SpanScalingInsufficientData,
-    SpanScalingWell;
+    SpanScalingWell,
+    @JsonEnumDefaultValue
+    Unmapped
+
 }
 
 enum class InsightImportance(val priority: Int) {

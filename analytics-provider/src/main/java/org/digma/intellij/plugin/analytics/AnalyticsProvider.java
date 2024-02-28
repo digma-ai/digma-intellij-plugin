@@ -28,6 +28,8 @@ public interface AnalyticsProvider extends Closeable {
 
     void sendDebuggerEvent(DebuggerEventRequest debuggerEventRequest);
 
+    List<InsightInfo> getInsightsInfo(InsightsRequest insightsRequest);
+
     List<CodeObjectInsight> getInsights(InsightsRequest insightsRequest);
 
     InsightsOfMethodsResponse getInsightsOfMethods(InsightsOfMethodsRequest insightsOfMethodsRequest);

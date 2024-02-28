@@ -335,28 +335,32 @@ tasks {
 
         exclude("**/webview/global-env-vars.txt")
 
+        val filesToFilter = listOf(
+            "webview/recentactivity/recentActivityTemplate.ftl",
+            "webview/tests/testsTemplate.ftl",
+            "webview/notifications/notificationstemplate.ftl",
+            "webview/assets/assetstemplate.ftl",
+            "webview/navigation/navigationtemplate.ftl",
+            "webview/insights/insightstemplate.ftl",
+            "webview/jaegerui/jaegeruitemplate.ftl"
+        )
+
+
         val globalEnvVarsFilePath = "src/main/resources/webview/global-env-vars.txt"
         val globalEnvVarsFile = layout.projectDirectory.file(globalEnvVarsFilePath).asFile
 
         inputs.file(globalEnvVarsFile.canonicalPath)
+        //all files are inputs so a change will trigger this task to filter again
+        filesToFilter.forEach {
+            inputs.file(layout.projectDirectory.file("src/main/resources/$it").asFile.canonicalPath)
+        }
 
         val globalEnvVars = globalEnvVarsFile.readText()
         val tokens = mutableMapOf<String, String>()
         tokens["GLOBAL_ENV_VARS"] = globalEnvVars
 
-        //todo: add all templates
-        filesMatching(
-            listOf(
-                "webview/recentactivity/recentActivityTemplate.ftl",
-                "webview/tests/testsTemplate.ftl",
-                "webview/notifications/notificationstemplate.ftl",
-                "webview/assets/assetstemplate.ftl",
-                "webview/navigation/navigationtemplate.ftl",
-                "webview/insights/insightstemplate.ftl"
-            )
-        ) {
+        filesMatching(filesToFilter) {
             filter<ReplaceTokens>("tokens" to tokens)
         }
-
     }
 }

@@ -1,107 +1,71 @@
 package org.digma.intellij.plugin.jaegerui;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.intellij.ide.BrowserUtil;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
-import com.intellij.ui.jcef.JBCefBrowser;
-import org.cef.browser.*;
-import org.cef.callback.CefQueryCallback;
-import org.cef.handler.CefMessageRouterHandlerAdapter;
-import org.digma.intellij.plugin.common.Backgroundable;
-import org.digma.intellij.plugin.errorreporting.ErrorReporter;
+import org.cef.browser.CefBrowser;
 import org.digma.intellij.plugin.jaegerui.model.incoming.*;
 import org.digma.intellij.plugin.jaegerui.model.outgoing.*;
-import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest;
+import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
-import static org.digma.intellij.plugin.common.StopWatchUtilsKt.*;
+import static org.digma.intellij.plugin.ui.jcef.JCefBrowserUtilsKt.serializeAndExecuteWindowPostMessageJavaScript;
 
-public class JaegerUIMessageRouterHandler extends CefMessageRouterHandlerAdapter {
+public class JaegerUIMessageRouterHandler extends BaseMessageRouterHandler {
 
-    private static final Logger LOGGER = Logger.getInstance(JaegerUIMessageRouterHandler.class);
+    private final Logger logger = Logger.getInstance(JaegerUIMessageRouterHandler.class);
 
-    private final Project project;
-    private final JBCefBrowser jbCefBrowser;
 
-    public JaegerUIMessageRouterHandler(Project project, JBCefBrowser jbCefBrowser) {
-        this.project = project;
-        this.jbCefBrowser = jbCefBrowser;
+    public JaegerUIMessageRouterHandler(Project project) {
+        super(project);
+    }
+
+
+    @NotNull
+    @Override
+    public String getOriginForTroubleshootingEvent() {
+        return "jaegerui";
     }
 
     @Override
-    public boolean onQuery(CefBrowser browser, CefFrame frame, long queryId, String request, boolean persistent, CefQueryCallback callback) {
+    public void doOnQuery(@NotNull Project project, @NotNull CefBrowser browser, @NotNull JsonNode requestJsonNode, @NotNull String rawRequest, @NotNull String action) throws Exception {
 
-        Backgroundable.executeOnPooledThread( () -> {
-            try {
+        switch (action) {
+            case "GET_SPANS_DATA" -> {
 
-                var stopWatch = stopWatchStart();
+                SpansMessage spansMessage = getObjectMapper().treeToValue(requestJsonNode, SpansMessage.class);
 
-                var objectMapper = new ObjectMapper();
-                var jsonNode = objectMapper.readTree(request);
-
-                String action = jsonNode.get("action").asText();
-                switch (action) {
-                    case "GET_SPANS_DATA" -> {
-
-                        SpansMessage spansMessage = objectMapper.treeToValue(jsonNode, SpansMessage.class);
-
-                        Map<String, SpanData> resolvedSpans;
-                        try {
-                            resolvedSpans = JaegerUIService.getInstance(project).getResolvedSpans(spansMessage);
-                        }catch (Exception e){
-                            Log.debugWithException(LOGGER,e,"Exception while resolving spans for GET_SPANS_DATA");
-                            resolvedSpans = Collections.emptyMap();
-                        }
-
-                        var spansWithResolvedLocationMessage = new SpansWithResolvedLocationMessage("digma",
-                                "SET_SPANS_DATA", resolvedSpans);
-
-                        var stringMessage = objectMapper.writeValueAsString(spansWithResolvedLocationMessage);
-
-                        browser.executeJavaScript(
-                                "window.postMessage(" + stringMessage + ");",
-                                jbCefBrowser.getCefBrowser().getURL(),
-                                0
-                        );
-                    }
-                    case "GO_TO_SPAN" -> {
-                        GoToSpanMessage goToSpanMessage = objectMapper.treeToValue(jsonNode, GoToSpanMessage.class);
-                        JaegerUIService.getInstance(project).navigateToCode(goToSpanMessage);
-                    }
-                    case "GO_TO_INSIGHTS" -> {
-                        //it's the same message as go to span
-                        GoToSpanMessage goToSpanMessage = objectMapper.treeToValue(jsonNode, GoToSpanMessage.class);
-                        JaegerUIService.getInstance(project).goToInsight(goToSpanMessage);
-                    }
-                    case JCefMessagesUtils.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER -> {
-                        OpenInDefaultBrowserRequest openBrowserRequest = JCefMessagesUtils.parseJsonToObject(request, OpenInDefaultBrowserRequest.class);
-                        if (openBrowserRequest != null && openBrowserRequest.getPayload() != null) {
-                            BrowserUtil.browse(openBrowserRequest.getPayload().getUrl());
-                        }
-                    }
-                    default -> throw new IllegalStateException("Unexpected value: " + action);
+                Map<String, SpanData> resolvedSpans;
+                try {
+                    resolvedSpans = JaegerUIService.getInstance(project).getResolvedSpans(spansMessage);
+                } catch (Exception e) {
+                    Log.debugWithException(logger, e, "Exception while resolving spans for GET_SPANS_DATA");
+                    resolvedSpans = Collections.emptyMap();
                 }
 
-                stopWatchStop(stopWatch, time -> Log.log(LOGGER::trace, "action {} took {}",action, time));
+                var spansWithResolvedLocationMessage = new SpansWithResolvedLocationMessage("digma",
+                        "SET_SPANS_DATA", resolvedSpans);
 
-            } catch (Throwable e) {
-                Log.debugWithException(LOGGER,e,"Exception in onQuery "+request);
-                ErrorReporter.getInstance().reportError(project, "JaegerUIMessageRouterHandler.onQuery", e);
+
+                serializeAndExecuteWindowPostMessageJavaScript(browser, spansWithResolvedLocationMessage);
             }
-        });
 
-        callback.success("");
+            case "GO_TO_SPAN" -> {
+                GoToSpanMessage goToSpanMessage = getObjectMapper().treeToValue(requestJsonNode, GoToSpanMessage.class);
+                JaegerUIService.getInstance(project).navigateToCode(goToSpanMessage);
+            }
 
-        return true;
-    }
+            case "GO_TO_INSIGHTS" -> {
+                //it's the same message as go to span
+                GoToSpanMessage goToSpanMessage = getObjectMapper().treeToValue(requestJsonNode, GoToSpanMessage.class);
+                JaegerUIService.getInstance(project).goToInsight(goToSpanMessage);
+            }
 
-    @Override
-    public void onQueryCanceled(CefBrowser browser, CefFrame frame, long queryId) {
-        Log.log(LOGGER::debug,"jcef query canceled");
+            default -> Log.log(logger::warn, "got unexpected action {}", action);
+        }
     }
 
 }

@@ -1,13 +1,10 @@
 package org.digma.intellij.plugin.jaegerui;
 
-import com.intellij.openapi.fileEditor.FileEditor;
-import com.intellij.openapi.fileEditor.FileEditorPolicy;
-import com.intellij.openapi.fileEditor.FileEditorProvider;
+import com.intellij.openapi.fileEditor.*;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.jcef.JBCefApp;
-import org.jetbrains.annotations.NonNls;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.*;
 
 public class JaegerUIFileEditorProvider implements FileEditorProvider {
 
@@ -21,7 +18,8 @@ public class JaegerUIFileEditorProvider implements FileEditorProvider {
 
     @Override
     public @NotNull FileEditor createEditor(@NotNull Project project, @NotNull VirtualFile file) {
-        return new JaegerUIFileEditor(project,file);
+        //unchecked cast must succeed or we have a bug
+        return new JaegerUIFileEditor(project, (JaegerUIVirtualFile) file);
     }
 
     @Override

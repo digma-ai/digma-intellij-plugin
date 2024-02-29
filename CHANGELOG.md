@@ -1,6 +1,12 @@
 # Changelog
 
-## [2.0.277] - 2024-02-28
+## [2.0.278] - 2024-02-29
+
+- Common jcef for jaeger UI by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1853
+- Clean insights from document info container Closes #1623 Closes #1755 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1855
+- Fix freeze when codelens refresh by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1858
+
+## 2.0.277 - 2024-02-28
 
 - add severity to errors by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1851
 - remove-latest-method-holder by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1852

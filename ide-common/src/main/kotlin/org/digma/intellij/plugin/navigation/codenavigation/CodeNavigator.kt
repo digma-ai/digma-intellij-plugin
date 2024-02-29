@@ -156,10 +156,10 @@ class CodeNavigator(val project: Project) {
                 val methodCodeObjectId = runInReadAccessWithResult {
                     languageService.detectMethodBySpan(project, CodeObjectsUtil.stripSpanPrefix(spanCodeObjectId))
                 }
-                return methodCodeObjectId;
+                return methodCodeObjectId
             }
         }
-        return null;
+        return null
     }
 
     fun getMethodLocation(methodId: String): Pair<String, Int>? {

@@ -6,11 +6,11 @@ import com.intellij.openapi.project.Project;
 import freemarker.template.*;
 import org.digma.intellij.plugin.docker.DockerService;
 import org.digma.intellij.plugin.env.Env;
-import org.digma.intellij.plugin.jcef.common.JCefTemplateUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.common.JaegerUtilKt;
+import org.digma.intellij.plugin.ui.jcef.BaseIndexTemplateBuilderKt;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -46,7 +46,7 @@ public class DashboardIndexTemplateBuilder {
         try {
             var data = new HashMap<String, Object>();
 
-            JCefTemplateUtils.addCommonEnvVariables(data);
+            BaseIndexTemplateBuilderKt.addCommonEnvVariables(data);
 
             data.put(ENV_VARIABLE_IDE, ApplicationNamesInfo.getInstance().getProductName());
             data.put(IS_JAEGER_ENABLED, JaegerUtilKt.isJaegerButtonEnabled());

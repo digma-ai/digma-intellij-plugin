@@ -19,8 +19,7 @@ import com.jetbrains.python.psi.*;
 import com.jetbrains.python.psi.stubs.*;
 import kotlin.Pair;
 import org.digma.intellij.plugin.common.*;
-import org.digma.intellij.plugin.document.DocumentInfoService;
-import org.digma.intellij.plugin.editor.*;
+import org.digma.intellij.plugin.editor.CaretContextService;
 import org.digma.intellij.plugin.env.Env;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.instrumentation.*;
@@ -163,56 +162,20 @@ public class PythonLanguageService implements LanguageService {
             var functions = PyFunctionNameIndex.find(functionName, project, GlobalSearchScope.allScope(project));
 
             //PyFunctionNameIndex may find many functions, we want only one, so if we found it break the loop
-            boolean found = false;
             for (PyFunction function : functions) {
                 if (function.isValid()) {
                     var codeObjectId = PythonLanguageUtils.createPythonMethodCodeObjectId(project, function);
                     List<String> allIds = PythonAdditionalIdsProvider.getAdditionalIdsInclusive(codeObjectId, false);
                     if (allIds.contains(methodId) && (function.canNavigateToSource())) {
                         Log.log(LOGGER::debug, "navigating to method {}", function);
-                        found = true;
                         function.navigate(true);
                         break;
                     }
                 }
             }
-
-            if (!found) {
-                navigateToMethodFallback(methodId);
-            }
         });
 
     }
-
-    private void navigateToMethodFallback(String methodId) {
-
-        PsiFile psiFile = DocumentInfoService.getInstance(project).findPsiFileByMethodId(methodId);
-        if (psiFile instanceof PyFile pyFile) {
-
-            PyFunction pyFunction = PythonLanguageUtils.findMethodInFile(project, pyFile, methodId);
-
-            if (pyFunction != null && pyFunction.canNavigateToSource()) {
-                Log.log(LOGGER::debug, "navigating to method {}", pyFunction);
-                pyFunction.navigate(true);
-            } else if (pyFunction != null) {
-                //it's a fallback. sometimes the psiMethod.canNavigateToSource is false and really the
-                //navigation doesn't work. i can't say why. usually it happens when indexing is not ready yet,
-                // and the user opens files, selects tabs or moves the caret. then when indexing is finished
-                // we have the list of methods but then psiMethod.navigate doesn't work.
-                // navigation to source using the editor does work in these circumstances.
-                var selectedEditor = EditorUtils.getSelectedTextEditorForFile(psiFile.getVirtualFile(), FileEditorManager.getInstance(project));
-                if (selectedEditor != null) {
-                    Log.log(LOGGER::debug, "moving caret to offset of function {}", pyFunction);
-                    selectedEditor.getCaretModel().moveToOffset(pyFunction.getTextOffset());
-                } else {
-                    Log.log(LOGGER::debug, "could not find selected text editor, can't navigate to method  {}", methodId);
-                }
-            } else {
-                Log.log(LOGGER::debug, "could not navigate to method {}, can't find PsiMethod in file {}", methodId, psiFile.getVirtualFile());
-            }
-        }
-    }
-
 
     @Override
     public boolean isServiceFor(@NotNull Language language) {

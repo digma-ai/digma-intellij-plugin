@@ -65,15 +65,15 @@ class QuarkusConfigureDepsPanel(
         contentPanel.border = JBUI.Borders.empty(4)
 
         val icon = JLabel(Laf.Icons.Misc.Quarkus)
-        contentPanel.add(Box.createHorizontalStrut(5));
+        contentPanel.add(Box.createHorizontalStrut(5))
         contentPanel.add(icon)
-        contentPanel.add(Box.createHorizontalStrut(5));
+        contentPanel.add(Box.createHorizontalStrut(5))
         val updateTextLabel = JLabel(asHtml(spanBold("Configure Quarkus to use Digma | ")))
         contentPanel.add(updateTextLabel)
         contentPanel.add(Box.createHorizontalStrut(5))
         val depsButton = QuarkusDependenciesButton(theService())
         contentPanel.add(depsButton)
-        contentPanel.add(Box.createHorizontalStrut(5));
+        contentPanel.add(Box.createHorizontalStrut(5))
 
         borderedPanel.add(contentPanel)
         borderedPanel.add(Box.createVerticalStrut(2))

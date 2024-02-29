@@ -15,11 +15,11 @@ import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.icons.AppIcons
-import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResponseEntry
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.ui.jcef.JCEFGlobalConstants
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
 import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
 import org.digma.intellij.plugin.ui.recentactivity.model.EnvironmentType
@@ -142,7 +142,7 @@ class RecentActivityUpdater(val project: Project) : Disposable {
         Log.log(logger::trace, "updating recent activities with result {},{}", latestActivitiesResult, allEnvs)
 
         val recentActivitiesMessage = RecentActivitiesMessageRequest(
-            JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
+            JCEFGlobalConstants.REQUEST_MESSAGE_TYPE,
             RECENT_ACTIVITY_SET_DATA,
             RecentActivitiesMessagePayload(
                 allEnvs,
@@ -225,7 +225,7 @@ class RecentActivityUpdater(val project: Project) : Disposable {
             val pendingEnvs = buildPendingEnvs(pendingEnvironments)
 
             val recentActivitiesMessage = RecentActivitiesMessageRequest(
-                JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
+                JCEFGlobalConstants.REQUEST_MESSAGE_TYPE,
                 RECENT_ACTIVITY_SET_DATA,
                 RecentActivitiesMessagePayload(
                     pendingEnvs.sortedBy { recentActivityEnvironment: RecentActivityEnvironment -> recentActivityEnvironment.name },

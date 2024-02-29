@@ -1,13 +1,17 @@
 package org.digma.intellij.plugin.ui.common
 
-import java.awt.*
+import java.awt.BorderLayout
+import java.awt.Color
+import java.awt.Component
+import java.awt.Container
+import java.awt.Graphics
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.awt.event.MouseListener
 import javax.swing.JComponent
 import javax.swing.JPanel
 
-class Hover constructor(val component: JComponent, val hoverColor: Color): JPanel() {
+class Hover(val component: JComponent, val hoverColor: Color) : JPanel() {
     init {
         component.isOpaque = false
 

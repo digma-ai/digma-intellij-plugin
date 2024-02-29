@@ -10,8 +10,7 @@ import org.cef.browser.CefBrowser;
 import org.digma.intellij.plugin.analytics.*;
 import org.digma.intellij.plugin.common.CodeObjectsUtil;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.model.InsightType;
-import org.digma.intellij.plugin.model.rest.insights.*;
+import org.digma.intellij.plugin.model.rest.insights.InsightType;
 import org.digma.intellij.plugin.model.rest.navigation.*;
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
@@ -19,7 +18,7 @@ import org.digma.intellij.plugin.ui.insights.InsightsService;
 import org.digma.intellij.plugin.ui.insights.model.*;
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler;
 import org.digma.intellij.plugin.vcs.VcsService;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -152,23 +151,12 @@ public class InsightsMessageRouterHandler extends BaseMessageRouterHandler {
         ActivityMonitor.getInstance(project).registerUserActionEvent("unlink ticket", Map.of("insight", insightType));
     }
 
-    private CodeObjectInsight getInsightBySpanTemporary(String spanCodeObjectId, String insightType) throws AnalyticsServiceException {
-        InsightsOfSingleSpanResponse insightBySpan = AnalyticsService.getInstance(project).getInsightsForSingleSpan(spanCodeObjectId);
-        return insightBySpan.getInsights().stream()
-                .filter(o -> o.getType().name().equals(insightType)).findFirst().orElse(null);
-    }
-
-    private CodeObjectInsight getInsightBySpan(String spanCodeObjectId, String insightType) throws AnalyticsServiceException {
+    @Nullable
+    private String getInsightBySpan(String spanCodeObjectId, String insightType) throws AnalyticsServiceException {
         try {
             return AnalyticsService.getInstance(project).getInsightBySpan(spanCodeObjectId, insightType);
         } catch (AnalyticsServiceException e) {
-            Throwable cause = e.getCause();
-            if (cause instanceof AnalyticsProviderException) {
-                if (((AnalyticsProviderException) cause).getResponseCode() == 404) {
-                    return getInsightBySpanTemporary(spanCodeObjectId, insightType);
-                }
-            }
-            throw e;
+            return null;
         }
     }
 
@@ -177,18 +165,18 @@ public class InsightsMessageRouterHandler extends BaseMessageRouterHandler {
         JsonNode payload = getObjectMapper().readTree(jsonNode.get("payload").toString());
         var spanCodeObjectId = payload.get("spanCodeObjectId").asText();
         var insightType = payload.get("insightType").asText();
-        CodeObjectInsight insight = null;
+        JsonNode insight = null;
         try {
-            insight = getInsightBySpan(spanCodeObjectId, insightType);
+            var insightsString = getInsightBySpan(spanCodeObjectId, insightType);
+            if (insightsString != null) {
+                insight = getObjectMapper().readTree(insightsString);
+            }
         } catch (AnalyticsServiceException e) {
             Log.warnWithException(LOGGER, project, e, "Error getInsight: {}", e.getMessage());
-        } catch (Exception e) {
-            Log.warnWithException(LOGGER, project, e, "unhandled error while getInsight: {}", e.getMessage());
-        } finally {
-            var message = new SetSpanInsightMessage("digma", "INSIGHTS/SET_SPAN_INSIGHT", new SetSpanInsightData(insight));
-            serializeAndExecuteWindowPostMessageJavaScript(browser, message);
         }
 
+        var message = new SetSpanInsightMessage("digma", "INSIGHTS/SET_SPAN_INSIGHT", new SetSpanInsightData(insight));
+        serializeAndExecuteWindowPostMessageJavaScript(browser, message);
     }
 
     private void getCodeLocations(@NotNull CefBrowser browser, JsonNode jsonNode) throws JsonProcessingException {

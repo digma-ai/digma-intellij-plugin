@@ -8,13 +8,13 @@ import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.common.EDT
+import org.digma.intellij.plugin.common.createObjectMapper
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.MonitoredPanel
 import org.digma.intellij.plugin.scope.ScopeManager
 import org.digma.intellij.plugin.scope.SpanScope
-import org.digma.intellij.plugin.ui.jcef.createObjectMapper
 
 @Service(Service.Level.PROJECT)
 class AssetsService(private val project: Project) : Disposable {

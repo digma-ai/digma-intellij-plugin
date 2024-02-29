@@ -6,6 +6,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.document.CodeLensProvider
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.psi.SupportedLanguages
 
@@ -26,7 +27,11 @@ class CodeLensRefresh(
                 if (isActive) {
                     SupportedLanguages.values().forEach { language ->
                         if (isActive) {
-                            LanguageService.findLanguageServiceByName(project, language.languageServiceClassName)?.refreshCodeLens()
+                            try {
+                                LanguageService.findLanguageServiceByName(project, language.languageServiceClassName)?.refreshCodeLens()
+                            } catch (e: Throwable) {
+                                ErrorReporter.getInstance().reportError("CodeLensRefresh.refreshCodeLens", e)
+                            }
                         }
                     }
                 }

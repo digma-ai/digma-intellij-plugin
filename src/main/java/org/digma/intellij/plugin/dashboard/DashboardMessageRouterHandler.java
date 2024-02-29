@@ -14,10 +14,10 @@ import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.dashboard.incoming.GoToSpan;
 import org.digma.intellij.plugin.dashboard.outgoing.*;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
-import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.rest.AboutResult;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
+import org.digma.intellij.plugin.ui.jcef.JCEFGlobalConstants;
 import org.digma.intellij.plugin.ui.jcef.model.*;
 
 import java.util.*;
@@ -51,8 +51,8 @@ public class DashboardMessageRouterHandler extends CefMessageRouterHandlerAdapte
 
                 switch (action) {
                     case "DASHBOARD/INITIALIZE" -> onInitialize(browser);
-                    case JCefMessagesUtils.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER -> {
-                        OpenInDefaultBrowserRequest openBrowserRequest = JCefMessagesUtils.parseJsonToObject(request, OpenInDefaultBrowserRequest.class);
+                    case JCEFGlobalConstants.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER -> {
+                        OpenInDefaultBrowserRequest openBrowserRequest = jsonToObject(request, OpenInDefaultBrowserRequest.class);
                         if (openBrowserRequest != null && openBrowserRequest.getPayload() != null) {
                             BrowserUtil.browse(openBrowserRequest.getPayload().getUrl());
                         }
@@ -141,7 +141,7 @@ public class DashboardMessageRouterHandler extends CefMessageRouterHandlerAdapte
             AboutResult about = AnalyticsService.getInstance(project).getAbout();
             var message = new BackendInfoMessage(about);
 
-            Log.log(logger::trace, project, "sending {} message",JCefMessagesUtils.GLOBAL_SET_BACKEND_INFO);
+            Log.log(logger::trace, project, "sending {} message", JCEFGlobalConstants.GLOBAL_SET_BACKEND_INFO);
             serializeAndExecuteWindowPostMessageJavaScript(browser, message);
         } catch (AnalyticsServiceException e) {
             Log.warnWithException(logger, e, "error getting backend info");

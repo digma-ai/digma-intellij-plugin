@@ -5,22 +5,20 @@ import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.jcef.JBCefBrowser;
-import org.cef.browser.CefBrowser;
-import org.cef.browser.CefFrame;
+import org.cef.browser.*;
 import org.cef.callback.CefQueryCallback;
 import org.cef.handler.CefMessageRouterHandlerAdapter;
-import org.digma.intellij.plugin.common.Backgroundable;
-import org.digma.intellij.plugin.common.EDT;
+import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.documentation.DocumentationService;
-import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil;
-import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest;
-import org.digma.intellij.plugin.model.rest.jcef.common.SendTrackingEventRequest;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
+import org.digma.intellij.plugin.ui.jcef.*;
+import org.digma.intellij.plugin.ui.jcef.model.*;
 import org.digma.intellij.plugin.ui.settings.Theme;
 import org.jetbrains.annotations.NotNull;
+
+import static org.digma.intellij.plugin.ui.jcef.JCefBrowserUtilsKt.jsonToObject;
 
 class TroubleshootingMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
@@ -48,23 +46,23 @@ class TroubleshootingMessageRouterHandler extends CefMessageRouterHandlerAdapter
                 switch (action) {
                     case "TROUBLESHOOTING/CLOSE" -> EDT.ensureEDT(() -> MainToolWindowCardsController.getInstance(project).troubleshootingFinished());
 
-                    case JCefMessagesUtils.GLOBAL_OPEN_DOCUMENTATION -> {
-                        Log.log(LOGGER::trace, project, "got {} message", JCefMessagesUtils.GLOBAL_OPEN_DOCUMENTATION);
+                    case JCEFGlobalConstants.GLOBAL_OPEN_DOCUMENTATION -> {
+                        Log.log(LOGGER::trace, project, "got {} message", JCEFGlobalConstants.GLOBAL_OPEN_DOCUMENTATION);
                         var page = objectMapper.readTree(jsonNode.get("payload").toString()).get("page").asText();
                         Log.log(LOGGER::trace, project, "got page {}", page);
                         DocumentationService.getInstance(project).openDocumentation(page);
                     }
 
 
-                    case JCefMessagesUtils.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER -> {
-                        OpenInDefaultBrowserRequest openBrowserRequest = JCefMessagesUtils.parseJsonToObject(request, OpenInDefaultBrowserRequest.class);
+                    case JCEFGlobalConstants.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER -> {
+                        OpenInDefaultBrowserRequest openBrowserRequest = jsonToObject(request, OpenInDefaultBrowserRequest.class);
                         if (openBrowserRequest != null && openBrowserRequest.getPayload() != null) {
                             BrowserUtil.browse(openBrowserRequest.getPayload().getUrl());
                         }
                     }
 
-                    case JCefMessagesUtils.GLOBAL_SEND_TRACKING_EVENT -> {
-                        SendTrackingEventRequest trackingRequest = JCefMessagesUtils.parseJsonToObject(request, SendTrackingEventRequest.class);
+                    case JCEFGlobalConstants.GLOBAL_SEND_TRACKING_EVENT -> {
+                        SendTrackingEventRequest trackingRequest = jsonToObject(request, SendTrackingEventRequest.class);
                         if (trackingRequest != null && trackingRequest.getPayload() != null) {
                             ActivityMonitor.getInstance(project).registerCustomEvent(trackingRequest.getPayload().getEventName(), trackingRequest.getPayload().getData());
                         }
@@ -85,15 +83,15 @@ class TroubleshootingMessageRouterHandler extends CefMessageRouterHandlerAdapter
 
 
     void sendRequestToChangeUiTheme(@NotNull Theme theme) {
-        JCefBrowserUtil.sendRequestToChangeUiTheme(theme, jbCefBrowser);
+        JCefMessagesUtilsKt.sendRequestToChangeUiTheme(theme, jbCefBrowser);
     }
 
     void sendRequestToChangeFont(String fontName) {
-        JCefBrowserUtil.sendRequestToChangeFont(fontName, jbCefBrowser);
+        JCefMessagesUtilsKt.sendRequestToChangeFont(fontName, jbCefBrowser);
     }
 
     void sendRequestToChangeCodeFont(String fontName) {
-        JCefBrowserUtil.sendRequestToChangeCodeFont(fontName, jbCefBrowser);
+        JCefMessagesUtilsKt.sendRequestToChangeCodeFont(fontName, jbCefBrowser);
     }
 
 

@@ -274,7 +274,7 @@ object Laf {
                 //                @JvmStatic val DigmaLogo64 = loadAndScaleIconByWidth("/icons/digma.png", 64)
 //                @JvmStatic val DigmaLogo16 = loadAndScaleIconByWidth("/icons/digma.png", 16)
                 @JvmStatic
-                val DigmaLogo = IconsUtil.loadIcon("/icons/digma.svg");
+                val DigmaLogo = IconsUtil.loadIcon("/icons/digma.svg")
 
                 @JvmStatic
                 val FileDark = IconsUtil.loadIcon("/icons/file-dark.svg")

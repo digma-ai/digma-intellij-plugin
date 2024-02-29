@@ -24,7 +24,7 @@ public class JaegerUiIndexTemplateBuilder extends BaseIndexTemplateBuilder {
 
 
     @Override
-    public void addAppSpecificEnvVariable(@NotNull Project project, @NotNull HashMap<String, Object> data) {
+    public void addAppSpecificEnvVariable(@NotNull Project project, @NotNull Map<String, Object> data) {
 
         var didUserChangeJaegerQueryUrl = !(SettingsState.DEFAULT_JAEGER_QUERY_URL.equalsIgnoreCase(SettingsState.getInstance().jaegerQueryUrl));
         data.put(JAEGER_URL_PARAM_NAME, jaegerUIVirtualFile.getJaegerBaseUrl());

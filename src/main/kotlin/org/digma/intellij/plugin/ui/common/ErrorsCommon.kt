@@ -1,9 +1,16 @@
 package org.digma.intellij.plugin.ui.common
 
+import com.intellij.ui.JBColor
 import com.intellij.util.ui.JBUI.Borders.empty
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError
 import org.digma.intellij.plugin.model.rest.errors.ScoreInfo
-import java.awt.*
+import java.awt.BorderLayout
+import java.awt.Color
+import java.awt.Component
+import java.awt.Dimension
+import java.awt.Graphics
+import java.awt.Graphics2D
+import java.awt.RenderingHints
 import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.border.LineBorder
@@ -108,5 +115,5 @@ private fun colorOf(score: Int?): Color {
             return Laf.Colors.ERROR_RED
         }
     }
-    return Color.WHITE
+    return JBColor.WHITE
 }

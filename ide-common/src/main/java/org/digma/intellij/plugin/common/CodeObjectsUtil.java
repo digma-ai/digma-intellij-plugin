@@ -96,4 +96,13 @@ public class CodeObjectsUtil {
         return new Pair<>(className, methodName);
     }
 
+
+    public static String extractMethodName(String codeObjectId) {
+        return stripPrefix(codeObjectId).split("\\$_\\$")[1];
+    }
+
+    public static String extractFqnClassName(String codeObjectId) {
+        return stripPrefix(codeObjectId).split("\\$_\\$")[0];
+    }
+
 }

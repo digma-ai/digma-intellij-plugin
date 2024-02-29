@@ -1,11 +1,11 @@
 package org.digma.intellij.plugin.ui.jcef.model
 
 import org.digma.intellij.plugin.env.Env
-import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
+import org.digma.intellij.plugin.ui.jcef.JCEFGlobalConstants
 
 data class SetEnvironmentMessage(val payload: SetEnvironmentMessagePayload) {
-    val type = JCefMessagesUtils.REQUEST_MESSAGE_TYPE
-    val action = JCefMessagesUtils.GLOBAL_SET_ENVIRONMENT
+    val type = JCEFGlobalConstants.REQUEST_MESSAGE_TYPE
+    val action = JCEFGlobalConstants.GLOBAL_SET_ENVIRONMENT
 }
 
 data class SetEnvironmentMessagePayload(val environment: Env)

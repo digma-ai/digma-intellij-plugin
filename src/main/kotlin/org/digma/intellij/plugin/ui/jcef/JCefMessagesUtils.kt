@@ -4,11 +4,11 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
+import com.intellij.ui.jcef.JBCefBrowser
 import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.docker.DigmaInstallationStatus
 import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.env.Env
-import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
 import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
 import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.ui.common.isJaegerButtonEnabled
@@ -29,8 +29,43 @@ import org.digma.intellij.plugin.ui.jcef.model.SetScopeMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetScopeMessagePayload
 import org.digma.intellij.plugin.ui.jcef.model.SetStateMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetUserEmailMessage
+import org.digma.intellij.plugin.ui.jcef.model.UICodeFontRequest
+import org.digma.intellij.plugin.ui.jcef.model.UIFontRequest
+import org.digma.intellij.plugin.ui.jcef.model.UIThemeRequest
+import org.digma.intellij.plugin.ui.jcef.model.UiCodeFontPayload
+import org.digma.intellij.plugin.ui.jcef.model.UiFontPayload
+import org.digma.intellij.plugin.ui.jcef.model.UiThemePayload
 import org.digma.intellij.plugin.ui.jcef.model.UserEmailPayload
+import org.digma.intellij.plugin.ui.settings.Theme
 
+
+fun sendRequestToChangeUiTheme(uiTheme: Theme, jbCefBrowser: JBCefBrowser) {
+    val message = UIThemeRequest(
+        JCEFGlobalConstants.REQUEST_MESSAGE_TYPE,
+        JCEFGlobalConstants.GLOBAL_SET_UI_THEME,
+        UiThemePayload(uiTheme.themeName)
+    )
+    serializeAndExecuteWindowPostMessageJavaScript(jbCefBrowser.cefBrowser, message)
+}
+
+
+fun sendRequestToChangeFont(font: String?, jbCefBrowser: JBCefBrowser) {
+    val message = UIFontRequest(
+        JCEFGlobalConstants.REQUEST_MESSAGE_TYPE,
+        JCEFGlobalConstants.GLOBAL_SET_UI_MAIN_FONT,
+        UiFontPayload(font!!)
+    )
+    serializeAndExecuteWindowPostMessageJavaScript(jbCefBrowser.cefBrowser, message)
+}
+
+fun sendRequestToChangeCodeFont(font: String?, jbCefBrowser: JBCefBrowser) {
+    val message = UICodeFontRequest(
+        JCEFGlobalConstants.REQUEST_MESSAGE_TYPE,
+        JCEFGlobalConstants.GLOBAL_SET_UI_CODE_FONT,
+        UiCodeFontPayload(font!!)
+    )
+    serializeAndExecuteWindowPostMessageJavaScript(jbCefBrowser.cefBrowser, message)
+}
 
 /**
  * try to find a field in the payload without throwing NPE.
@@ -58,7 +93,7 @@ fun updateDigmaEngineStatus(cefBrowser: CefBrowser, status: DigmaInstallationSta
 private fun sendDigmaEngineStatus(cefBrowser: CefBrowser, status: DigmaInstallationStatus) {
 
     val connectionStatusMessage = DigmaEngineStatusMessage(
-        JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
+        JCEFGlobalConstants.REQUEST_MESSAGE_TYPE,
         "GLOBAL/SET_DIGMA_STATUS", status
     )
     serializeAndExecuteWindowPostMessageJavaScript(cefBrowser, connectionStatusMessage)
@@ -67,7 +102,7 @@ private fun sendDigmaEngineStatus(cefBrowser: CefBrowser, status: DigmaInstallat
 
 fun sendApiUrl(cefBrowser: CefBrowser, url: String) {
     val setDigmaApiUrlMessage = SetApiUrlMessage(
-        JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
+        JCEFGlobalConstants.REQUEST_MESSAGE_TYPE,
         "GLOBAL/SET_DIGMA_API_URL", ApiUrlPayload(url)
     )
     serializeAndExecuteWindowPostMessageJavaScript(cefBrowser, setDigmaApiUrlMessage)
@@ -84,7 +119,7 @@ fun sendIsMicrometerProject(cefBrowser: CefBrowser, isMicrometer: Boolean) {
 
 fun sendUserEmail(cefBrowser: CefBrowser, email: String) {
     val setUserEmailMessage = SetUserEmailMessage(
-        JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
+        JCEFGlobalConstants.REQUEST_MESSAGE_TYPE,
         "GLOBAL/SET_USER_REGISTRATION_EMAIL", UserEmailPayload(email)
     )
     serializeAndExecuteWindowPostMessageJavaScript(cefBrowser, setUserEmailMessage)

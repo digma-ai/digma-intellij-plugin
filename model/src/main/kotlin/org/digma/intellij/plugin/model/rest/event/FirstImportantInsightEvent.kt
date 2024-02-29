@@ -2,7 +2,7 @@ package org.digma.intellij.plugin.model.rest.event
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
+import com.fasterxml.jackson.databind.JsonNode
 import java.beans.ConstructorProperties
 import java.time.ZonedDateTime
 
@@ -20,7 +20,7 @@ constructor(
     override val environment: String,
     override val eventTime: ZonedDateTime,
     override val eventRecognitionTime: ZonedDateTime,
-    val insight: CodeObjectInsight,
+    val insight: JsonNode,
 ) : CodeObjectEvent {
 
     override val type: CodeObjectEventType = CodeObjectEventType.FirstImportantInsight

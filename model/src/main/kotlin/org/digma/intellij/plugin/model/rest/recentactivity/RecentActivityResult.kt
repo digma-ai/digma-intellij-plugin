@@ -38,9 +38,9 @@ data class EntrySpan
 @ConstructorProperties("displayText", "serviceName", "scopeId", "spanCodeObjectId", "methodCodeObjectId")
 constructor(
         val displayText: String,
-        val serviceName: String?,
+        val serviceName: String,
         val scopeId: String,
-        val spanCodeObjectId: String?,
+        val spanCodeObjectId: String,
         val methodCodeObjectId: String?,
 )
 

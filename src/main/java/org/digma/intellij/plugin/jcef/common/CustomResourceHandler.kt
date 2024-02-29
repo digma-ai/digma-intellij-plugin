@@ -9,6 +9,7 @@ import org.cef.misc.StringRef
 import org.cef.network.CefRequest
 import org.cef.network.CefResponse
 import org.digma.intellij.plugin.ui.common.isJaegerButtonEnabled
+import org.digma.intellij.plugin.ui.jcef.addCommonEnvVariables
 import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.io.InputStream
@@ -191,7 +192,7 @@ private fun loadFreemarkerTemplate(
     val data: MutableMap<String, Any> = mutableMapOf<String, Any>(
         IS_JAEGER_ENABLED to isJaegerButtonEnabled()
     ).also {
-        JCefTemplateUtils.addCommonEnvVariables(it)
+        addCommonEnvVariables(it)
     }
 
     if (indexTemplateData != null)

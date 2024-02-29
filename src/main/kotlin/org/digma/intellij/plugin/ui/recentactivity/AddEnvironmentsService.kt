@@ -184,9 +184,7 @@ class AddEnvironmentsService {
 
         //nested local function
         fun isSpringBootWithMicroMeter(project: Project, selectedRunConfig: RunConfiguration): Boolean {
-            if (SpringBootMicrometerConfigureDepsService.isSpringBootWithMicrometer()) {
-                return true
-                //todo: check if its really a spring boot module
+            //todo: check if its really a spring boot module
 //                if (selectedRunConfig is ModuleBasedConfiguration<*, *>) {
 //                    var isSpringBootModule = false
 //                    selectedRunConfig.configurationModule.module?.let { module ->
@@ -195,8 +193,7 @@ class AddEnvironmentsService {
 //                    }
 //                    return isSpringBootModule
 //                }
-            }
-            return false
+            return SpringBootMicrometerConfigureDepsService.isSpringBootWithMicrometer()
         }
 
         //nested local function

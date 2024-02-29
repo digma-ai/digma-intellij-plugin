@@ -3,7 +3,10 @@ package org.digma.intellij.plugin.ui.jcef
 import com.intellij.openapi.application.ApplicationNamesInfo
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.editor.colors.impl.AppEditorFontOptions
 import com.intellij.openapi.project.Project
+import com.intellij.ui.JBColor
+import com.intellij.util.ui.UIUtil
 import freemarker.template.Configuration
 import freemarker.template.Template
 import freemarker.template.TemplateExceptionHandler
@@ -11,12 +14,12 @@ import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
-import org.digma.intellij.plugin.jcef.common.JCefTemplateUtils
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.ui.common.getJaegerUrl
 import org.digma.intellij.plugin.ui.common.isJaegerButtonEnabled
+import org.digma.intellij.plugin.ui.settings.Theme
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.io.StringWriter
@@ -36,6 +39,9 @@ private const val DIGMA_API_URL = "digmaApiUrl"
 private const val JAEGER_URL = "jaegerURL"
 private const val IS_MICROMETER_PROJECT = "isMicrometerProject"
 private const val ENVIRONMENT = "environment"
+private const val ENV_VARIABLE_THEME = "theme"
+private const val ENV_VARIABLE_FONT = "mainFont"
+private const val ENV_VARIABLE_CODE_FONT = "codeFont"
 
 
 abstract class BaseIndexTemplateBuilder(resourceFolderName: String, private val indexTemplateName: String) {
@@ -55,10 +61,9 @@ abstract class BaseIndexTemplateBuilder(resourceFolderName: String, private val 
 
         return try {
 
-            val data = HashMap<String, Any>()
+            val data = mutableMapOf<String, Any>()
 
-            //todo: move JCefTemplateUtils.addCommonEnvVariables to here when all apps are using this base class
-            JCefTemplateUtils.addCommonEnvVariables(data)
+            addCommonEnvVariables(data)
             data[ENV_VARIABLE_IDE] = ApplicationNamesInfo.getInstance().productName
             data[IS_JAEGER_ENABLED] = isJaegerButtonEnabled()
             data[USER_EMAIL_VARIABLE] = PersistenceService.getInstance().getUserEmail() ?: ""
@@ -90,7 +95,14 @@ abstract class BaseIndexTemplateBuilder(resourceFolderName: String, private val 
     /**
      * derived classes can implement to add more environment variables
      */
-    open fun addAppSpecificEnvVariable(project: Project, data: java.util.HashMap<String, Any>) {}
+    open fun addAppSpecificEnvVariable(project: Project, data: MutableMap<String, Any>) {}
 
 
+}
+
+
+fun addCommonEnvVariables(env: MutableMap<String, Any>) {
+    env[ENV_VARIABLE_THEME] = if (JBColor.isBright()) Theme.LIGHT.themeName else Theme.DARK.themeName
+    env[ENV_VARIABLE_FONT] = UIUtil.getLabelFont().fontName
+    env[ENV_VARIABLE_CODE_FONT] = AppEditorFontOptions.getInstance().fontPreferences.fontFamily
 }

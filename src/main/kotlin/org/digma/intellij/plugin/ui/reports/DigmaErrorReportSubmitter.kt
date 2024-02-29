@@ -49,7 +49,7 @@ class DigmaErrorReportSubmitter : ErrorReportSubmitter() {
 
         val mgr = DataManager.getInstance()
         val context = mgr.getDataContext(parentComponent)
-        val project: Project = CommonDataKeys.PROJECT.getData(context) ?: findActiveProject() ?: ProjectManager.getInstance().defaultProject;
+        val project: Project = CommonDataKeys.PROJECT.getData(context) ?: findActiveProject() ?: ProjectManager.getInstance().defaultProject
 
         Backgroundable.ensureBackground(project, "Reporting to Digma") {
 

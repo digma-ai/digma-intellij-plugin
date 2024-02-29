@@ -31,18 +31,4 @@ public final class InstallationWizardService implements Disposable {
         //nothing to do
     }
 
-//    public void sendCurrentStep(@NotNull String step) {
-//
-//        if (jbCefBrowser == null) {
-//            return;
-//        }
-//
-//        var payload = new InstallationWizardSetCurrentStepPayload(step);
-//        var message = JCefBrowserUtil.resultToString(new InstallationWizardSetCurrentStepRequest(
-//                JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
-//                JCefMessagesUtils.INSTALLATION_WIZARD_SET_CURRENT_STEP,
-//                payload));
-//
-//        JCefBrowserUtil.postJSMessage(message, jbCefBrowser);
-//    }
 }

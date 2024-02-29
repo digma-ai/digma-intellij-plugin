@@ -8,11 +8,11 @@ import org.digma.intellij.plugin.analytics.*;
 import org.digma.intellij.plugin.codelens.CodeLensRefresh;
 import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.model.InsightImportance;
-import org.digma.intellij.plugin.model.discovery.MethodInfo;
+import org.digma.intellij.plugin.model.discovery.SpanInfo;
+import org.digma.intellij.plugin.model.discovery.*;
 import org.digma.intellij.plugin.model.lens.CodeLens;
 import org.digma.intellij.plugin.model.rest.codelens.*;
-import org.digma.intellij.plugin.model.rest.insights.MethodWithCodeObjects;
+import org.digma.intellij.plugin.model.rest.insights.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -21,14 +21,10 @@ public class CodeLensProvider implements Disposable {
 
     private static final Logger LOGGER = Logger.getInstance(CodeLensProvider.class);
 
-    private final DocumentInfoService documentInfoService;
-    private final AnalyticsService analyticsService;
+    private final Project project;
 
     public CodeLensProvider(Project project) {
-
-        documentInfoService = project.getService(DocumentInfoService.class);
-        analyticsService = project.getService(AnalyticsService.class);
-
+        this.project = project;
         new CodeLensRefresh(project, this).start();
     }
 
@@ -42,7 +38,7 @@ public class CodeLensProvider implements Disposable {
 
         Log.log(LOGGER::trace, "Got request for code lens for {}", psiFile.getVirtualFile());
 
-        DocumentInfoContainer documentInfo = documentInfoService.getDocumentInfo(psiFile);
+        DocumentInfoContainer documentInfo = DocumentInfoService.getInstance(project).getDocumentInfo(psiFile);
         if (documentInfo == null) {
             Log.log(LOGGER::debug, "Can't find DocumentInfo for {}", psiFile.getVirtualFile());
             return Collections.emptySet();
@@ -68,15 +64,15 @@ public class CodeLensProvider implements Disposable {
         List<MethodWithCodeObjects> methods = new ArrayList<>();
 
         for (MethodInfo methodInfo : methodsInfo) {
-            List<String> relatedSpansCodeObjectIds = methodInfo.getSpans().stream().map(x -> x.getId()).toList();
-            List<String> relatedEndpointCodeObjectIds = methodInfo.getEndpoints().stream().map(x -> x.getId()).toList();
+            List<String> relatedSpansCodeObjectIds = methodInfo.getSpans().stream().map(SpanInfo::getId).toList();
+            List<String> relatedEndpointCodeObjectIds = methodInfo.getEndpoints().stream().map(EndpointInfo::getId).toList();
 
             for (String id : methodInfo.allIdsWithType()) {
                 methods.add(new MethodWithCodeObjects(id, relatedSpansCodeObjectIds, relatedEndpointCodeObjectIds));
             }
         }
 
-        var methodsWithCodeLens = analyticsService.getCodeLensByMethods(methods).getMethodWithCodeLens();
+        var methodsWithCodeLens = AnalyticsService.getInstance(project).getCodeLensByMethods(methods).getMethodWithCodeLens();
 
         for (MethodWithCodeLens methodWithCodeLens : methodsWithCodeLens) {
             var codeObjectId = CodeObjectsUtil.stripMethodPrefix(methodWithCodeLens.getMethodCodeObjectId());
@@ -94,7 +90,7 @@ public class CodeLensProvider implements Disposable {
 
             for (Decorator decorator : decorators) {
 
-                Integer importance = decorator.getImportance().getPriority();
+                int importance = decorator.getImportance().getPriority();
 
                 String priorityEmoji = "";
                 if (isImportant(importance)) {

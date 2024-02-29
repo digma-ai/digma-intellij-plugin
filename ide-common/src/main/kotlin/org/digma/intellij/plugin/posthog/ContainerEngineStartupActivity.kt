@@ -34,7 +34,7 @@ class ContainerEngineStartupActivity : StartupActivity {
     }
     private fun getExecPath(project: Project, executable: String): String ? {
         val cmd = GeneralCommandLine(if (isWindows) "where" else "which")
-        cmd.addParameter(executable);
+        cmd.addParameter(executable)
         val cmdString = cmd.commandLineString
         try {
             val result =  ExecUtil.execAndReadLine(cmd)

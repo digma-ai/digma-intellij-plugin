@@ -52,7 +52,7 @@ fun Project.platformVersion(): String = when (properties("platformType", this)) 
 }
 
 fun Project.shouldDownloadSources(): Boolean {
-    return if (findProperty("doNotDownloadSources") == null) true else false
+    return findProperty("doNotDownloadSources") == null
 }
 
 

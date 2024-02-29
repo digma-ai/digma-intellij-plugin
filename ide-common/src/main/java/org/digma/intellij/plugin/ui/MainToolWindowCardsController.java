@@ -50,7 +50,7 @@ public class MainToolWindowCardsController implements Disposable {
     private final WizardComponents wizard = new WizardComponents();
     private Function<Boolean, DisposablePanel> wizardPanelBuilder;
 
-    private TroubleshootingComponents troubleshooting = new TroubleshootingComponents();
+    private final TroubleshootingComponents troubleshooting = new TroubleshootingComponents();
     private Supplier<DisposablePanel> troubleshootingPanelBuilder;
 
     private final NotificationsComponents notifications = new NotificationsComponents();

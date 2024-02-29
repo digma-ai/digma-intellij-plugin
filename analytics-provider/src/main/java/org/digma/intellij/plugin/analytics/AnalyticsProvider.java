@@ -4,6 +4,7 @@ import org.digma.intellij.plugin.model.rest.AboutResult;
 import org.digma.intellij.plugin.model.rest.assets.AssetDisplayInfo;
 import org.digma.intellij.plugin.model.rest.codelens.*;
 import org.digma.intellij.plugin.model.rest.codespans.CodeContextSpans;
+import org.digma.intellij.plugin.model.rest.common.SpanHistogramQuery;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.env.*;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
@@ -14,8 +15,7 @@ import org.digma.intellij.plugin.model.rest.livedata.*;
 import org.digma.intellij.plugin.model.rest.navigation.*;
 import org.digma.intellij.plugin.model.rest.notifications.*;
 import org.digma.intellij.plugin.model.rest.recentactivity.*;
-import org.digma.intellij.plugin.model.rest.testing.LatestTestsOfSpanRequest;
-import org.digma.intellij.plugin.model.rest.usage.*;
+import org.digma.intellij.plugin.model.rest.tests.LatestTestsOfSpanRequest;
 import org.digma.intellij.plugin.model.rest.user.*;
 import org.digma.intellij.plugin.model.rest.version.*;
 
@@ -30,26 +30,15 @@ public interface AnalyticsProvider extends Closeable {
 
     List<InsightInfo> getInsightsInfo(InsightsRequest insightsRequest);
 
-    List<CodeObjectInsight> getInsights(InsightsRequest insightsRequest);
-
-    InsightsOfMethodsResponse getInsightsOfMethods(InsightsOfMethodsRequest insightsOfMethodsRequest);
-
-    InsightsOfSingleSpanResponse getInsightsForSingleSpan(InsightsOfSingleSpanRequest insightsOfSingleSpanRequest);
-
-    CodeObjectInsight getInsightBySpan(String environment, String spanCodeObjectId, String insightType);
-
+    String getInsightBySpan(String environment, String spanCodeObjectId, String insightType);
 
     LatestCodeObjectEventsResponse getLatestEvents(LatestCodeObjectEventsRequest latestCodeObjectEventsRequest);
 
     List<CodeObjectError> getErrorsOfCodeObject(String environment, List<String> codeObjectIds);
 
-    CodeObjectInsightsStatusResponse getCodeObjectInsightStatus(InsightsOfMethodsRequest request);
-
     void setInsightCustomStartTime(CustomStartTimeInsightRequest customStartTimeInsightRequest);
 
     CodeObjectErrorDetails getCodeObjectErrorDetails(String errorSourceId);
-
-    EnvUsageStatusResult getEnvironmentsUsageStatus(EnvsUsageStatusRequest envsUsageStatusRequest);
 
     String getHtmlGraphForSpanPercentiles(SpanHistogramQuery request);
 

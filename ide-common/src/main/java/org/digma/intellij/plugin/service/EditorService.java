@@ -5,27 +5,20 @@ import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.ex.EditorEx;
-import com.intellij.openapi.fileEditor.FileDocumentManager;
-import com.intellij.openapi.fileEditor.FileEditorManager;
-import com.intellij.openapi.fileEditor.OpenFileDescriptor;
+import com.intellij.openapi.fileEditor.*;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.ui.MessageConstants;
-import com.intellij.openapi.ui.Messages;
+import com.intellij.openapi.ui.*;
 import com.intellij.openapi.vcs.VcsException;
 import com.intellij.openapi.vcs.vfs.ContentRevisionVirtualFile;
-import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.openapi.vfs.VirtualFileManager;
-import com.intellij.testFramework.BinaryLightVirtualFile;
-import com.intellij.testFramework.LightVirtualFile;
-import kotlin.Pair;
-import kotlin.Triple;
+import com.intellij.openapi.vfs.*;
+import com.intellij.testFramework.*;
+import kotlin.*;
 import org.apache.commons.io.IOUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.digma.intellij.plugin.vcs.VcsService;
 import org.digma.intellij.plugin.vf.DigmaStackTraceVirtualFile;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.*;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -163,8 +156,7 @@ public class EditorService implements Disposable {
     public void openVirtualFile(@NotNull VirtualFile virtualFile, boolean readOnly) {
         Editor editor = openVirtualFile(virtualFile, 1);
         if (readOnly) {
-            if (editor instanceof EditorEx) {
-                var editorEx = (EditorEx) editor;
+            if (editor instanceof EditorEx editorEx) {
                 editorEx.setViewer(true);
             }
         }

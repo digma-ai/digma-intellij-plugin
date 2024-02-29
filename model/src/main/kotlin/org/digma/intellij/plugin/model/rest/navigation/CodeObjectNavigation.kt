@@ -2,7 +2,7 @@ package org.digma.intellij.plugin.model.rest.navigation
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import org.digma.intellij.plugin.model.rest.insights.SpanInfo
+import org.digma.intellij.plugin.model.rest.common.SpanInfo
 import java.beans.ConstructorProperties
 
 

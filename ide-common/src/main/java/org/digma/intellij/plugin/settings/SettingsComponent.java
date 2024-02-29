@@ -1,18 +1,14 @@
 package org.digma.intellij.plugin.settings;
 
 import com.intellij.openapi.ui.ComboBox;
-import com.intellij.ui.EnumComboBoxModel;
-import com.intellij.ui.JBColor;
-import com.intellij.ui.components.JBLabel;
-import com.intellij.ui.components.JBTextField;
+import com.intellij.ui.*;
+import com.intellij.ui.components.*;
 import com.intellij.util.ui.FormBuilder;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.*;
 
 import javax.swing.*;
 import java.awt.*;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.*;
 import java.util.Objects;
 
 /**
@@ -113,8 +109,7 @@ public class SettingsComponent {
         myEmbeddedJaegerMessage.setForeground(JBColor.BLUE);
 
         var myJaegerLinkModeLabel = new JBLabel("Jaeger link mode: ");
-        myJaegerLinkModeLabel.setToolTipText(""
-                + "Internal will open the link as an embedded URL within the IDE. "
+        myJaegerLinkModeLabel.setToolTipText("Internal will open the link as an embedded URL within the IDE. "
                 + "External will open the link externally to your default browser. "
                 + "Embedded mode will open embedded Jaeger UI in the editor area. "
         );
@@ -124,8 +119,7 @@ public class SettingsComponent {
         });
 
         var mySpringBootObservabilityModeLabel = new JBLabel("Spring Boot observability mode: ");
-        mySpringBootObservabilityModeLabel.setToolTipText(""
-                + "OtelAgent will use the default OpenTelemetry java agent. "
+        mySpringBootObservabilityModeLabel.setToolTipText("OtelAgent will use the default OpenTelemetry java agent. "
                 + "Micrometer will use Micrometer tracing, including the annotation of 'Observed' "
         );
 

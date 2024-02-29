@@ -3,7 +3,7 @@ package org.digma.intellij.plugin.model.rest.livedata
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
-import org.digma.intellij.plugin.model.rest.insights.Duration
+import org.digma.intellij.plugin.model.rest.common.Duration
 import java.beans.ConstructorProperties
 
 
@@ -13,7 +13,7 @@ data class LiveDataDurationPercentile
 @ConstructorProperties(
     "percentile", "currentDuration","previousDuration","changeVerified"
 )
-constructor(val percentile: Double,val currentDuration: Duration,val previousDuration: Duration?,val changeVerified: Boolean?)
+constructor(val percentile: Double, val currentDuration: Duration, val previousDuration: Duration?, val changeVerified: Boolean?)
 
 
 

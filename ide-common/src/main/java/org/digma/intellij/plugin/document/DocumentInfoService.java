@@ -6,17 +6,13 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import org.apache.commons.lang3.mutable.MutableInt;
-import org.digma.intellij.plugin.analytics.AnalyticsService;
-import org.digma.intellij.plugin.env.Env;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.*;
-import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.psi.PsiUtils;
 import org.jetbrains.annotations.*;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * DocumentInfoService holds the open documents containers and has various services to query the documents containers.
@@ -29,7 +25,6 @@ public class DocumentInfoService {
     private final Logger LOGGER = Logger.getInstance(DocumentInfoService.class);
 
     private final Project project;
-    private final AnalyticsService analyticsService;
 
     /**
      * the main map of document infos.
@@ -47,12 +42,9 @@ public class DocumentInfoService {
     //and equals is not necessary here.
     private final Map<String, MutableInt> dominantLanguages = new IdentityHashMap<>();
 
-    // selected/focused document
-    private final AtomicReference<VirtualFile> selectedFileRef = new AtomicReference<>();
 
     public DocumentInfoService(Project project) {
         this.project = project;
-        analyticsService = project.getService(AnalyticsService.class);
     }
 
 
@@ -70,33 +62,6 @@ public class DocumentInfoService {
     }
 
 
-    public void environmentChanged(Env newEnv) {
-        Log.log(LOGGER::debug, "Got environmentChanged event {}", newEnv);
-
-        //refresh all backend data.
-        //must run in background
-        updateCacheForAllOpenedDocuments();
-    }
-
-
-    public void updateCacheForAllOpenedDocuments() {
-        documents.forEach((psiFileUri, container) -> container.updateCache());
-    }
-
-    public void updateCacheForOtherOpenedDocuments(String selectedDocumentFileUri) {
-        Map<String, DocumentInfoContainer> documentsToRefresh = new HashMap<>(documents);
-        documentsToRefresh.remove(selectedDocumentFileUri);
-        documentsToRefresh.forEach((psiFileUri, container) -> container.updateCache());
-    }
-
-    public void refreshIfExists(PsiFile psiFile) {
-        DocumentInfoContainer documentInfoContainer = documents.get(PsiUtils.psiFileToUri(psiFile));
-        if (documentInfoContainer != null) {
-            documentInfoContainer.updateCache();
-        }
-    }
-
-
     public void notifyDocumentInfoChanged(PsiFile psiFile) {
         Log.log(LOGGER::debug, "Notifying DocumentInfo changed for {}", psiFile.getVirtualFile());
         DocumentInfoChanged publisher = project.getMessageBus().syncPublisher(DocumentInfoChanged.DOCUMENT_INFO_CHANGED_TOPIC);
@@ -107,7 +72,8 @@ public class DocumentInfoService {
     //called after a document is analyzed for code objects
     public void addCodeObjects(@NotNull PsiFile psiFile, @NotNull DocumentInfo documentInfo) {
         Log.log(LOGGER::debug, "Adding DocumentInfo for {},{}", psiFile.getVirtualFile(), documentInfo);
-        DocumentInfoContainer documentInfoContainer = documents.computeIfAbsent(PsiUtils.psiFileToUri(psiFile), file -> new DocumentInfoContainer(psiFile, analyticsService));
+        DocumentInfoContainer documentInfoContainer = documents.computeIfAbsent(PsiUtils.psiFileToUri(psiFile), file ->
+                new DocumentInfoContainer(psiFile));
         documentInfoContainer.update(documentInfo);
         dominantLanguages.computeIfAbsent(documentInfoContainer.getLanguage().getID(), key -> new MutableInt(0)).increment();
         notifyDocumentInfoChanged(psiFile);
@@ -118,18 +84,6 @@ public class DocumentInfoService {
         documents.remove(PsiUtils.psiFileToUri(psiFile));
     }
 
-
-    public List<CodeObjectInsight> getCachedMethodInsights(@NotNull MethodInfo methodInfo) {
-        Log.log(LOGGER::trace, "Requesting cached insights for MethodInfo {}", methodInfo.getId());
-
-        DocumentInfoContainer documentInfoContainer = documents.get(methodInfo.getContainingFileUri());
-        if (documentInfoContainer != null) {
-            Log.log(LOGGER::trace, "DocumentInfoContainer exists for MethodInfo {}, getting insights", methodInfo.getId());
-            return documentInfoContainer.getInsightsForMethod(methodInfo.getId());
-        }
-        Log.log(LOGGER::trace, "DocumentInfoContainer does not exist for MethodInfo {}", methodInfo.getId());
-        return Collections.emptyList();
-    }
 
     public DocumentInfoContainer getDocumentInfoByMethodInfo(@NotNull MethodInfo methodInfo) {
         return documents.get(methodInfo.getContainingFileUri());
@@ -158,22 +112,6 @@ public class DocumentInfoService {
         return documents.get(fileUri);
     }
 
-    @Nullable
-    public DocumentInfoContainer getDocumentInfoOfFocusedFile() {
-        VirtualFile selectedFile = selectedFileRef.get();
-        return getDocumentInfo(selectedFile);
-    }
-
-    @Nullable
-    public VirtualFile getFocusedFile() {
-        return selectedFileRef.get();
-    }
-
-    // allow null, when it is null, it means that editor holds no file
-    public void notifyFocusedDocument(@Nullable VirtualFile virtualFile) {
-        selectedFileRef.set(virtualFile);
-    }
-
     /*
      * getMethodInfo may return null. DocumentInfoService is just a container, it knows about what you feed it with.
      */
@@ -193,14 +131,6 @@ public class DocumentInfoService {
                 .orElse(null);
     }
 
-
-    @Nullable
-    public PsiFile findPsiFileByMethodId(String methodCodeObjectId) {
-        return this.documents.values().stream().
-                filter(documentInfoContainer -> documentInfoContainer.getDocumentInfo().getMethods().containsKey(methodCodeObjectId)).
-                findAny().map(DocumentInfoContainer::getPsiFile).
-                orElse(null);
-    }
 
 
     @Nullable
@@ -236,10 +166,4 @@ public class DocumentInfoService {
         return language != null ? Language.findLanguageByID(language) : null;
     }
 
-    /**
-     * this method will clear all documents. its main use if for rider to reload code objects on startup.
-     */
-    public void clearAll() {
-        documents.clear();
-    }
 }

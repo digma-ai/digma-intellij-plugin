@@ -15,8 +15,31 @@ class CodeLensRefresh(
     private val codeLensProvider: CodeLensProvider,
 ) {
 
+    //two coroutines:
+    //one calls refresh on CodeLensProvider to refresh its backend data
+    //one calls refresh for the editor to refresh code visions.
+    //they are not related and not synchronized but at the end the code lens are refreshed every some seconds.
+    //it is made to separate the calls to the backend from the UI code vision refresh
+
 
     fun start() {
+
+        @Suppress("UnstableApiUsage")
+        codeLensProvider.disposingScope().launch {
+            while (isActive) {
+                delay(20000)
+                if (isActive) {
+                    try {
+                        CodeLensProvider.getInstance(project).refresh()
+                    } catch (e: Throwable) {
+                        ErrorReporter.getInstance().reportError("CodeLensRefresh.CodeLensProvider.refresh", e)
+                    }
+                }
+            }
+        }
+
+
+
         @Suppress("UnstableApiUsage")
         codeLensProvider.disposingScope().launch {
 

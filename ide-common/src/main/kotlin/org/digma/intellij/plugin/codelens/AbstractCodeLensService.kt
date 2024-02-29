@@ -21,7 +21,6 @@ import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.document.CodeLensProvider
-import org.digma.intellij.plugin.document.DocumentInfoChanged
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.lens.CodeLens
@@ -63,13 +62,6 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
             restartAll()
         }
 
-        documentInfoChangedConnection.subscribe(DocumentInfoChanged.DOCUMENT_INFO_CHANGED_TOPIC,DocumentInfoChanged { psiFile: PsiFile ->
-            val psiUri = PsiUtils.psiFileToUri(psiFile)
-            Log.log(logger::trace, "got documentInfoChanged, restarting DaemonCodeAnalyzer for {}", psiUri)
-            codeLensCache.remove(PsiUtils.psiFileToUri(psiFile))
-            //restartFile(psiFile)
-            restartAll()
-        })
     }
 
 

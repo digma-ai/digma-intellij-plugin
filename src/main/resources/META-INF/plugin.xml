@@ -50,11 +50,9 @@
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.ToolWindowShower"/>
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.MainToolWindowCardsController"/>
 
-
         <projectService serviceImplementation="org.digma.intellij.plugin.analytics.AnalyticsService"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.document.DocumentInfoService"/>
-
 
         <projectService serviceImplementation="org.digma.intellij.plugin.document.CodeLensProvider"/>
 
@@ -159,6 +157,12 @@
         <listener
                 class="org.digma.intellij.plugin.toolwindow.DigmaToolWindowsListener"
                 topic="com.intellij.openapi.wm.ex.ToolWindowManagerListener"/>
+        <listener
+                class="org.digma.intellij.plugin.document.CodeLensProviderDocumentInfoAndEnvironmentChangedListener"
+                topic="org.digma.intellij.plugin.document.DocumentInfoChanged"/>
+        <listener
+                class="org.digma.intellij.plugin.document.CodeLensProviderDocumentInfoAndEnvironmentChangedListener"
+                topic="org.digma.intellij.plugin.analytics.EnvironmentChanged"/>
     </projectListeners>
 
 

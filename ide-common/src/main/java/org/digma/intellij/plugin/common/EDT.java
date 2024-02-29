@@ -44,8 +44,11 @@ public class EDT {
     }
 
     public static void assertNonDispatchThread(){
-        //noinspection UnstableApiUsage
-        ApplicationManager.getApplication().assertIsNonDispatchThread();
+        if (ApplicationManager.getApplication().isDispatchThread()) {
+            RuntimeException runtimeException = new RuntimeException("Must not run on EDT");
+            LOGGER.error("Must not run on EDT", runtimeException);
+            throw runtimeException;
+        }
     }
 
 

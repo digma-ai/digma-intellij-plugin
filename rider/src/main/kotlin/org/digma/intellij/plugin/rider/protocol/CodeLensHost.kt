@@ -17,12 +17,14 @@ import org.digma.intellij.plugin.psi.PsiUtils
 import org.jetbrains.annotations.NotNull
 import java.util.function.Consumer
 
+//don't make it light service because it will register on all IDEs, but we want it only on Rider
+@Suppress("LightServiceMigrationCode")
 class CodeLensHost(project: Project) : LifetimedProjectComponent(project) {
 
     private val logger = Logger.getInstance(CodeLensHost::class.java)
 
     private val documentInfoService: DocumentInfoService = DocumentInfoService.getInstance(project)
-    private val codeLensProvider: CodeLensProvider = project.getService(CodeLensProvider::class.java)
+    private val codeLensProvider: CodeLensProvider = CodeLensProvider.getInstance(project)
 
     //always use getInstance instead of injecting directly to other services.
     // this ensures lazy init only when this host is needed.
@@ -48,7 +50,7 @@ class CodeLensHost(project: Project) : LifetimedProjectComponent(project) {
             try {
                 val psiFile = PsiUtils.uriToPsiFile(psiFileUri, project)
                 Log.log(logger::debug, "Requesting code lens for {}", psiFile.virtualFile)
-                val codeLens: Set<CodeLens> = codeLensProvider.provideCodeLens(psiFile)
+                val codeLens: List<CodeLens> = codeLensProvider.provideCodeLens(psiFile)
                 Log.log(logger::debug, "Got codeLens for {}: {}", psiFile.virtualFile, codeLens)
                 installCodeLens(psiFile, codeLens)
             } catch (e: PsiFileNotFountException) {
@@ -58,13 +60,13 @@ class CodeLensHost(project: Project) : LifetimedProjectComponent(project) {
     }
 
 
-    fun installCodeLens(@NotNull psiFile: PsiFile, @NotNull codeLenses: Set<CodeLens>) {
+    fun installCodeLens(@NotNull psiFile: PsiFile, @NotNull codeLenses: List<CodeLens>) {
         EDT.ensureEDT {
             installCodeLensOnEDT(psiFile, codeLenses)
         }
     }
 
-    private fun installCodeLensOnEDT(@NotNull psiFile: PsiFile, @NotNull codeLenses: Set<CodeLens>) {
+    private fun installCodeLensOnEDT(@NotNull psiFile: PsiFile, @NotNull codeLenses: List<CodeLens>) {
 
         Log.log(logger::debug, "got request to installCodeLensOnEDT for {}: {}", psiFile.virtualFile, codeLenses)
 

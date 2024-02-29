@@ -2,7 +2,6 @@ package org.digma.intellij.plugin.analytics;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.openapi.Disposable;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.*;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.JBColor;
@@ -498,9 +497,10 @@ public class AnalyticsService implements Disposable {
 
             try {
 
-                //assert not UI thread, should never happen.
-                //noinspection UnstableApiUsage
-                ApplicationManager.getApplication().assertIsNonDispatchThread();
+                //should never call backend on EDT or in read access because it will cause a freeze.
+                // these must be caught during development
+                EDT.assertNonDispatchThread();
+                ReadActions.assertNotInReadAccess();
 
 
                 if (LOGGER.isTraceEnabled()) {

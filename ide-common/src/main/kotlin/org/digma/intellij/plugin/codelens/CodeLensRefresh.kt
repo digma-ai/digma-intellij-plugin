@@ -21,6 +21,18 @@ class CodeLensRefresh(
     //they are not related and not synchronized but at the end the code lens are refreshed every some seconds.
     //it is made to separate the calls to the backend from the UI code vision refresh
 
+    //refreshing the code vision on the editor is necessary in few events:
+
+    //when environment changes CodeLensProvider will refresh but the editor is not aware
+    // of that and needs a refresh.
+
+    //when the file changes CodeLensProvider will refresh its cache , its called by
+    //CodeLensProviderDocumentInfoAndEnvironmentChangedListener.documentInfoChanged.
+    //the editor is aware of that and will refresh and doesn't need an explicit refresh.
+
+    //when nothing happens in the IDE but an application is running and new data is collected.
+
+
 
     fun start() {
 

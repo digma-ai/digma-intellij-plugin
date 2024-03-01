@@ -12,9 +12,9 @@ class ErrorHotspotCodeLensProvider : DigmaCodeVisionProviderBase() {
         get() = ID
 
     override val name: String
-        get() = "Digma Error Hotspot Method Hints"
+        get() = "Digma Error Hotspot"
 
-    override val groupId: String
-        get() = ID
+//    override val groupId: String
+//        get() = ID
 
 }

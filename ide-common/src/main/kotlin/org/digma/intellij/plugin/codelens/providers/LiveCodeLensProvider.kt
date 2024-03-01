@@ -15,8 +15,8 @@ class LiveCodeLensProvider : DigmaCodeVisionProviderBase() {
     override val name: String
         get() = "Digma Live Method Hints"
 
-    override val groupId: String
-        get() = ID
+//    override val groupId: String
+//        get() = ID
 
     override val relativeOrderings: List<CodeVisionRelativeOrdering>
         get() = listOf(CodeVisionRelativeOrdering.CodeVisionRelativeOrderingFirst)

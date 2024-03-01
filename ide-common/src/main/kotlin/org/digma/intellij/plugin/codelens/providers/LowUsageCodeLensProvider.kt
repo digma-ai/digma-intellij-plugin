@@ -14,7 +14,7 @@ class LowUsageCodeLensProvider : DigmaCodeVisionProviderBase() {
     override val name: String
         get() = "Digma low usage"
 
-    override val groupId: String
-        get() = ID
+//    override val groupId: String
+//        get() = ID
 
 }

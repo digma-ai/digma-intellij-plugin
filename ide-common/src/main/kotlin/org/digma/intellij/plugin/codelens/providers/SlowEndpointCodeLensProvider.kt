@@ -14,7 +14,7 @@ class SlowEndpointCodeLensProvider : DigmaCodeVisionProviderBase() {
     override val name: String
         get() = "Digma Slow Endpoint"
 
-    override val groupId: String
-        get() = ID
+//    override val groupId: String
+//        get() = ID
 
 }

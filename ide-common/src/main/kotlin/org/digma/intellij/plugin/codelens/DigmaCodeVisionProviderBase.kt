@@ -31,6 +31,10 @@ abstract class DigmaCodeVisionProviderBase : DaemonBoundCodeVisionProvider {
     override val relativeOrderings: List<CodeVisionRelativeOrdering>
         get() = listOf(CodeVisionRelativeOrdering.CodeVisionRelativeOrderingAfter(LiveCodeLensProvider.ID))
 
+    override val groupId: String
+        get() = DIGMA_CODE_LENS_GROUP_ID
+
+
 
 
     override fun computeForEditor(editor: Editor, file: PsiFile): List<Pair<TextRange, CodeVisionEntry>> {

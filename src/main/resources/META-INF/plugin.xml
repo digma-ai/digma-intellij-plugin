@@ -125,6 +125,11 @@
             They will not be used in Rider or C#, Rider does code lens in resharper.
          -->
         <projectService serviceImplementation="org.digma.intellij.plugin.codelens.CodeLensProviderFactory"/>
+
+        <config.codeVisionGroupSettingProvider
+                implementation="org.digma.intellij.plugin.codelens.DigmaCodeVisionSettingsProvider"/>
+        <codeInsight.codeVisionSettingsPreviewLanguage language="JAVA" modelId="Digma"/>
+
         <codeInsight.daemonBoundCodeVisionProvider
                 implementation="org.digma.intellij.plugin.codelens.providers.LiveCodeLensProvider"/>
         <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.codelens.providers.ErrorHotspotCodeLensProvider"/>

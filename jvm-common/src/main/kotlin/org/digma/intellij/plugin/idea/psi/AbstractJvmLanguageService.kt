@@ -173,6 +173,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
 
     override fun environmentChanged(newEnv: Env) {
+        //todo: remove from language service and simulate contextChanged only in one place
         EDT.ensureEDT {
             allowSlowOperation {
                 val fileEditor = FileEditorManager.getInstance(project).selectedEditor

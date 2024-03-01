@@ -13,7 +13,7 @@ class CodeLensMethodInsightsProvider8: DigmaCodeVisionProviderBase() {
     override val name: String
         get() = "Digma Generic Provider 8"
 
-    override val groupId: String
-        get() = ID
+//    override val groupId: String
+//        get() = ID
 
 }

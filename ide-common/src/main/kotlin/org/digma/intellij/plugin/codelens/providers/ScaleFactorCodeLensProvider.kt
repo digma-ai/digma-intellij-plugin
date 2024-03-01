@@ -14,7 +14,7 @@ class ScaleFactorCodeLensProvider : DigmaCodeVisionProviderBase() {
     override val name: String
         get() = "Digma Scale Factor"
 
-    override val groupId: String
-        get() = ID
+//    override val groupId: String
+//        get() = ID
 
 }

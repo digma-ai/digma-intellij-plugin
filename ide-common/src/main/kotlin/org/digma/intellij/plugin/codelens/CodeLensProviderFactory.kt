@@ -26,8 +26,8 @@ class CodeLensProviderFactory {
         initializeGenericProvidersMap()
     }
 
-    fun getProviderId(lensTitle: String, usedGenericProviders: MutableList<String>): String {
-        return with(lensTitle.uppercase()) {
+    fun getProviderId(lensId: String, usedGenericProviders: MutableList<String>): String {
+        return with(lensId.uppercase()) {
             when {
                 contains("LIVE") -> LiveCodeLensProvider.ID
                 contains("ERROR") -> ErrorHotspotCodeLensProvider.ID

@@ -280,7 +280,7 @@ public class PythonLanguageService implements LanguageService {
             }
         });
 
-        PythonCodeLensService.getInstance(project).refreshCodeLens();
+        refreshCodeLens();
     }
 
 

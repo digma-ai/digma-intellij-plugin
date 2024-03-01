@@ -275,7 +275,7 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
 
     @Override
     public void refreshCodeLens() {
-        //todo:implement
+//        todo:implement
 //        CodeLensHost.getInstance(project).refreshCodeLens();
     }
 

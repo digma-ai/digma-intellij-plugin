@@ -2,7 +2,7 @@ package org.digma.intellij.plugin.codelens.providers
 
 import org.digma.intellij.plugin.codelens.DigmaCodeVisionProviderBase
 
-class ErrorHotspotCodeLensProvider: DigmaCodeVisionProviderBase() {
+class ErrorHotspotCodeLensProvider : DigmaCodeVisionProviderBase() {
 
     companion object {
         const val ID = "DigmaErrorHotspot"

@@ -22,6 +22,7 @@ public class CodeLensProviderDocumentInfoAndEnvironmentChangedListener implement
         Backgroundable.executeOnPooledThread(() -> {
             try {
                 CodeLensProvider.getInstance(project).buildCodeLens(psiFile);
+                //todo: refresh editor
             } catch (AnalyticsServiceException e) {
                 ErrorReporter.getInstance().reportError("CodeLensProviderDocumentInfoAndEnvironmentChangedListener.documentInfoChanged", e);
             }
@@ -33,6 +34,7 @@ public class CodeLensProviderDocumentInfoAndEnvironmentChangedListener implement
         Backgroundable.executeOnPooledThread(() -> {
             try {
                 CodeLensProvider.getInstance(project).refresh();
+                //todo:refresh editor
             } catch (Throwable e) {
                 ErrorReporter.getInstance().reportError("CodeLensProviderDocumentInfoAndEnvironmentChangedListener.environmentChanged", e);
             }

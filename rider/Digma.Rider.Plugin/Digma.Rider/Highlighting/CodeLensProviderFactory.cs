@@ -7,6 +7,7 @@ namespace Digma.Rider.Highlighting
     [SolutionComponent]
     public class CodeLensProviderFactory
     {
+        private readonly LiveMethodInsightsProvider _liveMethodInsightsProvider;
         private readonly ErrorHotspotMethodInsightsProvider _errorHotspotMethodInsightsProvider;
         private readonly UsageMethodInsightsProvider _usageMethodInsightsProvider;
         private readonly ScaleFactorMethodInsightsProvider _scaleFactorMethodInsightsProvider;
@@ -19,6 +20,7 @@ namespace Digma.Rider.Highlighting
         private readonly Dictionary<string, BaseMethodInsightsProvider> _genericProvidersMap = new();
 
         public CodeLensProviderFactory(
+            LiveMethodInsightsProvider liveMethodInsightsProvider,
             ErrorHotspotMethodInsightsProvider errorHotspotMethodInsightsProvider,
             UsageMethodInsightsProvider usageMethodInsightsProvider,
             ScaleFactorMethodInsightsProvider scaleFactorMethodInsightsProvider,
@@ -30,6 +32,7 @@ namespace Digma.Rider.Highlighting
             CodeLensMethodInsightsProvider5 codeLensMethodInsightsProvider5
             )
         {
+            _liveMethodInsightsProvider = liveMethodInsightsProvider;
             _errorHotspotMethodInsightsProvider = errorHotspotMethodInsightsProvider;
             _usageMethodInsightsProvider = usageMethodInsightsProvider;
             _scaleFactorMethodInsightsProvider = scaleFactorMethodInsightsProvider;
@@ -42,23 +45,27 @@ namespace Digma.Rider.Highlighting
             InitializeGenericProvidersMap();
         }
 
-        public BaseMethodInsightsProvider GetProvider(string lensTitle, List<string> usedGenericProviders)
+        public BaseMethodInsightsProvider GetProvider(string lensId, List<string> usedGenericProviders)
         {
-            if (lensTitle != null)
+            if (lensId != null)
             {
-                if (lensTitle.ToUpper().Contains("ERROR"))
+                if (lensId.ToUpper().Contains("LIVE"))
+                {
+                    return _liveMethodInsightsProvider;    
+                }
+                if (lensId.ToUpper().Contains("ERROR"))
                 {
                     return _errorHotspotMethodInsightsProvider;    
                 }
-                if (lensTitle.ToUpper().Contains("USAGE"))
+                if (lensId.ToUpper().Contains("USAGE"))
                 {
                     return _usageMethodInsightsProvider;    
                 }
-                if (lensTitle.ToUpper().Contains("SCALE"))
+                if (lensId.ToUpper().Contains("SCALE"))
                 {
                     return _scaleFactorMethodInsightsProvider;    
                 }
-                if (lensTitle.ToUpper().Contains("SLOW ENDPOINT"))
+                if (lensId.ToUpper().Contains("SLOW ENDPOINT"))
                 {
                     return _slowEndpointMethodInsightsProvider;
                 }

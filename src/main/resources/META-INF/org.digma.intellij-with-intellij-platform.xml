@@ -3,7 +3,7 @@
     <!--
     This file was a separate file when CSharpLanguageService language service was async to rider backend.
     but we changed CSharpLanguageService to work sync like the other language services and this file
-    is nit really necessary and the declarations can move to the main plugin file.
+    is not really necessary and the declarations can move to the main plugin file.
        -->
 
     <extensions defaultExtensionNs="com.intellij">

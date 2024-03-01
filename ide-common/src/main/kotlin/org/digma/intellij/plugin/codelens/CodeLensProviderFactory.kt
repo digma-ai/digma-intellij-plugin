@@ -1,7 +1,24 @@
 package org.digma.intellij.plugin.codelens
 
-import org.digma.intellij.plugin.codelens.providers.*
+import org.digma.intellij.plugin.codelens.providers.CodeLensMethodInsightsProvider1
+import org.digma.intellij.plugin.codelens.providers.CodeLensMethodInsightsProvider10
+import org.digma.intellij.plugin.codelens.providers.CodeLensMethodInsightsProvider2
+import org.digma.intellij.plugin.codelens.providers.CodeLensMethodInsightsProvider3
+import org.digma.intellij.plugin.codelens.providers.CodeLensMethodInsightsProvider4
+import org.digma.intellij.plugin.codelens.providers.CodeLensMethodInsightsProvider5
+import org.digma.intellij.plugin.codelens.providers.CodeLensMethodInsightsProvider6
+import org.digma.intellij.plugin.codelens.providers.CodeLensMethodInsightsProvider7
+import org.digma.intellij.plugin.codelens.providers.CodeLensMethodInsightsProvider8
+import org.digma.intellij.plugin.codelens.providers.CodeLensMethodInsightsProvider9
+import org.digma.intellij.plugin.codelens.providers.ErrorHotspotCodeLensProvider
+import org.digma.intellij.plugin.codelens.providers.HighUsageCodeLensProvider
+import org.digma.intellij.plugin.codelens.providers.LiveCodeLensProvider
+import org.digma.intellij.plugin.codelens.providers.LowUsageCodeLensProvider
+import org.digma.intellij.plugin.codelens.providers.ScaleFactorCodeLensProvider
+import org.digma.intellij.plugin.codelens.providers.SlowEndpointCodeLensProvider
 
+//don't convert to light service because it will register on all IDEs, but we want it only on Idea and Pycharm
+@Suppress("LightServiceMigrationCode")
 class CodeLensProviderFactory {
     private val genericProvidersList: MutableList<String> = ArrayList()
 
@@ -12,6 +29,7 @@ class CodeLensProviderFactory {
     fun getProviderId(lensTitle: String, usedGenericProviders: MutableList<String>): String {
         return with(lensTitle.uppercase()) {
             when {
+                contains("LIVE") -> LiveCodeLensProvider.ID
                 contains("ERROR") -> ErrorHotspotCodeLensProvider.ID
                 contains("HIGH") -> HighUsageCodeLensProvider.ID
                 contains("LOW") -> LowUsageCodeLensProvider.ID

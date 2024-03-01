@@ -58,10 +58,10 @@ public class CodeLensProvider implements Disposable {
 
 
     @NotNull
-    public List<CodeLens> provideCodeLens(@NotNull PsiFile psiFile) {
+    public Set<CodeLens> provideCodeLens(@NotNull PsiFile psiFile) {
         var lensPerFile = codeLensPerFile.get(psiFileToKey(psiFile));
         if (lensPerFile == null) {
-            return Collections.emptyList();
+            return Collections.emptySet();
         }
         return lensPerFile.codeLensList;
     }
@@ -100,7 +100,7 @@ public class CodeLensProvider implements Disposable {
         DocumentInfoContainer documentInfo = DocumentInfoService.getInstance(project).getDocumentInfo(psiFile);
         if (documentInfo == null) {
             Log.log(LOGGER::trace, "Can't find DocumentInfo for {}", psiKey);
-            codeLensPerFile.put(psiKey, new DocumentLensPair(null, Collections.emptyList()));
+            codeLensPerFile.put(psiKey, new DocumentLensPair(null, Collections.emptySet()));
         } else {
             var codeLens = buildCodeLens(documentInfo);
             Log.log(LOGGER::trace, "Got code lens for {}, {}", psiKey, codeLens);
@@ -140,12 +140,12 @@ public class CodeLensProvider implements Disposable {
     // and should not impact performance of the plugin. consumers of code lens never wait and take what is already
     // in the codeLensPerFile cache.
     @NotNull
-    private synchronized List<CodeLens> buildCodeLens(@NotNull DocumentInfoContainer documentInfoContainer) throws AnalyticsServiceException {
+    private synchronized Set<CodeLens> buildCodeLens(@NotNull DocumentInfoContainer documentInfoContainer) throws AnalyticsServiceException {
 
-        List<CodeLens> codeLensList = new ArrayList<>();
+        Set<CodeLens> codeLensList = new HashSet<>();
 
         if (documentInfoContainer.getDocumentInfo() == null) {
-            return Collections.emptyList();
+            return Collections.emptySet();
         }
 
         var methodsInfo = documentInfoContainer.getDocumentInfo().getMethods().values();
@@ -188,10 +188,9 @@ public class CodeLensProvider implements Disposable {
 
                 String title = priorityEmoji + decorator.getTitle();
 
-                CodeLens codeLens = new CodeLens(codeObjectId, decorator.getCodeObjectId(), title, importance);
+                CodeLens codeLens = new CodeLens(decorator.getTitle(), codeObjectId, decorator.getCodeObjectId(), title, importance);
                 codeLens.setLensDescription(decorator.getDescription());
                 codeLens.setLensMoreText("Go to " + title);
-                codeLens.setAnchor("Top");
 
                 codeLensList.add(codeLens);
             }
@@ -203,9 +202,8 @@ public class CodeLensProvider implements Disposable {
 
     private static CodeLens buildCodeLensOfActive(String methodId, Decorator liveDecorator) {
         var title = Unicodes.getLIVE_CIRCLE();
-        CodeLens codeLens = new CodeLens(methodId, liveDecorator.getCodeObjectId(), title, 1);
+        CodeLens codeLens = new CodeLens(liveDecorator.getTitle(), methodId, liveDecorator.getCodeObjectId(), title, 1);
         codeLens.setLensDescription(liveDecorator.getDescription());
-        codeLens.setAnchor("Top");
 
         return codeLens;
     }
@@ -217,9 +215,9 @@ public class CodeLensProvider implements Disposable {
 
     private static class DocumentLensPair {
         private final @Nullable DocumentInfoContainer documentInfoContainer;
-        private @NotNull List<CodeLens> codeLensList;
+        private @NotNull Set<CodeLens> codeLensList;
 
-        public DocumentLensPair(@Nullable DocumentInfoContainer documentInfoContainer, @NotNull List<CodeLens> codeLensList) {
+        public DocumentLensPair(@Nullable DocumentInfoContainer documentInfoContainer, @NotNull Set<CodeLens> codeLensList) {
             this.documentInfoContainer = documentInfoContainer;
             this.codeLensList = codeLensList;
         }

@@ -13,6 +13,7 @@
     <depends>com.intellij.modules.vcs</depends>
 
 
+    <!-- todo: remove and add a with-code-vision that is included only for java/kotlin and python   -->
     <xi:include href="/META-INF/org.digma.intellij-with-intellij-platform.xml" xpointer="xpointer(/idea-plugin/*)"/>
 
 
@@ -124,6 +125,8 @@
             They will not be used in Rider or C#, Rider does code lens in resharper.
          -->
         <projectService serviceImplementation="org.digma.intellij.plugin.codelens.CodeLensProviderFactory"/>
+        <codeInsight.daemonBoundCodeVisionProvider
+                implementation="org.digma.intellij.plugin.codelens.providers.LiveCodeLensProvider"/>
         <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.codelens.providers.ErrorHotspotCodeLensProvider"/>
         <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.codelens.providers.HighUsageCodeLensProvider"/>
         <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.codelens.providers.LowUsageCodeLensProvider"/>

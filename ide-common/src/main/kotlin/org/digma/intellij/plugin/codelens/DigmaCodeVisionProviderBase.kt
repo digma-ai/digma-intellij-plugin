@@ -10,6 +10,7 @@ import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiFile
+import org.digma.intellij.plugin.codelens.providers.LiveCodeLensProvider
 import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.common.isValidVirtualFile
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
@@ -28,8 +29,7 @@ abstract class DigmaCodeVisionProviderBase : DaemonBoundCodeVisionProvider {
         get() = CodeVisionAnchorKind.Top
 
     override val relativeOrderings: List<CodeVisionRelativeOrdering>
-        get() = listOf(CodeVisionRelativeOrdering.CodeVisionRelativeOrderingFirst)
-
+        get() = listOf(CodeVisionRelativeOrdering.CodeVisionRelativeOrderingAfter(LiveCodeLensProvider.ID))
 
 
 
@@ -57,10 +57,11 @@ abstract class DigmaCodeVisionProviderBase : DaemonBoundCodeVisionProvider {
             if (languageService.isCodeVisionSupported) {
                 Log.log(logger::trace, "file is supported, computing code lens for {}", file.virtualFile)
                 return computeLenses(editor, file, languageService)
+            } else {
+                Log.log(logger::trace, "returning empty code lens list for {}", file.virtualFile)
+                return empty
             }
 
-            Log.log(logger::trace, "returning empty code lens list for {}", file.virtualFile)
-            return empty
         } catch (pce: ProcessCanceledException) {
             //don't swallow or report ProcessCanceledException here , we have nothing to do about it,
             // the code vision infrastructure will retry

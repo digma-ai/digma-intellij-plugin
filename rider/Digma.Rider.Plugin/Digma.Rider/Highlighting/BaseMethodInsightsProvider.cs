@@ -55,14 +55,13 @@ namespace Digma.Rider.Highlighting
 
 
     #if (PROFILE_2022_3) // FIX_WHEN_MIN_IS_232
-        public CodeLensAnchorKind DefaultAnchor => CodeLensAnchorKind.Top;
-        public ICollection<CodeLensRelativeOrdering> RelativeOrderings => new CodeLensRelativeOrdering[]
-            { new CodeLensRelativeOrderingFirst() };
+        public virtual CodeLensAnchorKind DefaultAnchor => CodeLensAnchorKind.Top;
+        public virtual ICollection<CodeLensRelativeOrdering> RelativeOrderings => new CodeLensRelativeOrdering[]
+            { new CodeLensRelativeOrderingAfter(nameof(LiveMethodInsightsProvider)) };
     #else
-        public CodeVisionAnchorKind DefaultAnchor => CodeVisionAnchorKind.Top;
-
-        public ICollection<CodeVisionRelativeOrdering> RelativeOrderings => new CodeVisionRelativeOrdering[]
-            { new CodeVisionRelativeOrderingFirst() };
+        public virtual CodeVisionAnchorKind DefaultAnchor => CodeVisionAnchorKind.Top;
+        public virtual ICollection<CodeVisionRelativeOrdering> RelativeOrderings => new CodeVisionRelativeOrdering[]
+            { new CodeVisionRelativeOrderingAfter(nameof(LiveMethodInsightsProvider)) };
 
 #endif
 

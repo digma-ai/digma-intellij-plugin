@@ -17,4 +17,5 @@ class HighUsageCodeLensProvider : DigmaCodeVisionProviderBase() {
     override val groupId: String
         get() = ID
 
+
 }

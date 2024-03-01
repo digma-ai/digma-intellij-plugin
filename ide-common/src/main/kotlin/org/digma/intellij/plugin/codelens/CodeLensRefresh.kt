@@ -43,6 +43,7 @@ class CodeLensRefresh(
                 if (isActive) {
                     try {
                         CodeLensProvider.getInstance(project).refresh()
+                        //todo: refresh editor if there was a change in data
                     } catch (e: Throwable) {
                         ErrorReporter.getInstance().reportError("CodeLensRefresh.CodeLensProvider.refresh", e)
                     }

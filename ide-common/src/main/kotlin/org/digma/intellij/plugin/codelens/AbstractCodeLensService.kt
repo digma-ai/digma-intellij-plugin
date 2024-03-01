@@ -48,6 +48,7 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
 
 
     override fun dispose() {
+        codeLensCache.clear()
     }
 
 
@@ -93,7 +94,7 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
 
                 val entry = ClickableTextCodeVisionEntry(
                     lens.lensTitle,
-                    codeLensProviderFactory.getProviderId(lens.lensTitle, usedGenericProviders),
+                    codeLensProviderFactory.getProviderId(lens.id, usedGenericProviders),
                     ClickHandler(method, lens, project),
                     null, // icon was set already on previous step inside CodeLensProvider.buildCodeLens()
                     lens.lensMoreText,
@@ -184,7 +185,7 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
                         // we have the list of methods but then psiMethod.navigate doesn't work.
                         // navigation to source using the editor does work in these circumstances.
                         val selectedEditor = FileEditorManager.getInstance(project).selectedTextEditor
-                        selectedEditor?.caretModel?.moveToOffset(elementPointer.element!!.textOffset)
+                        selectedEditor?.caretModel?.moveToOffset(it.textOffset)
                     }
                 }
                 Backgroundable.ensurePooledThread{
@@ -195,7 +196,7 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
 
             } catch (e: Exception) {
                 Log.warnWithException(logger, project, e, "error in ClickHandler {}", e)
-                ErrorReporter.getInstance().reportError(project, "AbstractCodeLensService.ClickHandler.invoke", e)
+                ErrorReporter.getInstance().reportError(project, "${this::class.simpleName}.ClickHandler.invoke", e)
             }
         }
     }

@@ -15,7 +15,9 @@ public class ReadActions {
 
     public static void assertNotInReadAccess() {
         if (ApplicationManager.getApplication().isReadAccessAllowed()) {
-            throw new RuntimeException("Should not be in read access here");
+            RuntimeException runtimeException = new RuntimeException("Must not run in read access");
+            LOGGER.error("Must not run in read access", runtimeException);
+            throw runtimeException;
         }
     }
 

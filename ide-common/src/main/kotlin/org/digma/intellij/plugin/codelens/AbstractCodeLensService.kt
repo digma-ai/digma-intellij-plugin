@@ -8,7 +8,6 @@ import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditorManager
-import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.pom.Navigatable
@@ -16,12 +15,10 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
 import com.intellij.psi.SmartPointerManager
-import com.intellij.util.messages.MessageBusConnection
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.document.CodeLensProvider
-import org.digma.intellij.plugin.document.DocumentInfoChanged
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.lens.CodeLens
@@ -42,8 +39,6 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
 
     private val codeLensCache: MutableMap<String, CodeLensContainer> = ConcurrentHashMap()
 
-    private val documentInfoChangedConnection: MessageBusConnection = project.messageBus.connect()
-
     private val codeLensProviderFactory: CodeLensProviderFactory = project.getService(CodeLensProviderFactory::class.java)
 
 
@@ -53,23 +48,6 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
 
 
     override fun dispose() {
-        documentInfoChangedConnection.dispose()
-    }
-
-    init {
-
-        DumbService.getInstance(project).runWhenSmart {
-            Log.log(logger::debug,"runWhenSmart invoked, restarting DaemonCodeAnalyzer")
-            restartAll()
-        }
-
-        documentInfoChangedConnection.subscribe(DocumentInfoChanged.DOCUMENT_INFO_CHANGED_TOPIC,DocumentInfoChanged { psiFile: PsiFile ->
-            val psiUri = PsiUtils.psiFileToUri(psiFile)
-            Log.log(logger::trace, "got documentInfoChanged, restarting DaemonCodeAnalyzer for {}", psiUri)
-            codeLensCache.remove(PsiUtils.psiFileToUri(psiFile))
-            //restartFile(psiFile)
-            restartAll()
-        })
     }
 
 

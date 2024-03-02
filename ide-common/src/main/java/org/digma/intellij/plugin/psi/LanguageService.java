@@ -1,13 +1,11 @@
 package org.digma.intellij.plugin.psi;
 
-import com.intellij.codeInsight.codeVision.CodeVisionEntry;
 import com.intellij.lang.Language;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import kotlin.Pair;
@@ -145,7 +143,7 @@ public interface LanguageService extends Disposable {
             PsiFile psiFile = PsiUtils.uriToPsiFile(methodInfo.getContainingFileUri(), project);
             if (PsiUtils.isValidPsiFile(psiFile)) {
                 Language language = psiFile.getLanguage();
-                return project.getService(LanguageServiceLocator.class).locate(language);
+                return LanguageServiceLocator.getInstance(project).locate(language);
             }
         } catch (PsiFileNotFountException e) {
             //ignore
@@ -187,14 +185,14 @@ public interface LanguageService extends Disposable {
                 language = DocumentInfoService.getInstance(project).getDominantLanguage();
             }
         } else {
-            language = project.getService(DocumentInfoService.class).getLanguageByMethodCodeObjectId(methodInfo.getId());
+            language = DocumentInfoService.getInstance(project).getLanguageByMethodCodeObjectId(methodInfo.getId());
         }
 
         if (language == null) {
             return NoOpLanguageService.INSTANCE;
         }
 
-        return project.getService(LanguageServiceLocator.class).locate(language);
+        return LanguageServiceLocator.getInstance(project).locate(language);
     }
 
     @NotNull
@@ -205,7 +203,7 @@ public interface LanguageService extends Disposable {
             return NoOpLanguageService.INSTANCE;
         }
 
-        return project.getService(LanguageServiceLocator.class).locate(language);
+        return LanguageServiceLocator.getInstance(project).locate(language);
     }
 
 
@@ -372,10 +370,6 @@ public interface LanguageService extends Disposable {
 
     boolean isCodeVisionSupported();
 
-    @NotNull List<Pair<TextRange, CodeVisionEntry>> getCodeLens(@NotNull PsiFile psiFile);
-
-    void refreshCodeLens();
-
     @NotNull
     default MethodObservabilityInfo canInstrumentMethod(@NotNull String methodId) {
         return new MethodObservabilityInfo(methodId, false, false, null, false);
@@ -402,4 +396,6 @@ public interface LanguageService extends Disposable {
     @NotNull
     InstrumentationProvider getInstrumentationProvider();
 
+    @NotNull
+    Map<String, PsiElement> findMethodsByCodeObjectIds(@NotNull PsiFile psiFile, @NotNull List<String> methodIds) throws Throwable;
 }

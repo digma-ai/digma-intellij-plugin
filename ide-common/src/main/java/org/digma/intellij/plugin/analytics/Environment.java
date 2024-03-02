@@ -216,14 +216,13 @@ public class Environment implements EnvironmentsSupplier {
     }
 
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    private boolean collectionsEquals(Collection envs1, Collection envs2) {
+    private boolean collectionsEquals(Collection<Env> envs1, Collection<Env> envs2) {
         if (envs1 == null && envs2 == null) {
             return true;
         }
 
         if (envs1 != null && envs2 != null && envs1.size() == envs2.size()) {
-            return new HashSet(envs1).containsAll(envs2);
+            return new HashSet<>(envs1).containsAll(envs2);
         }
 
         return false;

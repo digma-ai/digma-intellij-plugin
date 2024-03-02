@@ -1,0 +1,84 @@
+<idea-plugin>
+
+    <extensions defaultExtensionNs="com.intellij">
+
+
+        <!-- Code lens providers are used only for some languages, for example java,kotlin,python.
+            They are not registered in Rider or C#, Rider does code lens in resharper.
+         -->
+        <projectService serviceImplementation="org.digma.intellij.plugin.codelens.CodeLensService"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.codelens.CodeVisionProviderToLensSelector"/>
+
+        <config.codeVisionGroupSettingProvider
+                implementation="org.digma.intellij.plugin.codelens.DigmaCodeVisionSettingsProvider"/>
+        <codeInsight.codeVisionSettingsPreviewLanguage language="JAVA" modelId="Digma"/>
+
+        <codeInsight.daemonBoundCodeVisionProvider
+                implementation="org.digma.intellij.plugin.codelens.LiveCodeLensProvider"/>
+        <codeInsight.daemonBoundCodeVisionProvider
+                implementation="org.digma.intellij.plugin.codelens.CodeVisionProvider1"/>
+        <codeInsight.daemonBoundCodeVisionProvider
+                implementation="org.digma.intellij.plugin.codelens.CodeVisionProvider2"/>
+        <codeInsight.daemonBoundCodeVisionProvider
+                implementation="org.digma.intellij.plugin.codelens.CodeVisionProvider3"/>
+        <codeInsight.daemonBoundCodeVisionProvider
+                implementation="org.digma.intellij.plugin.codelens.CodeVisionProvider4"/>
+        <codeInsight.daemonBoundCodeVisionProvider
+                implementation="org.digma.intellij.plugin.codelens.CodeVisionProvider5"/>
+        <codeInsight.daemonBoundCodeVisionProvider
+                implementation="org.digma.intellij.plugin.codelens.CodeVisionProvider6"/>
+        <codeInsight.daemonBoundCodeVisionProvider
+                implementation="org.digma.intellij.plugin.codelens.CodeVisionProvider7"/>
+        <codeInsight.daemonBoundCodeVisionProvider
+                implementation="org.digma.intellij.plugin.codelens.CodeVisionProvider8"/>
+        <codeInsight.daemonBoundCodeVisionProvider
+                implementation="org.digma.intellij.plugin.codelens.CodeVisionProvider9"/>
+        <codeInsight.daemonBoundCodeVisionProvider
+                implementation="org.digma.intellij.plugin.codelens.CodeVisionProvider10"/>
+        <codeInsight.daemonBoundCodeVisionProvider
+                implementation="org.digma.intellij.plugin.codelens.CodeVisionProvider11"/>
+        <codeInsight.daemonBoundCodeVisionProvider
+                implementation="org.digma.intellij.plugin.codelens.CodeVisionProvider12"/>
+        <codeInsight.daemonBoundCodeVisionProvider
+                implementation="org.digma.intellij.plugin.codelens.CodeVisionProvider13"/>
+        <codeInsight.daemonBoundCodeVisionProvider
+                implementation="org.digma.intellij.plugin.codelens.CodeVisionProvider14"/>
+        <codeInsight.daemonBoundCodeVisionProvider
+                implementation="org.digma.intellij.plugin.codelens.CodeVisionProvider15"/>
+        <codeInsight.daemonBoundCodeVisionProvider
+                implementation="org.digma.intellij.plugin.codelens.CodeVisionProvider16"/>
+        <codeInsight.daemonBoundCodeVisionProvider
+                implementation="org.digma.intellij.plugin.codelens.CodeVisionProvider17"/>
+        <codeInsight.daemonBoundCodeVisionProvider
+                implementation="org.digma.intellij.plugin.codelens.CodeVisionProvider18"/>
+        <codeInsight.daemonBoundCodeVisionProvider
+                implementation="org.digma.intellij.plugin.codelens.CodeVisionProvider19"/>
+        <codeInsight.daemonBoundCodeVisionProvider
+                implementation="org.digma.intellij.plugin.codelens.CodeVisionProvider20"/>
+        <codeInsight.daemonBoundCodeVisionProvider
+                implementation="org.digma.intellij.plugin.codelens.CodeVisionProvider21"/>
+        <codeInsight.daemonBoundCodeVisionProvider
+                implementation="org.digma.intellij.plugin.codelens.CodeVisionProvider22"/>
+        <codeInsight.daemonBoundCodeVisionProvider
+                implementation="org.digma.intellij.plugin.codelens.CodeVisionProvider23"/>
+        <codeInsight.daemonBoundCodeVisionProvider
+                implementation="org.digma.intellij.plugin.codelens.CodeVisionProvider24"/>
+        <codeInsight.daemonBoundCodeVisionProvider
+                implementation="org.digma.intellij.plugin.codelens.CodeVisionProvider25"/>
+        <codeInsight.daemonBoundCodeVisionProvider
+                implementation="org.digma.intellij.plugin.codelens.CodeVisionProvider26"/>
+        <codeInsight.daemonBoundCodeVisionProvider
+                implementation="org.digma.intellij.plugin.codelens.CodeVisionProvider27"/>
+        <codeInsight.daemonBoundCodeVisionProvider
+                implementation="org.digma.intellij.plugin.codelens.CodeVisionProvider28"/>
+        <codeInsight.daemonBoundCodeVisionProvider
+                implementation="org.digma.intellij.plugin.codelens.CodeVisionProvider29"/>
+        <codeInsight.daemonBoundCodeVisionProvider
+                implementation="org.digma.intellij.plugin.codelens.CodeVisionProvider30"/>
+
+
+    </extensions>
+
+
+
+</idea-plugin>

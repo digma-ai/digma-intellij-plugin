@@ -1,11 +1,9 @@
 package org.digma.intellij.plugin.psi;
 
-import com.intellij.codeInsight.codeVision.CodeVisionEntry;
 import com.intellij.lang.Language;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import kotlin.Pair;
@@ -127,6 +125,11 @@ public class NoOpLanguageService implements LanguageService {
     }
 
     @Override
+    public @NotNull Map<String, PsiElement> findMethodsByCodeObjectIds(@NotNull PsiFile psiFile, @NotNull List<String> methodIds) throws Throwable {
+        return Map.of();
+    }
+
+    @Override
     public boolean isRelevant(VirtualFile file) {
         return false;
     }
@@ -146,13 +149,4 @@ public class NoOpLanguageService implements LanguageService {
         return false;
     }
 
-    @Override
-    public @NotNull List<Pair<TextRange, CodeVisionEntry>> getCodeLens(@NotNull PsiFile psiFile) {
-        throw new UnsupportedOperationException("should not be called for NoOPLanguageService");
-    }
-
-    @Override
-    public void refreshCodeLens() {
-
-    }
 }

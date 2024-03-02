@@ -23,18 +23,20 @@ class DigmaCodeVisionSettingsProvider : CodeVisionGroupSettingProvider {
     }
 }
 
-//todo: can't create a real preview code for group settings
+//todo: can't create a real preview code with clickable code vision for group settings. need more research. its possible for single provider.
 class MyModel(
     name: String,
     groupId: String,
     description: String?,
-    previewLanguage: Language?,
+    private val myPreviewLanguage: Language?,
     isEnabled: Boolean,
     providers: List<CodeVisionProvider<*>>,
-) :
-    CodeVisionGroupDefaultSettingModel(name, groupId, description, previewLanguage, isEnabled, providers) {
+) : CodeVisionGroupDefaultSettingModel(name, groupId, description, isEnabled, providers) {
 
-    override val previewText: String?
+    override val previewLanguage: Language?
+        get() = myPreviewLanguage
+
+    override val previewText: String
         get() = "class MyClass{\n" +
                 "\n" +
                 "    Error Hotspot\n" +

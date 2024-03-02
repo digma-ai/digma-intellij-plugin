@@ -1,11 +1,12 @@
-<idea-plugin>
+<idea-plugin xmlns:xi="http://www.w3.org/2001/XInclude">
+
+    <xi:include href="/META-INF/org.digma.intellij-with-codevision.xml" xpointer="xpointer(/idea-plugin/*)"/>
 
     <extensions defaultExtensionNs="com.intellij">
 
         <projectService serviceImplementation="org.digma.intellij.plugin.psi.python.PythonLanguageService"/>
         <projectService serviceImplementation="org.digma.intellij.plugin.psi.python.PythonSpanNavigationProvider"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.psi.python.PythonSpanNavigationStartupActivity"/>
-        <projectService serviceImplementation="org.digma.intellij.plugin.psi.python.PythonCodeLensService"/>
 
     </extensions>
 

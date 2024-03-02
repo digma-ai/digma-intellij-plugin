@@ -1,13 +1,12 @@
 package org.digma.intellij.plugin.idea.psi.java
 
-import com.intellij.codeInsight.codeVision.CodeVisionEntry
 import com.intellij.lang.Language
 import com.intellij.lang.java.JavaLanguage
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.TextRange
 import com.intellij.psi.JavaPsiFacade
+import com.intellij.psi.JavaRecursiveElementWalkingVisitor
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementFactory
@@ -20,6 +19,7 @@ import com.intellij.psi.util.PsiTreeUtil
 import org.digma.intellij.plugin.common.runInReadAccessWithResult
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.psi.AbstractJvmLanguageService
+import org.digma.intellij.plugin.idea.psi.createMethodCodeObjectId
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscovery
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.GrpcFrameworkEndpointDiscovery
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.JaxrsJakartaFrameworkEndpointDiscovery
@@ -58,14 +58,6 @@ class JavaLanguageService(project: Project) : AbstractJvmLanguageService(project
 //        return classes.firstOrNull()?.toUElementOfType<UClass>()
     }
 
-    override fun refreshCodeLens() {
-        project.service<JavaCodeLensService>().refreshCodeLens()
-    }
-
-
-    override fun getCodeLens(psiFile: PsiFile): List<Pair<TextRange, CodeVisionEntry>> {
-        return project.service<JavaCodeLensService>().getCodeLens(psiFile)
-    }
 
     override fun findParentMethod(psiElement: PsiElement): UMethod? {
         return PsiTreeUtil.getParentOfType(psiElement, PsiMethod::class.java)?.toUElementOfType<UMethod>()
@@ -151,5 +143,37 @@ class JavaLanguageService(project: Project) : AbstractJvmLanguageService(project
 
     override fun getInstrumentationProvider(): InstrumentationProvider {
         return JavaInstrumentationProvider(project, this)
+    }
+
+
+    //this method is called only from CodeLensService, CodeLensService should handle exceptions
+    // the @Throws here is a reminder that this method may throw exception
+    @Throws(Throwable::class)
+    override fun findMethodsByCodeObjectIds(psiFile: PsiFile, methodIds: MutableList<String>): Map<String, PsiElement> {
+
+        if (methodIds.isEmpty() || !PsiUtils.isValidPsiFile(psiFile)) {
+            return emptyMap()
+        }
+
+        return runInReadAccessWithResult {
+            val methods = mutableMapOf<String, PsiElement>()
+
+            val visitor = object : JavaRecursiveElementWalkingVisitor() {
+
+                override fun visitMethod(method: PsiMethod) {
+
+                    method.toUElementOfType<UMethod>()?.let { uMethod ->
+                        val codeObjectId = createMethodCodeObjectId(uMethod)
+                        if (methodIds.contains(codeObjectId)) {
+                            methods[codeObjectId] = method
+                        }
+                    }
+                }
+            }
+
+            psiFile.acceptChildren(visitor)
+
+            return@runInReadAccessWithResult methods
+        }
     }
 }

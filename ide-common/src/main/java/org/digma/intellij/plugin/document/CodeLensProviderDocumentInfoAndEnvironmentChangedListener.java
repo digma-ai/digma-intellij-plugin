@@ -2,7 +2,7 @@ package org.digma.intellij.plugin.document;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
-import org.digma.intellij.plugin.analytics.*;
+import org.digma.intellij.plugin.analytics.EnvironmentChanged;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.env.Env;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
@@ -21,9 +21,11 @@ public class CodeLensProviderDocumentInfoAndEnvironmentChangedListener implement
     public void documentInfoChanged(PsiFile psiFile) {
         Backgroundable.executeOnPooledThread(() -> {
             try {
-                CodeLensProvider.getInstance(project).buildCodeLens(psiFile);
-                //todo: refresh editor
-            } catch (AnalyticsServiceException e) {
+                boolean changed = CodeLensProvider.getInstance(project).buildCodeLens(psiFile);
+                if (changed) {
+                    project.getMessageBus().syncPublisher(CodeLensChanged.CODELENS_CHANGED_TOPIC).codelensChanged(psiFile);
+                }
+            } catch (Throwable e) {
                 ErrorReporter.getInstance().reportError("CodeLensProviderDocumentInfoAndEnvironmentChangedListener.documentInfoChanged", e);
             }
         });
@@ -33,8 +35,10 @@ public class CodeLensProviderDocumentInfoAndEnvironmentChangedListener implement
     public void environmentChanged(Env newEnv) {
         Backgroundable.executeOnPooledThread(() -> {
             try {
-                CodeLensProvider.getInstance(project).refresh();
-                //todo:refresh editor
+                boolean changed = CodeLensProvider.getInstance(project).refresh();
+                if (changed) {
+                    project.getMessageBus().syncPublisher(CodeLensChanged.CODELENS_CHANGED_TOPIC).codelensChanged();
+                }
             } catch (Throwable e) {
                 ErrorReporter.getInstance().reportError("CodeLensProviderDocumentInfoAndEnvironmentChangedListener.environmentChanged", e);
             }

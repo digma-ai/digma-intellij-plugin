@@ -63,20 +63,23 @@ class ErrorReporter {
     }
 
     //this method is used to report an error that is not an exception. it should contain some details to say what the error is
-    fun reportError(project: Project?, message: String, details: Map<String, String>) {
+    fun reportError(project: Project?, message: String, action: String, details: Map<String, String>) {
+
+
+        if (isTooFrequentError(message, action)) {
+            return
+        }
+
 
         val projectToUse = project ?: findActiveProject()
 
         projectToUse?.let {
             if (it.isDisposed) return
 
-            //add SEVERITY_HIGH_TRY_FIX if severity doesn't exist
-            val detailsToSend = if (details.containsKey(SEVERITY_PROP_NAME)) {
-                details
-            } else {
-                val mm = details.toMutableMap()
-                mm[SEVERITY_PROP_NAME] = SEVERITY_HIGH_TRY_FIX
-                mm
+            val detailsToSend = details.toMutableMap()
+            detailsToSend["action"] = action
+            if (!detailsToSend.containsKey(SEVERITY_PROP_NAME)) {
+                detailsToSend[SEVERITY_PROP_NAME] = SEVERITY_HIGH_TRY_FIX
             }
 
             ActivityMonitor.getInstance(it).registerError(null, message, detailsToSend)
@@ -165,6 +168,12 @@ class ErrorReporter {
 
 
     private fun isTooFrequentBackendError(message: String, action: String): Boolean {
+        val counter = MyCache.getOrCreate(message, action)
+        val occurrences = counter.incrementAndGet()
+        return occurrences > 1
+    }
+
+    private fun isTooFrequentError(message: String, action: String): Boolean {
         val counter = MyCache.getOrCreate(message, action)
         val occurrences = counter.incrementAndGet()
         return occurrences > 1

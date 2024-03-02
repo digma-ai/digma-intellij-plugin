@@ -194,8 +194,6 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                 }
             }
         }
-
-        refreshCodeLens()
     }
 
 

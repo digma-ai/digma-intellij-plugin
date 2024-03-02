@@ -4,8 +4,8 @@ import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
+import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.digma.intellij.plugin.analytics.*;
-import org.digma.intellij.plugin.codelens.CodeLensRefresh;
 import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
@@ -39,6 +39,7 @@ public class CodeLensProvider implements Disposable {
 
     public CodeLensProvider(Project project) {
         this.project = project;
+        //start CodeLensRefresh. CodeLensRefresh is in kotlin so can use coroutines
         new CodeLensRefresh(project, this).start();
     }
 
@@ -59,14 +60,18 @@ public class CodeLensProvider implements Disposable {
 
     @NotNull
     public Set<CodeLens> provideCodeLens(@NotNull PsiFile psiFile) {
+        Log.log(LOGGER::trace, "Got request for code lens for {}", psiFile);
         var lensPerFile = codeLensPerFile.get(psiFileToKey(psiFile));
         if (lensPerFile == null) {
+            Log.log(LOGGER::trace, "No lenses for file in cache, returning empty {}", psiFile);
             return Collections.emptySet();
         }
+        Log.log(LOGGER::trace, "returning lenses for file {} [{}]", psiFile, lensPerFile.codeLensList);
         return lensPerFile.codeLensList;
     }
 
     public void clearCodeLens(@NotNull PsiFile psiFile) {
+        Log.log(LOGGER::trace, "clearing code lens for {}", psiFile);
         codeLensPerFile.remove(psiFileToKey(psiFile));
     }
 
@@ -74,17 +79,19 @@ public class CodeLensProvider implements Disposable {
     /**
      * called on background when a file is opened or changed and build code lest for the file.
      * code lens are kept in local cache.
+     * returns true is code lens changed.
      */
-    public void buildCodeLens(@NotNull PsiFile psiFile) throws AnalyticsServiceException {
-        try {
-            buildCodeLensImpl(psiFile);
-        } catch (AnalyticsServiceException e) {
-            ErrorReporter.getInstance().reportError("CodeLensProvider.buildCodeLens", e);
-        }
+    public boolean buildCodeLens(@NotNull PsiFile psiFile) throws AnalyticsServiceException {
+        var oldLenses = provideCodeLens(psiFile);
+        buildCodeLensImpl(psiFile);
+        var newLenses = provideCodeLens(psiFile);
+        return !oldLenses.equals(newLenses);
     }
 
 
     private void buildCodeLensImpl(@NotNull PsiFile psiFile) throws AnalyticsServiceException {
+
+        Log.log(LOGGER::trace, "Building code lens for {}", psiFile);
 
         if (!PsiUtils.isValidPsiFile(psiFile) || !ProjectUtilsKt.isProjectValid(project)) {
             return;
@@ -95,15 +102,13 @@ public class CodeLensProvider implements Disposable {
 
         var psiKey = psiFileToKey(psiFile);
 
-        Log.log(LOGGER::trace, "Got request for code lens for {}", psiKey);
-
         DocumentInfoContainer documentInfo = DocumentInfoService.getInstance(project).getDocumentInfo(psiFile);
         if (documentInfo == null) {
-            Log.log(LOGGER::trace, "Can't find DocumentInfo for {}", psiKey);
+            Log.log(LOGGER::trace, "Can't find DocumentInfo for {}", psiFile);
             codeLensPerFile.put(psiKey, new DocumentLensPair(null, Collections.emptySet()));
         } else {
             var codeLens = buildCodeLens(documentInfo);
-            Log.log(LOGGER::trace, "Got code lens for {}, {}", psiKey, codeLens);
+            Log.log(LOGGER::trace, "Built code lens for {}, [{}]", psiFile, codeLens);
             codeLensPerFile.put(psiKey, new DocumentLensPair(documentInfo, codeLens));
         }
     }
@@ -112,20 +117,30 @@ public class CodeLensProvider implements Disposable {
     /**
      * called on background by refresh task and when environment changed.
      * refresh code lens for the documents currently in the cache.
+     * return true is code lens changed.
      */
-    public void refresh() {
+    public boolean refresh() {
+
+        Log.log(LOGGER::trace, "Got request to refresh code lens");
 
         EDT.assertNonDispatchThread();
         ReadActions.assertNotInReadAccess();
+
+        MutableBoolean changed = new MutableBoolean(false);
 
         codeLensPerFile.forEach((key, documentLensPair) -> {
             try {
                 var documentInfo = documentLensPair.documentInfoContainer;
 
                 if (documentInfo != null) {
-                    var codeLens = buildCodeLens(documentInfo);
-                    Log.log(LOGGER::trace, "Got code lens for {}, {}", key, codeLens);
-                    documentLensPair.codeLensList = codeLens;
+                    Log.log(LOGGER::trace, "refreshing code lens for {}", key);
+                    var oldLenses = documentLensPair.codeLensList;
+                    var newLenses = buildCodeLens(documentInfo);
+                    documentLensPair.codeLensList = newLenses;
+                    if (!oldLenses.equals(newLenses)) {
+                        Log.log(LOGGER::trace, "Got refreshed code lens for {}, {}", key, newLenses);
+                        changed.setTrue();
+                    }
                 }
 
             } catch (Throwable e) {
@@ -133,6 +148,8 @@ public class CodeLensProvider implements Disposable {
                 ErrorReporter.getInstance().reportError("CodeLensProvider.refresh", e);
             }
         });
+
+        return changed.booleanValue();
     }
 
 
@@ -142,7 +159,8 @@ public class CodeLensProvider implements Disposable {
     @NotNull
     private synchronized Set<CodeLens> buildCodeLens(@NotNull DocumentInfoContainer documentInfoContainer) throws AnalyticsServiceException {
 
-        Set<CodeLens> codeLensList = new HashSet<>();
+        //LinkedHashSet retains insertion order so retains the order from backend
+        Set<CodeLens> codeLensList = new LinkedHashSet<>();
 
         if (documentInfoContainer.getDocumentInfo() == null) {
             return Collections.emptySet();
@@ -188,6 +206,7 @@ public class CodeLensProvider implements Disposable {
 
                 String title = priorityEmoji + decorator.getTitle();
 
+                //title is used as id of CodeLens
                 CodeLens codeLens = new CodeLens(decorator.getTitle(), codeObjectId, decorator.getCodeObjectId(), title, importance);
                 codeLens.setLensDescription(decorator.getDescription());
                 codeLens.setLensMoreText("Go to " + title);

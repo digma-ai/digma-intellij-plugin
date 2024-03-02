@@ -12,8 +12,6 @@ class LiveCodeLensProvider : DigmaCodeVisionProviderBase() {
     override val relativeOrderings: List<CodeVisionRelativeOrdering>
         get() = listOf(CodeVisionRelativeOrdering.CodeVisionRelativeOrderingFirst)
 
-    override var myLensId: String? = "LIVE"
-
 }
 
 

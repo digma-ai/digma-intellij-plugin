@@ -39,9 +39,6 @@ abstract class DigmaCodeVisionProviderBase : DaemonBoundCodeVisionProvider {
         get() = DIGMA_CODE_LENS_GROUP_ID
 
 
-    open var myLensId: String? = null
-
-
     private val empty: List<Pair<TextRange, CodeVisionEntry>> = listOf()
 
 

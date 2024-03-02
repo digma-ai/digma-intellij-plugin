@@ -21,7 +21,7 @@ namespace Digma.Rider.Highlighting
 #if (PROFILE_2022_3) // FIX_WHEN_MIN_IS_232
         public override CodeLensAnchorKind DefaultAnchor => CodeLensAnchorKind.Top;
         public override ICollection<CodeLensRelativeOrdering> RelativeOrderings => new CodeLensRelativeOrdering[]
-            { new CodeLensRelativeOrderingAfter(nameof(LiveMethodInsightsProvider)) };
+            { new CodeLensRelativeOrderingFirst() };
 #else
         public override CodeVisionAnchorKind DefaultAnchor => CodeVisionAnchorKind.Top;
         public override ICollection<CodeVisionRelativeOrdering> RelativeOrderings => new CodeVisionRelativeOrdering[]

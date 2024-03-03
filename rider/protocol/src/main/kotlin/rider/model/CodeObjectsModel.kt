@@ -1,8 +1,16 @@
 package rider.model
 
-import com.jetbrains.rd.generator.nova.*
+import com.jetbrains.rd.generator.nova.Ext
+import com.jetbrains.rd.generator.nova.PredefinedType
 import com.jetbrains.rd.generator.nova.csharp.CSharp50Generator
+import com.jetbrains.rd.generator.nova.field
+import com.jetbrains.rd.generator.nova.immutableList
 import com.jetbrains.rd.generator.nova.kotlin.Kotlin11Generator
+import com.jetbrains.rd.generator.nova.list
+import com.jetbrains.rd.generator.nova.map
+import com.jetbrains.rd.generator.nova.nullable
+import com.jetbrains.rd.generator.nova.setting
+import com.jetbrains.rd.generator.nova.source
 import com.jetbrains.rider.model.nova.ide.SolutionModel
 
 //todo: create root, see ExampleModel
@@ -42,11 +50,11 @@ object CodeObjectsModel : Ext(SolutionModel.Solution) {
     }
 
     val RiderCodeLensInfo = structdef {
+        field("id", PredefinedType.string)
         field("codeObjectId", PredefinedType.string)
         field("lensTitle", PredefinedType.string.nullable)
         field("lensDescription", PredefinedType.string.nullable)
         field("moreText", PredefinedType.string.nullable)
-        field("anchor", PredefinedType.string.nullable)
         field("psiUri", PredefinedType.string)
     }
 

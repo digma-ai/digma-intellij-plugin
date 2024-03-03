@@ -1,13 +1,11 @@
 package org.digma.intellij.plugin.rider.psi.csharp;
 
-import com.intellij.codeInsight.codeVision.CodeVisionEntry;
 import com.intellij.lang.Language;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.*;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.*;
-import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.jetbrains.rdclient.util.idea.LifetimedProjectComponent;
@@ -205,7 +203,6 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
             }
         });
 
-        CodeLensHost.getInstance(project).environmentChanged(newEnv);
     }
 
 
@@ -269,17 +266,6 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
     }
 
     @Override
-    public @NotNull List<Pair<TextRange, CodeVisionEntry>> getCodeLens(@NotNull PsiFile psiFile) {
-        throw new UnsupportedOperationException("should not be called for CSharpLanguageService");
-    }
-
-    @Override
-    public void refreshCodeLens() {
-        //todo:implement
-//        CodeLensHost.getInstance(project).refreshCodeLens();
-    }
-
-    @Override
     public @Nullable PsiElement getPsiElementForMethod(@NotNull String methodId) {
         //todo: implement
         return null;
@@ -298,5 +284,13 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
     @Override
     public @NotNull InstrumentationProvider getInstrumentationProvider() {
         return new NoOpInstrumentationProvider();
+    }
+
+    @Override
+    public @NotNull Map<String, PsiElement> findMethodsByCodeObjectIds(@NotNull PsiFile psiFile, @NotNull List<String> methodIds) throws Throwable {
+        //never called for csharp language,
+        //this method is used by CodeLensService which is only relevant for java/kotlin/python.
+        //Rider does code lens differently
+        throw new UnsupportedOperationException("should not be called for CSharp");
     }
 }

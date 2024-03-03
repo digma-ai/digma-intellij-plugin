@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.psi.python;
 
-import com.intellij.codeInsight.codeVision.CodeVisionEntry;
 import com.intellij.lang.Language;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.diagnostic.Logger;
@@ -9,7 +8,7 @@ import com.intellij.openapi.fileEditor.*;
 import com.intellij.openapi.progress.*;
 import com.intellij.openapi.project.*;
 import com.intellij.openapi.roots.ProjectFileIndex;
-import com.intellij.openapi.util.TextRange;
+import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.intellij.psi.search.GlobalSearchScope;
@@ -280,13 +279,6 @@ public class PythonLanguageService implements LanguageService {
             }
         });
 
-        PythonCodeLensService.getInstance(project).refreshCodeLens();
-    }
-
-
-    @Override
-    public void refreshCodeLens() {
-        PythonCodeLensService.getInstance(project).refreshCodeLens();
     }
 
 
@@ -351,11 +343,6 @@ public class PythonLanguageService implements LanguageService {
     }
 
     @Override
-    public @NotNull List<Pair<TextRange, CodeVisionEntry>> getCodeLens(@NotNull PsiFile psiFile) {
-        return PythonCodeLensService.getInstance(project).getCodeLens(psiFile);
-    }
-
-    @Override
     public @Nullable PsiElement getPsiElementForMethod(@NotNull String methodId) {
         var functionName = PythonLanguageUtils.extractFunctionNameFromCodeObjectId(methodId);
 
@@ -411,5 +398,30 @@ public class PythonLanguageService implements LanguageService {
     @Override
     public @NotNull InstrumentationProvider getInstrumentationProvider() {
         return new NoOpInstrumentationProvider();
+    }
+
+
+    //this method is called only from CodeLensService, CodeLensService should handle exceptions
+    @Override
+    public @NotNull Map<String, PsiElement> findMethodsByCodeObjectIds(@NotNull PsiFile psiFile, @NotNull List<String> methodIds) {
+        if (methodIds.isEmpty() || !PsiUtils.isValidPsiFile(psiFile)) {
+            return Collections.emptyMap();
+        }
+
+        return PsiAccessUtilsKt.runInReadAccessWithResult((Computable<Map<String, PsiElement>>) () -> {
+            var methods = new HashMap<String, PsiElement>();
+            var traverser = SyntaxTraverser.psiTraverser(psiFile);
+            for (PsiElement element : traverser) {
+                if (element instanceof PyFunction pyFunction) {
+                    var codeObjectId = PythonLanguageUtils.createPythonMethodCodeObjectId(psiFile.getProject(), pyFunction);
+                    var additionalIds = PythonAdditionalIdsProvider.getAdditionalIdsInclusive(codeObjectId, false);
+                    if (methodIds.stream().anyMatch(additionalIds::contains)) {
+                        methods.put(codeObjectId, element);
+                    }
+                }
+            }
+
+            return methods;
+        });
     }
 }

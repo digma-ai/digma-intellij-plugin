@@ -11,7 +11,7 @@ import org.digma.intellij.plugin.rider.protocol.CodeLensHost;
 import org.digma.intellij.plugin.rider.psi.csharp.CSharpLanguageService;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
+import java.util.Set;
 
 /**
  * A listener for DocumentInfoChanged events for rider
@@ -39,7 +39,7 @@ public class RiderDocumentInfoConsumer implements DocumentInfoChanged {
         try {
             if (cSharpLanguageService.isSupportedFile(psiFile)) {
                 Log.log(LOGGER::debug, "Got documentInfoChanged for {}", psiFile.getVirtualFile());
-                List<CodeLens> codeLens = codeLensProvider.provideCodeLens(psiFile);
+                Set<CodeLens> codeLens = codeLensProvider.provideCodeLens(psiFile);
                 Log.log(LOGGER::debug, "Got codeLens for {}: {}", psiFile.getVirtualFile(), codeLens);
                 CodeLensHost.getInstance(project).installCodeLens(psiFile, codeLens);
             }

@@ -55,8 +55,8 @@ class ScopeManager(private val project: Project) {
 
                 else -> {
                     ErrorReporter.getInstance().reportError(
-                        project, "ScopeManager.changeScope", mapOf(
-                            "error" to "got unknown scope $scope",
+                        project, "ScopeManager.changeScope", "changeScope,unknown scope", mapOf(
+                            "error hint" to "got unknown scope $scope",
                             SEVERITY_PROP_NAME to SEVERITY_HIGH_TRY_FIX
                         )
                     )

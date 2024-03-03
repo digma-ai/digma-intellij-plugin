@@ -49,7 +49,7 @@ namespace Digma.Rider.Highlighting
                 {
                     Log(_logger, "Installing code lens for code method {0}: {1}", methodFqn, riderCodeLensInfo);
                     var codeLensMethodInsightsProvider =
-                        _codeLensProviderFactory.GetProvider(riderCodeLensInfo.LensTitle,usedGenericProviders);
+                        _codeLensProviderFactory.GetProvider(riderCodeLensInfo.Id,usedGenericProviders);
 
                     highlightingConsumer.AddHighlighting(
                         new CodeInsightsHighlighting(

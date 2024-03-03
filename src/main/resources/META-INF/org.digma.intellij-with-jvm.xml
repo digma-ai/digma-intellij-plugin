@@ -1,4 +1,7 @@
-<idea-plugin>
+<idea-plugin xmlns:xi="http://www.w3.org/2001/XInclude">
+
+    <xi:include href="/META-INF/org.digma.intellij-with-codevision.xml" xpointer="xpointer(/idea-plugin/*)"/>
+
 
     <depends>org.jetbrains.idea.maven</depends>
     <depends>org.jetbrains.plugins.gradle</depends>
@@ -59,10 +62,6 @@
 
         <projectService
                 serviceImplementation="org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscoveryService"/>
-
-
-        <projectService serviceImplementation="org.digma.intellij.plugin.idea.psi.java.JavaCodeLensService"/>
-
 
     </extensions>
 

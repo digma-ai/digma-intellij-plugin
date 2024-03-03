@@ -1,7 +1,10 @@
 package org.digma.intellij.plugin.model.lens
 
+import java.util.Objects
+
 
 data class CodeLens(
+    val id: String,
     val codeMethod: String, //method this code lens should appear on
     val scopeCodeObjectId: String,
     val lensTitle: String,
@@ -9,13 +12,10 @@ data class CodeLens(
 ) {
     var lensDescription: String = ""
     var lensMoreText: String = ""
-    var anchor: String = ""
 
     // generated code. hashCode and equals on top of codeObjectId and lensTitle, in order to avoid duplicates
     override fun hashCode(): Int {
-        var result = codeMethod.hashCode()
-        result = 31 * result + lensTitle.hashCode()
-        return result
+        return Objects.hash(codeMethod, id)
     }
 
     override fun equals(other: Any?): Boolean {
@@ -23,7 +23,7 @@ data class CodeLens(
         if (other !is CodeLens) return false
 
         if (codeMethod != other.codeMethod) return false
-        return lensTitle == other.lensTitle
+        return id == other.id
     }
 
 }

@@ -1,5 +1,5 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
-<idea-plugin require-restart="true" xmlns:xi="http://www.w3.org/2001/XInclude">
+<idea-plugin require-restart="true">
 
     <change-notes/>
     <id>org.digma.intellij</id>
@@ -11,10 +11,6 @@
     </description>
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.vcs</depends>
-
-
-    <xi:include href="/META-INF/org.digma.intellij-with-intellij-platform.xml" xpointer="xpointer(/idea-plugin/*)"/>
-
 
     <!--
      Python support is currently disabled. the python module still builds and packaged but python is considered
@@ -71,6 +67,8 @@
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.navigation.CodeButtonCaretContextService"
                         serviceInterface="org.digma.intellij.plugin.editor.CaretContextService"/>
 
+        <projectService serviceImplementation="org.digma.intellij.plugin.editor.CurrentContextUpdater"/>
+
 
         <notificationGroup id="Digma Hidden Notification Group"
                            displayType="NONE"
@@ -120,26 +118,6 @@
                 implementation="org.digma.intellij.plugin.posthog.PerformanceMetricsPosthogEventStartupActivity"/>
 
 
-        <!-- Code lens providers are used only for some languages, for example java,python.
-            They will not be used in Rider or C#, Rider does code lens in resharper.
-         -->
-        <projectService serviceImplementation="org.digma.intellij.plugin.codelens.CodeLensProviderFactory"/>
-        <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.codelens.providers.ErrorHotspotCodeLensProvider"/>
-        <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.codelens.providers.HighUsageCodeLensProvider"/>
-        <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.codelens.providers.LowUsageCodeLensProvider"/>
-        <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.codelens.providers.ScaleFactorCodeLensProvider"/>
-        <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.codelens.providers.SlowEndpointCodeLensProvider"/>
-        <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.codelens.providers.CodeLensMethodInsightsProvider1"/>
-        <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.codelens.providers.CodeLensMethodInsightsProvider2"/>
-        <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.codelens.providers.CodeLensMethodInsightsProvider3"/>
-        <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.codelens.providers.CodeLensMethodInsightsProvider4"/>
-        <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.codelens.providers.CodeLensMethodInsightsProvider5"/>
-        <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.codelens.providers.CodeLensMethodInsightsProvider6"/>
-        <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.codelens.providers.CodeLensMethodInsightsProvider7"/>
-        <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.codelens.providers.CodeLensMethodInsightsProvider8"/>
-        <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.codelens.providers.CodeLensMethodInsightsProvider9"/>
-        <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.codelens.providers.CodeLensMethodInsightsProvider10"/>
-
 
         <errorHandler implementation="org.digma.intellij.plugin.ui.reports.DigmaErrorReportSubmitter"/>
 
@@ -148,6 +126,9 @@
 
 
     <projectListeners>
+        <listener
+                class="org.digma.intellij.plugin.editor.EditorEventsHandler"
+                topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
         <listener
                 class="org.digma.intellij.plugin.analytics.EnvironmentChangeHandler"
                 topic="org.digma.intellij.plugin.analytics.EnvironmentChanged"/>

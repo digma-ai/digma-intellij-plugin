@@ -41,4 +41,7 @@ public class ReadActions {
         }
     }
 
+    public static boolean isReadAccessAllowed() {
+        return ApplicationManager.getApplication().isReadAccessAllowed();
+    }
 }

@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.278] - 2024-02-29
+## [2.0.279] - 2024-03-03
+
+- Improve codelens providers by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1867
+
+## 2.0.278 - 2024-02-29
 
 - Common jcef for jaeger UI by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1853
 - Clean insights from document info container Closes #1623 Closes #1755 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1855

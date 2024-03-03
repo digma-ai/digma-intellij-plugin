@@ -17,7 +17,7 @@ import javax.swing.BoxLayout
 import javax.swing.JLabel
 import javax.swing.JPanel
 
-fun createMainToolWindowPanel(project: Project, mainContentPanel: MainContentPanel): JPanel {
+fun createMainToolWindowPanel(project: Project, mainContentPanel: JPanel): JPanel {
 
     val navigationPanel = NavigationPanel(project)
 

@@ -14,7 +14,7 @@ import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.troubleshooting.TroubleshootingPanel;
 import org.digma.intellij.plugin.ui.*;
-import org.digma.intellij.plugin.ui.common.MainContentPanel;
+import org.digma.intellij.plugin.ui.common.*;
 import org.digma.intellij.plugin.ui.common.statuspanels.NoConnectionPanelKt;
 import org.digma.intellij.plugin.ui.notifications.AllNotificationsPanel;
 import org.digma.intellij.plugin.ui.panels.DisposablePanel;
@@ -67,7 +67,8 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
         ToolWindowShower.getInstance(project).setToolWindow(toolWindow);
 
         //contentPanel contains the main views, insights,assets,errors and tests
-        var contentPanel = new MainContentPanel(project);
+        var mainContentPanel = new MainContentPanel(project);
+        var contentPanel = new UrgentMessagesPanel(project, mainContentPanel);
         //mainToolWindowPanel contains the navigation and update panels and the contentPanel
         var mainToolWindowPanel = createMainToolWindowPanel(project,contentPanel);
         //mainCardsPanel contains the mainToolWindowPanel and no connection panel

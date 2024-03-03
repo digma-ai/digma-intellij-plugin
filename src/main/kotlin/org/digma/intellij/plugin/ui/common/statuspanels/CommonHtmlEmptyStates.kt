@@ -23,14 +23,32 @@ import javax.swing.ScrollPaneConstants
 import javax.swing.SwingConstants
 
 
-fun createStartupEmptyStatePanel(project: Project):JPanel{
+fun createStartupEmptyStatePanel(project: Project): JPanel {
     val icon = if (JBColor.isBright()) {
         Laf.Icons.Common.FileLight
     } else {
         Laf.Icons.Common.FileDark
     }
-    return createCommonEmptyStateWithIconTitleAndParagraphAndSlackLink(project,icon,"Nothing to show",
-        "Navigate to any code file in your workspace,<br>or click a recent activity,<br>to see runtime data and insights here.")
+    return createCommonEmptyStateWithIconTitleAndParagraphAndSlackLink(
+        project, icon, "Nothing to show",
+        "Navigate to any code file in your workspace,<br>or click a recent activity,<br>to see runtime data and insights here."
+    )
+}
+
+fun createUpgradeBackendMessagePanel(project: Project): JPanel {
+    val icon = if (JBColor.isBright()) {
+        Laf.Icons.Common.FileLight
+    } else {
+        Laf.Icons.Common.FileDark
+    }
+    val textPane = createTextPaneWithHtmlTitleAndParagraph(
+        "We've added some new features.",
+        "Please update the Digma Engine<br>to the latest version using<br>the action above to continue using Digma"
+    )
+    val componentsPanel = createCommonEmptyStatePanelWithTextPane(textPane)
+//    val componentsPanel = createCommonEmptyStatePanelWIthIconAndTextPane(icon,textPane)
+    return createCommonEmptyStatePanelWithSlackLink(project, componentsPanel)
+//    return componentsPanel
 }
 
 //fun createNoFileEmptyStatePanel(project: Project):JPanel{
@@ -94,11 +112,10 @@ fun createStartupEmptyStatePanel(project: Project):JPanel{
 //}
 
 
-
 fun createNoErrorsEmptyStatePanel(): JPanel {
-    val icon = if (JBColor.isBright()){
+    val icon = if (JBColor.isBright()) {
         Laf.Icons.Common.NoErrorsLight
-    }else{
+    } else {
         Laf.Icons.Common.NoErrorsDark
     }
 
@@ -110,9 +127,8 @@ fun createNoErrorsEmptyStatePanel(): JPanel {
 }
 
 
-
 fun createCommonEmptyStateWithIconTwoTitlesAndParagraph(icon: Icon, firstTitle: String, secondTitle: String, paragraph: String): JPanel {
-    val textPane = createTextPaneWithHtmlTwoTitlesAndParagraph(firstTitle,secondTitle,paragraph)
+    val textPane = createTextPaneWithHtmlTwoTitlesAndParagraph(firstTitle, secondTitle, paragraph)
     val componentsPanel = createCommonEmptyStatePanelWIthIconAndTextPane(icon, textPane)
     return wrapWithScrollable(componentsPanel)
 }
@@ -123,10 +139,10 @@ fun createCommonEmptyStateWithIconTwoTitlesAndParagraph(icon: Icon, firstTitle: 
 //    return wrapWithScrollable(componentsPanel)
 //}
 
-fun createCommonEmptyStateWithIconTitleAndParagraphAndSlackLink(project: Project,icon: Icon, title: String,paragraph: String): JPanel {
-    val textPane = createTextPaneWithHtmlTitleAndParagraph(title,paragraph)
+fun createCommonEmptyStateWithIconTitleAndParagraphAndSlackLink(project: Project, icon: Icon, title: String, paragraph: String): JPanel {
+    val textPane = createTextPaneWithHtmlTitleAndParagraph(title, paragraph)
     val componentsPanel = createCommonEmptyStatePanelWIthIconAndTextPane(icon, textPane)
-    return createCommonEmptyStatePanelWithSlackLink(project,componentsPanel)
+    return createCommonEmptyStatePanelWithSlackLink(project, componentsPanel)
 }
 
 private fun createCommonEmptyStatePanelWithSlackLink(project: Project, componentsPanel: JPanel): JPanel {
@@ -142,17 +158,50 @@ private fun createCommonEmptyStatePanelWithSlackLink(project: Project, component
     constraints.gridheight = 1
     constraints.anchor = GridBagConstraints.CENTER
     constraints.insets = insets(10, 0)
-    mainPanel.add(componentsPanel,constraints)
+    mainPanel.add(componentsPanel, constraints)
 
     constraints.gridy = 2
     val slackLinkPanel = createSlackLinkPanel(project)
-    mainPanel.add(slackLinkPanel,constraints)
+    mainPanel.add(slackLinkPanel, constraints)
 
     return wrapWithScrollable(mainPanel)
 }
 
+fun createCommonEmptyStatePanelWithTextPane(textPane: JTextPane): JPanel {
 
-fun createCommonEmptyStatePanelWIthIconAndTextPane(icon: Icon, textPane: JTextPane):JPanel{
+//    val componentsPanel = JPanel(GridBagLayout())
+//    componentsPanel.isOpaque = false
+//    componentsPanel.border = JBUI.Borders.empty()
+//
+//    val constraints = GridBagConstraints()
+//
+//    constraints.gridx = 1
+//    constraints.gridy = 1
+//    constraints.gridwidth = 1
+//    constraints.gridheight = 1
+//    constraints.anchor = GridBagConstraints.CENTER
+//    constraints.insets = insets(10, 0)
+//    constraints.fill = GridBagConstraints.HORIZONTAL
+//    val messagePanel = JPanel(BorderLayout())
+//    messagePanel.isOpaque = false
+//    messagePanel.border = JBUI.Borders.empty()
+//    messagePanel.add(textPane,BorderLayout.CENTER)
+//    componentsPanel.add(messagePanel,constraints)
+//    componentsPanel.add(textPane,constraints)
+//
+//    return componentsPanel
+
+    val messagePanel = JPanel(BorderLayout())
+    messagePanel.isOpaque = false
+    messagePanel.border = JBUI.Borders.empty()
+    messagePanel.add(textPane, BorderLayout.CENTER)
+    return messagePanel
+
+
+}
+
+
+fun createCommonEmptyStatePanelWIthIconAndTextPane(icon: Icon, textPane: JTextPane): JPanel {
 
     val componentsPanel = JPanel(GridBagLayout())
     componentsPanel.isOpaque = false
@@ -168,7 +217,7 @@ fun createCommonEmptyStatePanelWIthIconAndTextPane(icon: Icon, textPane: JTextPa
     constraints.insets = insets(10, 0)
     val iconLabel = JLabel(icon)
     iconLabel.horizontalAlignment = SwingConstants.CENTER
-    componentsPanel.add(iconLabel,constraints)
+    componentsPanel.add(iconLabel, constraints)
 
 
     constraints.insets = emptyInsets()
@@ -177,17 +226,14 @@ fun createCommonEmptyStatePanelWIthIconAndTextPane(icon: Icon, textPane: JTextPa
     val messagePanel = JPanel(BorderLayout())
     messagePanel.isOpaque = false
     messagePanel.border = JBUI.Borders.empty()
-    messagePanel.add(messageTextPane,BorderLayout.CENTER)
-    componentsPanel.add(messagePanel,constraints)
+    messagePanel.add(messageTextPane, BorderLayout.CENTER)
+    componentsPanel.add(messagePanel, constraints)
 
     return componentsPanel
 }
 
 
-
-
-
-fun wrapWithScrollable(componentsPanel: JPanel):JPanel{
+fun wrapWithScrollable(componentsPanel: JPanel): JPanel {
     val scrollPane = JBScrollPane()
     scrollPane.border = JBUI.Borders.empty()
     scrollPane.isOpaque = false
@@ -197,29 +243,26 @@ fun wrapWithScrollable(componentsPanel: JPanel):JPanel{
     val scrollablePanel = JPanel(BorderLayout())
     scrollablePanel.isOpaque = false
     scrollablePanel.border = JBUI.Borders.empty()
-    scrollablePanel.add(scrollPane,BorderLayout.CENTER)
+    scrollablePanel.add(scrollPane, BorderLayout.CENTER)
     return scrollablePanel
 }
 
 
 fun createSlackLinkPanel(project: Project): JPanel {
 
-    val slackLinkPanel = JPanel(BorderLayout(10,5))
+    val slackLinkPanel = JPanel(BorderLayout(10, 5))
     slackLinkPanel.isOpaque = false
     slackLinkPanel.border = JBUI.Borders.empty()
 
     slackLinkPanel.add(JLabel(Laf.Icons.General.SLACK), BorderLayout.WEST)
-    val slackLink = ActionLink("Join Our Slack Channel for Support"){
+    val slackLink = ActionLink("Join Our Slack Channel for Support") {
         ActivityMonitor.getInstance(project).registerButtonClicked(MonitoredPanel.NoConnection, "slack")
         BrowserUtil.browse(Links.DIGMA_SLACK_SUPPORT_CHANNEL, project)
     }
     slackLink.toolTipText = "Join Our Slack Channel for Support"
     slackLinkPanel.add(slackLink, BorderLayout.CENTER)
     return slackLinkPanel
- }
-
-
-
+}
 
 
 //fun createTextPaneWithHtmlTitleAndParagraphAndSlackLink(title: String,paragraph: String): JTextPane {
@@ -234,11 +277,12 @@ fun createSlackLinkPanel(project: Project): JPanel {
 //    return createTextPaneWithHtml(getHtmlWithParagraphCenterAlign(paragraph))
 //}
 
-fun createTextPaneWithHtmlTitleAndParagraph(title: String,paragraph: String): JTextPane {
-    return createTextPaneWithHtml(getHtmlWithTitleAndParagraphCenterAlign(title,paragraph))
+fun createTextPaneWithHtmlTitleAndParagraph(title: String, paragraph: String): JTextPane {
+    return createTextPaneWithHtml(getHtmlWithTitleAndParagraphCenterAlign(title, paragraph))
 }
-fun createTextPaneWithHtmlTwoTitlesAndParagraph(firstTitle: String,secondTitle: String,paragraph: String): JTextPane {
-    return createTextPaneWithHtml(getHtmlWithTwoTitlesAndParagraphCenterAlign(firstTitle,secondTitle,paragraph))
+
+fun createTextPaneWithHtmlTwoTitlesAndParagraph(firstTitle: String, secondTitle: String, paragraph: String): JTextPane {
+    return createTextPaneWithHtml(getHtmlWithTwoTitlesAndParagraphCenterAlign(firstTitle, secondTitle, paragraph))
 }
 
 fun createTextPaneWithHtml(html: String): JTextPane {
@@ -260,7 +304,7 @@ fun createTextPaneWithHtml(html: String): JTextPane {
 }
 
 
-fun getHtmlWithTwoTitlesAndParagraphCenterAlign(firstTitle: String,secondTitle: String,paragraph: String): String{
+fun getHtmlWithTwoTitlesAndParagraphCenterAlign(firstTitle: String, secondTitle: String, paragraph: String): String {
     return "<html>" +
             "<head>" +
             "<style>" +
@@ -278,7 +322,7 @@ fun getHtmlWithTwoTitlesAndParagraphCenterAlign(firstTitle: String,secondTitle: 
             "</html>"
 }
 
-fun getHtmlWithTitleAndParagraphCenterAlign(title: String,paragraph: String): String{
+fun getHtmlWithTitleAndParagraphCenterAlign(title: String, paragraph: String): String {
     return "<html>" +
             "<head>" +
             "<style>" +

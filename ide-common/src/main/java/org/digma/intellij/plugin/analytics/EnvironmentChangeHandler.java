@@ -80,7 +80,9 @@ public class EnvironmentChangeHandler implements EnvironmentChanged {
                             if (languageService.isSupportedFile(psiFile) && languageService.isRelevant(psiFile)) {
                                 int offset = textEditor.getCaretModel().getOffset();
                                 var methodUnderCaret = languageService.detectMethodUnderCaret(project, psiFile, textEditor, offset);
-                                CaretContextService.getInstance(project).contextChanged(methodUnderCaret);
+                                //start a new thread to release the read access. CaretContextService.contextChanged
+                                // should run on background anyway and must not be in read access.
+                                Backgroundable.executeOnPooledThread(() -> CaretContextService.getInstance(project).contextChanged(methodUnderCaret));
                             }
                         }
                     }

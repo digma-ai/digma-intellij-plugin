@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.common;
 
 import com.intellij.openapi.application.*;
 import com.intellij.openapi.diagnostic.Logger;
+import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 
 import java.util.function.Supplier;
 
@@ -17,6 +18,7 @@ public class ReadActions {
         if (ApplicationManager.getApplication().isReadAccessAllowed()) {
             RuntimeException runtimeException = new RuntimeException("Must not run in read access");
             LOGGER.error("Must not run in read access", runtimeException);
+            ErrorReporter.getInstance().reportInternalFatalError("assertNotInReadAccess", runtimeException);
             throw runtimeException;
         }
     }

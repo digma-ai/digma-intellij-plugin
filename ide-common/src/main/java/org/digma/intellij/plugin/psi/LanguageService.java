@@ -9,7 +9,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import kotlin.Pair;
-import org.digma.intellij.plugin.common.EDT;
+import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.env.Env;
 import org.digma.intellij.plugin.instrumentation.*;
@@ -109,6 +109,20 @@ public interface LanguageService extends Disposable {
 
     @NotNull
     static LanguageService findLanguageServiceByFile(@NotNull Project project, @NotNull VirtualFile virtualFile) {
+        if (ReadActions.isReadAccessAllowed()) {
+            var psiFile = PsiManager.getInstance(project).findFile(virtualFile);
+            if (PsiUtils.isValidPsiFile(psiFile)) {
+                return LanguageServiceLocator.getInstance(project).locate(psiFile.getLanguage());
+            } else {
+                return findLanguageServiceByFileIfSupported(project, virtualFile);
+            }
+        } else {
+            return findLanguageServiceByFileIfSupported(project, virtualFile);
+        }
+    }
+
+    @NotNull
+    static LanguageService findLanguageServiceByFileIfSupported(@NotNull Project project, @NotNull VirtualFile virtualFile) {
 
         for (SupportedLanguages value : SupportedLanguages.values()) {
 

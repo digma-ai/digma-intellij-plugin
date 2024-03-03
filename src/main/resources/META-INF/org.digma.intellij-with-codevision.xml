@@ -80,5 +80,11 @@
     </extensions>
 
 
+    <projectListeners>
+        <listener class="org.digma.intellij.plugin.codelens.CodeLensServiceDocumentChangeListener"
+                  topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
+    </projectListeners>
+
+
 
 </idea-plugin>

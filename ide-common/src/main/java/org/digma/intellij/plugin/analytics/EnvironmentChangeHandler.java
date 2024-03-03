@@ -1,7 +1,11 @@
 package org.digma.intellij.plugin.analytics;
 
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.psi.PsiManager;
+import org.digma.intellij.plugin.common.*;
+import org.digma.intellij.plugin.editor.CaretContextService;
 import org.digma.intellij.plugin.env.Env;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
@@ -30,6 +34,12 @@ public class EnvironmentChangeHandler implements EnvironmentChanged {
 
         try {
 
+            //when environment change we need to simulate a CaretContextService.contextChanged.
+            //CaretContextService.contextChanged is the event of caret position changed on the current editor
+            //and some UI elements need to change data for the new environment.
+            //for example CodeButtonCaretContextService
+            simulateContextChange();
+
             //find any registered language service and call its environmentChanged method in case it has something to do
             // that is specific for that language.
             for (SupportedLanguages value : SupportedLanguages.values()) {
@@ -53,6 +63,34 @@ public class EnvironmentChangeHandler implements EnvironmentChanged {
             ErrorReporter.getInstance().reportError(project, "EnvironmentChangeHandler.environmentChanged", e);
         }
     }
+
+    private void simulateContextChange() {
+
+        PsiAccessUtilsKt.runInReadAccess(() -> {
+            try {
+                var textEditor = FileEditorManager.getInstance(project).getSelectedTextEditor();
+                if (textEditor != null) {
+                    var file = textEditor.getVirtualFile();
+                    var project = textEditor.getProject();
+                    if (file != null && project != null &&
+                            VfsUtilsKt.isValidVirtualFile(file) && ProjectUtilsKt.isProjectValid(project)) {
+                        var psiFile = PsiManager.getInstance(project).findFile(file);
+                        if (PsiUtils.isValidPsiFile(psiFile)) {
+                            var languageService = LanguageServiceLocator.getInstance(project).locate(psiFile.getLanguage());
+                            if (languageService.isSupportedFile(psiFile) && languageService.isRelevant(psiFile)) {
+                                int offset = textEditor.getCaretModel().getOffset();
+                                var methodUnderCaret = languageService.detectMethodUnderCaret(project, psiFile, textEditor, offset);
+                                CaretContextService.getInstance(project).contextChanged(methodUnderCaret);
+                            }
+                        }
+                    }
+                }
+            } catch (Throwable e) {
+                ErrorReporter.getInstance().reportError("EnvironmentChangeHandler.simulateContextChange", e);
+            }
+        });
+    }
+
 
     @Override
     public void environmentsListChanged(List<Env> newEnvironments) {

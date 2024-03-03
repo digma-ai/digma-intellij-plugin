@@ -7,7 +7,6 @@ import com.intellij.lang.Language
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditor
-import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.progress.EmptyProgressIndicator
@@ -42,8 +41,6 @@ import org.digma.intellij.plugin.common.runInReadAccess
 import org.digma.intellij.plugin.common.runInReadAccessWithResult
 import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.editor.CaretContextService
-import org.digma.intellij.plugin.editor.EditorUtils
-import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.errorreporting.SEVERITY_MEDIUM_TRY_FIX
 import org.digma.intellij.plugin.errorreporting.SEVERITY_PROP_NAME
@@ -167,31 +164,6 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                 PsiUtils.isValidPsiFile(psiFile) && isSupportedFile(psiFile)
             } else {
                 false
-            }
-        }
-    }
-
-
-    override fun environmentChanged(newEnv: Env) {
-        //todo: remove from language service and simulate contextChanged only in one place
-        EDT.ensureEDT {
-            allowSlowOperation {
-                val fileEditor = FileEditorManager.getInstance(project).selectedEditor
-                if (fileEditor != null) {
-                    val file = fileEditor.file
-                    if (isValidVirtualFile(file)) {
-                        val psiFile = PsiManager.getInstance(project).findFile(file)
-                        if (PsiUtils.isValidPsiFile(psiFile) && psiFile != null && isRelevant(psiFile.virtualFile)) {
-                            val selectedTextEditor =
-                                EditorUtils.getSelectedTextEditorForFile(file, FileEditorManager.getInstance(project))
-                            if (selectedTextEditor != null) {
-                                val offset = selectedTextEditor.caretModel.offset
-                                val methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedTextEditor, offset)
-                                CaretContextService.getInstance(project).contextChanged(methodUnderCaret)
-                            }
-                        }
-                    }
-                }
             }
         }
     }

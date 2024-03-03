@@ -250,9 +250,8 @@ public abstract class AbstractInsightsMessageRouterHandler extends BaseMessageRo
 
 
     private void recalculate(JsonNode jsonNode) throws JsonProcessingException {
-        var prefixedCodeObjectId = getObjectMapper().readTree(jsonNode.get("payload").toString()).get("prefixedCodeObjectId").asText();
-        var insightType = getObjectMapper().readTree(jsonNode.get("payload").toString()).get("insightType").asText();
-        InsightsService.getInstance(project).recalculate(prefixedCodeObjectId, insightType);
+        var insightId = getObjectMapper().readTree(jsonNode.get("payload").toString()).get("id").asText();
+        InsightsService.getInstance(project).recalculate(insightId);
     }
 
     private void goToTrace(JsonNode jsonNode) {

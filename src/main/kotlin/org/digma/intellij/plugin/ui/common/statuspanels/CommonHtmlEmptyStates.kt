@@ -112,6 +112,7 @@ fun createUpgradeBackendMessagePanel(project: Project): JPanel {
 //}
 
 
+
 fun createNoErrorsEmptyStatePanel(): JPanel {
     val icon = if (JBColor.isBright()) {
         Laf.Icons.Common.NoErrorsLight
@@ -125,6 +126,7 @@ fun createNoErrorsEmptyStatePanel(): JPanel {
         "You should return to this page if<br>any exceptions do occur to see<br>more details."
     )
 }
+
 
 
 fun createCommonEmptyStateWithIconTwoTitlesAndParagraph(icon: Icon, firstTitle: String, secondTitle: String, paragraph: String): JPanel {

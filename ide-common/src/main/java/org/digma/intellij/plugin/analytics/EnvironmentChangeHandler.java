@@ -68,9 +68,10 @@ public class EnvironmentChangeHandler implements EnvironmentChanged {
 
         PsiAccessUtilsKt.runInReadAccess(() -> {
             try {
+                var fileEditor = FileEditorManager.getInstance(project).getSelectedEditor();
                 var textEditor = FileEditorManager.getInstance(project).getSelectedTextEditor();
-                if (textEditor != null) {
-                    var file = textEditor.getVirtualFile();
+                if (fileEditor != null && textEditor != null) {
+                    var file = fileEditor.getFile();
                     var project = textEditor.getProject();
                     if (file != null && project != null &&
                             VfsUtilsKt.isValidVirtualFile(file) && ProjectUtilsKt.isProjectValid(project)) {

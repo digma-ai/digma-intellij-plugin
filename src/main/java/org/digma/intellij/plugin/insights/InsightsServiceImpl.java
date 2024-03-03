@@ -83,13 +83,12 @@ public abstract class InsightsServiceImpl implements Disposable {
     }
 
 
-    public void recalculate(@NotNull String prefixedCodeObjectId, @NotNull String insightType) {
+    public void recalculate(@NotNull String insightId) {
         try {
-            AnalyticsService.getInstance(project).setInsightCustomStartTime(prefixedCodeObjectId, InsightType.valueOf(insightType));
+            AnalyticsService.getInstance(project).setInsightCustomStartTime(insightId);
         } catch (AnalyticsServiceException e) {
             Log.warnWithException(logger, project, e, "Error in setInsightCustomStartTime {}", e.getMessage());
         }
-        ActivityMonitor.getInstance(project).registerButtonClicked("recalculate", InsightType.valueOf(insightType));
     }
 
 

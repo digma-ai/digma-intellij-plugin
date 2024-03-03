@@ -254,15 +254,14 @@ public class AnalyticsService implements Disposable {
     }
 
 
-    public void setInsightCustomStartTime(String codeObjectId, InsightType insightType) throws AnalyticsServiceException {
+    public void setInsightCustomStartTime(String insightId) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
         String formattedActualDate = Instant.now().toString();//FYI: by UTC time zone
         executeCatching(() -> {
             analyticsProviderProxy.setInsightCustomStartTime(
                     new CustomStartTimeInsightRequest(
                             env,
-                            codeObjectId,
-                            insightType.name(),
+                            insightId,
                             formattedActualDate
                     ));
             return null;

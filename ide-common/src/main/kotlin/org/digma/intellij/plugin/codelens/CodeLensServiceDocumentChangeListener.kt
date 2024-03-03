@@ -16,6 +16,7 @@ import com.intellij.util.Alarm
 import com.intellij.util.AlarmFactory
 import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.common.isValidVirtualFile
+import org.digma.intellij.plugin.common.runInReadAccessWithResult
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.psi.LanguageService
@@ -87,7 +88,10 @@ class CodeLensServiceDocumentChangeListener(private val project: Project) : File
                             documentChangeAlarm.cancelAllRequests()
                             documentChangeAlarm.addRequest({
                                 try {
-                                    val changedPsiFile = PsiDocumentManager.getInstance(project).getPsiFile(event.document)
+                                    val changedPsiFile = runInReadAccessWithResult {
+                                        PsiDocumentManager.getInstance(project).getPsiFile(event.document)
+                                    }
+
                                     changedPsiFile?.let {
                                         if (PsiUtils.isValidPsiFile(it)) {
                                             project.service<CodeLensService>().refresh(it)

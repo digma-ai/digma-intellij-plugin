@@ -10,7 +10,6 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.apache.maven.artifact.versioning.ComparableVersion
 import org.digma.intellij.plugin.analytics.AnalyticsService
-import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.newerThan
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
@@ -42,29 +41,22 @@ class UrgentMessagesService(private val project: Project) : Disposable {
 
 
     fun checkUrgentBackendUpdate() {
-        Backgroundable.ensurePooledThread {
-            if (!isCurrentBackendVersion02234()) {
-                myState.shouldShowUpgradeBackendMessage = true
-                urgentMessagesPanel?.reset()
-                startMonitoringBackendVersion()
-            }
+        if (isMonitoringBackendVersion02234.get()) {
+            return
         }
+        startMonitoringBackendVersion()
     }
 
 
-    private fun isCurrentBackendVersion02234(): Boolean {
-        try {
-            val about = AnalyticsService.getInstance(project).about
-            val backendVersion = ComparableVersion(about.applicationVersion)
-            val urgentUpdateVersion = ComparableVersion("0.2.234")
-            return backendVersion == urgentUpdateVersion || backendVersion.newerThan(urgentUpdateVersion)
-        } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("UrgentMessagesService.isCurrentBackendVersion02234", e)
-            return true
-        }
+    private fun isCurrentBackendVersion02234OrNewer(): Boolean {
+        //don't catch API exceptions here. the monitoring routine should deal with exceptions
+        val about = AnalyticsService.getInstance(project).about
+        val backendVersion = ComparableVersion(about.applicationVersion)
+        val urgentUpdateVersion = ComparableVersion("0.2.234")
+        return backendVersion == urgentUpdateVersion || backendVersion.newerThan(urgentUpdateVersion)
     }
 
-
+    @Synchronized //prevent multiple starts just in case. this method is not called many times so should not have impact on any performance
     private fun startMonitoringBackendVersion() {
 
         if (isMonitoringBackendVersion02234.get()) {
@@ -73,15 +65,28 @@ class UrgentMessagesService(private val project: Project) : Disposable {
         isMonitoringBackendVersion02234.set(true)
 
         @Suppress("UnstableApiUsage")
-        this.disposingScope().launch {
-            var needsUpdate = true
-            while (isActive && needsUpdate) {
+        disposingScope().launch {
+
+            //first check. if there is no connection to backend the result will be false and
+            // monitoring will not start. this is called just after the update panel became visible so
+            // most likely there is connection.
+            myState.shouldShowUpgradeBackendMessage = try {
+                !isCurrentBackendVersion02234OrNewer()
+            } catch (e: Throwable) {
+                false
+            }
+
+            //reset the panel no matter what the result is
+            urgentMessagesPanel?.reset()
+
+            //start monitoring. the message will stay on until backend is upgraded or project closed.
+            while (isActive && myState.shouldShowUpgradeBackendMessage) {
                 delay(10000)
+
                 try {
                     if (isActive) {
-                        if (isCurrentBackendVersion02234()) {
+                        if (isCurrentBackendVersion02234OrNewer()) {
                             myState.shouldShowUpgradeBackendMessage = false
-                            needsUpdate = false
                             urgentMessagesPanel?.reset()
                         }
                     }
@@ -94,6 +99,7 @@ class UrgentMessagesService(private val project: Project) : Disposable {
             urgentMessagesPanel?.reset()
         }
     }
+
 
     fun shouldShowUpgradeBackendMessage(): Boolean {
         return myState.shouldShowUpgradeBackendMessage

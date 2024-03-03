@@ -4,7 +4,7 @@ import com.intellij.lang.Language;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.fileEditor.*;
+import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.progress.*;
 import com.intellij.openapi.project.*;
 import com.intellij.openapi.roots.ProjectFileIndex;
@@ -19,7 +19,6 @@ import com.jetbrains.python.psi.stubs.*;
 import kotlin.Pair;
 import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.editor.CaretContextService;
-import org.digma.intellij.plugin.env.Env;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.instrumentation.*;
 import org.digma.intellij.plugin.log.Log;
@@ -258,29 +257,6 @@ public class PythonLanguageService implements LanguageService {
     public Set<EndpointInfo> lookForDiscoveredEndpoints(String endpointId) {
         return Collections.emptySet();
     }
-
-    @Override
-    public void environmentChanged(Env newEnv) {
-        EDT.ensureEDT(() -> {
-            var fileEditor = FileEditorManager.getInstance(project).getSelectedEditor();
-            if (fileEditor != null) {
-                var file = fileEditor.getFile();
-                if (VfsUtilsKt.isValidVirtualFile(file)) {
-                    var psiFile = PsiManager.getInstance(project).findFile(file);
-                    if (PsiUtils.isValidPsiFile(psiFile) && isRelevant(psiFile)) {
-                        var selectedTextEditor = FileEditorManager.getInstance(project).getSelectedTextEditor();
-                        if (selectedTextEditor != null) {
-                            int offset = selectedTextEditor.getCaretModel().getOffset();
-                            var methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedTextEditor, offset);
-                            CaretContextService.getInstance(project).contextChanged(methodUnderCaret);
-                        }
-                    }
-                }
-            }
-        });
-
-    }
-
 
     @Override
     public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, BuildDocumentInfoProcessContext context) {

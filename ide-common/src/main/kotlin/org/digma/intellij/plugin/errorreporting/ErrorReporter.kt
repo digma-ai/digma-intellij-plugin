@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.errorreporting
 
 import com.github.benmanes.caffeine.cache.Caffeine
+import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
@@ -8,9 +9,13 @@ import com.intellij.openapi.diagnostic.UntraceableException
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.analytics.NoSelectedEnvironmentException
 import org.digma.intellij.plugin.common.ExceptionUtils
+import org.digma.intellij.plugin.common.UserId
 import org.digma.intellij.plugin.common.findActiveProject
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.semanticversion.SemanticVersionUtil
+import java.io.PrintWriter
+import java.io.StringWriter
 import java.lang.reflect.Field
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
@@ -167,6 +172,58 @@ class ErrorReporter {
     }
 
 
+    //this error should be reported only when its a fatal error that we must fix quickly.
+    //don't use it for all errors.
+    //currently will be reported from EDT.assertNonDispatchThread and ReadActions.assertNotInReadAccess
+    // which usually should be caught in development but if not, are very urgent to fix.
+    fun reportInternalFatalError(source: String, exception: Throwable?) {
+
+        val details = mutableMapOf<String, String>()
+        details["Note"] = "This is an internal reporting of urgent error caught by plugin code and should be fixed ASAP"
+
+        //todo: change ActivityMonitor to application service
+        val projectToUse = findActiveProject() ?: return
+
+        exception?.let {
+            val exceptionStackTrace = it.let {
+                val stringWriter = StringWriter()
+                exception.printStackTrace(PrintWriter(stringWriter))
+                stringWriter.toString()
+            }
+
+            val exceptionMessage: String = it.let {
+                ExceptionUtils.getNonEmptyMessage(it)
+            } ?: ""
+
+            val causeExceptionType = ExceptionUtils.getFirstRealExceptionCauseTypeName(it)
+
+            details["exception.message"] = exceptionMessage
+            details["exception.stack-trace"] = exceptionStackTrace
+            details["cause.exception.type"] = causeExceptionType
+            details["exception.type"] = it.javaClass.name
+        }
+
+        val osType = System.getProperty("os.name")
+        val ideInfo = ApplicationInfo.getInstance()
+        val ideName = ideInfo.versionName
+        val ideVersion = ideInfo.fullVersion
+        val ideBuildNumber = ideInfo.build.asString()
+        val pluginVersion = SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("unknown")
+
+        details["ide.name"] = ideName
+        details["ide.version"] = ideVersion
+        details["ide.build"] = ideBuildNumber
+        details["plugin.version"] = pluginVersion
+        details["os.type"] = osType
+        details["user.type"] = if (UserId.isDevUser) "internal" else "external"
+        details["error source"] = source
+
+        ActivityMonitor.getInstance(projectToUse).registerFatalError(details)
+
+    }
+
+
+
     private fun isTooFrequentBackendError(message: String, action: String): Boolean {
         val counter = MyCache.getOrCreate(message, action)
         val occurrences = counter.incrementAndGet()
@@ -222,6 +279,7 @@ class ErrorReporter {
         return null
 
     }
+
 }
 
 

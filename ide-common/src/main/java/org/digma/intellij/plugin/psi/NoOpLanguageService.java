@@ -7,7 +7,6 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import kotlin.Pair;
-import org.digma.intellij.plugin.env.Env;
 import org.digma.intellij.plugin.instrumentation.*;
 import org.digma.intellij.plugin.model.discovery.*;
 import org.jetbrains.annotations.*;
@@ -85,11 +84,6 @@ public class NoOpLanguageService implements LanguageService {
         return Collections.emptySet();
     }
 
-    @Override
-    public void environmentChanged(Env newEnv) {
-        //nothing to do
-    }
-
 
     //this method should never be called on NoOpLanguageService, calling code must be aware of that
     @Override
@@ -125,7 +119,7 @@ public class NoOpLanguageService implements LanguageService {
     }
 
     @Override
-    public @NotNull Map<String, PsiElement> findMethodsByCodeObjectIds(@NotNull PsiFile psiFile, @NotNull List<String> methodIds) throws Throwable {
+    public @NotNull Map<String, PsiElement> findMethodsByCodeObjectIds(@NotNull PsiFile psiFile, @NotNull List<String> methodIds) {
         return Map.of();
     }
 

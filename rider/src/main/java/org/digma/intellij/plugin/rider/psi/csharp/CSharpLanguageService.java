@@ -3,7 +3,7 @@ package org.digma.intellij.plugin.rider.psi.csharp;
 import com.intellij.lang.Language;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.fileEditor.*;
+import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.*;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -13,8 +13,7 @@ import com.jetbrains.rider.projectView.SolutionLifecycleHost;
 import kotlin.Pair;
 import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.common.*;
-import org.digma.intellij.plugin.editor.*;
-import org.digma.intellij.plugin.env.Env;
+import org.digma.intellij.plugin.editor.CaretContextService;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.instrumentation.*;
 import org.digma.intellij.plugin.log.Log;
@@ -182,29 +181,6 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
         return Collections.emptySet();
     }
 
-    @Override
-    public void environmentChanged(Env newEnv) {
-
-        EDT.ensureEDT(() -> {
-            var fileEditor = FileEditorManager.getInstance(project).getSelectedEditor();
-            if (fileEditor != null) {
-                var file = fileEditor.getFile();
-                if (VfsUtilsKt.isValidVirtualFile(file)) {
-                    var psiFile = PsiManager.getInstance(project).findFile(file);
-                    if (PsiUtils.isValidPsiFile(psiFile) && isRelevant(psiFile.getVirtualFile())) {
-                        var selectedTextEditor = EditorUtils.getSelectedTextEditorForFile(file, FileEditorManager.getInstance(project));
-                        if (selectedTextEditor != null) {
-                            int offset = selectedTextEditor.getCaretModel().getOffset();
-                            var methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedTextEditor, offset);
-                            CaretContextService.getInstance(project).contextChanged(methodUnderCaret);
-                        }
-                    }
-                }
-            }
-        });
-
-    }
-
 
     @Override
     public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, BuildDocumentInfoProcessContext context) {
@@ -287,7 +263,7 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
     }
 
     @Override
-    public @NotNull Map<String, PsiElement> findMethodsByCodeObjectIds(@NotNull PsiFile psiFile, @NotNull List<String> methodIds) throws Throwable {
+    public @NotNull Map<String, PsiElement> findMethodsByCodeObjectIds(@NotNull PsiFile psiFile, @NotNull List<String> methodIds) {
         //never called for csharp language,
         //this method is used by CodeLensService which is only relevant for java/kotlin/python.
         //Rider does code lens differently

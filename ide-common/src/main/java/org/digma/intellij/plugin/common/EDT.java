@@ -47,6 +47,7 @@ public class EDT {
         if (ApplicationManager.getApplication().isDispatchThread()) {
             RuntimeException runtimeException = new RuntimeException("Must not run on EDT");
             LOGGER.error("Must not run on EDT", runtimeException);
+            ErrorReporter.getInstance().reportInternalFatalError("assertNonDispatchThread", runtimeException);
             throw runtimeException;
         }
     }

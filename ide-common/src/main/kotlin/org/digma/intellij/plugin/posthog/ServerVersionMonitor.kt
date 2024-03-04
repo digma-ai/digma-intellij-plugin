@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.posthog
 import com.intellij.collaboration.async.disposingScope
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import kotlinx.coroutines.launch
@@ -11,16 +12,16 @@ import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
 import org.digma.intellij.plugin.log.Log
 
 @Service(Service.Level.PROJECT)
-class ConnectionActivityMonitor(private val project: Project) : AnalyticsServiceConnectionEvent,Disposable {
+class ServerVersionMonitor(private val project: Project) : AnalyticsServiceConnectionEvent, Disposable {
 
     private var appVersion: String? = null
 
     companion object {
-        private val LOGGER = Logger.getInstance(ConnectionActivityMonitor::class.java)
+        private val LOGGER = Logger.getInstance(ServerVersionMonitor::class.java)
 
         @JvmStatic
-        fun loadInstance(project: Project) {
-            project.getService(ConnectionActivityMonitor::class.java)
+        fun getInstance(project: Project): ServerVersionMonitor {
+            return project.service<ServerVersionMonitor>()
         }
     }
 
@@ -32,6 +33,12 @@ class ConnectionActivityMonitor(private val project: Project) : AnalyticsService
         asyncFetchAndRegisterServerVersion()
     }
 
+
+    fun getServerVersion(): String {
+        return appVersion.toString()
+    }
+
+
     override fun connectionLost() {
         //nothing to do
     }
@@ -40,7 +47,7 @@ class ConnectionActivityMonitor(private val project: Project) : AnalyticsService
         asyncFetchAndRegisterServerVersion()
     }
 
-    private fun asyncFetchAndRegisterServerVersion(){
+    private fun asyncFetchAndRegisterServerVersion() {
         Log.log(LOGGER::trace, "Fetching server about info")
 
         @Suppress("UnstableApiUsage")

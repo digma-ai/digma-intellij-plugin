@@ -26,8 +26,8 @@ class PluginActivityMonitor(private val project: Project) : PluginStateListener,
         private val LOGGER = Logger.getInstance(PluginActivityMonitor::class.java)
 
         @JvmStatic
-        fun loadInstance(project: Project) {
-            project.getService(PluginActivityMonitor::class.java)
+        fun getInstance(project: Project): PluginActivityMonitor {
+            return project.service<PluginActivityMonitor>()
         }
     }
 

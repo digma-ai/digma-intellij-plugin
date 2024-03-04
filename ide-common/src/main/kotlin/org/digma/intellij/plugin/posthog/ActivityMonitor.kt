@@ -57,8 +57,8 @@ class ActivityMonitor(private val project: Project) : Disposable {
         postHog = PostHog.Builder(token).build()
         registerSessionDetails()
 
-        ConnectionActivityMonitor.loadInstance(project)
-        PluginActivityMonitor.loadInstance(project)
+        ServerVersionMonitor.getInstance(project)
+        PluginActivityMonitor.getInstance(project)
 
         settingsChangeTracker.start(this)
 
@@ -223,6 +223,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
                 "ide.version" to ideVersion,
                 "ide.build" to ideBuildNumber,
                 "plugin.version" to pluginVersion,
+                "server.version" to ServerVersionMonitor.getInstance(project).getServerVersion(),
                 "user.type" to if (isDevUser) "internal" else "external"
             )
 

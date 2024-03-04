@@ -1,6 +1,27 @@
 # Changelog
 
-## [2.0.279] - 2024-03-03
+## [2.0.280] - 2024-03-04
+
+- Simulate context change Closes #1859 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1869
+- remove-insight-type-enum Closes #1871 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1875
+- Update Insights UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1857
+- dont-report-error-for-CancellationException by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1876
+- fix-npe-in-DocumentChangeListener by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1877
+- Add `Criticality` to recent activity by @borisermakof in https://github.com/digma-ai/digma-intellij-plugin/pull/1880
+- remove-psifile-from-DocumentInfoContainer by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1879
+- Update Insights UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1878
+- add server version to error reporter by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1882
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1883
+- Update Insights UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1884
+- Update Assets UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1885
+- Update Insights UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1886
+- workaround-add-noverify-run-config Closes #1874 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1881
+- change text for upgrade backend message by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1887
+- Update Insights UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1888
+- Update Insights UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1889
+- Update Insights UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1890
+
+## 2.0.279 - 2024-03-03
 
 - Improve codelens providers by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1867
 

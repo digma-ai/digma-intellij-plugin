@@ -6,7 +6,6 @@ data class CustomStartTimeInsightRequest
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 constructor(
         val environment: String,
-        val codeObjectId: String,
-        val insightType: String,
+        val id: String,
         val time: String,
 )

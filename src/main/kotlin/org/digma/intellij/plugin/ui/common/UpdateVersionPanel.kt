@@ -19,6 +19,7 @@ import org.digma.intellij.plugin.ui.common.Links.DIGMA_DOCKER_APP_URL
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import org.digma.intellij.plugin.updates.UpdateState
 import org.digma.intellij.plugin.updates.UpdatesService
+import org.digma.intellij.plugin.updates.UrgentMessagesService
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import javax.swing.BorderFactory
@@ -62,6 +63,9 @@ class UpdateVersionPanel(
     private fun changeState() {
         updateTextProperty.set(buildText(updateState))
         isVisible = updateState.shouldUpdateAny()
+        if (isVisible) {
+            UrgentMessagesService.getInstance(project).checkUrgentBackendUpdate()
+        }
         Log.log(logger::debug,"state changed , isVisible={}, text={}",isVisible,updateTextProperty.get())
     }
 

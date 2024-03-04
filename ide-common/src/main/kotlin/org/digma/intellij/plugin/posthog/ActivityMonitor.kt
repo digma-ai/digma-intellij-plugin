@@ -12,7 +12,6 @@ import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.common.JsonUtils
 import org.digma.intellij.plugin.common.UserId
 import org.digma.intellij.plugin.model.rest.AboutResult
-import org.digma.intellij.plugin.model.rest.insights.InsightType
 import org.digma.intellij.plugin.model.rest.user.UserUsageStatsResponse
 import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
 import org.digma.intellij.plugin.model.rest.version.PerformanceCounterReport
@@ -48,7 +47,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
 
     private var postHog: PostHog? = null
     private var lastLensClick: LocalDateTime? = null
-    private val lastInsightsViewed = mutableSetOf<InsightType>()
+    private val lastInsightsViewed = mutableSetOf<String>()
 
     private val settingsChangeTracker = SettingsChangeTracker()
 
@@ -402,9 +401,9 @@ class ActivityMonitor(private val project: Project) : Disposable {
         lastInsightsViewed.clear()
     }
 
-    fun registerInsightsViewed(insightsAndCounts: List<Pair<InsightType, Int>>) {
+    fun registerInsightsViewed(insightsAndCounts: List<Pair<String, Int>>) {
 
-        val insightsTypesToRegister = mutableListOf<Pair<InsightType, Int>>()
+        val insightsTypesToRegister = mutableListOf<Pair<String, Int>>()
 
         insightsAndCounts.forEach { (insightType, reopenCount) ->
             if (!lastInsightsViewed.contains(insightType)) {
@@ -458,12 +457,12 @@ class ActivityMonitor(private val project: Project) : Disposable {
         registerUserAction("Clicked on navigation button")
     }
 
-    fun registerSpanLinkClicked(insight: InsightType) {
+    fun registerSpanLinkClicked(insight: String) {
         capture(
             "span-link clicked",
             mapOf(
                 "panel" to MonitoredPanel.Insights.name,
-                "insight" to insight.name
+                "insight" to insight
             )
         )
         registerUserAction("Clicked on span link from insights")
@@ -480,12 +479,12 @@ class ActivityMonitor(private val project: Project) : Disposable {
         registerUserAction("Clicked on span link from ${panel.name}")
     }
 
-    fun registerButtonClicked(button: String, insight: InsightType) {
+    fun registerButtonClicked(button: String, insight: String) {
         capture(
             "insights button-clicked",
             mapOf(
                 "button" to button,
-                "insight" to insight.name
+                "insight" to insight
             )
         )
         registerUserAction("Clicked on button from insights")

@@ -69,7 +69,7 @@ class TomcatRunConfigurationWrapperForIdeaUltimate: RunConfigurationWrapper {
             digmaExtensionPath = FileUtils.convertWinToWslPath(digmaExtensionPath)
         }
 
-        var retVal = " "
+        var retVal = " -noverify "
         retVal = retVal
             .plus("-javaagent:$otelAgentPath")
             .plus(" ")

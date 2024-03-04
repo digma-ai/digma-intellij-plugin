@@ -2,10 +2,10 @@ package org.digma.intellij.plugin.document;
 
 import com.intellij.lang.Language;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.psi.*;
-import org.digma.intellij.plugin.common.PsiAccessUtilsKt;
+import com.intellij.psi.PsiFile;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.*;
+import org.digma.intellij.plugin.psi.PsiUtils;
 import org.jetbrains.annotations.*;
 
 /**
@@ -15,15 +15,15 @@ public class DocumentInfoContainer {
 
     private final Logger LOGGER = Logger.getInstance(DocumentInfoContainer.class);
 
-    //todo: remove , not in use anymore
-    private final SmartPsiElementPointer<PsiFile> psiFilePointer;
-
     private final Language language;
 
     private DocumentInfo documentInfo;
 
+    //psiUrl is not really necessary, just keep it for information and debugging
+    private final String psiUrl;
+
     public DocumentInfoContainer(@NotNull PsiFile psiFile) {
-        this.psiFilePointer = PsiAccessUtilsKt.runInReadAccessWithResult(() -> SmartPointerManager.createPointer(psiFile));
+        psiUrl = PsiUtils.psiFileToUri(psiFile);
         language = psiFile.getLanguage();
     }
 
@@ -39,7 +39,7 @@ public class DocumentInfoContainer {
      */
     public void update(@NotNull DocumentInfo documentInfo) {
 
-        Log.log(LOGGER::trace, "Updating document for {}: {}", psiFilePointer.getVirtualFile(), documentInfo);
+        Log.log(LOGGER::trace, "Updating document for {}: {}", psiUrl, documentInfo);
 
         //maybe documentInfo already exists, override it anyway with a new one from analysis
         this.documentInfo = documentInfo;
@@ -49,9 +49,8 @@ public class DocumentInfoContainer {
         return documentInfo;
     }
 
-    //todo: remove , not in use anymore
-    public PsiFile getPsiFile() {
-        return psiFilePointer.getElement();
+    public String getPsiFileUrl() {
+        return psiUrl;
     }
 
     @Nullable

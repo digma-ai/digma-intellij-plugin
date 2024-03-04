@@ -308,6 +308,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
                     "ide.version" to ideVersion,
                     "ide.build" to ideBuildNumber,
                     "plugin.version" to pluginVersion,
+                    "server.version" to ServerVersionMonitor.getInstance(project).getServerVersion(),
                     "user.type" to if (isDevUser) "internal" else "external"
                 )
             )

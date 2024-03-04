@@ -90,7 +90,7 @@ class QuarkusRunConfigurationWrapper : RunConfigurationWrapper {
      * @see <a href="https://quarkus.io/guides/opentelemetry">Quarkus with opentelemetry</a>
      */
     private fun buildJavaToolOptions(isTest: Boolean): String {
-        var retVal = " "
+        var retVal = " -noverify "
             .plus("-Dquarkus.otel.exporter.otlp.traces.endpoint=${getExporterUrl()}")
             .plus(" ")
 

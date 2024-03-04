@@ -42,7 +42,7 @@ fun createUpgradeBackendMessagePanel(project: Project): JPanel {
         Laf.Icons.Common.FileDark
     }
     val textPane = createTextPaneWithHtmlTitleAndParagraph(
-        "We've added some new features.",
+        "We've added some new features!",
         "Please update the Digma Engine<br>to the latest version using<br>the action above to continue using Digma"
     )
     val componentsPanel = createCommonEmptyStatePanelWithTextPane(textPane)

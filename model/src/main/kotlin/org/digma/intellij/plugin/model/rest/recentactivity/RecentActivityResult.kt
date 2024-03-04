@@ -47,11 +47,12 @@ constructor(
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class SlimAggregatedInsight
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-@ConstructorProperties("type", "importance", "codeObjectIds")
+@ConstructorProperties("type", "importance", "codeObjectIds", "criticality")
 constructor(
         val type: String,
         val importance: Int, // value of zero means that backend is still not up to date(forward compatibility)
-        val codeObjectIds: List<String>
+        val codeObjectIds: List<String>,
+        val criticality: Number
 )
 
 

@@ -624,12 +624,10 @@ class DigmaStatusUpdater {
                         delay(2000)
                     }
 
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (e: Exception) {
-                    //no need to report CancellationException , it's not an error, we cancel the job
-                    if (e !is CancellationException) {
-                        ErrorReporter.getInstance().reportError(project, "DigmaStatusUpdater.loop", e)
-                    }
-
+                    ErrorReporter.getInstance().reportError(project, "DigmaStatusUpdater.loop", e)
                 }
             }
         }

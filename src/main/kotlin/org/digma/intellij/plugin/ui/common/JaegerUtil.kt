@@ -7,7 +7,6 @@ import org.digma.intellij.plugin.common.CommonUtils
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider
 import org.digma.intellij.plugin.jaegerui.JaegerUIService
-import org.digma.intellij.plugin.model.rest.insights.InsightType
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.settings.LinkMode
 import org.digma.intellij.plugin.settings.SettingsState
@@ -79,7 +78,7 @@ fun openJaegerFromInsight(
     project: Project,
     traceId: String,
     traceName: String,
-    insightType: InsightType,
+    insightType: String,
     spanCodeObjectId: String?,
 ) {
 
@@ -137,7 +136,7 @@ fun openJaegerComparisonFromInsight(
     traceName1: String,
     traceId2: String,
     traceName2: String,
-    insightType: InsightType,
+    insightType: String,
 ) {
 
     ActivityMonitor.getInstance(project).registerButtonClicked(traceButtonName, insightType)

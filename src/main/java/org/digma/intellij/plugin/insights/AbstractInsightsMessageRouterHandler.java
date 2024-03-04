@@ -5,12 +5,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
-import kotlin.Pair;
 import org.cef.browser.CefBrowser;
 import org.digma.intellij.plugin.analytics.*;
 import org.digma.intellij.plugin.common.CodeObjectsUtil;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.model.rest.insights.InsightType;
 import org.digma.intellij.plugin.model.rest.navigation.*;
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
@@ -26,14 +24,14 @@ import java.util.stream.Collectors;
 import static org.digma.intellij.plugin.ui.jcef.JCEFUtilsKt.getQueryMapFromPayload;
 import static org.digma.intellij.plugin.ui.jcef.JCefBrowserUtilsKt.serializeAndExecuteWindowPostMessageJavaScript;
 
-//todo: convert to kotlin and move to org.digma.intellij.plugin.ui.insights
-public class InsightsMessageRouterHandler extends BaseMessageRouterHandler {
+//todo: convert to kotlin move all code to org.digma.intellij.plugin.ui.insights.InsightsMessageRouterHandler
+public abstract class AbstractInsightsMessageRouterHandler extends BaseMessageRouterHandler {
 
-    private final Logger LOGGER = Logger.getInstance(getClass());
+    protected final Logger LOGGER = Logger.getInstance(getClass());
 
-    private final Project project;
+    protected final Project project;
 
-    public InsightsMessageRouterHandler(Project project) {
+    public AbstractInsightsMessageRouterHandler(Project project) {
         super(project);
         this.project = project;
     }
@@ -49,36 +47,33 @@ public class InsightsMessageRouterHandler extends BaseMessageRouterHandler {
     @Override
     public void doOnQuery(@NotNull Project project, @NotNull CefBrowser browser, @NotNull JsonNode requestJsonNode, @NotNull String rawRequest, @NotNull String action) throws Exception {
 
-        var jsonNode = getObjectMapper().readTree(rawRequest);
         switch (action) {
 
             case "INSIGHTS/INITIALIZE" -> onInitialize(browser);
 
-            case "INSIGHTS/GO_TO_ASSET" -> goToInsight(jsonNode);
+            case "INSIGHTS/GO_TO_ASSET" -> goToInsight(requestJsonNode);
 
-            case "INSIGHTS/OPEN_LIVE_VIEW" -> openLiveView(jsonNode);
+            case "INSIGHTS/OPEN_LIVE_VIEW" -> openLiveView(requestJsonNode);
 
-            case "INSIGHTS/OPEN_HISTOGRAM" -> openHistogram(jsonNode);
+            case "INSIGHTS/OPEN_HISTOGRAM" -> openHistogram(requestJsonNode);
 
-            case "INSIGHTS/RECALCULATE" -> recalculate(jsonNode);
+            case "INSIGHTS/RECALCULATE" -> recalculate(requestJsonNode);
 
-            case "INSIGHTS/GO_TO_TRACE" -> goToTrace(jsonNode);
+            case "INSIGHTS/GO_TO_TRACE" -> goToTrace(requestJsonNode);
 
-            case "INSIGHTS/GO_TO_TRACE_COMPARISON" -> goToTraceComparison(jsonNode);
+            case "INSIGHTS/GO_TO_TRACE_COMPARISON" -> goToTraceComparison(requestJsonNode);
 
-            case "INSIGHTS/MARK_INSIGHT_TYPES_AS_VIEWED" -> markInsightsViewed(jsonNode);
+            case "INSIGHTS/LINK_TICKET" -> linkTicket(browser, requestJsonNode);
 
-            case "INSIGHTS/LINK_TICKET" -> linkTicket(browser, jsonNode);
+            case "INSIGHTS/UNLINK_TICKET" -> unlinkTicket(browser, requestJsonNode);
 
-            case "INSIGHTS/UNLINK_TICKET" -> unlinkTicket(browser, jsonNode);
+            case "INSIGHTS/GET_CODE_LOCATIONS" -> getCodeLocations(browser, requestJsonNode);
 
-            case "INSIGHTS/GET_CODE_LOCATIONS" -> getCodeLocations(browser, jsonNode);
+            case "INSIGHTS/GET_SPAN_INSIGHT" -> getInsight(browser, requestJsonNode);
 
-            case "INSIGHTS/GET_SPAN_INSIGHT" -> getInsight(browser, jsonNode);
+            case "INSIGHTS/GET_COMMIT_INFO" -> getCommitInfo(browser, requestJsonNode);
 
-            case "INSIGHTS/GET_COMMIT_INFO" -> getCommitInfo(browser, jsonNode);
-
-            case "INSIGHTS/GET_DATA_LIST" -> pushInsightsListData(jsonNode);
+            case "INSIGHTS/GET_DATA_LIST" -> pushInsightsListData(requestJsonNode);
 
 
             default -> Log.log(LOGGER::warn, "got unexpected action='{}'", action);
@@ -113,20 +108,7 @@ public class InsightsMessageRouterHandler extends BaseMessageRouterHandler {
     }
 
 
-    private void markInsightsViewed(JsonNode jsonNode) throws JsonProcessingException {
-        Log.log(LOGGER::trace, project, "got INSIGHTS/MARK_INSIGHT_TYPES_AS_VIEWED message");
-        var insightsTypesJasonArray = (ArrayNode) getObjectMapper().readTree(jsonNode.get("payload").toString()).get("insightTypes");
-        List<Pair<InsightType, Integer>> insightTypeList = new ArrayList<>();
-        insightsTypesJasonArray.forEach(insightType -> {
-            var type = InsightType.valueOf(insightType.get("type").asText());
-            var reopenCountObject = insightType.get("reopenCount");
-            var reopensCount = (reopenCountObject != null) ? reopenCountObject.asInt() : 0;
-            Pair<InsightType, Integer> insightOpensCount = new Pair<>(type, reopensCount);
-            insightTypeList.add(insightOpensCount);
-        });
-        Log.log(LOGGER::trace, project, "got insights types {}", insightTypeList);
-        ActivityMonitor.getInstance(project).registerInsightsViewed(insightTypeList);
-    }
+
 
     private void linkTicket(@NotNull CefBrowser browser, JsonNode jsonNode) throws JsonProcessingException, AnalyticsServiceException {
         Log.log(LOGGER::trace, project, "got INSIGHTS/LINK_TICKET message");
@@ -273,26 +255,28 @@ public class InsightsMessageRouterHandler extends BaseMessageRouterHandler {
         InsightsService.getInstance(project).recalculate(prefixedCodeObjectId, insightType);
     }
 
-    private void goToTrace(JsonNode jsonNode) throws JsonProcessingException {
-
-        var payload = getObjectMapper().readTree(jsonNode.get("payload").toString());
-        var traceId = payload.get("trace").get("id").asText();
-        var traceName = payload.get("trace").get("name").asText();
-        var insightType = payload.get("insightType").asText();
-        String spanCodeObjectId = payload.has("spanCodeObjectId") ? payload.get("spanCodeObjectId").asText() : null;
-
-        InsightsService.getInstance(project).goToTrace(traceId, traceName, InsightType.valueOf(insightType), spanCodeObjectId);
+    private void goToTrace(JsonNode jsonNode) {
+        var payload = getPayloadFromRequest(jsonNode);
+        if (payload != null) {
+            var traceId = payload.get("trace").get("id").asText();
+            var traceName = payload.get("trace").get("name").asText();
+            var insightType = payload.get("insightType").asText();
+            String spanCodeObjectId = payload.has("spanCodeObjectId") ? payload.get("spanCodeObjectId").asText() : null;
+            InsightsService.getInstance(project).goToTrace(traceId, traceName, insightType, spanCodeObjectId);
+        }
     }
 
-    private void goToTraceComparison(JsonNode jsonNode) throws JsonProcessingException {
-
-        var traces = getObjectMapper().readTree(jsonNode.get("payload").toString()).get("traces");
-        var traceId1 = traces.get(0).get("id").asText();
-        var traceName1 = traces.get(0).get("name").asText();
-        var traceId2 = traces.get(1).get("id").asText();
-        var traceName2 = traces.get(1).get("name").asText();
-        var insightType = getObjectMapper().readTree(jsonNode.get("payload").toString()).get("insightType").asText();
-        InsightsService.getInstance(project).goToTraceComparison(traceId1, traceName1, traceId2, traceName2, InsightType.valueOf(insightType));
+    private void goToTraceComparison(JsonNode jsonNode) {
+        var payload = getPayloadFromRequest(jsonNode);
+        if (payload != null) {
+            var traces = payload.get("traces");
+            var traceId1 = traces.get(0).get("id").asText();
+            var traceName1 = traces.get(0).get("name").asText();
+            var traceId2 = traces.get(1).get("id").asText();
+            var traceName2 = traces.get(1).get("name").asText();
+            var insightType = payload.get("insightType").asText();
+            InsightsService.getInstance(project).goToTraceComparison(traceId1, traceName1, traceId2, traceName2, insightType);
+        }
     }
 
 

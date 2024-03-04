@@ -56,8 +56,7 @@ public class CurrentContextUpdater implements Disposable {
     }
 
 
-
-    void addRequest(Editor editor, int caretOffset, VirtualFile file) {
+    void addRequest(@NotNull Editor editor, int caretOffset, VirtualFile file) {
         //process the most recent event after a quite period of delayMillis
         caretEventAlarm.cancelAllRequests();
         caretEventAlarm.addRequest(() -> {

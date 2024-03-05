@@ -18,6 +18,7 @@ import org.digma.intellij.plugin.posthog.MonitoredPanel
 import org.digma.intellij.plugin.scope.ScopeManager
 import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.ui.common.openJaegerFromRecentActivity
+import org.digma.intellij.plugin.ui.jcef.JCefComponent
 import org.digma.intellij.plugin.ui.recentactivity.model.CloseLiveViewMessage
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityEntrySpanForTracePayload
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityEntrySpanPayload
@@ -27,9 +28,15 @@ class RecentActivityService(val project: Project) : Disposable {
 
     private val logger = Logger.getInstance(this::class.java)
 
+    private var jCefComponent: JCefComponent? = null
 
     override fun dispose() {
         //nothing to do , used as parent disposable
+    }
+
+
+    fun setJcefComponent(jCefComponent: JCefComponent) {
+        this.jCefComponent = jCefComponent
     }
 
 

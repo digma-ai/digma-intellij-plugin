@@ -2,7 +2,6 @@ package org.digma.intellij.plugin.ui.jcef
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.intellij.openapi.components.Service
-import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
@@ -22,10 +21,10 @@ class RegistrationEventHandler(private val project: Project) {
             payloadNode.fields().asSequence()
                 .associate { mutableEntry: MutableMap.MutableEntry<String, JsonNode> -> Pair(mutableEntry.key, mutableEntry.value.asText()) }
 
-        project.service<ActivityMonitor>().registerUserActionEvent("register user", map)
+        ActivityMonitor.getInstance(project).registerUserActionEvent("register user", map)
 
         val email = map["email"].toString()
-        project.service<ActivityMonitor>().registerEmail(email)//override the onboarding email
+        ActivityMonitor.getInstance(project).registerEmail(email)//override the onboarding email
         PersistenceService.getInstance().setUserRegistrationEmail(email)
 
         val publisher: UserRegistrationEvent = project.messageBus

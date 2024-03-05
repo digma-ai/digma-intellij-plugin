@@ -18,7 +18,7 @@ import org.digma.intellij.plugin.common.findActiveProject
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.persistence.IdleNotificationsPersistenceState
+import org.digma.intellij.plugin.persistence.NotificationsPersistenceState
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import java.time.Instant
@@ -47,21 +47,21 @@ fun startIdleUserTimers(parentDisposable: Disposable) {
                     backendIdleDays() > 3 &&
                     backendHasntBeenRunningLastNotified() > 7
                 ) {
-                    service<IdleNotificationsPersistenceState>().state.backendHasntBeenRunningForAWhileLastNotified = Instant.now()
+                    service<NotificationsPersistenceState>().state.backendHasntBeenRunningForAWhileLastNotified = Instant.now()
                     showDigmaHasntBeenRunningForAWhile()
                 } else if (PersistenceService.getInstance().isFirstTimeAssetsReceived() &&
                     backendIdleDays() <= 1 &&
                     userActionIdleDays() > 3 &&
                     hasntBeenOpenedForAWhileLastNotified() > 7
                 ) {
-                    service<IdleNotificationsPersistenceState>().state.hasntBeenOpenedForAWhileLastNotified = Instant.now()
+                    service<NotificationsPersistenceState>().state.hasntBeenOpenedForAWhileLastNotified = Instant.now()
                     showDigmaHasntBeenOpenedForAWhile()
                 } else if (PersistenceService.getInstance().isFirstTimeConnectionEstablished() &&
                     !PersistenceService.getInstance().isFirstTimeAssetsReceived() &&
                     pluginInstalledDays() > 7 &&
                     hasntBeenActivatedLastNotified() > 7
                 ) {
-                    service<IdleNotificationsPersistenceState>().state.hasntBeenActivatedLastNotified = Instant.now()
+                    service<NotificationsPersistenceState>().state.hasntBeenActivatedLastNotified = Instant.now()
                     showDigmaHasntBeenActivated()
                 }
             } catch (e: Throwable) {
@@ -122,17 +122,17 @@ private fun showNotification(name: String, text: String, formName: String) {
 
 
 private fun backendHasntBeenRunningLastNotified(): Long {
-    val backendHasntBeenRunningForAWhile = service<IdleNotificationsPersistenceState>().state.backendHasntBeenRunningForAWhileLastNotified
+    val backendHasntBeenRunningForAWhile = service<NotificationsPersistenceState>().state.backendHasntBeenRunningForAWhileLastNotified
     return backendHasntBeenRunningForAWhile?.until(Instant.now(), ChronoUnit.DAYS) ?: 8L
 }
 
 private fun hasntBeenOpenedForAWhileLastNotified(): Long {
-    val hasntBeenOpenedForAWhile = service<IdleNotificationsPersistenceState>().state.hasntBeenOpenedForAWhileLastNotified
+    val hasntBeenOpenedForAWhile = service<NotificationsPersistenceState>().state.hasntBeenOpenedForAWhileLastNotified
     return hasntBeenOpenedForAWhile?.until(Instant.now(), ChronoUnit.DAYS) ?: 8L
 }
 
 private fun hasntBeenActivatedLastNotified(): Long {
-    val hasntBeenActivated = service<IdleNotificationsPersistenceState>().state.hasntBeenActivatedLastNotified
+    val hasntBeenActivated = service<NotificationsPersistenceState>().state.hasntBeenActivatedLastNotified
     return hasntBeenActivated?.until(Instant.now(), ChronoUnit.DAYS) ?: 8L
 }
 
@@ -222,6 +222,3 @@ class GoAwayAction(
 }
 
 
-private fun asHtml(content: String?): String {
-    return "<html><body>${content.orEmpty()}</body>"
-}

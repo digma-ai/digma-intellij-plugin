@@ -243,11 +243,11 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
             val message = BackendInfoMessage(about)
             Log.log(logger::trace, project, "sending {} message", JCEFGlobalConstants.GLOBAL_SET_BACKEND_INFO)
             serializeAndExecuteWindowPostMessageJavaScript(browser, message)
-
-            updateDigmaEngineStatus(project, browser)
         } catch (e: Exception) {
-            Log.debugWithException(logger, project, e, "jcef query canceled")
+            Log.debugWithException(logger, project, e, "error calling about")
         }
+
+        updateDigmaEngineStatus(project, browser)
 
         sendEnvironmentsList(browser, AnalyticsService.getInstance(project).environment.getEnvironments())
 

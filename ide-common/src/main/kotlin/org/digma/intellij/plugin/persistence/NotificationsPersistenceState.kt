@@ -7,13 +7,14 @@ import com.intellij.openapi.components.Storage
 import com.intellij.util.xmlb.annotations.OptionTag
 import java.time.Instant
 
-
+//the name of the file is a bit misleading,the Idle part is history, changing file names needs to keep latest entries.
+// this file holds timestamp of last time some notification was shown to help calculate when to show it again.
 @State(
     name = "org.digma.intellij.plugin.persistence.IdleNotificationsPersistenceState",
     storages = [Storage("DigmaIdleNotificationsState.xml")]
 )
 @Service(Service.Level.APP)
-class IdleNotificationsPersistenceState : PersistentStateComponent<IdleNotificationsState> {
+class NotificationsPersistenceState : PersistentStateComponent<IdleNotificationsState> {
 
     private var myPersistenceState: IdleNotificationsState = IdleNotificationsState()
 
@@ -35,4 +36,6 @@ data class IdleNotificationsState(
     var hasntBeenOpenedForAWhileLastNotified: Instant? = null,
     @OptionTag(converter = InstantConverter::class)
     var hasntBeenActivatedLastNotified: Instant? = null,
+    @OptionTag(converter = InstantConverter::class)
+    var requestRegistrationLastNotified: Instant? = null,
 )

@@ -29,6 +29,8 @@ class AppNotificationCenter: Disposable {
         startNoInsightsYetNotificationTimer()
 
         startIdleUserTimers(this)
+
+        startRequestRegisterTimers(this)
     }
 
     private fun startNoInsightsYetNotificationTimer() {

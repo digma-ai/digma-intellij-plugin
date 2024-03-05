@@ -9,6 +9,7 @@ import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.docker.DigmaInstallationStatus
 import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.env.Env
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
 import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.ui.common.isJaegerButtonEnabled
@@ -81,8 +82,12 @@ fun tryGetFieldFromPayload(objectMapper: ObjectMapper, requestJsonNode: JsonNode
 
 
 fun updateDigmaEngineStatus(project: Project, cefBrowser: CefBrowser) {
-    val status = service<DockerService>().getActualRunningEngine(project)
-    updateDigmaEngineStatus(cefBrowser, status)
+    try {
+        val status = service<DockerService>().getActualRunningEngine(project)
+        updateDigmaEngineStatus(cefBrowser, status)
+    } catch (e: Throwable) {
+        ErrorReporter.getInstance().reportError("updateDigmaEngineStatus", e)
+    }
 }
 
 fun updateDigmaEngineStatus(cefBrowser: CefBrowser, status: DigmaInstallationStatus) {
@@ -126,10 +131,14 @@ fun sendUserEmail(cefBrowser: CefBrowser, email: String) {
 }
 
 fun sendEnvironmentsList(cefBrowser: CefBrowser, environments: List<Env>) {
-    serializeAndExecuteWindowPostMessageJavaScript(
-        cefBrowser,
-        SetEnvironmentsMessage(SetEnvironmentsMessagePayload(environments))
-    )
+    try {
+        serializeAndExecuteWindowPostMessageJavaScript(
+            cefBrowser,
+            SetEnvironmentsMessage(SetEnvironmentsMessagePayload(environments))
+        )
+    } catch (e: Throwable) {
+        ErrorReporter.getInstance().reportError("sendEnvironmentsList", e)
+    }
 }
 
 fun sendCurrentEnvironment(cefBrowser: CefBrowser, environment: Env) {

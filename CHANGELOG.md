@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.282] - 2024-03-05
+## [2.0.283] - 2024-03-05
+
+- better code vision refresh by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1904
+- support jar configuration Closes #1894 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1906
+
+## 2.0.282 - 2024-03-05
 
 - update EAP profile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1891
 - Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1905

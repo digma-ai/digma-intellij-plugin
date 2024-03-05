@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.notifications
+package org.digma.intellij.plugin.ui.notificationcenter
 
 import com.intellij.collaboration.async.disposingScope
 import com.intellij.notification.Notification
@@ -19,6 +19,8 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.NotificationsPersistenceState
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.ui.recentactivity.RecentActivityService
+import org.digma.intellij.plugin.ui.recentactivity.RecentActivityToolWindowShower
 import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -50,19 +52,15 @@ fun startRequestRegisterTimers(parentDisposable: Disposable) {
                     showRequestRegistrationNotification()
                 }
 
-
-                //temp
-                delay(Duration.of(1, ChronoUnit.MINUTES).toMillis())
-//                delay(Duration.of(6, ChronoUnit.HOURS).toMillis())
-
+                delay(Duration.of(6, ChronoUnit.HOURS).toMillis())
 
             } catch (e: Throwable) {
                 ErrorReporter.getInstance().reportError("AppNotificationCenter.startIdleUserTimers", e)
             }
         }
     }
-
 }
+
 
 private fun isUserRegistered(): Boolean {
     return PersistenceService.getInstance().getUserRegistrationEmail() != null
@@ -107,8 +105,7 @@ private fun moreThen24HoursSinceLastNotified(): Boolean {
     val lastNotifiedTimestamp = service<NotificationsPersistenceState>().state.requestRegistrationLastNotified
     //if null return 25 to catch the first time, it should be non-null after the first check
     val hoursPassed = lastNotifiedTimestamp?.until(Instant.now(), ChronoUnit.HOURS) ?: 25L
-//    return hoursPassed > 24L
-    return true
+    return hoursPassed > 24L
 }
 
 
@@ -140,7 +137,8 @@ class RegisterAction(
     }
 
     private fun openRegistrationPopup(project: Project) {
-        println("")
+        project.service<RecentActivityToolWindowShower>().showToolWindow()
+        project.service<RecentActivityService>().showRegistrationPopup()
     }
 
 }

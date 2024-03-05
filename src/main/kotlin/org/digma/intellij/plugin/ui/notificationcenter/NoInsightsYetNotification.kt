@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.notifications
+package org.digma.intellij.plugin.ui.notificationcenter
 
 import com.intellij.collaboration.async.disposingScope
 import com.intellij.notification.NotificationGroupManager

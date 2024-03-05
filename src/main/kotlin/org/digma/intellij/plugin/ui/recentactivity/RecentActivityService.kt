@@ -148,4 +148,8 @@ class RecentActivityService(val project: Project) : Disposable {
         }
     }
 
+    fun showRegistrationPopup() {
+
+    }
+
 }

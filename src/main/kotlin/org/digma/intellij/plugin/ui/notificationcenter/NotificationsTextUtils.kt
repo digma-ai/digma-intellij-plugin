@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.notifications
+package org.digma.intellij.plugin.ui.notificationcenter
 
 
 fun asHtml(content: String?): String {

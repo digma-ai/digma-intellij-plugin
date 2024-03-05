@@ -68,7 +68,16 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
                 //do common messages for all apps, or call doOnQuery
                 when (action) {
                     JCEFGlobalConstants.GLOBAL_REGISTER -> {
-                        RegistrationEventHandler.getInstance(project).register(requestJsonNode)
+                        val payload = getPayloadFromRequestNonNull(requestJsonNode)
+                        val registrationMap: Map<String, String> =
+                            payload.fields().asSequence()
+                                .associate { mutableEntry: MutableMap.MutableEntry<String, JsonNode> ->
+                                    Pair(
+                                        mutableEntry.key,
+                                        mutableEntry.value.asText()
+                                    )
+                                }
+                        UserRegistrationManager.getInstance(project).register(registrationMap)
                     }
 
                     JCEFGlobalConstants.GLOBAL_OPEN_TROUBLESHOOTING_GUIDE -> {
@@ -259,6 +268,13 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
         return payload?.let {
             objectMapper.readTree(it.toString())
         }
+    }
+
+    //NPE should be handled by caller
+    @kotlin.jvm.Throws(NullPointerException::class)
+    protected fun getPayloadFromRequestNonNull(requestJsonNode: JsonNode): JsonNode {
+        val payload = requestJsonNode.get("payload")
+        return payload ?: throw NullPointerException("payload is null")
     }
 
 

@@ -9,6 +9,7 @@ import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -32,10 +33,7 @@ fun startRequestRegisterTimers(parentDisposable: Disposable) {
         return
     }
 
-
     Log.log(AppNotificationCenter.logger::info, "starting startRequestRegisterTimers")
-
-
 
     @Suppress("UnstableApiUsage")
     parentDisposable.disposingScope().launch {
@@ -54,8 +52,11 @@ fun startRequestRegisterTimers(parentDisposable: Disposable) {
 
                 delay(Duration.of(6, ChronoUnit.HOURS).toMillis())
 
+            } catch (e: CancellationException) {
+                //job may be canceled by framework or when project closes
+                throw e
             } catch (e: Throwable) {
-                ErrorReporter.getInstance().reportError("AppNotificationCenter.startIdleUserTimers", e)
+                ErrorReporter.getInstance().reportError("AppNotificationCenter.startRequestRegisterTimers", e)
             }
         }
     }

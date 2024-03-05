@@ -776,15 +776,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
 
 
     private fun getEmailForEvent(): String {
-
-        val userRegistrationEmail = PersistenceService.getInstance().getUserRegistrationEmail()
-
-        return if (!userRegistrationEmail.isNullOrBlank()) {
-            userRegistrationEmail
-        } else {
-            PersistenceService.getInstance().getUserEmail() ?: ""
-        }
-
+        return PersistenceService.getInstance().getUserRegistrationEmail() ?: PersistenceService.getInstance().getUserEmail() ?: ""
     }
 
 }

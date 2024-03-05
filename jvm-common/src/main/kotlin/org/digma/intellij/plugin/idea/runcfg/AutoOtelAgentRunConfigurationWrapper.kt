@@ -188,7 +188,7 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
             digmaExtensionPath = FileUtils.convertWinToWslPath(digmaExtensionPath)
         }
 
-        var retVal = " -noverify "
+        var retVal = "-Xverify:none "
         if (isSpringBootWithMicrometerTracing) {
             retVal = retVal
                 .plus("-Dmanagement.otlp.tracing.endpoint=${getExporterUrl()}")

@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.281] - 2024-03-05
+## [2.0.282] - 2024-03-05
+
+- update EAP profile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1891
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1905
+
+## 2.0.281 - 2024-03-05
 
 - noverify flag caused an issue by @doppleware in https://github.com/digma-ai/digma-intellij-plugin/pull/1892
 

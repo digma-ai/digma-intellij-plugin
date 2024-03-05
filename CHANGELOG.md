@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.280] - 2024-03-04
+## [2.0.281] - 2024-03-05
+
+- noverify flag caused an issue by @doppleware in https://github.com/digma-ai/digma-intellij-plugin/pull/1892
+
+## 2.0.280 - 2024-03-04
 
 - Simulate context change Closes #1859 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1869
 - remove-insight-type-enum Closes #1871 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1875

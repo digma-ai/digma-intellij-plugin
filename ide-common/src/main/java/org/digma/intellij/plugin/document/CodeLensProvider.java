@@ -4,8 +4,8 @@ import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
-import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.digma.intellij.plugin.analytics.*;
+import org.digma.intellij.plugin.codelens.CodeLensProviderRefresh;
 import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
@@ -19,6 +19,8 @@ import org.jetbrains.annotations.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static org.digma.intellij.plugin.document.CodeLensUtils.psiFileToKey;
+
 
 /**
  * get code lens from backend , builds it and caches it while the file is opened.
@@ -26,7 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * documentInfoChanged will be fired when a file is opened and every time it is changed.
  * when the file is closed the code lens are removed.
  * consumers for code lens never wait for the backend and always get what CodeLensProvider has in its cache.
- * the cache is refreshed every some seconds by CodeLensRefresh that calls refresh on background.
+ * the cache is refreshed every some seconds by CodeLensProviderRefresh that calls refresh on background.
  */
 public class CodeLensProvider implements Disposable {
 
@@ -39,8 +41,8 @@ public class CodeLensProvider implements Disposable {
 
     public CodeLensProvider(Project project) {
         this.project = project;
-        //start CodeLensRefresh. CodeLensRefresh is in kotlin so can use coroutines
-        new CodeLensRefresh(project, this).start();
+        //start CodeLensProviderRefresh. CodeLensProviderRefresh is in kotlin so can use coroutines
+        new CodeLensProviderRefresh(project, this).start();
     }
 
     @Override
@@ -52,10 +54,6 @@ public class CodeLensProvider implements Disposable {
         return project.getService(CodeLensProvider.class);
     }
 
-
-    private String psiFileToKey(@NotNull PsiFile psiFile) {
-        return PsiUtils.psiFileToUri(psiFile);
-    }
 
 
     @NotNull
@@ -117,16 +115,16 @@ public class CodeLensProvider implements Disposable {
     /**
      * called on background by refresh task and when environment changed.
      * refresh code lens for the documents currently in the cache.
-     * return true is code lens changed.
+     * return the list of psi urls where code lens changed
      */
-    public boolean refresh() {
+    public List<String> refresh() {
 
         Log.log(LOGGER::trace, "Got request to refresh code lens");
 
         EDT.assertNonDispatchThread();
         ReadActions.assertNotInReadAccess();
 
-        MutableBoolean changed = new MutableBoolean(false);
+        var changed = new ArrayList<String>();
 
         codeLensPerFile.forEach((key, documentLensPair) -> {
             try {
@@ -139,7 +137,7 @@ public class CodeLensProvider implements Disposable {
                     documentLensPair.codeLensList = newLenses;
                     if (!oldLenses.equals(newLenses)) {
                         Log.log(LOGGER::trace, "Got refreshed code lens for {}, {}", key, newLenses);
-                        changed.setTrue();
+                        changed.add(key);
                     }
                 }
 
@@ -149,7 +147,7 @@ public class CodeLensProvider implements Disposable {
             }
         });
 
-        return changed.booleanValue();
+        return changed;
     }
 
 

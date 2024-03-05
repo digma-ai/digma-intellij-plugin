@@ -172,17 +172,25 @@ class ErrorReporter {
     }
 
 
+    fun reportInternalFatalError(source: String, exception: Throwable, details: MutableMap<String, String> = mutableMapOf()) {
+        //todo: change ActivityMonitor to application service
+        val projectToUse = findActiveProject() ?: return
+        reportInternalFatalError(projectToUse, source, exception, details)
+    }
+
     //this error should be reported only when its a fatal error that we must fix quickly.
     //don't use it for all errors.
     //currently will be reported from EDT.assertNonDispatchThread and ReadActions.assertNotInReadAccess
     // which usually should be caught in development but if not, are very urgent to fix.
-    fun reportInternalFatalError(source: String, exception: Throwable?) {
+    fun reportInternalFatalError(project: Project, source: String, exception: Throwable, details: MutableMap<String, String> = mutableMapOf()) {
 
-        val details = mutableMapOf<String, String>()
+        if (isTooFrequentException(source, exception)) {
+            return
+        }
+
+
         details["Note"] = "This is an internal reporting of urgent error caught by plugin code and should be fixed ASAP"
 
-        //todo: change ActivityMonitor to application service
-        val projectToUse = findActiveProject() ?: return
 
         exception?.let {
             val exceptionStackTrace = it.let {
@@ -218,7 +226,7 @@ class ErrorReporter {
         details["user.type"] = if (UserId.isDevUser) "internal" else "external"
         details["error source"] = source
 
-        ActivityMonitor.getInstance(projectToUse).registerFatalError(details)
+        ActivityMonitor.getInstance(project).registerFatalError(details)
 
     }
 

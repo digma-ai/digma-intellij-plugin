@@ -30,14 +30,19 @@ class CodeLensHost(project: Project) : LifetimedProjectComponent(project) {
     init {
         project.messageBus.connect(this).subscribe(CodeLensChanged.CODELENS_CHANGED_TOPIC, object : CodeLensChanged {
             override fun codelensChanged(psiFile: PsiFile) {
-                refresh(psiFile)
+                refreshOneFile(psiFile)
+            }
+
+            override fun codelensChanged(psiFilesUrls: List<String>) {
+                refreshFiles(psiFilesUrls)
             }
 
             override fun codelensChanged() {
-                refresh()
+                refreshAll()
             }
         })
     }
+
 
 
     //always use getInstance instead of injecting directly to other services.
@@ -57,19 +62,7 @@ class CodeLensHost(project: Project) : LifetimedProjectComponent(project) {
     }
 
 
-    private fun refresh() {
-        documentInfoService.allKeys().forEach(Consumer { psiFileUri: String ->
-            try {
-                val psiFile = PsiUtils.uriToPsiFile(psiFileUri, project)
-                refresh(psiFile)
-            } catch (e: Throwable) {
-                Log.warnWithException(logger, project, e, "error in refresh for {}", psiFileUri)
-                ErrorReporter.getInstance().reportError("CodeLensHost.refresh", e)
-            }
-        })
-    }
-
-    private fun refresh(psiFile: PsiFile) {
+    private fun refreshOneFile(psiFile: PsiFile) {
         try {
             Log.log(logger::debug, "Refreshing code lens for {}", psiFile.virtualFile)
             val codeLens: Set<CodeLens> = codeLensProvider.provideCodeLens(psiFile)
@@ -80,6 +73,26 @@ class CodeLensHost(project: Project) : LifetimedProjectComponent(project) {
             ErrorReporter.getInstance().reportError("CodeLensHost.refresh", e)
         }
     }
+
+
+    private fun refreshFiles(psiFilesUrls: List<String>) {
+        psiFilesUrls.forEach(Consumer { psiFileUri: String ->
+            try {
+                val psiFile = PsiUtils.uriToPsiFile(psiFileUri, project)
+                refreshOneFile(psiFile)
+            } catch (e: Throwable) {
+                Log.warnWithException(logger, project, e, "error in refresh for {}", psiFileUri)
+                ErrorReporter.getInstance().reportError("CodeLensHost.refresh", e)
+            }
+        })
+    }
+
+    private fun refreshAll() {
+        //all the files that are opened should be in documentInfoService.
+        //could also take all editors from FileEditorManager
+        refreshFiles(documentInfoService.allKeys().toList())
+    }
+
 
 
     fun installCodeLens(@NotNull psiFile: PsiFile, @NotNull codeLenses: Set<CodeLens>) {

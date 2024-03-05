@@ -35,9 +35,9 @@ public class CodeLensProviderDocumentInfoAndEnvironmentChangedListener implement
     public void environmentChanged(Env newEnv) {
         Backgroundable.executeOnPooledThread(() -> {
             try {
-                boolean changed = CodeLensProvider.getInstance(project).refresh();
-                if (changed) {
-                    project.getMessageBus().syncPublisher(CodeLensChanged.CODELENS_CHANGED_TOPIC).codelensChanged();
+                var changedPsiFiles = CodeLensProvider.getInstance(project).refresh();
+                if (!changedPsiFiles.isEmpty()) {
+                    project.getMessageBus().syncPublisher(CodeLensChanged.CODELENS_CHANGED_TOPIC).codelensChanged(changedPsiFiles);
                 }
             } catch (Throwable e) {
                 ErrorReporter.getInstance().reportError("CodeLensProviderDocumentInfoAndEnvironmentChangedListener.environmentChanged", e);

@@ -2,10 +2,8 @@ package org.digma.intellij.plugin.codelens
 
 import com.intellij.codeInsight.codeVision.CodeVisionEntry
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
-import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.codeInsight.hints.InlayHintsUtils
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
@@ -15,19 +13,17 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.pom.Navigatable
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
-import com.intellij.psi.PsiManager
 import com.intellij.psi.SmartPointerManager
 import com.jetbrains.rd.util.ConcurrentHashMap
 import org.digma.intellij.plugin.common.Backgroundable
-import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.document.CodeLensChanged
 import org.digma.intellij.plugin.document.CodeLensProvider
+import org.digma.intellij.plugin.document.CodeLensUtils.psiFileToKey
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.lens.CodeLens
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.psi.LanguageService
-import org.digma.intellij.plugin.psi.PsiUtils
 import org.digma.intellij.plugin.scope.ScopeManager
 import org.digma.intellij.plugin.scope.SpanScope
 import java.awt.event.MouseEvent
@@ -41,13 +37,24 @@ class CodeLensService(private val project: Project) : Disposable {
     //cache psiFile -> map providerId -> CodeLensContainer
     private val cachedCodeVision = ConcurrentHashMap(mutableMapOf<String, MutableMap<String, CodeLensContainer>>())
 
+    private val codeVisionRefresh = CodeVisionRefresh(project)
+
 
     init {
         project.messageBus.connect(this).subscribe(CodeLensChanged.CODELENS_CHANGED_TOPIC, object : CodeLensChanged {
             override fun codelensChanged(psiFile: PsiFile) {
                 try {
                     Log.log(logger::trace, "codelensChanged called for file {}", psiFile)
-                    refresh(psiFile)
+                    refreshOneFile(psiFile)
+                } catch (e: Throwable) {
+                    ErrorReporter.getInstance().reportError("CodeLensService.codelensChanged", e)
+                }
+            }
+
+            override fun codelensChanged(psiFilesUrls: List<String>) {
+                try {
+                    Log.log(logger::trace, "codelensChanged called for files {}", psiFilesUrls)
+                    refreshFiles(psiFilesUrls)
                 } catch (e: Throwable) {
                     ErrorReporter.getInstance().reportError("CodeLensService.codelensChanged", e)
                 }
@@ -56,7 +63,7 @@ class CodeLensService(private val project: Project) : Disposable {
             override fun codelensChanged() {
                 try {
                     Log.log(logger::trace, "codelensChanged called")
-                    refresh()
+                    refreshAll()
                 } catch (e: Throwable) {
                     ErrorReporter.getInstance().reportError("CodeLensService.codelensChanged", e)
                 }
@@ -150,52 +157,40 @@ class CodeLensService(private val project: Project) : Disposable {
         cachedCodeVision.remove(psiFileToKey(psiFile))
     }
 
+    private fun clearCacheForFiles(psiFilesUrls: List<String>) {
+        psiFilesUrls.forEach {
+            cachedCodeVision.remove(it)
+        }
+    }
+
+
     fun clearCache() {
         cachedCodeVision.clear()
     }
 
 
-    // todo: just calling DaemonCodeAnalyzer.restart does not force CodeVisionPass.
-    // in the past it was possible to call CodeVisionPassFactory.clearModificationStamp(editor)
-    // before DaemonCodeAnalyzer.restart and that worked.
-    // but since CodeVisionPassFactory became internal its not possible to call
-    // CodeVisionPassFactory.clearModificationStamp(editor).
-    // after consulting the jetbrains forum i found the only code that works bellow.
-    // but it seems a waste to clear and refresh all editors when we need to refresh only one file.
-    // and also looks like something we don't want to do.
-    // but it works and doesn't seem to cause any issues.
-    // try to find a better standard way to force a refresh.
-    fun refresh(psiFile: PsiFile) {
+    fun refreshOneFile(psiFile: PsiFile) {
+        Log.log(logger::trace, "refresh called for file {}", psiFile)
         clearCacheForFile(psiFile)
-        EDT.ensureEDT {
-            WriteAction.run<RuntimeException> {
-                if (!project.isDisposed) {
-                    val manager = PsiManager.getInstance(project)
-                    manager.dropPsiCaches()
-                    manager.dropResolveCaches()
-                    DaemonCodeAnalyzer.getInstance(project).restart()
-                }
-            }
-        }
+        codeVisionRefresh.refreshForFile(psiFile)
     }
 
-    fun refresh() {
+
+    fun refreshFiles(psiFilesUrls: List<String>) {
+        Log.log(logger::trace, "refresh called for files {}", psiFilesUrls)
+        //sending the psi urls to remove. urls came from CodeLensProvider and should be the same as used
+        // here as keys, all these services use org.digma.intellij.plugin.document.CodeLensUtils.psiFileToKey.
+        clearCacheForFiles(psiFilesUrls)
+        codeVisionRefresh.refreshForFiles(psiFilesUrls)
+    }
+
+
+    fun refreshAll() {
+        Log.log(logger::trace, "refresh called for all")
         clearCache()
-        EDT.ensureEDT {
-            WriteAction.run<RuntimeException> {
-                if (!project.isDisposed) {
-                    val manager = PsiManager.getInstance(project)
-                    manager.dropPsiCaches()
-                    manager.dropResolveCaches()
-                    DaemonCodeAnalyzer.getInstance(project).restart()
-                }
-            }
-        }
+        codeVisionRefresh.refreshAll()
     }
 
-    private fun psiFileToKey(psiFile: PsiFile): String {
-        return PsiUtils.psiFileToUri(psiFile)
-    }
 
 
     private class CodeLensContainer {

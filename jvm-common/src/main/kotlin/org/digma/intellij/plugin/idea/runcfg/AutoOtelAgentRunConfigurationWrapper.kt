@@ -8,6 +8,7 @@ import com.intellij.execution.configurations.ParametersList
 import com.intellij.execution.configurations.RunConfiguration
 import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.execution.configurations.RunnerSettings
+import com.intellij.execution.jar.JarApplicationConfiguration
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.module.Module
@@ -62,6 +63,20 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
         val isMicronautModule = evalIsMicronautModule(resolvedModule)
         val useAgent = !(isMicronautModule || isSpringBootWithMicrometerTracing)
         when (val runConfigType = evalRunConfigType(configuration)) {
+            RunConfigType.Jar -> {
+                val javaToolOptions =
+                    buildJavaToolOptions(
+                        configuration,
+                        useAgent,
+                        isSpringBootWithMicrometerTracing,
+                        isOtelServiceNameAlreadyDefined(params),
+                        runConfigType.isTest
+                    )
+                javaToolOptions?.let {
+                    mergeJavaToolOptions(project, params, it)
+                }
+            }
+
             RunConfigType.JavaTest,
             RunConfigType.KotlinRun,
             RunConfigType.JavaRun,
@@ -290,6 +305,7 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
         if (isGradleTestConfiguration(configuration)) return RunConfigType.GradleTest
         if (isMavenConfiguration(configuration)) return RunConfigType.MavenRun
         if (isMavenTestConfiguration(configuration)) return RunConfigType.MavenTest
+        if (isJarConfiguration(configuration)) return RunConfigType.Jar
         return RunConfigType.Unknown
     }
 
@@ -421,6 +437,10 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
             return hasTestTask
         }
         return false
+    }
+
+    private fun isJarConfiguration(configuration: RunConfiguration): Boolean {
+        return configuration is JarApplicationConfiguration
     }
 
 }

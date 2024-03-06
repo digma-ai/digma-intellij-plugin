@@ -14,6 +14,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.PluginId
+import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.findActiveProject
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
@@ -21,7 +22,6 @@ import org.digma.intellij.plugin.persistence.NotificationsPersistenceState
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.recentactivity.RecentActivityService
-import org.digma.intellij.plugin.ui.recentactivity.RecentActivityToolWindowShower
 import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -37,6 +37,9 @@ fun startRequestRegisterTimers(parentDisposable: Disposable) {
 
     @Suppress("UnstableApiUsage")
     parentDisposable.disposingScope().launch {
+
+        //wait one minute after project opens and before showing the message
+        delay(60000)
 
         while (isActive && !isUserRegistered()) {
 
@@ -129,7 +132,7 @@ class RegisterAction(
 
             ActivityMonitor.getInstance(project).registerNotificationCenterEvent("$notificationName.clicked", mapOf())
 
-            openRegistrationPopup(project)
+            openRegistrationDialog(project)
 
             notification.expire()
         } catch (e: Throwable) {
@@ -137,9 +140,11 @@ class RegisterAction(
         }
     }
 
-    private fun openRegistrationPopup(project: Project) {
-        project.service<RecentActivityToolWindowShower>().showToolWindow()
-        project.service<RecentActivityService>().showRegistrationPopup()
+    private fun openRegistrationDialog(project: Project) {
+        //this is called on EDT, start background and release the EDT thread
+        Backgroundable.ensurePooledThread {
+            project.service<RecentActivityService>().openRegistrationDialog()
+        }
     }
 
 }

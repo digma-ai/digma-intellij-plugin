@@ -36,11 +36,17 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
         when (action) {
 
             "RECENT_ACTIVITY/INITIALIZE" -> {
-                doCommonInitialize(browser)
-
-                project.service<LiveViewUpdater>().appInitialized()
-                val environments = AnalyticsService.getInstance(project).environment.getEnvironments()
-                project.service<RecentActivityUpdater>().updateLatestActivities(environments)
+                try {
+                    doCommonInitialize(browser)
+                    val environments = AnalyticsService.getInstance(project).environment.getEnvironments()
+                    project.service<RecentActivityUpdater>().updateLatestActivities(environments)
+                } finally {
+                    //if there is an exception it will be handled by BaseMessageRouterHandler.
+                    // but at least set these two variables.
+                    //in any case an exception here means something is very wrong and we should check errors in logs.
+                    project.service<LiveViewUpdater>().appInitialized()
+                    project.service<RecentActivityService>().appInitialized()
+                }
             }
 
             "RECENT_ACTIVITY/GO_TO_SPAN" -> {

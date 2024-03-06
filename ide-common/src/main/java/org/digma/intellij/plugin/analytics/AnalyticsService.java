@@ -398,6 +398,21 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.getInsights(queryParams));
     }
 
+    public void dismissInsight(String insightId) throws AnalyticsServiceException {
+        var env = getCurrentEnvironment();
+        executeCatching(() -> {
+            analyticsProviderProxy.dismissInsight(insightId);
+            return null;
+        });
+    }
+
+    public void undismissInsight(String insightId) throws AnalyticsServiceException {
+        executeCatching(() -> {
+            analyticsProviderProxy.undismissInsight(insightId);
+            return null;
+        });
+    }
+
     @NotNull
     public AssetNavigationResponse getAssetNavigation(@NotNull String spanCodeObjectId) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();

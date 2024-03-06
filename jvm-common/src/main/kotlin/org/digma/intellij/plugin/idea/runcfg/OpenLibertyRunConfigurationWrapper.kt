@@ -51,7 +51,7 @@ class OpenLibertyRunConfigurationWrapper : RunConfigurationWrapper {
             RunConfigType.MavenRun,
             -> {
                 configuration as MavenRunConfiguration
-                val javaToolOptions = buildJavaToolOptions(runConfigType.isTest)
+                val javaToolOptions = buildJavaToolOptions(runConfigType.isTest, configuration, params)
                 mergeJavaToolOptions(configuration.project, params, javaToolOptions)
             }
 
@@ -59,7 +59,7 @@ class OpenLibertyRunConfigurationWrapper : RunConfigurationWrapper {
             RunConfigType.GradleRun,
             -> {
                 configuration as GradleRunConfiguration
-                val javaToolOptions = buildJavaToolOptions(runConfigType.isTest)
+                val javaToolOptions = buildJavaToolOptions(runConfigType.isTest, configuration, params)
                 mergeGradleJavaToolOptions(configuration, javaToolOptions)
             }
 
@@ -73,14 +73,14 @@ class OpenLibertyRunConfigurationWrapper : RunConfigurationWrapper {
     /**
      * @see <a href="https://openliberty.io/docs/latest/microprofile-telemetry.html">OpenLiberty - Enable distributed tracing with MicroProfile Telemetry</a>
      */
-    private fun buildJavaToolOptions(isTest: Boolean): String {
+    private fun buildJavaToolOptions(isTest: Boolean, configuration: RunConfiguration, params: JavaParameters): String {
         var retVal = "-Xverify:none "
             .plus("-Dotel.sdk.disabled=false") // in order to enable MicroProfile Telemetry, need to disable otel sdk
             .plus(" ")
             .plus("-Dotel.exporter.otlp.endpoint=${getExporterUrl()}")
             .plus(" ")
 
-        if (isTest) {
+        if (isTest && !alreadyHasTestEnv(configuration, params)) {
             val envPart = "digma.environment=${Env.buildEnvForLocalTests()}"
             retVal = retVal
                 .plus("-Dotel.resource.attributes=\"$envPart\"")
@@ -90,6 +90,21 @@ class OpenLibertyRunConfigurationWrapper : RunConfigurationWrapper {
         return retVal
     }
 
+
+    private fun alreadyHasTestEnv(configuration: RunConfiguration, params: JavaParameters?): Boolean {
+
+        if (isGradleTestConfiguration(configuration) &&
+            alreadyHasDigmaEnvironmentInResourceAttributeInGradleConfig(configuration as GradleRunConfiguration)
+        ) {
+            return true
+        }
+
+        return params?.let {
+            alreadyHasDigmaEnvironmentInResourceAttribute(params)
+        } ?: false
+    }
+
+
     private fun getExporterUrl(): String {
         return SettingsState.getInstance().runtimeObservabilityBackendUrl
     }
@@ -97,8 +112,8 @@ class OpenLibertyRunConfigurationWrapper : RunConfigurationWrapper {
     private fun evalRunConfigType(configuration: RunConfiguration, module: Module?): RunConfigType {
         if (isMavenConfiguration(configuration)) return RunConfigType.MavenRun
         if (isMavenTestConfiguration(configuration)) return RunConfigType.MavenTest
-        if (isGradleConfiguration(configuration)) return RunConfigType.GradleRun
         if (isGradleTestConfiguration(configuration)) return RunConfigType.GradleTest
+        if (isGradleConfiguration(configuration)) return RunConfigType.GradleRun
         return RunConfigType.Unknown
     }
 

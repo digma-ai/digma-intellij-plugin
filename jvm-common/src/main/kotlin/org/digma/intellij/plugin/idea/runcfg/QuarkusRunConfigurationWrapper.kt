@@ -62,7 +62,7 @@ class QuarkusRunConfigurationWrapper : RunConfigurationWrapper {
                 //when gradle runs the :test task it's not possible to pass system properties to the task.
                 // JAVA_TOOL_OPTIONS is not the best as said above, but it works.
                 configuration as GradleRunConfiguration
-                val javaToolOptions = buildJavaToolOptions(runConfigType.isTest)
+                val javaToolOptions = buildJavaToolOptions(runConfigType.isTest, configuration, params)
                 mergeGradleJavaToolOptions(configuration, javaToolOptions)
             }
 
@@ -70,12 +70,12 @@ class QuarkusRunConfigurationWrapper : RunConfigurationWrapper {
             RunConfigType.MavenRun,
             -> {
                 configuration as MavenRunConfiguration
-                val javaToolOptions = buildJavaToolOptions(runConfigType.isTest)
+                val javaToolOptions = buildJavaToolOptions(runConfigType.isTest, configuration, params)
                 mergeJavaToolOptions(configuration.project, params, javaToolOptions)
             }
 
             RunConfigType.JavaTest -> {
-                val javaToolOptions = buildJavaToolOptions(runConfigType.isTest)
+                val javaToolOptions = buildJavaToolOptions(runConfigType.isTest, configuration, params)
                 mergeJavaToolOptions(configuration.project, params, javaToolOptions)
             }
 
@@ -89,7 +89,7 @@ class QuarkusRunConfigurationWrapper : RunConfigurationWrapper {
     /**
      * @see <a href="https://quarkus.io/guides/opentelemetry">Quarkus with opentelemetry</a>
      */
-    private fun buildJavaToolOptions(isTest: Boolean): String {
+    private fun buildJavaToolOptions(isTest: Boolean, configuration: RunConfiguration, params: JavaParameters): String {
         var retVal = "-Xverify:none "
             .plus("-Dquarkus.otel.exporter.otlp.traces.endpoint=${getExporterUrl()}")
             .plus(" ")
@@ -110,6 +110,7 @@ class QuarkusRunConfigurationWrapper : RunConfigurationWrapper {
 
         return retVal
     }
+
 
     private fun getExporterUrl(): String {
         return SettingsState.getInstance().runtimeObservabilityBackendUrl

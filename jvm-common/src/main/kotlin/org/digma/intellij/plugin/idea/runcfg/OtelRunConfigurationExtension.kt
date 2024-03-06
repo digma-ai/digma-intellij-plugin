@@ -104,18 +104,22 @@ class OtelRunConfigurationExtension : RunConfigurationExtension() {
         handler: ProcessHandler,
         runnerSettings: RunnerSettings?,
     ) {
+        try {
         //we need to clean gradle configuration from our JAVA_TOOL_OPTIONS
-        if (isAutoOtelEnabled() &&
-            getWrapperFor(configuration)?.isGradleConfiguration(configuration) == true
-        ) {
-            handler.addProcessListener(object : ProcessListener {
-                //clean the settings after the process starts.
-                //NOTE: do not clean when process ends because if user adds the variables while the process is running
-                // it will remove the variables.
-                override fun startNotified(event: ProcessEvent) {
-                    cleanGradleSettingsAfterProcessStart(configuration as GradleRunConfiguration)
-                }
-            })
+            if (isAutoOtelEnabled() &&
+                getWrapperFor(configuration)?.isGradleConfiguration(configuration) == true
+            ) {
+                handler.addProcessListener(object : ProcessListener {
+                    //clean the settings after the process starts.
+                    //NOTE: do not clean when process ends because if user adds the variables while the process is running
+                    // it will remove the variables.
+                    override fun startNotified(event: ProcessEvent) {
+                        cleanGradleSettingsAfterProcessStart(configuration as GradleRunConfiguration)
+                    }
+                })
+            }
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError("OtelRunConfigurationExtension.attachToProcess", e)
         }
     }
 

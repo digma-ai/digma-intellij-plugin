@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.285] - 2024-03-06
+## [2.0.286] - 2024-03-06
+
+- Request user register after two weeks Closes #1895 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1908
+
+## 2.0.285 - 2024-03-06
 
 - report error instead of fatal by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1907
 

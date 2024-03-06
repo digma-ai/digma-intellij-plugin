@@ -115,6 +115,11 @@ fun updateOtelResourceAttribute(project: Project, params: JavaParameters) {
 }
 
 
+fun alreadyHasDigmaEnvironmentInResourceAttribute(params: JavaParameters): Boolean {
+    return params.env[OTEL_RESOURCE_ATTRIBUTES]?.contains("digma.environment=") ?: false
+}
+
+
 fun updateOtelResourceAttribute(configuration: GradleRunConfiguration) {
 
     val commitId = configuration.project.service<VcsService>().getCommitIdForCurrentProject()
@@ -133,6 +138,11 @@ fun updateOtelResourceAttribute(configuration: GradleRunConfiguration) {
     newEnv[OTEL_RESOURCE_ATTRIBUTES] = otelResourceAttributes
     configuration.settings.env = newEnv
 }
+
+fun alreadyHasDigmaEnvironmentInResourceAttributeInGradleConfig(configuration: GradleRunConfiguration): Boolean {
+    return configuration.settings.env[OTEL_RESOURCE_ATTRIBUTES]?.contains("digma.environment=") ?: false
+}
+
 
 
 fun cleanOtelResourceAttributes(configuration: GradleRunConfiguration) {
@@ -218,7 +228,7 @@ internal fun javaToolOptionsToMap(myJavaToolOptions: String): Map<String, String
  * because they are very specific and should not be used elsewhere.
  * but if they are private they can't be used in unit tests.
  * Annotating these two methods with JavaToolOptionsMergeUtils prevents accidental use of them in other places.
- * to use them a method or class need to @OptIn(JavaToolOptionsMergeUtils::class), including the unit test class.
+ * in order to use them a method or class need to @OptIn(JavaToolOptionsMergeUtils::class), including the unit test class.
  */
 @RequiresOptIn(level = RequiresOptIn.Level.ERROR, message = "Only to be used in RunConfigurationUtils")
 @Retention(AnnotationRetention.BINARY)

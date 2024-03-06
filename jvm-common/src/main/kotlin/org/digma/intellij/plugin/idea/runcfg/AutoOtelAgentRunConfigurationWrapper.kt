@@ -67,6 +67,7 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
                 val javaToolOptions =
                     buildJavaToolOptions(
                         configuration,
+                        params,
                         useAgent,
                         isSpringBootWithMicrometerTracing,
                         isOtelServiceNameAlreadyDefined(params),
@@ -87,6 +88,7 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
                 val javaToolOptions =
                     buildJavaToolOptions(
                         configuration,
+                        params,
                         useAgent,
                         isSpringBootWithMicrometerTracing,
                         isOtelServiceNameAlreadyDefined(params),
@@ -114,6 +116,7 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
                 val javaToolOptions =
                     buildJavaToolOptions(
                         configuration,
+                        params,
                         useAgent,
                         isSpringBootWithMicrometerTracing,
                         isOtelServiceNameAlreadyDefined(configuration),
@@ -131,6 +134,7 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
                 val javaToolOptions =
                     buildJavaToolOptions(
                         configuration,
+                        params,
                         useAgent,
                         isSpringBootWithMicrometerTracing,
                         isOtelServiceNameAlreadyDefined(params),
@@ -183,6 +187,7 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
 
     private fun buildJavaToolOptions(
         configuration: RunConfigurationBase<*>,
+        params: JavaParameters?,
         useAgent: Boolean,
         isSpringBootWithMicrometerTracing: Boolean,
         serviceAlreadyDefined: Boolean,
@@ -223,10 +228,12 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
         }
 
         if (isTest) {
-            val envPart = "digma.environment=${Env.buildEnvForLocalTests()}"
-            retVal = retVal
-                .plus("-Dotel.resource.attributes=\"$envPart\"")
-                .plus(" ")
+            if (!alreadyHasTestEnv(configuration, params)) {
+                val envPart = "digma.environment=${Env.buildEnvForLocalTests()}"
+                retVal = retVal
+                    .plus("-Dotel.resource.attributes=\"$envPart\"")
+                    .plus(" ")
+            }
 
             val hasMockito = true //currently do not check for mockito since flag is minor and won't affect other cases
             if (hasMockito) {
@@ -249,6 +256,20 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
 
         return retVal
     }
+
+    private fun alreadyHasTestEnv(configuration: RunConfiguration, params: JavaParameters?): Boolean {
+
+        if (isGradleTestConfiguration(configuration) &&
+            alreadyHasDigmaEnvironmentInResourceAttributeInGradleConfig(configuration as GradleRunConfiguration)
+        ) {
+            return true
+        }
+
+        return params?.let {
+            alreadyHasDigmaEnvironmentInResourceAttribute(params)
+        } ?: false
+    }
+
 
     private fun isOtelEntryDefined(
         javaConfParams: JavaParameters,
@@ -301,8 +322,8 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
         if (isJavaConfiguration(configuration)) return RunConfigType.JavaRun
         if (isKotlinConfiguration(configuration)) return RunConfigType.KotlinRun
         if (isJavaTestConfiguration(configuration)) return RunConfigType.JavaTest
-        if (isGradleConfiguration(configuration)) return RunConfigType.GradleRun
         if (isGradleTestConfiguration(configuration)) return RunConfigType.GradleTest
+        if (isGradleConfiguration(configuration)) return RunConfigType.GradleRun
         if (isMavenConfiguration(configuration)) return RunConfigType.MavenRun
         if (isMavenTestConfiguration(configuration)) return RunConfigType.MavenTest
         if (isJarConfiguration(configuration)) return RunConfigType.Jar
@@ -359,6 +380,7 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
             }
 
             // check for standard OpenTelemetry environment variables based on common prefix OTEL_
+            //todo: why that means its gradle ?
             val hasOtelDefined = configuration.settings.env.keys.any {
                 it.startsWith("OTEL_")
             }

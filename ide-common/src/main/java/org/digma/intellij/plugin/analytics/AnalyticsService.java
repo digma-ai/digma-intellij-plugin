@@ -399,7 +399,6 @@ public class AnalyticsService implements Disposable {
     }
 
     public void dismissInsight(String insightId) throws AnalyticsServiceException {
-        var env = getCurrentEnvironment();
         executeCatching(() -> {
             analyticsProviderProxy.dismissInsight(insightId);
             return null;

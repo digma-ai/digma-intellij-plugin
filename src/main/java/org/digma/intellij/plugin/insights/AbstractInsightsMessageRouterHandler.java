@@ -91,13 +91,13 @@ public abstract class AbstractInsightsMessageRouterHandler extends BaseMessageRo
 
     private void dismissInsight(JsonNode jsonNode) throws JsonProcessingException {
         Log.log(LOGGER::debug, project, "got INSIGHTS/DISMISS message");
-        var insightId = getObjectMapper().readTree(jsonNode.get("payload").toString()).get("insightId").asText();
+        var insightId = getPayloadFromRequestNonNull(jsonNode).get("insightId").asText();
         InsightsService.getInstance(project).dismissInsight(insightId);
     }
 
     private void undismissInsight(JsonNode jsonNode) throws JsonProcessingException {
         Log.log(LOGGER::debug, project, "got INSIGHTS/UNDISMISS message");
-        var insightId = getObjectMapper().readTree(jsonNode.get("payload").toString()).get("insightId").asText();
+        var insightId = getPayloadFromRequestNonNull(jsonNode).get("insightId").asText();
         InsightsService.getInstance(project).undismissInsight(insightId);
     }
 

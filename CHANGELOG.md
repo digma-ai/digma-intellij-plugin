@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.283] - 2024-03-05
+## [2.0.284] - 2024-03-06
+
+**Full Changelog**: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.283...v2.0.284
+
+## 2.0.283 - 2024-03-05
 
 - better code vision refresh by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1904
 - support jar configuration Closes #1894 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1906

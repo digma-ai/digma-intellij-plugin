@@ -76,7 +76,7 @@ internal class CodeVisionRefresh(private val project: Project) {
             ErrorReporter.getInstance().reportInternalFatalError(
                 project, "CodeVisionRefresh.clearModificationStampMH",
                 throwable,
-                mutableMapOf(
+                mapOf(
                     "error message" to "Failed to acquire a method handle to method ModificationStampUtil.clearModificationStamp"
                 )
             )
@@ -101,7 +101,7 @@ internal class CodeVisionRefresh(private val project: Project) {
         ErrorReporter.getInstance().reportInternalFatalError(
             project, "CodeVisionRefresh.clearModificationStampMH",
             throwable,
-            mutableMapOf(
+            mapOf(
                 "error message" to "Failed to acquire a method handle to method CodeVisionPassFactory.Companion.clearModificationStamp"
             )
         )

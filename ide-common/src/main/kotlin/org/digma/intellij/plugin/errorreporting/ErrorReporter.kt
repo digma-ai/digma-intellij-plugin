@@ -1,7 +1,6 @@
 package org.digma.intellij.plugin.errorreporting
 
 import com.github.benmanes.caffeine.cache.Caffeine
-import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
@@ -9,13 +8,9 @@ import com.intellij.openapi.diagnostic.UntraceableException
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.analytics.NoSelectedEnvironmentException
 import org.digma.intellij.plugin.common.ExceptionUtils
-import org.digma.intellij.plugin.common.UserId
 import org.digma.intellij.plugin.common.findActiveProject
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
-import org.digma.intellij.plugin.semanticversion.SemanticVersionUtil
-import java.io.PrintWriter
-import java.io.StringWriter
 import java.lang.reflect.Field
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
@@ -172,7 +167,8 @@ class ErrorReporter {
     }
 
 
-    fun reportInternalFatalError(source: String, exception: Throwable, details: MutableMap<String, String> = mutableMapOf()) {
+    //better to use overloaded method that accepts project
+    fun reportInternalFatalError(source: String, exception: Throwable, details: Map<String, String> = mapOf()) {
         //todo: change ActivityMonitor to application service
         val projectToUse = findActiveProject() ?: return
         reportInternalFatalError(projectToUse, source, exception, details)
@@ -182,51 +178,14 @@ class ErrorReporter {
     //don't use it for all errors.
     //currently will be reported from EDT.assertNonDispatchThread and ReadActions.assertNotInReadAccess
     // which usually should be caught in development but if not, are very urgent to fix.
-    fun reportInternalFatalError(project: Project, source: String, exception: Throwable, details: MutableMap<String, String> = mutableMapOf()) {
+    // if the error is not a result of an exception create a new RuntimeException and send it so we have the stack trace.
+    fun reportInternalFatalError(project: Project, source: String, exception: Throwable, details: Map<String, String> = mapOf()) {
 
         if (isTooFrequentException(source, exception)) {
             return
         }
 
-
-        details["Note"] = "This is an internal reporting of urgent error caught by plugin code and should be fixed ASAP"
-
-
-        exception?.let {
-            val exceptionStackTrace = it.let {
-                val stringWriter = StringWriter()
-                exception.printStackTrace(PrintWriter(stringWriter))
-                stringWriter.toString()
-            }
-
-            val exceptionMessage: String = it.let {
-                ExceptionUtils.getNonEmptyMessage(it)
-            } ?: ""
-
-            val causeExceptionType = ExceptionUtils.getFirstRealExceptionCauseTypeName(it)
-
-            details["exception.message"] = exceptionMessage
-            details["exception.stack-trace"] = exceptionStackTrace
-            details["cause.exception.type"] = causeExceptionType
-            details["exception.type"] = it.javaClass.name
-        }
-
-        val osType = System.getProperty("os.name")
-        val ideInfo = ApplicationInfo.getInstance()
-        val ideName = ideInfo.versionName
-        val ideVersion = ideInfo.fullVersion
-        val ideBuildNumber = ideInfo.build.asString()
-        val pluginVersion = SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("unknown")
-
-        details["ide.name"] = ideName
-        details["ide.version"] = ideVersion
-        details["ide.build"] = ideBuildNumber
-        details["plugin.version"] = pluginVersion
-        details["os.type"] = osType
-        details["user.type"] = if (UserId.isDevUser) "internal" else "external"
-        details["error source"] = source
-
-        ActivityMonitor.getInstance(project).registerFatalError(details)
+        ActivityMonitor.getInstance(project).registerInternalFatalError(source, exception, details)
 
     }
 

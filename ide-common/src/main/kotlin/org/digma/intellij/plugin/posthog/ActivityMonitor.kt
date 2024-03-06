@@ -202,7 +202,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
     }
 
 
-    fun registerError(exception: Throwable?, message: String, extraDetails: Map<String, String>? = mapOf()) {
+    fun registerError(exception: Throwable?, message: String, extraDetails: Map<String, String> = mapOf()) {
 
         try {
             val osType = System.getProperty("os.name")
@@ -247,10 +247,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
                 details["exception.type"] = it.javaClass.name
             }
 
-
-            extraDetails?.let {
-                details.putAll(it)
-            }
+            details.putAll(extraDetails)
 
 
             capture(
@@ -267,9 +264,59 @@ class ActivityMonitor(private val project: Project) : Disposable {
     }
 
 
-    fun registerFatalError(details: MutableMap<String, String>) {
+    fun registerFatalError(details: Map<String, String>) {
         capture(
             "fatal error",
+            details
+        )
+    }
+
+    fun registerInternalFatalError(source: String, exception: Throwable, extraDetails: Map<String, String> = mapOf()) {
+
+        val details = mutableMapOf<String, String>()
+
+        details.putAll(extraDetails)
+
+        details["Note"] = "This is an internal reporting of urgent error caught by plugin code and should be fixed ASAP"
+
+        exception.let {
+            val exceptionStackTrace = it.let {
+                val stringWriter = StringWriter()
+                exception.printStackTrace(PrintWriter(stringWriter))
+                stringWriter.toString()
+            }
+
+            val exceptionMessage: String = it.let {
+                ExceptionUtils.getNonEmptyMessage(it)
+            } ?: ""
+
+            val causeExceptionType = ExceptionUtils.getFirstRealExceptionCauseTypeName(it)
+
+            details["exception.message"] = exceptionMessage
+            details["exception.stack-trace"] = exceptionStackTrace
+            details["cause.exception.type"] = causeExceptionType
+            details["exception.type"] = it.javaClass.name
+        }
+
+        val osType = System.getProperty("os.name")
+        val ideInfo = ApplicationInfo.getInstance()
+        val ideName = ideInfo.versionName
+        val ideVersion = ideInfo.fullVersion
+        val ideBuildNumber = ideInfo.build.asString()
+        val pluginVersion = SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("unknown")
+
+        details["ide.name"] = ideName
+        details["ide.version"] = ideVersion
+        details["ide.build"] = ideBuildNumber
+        details["os.type"] = osType
+        details["user.type"] = if (UserId.isDevUser) "internal" else "external"
+        details["error source"] = source
+        details["plugin.version"] = pluginVersion
+        details["server.version"] = ServerVersionMonitor.getInstance(project).getServerVersion()
+
+
+        capture(
+            "internal fatal error",
             details
         )
     }

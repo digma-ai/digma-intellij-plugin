@@ -79,7 +79,6 @@ public abstract class AbstractInsightsMessageRouterHandler extends BaseMessageRo
 
             case "INSIGHTS/UNDISMISS" -> undismissInsight(requestJsonNode);
 
-
             default -> Log.log(LOGGER::warn, "got unexpected action='{}'", action);
         }
     }

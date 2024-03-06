@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.codelens
 
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
+import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.diagnostic.Logger
@@ -71,6 +72,16 @@ internal class CodeVisionRefresh(private val project: Project) {
 
     }.recoverCatching { throwable: Throwable ->
 
+        if (ideVersion241OrAbove()) {
+            ErrorReporter.getInstance().reportInternalFatalError(
+                project, "CodeVisionRefresh.clearModificationStampMH",
+                throwable,
+                mutableMapOf(
+                    "error message" to "Failed to acquire a method handle to method ModificationStampUtil.clearModificationStamp"
+                )
+            )
+        }
+
         // 223 all builds
         // 231 all builds
         // 232 all builds - CodeVisionPassFactory changed to internal class
@@ -86,13 +97,18 @@ internal class CodeVisionRefresh(private val project: Project) {
         Log.log(logger::trace, "binding clearModificationStamp to CodeVisionPassFactory.Companion.clearModificationStamp")
         methodHandler
     }.onFailure { throwable: Throwable ->
-        ErrorReporter.getInstance().reportError(
+
+        ErrorReporter.getInstance().reportInternalFatalError(
             project, "CodeVisionRefresh.clearModificationStampMH",
             throwable,
             mutableMapOf(
-                "error message" to "Failed to acquire a method handle to method clearModificationStamp"
+                "error message" to "Failed to acquire a method handle to method CodeVisionPassFactory.Companion.clearModificationStamp"
             )
         )
+    }
+
+    private fun ideVersion241OrAbove(): Boolean {
+        return ApplicationInfo.getInstance().build.baselineVersion >= 241
     }
 
 

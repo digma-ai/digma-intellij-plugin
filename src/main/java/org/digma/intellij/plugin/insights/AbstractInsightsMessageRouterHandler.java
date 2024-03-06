@@ -75,6 +75,9 @@ public abstract class AbstractInsightsMessageRouterHandler extends BaseMessageRo
 
             case "INSIGHTS/GET_DATA_LIST" -> pushInsightsListData(requestJsonNode);
 
+            case "INSIGHTS/DISMISS" -> dismissInsight(requestJsonNode);
+
+            case "INSIGHTS/UNDISMISS" -> undismissInsight(requestJsonNode);
 
             default -> Log.log(LOGGER::warn, "got unexpected action='{}'", action);
         }
@@ -84,6 +87,18 @@ public abstract class AbstractInsightsMessageRouterHandler extends BaseMessageRo
         Log.log(LOGGER::debug, project, "got INSIGHTS/GET_DATA_LIST message");
         Map<String, Object> backendQueryParams = getQueryMapFromPayload(jsonNode, getObjectMapper());
         InsightsService.getInstance(project).refreshInsightsList(backendQueryParams);
+    }
+
+    private void dismissInsight(JsonNode jsonNode) throws JsonProcessingException {
+        Log.log(LOGGER::debug, project, "got INSIGHTS/DISMISS message");
+        var insightId = getPayloadFromRequestNonNull(jsonNode).get("insightId").asText();
+        InsightsService.getInstance(project).dismissInsight(insightId);
+    }
+
+    private void undismissInsight(JsonNode jsonNode) throws JsonProcessingException {
+        Log.log(LOGGER::debug, project, "got INSIGHTS/UNDISMISS message");
+        var insightId = getPayloadFromRequestNonNull(jsonNode).get("insightId").asText();
+        InsightsService.getInstance(project).undismissInsight(insightId);
     }
 
     private void getCommitInfo(@NotNull CefBrowser browser, JsonNode jsonNode) throws JsonProcessingException {

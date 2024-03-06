@@ -241,6 +241,16 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
+    public void dismissInsight(String insightId) {
+        execute(() -> client.analyticsProvider.dismissInsight(new DismissRequest(insightId)));
+    }
+
+    @Override
+    public void undismissInsight(String insightId) {
+        execute(() -> client.analyticsProvider.undismissInsight(new UnDismissRequest(insightId)));
+    }
+
+    @Override
     public String getDashboard(Map<String, String> queryParams) {
         return execute(() -> client.analyticsProvider.getDashboard(queryParams));
     }
@@ -671,6 +681,20 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @GET("/assets/navigation")
         Call<AssetNavigationResponse> getAssetNavigation(@Query("environment") String environment, @Query("spanCodeObjectId") String spanCodeObjectId);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @PUT("/InsightsActions/dismiss")
+        Call<ResponseBody> dismissInsight(@Body DismissRequest insightId);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @PUT("/InsightsActions/unDismiss")
+        Call<ResponseBody> undismissInsight(@Body UnDismissRequest insightId);
     }
 
 }

@@ -97,4 +97,9 @@ public interface AnalyticsProvider extends Closeable {
     String getInsights(Map<String, Object> queryParams);
 
     AssetNavigationResponse getAssetNavigation(String env, String spanCodeObjectId);
+
+    void dismissInsight(String  insightId);
+
+    void undismissInsight(String insightId);
+
 }

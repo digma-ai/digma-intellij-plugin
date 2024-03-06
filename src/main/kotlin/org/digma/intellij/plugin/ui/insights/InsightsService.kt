@@ -55,6 +55,15 @@ class InsightsService(val project: Project) : InsightsServiceImpl(project) {
         }
     }
 
+    fun undismissInsight(insightId: String) {
+        AnalyticsService.getInstance(project).undismissInsight(insightId)
+    }
+
+
+    fun dismissInsight(insightId: String) {
+        AnalyticsService.getInstance(project).dismissInsight(insightId)
+    }
+
 
     private fun onInsightReceived(insights: String) {
 

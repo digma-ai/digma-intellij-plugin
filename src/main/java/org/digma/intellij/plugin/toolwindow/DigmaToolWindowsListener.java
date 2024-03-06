@@ -2,13 +2,12 @@ package org.digma.intellij.plugin.toolwindow;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.wm.ToolWindow;
-import com.intellij.openapi.wm.ToolWindowManager;
+import com.intellij.openapi.wm.*;
 import com.intellij.openapi.wm.ex.ToolWindowManagerListener;
 import org.digma.intellij.plugin.PluginId;
 import org.digma.intellij.plugin.docker.DockerService;
-import org.digma.intellij.plugin.notifications.AppNotificationCenter;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
+import org.digma.intellij.plugin.ui.notificationcenter.AppNotificationCenter;
 import org.jetbrains.annotations.NotNull;
 
 public class DigmaToolWindowsListener implements ToolWindowManagerListener {

@@ -34,6 +34,7 @@ class RecentActivityPanel(private val project: Project) : DisposablePanel() {
         }
 
         jCefComponent?.let {
+            project.service<RecentActivityService>().setJcefComponent(it)
             project.service<RecentActivityUpdater>().setJcefComponent(it)
             project.service<LiveViewUpdater>().setJcefComponent(it)
         }

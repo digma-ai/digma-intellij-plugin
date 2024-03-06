@@ -1,10 +1,14 @@
 package org.digma.intellij.plugin.ui.recentactivity
 
+import com.intellij.collaboration.async.disposingScope
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.common.EDT
@@ -18,18 +22,36 @@ import org.digma.intellij.plugin.posthog.MonitoredPanel
 import org.digma.intellij.plugin.scope.ScopeManager
 import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.ui.common.openJaegerFromRecentActivity
+import org.digma.intellij.plugin.ui.jcef.JCefComponent
+import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
 import org.digma.intellij.plugin.ui.recentactivity.model.CloseLiveViewMessage
+import org.digma.intellij.plugin.ui.recentactivity.model.OpenRegistrationDialogMessage
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityEntrySpanForTracePayload
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityEntrySpanPayload
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+import java.util.concurrent.atomic.AtomicBoolean
 
 @Service(Service.Level.PROJECT)
 class RecentActivityService(val project: Project) : Disposable {
 
     private val logger = Logger.getInstance(this::class.java)
 
+    private var jCefComponent: JCefComponent? = null
+
+    private val appInitialized: AtomicBoolean = AtomicBoolean(false)
 
     override fun dispose() {
         //nothing to do , used as parent disposable
+    }
+
+
+    fun setJcefComponent(jCefComponent: JCefComponent) {
+        this.jCefComponent = jCefComponent
+    }
+
+    fun appInitialized() {
+        appInitialized.set(true)
     }
 
 
@@ -139,6 +161,34 @@ class RecentActivityService(val project: Project) : Disposable {
             Log.warnWithException(logger, project, e, "error deleting environment")
             ErrorReporter.getInstance().reportError(project, "RecentActivityService.deleteEnvironment", e)
         }
+    }
+
+    fun openRegistrationDialog() {
+
+        project.service<RecentActivityToolWindowShower>().showToolWindow()
+
+        //maybe the recent activity is not open yet. it will be opened as a result of calling
+        // showToolWindow, but takes some time before the app is ready to accept messages.
+        // so wait here until the app is initialized
+        @Suppress("UnstableApiUsage")
+        disposingScope().launch {
+
+            val startTime = Instant.now()
+
+            //wait for the app to initialize. maximum 60 seconds and stop the coroutine.
+            // 60 seconds should be enough, if the app was not initialized then something is wrong
+            while (!appInitialized.get() && isActive &&
+                startTime.until(Instant.now(), ChronoUnit.SECONDS) < 60
+            ) {
+                delay(5)
+            }
+
+            jCefComponent?.let {
+                val message = OpenRegistrationDialogMessage()
+                serializeAndExecuteWindowPostMessageJavaScript(it.jbCefBrowser.cefBrowser, message)
+            }
+        }
+
     }
 
 }

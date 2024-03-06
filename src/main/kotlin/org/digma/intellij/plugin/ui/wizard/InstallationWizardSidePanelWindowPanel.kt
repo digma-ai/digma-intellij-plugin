@@ -35,7 +35,6 @@ import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.jcef.common.CustomSchemeHandlerFactory
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.notifications.AppNotificationCenter
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.persistence.updateInstallationWizardFlag
 import org.digma.intellij.plugin.posthog.ActivityMonitor
@@ -52,6 +51,7 @@ import org.digma.intellij.plugin.ui.jcef.sendRequestToChangeFont
 import org.digma.intellij.plugin.ui.jcef.sendRequestToChangeUiTheme
 import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
 import org.digma.intellij.plugin.ui.jcef.updateDigmaEngineStatus
+import org.digma.intellij.plugin.ui.notificationcenter.AppNotificationCenter
 import org.digma.intellij.plugin.ui.panels.DisposablePanel
 import org.digma.intellij.plugin.ui.recentactivity.RecentActivityToolWindowShower
 import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier

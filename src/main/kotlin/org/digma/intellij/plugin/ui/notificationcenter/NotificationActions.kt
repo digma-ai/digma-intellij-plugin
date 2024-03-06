@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.notifications
+package org.digma.intellij.plugin.ui.notificationcenter
 
 import com.intellij.notification.Notification
 import com.intellij.openapi.actionSystem.AnAction

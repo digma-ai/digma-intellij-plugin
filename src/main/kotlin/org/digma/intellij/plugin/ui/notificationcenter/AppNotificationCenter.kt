@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.notifications
+package org.digma.intellij.plugin.ui.notificationcenter
 
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
@@ -29,6 +29,8 @@ class AppNotificationCenter: Disposable {
         startNoInsightsYetNotificationTimer()
 
         startIdleUserTimers(this)
+
+        startRequestRegisterTimers(this)
     }
 
     private fun startNoInsightsYetNotificationTimer() {

@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.notifications
+package org.digma.intellij.plugin.ui.notificationcenter
 
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.intellij.collaboration.async.disposingScope

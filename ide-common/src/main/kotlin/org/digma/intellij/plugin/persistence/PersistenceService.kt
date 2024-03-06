@@ -78,6 +78,9 @@ class PersistenceService {
         state.firstTimeAssetsReceivedTimestamp = Instant.now()
     }
 
+    fun getFirstTimeAssetsReceivedTimestamp(): Instant? {
+        return state.firstTimeAssetsReceivedTimestamp
+    }
 
     fun isFirstTimePluginLoaded(): Boolean {
         //todo: backwards compatibility, remove state.isFirstTimePluginLoaded on May 2024

@@ -68,7 +68,16 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
                 //do common messages for all apps, or call doOnQuery
                 when (action) {
                     JCEFGlobalConstants.GLOBAL_REGISTER -> {
-                        RegistrationEventHandler.getInstance(project).register(requestJsonNode)
+                        val payload = getPayloadFromRequestNonNull(requestJsonNode)
+                        val registrationMap: Map<String, String> =
+                            payload.fields().asSequence()
+                                .associate { mutableEntry: MutableMap.MutableEntry<String, JsonNode> ->
+                                    Pair(
+                                        mutableEntry.key,
+                                        mutableEntry.value.asText()
+                                    )
+                                }
+                        UserRegistrationManager.getInstance(project).register(registrationMap)
                     }
 
                     JCEFGlobalConstants.GLOBAL_OPEN_TROUBLESHOOTING_GUIDE -> {
@@ -243,11 +252,11 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
             val message = BackendInfoMessage(about)
             Log.log(logger::trace, project, "sending {} message", JCEFGlobalConstants.GLOBAL_SET_BACKEND_INFO)
             serializeAndExecuteWindowPostMessageJavaScript(browser, message)
-
-            updateDigmaEngineStatus(project, browser)
         } catch (e: Exception) {
-            Log.debugWithException(logger, project, e, "jcef query canceled")
+            Log.debugWithException(logger, project, e, "error calling about")
         }
+
+        updateDigmaEngineStatus(project, browser)
 
         sendEnvironmentsList(browser, AnalyticsService.getInstance(project).environment.getEnvironments())
 
@@ -259,6 +268,13 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
         return payload?.let {
             objectMapper.readTree(it.toString())
         }
+    }
+
+    //NPE should be handled by caller
+    @kotlin.jvm.Throws(NullPointerException::class)
+    protected fun getPayloadFromRequestNonNull(requestJsonNode: JsonNode): JsonNode {
+        val payload = requestJsonNode.get("payload")
+        return payload ?: throw NullPointerException("payload is null")
     }
 
 

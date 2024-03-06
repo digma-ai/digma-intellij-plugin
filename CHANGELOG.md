@@ -1,6 +1,12 @@
 # Changelog
 
-## [2.0.286] - 2024-03-06
+## [2.0.287] - 2024-03-06
+
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1909
+- catch-error-in-attachToProcess by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1912
+- fix-environment-overrides-in-test-run-config Closes #1893 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1910
+
+## 2.0.286 - 2024-03-06
 
 - Request user register after two weeks Closes #1895 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1908
 

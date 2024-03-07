@@ -1,6 +1,12 @@
 # Changelog
 
-## [2.0.287] - 2024-03-06
+## [2.0.288] - 2024-03-07
+
+- Add dismiss handlers by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1911
+- Update Insights UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1913
+- fix typo by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1914
+
+## 2.0.287 - 2024-03-06
 
 - Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1909
 - catch-error-in-attachToProcess by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1912

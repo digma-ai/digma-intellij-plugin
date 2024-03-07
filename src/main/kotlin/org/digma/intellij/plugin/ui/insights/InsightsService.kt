@@ -60,18 +60,18 @@ class InsightsService(val project: Project) : InsightsServiceImpl(project) {
     }
 
     fun undismissInsight(insightId: String) {
-       var status =""
-       var error: String? =null
+        var status = ""
+        var error: String? = null
         try {
-           AnalyticsService.getInstance(project).undismissInsight(insightId)
-           status ="success"
-       } catch (e: AnalyticsServiceException) {
-           status = "failure"
-           error= "Error undismissing  insight";
-           Log.warnWithException(logger, project, e,error , e.message)
-       }
+            AnalyticsService.getInstance(project).undismissInsight(insightId)
+            status = "success"
+        } catch (e: AnalyticsServiceException) {
+            status = "failure"
+            error = "Error undismissing  insight";
+            Log.warnWithException(logger, project, e, error, e.message)
+        }
 
-        val msg = SetUnDismissedMessage(SetUnDismissedData(insightId,status, error))
+        val msg = SetUnDismissedMessage(SetUnDismissedData(insightId, status, error))
         jCefComponent?.let {
             serializeAndExecuteWindowPostMessageJavaScript(it.jbCefBrowser.cefBrowser, msg)
         }
@@ -79,15 +79,15 @@ class InsightsService(val project: Project) : InsightsServiceImpl(project) {
 
 
     fun dismissInsight(insightId: String) {
-        var status =""
-        var error: String? =null
+        var status = ""
+        var error: String? = null
         try {
             AnalyticsService.getInstance(project).dismissInsight(insightId)
-            status ="success"
+            status = "success"
         } catch (e: AnalyticsServiceException) {
             status = "failure"
-            error= "Error dismissing  insight";
-            Log.warnWithException(logger, project, e,error , e.message)
+            error = "Error dismissing  insight";
+            Log.warnWithException(logger, project, e, error, e.message)
         }
 
         val msg = SetDismissedMessage(SetDismissedData(insightId, status, error))

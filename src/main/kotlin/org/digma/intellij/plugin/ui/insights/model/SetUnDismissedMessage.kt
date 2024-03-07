@@ -11,7 +11,7 @@ data class SetUnDismissedData @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 constructor(
     val insightId: String,
     val status: String,
-    val error: String?
+    val error: String?,
 )
 
 data class SetUnDismissedMessage(val payload: SetUnDismissedData) {

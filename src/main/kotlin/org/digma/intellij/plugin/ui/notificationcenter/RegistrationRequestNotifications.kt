@@ -76,7 +76,7 @@ fun showRequestRegistrationNotification() {
 
         val notificationName = "Register"
 
-        ActivityMonitor.getInstance(project).registerNotificationCenterEvent("RequestRegisteration", mapOf())
+        ActivityMonitor.getInstance(project).registerNotificationCenterEvent("RequestRegistration", mapOf())
 
         val text = asHtml(
             "Please register to continue using Digma.<br>" +

@@ -1,6 +1,12 @@
 # Changelog
 
-## [2.0.288] - 2024-03-07
+## [2.0.289] - 2024-03-07
+
+- Added response for dialog by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1915
+- Update Insights UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1916
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1917
+
+## 2.0.288 - 2024-03-07
 
 - Add dismiss handlers by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1911
 - Update Insights UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1913

@@ -90,7 +90,6 @@ class InsightsService(val project: Project) : InsightsServiceImpl(project) {
             Log.warnWithException(logger, project, e,error , e.message)
         }
 
-
         val msg = SetDismissedMessage(SetDismissedData(insightId, status, error))
         jCefComponent?.let {
             serializeAndExecuteWindowPostMessageJavaScript(it.jbCefBrowser.cefBrowser, msg)

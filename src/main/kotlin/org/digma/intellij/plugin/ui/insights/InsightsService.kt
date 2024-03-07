@@ -12,7 +12,11 @@ import org.digma.intellij.plugin.insights.InsightsServiceImpl
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.ui.insights.model.SetDismissedData
+import org.digma.intellij.plugin.ui.insights.model.SetDismissedMessage
 import org.digma.intellij.plugin.ui.insights.model.SetInsightDataListMessage
+import org.digma.intellij.plugin.ui.insights.model.SetUnDismissedData
+import org.digma.intellij.plugin.ui.insights.model.SetUnDismissedMessage
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
 import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
 
@@ -56,12 +60,41 @@ class InsightsService(val project: Project) : InsightsServiceImpl(project) {
     }
 
     fun undismissInsight(insightId: String) {
-        AnalyticsService.getInstance(project).undismissInsight(insightId)
+       var status =""
+       var error: String? =null
+        try {
+           AnalyticsService.getInstance(project).undismissInsight(insightId)
+           status ="success"
+       } catch (e: AnalyticsServiceException) {
+           status = "failure"
+           error= "Error undismissing  insight";
+           Log.warnWithException(logger, project, e,error , e.message)
+       }
+
+        val msg = SetUnDismissedMessage(SetUnDismissedData(insightId,status, error))
+        jCefComponent?.let {
+            serializeAndExecuteWindowPostMessageJavaScript(it.jbCefBrowser.cefBrowser, msg)
+        }
     }
 
 
     fun dismissInsight(insightId: String) {
-        AnalyticsService.getInstance(project).dismissInsight(insightId)
+        var status =""
+        var error: String? =null
+        try {
+            AnalyticsService.getInstance(project).dismissInsight(insightId)
+            status ="success"
+        } catch (e: AnalyticsServiceException) {
+            status = "failure"
+            error= "Error dismissing  insight";
+            Log.warnWithException(logger, project, e,error , e.message)
+        }
+
+
+        val msg = SetDismissedMessage(SetDismissedData(insightId, status, error))
+        jCefComponent?.let {
+            serializeAndExecuteWindowPostMessageJavaScript(it.jbCefBrowser.cefBrowser, msg)
+        }
     }
 
 

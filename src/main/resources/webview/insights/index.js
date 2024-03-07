@@ -236,6 +236,8 @@
   align-items: center;
   margin: -8px;
   background: ${({theme:e})=>e.colors.v3.surface.sidePanelHeader};
+
+  ${l.subscriptRegularTypography}
 `,t.DismissDialogActions=a.default.div`
   display: flex;
   gap: 8px;

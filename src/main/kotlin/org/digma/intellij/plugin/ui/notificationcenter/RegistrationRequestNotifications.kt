@@ -46,7 +46,7 @@ fun startRequestRegisterTimers(parentDisposable: Disposable) {
             try {
                 if (PersistenceService.getInstance().isFirstTimeAssetsReceived() &&
                     !isUserRegistered() &&
-                    daysSinceFirstAsset() > 14 &&
+                    daysSinceFirstAsset() > 14000 &&
                     moreThen24HoursSinceLastNotified()
                 ) {
                     service<NotificationsPersistenceState>().state.requestRegistrationLastNotified = Instant.now()

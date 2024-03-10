@@ -57,12 +57,12 @@ public class DocumentInfoService {
     }
 
 
-    public boolean contains(PsiFile psiFile) {
+    public boolean contains(@NotNull PsiFile psiFile) {
         return documents.containsKey(PsiUtils.psiFileToUri(psiFile));
     }
 
 
-    public void notifyDocumentInfoChanged(PsiFile psiFile) {
+    public void notifyDocumentInfoChanged(@NotNull PsiFile psiFile) {
         Log.log(LOGGER::debug, "Notifying DocumentInfo changed for {}", psiFile.getVirtualFile());
         DocumentInfoChanged publisher = project.getMessageBus().syncPublisher(DocumentInfoChanged.DOCUMENT_INFO_CHANGED_TOPIC);
         publisher.documentInfoChanged(psiFile);

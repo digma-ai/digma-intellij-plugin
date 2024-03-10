@@ -84,23 +84,25 @@ class DocumentChangeListener {
                         return;
                     }
 
-                    //must be executed on EDT
-                    PsiFile changedPsiFile = PsiDocumentManager.getInstance(project).getPsiFile(event.getDocument());
-                    if (changedPsiFile == null) {
-                        Log.log(LOGGER::debug, "changedPsiFile is null for {}", event.getDocument());
+
+                    var virtualFile = FileDocumentManager.getInstance().getFile(event.getDocument());
+
+                    if (virtualFile == null || !VfsUtilsKt.isValidVirtualFile(virtualFile)) {
                         return;
                     }
 
+                    var psiFileCachedValue = PsiUtils.getPsiFileCachedValue(project, virtualFile);
+
                     @Nullable
-                    var fileEditor = FileEditorManager.getInstance(project).getSelectedEditor(changedPsiFile.getVirtualFile());
+                    var fileEditor = FileEditorManager.getInstance(project).getSelectedEditor(virtualFile);
 
                     documentChangeAlarm.cancelAllRequests();
                     documentChangeAlarm.addRequest(() -> {
 
                         try {
                             Log.log(LOGGER::debug, "got documentChanged alarm for {}", event.getDocument());
-                            Log.log(LOGGER::debug, "Processing documentChanged event for {}", changedPsiFile);
-                            processDocumentChanged(changedPsiFile, fileEditor);
+                            Log.log(LOGGER::debug, "Processing documentChanged event for {}", virtualFile);
+                            processDocumentChanged(psiFileCachedValue, fileEditor);
                         } catch (Exception e) {
                             Log.warnWithException(LOGGER, e, "exception while processing documentChanged event for file: {}, {}", event.getDocument(), e.getMessage());
                             ErrorReporter.getInstance().reportError(project, "DocumentChangeListener.documentChanged", e);
@@ -130,22 +132,22 @@ class DocumentChangeListener {
     }
 
 
-    private void processDocumentChanged(@NotNull PsiFile psiFile, @Nullable FileEditor fileEditor) {
+    private void processDocumentChanged(@NotNull PsiFileCachedValueWithUri psiFileCachedValue, @Nullable FileEditor fileEditor) {
 
-        if (!ProjectUtilsKt.isProjectValid(project) || !PsiUtils.isValidPsiFile(psiFile)) {
+        if (!ProjectUtilsKt.isProjectValid(project) || !PsiUtils.isValidPsiFile(psiFileCachedValue.getValue())) {
             return;
         }
 
         EDT.assertNonDispatchThread();
 
-        LanguageService languageService = LanguageServiceLocator.getInstance(project).locate(psiFile.getLanguage());
+        LanguageService languageService = LanguageServiceLocator.getInstance(project).locate(psiFileCachedValue.getValue().getLanguage());
 
-        BuildDocumentInfoProcessContext.buildDocumentInfoUnderProcess(project, psiFile.getName(), progressIndicator -> {
+        BuildDocumentInfoProcessContext.buildDocumentInfoUnderProcess(project, psiFileCachedValue.getValue().getName(), progressIndicator -> {
             var context = new BuildDocumentInfoProcessContext(progressIndicator);
-            DocumentInfo documentInfo = languageService.buildDocumentInfo(psiFile, fileEditor, context);
-            Log.log(LOGGER::debug, "got DocumentInfo for {}", psiFile.getVirtualFile());
-            documentInfoService.addCodeObjects(psiFile, documentInfo);
-            Log.log(LOGGER::debug, "documentInfoService updated with DocumentInfo for {}", psiFile.getVirtualFile());
+            DocumentInfo documentInfo = languageService.buildDocumentInfo(psiFileCachedValue, fileEditor, context);
+            Log.log(LOGGER::debug, "got DocumentInfo for {}", psiFileCachedValue.getValue().getVirtualFile());
+            documentInfoService.addCodeObjects(psiFileCachedValue.getValue(), documentInfo);
+            Log.log(LOGGER::debug, "documentInfoService updated with DocumentInfo for {}", psiFileCachedValue.getValue().getVirtualFile());
         });
     }
 

@@ -3,14 +3,11 @@ package org.digma.intellij.plugin.psi;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.openapi.vfs.VirtualFileManager;
-import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiManager;
-import org.digma.intellij.plugin.common.ReadActions;
-import org.digma.intellij.plugin.common.VfsUtilsKt;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import com.intellij.openapi.vfs.*;
+import com.intellij.psi.*;
+import com.intellij.psi.util.*;
+import org.digma.intellij.plugin.common.*;
+import org.jetbrains.annotations.*;
 
 
 public class PsiUtils {
@@ -79,6 +76,25 @@ public class PsiUtils {
             }
             return psiUri;
         });
+    }
+
+    @NotNull
+    public static PsiFileCachedValueWithUri getPsiFileCachedValue(Project project, VirtualFile virtualFile) {
+
+        return new PsiFileCachedValueWithUri(CachedValuesManager.getManager(project).createCachedValue(new CachedValueProvider<>() {
+            @Nullable
+            @Override
+            public Result<PsiFile> compute() {
+
+                if (!VfsUtilsKt.isValidVirtualFile(virtualFile)) {
+                    return null;
+                }
+
+                var psiFile = PsiAccessUtilsKt.runInReadAccessWithResult(() -> PsiManager.getInstance(project).findFile(virtualFile));
+                //todo: maybe add PsiModificationTracker as dependency
+                return CachedValueProvider.Result.create(psiFile, virtualFile);
+            }
+        }, true), virtualFile);
     }
 
 }

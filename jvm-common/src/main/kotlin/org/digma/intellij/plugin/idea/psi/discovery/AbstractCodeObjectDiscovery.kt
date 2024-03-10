@@ -3,7 +3,6 @@ package org.digma.intellij.plugin.idea.psi.discovery
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
-import com.intellij.psi.PsiFile
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.common.executeCatching
@@ -22,6 +21,7 @@ import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.discovery.SpanInfo
 import org.digma.intellij.plugin.psi.BuildDocumentInfoProcessContext
+import org.digma.intellij.plugin.psi.PsiFileCachedValueWithUri
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UFile
@@ -84,11 +84,11 @@ abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSp
 
     //todo: run under process and use org.digma.intellij.plugin.progress.ProcessContext
     // to track errors, create a ProcessContext class for buildDocumentInfo like BuildDocumentInfoProcessContext
-    open fun buildDocumentInfo(project: Project, psiFile: PsiFile, context: BuildDocumentInfoProcessContext): DocumentInfo {
-
-        if (!isProjectValid(project) || !PsiUtils.isValidPsiFile(psiFile)) {
-            return DocumentInfo(PsiUtils.psiFileToUri(psiFile), mutableMapOf())
-        }
+    open fun buildDocumentInfo(
+        project: Project,
+        psiFileCachedValue: PsiFileCachedValueWithUri,
+        context: BuildDocumentInfoProcessContext,
+    ): DocumentInfo {
 
         try {
 
@@ -100,9 +100,15 @@ abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSp
 
             DumbService.getInstance(project).waitForSmartMode()
 
+            var psiFile = psiFileCachedValue.value
+            if (!isProjectValid(project) || !PsiUtils.isValidPsiFile(psiFile)) {
+                return DocumentInfo(psiFileCachedValue.uri, mutableMapOf())
+            }
+
+
             //build a file data in read access
             val fileData = runInReadAccessWithResult {
-                FileData.buildFileData(psiFile)
+                FileData.buildFileData(psiFileCachedValue)
             }
 
             val fileUri = fileData.fileUri
@@ -112,19 +118,21 @@ abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSp
 
             val packageName = fileData.packageName
 
-            val classes = fileData.classes
-
             val methodInfoMap = mutableMapOf<String, MethodInfo>()
 
-            val spans: Collection<SpanInfo> = collectSpans(project, psiFile, context)
+            val spans: Collection<SpanInfo> = collectSpans(project, psiFileCachedValue, context)
 
+            //get an updated psi file if it was invalidated
+            psiFile = psiFileCachedValue.value
             //if collectMethods throws exception we don't catch it, there is no use for DocumentInfo without methods.
             //the exception will be caught be caller and hopefully retry and succeed.
+            val classes = psiFile.toUElementOfType<UFile>()?.classes ?: listOf()
             collectMethods(project, fileUri, classes, packageName, methodInfoMap, spans, context)
+
 
             val documentInfo = DocumentInfo(fileUri, methodInfoMap)
 
-            collectEndpoints(project, psiFile, documentInfo, context)
+            collectEndpoints(project, psiFileCachedValue, documentInfo, context)
 
             return documentInfo
 
@@ -137,15 +145,17 @@ abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSp
 
     private fun collectEndpoints(
         project: Project,
-        psiFile: PsiFile,
+        psiFileCachedValue: PsiFileCachedValueWithUri,
         documentInfo: DocumentInfo,
         context: BuildDocumentInfoProcessContext,
     ) {
+
+        val psiFile = psiFileCachedValue.value ?: return
         val endpointDiscoveryList = EndpointDiscoveryService.getInstance(project).getEndpointDiscoveryForLanguage(psiFile)
         endpointDiscoveryList.forEach(Consumer { framework: EndpointDiscovery ->
             //if a framework fails catch it and continue execution so at least we have a partial document info.
             executeCatchingWithResultAndRetryIgnorePCE({
-                framework.endpointDiscovery(psiFile, documentInfo, context)
+                framework.endpointDiscovery(psiFileCachedValue, documentInfo, context)
             }, { e ->
                 context.addError("collectEndpoints", e)
             })
@@ -155,12 +165,12 @@ abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSp
 
     private fun collectSpans(
         project: Project,
-        psiFile: PsiFile,
+        psiFileCachedValue: PsiFileCachedValueWithUri,
         context: BuildDocumentInfoProcessContext,
     ): Collection<SpanInfo> {
         //if span discovery fails catch it and continue execution so at least we have a partial document info.
         return executeCatchingWithResultAndRetryIgnorePCE({
-            spanDiscovery.discoverSpans(project, psiFile, context)
+            spanDiscovery.discoverSpans(project, psiFileCachedValue, context)
         }, { e ->
             context.addError("collectSpans", e)
             listOf()
@@ -236,22 +246,26 @@ abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSp
 }
 
 
-private class FileData(val fileUri: String, val uFile: UFile?, val packageName: String, val classes: List<UClass>) {
+private class FileData(val fileUri: String, val uFile: UFile?, val packageName: String) {
 
-    constructor() : this("", null, "", listOf())
-    constructor(fileUri: String) : this(fileUri, null, "", listOf())
+    constructor() : this("", null, "")
+    constructor(fileUri: String) : this(fileUri, null, "")
 
     companion object {
-        fun buildFileData(psiFile: PsiFile): FileData {
+        fun buildFileData(psiFileCachedValue: PsiFileCachedValueWithUri): FileData {
+
             return executeCatchingWithResult({
-                val fileUri = PsiUtils.psiFileToUri(psiFile)
-                //usually it will return a UFile but must consider null
-                val uFile: UFile? = psiFile.toUElementOfType<UFile>()
-                uFile?.let {
-                    val packageName = it.packageName
-                    val classes = it.classes
-                    FileData(fileUri, it, packageName, classes)
-                } ?: FileData(fileUri)
+
+                psiFileCachedValue.value?.let { psiFile ->
+                    val fileUri = PsiUtils.psiFileToUri(psiFile)
+                    //usually it will return a UFile but must consider null
+                    val uFile: UFile? = psiFile.toUElementOfType<UFile>()
+                    uFile?.let {
+                        val packageName = it.packageName
+                        FileData(fileUri, it, packageName)
+                    } ?: FileData(fileUri)
+
+                } ?: FileData()
             }, {
                 FileData()
             })

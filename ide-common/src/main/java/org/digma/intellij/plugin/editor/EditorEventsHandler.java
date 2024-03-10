@@ -145,12 +145,16 @@ public class EditorEventsHandler implements FileEditorManagerListener {
                     return;
                 }
 
-                PsiFile psiFile = PsiAccessUtilsKt.runInReadAccessWithResult(() -> PsiManager.getInstance(project).findFile(newFile));
+                var psiFileCachedValue = PsiUtils.getPsiFileCachedValue(project, newFile);
 
+                var psiFile = psiFileCachedValue.getValue();
                 if (!PsiUtils.isValidPsiFile(psiFile)) {
-                    Log.log(LOGGER::trace, "No psi file for :{}", newFile);
+                    Log.log(LOGGER::trace, "Psi file invalid for :{}", newFile);
                     return;
                 }
+
+                //psi file is non-null and valid here
+
 
                 //if documentInfoService contains this file then the file was already opened before and now its only
                 //selectionChanged when changing tabs
@@ -160,16 +164,28 @@ public class EditorEventsHandler implements FileEditorManagerListener {
 
                     if (newEditor.isValid()) {
 
+                        //get up-to-date file again because it's after waiting for smart mode and the file may be invalidated
+                        psiFile = psiFileCachedValue.getValue();
+                        if (!PsiUtils.isValidPsiFile(psiFile)) {
+                            Log.log(LOGGER::trace, "Psi file invalid for :{}", newFile);
+                            return;
+                        }
+
+
                         LanguageService languageService = languageServiceLocator.locate(psiFile.getLanguage());
                         Log.log(LOGGER::trace, "Found language service {} for :{}", languageService, newFile);
 
 
                         BuildDocumentInfoProcessContext.buildDocumentInfoUnderProcess(project, psiFile.getName(), progressIndicator -> {
                             var context = new BuildDocumentInfoProcessContext(progressIndicator);
-                            DocumentInfo documentInfo = languageService.buildDocumentInfo(psiFile, newEditor, context);
+                            DocumentInfo documentInfo = languageService.buildDocumentInfo(psiFileCachedValue, newEditor, context);
                             Log.log(LOGGER::trace, "got DocumentInfo for :{}", newFile);
-                            documentInfoService.addCodeObjects(psiFile, documentInfo);
-                            Log.log(LOGGER::trace, "documentInfoService updated with DocumentInfo for :{}", newFile);
+                            //get the value again, maybe it was invalidated
+                            var upToDatePsiFile = psiFileCachedValue.getValue();
+                            if (PsiUtils.isValidPsiFile(upToDatePsiFile)) {
+                                documentInfoService.addCodeObjects(upToDatePsiFile, documentInfo);
+                                Log.log(LOGGER::trace, "documentInfoService updated with DocumentInfo for :{}", newFile);
+                            }
                         });
                     }
                 } else {

@@ -157,8 +157,9 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
                 val psiFile = PsiUtils.uriToPsiFile(fileUri, project)
                 if (PsiUtils.isValidPsiFile(psiFile)) {
                     BuildDocumentInfoProcessContext.buildDocumentInfoUnderProcessOnCurrentThreadNoRetry { pi ->
+                        val psiFileCachedValue = PsiUtils.getPsiFileCachedValue(project, psiFile.virtualFile)
                         val context = BuildDocumentInfoProcessContext(pi)
-                        val documentInfo = languageService.buildDocumentInfo(psiFile, context)
+                        val documentInfo = languageService.buildDocumentInfo(psiFileCachedValue, context)
                         documentInfo.methods[methodCodeObjectId] ?: defaultResult
                     }
 

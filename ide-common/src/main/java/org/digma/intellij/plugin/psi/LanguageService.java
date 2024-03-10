@@ -370,12 +370,12 @@ public interface LanguageService extends Disposable {
 
 
     @NotNull
-    DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, BuildDocumentInfoProcessContext context);
+    DocumentInfo buildDocumentInfo(@NotNull PsiFileCachedValueWithUri psiFileCachedValue, BuildDocumentInfoProcessContext context);
 
     //some language services need the selected editor , for example CSharpLanguageService need to take
     // getProjectModelId from the selected editor. it may be null
     @NotNull
-    DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, @Nullable FileEditor selectedTextEditor, BuildDocumentInfoProcessContext context);
+    DocumentInfo buildDocumentInfo(@NotNull PsiFileCachedValueWithUri psiFileCachedValue, @Nullable FileEditor selectedTextEditor, BuildDocumentInfoProcessContext context);
 
 
     boolean isRelevant(VirtualFile file);

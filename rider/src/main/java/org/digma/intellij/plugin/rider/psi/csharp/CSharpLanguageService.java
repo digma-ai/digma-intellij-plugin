@@ -183,25 +183,30 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
 
 
     @Override
-    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, BuildDocumentInfoProcessContext context) {
-        return buildDocumentInfo(psiFile, null, context);
+    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFileCachedValueWithUri psiFileCachedValue, BuildDocumentInfoProcessContext context) {
+        return buildDocumentInfo(psiFileCachedValue, null, context);
     }
 
     @Override
-    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, @Nullable FileEditor newEditor, BuildDocumentInfoProcessContext context) {
+    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFileCachedValueWithUri psiFileCachedValue, @Nullable FileEditor newEditor, BuildDocumentInfoProcessContext context) {
+
+        var psiFile = psiFileCachedValue.getValue();
+        if (!PsiUtils.isValidPsiFile(psiFile)) {
+            return new DocumentInfo(psiFileCachedValue.getUri(), new HashMap<>());
+        }
 
         Log.log(LOGGER::debug, "got buildDocumentInfo request for {}", psiFile);
-        //must be PsiJavaFile , this method should be called only for java files
+        //must be CSharpFile
         if (CSharpLanguageUtil.isCSharpFile(psiFile)) {
             DocumentInfo documentInfo = LanguageServiceHost.getInstance(project).getDocumentInfo(psiFile, newEditor);
             if (documentInfo == null) {
-                Log.log(LOGGER::warn, "DocumentInfo not found for {}, returning empty DocumentInfo", psiFile);
-                documentInfo = new DocumentInfo(PsiUtils.psiFileToUri(psiFile), new HashMap<>());
+                Log.log(LOGGER::warn, "DocumentInfo not found for {}, returning empty DocumentInfo", psiFileCachedValue.getValue());
+                documentInfo = new DocumentInfo(psiFileCachedValue.getUri(), new HashMap<>());
             }
             return documentInfo;
         } else {
-            Log.log(LOGGER::debug, "psi file is noy CSharpFile, returning empty DocumentInfo for {}", psiFile);
-            return new DocumentInfo(PsiUtils.psiFileToUri(psiFile), new HashMap<>());
+            Log.log(LOGGER::debug, "psi file is not CSharpFile, returning empty DocumentInfo for {}", psiFileCachedValue.getValue());
+            return new DocumentInfo(psiFileCachedValue.getUri(), new HashMap<>());
         }
     }
 

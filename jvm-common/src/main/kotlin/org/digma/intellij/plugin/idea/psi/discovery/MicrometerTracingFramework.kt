@@ -122,13 +122,14 @@ class MicrometerTracingFramework {
 
         val spanInfos = mutableListOf<SpanInfo>()
 
-        val newSpanClass = psiPointers.getPsiClass(project, NEW_SPAN_FQN)
+        psiPointers.getPsiClass(project, NEW_SPAN_FQN)?.let {
 
-        newSpanClass?.let {
+            val annotatedMethods = psiPointers.getPsiClassPointer(project, NEW_SPAN_FQN)?.let { newSpanClassPointer ->
+                findAnnotatedMethods(project, newSpanClassPointer) { GlobalSearchScope.fileScope(psiFile) }
+            }
 
-            val annotatedMethods = findAnnotatedMethods(project, newSpanClass) { GlobalSearchScope.fileScope(psiFile) }
 
-            annotatedMethods.forEach { annotatedMethod: SmartPsiElementPointer<PsiMethod> ->
+            annotatedMethods?.forEach { annotatedMethod: SmartPsiElementPointer<PsiMethod> ->
 
                 executeCatchingIgnorePCE({
                     runInReadAccessWithRetryIgnorePCE {
@@ -161,13 +162,15 @@ class MicrometerTracingFramework {
 
         val spanInfos = mutableListOf<SpanInfo>()
 
-        val observedAnnotationClass = psiPointers.getPsiClass(project, OBSERVED_FQN)
 
-        observedAnnotationClass?.let {
+        psiPointers.getPsiClass(project, OBSERVED_FQN)?.let {
 
-            val annotatedMethods = findAnnotatedMethods(project, observedAnnotationClass) { GlobalSearchScope.fileScope(psiFile) }
+            val annotatedMethods = psiPointers.getPsiClassPointer(project, OBSERVED_FQN)?.let { observedAnnotationClassPointer ->
+                findAnnotatedMethods(project, observedAnnotationClassPointer) { GlobalSearchScope.fileScope(psiFile) }
+            }
 
-            annotatedMethods.forEach { annotatedMethod: SmartPsiElementPointer<PsiMethod> ->
+
+            annotatedMethods?.forEach { annotatedMethod: SmartPsiElementPointer<PsiMethod> ->
 
                 executeCatchingIgnorePCE({
                     runInReadAccessWithRetryIgnorePCE {

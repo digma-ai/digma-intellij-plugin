@@ -22,7 +22,8 @@ class PsiPointers(val project: Project) {
 
 
     fun getPsiClass(project: Project, className: String): PsiClass? {
-        return runInReadAccessWithResult { getPsiClassPointer(project, className)?.element }
+        val classPointer = getPsiClassPointer(project, className)
+        return runInReadAccessWithResult { classPointer?.element }
     }
 
     fun getPsiClassPointer(project: Project, className: String): SmartPsiElementPointer<PsiClass>? {
@@ -41,9 +42,17 @@ class PsiPointers(val project: Project) {
     }
 
 
-    //its not easy to keep keys for methods cox can't use the PsiClass as key in a map.
-    // we don't have many cases that we need to keep a pointer to PsiMethod so specific method is ok.
-    fun getOtelStartSpanMethod(project: Project, builderClass: PsiClass): PsiMethod? {
+    //it's not easy to keep keys for methods coz can't use the PsiClass as key in a map.
+    // we don't have many cases that we need to keep a pointer to PsiMethod so specific method for each use case is ok.
+    fun getOtelStartSpanMethodPointer(project: Project, builderClassPointer: SmartPsiElementPointer<PsiClass>): SmartPsiElementPointer<PsiMethod>? {
+        val builderClass = runInReadAccessWithResult { builderClassPointer.element }
+        return builderClass?.let {
+            getOtelStartSpanMethodPointer(project, it)
+        }
+    }
+
+
+    private fun getOtelStartSpanMethodPointer(project: Project, builderClass: PsiClass): SmartPsiElementPointer<PsiMethod>? {
         if (startSpanPsiMethodPointer == null) {
             startSpanPsiMethodPointer = runInReadAccessInSmartModeWithResultAndRetryIgnorePCE(project) {
                 val startSpanMethod: PsiMethod? = findMethodInClass(builderClass, "startSpan") { psiMethod: PsiMethod ->
@@ -56,9 +65,13 @@ class PsiPointers(val project: Project) {
             }
         }
 
-        return runInReadAccessWithResult {
-            startSpanPsiMethodPointer?.element
-        }
+        return startSpanPsiMethodPointer
     }
+
+//    fun getOtelStartSpanMethod(project: Project, builderClass: PsiClass): PsiMethod? {
+//        return runInReadAccessWithResult {
+//            getOtelStartSpanMethodPointer(project,builderClass)?.element
+//        }
+//    }
 
 }

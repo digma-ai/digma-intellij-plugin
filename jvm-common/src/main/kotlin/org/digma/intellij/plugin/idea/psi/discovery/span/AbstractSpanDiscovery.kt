@@ -6,6 +6,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiReference
+import com.intellij.psi.SmartPsiElementPointer
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.searches.AnnotatedElementsSearch
 import com.intellij.psi.search.searches.MethodReferencesSearch
@@ -88,15 +89,16 @@ abstract class AbstractSpanDiscovery {
 
         val psiPointers = project.service<PsiPointers>()
 
-        val withSpanAnnotationClass = psiPointers.getPsiClass(project, WITH_SPAN_ANNOTATION_FQN)
-
-        return withSpanAnnotationClass?.let { withSpanClass ->
+        return psiPointers.getPsiClass(project, WITH_SPAN_ANNOTATION_FQN)?.let {
 
             val spanInfos = mutableListOf<SpanInfo>()
 
-            val annotatedMethods: List<UMethod> = findAnnotatedMethods(project, withSpanClass, searchScope)
+            val annotatedMethods: List<UMethod>? = psiPointers.getPsiClassPointer(project, WITH_SPAN_ANNOTATION_FQN)?.let { withSpanClassPointer ->
+                findAnnotatedMethods(project, withSpanClassPointer, searchScope)
+            }
 
-            annotatedMethods.forEach {
+
+            annotatedMethods?.forEach {
 
                 //catch exceptions for each annotated method and skip it
                 val methodSpans: List<SpanInfo> =
@@ -125,12 +127,18 @@ abstract class AbstractSpanDiscovery {
     }
 
 
-    private fun findAnnotatedMethods(project: Project, annotationClass: PsiClass, searchScope: SearchScopeProvider): List<UMethod> {
+    private fun findAnnotatedMethods(
+        project: Project,
+        annotationClassPointer: SmartPsiElementPointer<PsiClass>,
+        searchScope: SearchScopeProvider,
+    ): List<UMethod> {
         //todo: different search for java/kotlin, for kotlin use KotlinAnnotatedElementsSearcher or KotlinAnnotationsIndex
         return runInReadAccessInSmartModeWithResultAndRetryIgnorePCE(project) {
-            val psiMethods = AnnotatedElementsSearch.searchPsiMethods(annotationClass, searchScope.get())
-            psiMethods.findAll().mapNotNull { psiMethod: PsiMethod -> psiMethod.toUElementOfType<UMethod>() }
-        }
+            annotationClassPointer.element?.let { annotationClass ->
+                val psiMethods = AnnotatedElementsSearch.searchPsiMethods(annotationClass, searchScope.get())
+                psiMethods.findAll().mapNotNull { psiMethod: PsiMethod -> psiMethod.toUElementOfType<UMethod>() }
+            }
+        } ?: listOf()
     }
 
 
@@ -142,41 +150,36 @@ abstract class AbstractSpanDiscovery {
 
         val psiPointers = project.service<PsiPointers>()
 
-        val tracerBuilderClass = psiPointers.getPsiClass(project, SPAN_BUILDER_FQN)
+        return psiPointers.getPsiClassPointer(project, SPAN_BUILDER_FQN)?.let { tracerBuilderClassPointer ->
 
-        return tracerBuilderClass?.let { builderClass ->
+            val spanInfos = mutableListOf<SpanInfo>()
 
-            val startSpanMethod = psiPointers.getOtelStartSpanMethod(project, builderClass)
-
-
-            return startSpanMethod?.let { method ->
-
-                val spanInfos = mutableListOf<SpanInfo>()
-
-                val startSpanReferences: Collection<UReferenceExpression> = findStartSpanMethodReferences(project, method, searchScope)
-
-                startSpanReferences.forEach { uReference ->
-
-                    //catch exceptions for each method reference and skip it
-                    val spanInfo: SpanInfo? =
-                        executeCatchingWithResultIgnorePCE({
-                            runInReadAccessInSmartModeWithResultAndRetryIgnorePCE(project) {
-                                findSpanInfoFromStartSpanMethodReference(project, uReference)
-                            }
-                        }, { e ->
-                            context.addError("discoverStartSpanMethodCallSpanDiscovery", e)
-                            null
-                        })
-
-                    spanInfo?.let { span ->
-                        spanInfos.add(span)
-                    }
-
+            val startSpanReferences: Collection<UReferenceExpression>? =
+                psiPointers.getOtelStartSpanMethodPointer(project, tracerBuilderClassPointer)?.let { startSpanMethodPointer ->
+                    findStartSpanMethodReferences(project, startSpanMethodPointer, searchScope)
                 }
 
-                return spanInfos
+            startSpanReferences?.forEach { uReference ->
+
+                //catch exceptions for each method reference and skip it
+                val spanInfo: SpanInfo? =
+                    executeCatchingWithResultIgnorePCE({
+                        runInReadAccessInSmartModeWithResultAndRetryIgnorePCE(project) {
+                            findSpanInfoFromStartSpanMethodReference(project, uReference)
+                        }
+                    }, { e ->
+                        context.addError("discoverStartSpanMethodCallSpanDiscovery", e)
+                        null
+                    })
+
+                spanInfo?.let { span ->
+                    spanInfos.add(span)
+                }
 
             }
+
+            return spanInfos
+
         }
     }
 
@@ -190,15 +193,16 @@ abstract class AbstractSpanDiscovery {
 
     private fun findStartSpanMethodReferences(
         project: Project,
-        startSpanMethod: PsiMethod,
+        startSpanMethodPointer: SmartPsiElementPointer<PsiMethod>,
         searchScope: SearchScopeProvider,
-    ): Collection<UReferenceExpression> {
+    ): Collection<UReferenceExpression>? {
 
         return runInReadAccessInSmartModeWithResultAndRetryIgnorePCE(project) {
-            val methodReferences = MethodReferencesSearch.search(startSpanMethod, searchScope.get(), true)
-            methodReferences.findAll().mapNotNull { psiReference: PsiReference -> psiReference.element.toUElementOfType<UReferenceExpression>() }
+            startSpanMethodPointer.element?.let { startSpanMethod ->
+                val methodReferences = MethodReferencesSearch.search(startSpanMethod, searchScope.get(), true)
+                methodReferences.findAll().mapNotNull { psiReference: PsiReference -> psiReference.element.toUElementOfType<UReferenceExpression>() }
+            }
         }
-
     }
 
 }

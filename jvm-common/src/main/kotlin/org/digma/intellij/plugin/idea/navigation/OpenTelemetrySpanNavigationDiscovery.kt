@@ -59,8 +59,9 @@ class OpenTelemetrySpanNavigationDiscovery(private val project: Project) : SpanN
 
         val annotatedMethods =
             executeCatchingWithResultWithRetry(context, getName(), 50, 5) {
-                val withSpanClass = psiPointers.getPsiClass(project, WITH_SPAN_ANNOTATION_FQN) ?: return@executeCatchingWithResultWithRetry listOf()
-                findAnnotatedMethods(project, withSpanClass, context.searchScope)
+                psiPointers.getPsiClassPointer(project, WITH_SPAN_ANNOTATION_FQN)?.let { withSpanClassPointer ->
+                    findAnnotatedMethods(project, withSpanClassPointer, context.searchScope)
+                }
             } ?: return mapOf()
 
 
@@ -112,12 +113,14 @@ class OpenTelemetrySpanNavigationDiscovery(private val project: Project) : SpanN
         val psiPointers = project.service<PsiPointers>()
 
         val startSpanReferences = executeCatchingWithResultWithRetry(context, getName(), 50, 5) {
-            val tracerBuilderClass = psiPointers.getPsiClass(project, SPAN_BUILDER_FQN) ?: return@executeCatchingWithResultWithRetry listOf()
-            val startSpanMethod = psiPointers.getOtelStartSpanMethod(project, tracerBuilderClass)
-            Objects.requireNonNull(startSpanMethod, "startSpan method must be found in SpanBuilder class")
-            startSpanMethod?.let {
-                findMethodReferences(project, startSpanMethod, context.searchScope)
-            } ?: listOf()
+            val tracerBuilderClassPointer = psiPointers.getPsiClassPointer(project, SPAN_BUILDER_FQN)
+            tracerBuilderClassPointer?.let {
+                val startSpanMethodPointer = psiPointers.getOtelStartSpanMethodPointer(project, tracerBuilderClassPointer)
+                Objects.requireNonNull(startSpanMethodPointer, "startSpan method must be found in SpanBuilder class")
+                startSpanMethodPointer?.let {
+                    findMethodReferences(project, startSpanMethodPointer, context.searchScope)
+                } ?: listOf()
+            }
         } ?: return mapOf()
 
 

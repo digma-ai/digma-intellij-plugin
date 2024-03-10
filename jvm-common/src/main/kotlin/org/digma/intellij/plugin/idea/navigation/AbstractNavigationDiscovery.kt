@@ -33,6 +33,7 @@ import org.digma.intellij.plugin.posthog.SessionMetadata
 import org.digma.intellij.plugin.posthog.getPluginLoadedKey
 import org.digma.intellij.plugin.progress.RetryableTask
 import org.digma.intellij.plugin.psi.PsiUtils
+import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 import java.util.function.Consumer
@@ -46,7 +47,8 @@ abstract class AbstractNavigationDiscovery(protected val project: Project) : Dis
     //used to restrict one update thread at a time
     protected val buildLock = ReentrantLock()
 
-    private val scheduledExecutorService = AppExecutorUtil.createBoundedScheduledExecutorService("SpanNav", 1)
+    private val scheduledExecutorService: ScheduledExecutorService
+        get() = AppExecutorUtil.createBoundedScheduledExecutorService("${this.type}Nav", 1)
 
 
     override fun dispose() {

@@ -11,17 +11,29 @@ import com.intellij.psi.search.searches.MethodReferencesSearch
 import org.digma.intellij.plugin.common.SearchScopeProvider
 import org.digma.intellij.plugin.common.runInReadAccessInSmartModeWithResultAndRetryIgnorePCE
 
-
-fun findAnnotatedMethods(project: Project, annotationClass: PsiClass, searchScope: SearchScopeProvider): List<SmartPsiElementPointer<PsiMethod>> {
+//this method receives a annotationClassPointer and takes the pointer as late as possible because maybe there will be a PSI reparse until its used.
+fun findAnnotatedMethods(
+    project: Project,
+    annotationClassPointer: SmartPsiElementPointer<PsiClass>,
+    searchScope: SearchScopeProvider,
+): List<SmartPsiElementPointer<PsiMethod>> {
     return runInReadAccessInSmartModeWithResultAndRetryIgnorePCE(project) {
-        val psiMethodsQuery = AnnotatedElementsSearch.searchPsiMethods(annotationClass, searchScope.get())
-        psiMethodsQuery.findAll().map { SmartPointerManager.getInstance(project).createSmartPsiElementPointer(it) }
+        annotationClassPointer.element?.let { annotationClass ->
+            val psiMethodsQuery = AnnotatedElementsSearch.searchPsiMethods(annotationClass, searchScope.get())
+            psiMethodsQuery.findAll().map { SmartPointerManager.getInstance(project).createSmartPsiElementPointer(it) }
+        }
     } ?: listOf()
 }
 
-fun findMethodReferences(project: Project, psiMethod: PsiMethod, searchScope: SearchScopeProvider): List<PsiReference> {
+fun findMethodReferences(
+    project: Project,
+    psiMethodPointer: SmartPsiElementPointer<PsiMethod>,
+    searchScope: SearchScopeProvider,
+): List<PsiReference> {
     return runInReadAccessInSmartModeWithResultAndRetryIgnorePCE(project) {
-        val references = MethodReferencesSearch.search(psiMethod, searchScope.get(), true)
-        references.findAll().toList()
+        psiMethodPointer.element?.let { psiMethod ->
+            val references = MethodReferencesSearch.search(psiMethod, searchScope.get(), true)
+            references.findAll().toList()
+        }
     } ?: listOf()
 }

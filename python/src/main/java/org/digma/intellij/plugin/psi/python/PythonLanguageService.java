@@ -259,12 +259,22 @@ public class PythonLanguageService implements LanguageService {
     }
 
     @Override
-    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, BuildDocumentInfoProcessContext context) {
+    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFileCachedValueWithUri psiFileCachedValue, BuildDocumentInfoProcessContext context) {
+
+        var psiFile = psiFileCachedValue.getValue();
+        if (!PsiUtils.isValidPsiFile(psiFile)) {
+            return new DocumentInfo(psiFileCachedValue.getUri(), new HashMap<>());
+        }
+
+        //todo: when python support is revived pass psiFileCachedValue to PythonCodeObjectsDiscovery.buildDocumentInfo
+        // and use PsiFileCachedValueWithUri to always use a valid file
+
         Log.log(LOGGER::debug, "got buildDocumentInfo request for {}", psiFile);
         if (psiFile instanceof PyFile pyFile) {
 
-            return ProgressManager.getInstance().runProcess(() -> Retries.retryWithResult(() -> ReadAction.compute(() -> PythonCodeObjectsDiscovery.buildDocumentInfo(project, pyFile)),
-                    Throwable.class,50,5),new EmptyProgressIndicator());
+            return ProgressManager.getInstance().runProcess(() -> Retries.retryWithResult(() ->
+                            ReadAction.compute(() -> PythonCodeObjectsDiscovery.buildDocumentInfo(project, pyFile)),
+                    Throwable.class, 50, 5), new EmptyProgressIndicator());
 
         } else {
             Log.log(LOGGER::debug, "psi file is noy python, returning empty DocumentInfo for {}", psiFile);
@@ -273,8 +283,8 @@ public class PythonLanguageService implements LanguageService {
     }
 
     @Override
-    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, @Nullable FileEditor newEditor, BuildDocumentInfoProcessContext context) {
-        return buildDocumentInfo(psiFile, context);
+    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFileCachedValueWithUri psiFileCachedValue, @Nullable FileEditor newEditor, BuildDocumentInfoProcessContext context) {
+        return buildDocumentInfo(psiFileCachedValue, context);
     }
 
 

@@ -8,7 +8,6 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
-import com.intellij.psi.PsiManager
 import com.jetbrains.rd.framework.IProtocol
 import com.jetbrains.rd.util.reactive.whenTrue
 import com.jetbrains.rdclient.util.idea.LifetimedProjectComponent
@@ -101,8 +100,10 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
             selectedEditor?.let {
                 val virtualFile = selectedEditor.file
                 virtualFile?.takeIf { isValidVirtualFile(virtualFile) }.let {
-                    val psiFile = PsiManager.getInstance(project).findFile(virtualFile)
-                    psiFile?.takeIf { PsiUtils.isValidPsiFile(psiFile) }?.let {
+                    val psiFileCachedValue = PsiUtils.getPsiFileCachedValue(project, virtualFile)
+                    psiFileCachedValue.takeIf { PsiUtils.isValidPsiFile(psiFileCachedValue.value) }?.let {
+
+                        val psiFile: PsiFile = psiFileCachedValue.value ?: return
 
                         if (CSharpLanguageUtil.isCSharpLanguage(psiFile.language)) {
 
@@ -119,13 +120,14 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
                                     ) { progressIndicator: ProgressIndicator ->
                                         val context = BuildDocumentInfoProcessContext(progressIndicator)
                                         val documentInfoService = DocumentInfoService.getInstance(project)
-                                        val documentInfo = languageService.buildDocumentInfo(psiFile, selectedEditor, context)
-                                        documentInfo.let {
-                                            documentInfoService.addCodeObjects(psiFile, documentInfo)
+                                        val documentInfo = languageService.buildDocumentInfo(psiFileCachedValue, selectedEditor, context)
+                                        val upToDatePsiFile = psiFileCachedValue.value
+                                        upToDatePsiFile?.let {
+                                            documentInfoService.addCodeObjects(upToDatePsiFile, documentInfo)
+                                            val methodUnderCaret =
+                                                detectMethodUnderCaret(it, selectedTextEditor, offset)
+                                            CaretContextService.getInstance(project).contextChanged(methodUnderCaret)
                                         }
-                                        val methodUnderCaret =
-                                            detectMethodUnderCaret(psiFile, selectedTextEditor, offset)
-                                        CaretContextService.getInstance(project).contextChanged(methodUnderCaret)
                                     }
                                 }
                             }
@@ -188,6 +190,7 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
 
     //always try to send the editor to this method, or execute it on EDT, if the editor is null this method will try
     // to find selected editor only if executed on EDT.
+    //todo:change to psi cached value
     fun detectMethodUnderCaret(psiFile: PsiFile, selectedEditor: Editor?, caretOffset: Int): MethodUnderCaret {
 
         Log.log(logger::debug,"Got request to detectMethodUnderCaret for PsiFile {}, selectedEditor {}, solution loaded {}",psiFile.virtualFile,selectedEditor,solutionLoaded)

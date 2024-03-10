@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.rider.psi.csharp;
 
 import com.intellij.lang.Language;
 import com.intellij.psi.PsiFile;
+import org.jetbrains.annotations.NotNull;
 
 public class CSharpLanguageUtil {
 
@@ -38,12 +39,13 @@ public class CSharpLanguageUtil {
     }
 
 
-    public static boolean isCSharpLanguage(Language language) {
+    public static boolean isCSharpLanguage(@NotNull Language language) {
         return getCSharpLanguageClassWithReflection().isInstance(language);
     }
 
-    public static boolean isCSharpFile(PsiFile psiFile) {
-        return getCSharpFileClassWithReflection().isInstance(psiFile);
+    public static boolean isCSharpFile(@NotNull PsiFile psiFile) {
+//        return getCSharpFileClassWithReflection().isInstance(psiFile);
+        return isCSharpLanguage(psiFile.getLanguage());
     }
 
 

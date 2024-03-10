@@ -61,6 +61,7 @@ import org.digma.intellij.plugin.model.discovery.TextRange
 import org.digma.intellij.plugin.progress.assertUnderProgress
 import org.digma.intellij.plugin.psi.BuildDocumentInfoProcessContext
 import org.digma.intellij.plugin.psi.LanguageService
+import org.digma.intellij.plugin.psi.PsiFileCachedValueWithUri
 import org.digma.intellij.plugin.psi.PsiFileNotFountException
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.jetbrains.uast.UClass
@@ -111,26 +112,32 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
     }
 
 
-    override fun buildDocumentInfo(psiFile: PsiFile, selectedTextEditor: FileEditor?, context: BuildDocumentInfoProcessContext): DocumentInfo {
-        return buildDocumentInfo(psiFile, context)
+    override fun buildDocumentInfo(
+        psiFileCachedValue: PsiFileCachedValueWithUri,
+        selectedTextEditor: FileEditor?,
+        context: BuildDocumentInfoProcessContext,
+    ): DocumentInfo {
+        return buildDocumentInfo(psiFileCachedValue, context)
     }
 
-    override fun buildDocumentInfo(psiFile: PsiFile, context: BuildDocumentInfoProcessContext): DocumentInfo {
+    override fun buildDocumentInfo(psiFileCachedValue: PsiFileCachedValueWithUri, context: BuildDocumentInfoProcessContext): DocumentInfo {
 
         EDT.assertNonDispatchThread()
         //should not be in read access, read access is acquired when necessary to make it short periods
         ReadActions.assertNotInReadAccess()
         assertUnderProgress()
 
+        val psiFile = psiFileCachedValue.value ?: return DocumentInfo(psiFileCachedValue.uri, mutableMapOf())
+
         Log.log(logger::debug, "got buildDocumentInfo request for {}", psiFile)
 
         if (isProjectValid(project) && PsiUtils.isValidPsiFile(psiFile) && isSupportedFile(psiFile)) {
 
             val documentInfo = executeCatchingWithResultAndRetryIgnorePCE({
-                codeObjectDiscovery.buildDocumentInfo(project, psiFile, context)
+                codeObjectDiscovery.buildDocumentInfo(project, psiFileCachedValue, context)
             }, { e ->
                 context.addError("buildDocumentInfo", e)
-                DocumentInfo(PsiUtils.psiFileToUri(psiFile), mutableMapOf())
+                DocumentInfo(psiFileCachedValue.uri, mutableMapOf())
             }) {
                 if (context.hasErrors()) {
                     context.errorsList().forEach { entry ->
@@ -152,7 +159,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
         } else {
             Log.log(logger::debug, "psi file is not supported or not valid, returning empty DocumentInfo for {}", psiFile)
-            return DocumentInfo(PsiUtils.psiFileToUri(psiFile), mutableMapOf())
+            return DocumentInfo(psiFileCachedValue.uri, mutableMapOf())
         }
     }
 

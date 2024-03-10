@@ -87,13 +87,13 @@ public class NoOpLanguageService implements LanguageService {
 
     //this method should never be called on NoOpLanguageService, calling code must be aware of that
     @Override
-    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, BuildDocumentInfoProcessContext context) {
+    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFileCachedValueWithUri psiFileCachedValue, BuildDocumentInfoProcessContext context) {
         throw new UnsupportedOperationException("should not be called");
     }
 
     //this method should never be called on NoOpLanguageService, calling code must be aware of that
     @Override
-    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, @Nullable FileEditor newEditor, BuildDocumentInfoProcessContext context) {
+    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFileCachedValueWithUri psiFileCachedValue, @Nullable FileEditor newEditor, BuildDocumentInfoProcessContext context) {
         throw new UnsupportedOperationException("should not be called");
     }
 

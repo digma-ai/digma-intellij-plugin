@@ -4,7 +4,6 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiClass
-import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiReference
 import com.intellij.psi.search.GlobalSearchScope
@@ -21,6 +20,7 @@ import org.digma.intellij.plugin.idea.psi.PsiPointers
 import org.digma.intellij.plugin.idea.psi.discovery.MicrometerTracingFramework
 import org.digma.intellij.plugin.model.discovery.SpanInfo
 import org.digma.intellij.plugin.psi.BuildDocumentInfoProcessContext
+import org.digma.intellij.plugin.psi.PsiFileCachedValueWithUri
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UReferenceExpression
@@ -33,8 +33,13 @@ abstract class AbstractSpanDiscovery {
     private val micrometerTracingFramework = MicrometerTracingFramework()
 
 
-    fun discoverSpans(project: Project, psiFile: PsiFile, context: BuildDocumentInfoProcessContext): Collection<SpanInfo> {
+    fun discoverSpans(
+        project: Project,
+        psiFileCachedValue: PsiFileCachedValueWithUri,
+        context: BuildDocumentInfoProcessContext,
+    ): Collection<SpanInfo> {
 
+        val psiFile = psiFileCachedValue.value ?: return listOf()
         if (!isProjectValid(project) || !PsiUtils.isValidPsiFile(psiFile)) {
             return listOf()
         }
@@ -62,7 +67,7 @@ abstract class AbstractSpanDiscovery {
 
 
         executeCatchingWithRetryIgnorePCE({
-            val micrometerSpans = micrometerTracingFramework.discoverSpans(project, psiFile, context)
+            val micrometerSpans = micrometerTracingFramework.discoverSpans(project, psiFileCachedValue, context)
             micrometerSpans.let {
                 spanInfos.addAll(it)
             }

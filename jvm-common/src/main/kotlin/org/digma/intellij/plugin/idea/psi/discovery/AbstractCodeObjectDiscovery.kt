@@ -126,7 +126,7 @@ abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSp
             psiFile = psiFileCachedValue.value
             //if collectMethods throws exception we don't catch it, there is no use for DocumentInfo without methods.
             //the exception will be caught be caller and hopefully retry and succeed.
-            val classes = psiFile.toUElementOfType<UFile>()?.classes ?: listOf()
+            val classes = runInReadAccessWithResult { psiFile.toUElementOfType<UFile>()?.classes ?: listOf() }
             collectMethods(project, fileUri, classes, packageName, methodInfoMap, spans, context)
 
 

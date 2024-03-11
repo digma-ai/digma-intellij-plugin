@@ -1,6 +1,16 @@
 # Changelog
 
-## [2.0.289] - 2024-03-07
+## [2.0.290] - 2024-03-11
+
+- update eap profile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1920
+- lazy get psi file in buildDocumentInfo Closes #1919 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1922
+- get element from psi pointer as late as possible Closes #1923 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1924
+- better handling the case when docker daemon is down Closes #1921 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1925
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1927
+- Add error check by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1926
+- keep-wizard-on-in-new-install Closes #1928 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1929
+
+## 2.0.289 - 2024-03-07
 
 - Added response for dialog by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1915
 - Update Insights UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1916

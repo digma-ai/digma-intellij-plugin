@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.analytics;
 
+import okhttp3.*;
 import org.digma.intellij.plugin.model.rest.AboutResult;
 import org.digma.intellij.plugin.model.rest.assets.AssetDisplayInfo;
 import org.digma.intellij.plugin.model.rest.codelens.*;
@@ -106,4 +107,6 @@ public interface AnalyticsProvider extends Closeable {
     String getInsights(Map<String, Object> queryParams);
 
     AssetNavigationResponse getAssetNavigation(String env, String spanCodeObjectId);
+
+    Response lowLevelCall(Request request);
 }

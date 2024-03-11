@@ -4,11 +4,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.fileChooser.FileChooserFactory;
 import com.intellij.openapi.project.Project;
+import com.intellij.util.download.DownloadableFileService;
 import kotlin.Pair;
 import org.cef.browser.CefBrowser;
 import org.digma.intellij.plugin.analytics.*;
 import org.digma.intellij.plugin.document.CodeObjectsUtil;
+import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.insights.model.outgoing.*;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightType;
@@ -20,7 +23,10 @@ import org.digma.intellij.plugin.ui.insights.InsightsService;
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler;
 import org.digma.intellij.plugin.vcs.VcsService;
 import org.jetbrains.annotations.NotNull;
+import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 
+import java.io.IOException;
+import java.nio.file.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -72,6 +78,8 @@ public class InsightsMessageRouterHandler extends BaseMessageRouterHandler {
             case "INSIGHTS/OPEN_LIVE_VIEW" -> openLiveView(jsonNode);
 
             case "INSIGHTS/OPEN_HISTOGRAM" -> openHistogram(jsonNode);
+
+            case "INSIGHTS/DOWNLOAD_HISTOGRAM" -> downloadHistogram(jsonNode);
 
 //            case "INSIGHTS/GO_TO_ERRORS" -> goToErrors();
 //
@@ -288,6 +296,27 @@ public class InsightsMessageRouterHandler extends BaseMessageRouterHandler {
         var insightType = payload.get("insightType").asText();
         var displayName = payload.has("displayName") ? payload.get("displayName").asText() : null;
         org.digma.intellij.plugin.ui.insights.InsightsService.getInstance(project).openHistogram(instrumentationLibrary, name, insightType, displayName);
+    }
+
+    private void downloadHistogram(JsonNode jsonNode) throws JsonProcessingException {
+        Log.log(LOGGER::debug, project, "got INSIGHTS/DOWNLOAD_HISTOGRAM message");
+        var payload = getObjectMapper().readTree(jsonNode.get("payload").toString());
+        var instrumentationLibrary = payload.get("instrumentationLibrary").asText();
+        var name = payload.get("name").asText();
+
+        var descriptor = new FileChooserDescriptor(true, false, false, false, false, false);
+        var fileChooserDialog = FileChooserFactory.getInstance().createFileChooser(descriptor, project, null);
+        var files = fileChooserDialog.choose(null);
+        if(files.length == 0)
+            return;
+
+        var path = files[0].toNioPath();
+        try {
+            var response = AnalyticsService.getInstance(project).getHtmlGraphForSpanScaling(instrumentationLibrary, name, null);
+            Files.writeString(path, response, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        } catch (Throwable e) {
+            Log.warnWithException(LOGGER, project, e, "Error in downloadHistogram for {},{} {}", instrumentationLibrary, name, e.getMessage());
+        }
     }
 
     private void openLiveView(JsonNode jsonNode) throws JsonProcessingException {

@@ -484,6 +484,10 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.getAssetNavigation(env, spanCodeObjectId));
     }
 
+    public okhttp3.Response lowLevelCall(okhttp3.Request request) throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.lowLevelCall(request));
+    }
+
     @Override
     public void dispose() {
         try {

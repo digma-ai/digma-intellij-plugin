@@ -263,6 +263,28 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
+    public okhttp3.Response lowLevelCall(Request request) {
+        okhttp3.Response response;
+        try {
+            response = client.okHttpClient.newCall(request).execute();
+        } catch (Exception e) {
+            throw new AnalyticsProviderException(e);
+        }
+
+        if (response.isSuccessful()) {
+            return response;
+        } else {
+            String message;
+            try (ResponseBody errorBody = response.body()) {
+                message = String.format("Error %d. %s", response.code(), errorBody == null ? null : errorBody.string());
+            } catch (IOException e) {
+                throw new AnalyticsProviderException(e.getMessage(), e);
+            }
+            throw new AnalyticsProviderException(response.code(), message);
+        }
+    }
+
+    @Override
     public String getDashboard(Map<String, String> queryParams) {
         return execute(() -> client.analyticsProvider.getDashboard(queryParams));
     }
@@ -311,15 +333,17 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
 
     //A closable client
-    private static class Client implements Closeable {
+    public static class Client implements Closeable {
 
 
         private final AnalyticsProviderRetrofit analyticsProvider;
         private final OkHttpClient okHttpClient;
+        private final String baseUrl;
 
         @SuppressWarnings("MoveFieldAssignmentToInitializer")
         public Client(String baseUrl, String apiToken) {
 
+            this.baseUrl = baseUrl;
             //configure okHttp here if necessary
             OkHttpClient.Builder builder = new OkHttpClient.Builder();
 

@@ -4,7 +4,7 @@ import com.intellij.openapi.project.Project
 import org.cef.handler.CefResourceHandler
 import org.digma.intellij.plugin.ui.jcef.BaseSchemeHandlerFactory
 
-class NotificationsSchemeHandlerFactory(val project: Project, val notificationViewMode: NotificationViewMode) : BaseSchemeHandlerFactory() {
+class NotificationsSchemeHandlerFactory(project: Project, val notificationViewMode: NotificationViewMode) : BaseSchemeHandlerFactory(project) {
 
 
     override fun createResourceHandler(resourceName: String, resourceExists: Boolean): CefResourceHandler {

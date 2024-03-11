@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.290] - 2024-03-11
+## [2.0.291] - 2024-03-11
+
+- temp fix to suspend notifications by @doppleware in https://github.com/digma-ai/digma-intellij-plugin/pull/1918
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1930
+
+## 2.0.290 - 2024-03-11
 
 - update eap profile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1920
 - lazy get psi file in buildDocumentInfo Closes #1919 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1922

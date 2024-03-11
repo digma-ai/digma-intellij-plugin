@@ -91,13 +91,14 @@ class SpringBootFrameworkEndpointDiscovery(private val project: Project) : Endpo
             //catch any exception for each annotation
             executeCatchingWithRetryIgnorePCE({
 
-                val annotationClass = psiPointers.getPsiClass(project, annotationFqn)
+                psiPointers.getPsiClass(project, annotationFqn)?.let {
 
-                annotationClass?.let {
+                    val annotatedMethods = psiPointers.getPsiClassPointer(project, annotationFqn)?.let { annotationClassPointer ->
+                        findAnnotatedMethods(project, annotationClassPointer, searchScopeProvider)
+                    }
 
-                    val annotatedMethods = findAnnotatedMethods(project, annotationClass, searchScopeProvider)
 
-                    annotatedMethods.forEach { annotatedMethod: SmartPsiElementPointer<PsiMethod> ->
+                    annotatedMethods?.forEach { annotatedMethod: SmartPsiElementPointer<PsiMethod> ->
 
                         context.indicator.checkCanceled()
 

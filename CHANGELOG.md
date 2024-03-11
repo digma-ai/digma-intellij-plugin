@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.291] - 2024-03-11
+## [2.0.292] - 2024-03-11
+
+- fix-read-access-in-psi-cached-value by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1931
+
+## 2.0.291 - 2024-03-11
 
 - temp fix to suspend notifications by @doppleware in https://github.com/digma-ai/digma-intellij-plugin/pull/1918
 - Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1930

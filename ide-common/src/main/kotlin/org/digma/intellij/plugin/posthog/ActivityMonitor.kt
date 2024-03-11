@@ -656,7 +656,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
     }
 
 
-    fun registerDigmaEngineEventStart(eventName: String, eventDetails: Map<String, Any>) {
+    fun registerDigmaEngineEventStart(eventName: String, eventDetails: Map<String, Any> = mapOf()) {
         capture(
             "Engine.".plus(eventName).plus(".start"),
             eventDetails
@@ -664,24 +664,33 @@ class ActivityMonitor(private val project: Project) : Disposable {
     }
 
 
-    fun registerDigmaEngineEventEnd(eventName: String, eventDetails: Map<String, Any>) {
+    fun registerDigmaEngineEventEnd(eventName: String, eventDetails: Map<String, Any> = mapOf()) {
         capture(
             "Engine.".plus(eventName).plus(".end"),
             eventDetails
         )
     }
 
-    fun registerDigmaEngineEventRetry(eventName: String, eventDetails: Map<String, Any>) {
+    fun registerDigmaEngineEventRetry(eventName: String, eventDetails: Map<String, Any> = mapOf()) {
         capture(
             "Engine.".plus(eventName).plus(".retry"),
             eventDetails
         )
     }
 
-    fun registerDigmaEngineEventError(eventName: String, errorMessage: String) {
+    fun registerDigmaEngineEventError(eventName: String, errorMessage: String, eventDetails: Map<String, Any> = mapOf()) {
+        val detailsToUse = eventDetails.toMutableMap()
+        detailsToUse["errorMessage"] = errorMessage
         capture(
             "Engine.".plus(eventName).plus(".error"),
-            mapOf("errorMessage" to errorMessage)
+            detailsToUse
+        )
+    }
+
+    fun registerDigmaEngineEventInfo(eventName: String, eventDetails: Map<String, Any> = mapOf()) {
+        capture(
+            "Engine.".plus(eventName),
+            eventDetails
         )
     }
 

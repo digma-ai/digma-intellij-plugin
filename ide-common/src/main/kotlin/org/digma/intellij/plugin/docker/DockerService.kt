@@ -97,8 +97,7 @@ class DockerService {
     private fun isDockerDaemonDownExitValue(exitValue: String): Boolean {
         return exitValue.contains("Cannot connect to the Docker daemon", true) ||//mac, linux
                 exitValue.contains("docker daemon is not running", true) || //win
-                exitValue.contains("Error while fetching server API version", true) ||
-                (exitValue.contains("code", true) && exitValue.contains("255", true))
+                exitValue.contains("Error while fetching server API version", true)
     }
 
 

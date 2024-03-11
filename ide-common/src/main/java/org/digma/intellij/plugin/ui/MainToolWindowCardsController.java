@@ -283,8 +283,14 @@ public class MainToolWindowCardsController implements Disposable {
      */
     public void closeCoveringViewsIfNecessary() {
 
-        //Note in case user finished new install but never clicked finish in the wizard, and clicks a link somewhere,
-        // then this method will close the wizard and update the wizard finished flags
+        //in case wizard is on and there is no connection don't change it. probably user is installing local
+        // engine, or it's first launch of the wizard and is auto installing.
+        if (wizard.isOn() && BackendConnectionMonitor.getInstance(project).isConnectionError()) {
+            return;
+        }
+
+        //in case user finished new install but never clicked finish in the wizard, and clicks a link somewhere,
+        // for example in recent activity, then close everything to show the main panel
         if (wizard.isOn()) {
             updateInstallationWizardFlag();
         }

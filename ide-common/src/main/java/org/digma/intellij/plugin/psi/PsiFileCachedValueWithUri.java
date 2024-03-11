@@ -4,6 +4,7 @@ import com.intellij.openapi.util.Getter;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.*;
+import org.digma.intellij.plugin.common.PsiAccessUtilsKt;
 import org.jetbrains.annotations.*;
 
 public class PsiFileCachedValueWithUri implements CachedValue<PsiFile> {
@@ -25,7 +26,7 @@ public class PsiFileCachedValueWithUri implements CachedValue<PsiFile> {
     @Nullable
     @Override
     public PsiFile getValue() {
-        return psiFileCachedValue.getValue();
+        return PsiAccessUtilsKt.runInReadAccessWithResult(psiFileCachedValue::getValue);
     }
 
     @Override
@@ -35,11 +36,11 @@ public class PsiFileCachedValueWithUri implements CachedValue<PsiFile> {
 
     @Override
     public boolean hasUpToDateValue() {
-        return psiFileCachedValue.hasUpToDateValue();
+        return PsiAccessUtilsKt.runInReadAccessWithResult(psiFileCachedValue::hasUpToDateValue);
     }
 
     @Override
     public Getter<PsiFile> getUpToDateOrNull() {
-        return psiFileCachedValue.getUpToDateOrNull();
+        return PsiAccessUtilsKt.runInReadAccessWithResult(psiFileCachedValue::getUpToDateOrNull);
     }
 }

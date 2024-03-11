@@ -90,9 +90,11 @@ public class PsiUtils {
                     return null;
                 }
 
-                var psiFile = PsiAccessUtilsKt.runInReadAccessWithResult(() -> PsiManager.getInstance(project).findFile(virtualFile));
-                //todo: maybe add PsiModificationTracker as dependency
-                return CachedValueProvider.Result.create(psiFile, virtualFile);
+                return PsiAccessUtilsKt.runInReadAccessWithResult(() -> {
+                    var psiFile = PsiManager.getInstance(project).findFile(virtualFile);
+                    //todo: maybe add PsiModificationTracker as dependency
+                    return Result.create(psiFile, virtualFile);
+                });
             }
         }, true), virtualFile);
     }

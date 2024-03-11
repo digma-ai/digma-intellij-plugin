@@ -385,11 +385,7 @@ class DockerService {
 
 
         val command = if (SystemInfo.isMac) {
-            if (getCommand("docker-machine") != null) {
-                listOf("docker-machine", "restart")
-            } else {
-                listOf("open", "-a", "Docker")
-            }
+            listOf("docker-machine", "restart")
         } else if (SystemInfo.isWindows) {
             listOf("wsl.exe", "-u", "root", "-e", "sh", "-c", "service docker status || service docker start")
         } else if (SystemInfo.isLinux) {

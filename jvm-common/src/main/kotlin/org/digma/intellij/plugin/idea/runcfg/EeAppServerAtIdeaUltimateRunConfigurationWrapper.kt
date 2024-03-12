@@ -91,7 +91,7 @@ class EeAppServerAtIdeaUltimateRunConfigurationWrapper : RunConfigurationWrapper
             digmaExtensionPath = FileUtils.convertWinToWslPath(digmaExtensionPath)
         }
 
-        var retVal = "-Xverify:none "
+        var retVal = " "
         retVal = retVal
             .plus("-javaagent:$otelAgentPath")
             .plus(" ")

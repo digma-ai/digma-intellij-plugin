@@ -74,7 +74,7 @@ class OpenLibertyRunConfigurationWrapper : RunConfigurationWrapper {
      * @see <a href="https://openliberty.io/docs/latest/microprofile-telemetry.html">OpenLiberty - Enable distributed tracing with MicroProfile Telemetry</a>
      */
     private fun buildJavaToolOptions(isTest: Boolean, configuration: RunConfiguration, params: JavaParameters): String {
-        var retVal = "-Xverify:none "
+        var retVal = " "
             .plus("-Dotel.sdk.disabled=false") // in order to enable MicroProfile Telemetry, need to disable otel sdk
             .plus(" ")
             .plus("-Dotel.exporter.otlp.endpoint=${getExporterUrl()}")

@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.ui.jcef
 
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import org.cef.callback.CefCallback
 import org.cef.handler.CefResourceHandler
@@ -21,7 +22,7 @@ class ApiProxyResourceHandler(val project: Project) : CefResourceHandler {
 
     companion object{
         const val URL_PREFIX = "/api-proxy"
-
+        private val LOGGER = Logger.getInstance(ApiProxyResourceHandler::class.java)
         fun isApiProxyCall(url: URL): Boolean{
             return url.path.startsWith(URL_PREFIX)
         }
@@ -44,7 +45,7 @@ class ApiProxyResourceHandler(val project: Project) : CefResourceHandler {
             return true
         }
         catch (e: Throwable){
-            // Logger
+            Log.warnWithException(LOGGER, e, "processRequest failed")
             callback.cancel()
             return false
         }
@@ -73,9 +74,6 @@ class ApiProxyResourceHandler(val project: Project) : CefResourceHandler {
                 return false
             }
 
-//            val inputStream = source.inputStream()
-//            val available = inputStream.available()
-//            val toRead = min(available.toDouble(), bytesToRead.toDouble()).toInt()
             val read = source.read(dataOut, 0, bytesToRead)
             bytesRead.set(read)
             return true

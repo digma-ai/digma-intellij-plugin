@@ -17,7 +17,7 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.psi.*;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.*;
 
 import java.util.*;
 
@@ -84,21 +84,25 @@ class DocumentChangeListener {
                         return;
                     }
 
-                    //must be executed on EDT
-                    PsiFile changedPsiFile = PsiDocumentManager.getInstance(project).getPsiFile(event.getDocument());
-                    if (changedPsiFile == null) {
-                        Log.log(LOGGER::debug, "changedPsiFile is null for {}", event.getDocument());
+
+                    var virtualFile = FileDocumentManager.getInstance().getFile(event.getDocument());
+
+                    if (virtualFile == null || !VfsUtilsKt.isValidVirtualFile(virtualFile)) {
                         return;
                     }
-                    var fileEditor = FileEditorManager.getInstance(project).getSelectedEditor(changedPsiFile.getVirtualFile());
+
+                    var psiFileCachedValue = PsiUtils.getPsiFileCachedValue(project, virtualFile);
+
+                    @Nullable
+                    var fileEditor = FileEditorManager.getInstance(project).getSelectedEditor(virtualFile);
 
                     documentChangeAlarm.cancelAllRequests();
                     documentChangeAlarm.addRequest(() -> {
 
                         try {
                             Log.log(LOGGER::debug, "got documentChanged alarm for {}", event.getDocument());
-                            Log.log(LOGGER::debug, "Processing documentChanged event for {}", changedPsiFile.getVirtualFile());
-                            processDocumentChanged(changedPsiFile, fileEditor);
+                            Log.log(LOGGER::debug, "Processing documentChanged event for {}", virtualFile);
+                            processDocumentChanged(psiFileCachedValue, fileEditor);
                         } catch (Exception e) {
                             Log.warnWithException(LOGGER, e, "exception while processing documentChanged event for file: {}, {}", event.getDocument(), e.getMessage());
                             ErrorReporter.getInstance().reportError(project, "DocumentChangeListener.documentChanged", e);
@@ -109,12 +113,12 @@ class DocumentChangeListener {
                             // event will fire only when the caret moves but not while editing.
                             // if the document changes and no caret event is fired the UI will not be updated.
                             // so calling here currentContextUpdater after document change will update the UI.
-                            var editor1 = EditorUtils.getSelectedTextEditorForFile(changedPsiFile.getVirtualFile(), FileEditorManager.getInstance(project));
-                            if (editor1 != null) {
-                                int caretOffset = editor1.logicalPositionToOffset(editor1.getCaretModel().getLogicalPosition());
-                                var file = FileDocumentManager.getInstance().getFile(editor1.getDocument());
+                            var selectedTextEditor = FileEditorManager.getInstance(project).getSelectedTextEditor();
+                            if (selectedTextEditor != null) {
+                                int caretOffset = selectedTextEditor.logicalPositionToOffset(selectedTextEditor.getCaretModel().getLogicalPosition());
+                                var file = FileDocumentManager.getInstance().getFile(selectedTextEditor.getDocument());
                                 currentContextUpdater.clearLatestMethod();
-                                currentContextUpdater.addRequest(editor1, caretOffset, file);
+                                currentContextUpdater.addRequest(selectedTextEditor, caretOffset, file);
                             }
                         });
                     }, 2000);
@@ -128,25 +132,23 @@ class DocumentChangeListener {
     }
 
 
-    private void processDocumentChanged(@NotNull PsiFile psiFile, FileEditor fileEditor) {
+    private void processDocumentChanged(@NotNull PsiFileCachedValueWithUri psiFileCachedValue, @Nullable FileEditor fileEditor) {
 
-        if (!ProjectUtilsKt.isProjectValid(project) || !PsiUtils.isValidPsiFile(psiFile)) {
+        if (!ProjectUtilsKt.isProjectValid(project) || !PsiUtils.isValidPsiFile(psiFileCachedValue.getValue())) {
             return;
         }
 
         EDT.assertNonDispatchThread();
 
-        LanguageService languageService = LanguageServiceLocator.getInstance(project).locate(psiFile.getLanguage());
+        LanguageService languageService = LanguageServiceLocator.getInstance(project).locate(psiFileCachedValue.getValue().getLanguage());
 
-        if (fileEditor.isValid()) {
-            BuildDocumentInfoProcessContext.buildDocumentInfoUnderProcess(project, progressIndicator -> {
-                var context = new BuildDocumentInfoProcessContext(progressIndicator);
-                DocumentInfo documentInfo = languageService.buildDocumentInfo(psiFile, fileEditor, context);
-                Log.log(LOGGER::debug, "got DocumentInfo for {}", psiFile.getVirtualFile());
-                documentInfoService.addCodeObjects(psiFile, documentInfo);
-                Log.log(LOGGER::debug, "documentInfoService updated with DocumentInfo for {}", psiFile.getVirtualFile());
-            });
-        }
+        BuildDocumentInfoProcessContext.buildDocumentInfoUnderProcess(project, psiFileCachedValue.getValue().getName(), progressIndicator -> {
+            var context = new BuildDocumentInfoProcessContext(progressIndicator);
+            DocumentInfo documentInfo = languageService.buildDocumentInfo(psiFileCachedValue, fileEditor, context);
+            Log.log(LOGGER::debug, "got DocumentInfo for {}", psiFileCachedValue.getValue().getVirtualFile());
+            documentInfoService.addCodeObjects(psiFileCachedValue.getValue(), documentInfo);
+            Log.log(LOGGER::debug, "documentInfoService updated with DocumentInfo for {}", psiFileCachedValue.getValue().getVirtualFile());
+        });
     }
 
 

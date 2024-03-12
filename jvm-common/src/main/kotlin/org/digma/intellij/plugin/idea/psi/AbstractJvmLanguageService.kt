@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.idea.psi
 
-import com.google.common.collect.ImmutableMap
 import com.intellij.buildsystem.model.unified.UnifiedCoordinates
 import com.intellij.buildsystem.model.unified.UnifiedDependency
 import com.intellij.externalSystem.DependencyModifierService
@@ -8,7 +7,6 @@ import com.intellij.lang.Language
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditor
-import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.progress.EmptyProgressIndicator
@@ -30,6 +28,7 @@ import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
 import org.digma.intellij.plugin.WITH_SPAN_ANNOTATION_FQN
 import org.digma.intellij.plugin.WITH_SPAN_DEPENDENCY_DESCRIPTION
+import org.digma.intellij.plugin.common.CodeObjectsUtil
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.common.Retries
@@ -40,12 +39,8 @@ import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.common.isValidVirtualFile
 import org.digma.intellij.plugin.common.runInReadAccess
 import org.digma.intellij.plugin.common.runInReadAccessWithResult
-import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.editor.CaretContextService
-import org.digma.intellij.plugin.editor.EditorUtils
-import org.digma.intellij.plugin.editor.LatestMethodUnderCaretHolder
-import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.errorreporting.SEVERITY_MEDIUM_TRY_FIX
 import org.digma.intellij.plugin.errorreporting.SEVERITY_PROP_NAME
@@ -66,6 +61,7 @@ import org.digma.intellij.plugin.model.discovery.TextRange
 import org.digma.intellij.plugin.progress.assertUnderProgress
 import org.digma.intellij.plugin.psi.BuildDocumentInfoProcessContext
 import org.digma.intellij.plugin.psi.LanguageService
+import org.digma.intellij.plugin.psi.PsiFileCachedValueWithUri
 import org.digma.intellij.plugin.psi.PsiFileNotFountException
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.jetbrains.uast.UClass
@@ -86,15 +82,11 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
     private val otelDependencyVersion = "1.26.0"
     private val otelCoordinates =
         UnifiedCoordinates("io.opentelemetry.instrumentation", "opentelemetry-instrumentation-annotations", otelDependencyVersion)
-    private val mapBuildSystem2Dependency: ImmutableMap<JavaBuildSystem, UnifiedDependency>
-
-    init {
-        val builder: ImmutableMap.Builder<JavaBuildSystem, UnifiedDependency> = ImmutableMap.Builder()
-        builder.put(JavaBuildSystem.UNKNOWN, UnifiedDependency(otelCoordinates, "compile"))
-        builder.put(JavaBuildSystem.MAVEN, UnifiedDependency(otelCoordinates, null))
-        builder.put(JavaBuildSystem.GRADLE, UnifiedDependency(otelCoordinates, "implementation"))
-        mapBuildSystem2Dependency = builder.build()
-    }
+    private val mapBuildSystem2Dependency: Map<JavaBuildSystem, UnifiedDependency> = mapOf(
+        JavaBuildSystem.UNKNOWN to UnifiedDependency(otelCoordinates, "compile"),
+        JavaBuildSystem.MAVEN to UnifiedDependency(otelCoordinates, null),
+        JavaBuildSystem.GRADLE to UnifiedDependency(otelCoordinates, "implementation")
+    )
 
 
     companion object {
@@ -120,26 +112,32 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
     }
 
 
-    override fun buildDocumentInfo(psiFile: PsiFile, selectedTextEditor: FileEditor?, context: BuildDocumentInfoProcessContext): DocumentInfo {
-        return buildDocumentInfo(psiFile, context)
+    override fun buildDocumentInfo(
+        psiFileCachedValue: PsiFileCachedValueWithUri,
+        selectedTextEditor: FileEditor?,
+        context: BuildDocumentInfoProcessContext,
+    ): DocumentInfo {
+        return buildDocumentInfo(psiFileCachedValue, context)
     }
 
-    override fun buildDocumentInfo(psiFile: PsiFile, context: BuildDocumentInfoProcessContext): DocumentInfo {
+    override fun buildDocumentInfo(psiFileCachedValue: PsiFileCachedValueWithUri, context: BuildDocumentInfoProcessContext): DocumentInfo {
 
         EDT.assertNonDispatchThread()
         //should not be in read access, read access is acquired when necessary to make it short periods
         ReadActions.assertNotInReadAccess()
         assertUnderProgress()
 
+        val psiFile = psiFileCachedValue.value ?: return DocumentInfo(psiFileCachedValue.uri, mutableMapOf())
+
         Log.log(logger::debug, "got buildDocumentInfo request for {}", psiFile)
 
         if (isProjectValid(project) && PsiUtils.isValidPsiFile(psiFile) && isSupportedFile(psiFile)) {
 
             val documentInfo = executeCatchingWithResultAndRetryIgnorePCE({
-                codeObjectDiscovery.buildDocumentInfo(project, psiFile, context)
+                codeObjectDiscovery.buildDocumentInfo(project, psiFileCachedValue, context)
             }, { e ->
                 context.addError("buildDocumentInfo", e)
-                DocumentInfo(PsiUtils.psiFileToUri(psiFile), mutableMapOf())
+                DocumentInfo(psiFileCachedValue.uri, mutableMapOf())
             }) {
                 if (context.hasErrors()) {
                     context.errorsList().forEach { entry ->
@@ -161,7 +159,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
         } else {
             Log.log(logger::debug, "psi file is not supported or not valid, returning empty DocumentInfo for {}", psiFile)
-            return DocumentInfo(PsiUtils.psiFileToUri(psiFile), mutableMapOf())
+            return DocumentInfo(psiFileCachedValue.uri, mutableMapOf())
         }
     }
 
@@ -175,36 +173,6 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                 false
             }
         }
-    }
-
-
-    override fun environmentChanged(newEnv: Env, refreshInsightsView: Boolean) {
-        if (refreshInsightsView) {
-            EDT.ensureEDT {
-                allowSlowOperation {
-                    val fileEditor = FileEditorManager.getInstance(project).selectedEditor
-                    if (fileEditor != null) {
-                        val file = fileEditor.file
-                        if (isValidVirtualFile(file)) {
-                            val psiFile = PsiManager.getInstance(project).findFile(file)
-                            if (PsiUtils.isValidPsiFile(psiFile) && psiFile != null && isRelevant(psiFile.virtualFile)) {
-                                val selectedTextEditor =
-                                    EditorUtils.getSelectedTextEditorForFile(file, FileEditorManager.getInstance(project))
-                                if (selectedTextEditor != null) {
-                                    val offset = selectedTextEditor.caretModel.offset
-                                    val methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedTextEditor, offset)
-                                    LatestMethodUnderCaretHolder.getInstance(project)
-                                        .saveLatestMethodUnderCaret(project, this, methodUnderCaret.id)
-                                    CaretContextService.getInstance(project).contextChanged(methodUnderCaret)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        refreshCodeLens()
     }
 
 
@@ -584,7 +552,6 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
     override fun refreshMethodUnderCaret(project: Project, psiFile: PsiFile, selectedEditor: Editor?, offset: Int) {
         val methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedEditor, offset)
-        LatestMethodUnderCaretHolder.getInstance(project).saveLatestMethodUnderCaret(project, this, methodUnderCaret.id)
         CaretContextService.getInstance(project).contextChanged(methodUnderCaret)
     }
 
@@ -601,7 +568,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                     val uMethod = findMethodByMethodCodeObjectId(methodId)
                     if (uMethod?.sourcePsi == null) {
                         Log.log(logger::trace, "Failed to get Method from method id '{}'", methodId)
-                        return MethodObservabilityInfo(methodId, hasMissingDependency = false, canInstrumentMethod = false)
+                        return MethodObservabilityInfo(methodId, hasMissingDependency = false, canInstrumentMethod = false, hasAnnotation = false)
                     }
 
                     progressIndicator.checkCanceled()
@@ -609,7 +576,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                     val psiFile = uMethod.getContainingUFile()
                     if (psiFile == null || !isSupportedFile(psiFile.sourcePsi)) {
                         Log.log(logger::trace, "Method's file is not supported file (methodId: {})", methodId)
-                        return MethodObservabilityInfo(methodId, hasMissingDependency = false, canInstrumentMethod = false)
+                        return MethodObservabilityInfo(methodId, hasMissingDependency = false, canInstrumentMethod = false, hasAnnotation = false)
                     }
 
                     progressIndicator.checkCanceled()
@@ -617,7 +584,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                     val module = ModuleUtilCore.findModuleForPsiElement(uMethod.sourcePsi!!)
                     if (module == null) {
                         Log.log(logger::trace, "Failed to get module from PsiMethod '{}'", methodId)
-                        return MethodObservabilityInfo(methodId, hasMissingDependency = false, canInstrumentMethod = false)
+                        return MethodObservabilityInfo(methodId, hasMissingDependency = false, canInstrumentMethod = false, hasAnnotation = false)
                     }
 
                     progressIndicator.checkCanceled()
@@ -634,11 +601,11 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                         val moduleExt = modulesDepsService.getModuleExt(module.name)
                         if (moduleExt == null) {
                             Log.log(logger::trace, "Failed to not lookup module ext by module name='{}'", module.name)
-                            return MethodObservabilityInfo(methodId, hasMissingDependency = false, canInstrumentMethod = false)
+                            return MethodObservabilityInfo(methodId, hasMissingDependency = false, canInstrumentMethod = false, hasAnnotation = false)
                         }
                         val hasDeps = modulesDepsService.isModuleHasNeededDependenciesForSpringBootWithMicrometer(moduleExt.metadata)
                         if (!hasDeps) {
-                            return MethodObservabilityInfo(methodId, hasMissingDependency = true, canInstrumentMethod = false)
+                            return MethodObservabilityInfo(methodId, hasMissingDependency = true, canInstrumentMethod = false, hasAnnotation = false)
                         }
                     }
 
@@ -650,14 +617,17 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                     )
                     if (annotationPsiClass == null) {
                         Log.log(logger::trace, "Cannot find WithSpan PsiClass (methodId: {}) (module:{})", methodId, module)
-                        return MethodObservabilityInfo(methodId, hasMissingDependency = true, canInstrumentMethod = false)
+                        return MethodObservabilityInfo(methodId, hasMissingDependency = true, canInstrumentMethod = false, hasAnnotation = false)
                     }
+
+                    val hasAnnotation = uMethod.uAnnotations.any { uAnnotation -> uAnnotation.qualifiedName == annotationClassFqn }
 
                     return MethodObservabilityInfo(
                         methodId,
                         hasMissingDependency = false,
                         canInstrumentMethod = true,
-                        annotationClassFqn = annotationClassFqn
+                        annotationClassFqn = annotationClassFqn,
+                        hasAnnotation = hasAnnotation
                     )
 
                 } catch (e: ProcessCanceledException) {
@@ -666,7 +636,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                     ErrorReporter.getInstance().reportError(project, "AbstractJvmLanguageService.canInstrumentMethod", e)
                 }
 
-                return MethodObservabilityInfo(methodId, hasMissingDependency = false, canInstrumentMethod = false)
+                return MethodObservabilityInfo(methodId, hasMissingDependency = false, canInstrumentMethod = false, hasAnnotation = false)
             }
 
         }
@@ -680,7 +650,12 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                 }
             }, myComputable.progressIndicator)
             return@retryWithResultAndDefault result
-        }, Throwable::class.java, 50, 5, MethodObservabilityInfo(methodId, hasMissingDependency = false, canInstrumentMethod = false))
+        },
+            Throwable::class.java,
+            50,
+            5,
+            MethodObservabilityInfo(methodId, hasMissingDependency = false, canInstrumentMethod = false, hasAnnotation = false)
+        )
     }
 
 
@@ -699,7 +674,10 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
             Log.log(logger::warn, "Failed to add dependencies OTEL lib since could not lookup module by methodId='{}'", methodId)
             return
         }
-        if (!isSpringBootAndMicrometer(module)) {
+
+        if (isSpringBootAndMicrometer(module)) {
+            addDepsForSpringBootAndMicrometer(module)
+        } else {
             val moduleBuildSystem = determineBuildSystem(module)
             val dependencyLib = mapBuildSystem2Dependency[moduleBuildSystem]
 
@@ -708,11 +686,8 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
             if (dependencyLib != null) {
                 dependencyModifierService.addDependency(module, dependencyLib)
             }
-            return
         }
 
-        // handling spring boot with micrometer tracing
-        addDepsForSpringBootAndMicrometer(module)
     }
 
 

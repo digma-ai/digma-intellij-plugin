@@ -4,8 +4,9 @@ import com.intellij.psi.PsiFile;
 import com.intellij.util.messages.Topic;
 
 /**
- * Event fired when a document info has changed after a document is analyzed and its backend info is retrieved from
- * the analytics service, or after environment change.
+ * Event fired when a document info has changed.
+ * document info changes first when a file is opened. then when the file content changes
+ * document info is computed again.
  */
 public interface DocumentInfoChanged {
 

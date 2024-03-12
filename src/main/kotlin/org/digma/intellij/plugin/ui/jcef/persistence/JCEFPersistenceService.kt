@@ -11,8 +11,8 @@ import com.intellij.util.xmlb.Converter
 import com.intellij.util.xmlb.annotations.Attribute
 import com.intellij.util.xmlb.annotations.XMap
 import org.cef.browser.CefBrowser
+import org.digma.intellij.plugin.common.createObjectMapper
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
-import org.digma.intellij.plugin.ui.jcef.createObjectMapper
 import org.digma.intellij.plugin.ui.jcef.model.ErrorPayload
 import org.digma.intellij.plugin.ui.jcef.model.GetFromPersistenceRequest
 import org.digma.intellij.plugin.ui.jcef.model.SaveToPersistenceRequest

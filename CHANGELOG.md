@@ -1,6 +1,150 @@
 # Changelog
 
-## [2.0.268] - 2024-02-22
+## [2.0.292] - 2024-03-11
+
+- fix-read-access-in-psi-cached-value by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1931
+
+## 2.0.291 - 2024-03-11
+
+- temp fix to suspend notifications by @doppleware in https://github.com/digma-ai/digma-intellij-plugin/pull/1918
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1930
+
+## 2.0.290 - 2024-03-11
+
+- update eap profile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1920
+- lazy get psi file in buildDocumentInfo Closes #1919 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1922
+- get element from psi pointer as late as possible Closes #1923 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1924
+- better handling the case when docker daemon is down Closes #1921 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1925
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1927
+- Add error check by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1926
+- keep-wizard-on-in-new-install Closes #1928 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1929
+
+## 2.0.289 - 2024-03-07
+
+- Added response for dialog by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1915
+- Update Insights UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1916
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1917
+
+## 2.0.288 - 2024-03-07
+
+- Add dismiss handlers by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1911
+- Update Insights UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1913
+- fix typo by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1914
+
+## 2.0.287 - 2024-03-06
+
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1909
+- catch-error-in-attachToProcess by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1912
+- fix-environment-overrides-in-test-run-config Closes #1893 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1910
+
+## 2.0.286 - 2024-03-06
+
+- Request user register after two weeks Closes #1895 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1908
+
+## 2.0.285 - 2024-03-06
+
+- report error instead of fatal by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1907
+
+## 2.0.284 - 2024-03-06
+
+**Full Changelog**: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.283...v2.0.284
+
+## 2.0.283 - 2024-03-05
+
+- better code vision refresh by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1904
+- support jar configuration Closes #1894 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1906
+
+## 2.0.282 - 2024-03-05
+
+- update EAP profile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1891
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1905
+
+## 2.0.281 - 2024-03-05
+
+- noverify flag caused an issue by @doppleware in https://github.com/digma-ai/digma-intellij-plugin/pull/1892
+
+## 2.0.280 - 2024-03-04
+
+- Simulate context change Closes #1859 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1869
+- remove-insight-type-enum Closes #1871 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1875
+- Update Insights UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1857
+- dont-report-error-for-CancellationException by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1876
+- fix-npe-in-DocumentChangeListener by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1877
+- Add `Criticality` to recent activity by @borisermakof in https://github.com/digma-ai/digma-intellij-plugin/pull/1880
+- remove-psifile-from-DocumentInfoContainer by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1879
+- Update Insights UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1878
+- add server version to error reporter by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1882
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1883
+- Update Insights UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1884
+- Update Assets UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1885
+- Update Insights UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1886
+- workaround-add-noverify-run-config Closes #1874 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1881
+- change text for upgrade backend message by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1887
+- Update Insights UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1888
+- Update Insights UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1889
+- Update Insights UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1890
+
+## 2.0.279 - 2024-03-03
+
+- Improve codelens providers by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1867
+
+## 2.0.278 - 2024-02-29
+
+- Common jcef for jaeger UI by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1853
+- Clean insights from document info container Closes #1623 Closes #1755 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1855
+- Fix freeze when codelens refresh by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1858
+
+## 2.0.277 - 2024-02-28
+
+- add severity to errors by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1851
+- remove-latest-method-holder by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1852
+
+## 2.0.276 - 2024-02-27
+
+- Improve bulk listener by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1850
+
+## 2.0.275 - 2024-02-27
+
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1849
+
+## 2.0.274 - 2024-02-26
+
+- remove unnecessary try catch by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1832
+- fix environment query param usage Closes #1831 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1848
+
+## 2.0.273 - 2024-02-26
+
+- remove highlighter if already exists for method by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1847
+
+## 2.0.272 - 2024-02-26
+
+- Feature/highlight method by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1846
+
+## 2.0.271 - 2024-02-26
+
+- Navigation discovery invisible process Closes #1843 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1844
+
+## 2.0.270 - 2024-02-25
+
+- remove-insights-model-react by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1835
+- Disable python support Closes #1824 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1836
+- remove insights view service Closes #1758 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1837
+- dont-call-change-scope-on-edt Closes #1840 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1841
+- catch-errors-in-add-observability by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1839
+- add allow slow operations by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1838
+- dont-report-PCE-in-codelens-service by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1842
+
+## 2.0.269 - 2024-02-25
+
+- remove notification dot in tool window icon Closes #1816 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1825
+- update build profiles to latest EAP by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1829
+- add method: prefix in CodeContextMessagePayload Closes #1820 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1826
+- Fix add annotation by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1830
+- Scaling insight ticket by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1828
+- add-throws-in-base-router-handler by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1833
+- change-some-messages-to-global by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1834
+
+## 2.0.268 - 2024-02-22
 
 - updated to otel latest by @doppleware in https://github.com/digma-ai/digma-intellij-plugin/pull/1823
 

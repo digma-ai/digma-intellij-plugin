@@ -5,10 +5,10 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import freemarker.template.*;
 import org.digma.intellij.plugin.docker.DockerService;
-import org.digma.intellij.plugin.jcef.common.JCefTemplateUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.persistence.PersistenceService;
-import org.digma.intellij.plugin.ui.list.insights.JaegerUtilKt;
+import org.digma.intellij.plugin.ui.common.JaegerUtilKt;
+import org.digma.intellij.plugin.ui.jcef.BaseIndexTemplateBuilderKt;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -42,7 +42,7 @@ class TroubleshootingIndexTemplateBuilder {
 
         try {
             var data = new HashMap<String, Object>();
-            JCefTemplateUtils.addCommonEnvVariables(data);
+            BaseIndexTemplateBuilderKt.addCommonEnvVariables(data);
 
             data.put(ENV_VARIABLE_IDE, ApplicationNamesInfo.getInstance().getProductName());
             data.put(IS_JAEGER_ENABLED, JaegerUtilKt.isJaegerButtonEnabled());

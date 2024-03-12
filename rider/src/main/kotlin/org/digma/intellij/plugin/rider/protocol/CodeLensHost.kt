@@ -7,22 +7,43 @@ import com.jetbrains.rd.framework.IProtocol
 import com.jetbrains.rdclient.util.idea.LifetimedProjectComponent
 import com.jetbrains.rider.projectView.solution
 import org.digma.intellij.plugin.common.EDT
+import org.digma.intellij.plugin.document.CodeLensChanged
 import org.digma.intellij.plugin.document.CodeLensProvider
 import org.digma.intellij.plugin.document.DocumentInfoService
-import org.digma.intellij.plugin.env.Env
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.lens.CodeLens
-import org.digma.intellij.plugin.psi.PsiFileNotFountException
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.jetbrains.annotations.NotNull
 import java.util.function.Consumer
 
+//don't make it light service because it will register on all IDEs, but we want it only on Rider
+@Suppress("LightServiceMigrationCode")
 class CodeLensHost(project: Project) : LifetimedProjectComponent(project) {
 
     private val logger = Logger.getInstance(CodeLensHost::class.java)
 
     private val documentInfoService: DocumentInfoService = DocumentInfoService.getInstance(project)
-    private val codeLensProvider: CodeLensProvider = project.getService(CodeLensProvider::class.java)
+    private val codeLensProvider: CodeLensProvider = CodeLensProvider.getInstance(project)
+
+
+    init {
+        project.messageBus.connect(this).subscribe(CodeLensChanged.CODELENS_CHANGED_TOPIC, object : CodeLensChanged {
+            override fun codelensChanged(psiFile: PsiFile) {
+                refreshOneFile(psiFile)
+            }
+
+            override fun codelensChanged(psiFilesUrls: List<String>) {
+                refreshFiles(psiFilesUrls)
+            }
+
+            override fun codelensChanged() {
+                refreshAll()
+            }
+        })
+    }
+
+
 
     //always use getInstance instead of injecting directly to other services.
     // this ensures lazy init only when this host is needed.
@@ -40,22 +61,38 @@ class CodeLensHost(project: Project) : LifetimedProjectComponent(project) {
         return model.protocol!! //protocol is nullable in 2023.2, remove when 2023.2 is our base
     }
 
-    fun environmentChanged(newEnv: Env) {
-        Log.log(logger::debug, "Got environmentChanged {}", newEnv)
+
+    private fun refreshOneFile(psiFile: PsiFile) {
+        try {
+            Log.log(logger::debug, "Refreshing code lens for {}", psiFile.virtualFile)
+            val codeLens: Set<CodeLens> = codeLensProvider.provideCodeLens(psiFile)
+            Log.log(logger::debug, "Got codeLens for {}: {}", psiFile.virtualFile, codeLens)
+            installCodeLens(psiFile, codeLens)
+        } catch (e: Throwable) {
+            Log.warnWithException(logger, project, e, "error in refresh for {}", psiFile.virtualFile)
+            ErrorReporter.getInstance().reportError("CodeLensHost.refresh", e)
+        }
+    }
 
 
-        documentInfoService.allKeys().forEach(Consumer { psiFileUri: String? ->
+    private fun refreshFiles(psiFilesUrls: List<String>) {
+        psiFilesUrls.forEach(Consumer { psiFileUri: String ->
             try {
-                val psiFile = PsiUtils.uriToPsiFile(psiFileUri!!, project)
-                Log.log(logger::debug, "Requesting code lens for {}", psiFile.virtualFile)
-                val codeLens: Set<CodeLens> = codeLensProvider.provideCodeLens(psiFile)
-                Log.log(logger::debug, "Got codeLens for {}: {}", psiFile.virtualFile, codeLens)
-                installCodeLens(psiFile, codeLens)
-            } catch (e: PsiFileNotFountException) {
-                Log.warnWithException(logger, project, e, "Could not find psi file {}", psiFileUri)
+                val psiFile = PsiUtils.uriToPsiFile(psiFileUri, project)
+                refreshOneFile(psiFile)
+            } catch (e: Throwable) {
+                Log.warnWithException(logger, project, e, "error in refresh for {}", psiFileUri)
+                ErrorReporter.getInstance().reportError("CodeLensHost.refresh", e)
             }
         })
     }
+
+    private fun refreshAll() {
+        //all the files that are opened should be in documentInfoService.
+        //could also take all editors from FileEditorManager
+        refreshFiles(documentInfoService.allKeys().toList())
+    }
+
 
 
     fun installCodeLens(@NotNull psiFile: PsiFile, @NotNull codeLenses: Set<CodeLens>) {
@@ -109,11 +146,11 @@ class CodeLensHost(project: Project) : LifetimedProjectComponent(project) {
 
 
     private fun CodeLens.toRiderCodeLensInfo(psiUri: String) = RiderCodeLensInfo(
+        id = id,
         codeObjectId = codeMethod,
         lensTitle = lensTitle,
         lensDescription = lensDescription,
         moreText = lensMoreText,
-        anchor = anchor,
         psiUri = psiUri
     )
 

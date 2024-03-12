@@ -6,6 +6,8 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Collections;
+
 public class EDT {
 
     private static final Logger LOGGER = Logger.getInstance(EDT.class);
@@ -44,8 +46,12 @@ public class EDT {
     }
 
     public static void assertNonDispatchThread(){
-        //noinspection UnstableApiUsage
-        ApplicationManager.getApplication().assertIsNonDispatchThread();
+        if (ApplicationManager.getApplication().isDispatchThread()) {
+            RuntimeException runtimeException = new RuntimeException("Must not run on EDT");
+            LOGGER.error("Must not run on EDT", runtimeException);
+            ErrorReporter.getInstance().reportInternalFatalError("assertNonDispatchThread", runtimeException, Collections.emptyMap());
+            throw runtimeException;
+        }
     }
 
 

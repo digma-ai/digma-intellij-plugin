@@ -9,15 +9,13 @@ import org.digma.intellij.plugin.analytics.ConnectionTestResult
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
-import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.MonitoredPanel
+import org.digma.intellij.plugin.ui.common.traceButtonName
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
-import org.digma.intellij.plugin.ui.jcef.RegistrationEventHandler
+import org.digma.intellij.plugin.ui.jcef.jsonToObject
 import org.digma.intellij.plugin.ui.jcef.tryGetFieldFromPayload
-import org.digma.intellij.plugin.ui.jcef.updateDigmaEngineStatus
-import org.digma.intellij.plugin.ui.list.insights.traceButtonName
 import org.digma.intellij.plugin.ui.recentactivity.model.CloseLiveViewMessage
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityGoToSpanRequest
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityGoToTraceRequest
@@ -38,29 +36,33 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
         when (action) {
 
             "RECENT_ACTIVITY/INITIALIZE" -> {
-                updateDigmaEngineStatus(project, browser)
-                //todo: maybe need to refresh the environments first on current thread. in the past it was a direct call to AnalyticsService.getEnvironments
-//                project.service<AnalyticsService>().environment.refreshNow()
-                val environments = project.service<AnalyticsService>().environment.getEnvironments()
-                project.service<LiveViewUpdater>().appInitialized()
-                project.service<RecentActivityUpdater>().updateLatestActivities(environments)
-                doCommonInitialize(browser)
+                try {
+                    doCommonInitialize(browser)
+                    val environments = AnalyticsService.getInstance(project).environment.getEnvironments()
+                    project.service<RecentActivityUpdater>().updateLatestActivities(environments)
+                } finally {
+                    //if there is an exception it will be handled by BaseMessageRouterHandler.
+                    // but at least set these two variables.
+                    //in any case an exception here means something is very wrong and we should check errors in logs.
+                    project.service<LiveViewUpdater>().appInitialized()
+                    project.service<RecentActivityService>().appInitialized()
+                }
             }
 
             "RECENT_ACTIVITY/GO_TO_SPAN" -> {
-                val recentActivityGoToSpanRequest = JCefMessagesUtils.parseJsonToObject(rawRequest, RecentActivityGoToSpanRequest::class.java)
+                val recentActivityGoToSpanRequest = jsonToObject(rawRequest, RecentActivityGoToSpanRequest::class.java)
                 project.service<RecentActivityService>().processRecentActivityGoToSpanRequest(recentActivityGoToSpanRequest.payload)
             }
 
             "RECENT_ACTIVITY/GO_TO_TRACE" -> {
                 project.service<ActivityMonitor>().registerButtonClicked(MonitoredPanel.RecentActivity, traceButtonName)
-                val recentActivityGoToTraceRequest = JCefMessagesUtils.parseJsonToObject(rawRequest, RecentActivityGoToTraceRequest::class.java)
+                val recentActivityGoToTraceRequest = jsonToObject(rawRequest, RecentActivityGoToTraceRequest::class.java)
                 project.service<RecentActivityService>().processRecentActivityGoToTraceRequest(recentActivityGoToTraceRequest.payload)
             }
 
             "RECENT_ACTIVITY/CLOSE_LIVE_VIEW" -> {
                 try {
-                    val closeLiveViewMessage = JCefMessagesUtils.parseJsonToObject(rawRequest, CloseLiveViewMessage::class.java)
+                    val closeLiveViewMessage = jsonToObject(rawRequest, CloseLiveViewMessage::class.java)
                     project.service<RecentActivityService>().liveViewClosed(closeLiveViewMessage)
                 } catch (e: Exception) {
                     //we can't miss the close message because then the live view will stay open.
@@ -148,11 +150,6 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
                     project.service<RecentActivityUpdater>().updateLatestActivities()
                 }
             }
-            JCefMessagesUtils.GLOBAL_REGISTER -> {
-                RegistrationEventHandler.getInstance(project).register(requestJsonNode)
-            }
-
-
 
         }
     }

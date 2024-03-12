@@ -56,8 +56,7 @@ public class CurrentContextUpdater implements Disposable {
     }
 
 
-
-    void addRequest(Editor editor, int caretOffset, VirtualFile file) {
+    void addRequest(@NotNull Editor editor, int caretOffset, VirtualFile file) {
         //process the most recent event after a quite period of delayMillis
         caretEventAlarm.cancelAllRequests();
         caretEventAlarm.addRequest(() -> {
@@ -107,7 +106,6 @@ public class CurrentContextUpdater implements Disposable {
         }
         latestMethodUnderCaret = methodUnderCaret;
         Log.log(LOGGER::debug, "contextChanged for file: {}, with method under caret '{}", psiFile.getVirtualFile(), methodUnderCaret);
-        LatestMethodUnderCaretHolder.getInstance(project).saveLatestMethodUnderCaret(project, languageService, methodUnderCaret.getId());
         caretContextService.contextChanged(methodUnderCaret);
     }
 

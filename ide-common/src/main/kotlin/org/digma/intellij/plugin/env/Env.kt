@@ -3,6 +3,8 @@ package org.digma.intellij.plugin.env
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.intellij.openapi.project.Project
+import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.common.CommonUtils
 import java.beans.ConstructorProperties
 
@@ -24,6 +26,16 @@ constructor(
 
 
     companion object {
+
+        @JvmStatic
+        fun getCurrentEnvName(project: Project): String? {
+            return AnalyticsService.getInstance(project).environment.getCurrent()?.originalName
+        }
+
+        @JvmStatic
+        fun getCurrentEnv(project: Project): Env? {
+            return AnalyticsService.getInstance(project).environment.getCurrent()
+        }
 
         @JvmStatic
         fun toEnv(env: String): Env {

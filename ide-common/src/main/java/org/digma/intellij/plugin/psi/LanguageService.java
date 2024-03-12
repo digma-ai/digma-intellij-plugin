@@ -1,17 +1,15 @@
 package org.digma.intellij.plugin.psi;
 
-import com.intellij.codeInsight.codeVision.CodeVisionEntry;
 import com.intellij.lang.Language;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import kotlin.Pair;
-import org.digma.intellij.plugin.common.EDT;
+import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.env.Env;
 import org.digma.intellij.plugin.instrumentation.*;
@@ -111,6 +109,20 @@ public interface LanguageService extends Disposable {
 
     @NotNull
     static LanguageService findLanguageServiceByFile(@NotNull Project project, @NotNull VirtualFile virtualFile) {
+        if (ReadActions.isReadAccessAllowed()) {
+            var psiFile = PsiManager.getInstance(project).findFile(virtualFile);
+            if (PsiUtils.isValidPsiFile(psiFile)) {
+                return LanguageServiceLocator.getInstance(project).locate(psiFile.getLanguage());
+            } else {
+                return findLanguageServiceByFileIfSupported(project, virtualFile);
+            }
+        } else {
+            return findLanguageServiceByFileIfSupported(project, virtualFile);
+        }
+    }
+
+    @NotNull
+    static LanguageService findLanguageServiceByFileIfSupported(@NotNull Project project, @NotNull VirtualFile virtualFile) {
 
         for (SupportedLanguages value : SupportedLanguages.values()) {
 
@@ -145,7 +157,7 @@ public interface LanguageService extends Disposable {
             PsiFile psiFile = PsiUtils.uriToPsiFile(methodInfo.getContainingFileUri(), project);
             if (PsiUtils.isValidPsiFile(psiFile)) {
                 Language language = psiFile.getLanguage();
-                return project.getService(LanguageServiceLocator.class).locate(language);
+                return LanguageServiceLocator.getInstance(project).locate(language);
             }
         } catch (PsiFileNotFountException e) {
             //ignore
@@ -187,14 +199,14 @@ public interface LanguageService extends Disposable {
                 language = DocumentInfoService.getInstance(project).getDominantLanguage();
             }
         } else {
-            language = project.getService(DocumentInfoService.class).getLanguageByMethodCodeObjectId(methodInfo.getId());
+            language = DocumentInfoService.getInstance(project).getLanguageByMethodCodeObjectId(methodInfo.getId());
         }
 
         if (language == null) {
             return NoOpLanguageService.INSTANCE;
         }
 
-        return project.getService(LanguageServiceLocator.class).locate(language);
+        return LanguageServiceLocator.getInstance(project).locate(language);
     }
 
     @NotNull
@@ -205,7 +217,7 @@ public interface LanguageService extends Disposable {
             return NoOpLanguageService.INSTANCE;
         }
 
-        return project.getService(LanguageServiceLocator.class).locate(language);
+        return LanguageServiceLocator.getInstance(project).locate(language);
     }
 
 
@@ -275,7 +287,7 @@ public interface LanguageService extends Disposable {
 
 
     @Nullable
-    public static Set<EndpointInfo> getEndpointInfos(Project project, String endpointCodeObjectId) {
+    static Set<EndpointInfo> getEndpointInfos(Project project, String endpointCodeObjectId) {
         for (SupportedLanguages value : SupportedLanguages.values()) {
 
             try {
@@ -352,16 +364,18 @@ public interface LanguageService extends Disposable {
     /**
      * let language services do something on environmentChanged. for example to update the current method context.
      */
-    void environmentChanged(Env newEnv, boolean refreshInsightsView);
+    default void environmentChanged(Env newEnv) {
+        //nothing to do , implement for specific languages if necessary
+    }
 
 
     @NotNull
-    DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, BuildDocumentInfoProcessContext context);
+    DocumentInfo buildDocumentInfo(@NotNull PsiFileCachedValueWithUri psiFileCachedValue, BuildDocumentInfoProcessContext context);
 
     //some language services need the selected editor , for example CSharpLanguageService need to take
     // getProjectModelId from the selected editor. it may be null
     @NotNull
-    DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, @Nullable FileEditor selectedTextEditor, BuildDocumentInfoProcessContext context);
+    DocumentInfo buildDocumentInfo(@NotNull PsiFileCachedValueWithUri psiFileCachedValue, @Nullable FileEditor selectedTextEditor, BuildDocumentInfoProcessContext context);
 
 
     boolean isRelevant(VirtualFile file);
@@ -372,13 +386,9 @@ public interface LanguageService extends Disposable {
 
     boolean isCodeVisionSupported();
 
-    @NotNull List<Pair<TextRange, CodeVisionEntry>> getCodeLens(@NotNull PsiFile psiFile);
-
-    void refreshCodeLens();
-
     @NotNull
     default MethodObservabilityInfo canInstrumentMethod(@NotNull String methodId) {
-        return new MethodObservabilityInfo(methodId, false, false, null);
+        return new MethodObservabilityInfo(methodId, false, false, null, false);
     }
 
     default boolean instrumentMethod(@NotNull MethodObservabilityInfo methodObservabilityInfo) {
@@ -402,4 +412,6 @@ public interface LanguageService extends Disposable {
     @NotNull
     InstrumentationProvider getInstrumentationProvider();
 
+    @NotNull
+    Map<String, PsiElement> findMethodsByCodeObjectIds(@NotNull PsiFile psiFile, @NotNull List<String> methodIds) throws Throwable;
 }

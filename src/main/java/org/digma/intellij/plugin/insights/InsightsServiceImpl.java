@@ -7,16 +7,15 @@ import org.digma.intellij.plugin.analytics.*;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.scope.*;
-import org.digma.intellij.plugin.ui.common.Laf;
-import org.digma.intellij.plugin.ui.list.insights.JaegerUtilKt;
+import org.digma.intellij.plugin.ui.common.*;
 import org.digma.intellij.plugin.ui.recentactivity.RecentActivityService;
 import org.jetbrains.annotations.*;
 
 import java.util.Collections;
 
+//todo: convert to kotlin and move to org.digma.intellij.plugin.ui.insights
 public abstract class InsightsServiceImpl implements Disposable {
 
     private final Logger logger = Logger.getInstance(InsightsServiceImpl.class);
@@ -43,17 +42,17 @@ public abstract class InsightsServiceImpl implements Disposable {
 
         Log.log(logger::debug, project, "openHistogram called {},{}", instrumentationLibrary, spanName);
 
-        ActivityMonitor.getInstance(project).registerButtonClicked("histogram", InsightType.valueOf(insightType));
+        ActivityMonitor.getInstance(project).registerButtonClicked("histogram", insightType);
         var title  = displayName != null && !displayName.isEmpty()? displayName: spanName;
         try {
 
             try {
-                switch (InsightType.valueOf(insightType)) {
-                    case SpanDurations -> {
+                switch (insightType) {
+                    case "SpanDurations" -> {
                         String htmlContent = AnalyticsService.getInstance(project).getHtmlGraphForSpanPercentiles(instrumentationLibrary, spanName, Laf.INSTANCE.getColorHex(Laf.Colors.getPLUGIN_BACKGROUND()));
                         DigmaHTMLEditorProvider.openEditor(project, "Percentiles Graph of Span " + title, htmlContent);
                     }
-                    case SpanScaling -> {
+                    case "SpanScaling" -> {
                         String htmlContent = AnalyticsService.getInstance(project).getHtmlGraphForSpanScaling(instrumentationLibrary, spanName, Laf.INSTANCE.getColorHex(Laf.Colors.getPLUGIN_BACKGROUND()));
                         DigmaHTMLEditorProvider.openEditor(project, "Scaling Graph of Span " + title, htmlContent);
                     }
@@ -83,25 +82,20 @@ public abstract class InsightsServiceImpl implements Disposable {
     }
 
 
-    public void recalculate(@NotNull String prefixedCodeObjectId, @NotNull String insightType) {
+    public void recalculate(@NotNull String insightId) {
         try {
-            AnalyticsService.getInstance(project).setInsightCustomStartTime(prefixedCodeObjectId, InsightType.valueOf(insightType));
+            AnalyticsService.getInstance(project).setInsightCustomStartTime(insightId);
         } catch (AnalyticsServiceException e) {
             Log.warnWithException(logger, project, e, "Error in setInsightCustomStartTime {}", e.getMessage());
         }
-        ActivityMonitor.getInstance(project).registerButtonClicked("recalculate", InsightType.valueOf(insightType));
-    }
-
-    public void refresh(@NotNull InsightType insightType) {
-        ActivityMonitor.getInstance(project).registerButtonClicked("refresh", insightType);
     }
 
 
-    public void goToTrace(@NotNull String traceId, @NotNull String traceName, @NotNull InsightType insightType, @Nullable String spanCodeObjectId) {
+    public void goToTrace(@NotNull String traceId, @NotNull String traceName, @NotNull String insightType, @Nullable String spanCodeObjectId) {
         JaegerUtilKt.openJaegerFromInsight(project, traceId, traceName, insightType, spanCodeObjectId);
     }
 
-    public void goToTraceComparison(@NotNull String traceId1, @NotNull String traceName1, @NotNull String traceId2, @NotNull String traceName2, @NotNull InsightType insightType) {
+    public void goToTraceComparison(@NotNull String traceId1, @NotNull String traceName1, @NotNull String traceId2, @NotNull String traceName2, @NotNull String insightType) {
         JaegerUtilKt.openJaegerComparisonFromInsight(project, traceId1, traceName1, traceId2, traceName2, insightType);
     }
 

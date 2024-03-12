@@ -1,13 +1,11 @@
 package org.digma.intellij.plugin.rider.psi.csharp;
 
-import com.intellij.codeInsight.codeVision.CodeVisionEntry;
 import com.intellij.lang.Language;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.fileEditor.*;
+import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.*;
-import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.jetbrains.rdclient.util.idea.LifetimedProjectComponent;
@@ -15,8 +13,7 @@ import com.jetbrains.rider.projectView.SolutionLifecycleHost;
 import kotlin.Pair;
 import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.common.*;
-import org.digma.intellij.plugin.editor.*;
-import org.digma.intellij.plugin.env.Env;
+import org.digma.intellij.plugin.editor.CaretContextService;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.instrumentation.*;
 import org.digma.intellij.plugin.log.Log;
@@ -184,55 +181,32 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
         return Collections.emptySet();
     }
 
-    @Override
-    public void environmentChanged(Env newEnv, boolean refreshInsightsView) {
 
-        if (refreshInsightsView) {
-            EDT.ensureEDT(() -> {
-                var fileEditor = FileEditorManager.getInstance(project).getSelectedEditor();
-                if (fileEditor != null) {
-                    var file = fileEditor.getFile();
-                    if (VfsUtilsKt.isValidVirtualFile(file)) {
-                        var psiFile = PsiManager.getInstance(project).findFile(file);
-                        if (PsiUtils.isValidPsiFile(psiFile) && isRelevant(psiFile.getVirtualFile())) {
-                            var selectedTextEditor = EditorUtils.getSelectedTextEditorForFile(file, FileEditorManager.getInstance(project));
-                            if (selectedTextEditor != null) {
-                                int offset = selectedTextEditor.getCaretModel().getOffset();
-                                var methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedTextEditor, offset);
-                                LatestMethodUnderCaretHolder.getInstance(project).saveLatestMethodUnderCaret(project, this, methodUnderCaret.getId());
-                                CaretContextService.getInstance(project).contextChanged(methodUnderCaret);
-                            }
-                        }
-                    }
-                }
-            });
+    @Override
+    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFileCachedValueWithUri psiFileCachedValue, BuildDocumentInfoProcessContext context) {
+        return buildDocumentInfo(psiFileCachedValue, null, context);
+    }
+
+    @Override
+    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFileCachedValueWithUri psiFileCachedValue, @Nullable FileEditor newEditor, BuildDocumentInfoProcessContext context) {
+
+        var psiFile = psiFileCachedValue.getValue();
+        if (!PsiUtils.isValidPsiFile(psiFile)) {
+            return new DocumentInfo(psiFileCachedValue.getUri(), new HashMap<>());
         }
 
-
-        CodeLensHost.getInstance(project).environmentChanged(newEnv);
-    }
-
-
-    @Override
-    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, BuildDocumentInfoProcessContext context) {
-        return buildDocumentInfo(psiFile, null, context);
-    }
-
-    @Override
-    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, @Nullable FileEditor newEditor, BuildDocumentInfoProcessContext context) {
-
         Log.log(LOGGER::debug, "got buildDocumentInfo request for {}", psiFile);
-        //must be PsiJavaFile , this method should be called only for java files
+        //must be CSharpFile
         if (CSharpLanguageUtil.isCSharpFile(psiFile)) {
             DocumentInfo documentInfo = LanguageServiceHost.getInstance(project).getDocumentInfo(psiFile, newEditor);
             if (documentInfo == null) {
-                Log.log(LOGGER::warn, "DocumentInfo not found for {}, returning empty DocumentInfo", psiFile);
-                documentInfo = new DocumentInfo(PsiUtils.psiFileToUri(psiFile), new HashMap<>());
+                Log.log(LOGGER::warn, "DocumentInfo not found for {}, returning empty DocumentInfo", psiFileCachedValue.getValue());
+                documentInfo = new DocumentInfo(psiFileCachedValue.getUri(), new HashMap<>());
             }
             return documentInfo;
         } else {
-            Log.log(LOGGER::debug, "psi file is noy CSharpFile, returning empty DocumentInfo for {}", psiFile);
-            return new DocumentInfo(PsiUtils.psiFileToUri(psiFile), new HashMap<>());
+            Log.log(LOGGER::debug, "psi file is not CSharpFile, returning empty DocumentInfo for {}", psiFileCachedValue.getValue());
+            return new DocumentInfo(psiFileCachedValue.getUri(), new HashMap<>());
         }
     }
 
@@ -264,24 +238,12 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
     @Override
     public void refreshMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, @Nullable Editor selectedEditor, int offset) {
         MethodUnderCaret methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedEditor, offset);
-        LatestMethodUnderCaretHolder.getInstance(project).saveLatestMethodUnderCaret(project, this, methodUnderCaret.getId());
         CaretContextService.getInstance(project).contextChanged(methodUnderCaret);
     }
 
     @Override
     public boolean isCodeVisionSupported() {
         return false;
-    }
-
-    @Override
-    public @NotNull List<Pair<TextRange, CodeVisionEntry>> getCodeLens(@NotNull PsiFile psiFile) {
-        throw new UnsupportedOperationException("should not be called for CSharpLanguageService");
-    }
-
-    @Override
-    public void refreshCodeLens() {
-        //todo:implement
-//        CodeLensHost.getInstance(project).refreshCodeLens();
     }
 
     @Override
@@ -303,5 +265,13 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
     @Override
     public @NotNull InstrumentationProvider getInstrumentationProvider() {
         return new NoOpInstrumentationProvider();
+    }
+
+    @Override
+    public @NotNull Map<String, PsiElement> findMethodsByCodeObjectIds(@NotNull PsiFile psiFile, @NotNull List<String> methodIds) {
+        //never called for csharp language,
+        //this method is used by CodeLensService which is only relevant for java/kotlin/python.
+        //Rider does code lens differently
+        throw new UnsupportedOperationException("should not be called for CSharp");
     }
 }

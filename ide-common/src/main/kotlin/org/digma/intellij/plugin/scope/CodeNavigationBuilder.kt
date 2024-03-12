@@ -2,7 +2,7 @@ package org.digma.intellij.plugin.scope
 
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.analytics.AnalyticsService
-import org.digma.intellij.plugin.document.CodeObjectsUtil
+import org.digma.intellij.plugin.common.CodeObjectsUtil
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.model.code.CodeDetails
 import org.digma.intellij.plugin.model.rest.navigation.AssetCodeLocation
@@ -168,22 +168,3 @@ private fun getSpanDisplayName(project: Project, spanCodeObjectId: String): Stri
     return spanScopeInfo?.displayName ?: spanCodeObjectId
 }
 
-
-//private fun isAlreadyAtCodeLocation(project: Project, spanCodeObjectId: String, methodCodeObjectId: String?): Boolean {
-//
-//    val codeNavigator = CodeNavigator.getInstance(project)
-//
-//    val spanLocation: Pair<String, Int>? = codeNavigator.getSpanLocation(spanCodeObjectId)
-//    val latestMethodInfo = LatestMethodUnderCaretHolder.getInstance(project).latestMethodInfo
-//    if (latestMethodInfo != null && spanLocation != null) {
-//        if (spanLocation.second >= latestMethodInfo.startOffset && spanLocation.second <= latestMethodInfo.endOffset) {
-//            return true
-//        }
-//    }
-//
-//    if (latestMethodInfo != null && methodCodeObjectId != null) {
-//        return latestMethodInfo.methodId == CodeObjectsUtil.stripMethodPrefix(methodCodeObjectId)
-//    }
-//    return false
-//
-//}

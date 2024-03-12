@@ -7,7 +7,6 @@ import com.intellij.ui.jcef.JBCefApp
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
 import org.digma.intellij.plugin.ui.jcef.JCefComponent.JCefComponentBuilder
-import org.digma.intellij.plugin.ui.jcef.JaegerButtonStateListener
 import org.digma.intellij.plugin.ui.list.listBackground
 import org.digma.intellij.plugin.ui.panels.DisposablePanel
 import java.awt.BorderLayout
@@ -35,8 +34,7 @@ class RecentActivityPanel(private val project: Project) : DisposablePanel() {
         }
 
         jCefComponent?.let {
-            JaegerButtonStateListener().start(project.service<RecentActivityService>(), it)
-
+            project.service<RecentActivityService>().setJcefComponent(it)
             project.service<RecentActivityUpdater>().setJcefComponent(it)
             project.service<LiveViewUpdater>().setJcefComponent(it)
         }

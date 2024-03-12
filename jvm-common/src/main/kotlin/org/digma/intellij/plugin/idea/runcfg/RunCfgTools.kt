@@ -6,6 +6,7 @@ import com.intellij.execution.configurations.ModuleBasedConfiguration
 import com.intellij.execution.configurations.RunConfiguration
 import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.execution.configurations.RunConfigurationOptions
+import com.intellij.execution.jar.JarApplicationConfiguration
 import com.intellij.execution.target.TargetEnvironmentsManager
 import com.intellij.execution.wsl.target.WslTargetEnvironmentConfiguration
 import com.intellij.openapi.diagnostic.Logger
@@ -52,6 +53,7 @@ private fun evalFlavor(runCfg: RunConfiguration?): RunCfgFlavor<*>? {
     if (runCfg is GradleRunConfiguration) return GradleCfgFlavor(runCfg)
     if (runCfg is MavenRunConfiguration) return MavenCfgFlavor(runCfg)
     if (runCfg is JavaRunConfigurationBase) return JavaAppCfgFlavor(runCfg)
+    if (runCfg is JarApplicationConfiguration) return JarAppCfgFlavor(runCfg)
     // no match, need to log warning
     return null
 }
@@ -112,7 +114,7 @@ private abstract class RunCfgFlavor<T : RunConfiguration>(protected val runCfgBa
 
     abstract fun evalMainClass(params: JavaParameters): String?
 
-    fun tryResolveModule(params: JavaParameters?): Module? {
+    open fun tryResolveModule(params: JavaParameters?): Module? {
         // first strategy, maybe module is just given
         if (runCfgBase is ModuleBasedConfiguration<*, *>) {
             val theCfgModule = runCfgBase.configurationModule
@@ -292,4 +294,14 @@ private class JavaAppCfgFlavor(runCfgBase: JavaRunConfigurationBase) :
 
     override fun evalMainClass(params: JavaParameters): String? = params.mainClass
 
+}
+
+private class JarAppCfgFlavor(runCfgBase: JarApplicationConfiguration) :
+    RunCfgFlavor<JarApplicationConfiguration>(runCfgBase) {
+
+    override fun evalMainClass(params: JavaParameters): String? = params.mainClass
+
+    override fun tryResolveModule(params: JavaParameters?): Module? {
+        return runCfgBase.module
+    }
 }

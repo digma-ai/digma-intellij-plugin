@@ -22,8 +22,6 @@ import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
-import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil
-import org.digma.intellij.plugin.jcef.common.UserRegistrationEvent
 import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
 import org.digma.intellij.plugin.observability.ObservabilityChanged
 import org.digma.intellij.plugin.scope.ScopeChangedEvent
@@ -41,10 +39,10 @@ class JCefComponent
 private constructor(
     val project: Project,
     val jbCefBrowser: JBCefBrowser,
-    val cefMessageRouter: CefMessageRouter,
+    private val cefMessageRouter: CefMessageRouter,
     val messageRouterHandler: BaseMessageRouterHandler?,
     val schemeHandlerFactory: BaseSchemeHandlerFactory?,
-    val lifeSpanHandler: CefLifeSpanHandlerAdapter,
+    private val lifeSpanHandler: CefLifeSpanHandlerAdapter,
 ) : Disposable {
 
 
@@ -64,15 +62,15 @@ private constructor(
 
         settingsChangeListener = object : SettingsChangeListener {
             override fun systemFontChange(fontName: String) {
-                JCefBrowserUtil.sendRequestToChangeFont(fontName, jbCefBrowser)
+                sendRequestToChangeFont(fontName, jbCefBrowser)
             }
 
             override fun systemThemeChange(theme: Theme) {
-                JCefBrowserUtil.sendRequestToChangeUiTheme(theme, jbCefBrowser)
+                sendRequestToChangeUiTheme(theme, jbCefBrowser)
             }
 
             override fun editorFontChange(fontName: String) {
-                JCefBrowserUtil.sendRequestToChangeCodeFont(fontName, jbCefBrowser)
+                sendRequestToChangeCodeFont(fontName, jbCefBrowser)
             }
         }
 
@@ -119,17 +117,21 @@ private constructor(
             val apiUrl = settings.apiUrl
             sendApiUrl(jbCefBrowser.cefBrowser, apiUrl)
             sendIsMicrometerProject(jbCefBrowser.cefBrowser, SpringBootMicrometerConfigureDepsService.isSpringBootWithMicrometer())
+            sendIsJaegerButtonEnabledMessage(jbCefBrowser.cefBrowser)
         }, settingsListenerParentDisposable)
 
 
         project.messageBus.connect(userRegistrationParentDisposable).subscribe(
-            UserRegistrationEvent.USER_REGISTRATION_TOPIC,
-            UserRegistrationEvent { email -> sendUserEmail(jbCefBrowser.cefBrowser, email) })
+            UserRegistrationEvent.USER_REGISTRATION_TOPIC, object : UserRegistrationEvent {
+                override fun userRegistered(email: String) {
+                    sendUserEmail(jbCefBrowser.cefBrowser, email)
+                }
+            })
 
 
         project.messageBus.connect(environmentChangeParentDisposable).subscribe(
             EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC, object : EnvironmentChanged {
-                override fun environmentChanged(newEnv: Env, refreshInsightsView: Boolean) {
+                override fun environmentChanged(newEnv: Env) {
                     sendCurrentEnvironment(jbCefBrowser.cefBrowser, newEnv)
                 }
 
@@ -205,7 +207,7 @@ private constructor(
         private var url: String? = null
         private var messageRouterHandler: BaseMessageRouterHandler? = null
         private var schemeHandlerFactory: BaseSchemeHandlerFactory? = null
-        private var downloadAdapter: CefDownloadHandler? = null;
+        private var downloadAdapter: CefDownloadHandler? = null
 
 
         fun build(): JCefComponent {
@@ -242,7 +244,7 @@ private constructor(
             }
 
             downloadAdapter?.let {
-                jbCefClient.cefClient.addDownloadHandler(it);
+                jbCefClient.cefClient.addDownloadHandler(it)
             }
 
             return jCefComponent
@@ -276,7 +278,7 @@ private constructor(
 
         fun withDownloadAdapter(adapter: CefDownloadHandler): JCefComponentBuilder {
             this.downloadAdapter = adapter
-            return this;
+            return this
         }
     }
 }

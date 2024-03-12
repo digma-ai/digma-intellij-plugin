@@ -1,66 +1,43 @@
 package org.digma.intellij.plugin.jaegerui;
 
-import com.intellij.openapi.fileEditor.FileEditor;
-import com.intellij.openapi.fileEditor.FileEditorState;
+import com.intellij.openapi.fileEditor.*;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.util.UserDataHolderBase;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.ui.jcef.JBCefBrowser;
-import org.cef.CefApp;
-import org.cef.browser.CefBrowser;
-import org.cef.browser.CefMessageRouter;
-import org.cef.handler.CefLifeSpanHandlerAdapter;
-import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator;
-import org.jetbrains.annotations.Nls;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import com.intellij.ui.jcef.JBCefApp;
+import org.digma.intellij.plugin.ui.jcef.*;
+import org.jetbrains.annotations.*;
 
 import javax.swing.*;
 import java.beans.PropertyChangeListener;
 
 public class JaegerUIFileEditor extends UserDataHolderBase implements FileEditor {
 
-    static final String RESOURCE_FOLDER_NAME = "/webview/jaegerui";
-    static final String DOMAIN_NAME = "jaegerui";
-    static final String SCHEMA_NAME = "http";
-
     private final VirtualFile file;
-    private final JBCefBrowser jbCefBrowser;
-    private final CefMessageRouter cefMessageRouter;
 
-    public JaegerUIFileEditor(Project project, VirtualFile file) {
+    @Nullable
+    private final JCefComponent jCefComponent;
+
+    public JaegerUIFileEditor(Project project, JaegerUIVirtualFile file) {
         this.file = file;
-        jbCefBrowser = JBCefBrowserBuilderCreator.create()
-                .setUrl("http://" + DOMAIN_NAME + "/index.html")
-                .build();
-
-        var jbCefClient = jbCefBrowser.getJBCefClient();
-        cefMessageRouter = CefMessageRouter.create();
-        cefMessageRouter.addHandler(new JaegerUIMessageRouterHandler(project, jbCefBrowser), true);
-        jbCefClient.getCefClient().addMessageRouter(cefMessageRouter);
-
-        var lifeSpanHandler = new CefLifeSpanHandlerAdapter() {
-            @Override
-            public void onAfterCreated(CefBrowser browser) {
-                registerAppSchemeHandler(project, (JaegerUIVirtualFile) file);
-            }
-        };
-
-        jbCefBrowser.getJBCefClient().addLifeSpanHandler(lifeSpanHandler, jbCefBrowser.getCefBrowser());
-
-        Disposer.register(this, () -> jbCefBrowser.getJBCefClient().removeLifeSpanHandler(lifeSpanHandler, jbCefBrowser.getCefBrowser()));
-
-
+        jCefComponent = createJcefComponent(project, file);
     }
 
+    @Nullable
+    private JCefComponent createJcefComponent(Project project, JaegerUIVirtualFile file) {
 
+        if (JBCefApp.isSupported()) {
+            return new JCefComponent.JCefComponentBuilder(project, JaegerUIService.getInstance(project))
+                    .url(JaegerUIConstants.JAEGER_UI_URL)
+                    .messageRouterHandler(new JaegerUIMessageRouterHandler(project))
+                    .schemeHandlerFactory(new JaegerUiSchemeHandlerFactory(project, file))
+                    .withDownloadAdapter(new DownloadHandlerAdapter())
+                    .build();
 
-    private void registerAppSchemeHandler(Project project, JaegerUIVirtualFile file) {
-        CefApp.getInstance().registerSchemeHandlerFactory("http", DOMAIN_NAME,
-                new JaegerUISchemeHandlerFactory(project,file));
+        } else {
+            return null;
+        }
     }
-
 
 
     @Override
@@ -68,15 +45,23 @@ public class JaegerUIFileEditor extends UserDataHolderBase implements FileEditor
         return file;
     }
 
+    private JComponent getMyComponent() {
+        if (jCefComponent != null) {
+            return jCefComponent.getComponent();
+        } else {
+            return new JLabel("JCEF not supported");
+        }
+    }
+
 
     @Override
     public @NotNull JComponent getComponent() {
-        return jbCefBrowser.getComponent();
+        return getMyComponent();
     }
 
     @Override
     public @Nullable JComponent getPreferredFocusedComponent() {
-        return jbCefBrowser.getComponent();
+        return getMyComponent();
     }
 
     @Override
@@ -111,8 +96,9 @@ public class JaegerUIFileEditor extends UserDataHolderBase implements FileEditor
 
     @Override
     public void dispose() {
-        jbCefBrowser.dispose();
-        cefMessageRouter.dispose();
+        if (jCefComponent != null) {
+            jCefComponent.dispose();
+        }
     }
 
 }

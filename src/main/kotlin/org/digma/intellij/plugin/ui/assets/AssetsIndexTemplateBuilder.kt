@@ -13,7 +13,7 @@ private const val SELECTED_SERVICES_VARIABLE = "assetsSelectedServices"
 
 class AssetsIndexTemplateBuilder : BaseIndexTemplateBuilder(ASSETS_APP_RESOURCE_FOLDER_NAME, ASSETS_APP_INDEX_TEMPLATE_NAME) {
 
-    override fun addAppSpecificEnvVariable(project: Project, data: HashMap<String, Any>) {
+    override fun addAppSpecificEnvVariable(project: Project, data: MutableMap<String, Any>) {
 
         val assetSearchEnabledForLinux: Boolean = VersionComparatorUtil.compare(ApplicationInfo.getInstance().majorVersion, "2023") >= 0
         data[ASSET_SEARCH_ENV_NAME] = if (SystemInfo.isLinux) assetSearchEnabledForLinux.toString() else "true"

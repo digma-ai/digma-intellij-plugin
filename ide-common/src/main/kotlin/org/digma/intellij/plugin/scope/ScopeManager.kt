@@ -4,8 +4,8 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.analytics.AnalyticsService
+import org.digma.intellij.plugin.common.CodeObjectsUtil
 import org.digma.intellij.plugin.common.EDT
-import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.errorreporting.SEVERITY_HIGH_TRY_FIX
 import org.digma.intellij.plugin.errorreporting.SEVERITY_PROP_NAME
@@ -30,6 +30,8 @@ class ScopeManager(private val project: Project) {
 
     fun changeToHome() {
 
+        EDT.assertNonDispatchThread()
+
         ErrorsViewService.getInstance(project).empty()
 
         EDT.ensureEDT {
@@ -45,14 +47,16 @@ class ScopeManager(private val project: Project) {
 
     fun changeScope(scope: Scope) {
 
+        EDT.assertNonDispatchThread()
+
         try {
             when (scope) {
                 is SpanScope -> changeToSpanScope(scope)
 
                 else -> {
                     ErrorReporter.getInstance().reportError(
-                        project, "ScopeManager.changeScope", mapOf(
-                            "error" to "got unknown scope $scope",
+                        project, "ScopeManager.changeScope", "changeScope,unknown scope", mapOf(
+                            "error hint" to "got unknown scope $scope",
                             SEVERITY_PROP_NAME to SEVERITY_HIGH_TRY_FIX
                         )
                     )

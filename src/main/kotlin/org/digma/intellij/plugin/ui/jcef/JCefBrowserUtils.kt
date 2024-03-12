@@ -6,10 +6,6 @@ import org.digma.intellij.plugin.log.Log
 
 val logger = Logger.getInstance("org.digma.intellij.plugin.ui.jcef.JCefBrowserUtils")
 
-private object CommonObjectMapper {
-    var objectMapper = createObjectMapper()
-}
-
 
 fun serializeObjectToJson(value: Any): String {
     return CommonObjectMapper.objectMapper.writeValueAsString(value)

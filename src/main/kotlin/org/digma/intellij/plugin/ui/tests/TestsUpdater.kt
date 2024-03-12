@@ -6,13 +6,13 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
+import org.digma.intellij.plugin.common.createObjectMapper
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.tests.FilterForLatestTests
 import org.digma.intellij.plugin.model.rest.tests.TestsScopeRequest
 import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
-import org.digma.intellij.plugin.ui.jcef.createObjectMapper
 import org.digma.intellij.plugin.ui.jcef.model.ErrorPayload
 import org.digma.intellij.plugin.ui.jcef.model.Payload
 import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
@@ -62,7 +62,6 @@ class TestsUpdater(private val project: Project) {
             if(scope.spanCodeObjectId.isNotEmpty())
                 spanCodeObjectIds = setOf(scope.spanCodeObjectId)
 
-            //todo: should check if scopeRequest.isEmpty() and return json representing empty state in case of Document scope, no need to call the backend
             val testsOfSpanJson = project.service<TestsService>().getLatestTestsOfSpan(TestsScopeRequest(spanCodeObjectIds, scope.methodId, null), lastKnownFilterForLatestTests)
             Log.log(logger::trace, project, "got tests of span {}", testsOfSpanJson)
             val payload = objectMapper.readTree(testsOfSpanJson)

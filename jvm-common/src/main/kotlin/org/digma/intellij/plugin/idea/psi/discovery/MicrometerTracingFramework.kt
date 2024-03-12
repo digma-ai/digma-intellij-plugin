@@ -18,6 +18,7 @@ import org.digma.intellij.plugin.idea.psi.findAnnotatedMethods
 import org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils
 import org.digma.intellij.plugin.model.discovery.SpanInfo
 import org.digma.intellij.plugin.psi.BuildDocumentInfoProcessContext
+import org.digma.intellij.plugin.psi.PsiFileCachedValueWithUri
 import org.digma.intellij.plugin.psi.PsiUtils
 
 class MicrometerTracingFramework {
@@ -84,18 +85,22 @@ class MicrometerTracingFramework {
     }
 
 
-    fun discoverSpans(project: Project, psiFile: PsiFile, context: BuildDocumentInfoProcessContext): Collection<SpanInfo> {
+    fun discoverSpans(
+        project: Project,
+        psiFileCachedValue: PsiFileCachedValueWithUri,
+        context: BuildDocumentInfoProcessContext,
+    ): Collection<SpanInfo> {
         val spanInfos = mutableListOf<SpanInfo>()
 
         executeCatchingWithRetryIgnorePCE({
-            val newSpanAnnotationSpans = newSpanAnnotationSpanDiscovery(project, psiFile, context)
+            val newSpanAnnotationSpans = newSpanAnnotationSpanDiscovery(project, psiFileCachedValue, context)
             spanInfos.addAll(newSpanAnnotationSpans)
         }, { e ->
             context.addError("newSpanAnnotationSpanDiscovery", e)
         })
 
         executeCatchingWithRetryIgnorePCE({
-            val observedAnnotationSpans = observedAnnotationSpanDiscovery(project, psiFile, context)
+            val observedAnnotationSpans = observedAnnotationSpanDiscovery(project, psiFileCachedValue, context)
             spanInfos.addAll(observedAnnotationSpans)
         }, { e ->
             context.addError("observedAnnotationSpanDiscovery", e)
@@ -105,19 +110,26 @@ class MicrometerTracingFramework {
     }
 
 
-    private fun newSpanAnnotationSpanDiscovery(project: Project, psiFile: PsiFile, context: BuildDocumentInfoProcessContext): Collection<SpanInfo> {
+    private fun newSpanAnnotationSpanDiscovery(
+        project: Project,
+        psiFileCachedValue: PsiFileCachedValueWithUri,
+        context: BuildDocumentInfoProcessContext,
+    ): Collection<SpanInfo> {
+
+        val psiFile = psiFileCachedValue.value ?: return listOf()
 
         val psiPointers = project.service<PsiPointers>()
 
         val spanInfos = mutableListOf<SpanInfo>()
 
-        val newSpanClass = psiPointers.getPsiClass(project, NEW_SPAN_FQN)
+        psiPointers.getPsiClass(project, NEW_SPAN_FQN)?.let {
 
-        newSpanClass?.let {
+            val annotatedMethods = psiPointers.getPsiClassPointer(project, NEW_SPAN_FQN)?.let { newSpanClassPointer ->
+                findAnnotatedMethods(project, newSpanClassPointer) { GlobalSearchScope.fileScope(psiFile) }
+            }
 
-            val annotatedMethods = findAnnotatedMethods(project, newSpanClass) { GlobalSearchScope.fileScope(psiFile) }
 
-            annotatedMethods.forEach { annotatedMethod: SmartPsiElementPointer<PsiMethod> ->
+            annotatedMethods?.forEach { annotatedMethod: SmartPsiElementPointer<PsiMethod> ->
 
                 executeCatchingIgnorePCE({
                     runInReadAccessWithRetryIgnorePCE {
@@ -138,19 +150,27 @@ class MicrometerTracingFramework {
     }
 
 
-    private fun observedAnnotationSpanDiscovery(project: Project, psiFile: PsiFile, context: BuildDocumentInfoProcessContext): Collection<SpanInfo> {
+    private fun observedAnnotationSpanDiscovery(
+        project: Project,
+        psiFileCachedValue: PsiFileCachedValueWithUri,
+        context: BuildDocumentInfoProcessContext,
+    ): Collection<SpanInfo> {
+
+        val psiFile = psiFileCachedValue.value ?: return listOf()
 
         val psiPointers = project.service<PsiPointers>()
 
         val spanInfos = mutableListOf<SpanInfo>()
 
-        val observedAnnotationClass = psiPointers.getPsiClass(project, OBSERVED_FQN)
 
-        observedAnnotationClass?.let {
+        psiPointers.getPsiClass(project, OBSERVED_FQN)?.let {
 
-            val annotatedMethods = findAnnotatedMethods(project, observedAnnotationClass) { GlobalSearchScope.fileScope(psiFile) }
+            val annotatedMethods = psiPointers.getPsiClassPointer(project, OBSERVED_FQN)?.let { observedAnnotationClassPointer ->
+                findAnnotatedMethods(project, observedAnnotationClassPointer) { GlobalSearchScope.fileScope(psiFile) }
+            }
 
-            annotatedMethods.forEach { annotatedMethod: SmartPsiElementPointer<PsiMethod> ->
+
+            annotatedMethods?.forEach { annotatedMethod: SmartPsiElementPointer<PsiMethod> ->
 
                 executeCatchingIgnorePCE({
                     runInReadAccessWithRetryIgnorePCE {

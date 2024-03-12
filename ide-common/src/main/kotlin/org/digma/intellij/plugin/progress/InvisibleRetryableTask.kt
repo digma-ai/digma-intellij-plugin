@@ -3,12 +3,25 @@ package org.digma.intellij.plugin.progress
 import com.intellij.openapi.progress.EmptyProgressIndicator
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.progress.ProgressManager
+import org.digma.intellij.plugin.common.isProjectValid
 
-class InvisibleRetryableTask(val task: RetryableTask) : Runnable {
+/**
+ * runs RetryableTask.Invisible under progress.
+ * the calling thread should not already be running under progress, if it does it will break the behaviour
+ * of the calling progress.
+ */
+internal class InvisibleRetryableTask(val task: RetryableTask.Invisible) : Runnable {
 
 
-    //will run on current thread and retry until exhausted
     override fun run() {
+
+        if (!isProjectValid(task.project)) {
+            return
+        }
+
+        //must not be under progress already
+        assertNotUnderProgress()
+
         var canceled = false
         do {
             canceled = false

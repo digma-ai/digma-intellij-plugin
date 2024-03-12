@@ -6,16 +6,10 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.util.ui.JBUI.Borders.empty
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.ui.common.buildPreviewListPanel
-import org.digma.intellij.plugin.ui.common.statuspanels.createLoadingInsightsPanel
 import org.digma.intellij.plugin.ui.common.statuspanels.createNoErrorsEmptyStatePanel
-import org.digma.intellij.plugin.ui.common.statuspanels.createPendingInsightsPanel
-import org.digma.intellij.plugin.ui.common.statuspanels.createStartupEmptyStatePanel
 import org.digma.intellij.plugin.ui.list.ScrollablePanelList
 import org.digma.intellij.plugin.ui.list.errors.ErrorsPanelList
-import org.digma.intellij.plugin.ui.list.insights.PreviewList
 import org.digma.intellij.plugin.ui.list.listBackground
-import org.digma.intellij.plugin.ui.model.UIInsightsStatus
 import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
 import org.digma.intellij.plugin.ui.model.errors.ErrorsTabCard
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
@@ -31,16 +25,9 @@ private val logger: Logger = Logger.getInstance("org.digma.intellij.plugin.ui.in
 
 fun errorsPanel(project: Project): DigmaTabPanel {
 
-    //errorsModel and insightsModel are not singletons but are single per open project.
-    //they are created by the view service and live as long as the project is alive.
-    //so components can bind to them, but not to members of them, the model instance is the same on but the
-    //members change , like the various lists. or bind to a function of the mode like getScope.
     val errorsModel = ErrorsViewService.getInstance(project).model
 
     val errorsList = ScrollablePanelList(ErrorsPanelList(project, errorsModel.listViewItems))
-    val previewList = ScrollablePanelList(PreviewList(project, errorsModel.getMethodNamesWithErrors()))
-
-    val previewPanel = buildPreviewListPanel(previewList)
 
     val errorsDetailsPanel = errorDetailsPanel(project, errorsModel)
 
@@ -52,9 +39,6 @@ fun errorsPanel(project: Project): DigmaTabPanel {
 
     myCardPanel.add(errorsList, ErrorsTabCard.ERRORS_LIST.name)
     myCardLayout.addLayoutComponent(errorsList, ErrorsTabCard.ERRORS_LIST.name)
-
-    myCardPanel.add(previewPanel, ErrorsTabCard.PREVIEW_LIST.name)
-    myCardLayout.addLayoutComponent(previewPanel, ErrorsTabCard.PREVIEW_LIST.name)
 
     myCardPanel.add(errorsDetailsPanel, ErrorsTabCard.ERROR_DETAILS.name)
     myCardLayout.addLayoutComponent(errorsDetailsPanel, ErrorsTabCard.ERROR_DETAILS.name)
@@ -80,7 +64,6 @@ fun errorsPanel(project: Project): DigmaTabPanel {
         override fun reset() {
 
             errorsList.getModel().setListData(errorsModel.listViewItems)
-            previewList.getModel().setListData(errorsModel.getMethodNamesWithErrors())
             errorsDetailsPanel.reset()
             Log.log(logger::debug, project, "Changing errors tab card to ${errorsModel.card.name}")
             myCardLayout.show(myCardPanel, errorsModel.card.name)
@@ -103,8 +86,7 @@ private fun wrapWithEmptyStatuses(
     errorsModel: ErrorsModel,
 ): DigmaTabPanel {
 
-    //using the insights model status to change to empty state card
-
+    val defaultCardName = "Default"
     val noErrorsCardName = "NoErrors"
 
     val emptyStatusesCardsLayout = CardLayout()
@@ -113,29 +95,14 @@ private fun wrapWithEmptyStatuses(
     emptyStatusesCardsPanel.border = empty()
 
     val noInErrorsPanel = createNoErrorsEmptyStatePanel()
-    val pendingInsightsPanel = createPendingInsightsPanel()
-    val loadingInsightsPanel = createLoadingInsightsPanel()
 
-    val startupEmpty = createStartupEmptyStatePanel(project)
-
-    emptyStatusesCardsPanel.add(errorsPanel, UIInsightsStatus.Default.name)
-    emptyStatusesCardsLayout.addLayoutComponent(errorsPanel, UIInsightsStatus.Default.name)
+    emptyStatusesCardsPanel.add(errorsPanel, defaultCardName)
+    emptyStatusesCardsLayout.addLayoutComponent(errorsPanel, defaultCardName)
 
     emptyStatusesCardsPanel.add(noInErrorsPanel, noErrorsCardName)
     emptyStatusesCardsLayout.addLayoutComponent(noInErrorsPanel, noErrorsCardName)
 
-    emptyStatusesCardsPanel.add(loadingInsightsPanel, UIInsightsStatus.Loading.name)
-    emptyStatusesCardsLayout.addLayoutComponent(loadingInsightsPanel, UIInsightsStatus.Loading.name)
-
-    emptyStatusesCardsPanel.add(pendingInsightsPanel, UIInsightsStatus.InsightPending.name)
-    emptyStatusesCardsLayout.addLayoutComponent(pendingInsightsPanel, UIInsightsStatus.InsightPending.name)
-
-    emptyStatusesCardsPanel.add(startupEmpty, UIInsightsStatus.Startup.name)
-    emptyStatusesCardsLayout.addLayoutComponent(startupEmpty, UIInsightsStatus.Startup.name)
-
-    emptyStatusesCardsLayout.show(emptyStatusesCardsPanel,UIInsightsStatus.Startup.name)
-
-
+    emptyStatusesCardsLayout.show(emptyStatusesCardsPanel, defaultCardName)
 
     val resultPanel = object : DigmaTabPanel() {
         override fun getPreferredFocusableComponent(): JComponent {
@@ -150,50 +117,15 @@ private fun wrapWithEmptyStatuses(
 
             errorsPanel.reset()
 
-            var cardToShow = UIInsightsStatus.Default.name
+            var cardToShow = defaultCardName
 
             if (errorsModel.listViewItems.isEmpty()) {
                 cardToShow = noErrorsCardName
             }
 
-//            if (errorsModel.listViewItems.isEmpty() && errorsModel.card == ErrorsTabCard.ERRORS_LIST){
-//                cardToShow = noErrorsCardName
-//            }
-            if (!errorsModel.hasErrors() && errorsModel.card == ErrorsTabCard.PREVIEW_LIST) {
-                cardToShow = noErrorsCardName
-            }
 
             Log.log(logger::debug, project, "Changing to card  $cardToShow")
             emptyStatusesCardsLayout.show(emptyStatusesCardsPanel, cardToShow)
-
-
-//            if (insightsModel.status == UIInsightsStatus.Startup){
-//                emptyStatusesCardsLayout.show(emptyStatusesCardsPanel,UIInsightsStatus.Startup.name)
-//            }else
-//            if (errorsModel.card == ErrorsTabCard.ERROR_DETAILS){
-//                Log.log(logger::debug, project, "Changing to error default")
-//                emptyStatusesCardsLayout.show(emptyStatusesCardsPanel,UIInsightsStatus.Default.name )
-//            }else if (listOf(UIInsightsStatus.Loading,UIInsightsStatus.InsightPending).contains(insightsModel.status)){
-//                Log.log(logger::debug, project, "Changing to card  ${insightsModel.status.name}")
-//                emptyStatusesCardsLayout.show(emptyStatusesCardsPanel, insightsModel.status.name)
-//            }else{
-//                var cardToShow = UIInsightsStatus.Default.name
-//
-//                if (errorsModel.listViewItems.isNotEmpty() &&
-//                    listOf(UIInsightsStatus.NoSpanData,UIInsightsStatus.NoObservability,UIInsightsStatus.NoInsights).contains(insightsModel.status)){
-//                    cardToShow = noErrorsCardName
-//                }
-//
-//                if (errorsModel.listViewItems.isEmpty() && errorsModel.card == ErrorsTabCard.ERRORS_LIST){
-//                    cardToShow = noErrorsCardName
-//                }
-//                if (!errorsModel.hasErrors() && errorsModel.card == ErrorsTabCard.PREVIEW_LIST){
-//                    cardToShow = noErrorsCardName
-//                }
-//
-//                Log.log(logger::debug, project, "Changing to card  $cardToShow")
-//                emptyStatusesCardsLayout.show(emptyStatusesCardsPanel, cardToShow)
-//            }
         }
     }
 

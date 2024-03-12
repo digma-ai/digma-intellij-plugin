@@ -18,13 +18,14 @@ import java.util.concurrent.locks.ReentrantLock;
 public class Environment implements EnvironmentsSupplier {
 
     private static final Logger LOGGER = Logger.getInstance(Environment.class);
-    private static final String NO_ENVIRONMENTS_MESSAGE = "No Environments";
 
     private Env current;
 
     @NotNull
     private List<Env> environments = new ArrayList<>();
 
+    //used to try restore environment after connections are lost and regained
+    private String latestKnownEnv = null;
 
     private final Project project;
     private final AnalyticsService analyticsService;
@@ -34,6 +35,7 @@ public class Environment implements EnvironmentsSupplier {
     public Environment(@NotNull Project project, @NotNull AnalyticsService analyticsService) {
         this.project = project;
         this.analyticsService = analyticsService;
+        latestKnownEnv = PersistenceService.getInstance().getCurrentEnv();
     }
 
 
@@ -53,18 +55,18 @@ public class Environment implements EnvironmentsSupplier {
     @Override
     public void setCurrent(@Nullable String newEnv) {
 
-        if (StringUtils.isEmpty(newEnv) || NO_ENVIRONMENTS_MESSAGE.equals(newEnv)) {
+        if (StringUtils.isEmpty(newEnv)) {
             return;
         }
 
-        setCurrent(newEnv, true, null);
+        setCurrent(newEnv, null);
     }
 
 
     //this method does not handle illegal or null environment. it should be called with a non-null newEnv
     // that exists in the DB.
     @Override
-    public void setCurrent(@NotNull String newEnv, boolean refreshInsightsView, @Nullable Runnable taskToRunAfterChange) {
+    public void setCurrent(@NotNull String newEnv, @Nullable Runnable taskToRunAfterChange) {
 
         try {
             Log.log(LOGGER::debug, "Setting current environment , old={},new={}", this.current, newEnv);
@@ -74,7 +76,7 @@ public class Environment implements EnvironmentsSupplier {
                 return;
             }
 
-            //this setCurrent method is called from RecentActivityService, it may send an env that does not exist in  the
+            //this setCurrent method may send an env that does not exist in the
             // list of environments. so refresh if necessary.
             Runnable task = () -> {
                 envChangeLock.lock();
@@ -83,7 +85,7 @@ public class Environment implements EnvironmentsSupplier {
                     if (environments.isEmpty() || !contains(newEnv)) {
                         refreshEnvironments();
                     }
-                    updateCurrentEnv(newEnv, refreshInsightsView);
+                    updateCurrentEnv(newEnv);
                 } finally {
                     if (envChangeLock.isHeldByCurrentThread()) {
                         envChangeLock.unlock();
@@ -94,10 +96,10 @@ public class Environment implements EnvironmentsSupplier {
                 if (taskToRunAfterChange != null) {
                     taskToRunAfterChange.run();
                 }
-
             };
 
             Backgroundable.ensureBackground(project, "Digma: environment changed " + newEnv, task);
+
         } catch (Throwable e) {
             ErrorReporter.getInstance().reportError(project, "Environment.setCurrent", e);
         }
@@ -126,7 +128,7 @@ public class Environment implements EnvironmentsSupplier {
             try {
                 //run both refreshEnvironments and updateCurrentEnv under same lock
                 refreshEnvironments();
-                updateCurrentEnv(PersistenceService.getInstance().getCurrentEnv(), true);
+                updateCurrentEnv(latestKnownEnv);
             } catch (Exception e) {
                 Log.warnWithException(LOGGER, e, "Exception in refreshNowOnBackground");
                 ErrorReporter.getInstance().reportError(project, "Environment.refreshNowOnBackground", e);
@@ -182,31 +184,30 @@ public class Environment implements EnvironmentsSupplier {
     }
 
 
-
-
-    private void updateCurrentEnv(@Nullable String preferred, boolean refreshInsightsView) {
+    private void updateCurrentEnv(@Nullable String preferred) {
 
         var oldEnv = current;
 
         var optionalEnv = find(preferred);
         if (optionalEnv.isPresent()) {
             current = optionalEnv.get();
-        } else if (current == null || !this.environments.contains(current)) {
+        } else if (current == null) {
             current = environments.isEmpty() ? null : environments.get(0);
         }
 
         if (current != null) {
-            //don't update the persistent data with null,null will happen on connection lost,
-            //so when connection is back the current env can be restored to the last one.
+            latestKnownEnv = current.getOriginalName();
             PersistenceService.getInstance().setCurrentEnv(current.getOriginalName());
+        } else {
+            PersistenceService.getInstance().setCurrentEnv(null);
         }
 
         if (!Objects.equals(oldEnv, current)) {
-            notifyEnvironmentChanged(oldEnv, current, refreshInsightsView);
+            notifyEnvironmentChanged(oldEnv, current);
         }
     }
 
-    private Optional<Env> find(String envToFind) {
+    private Optional<Env> find(@Nullable String envToFind) {
         return environments.stream().filter(env -> env.getOriginalName().equals(envToFind)).findFirst();
     }
 
@@ -215,14 +216,13 @@ public class Environment implements EnvironmentsSupplier {
     }
 
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    private boolean collectionsEquals(Collection envs1, Collection envs2) {
+    private boolean collectionsEquals(Collection<Env> envs1, Collection<Env> envs2) {
         if (envs1 == null && envs2 == null) {
             return true;
         }
 
         if (envs1 != null && envs2 != null && envs1.size() == envs2.size()) {
-            return new HashSet(envs1).containsAll(envs2);
+            return new HashSet<>(envs1).containsAll(envs2);
         }
 
         return false;
@@ -244,7 +244,7 @@ public class Environment implements EnvironmentsSupplier {
     }
 
 
-    private void notifyEnvironmentChanged(Env oldEnv, Env newEnv, boolean refreshInsightsView) {
+    private void notifyEnvironmentChanged(Env oldEnv, Env newEnv) {
         Log.log(LOGGER::trace, "Firing EnvironmentChanged event for {}", newEnv);
         if (project.isDisposed()) {
             return;
@@ -255,7 +255,7 @@ public class Environment implements EnvironmentsSupplier {
         //run in new background thread so locks can be freed because this method is called under lock
         Backgroundable.runInNewBackgroundThread(project, "environmentChanged", () -> {
             EnvironmentChanged publisher = project.getMessageBus().syncPublisher(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC);
-            publisher.environmentChanged(newEnv, refreshInsightsView);
+            publisher.environmentChanged(newEnv);
         });
     }
 

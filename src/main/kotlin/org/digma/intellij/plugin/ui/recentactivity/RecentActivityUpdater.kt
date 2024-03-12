@@ -15,12 +15,11 @@ import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.icons.AppIcons
-import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResponseEntry
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult
 import org.digma.intellij.plugin.posthog.ActivityMonitor
-import org.digma.intellij.plugin.recentactivity.RecentActivityLogic.Companion.isRecentTime
+import org.digma.intellij.plugin.ui.jcef.JCEFGlobalConstants
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
 import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
 import org.digma.intellij.plugin.ui.recentactivity.model.EnvironmentType
@@ -28,6 +27,8 @@ import org.digma.intellij.plugin.ui.recentactivity.model.PendingEnvironment
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivitiesMessagePayload
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivitiesMessageRequest
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityEnvironment
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.Date
 import java.util.Optional
 import javax.swing.Icon
@@ -47,7 +48,7 @@ class RecentActivityUpdater(val project: Project) : Disposable {
 
     init {
         project.messageBus.connect(this).subscribe<EnvironmentChanged>(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC, object : EnvironmentChanged {
-            override fun environmentChanged(newEnv: Env, refreshInsightsView: Boolean) {
+            override fun environmentChanged(newEnv: Env) {
                 Backgroundable.ensurePooledThread { updateLatestActivities() }
             }
 
@@ -116,6 +117,12 @@ class RecentActivityUpdater(val project: Project) : Disposable {
     }
 
 
+    private fun isRecentTime(date: Date?): Boolean {
+        if (date == null) return false
+        return date.toInstant().plus(RECENT_EXPIRATION_LIMIT_MILLIS, ChronoUnit.MILLIS).isAfter(Instant.now())
+    }
+
+
     private fun sendLatestActivities(jCefComponent: JCefComponent, latestActivitiesResult: RecentActivityResult, environments: List<Env>) {
 
         Log.log(logger::trace, "updating recent activities {},environments:{}", latestActivitiesResult, environments)
@@ -135,7 +142,7 @@ class RecentActivityUpdater(val project: Project) : Disposable {
         Log.log(logger::trace, "updating recent activities with result {},{}", latestActivitiesResult, allEnvs)
 
         val recentActivitiesMessage = RecentActivitiesMessageRequest(
-            JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
+            JCEFGlobalConstants.REQUEST_MESSAGE_TYPE,
             RECENT_ACTIVITY_SET_DATA,
             RecentActivitiesMessagePayload(
                 allEnvs,
@@ -218,7 +225,7 @@ class RecentActivityUpdater(val project: Project) : Disposable {
             val pendingEnvs = buildPendingEnvs(pendingEnvironments)
 
             val recentActivitiesMessage = RecentActivitiesMessageRequest(
-                JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
+                JCEFGlobalConstants.REQUEST_MESSAGE_TYPE,
                 RECENT_ACTIVITY_SET_DATA,
                 RecentActivitiesMessagePayload(
                     pendingEnvs.sortedBy { recentActivityEnvironment: RecentActivityEnvironment -> recentActivityEnvironment.name },

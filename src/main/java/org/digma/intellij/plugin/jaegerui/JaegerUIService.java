@@ -1,16 +1,15 @@
 package org.digma.intellij.plugin.jaegerui;
 
+import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
-import freemarker.template.*;
 import org.apache.commons.collections.CollectionUtils;
 import org.digma.intellij.plugin.analytics.*;
 import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.jaegerui.model.incoming.*;
 import org.digma.intellij.plugin.jaegerui.model.outgoing.*;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator;
 import org.digma.intellij.plugin.posthog.*;
 import org.digma.intellij.plugin.psi.*;
@@ -20,112 +19,29 @@ import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
 import org.digma.intellij.plugin.ui.model.TraceSample;
 import org.jetbrains.annotations.*;
 
-import java.io.*;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-import static org.digma.intellij.plugin.document.CodeObjectsUtil.*;
+import static org.digma.intellij.plugin.common.CodeObjectsUtil.*;
 
 
-public class JaegerUIService {
+public class JaegerUIService implements Disposable {
 
     private final Logger logger = Logger.getInstance(JaegerUIService.class);
 
     private final Project project;
 
-    //Configuration should be singleton
-    private final Configuration freemarketConfiguration = new Configuration(Configuration.VERSION_2_3_30);
-
-    private static final String INDEX_TEMPLATE_NAME = "jaegeruitemplate.ftl";
-
-    private static final String INITIAL_ROUTE_PARAM_NAME = "initial_route";
-    private static final String JAEGER_URL_PARAM_NAME = "jaeger_url";
-    private static final String JAEGER_QUERY_URL_CHANGED_FROM_DEFAULT_PARAM_NAME = "isUserChangedJaegerQueryUrl";
-
 
     public JaegerUIService(Project project) {
         this.project = project;
-        freemarketConfiguration.setClassForTemplateLoading(this.getClass(), JaegerUIFileEditor.RESOURCE_FOLDER_NAME);
-        freemarketConfiguration.setDefaultEncoding(StandardCharsets.UTF_8.name());
-        freemarketConfiguration.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
-        freemarketConfiguration.setNumberFormat("computer");
     }
 
+    @Override
+    public void dispose() {
+        //nothing to do, used as parent disposable
+    }
 
     public static JaegerUIService getInstance(Project project) {
         return project.getService(JaegerUIService.class);
-    }
-
-    boolean isIndexHtml(String path) {
-        return path.endsWith("index.html");
-    }
-
-    public InputStream buildIndexFromTemplate(String path, JaegerUIVirtualFile jaegerUIVirtualFile) {
-
-        if (!isIndexHtml(path)) {
-            //should not happen
-            return null;
-        }
-
-        try {
-
-            var didUserChangeJaegerQueryUrl = !(SettingsState.DEFAULT_JAEGER_QUERY_URL.equalsIgnoreCase(SettingsState.getInstance().jaegerQueryUrl));
-
-            var data = new HashMap<String, String>();
-            data.put(JAEGER_URL_PARAM_NAME, jaegerUIVirtualFile.getJaegerBaseUrl());
-            data.put(JAEGER_QUERY_URL_CHANGED_FROM_DEFAULT_PARAM_NAME, String.valueOf(didUserChangeJaegerQueryUrl));
-
-
-            if (jaegerUIVirtualFile.getTraceId() != null) {
-                var initialRoutePath = buildInitialRoutePath(jaegerUIVirtualFile.getTraceId(), jaegerUIVirtualFile.getSpanCodeObjectId(), jaegerUIVirtualFile.isSendSearchQuery());
-                data.put(INITIAL_ROUTE_PARAM_NAME, initialRoutePath);
-            } else if (jaegerUIVirtualFile.getTraceSamples() != null && !jaegerUIVirtualFile.getTraceSamples().isEmpty()) {
-
-                if (jaegerUIVirtualFile.getTraceSamples().size() == 1 &&
-                        jaegerUIVirtualFile.getTraceSamples().get(0).getTraceId() != null &&
-                        !Objects.requireNonNull(jaegerUIVirtualFile.getTraceSamples().get(0).getTraceId()).isBlank()) {
-
-                    var initialRoutePath = buildInitialRoutePath(Objects.requireNonNull(jaegerUIVirtualFile.getTraceSamples().get(0).getTraceId()), jaegerUIVirtualFile.getSpanCodeObjectId(), jaegerUIVirtualFile.isSendSearchQuery());
-                    data.put(INITIAL_ROUTE_PARAM_NAME, initialRoutePath);
-
-                } else if (jaegerUIVirtualFile.getTraceSamples().size() == 2 &&
-                        jaegerUIVirtualFile.getTraceSamples().get(0).getTraceId() != null &&
-                        !Objects.requireNonNull(jaegerUIVirtualFile.getTraceSamples().get(0).getTraceId()).isBlank() &&
-                        jaegerUIVirtualFile.getTraceSamples().get(1).getTraceId() != null &&
-                        !Objects.requireNonNull(jaegerUIVirtualFile.getTraceSamples().get(1).getTraceId()).isBlank()) {
-
-                    var trace1 = Objects.requireNonNull(jaegerUIVirtualFile.getTraceSamples().get(0).getTraceId()).toLowerCase();
-                    var trace2 = Objects.requireNonNull(jaegerUIVirtualFile.getTraceSamples().get(1).getTraceId()).toLowerCase();
-                    var initialRoutePath = "/trace/" + trace1 + "..." + trace2 + "?cohort=" + trace1 + "&cohort=" + trace2;
-                    if (jaegerUIVirtualFile.getSpanCodeObjectId() != null && jaegerUIVirtualFile.isSendSearchQuery()) {
-                        initialRoutePath = initialRoutePath + "&uiFind=" + URLEncoder.encode("\"" + jaegerUIVirtualFile.getSpanCodeObjectId() + "\"", StandardCharsets.UTF_8);
-                    }
-                    data.put(INITIAL_ROUTE_PARAM_NAME, initialRoutePath);
-                }
-            } else {
-                data.put(INITIAL_ROUTE_PARAM_NAME, "");
-            }
-
-
-            Template template = freemarketConfiguration.getTemplate(INDEX_TEMPLATE_NAME);
-            StringWriter stringWriter = new StringWriter();
-            template.process(data, stringWriter);
-            return new ByteArrayInputStream(stringWriter.toString().getBytes(StandardCharsets.UTF_8));
-
-        } catch (Exception e) {
-            Log.debugWithException(logger, e, "error creating template for index.html");
-            return null;
-        }
-    }
-
-    private String buildInitialRoutePath(String traceId, @Nullable String spanCodeObjectId, boolean isSendSearchQuery) {
-        var traceLowerCase = traceId.toLowerCase();
-        var url = "/trace/" + traceLowerCase + "?cohort=" + traceLowerCase;
-        if (spanCodeObjectId != null && isSendSearchQuery) {
-            url = url + "&uiFind=" + URLEncoder.encode("\"" + spanCodeObjectId + "\"", StandardCharsets.UTF_8);
-        }
-        return url;
     }
 
 
@@ -313,12 +229,11 @@ public class JaegerUIService {
         var insights = new HashMap<String, List<Insight>>();
 
         try {
-            var insightsFromBackend = AnalyticsService.getInstance(project).getInsights(ids).
-                    stream().filter(codeObjectInsight -> codeObjectInsight.getType() != InsightType.Unmapped);
+            var insightsFromBackend = AnalyticsService.getInstance(project).getInsightsInfo(ids);
             insightsFromBackend.forEach(codeObjectInsight -> {
                 var id = codeObjectInsight.getCodeObjectId();
                 var objectInsights = insights.computeIfAbsent(id, s -> new ArrayList<>());
-                objectInsights.add(new Insight(codeObjectInsight.getType().name(), codeObjectInsight.getImportance()));
+                objectInsights.add(new Insight(codeObjectInsight.getType(), codeObjectInsight.getImportance()));
             });
             return insights;
         } catch (AnalyticsServiceException e) {
@@ -326,4 +241,6 @@ public class JaegerUIService {
             return Collections.emptyMap();
         }
     }
+
+
 }

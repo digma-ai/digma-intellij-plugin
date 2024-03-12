@@ -27,14 +27,9 @@ public class IDEUtilsService {
 
     public static boolean isAlreadyPassedInstallationWizard(){
         PersistenceService persistenceService = PersistenceService.getInstance();
-        if (IDEUtilsService.isIdeaIDE() && persistenceService.isAlreadyPassedTheInstallationWizardForIdeaIDE() ||
+        return IDEUtilsService.isIdeaIDE() && persistenceService.isAlreadyPassedTheInstallationWizardForIdeaIDE() ||
                 IDEUtilsService.isRiderIDE() && persistenceService.isAlreadyPassedTheInstallationWizardForRiderIDE() ||
-                IDEUtilsService.isPyCharmIDE() && persistenceService.isAlreadyPassedTheInstallationWizardForPyCharmIDE()
-        )   {
-            return true;
-        }
-
-        return false;
+                IDEUtilsService.isPyCharmIDE() && persistenceService.isAlreadyPassedTheInstallationWizardForPyCharmIDE();
     }
 
 

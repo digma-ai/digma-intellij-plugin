@@ -21,11 +21,15 @@ class PersistenceService {
     private val state = service<PersistenceState>().state
 
 
+    /**
+     * Do not use this method to get the current environment.
+     * @see org.digma.intellij.plugin.env.Env.Companion.getCurrentEnvName
+     */
     fun getCurrentEnv(): String? {
         return state.currentEnv
     }
 
-    fun setCurrentEnv(env: String) {
+    fun setCurrentEnv(env: String?) {
         state.currentEnv = env
     }
 
@@ -74,6 +78,9 @@ class PersistenceService {
         state.firstTimeAssetsReceivedTimestamp = Instant.now()
     }
 
+    fun getFirstTimeAssetsReceivedTimestamp(): Instant? {
+        return state.firstTimeAssetsReceivedTimestamp
+    }
 
     fun isFirstTimePluginLoaded(): Boolean {
         //todo: backwards compatibility, remove state.isFirstTimePluginLoaded on May 2024

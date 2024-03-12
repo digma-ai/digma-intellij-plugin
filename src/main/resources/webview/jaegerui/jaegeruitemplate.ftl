@@ -39,7 +39,8 @@
       window.global = {};
     </script>
     <script>
-      window.platform = "JetBrains";
+      @GLOBAL_ENV_VARS@
+
       window.apiBaseUrl = "${jaeger_url}";
       window.initialRoutePath = "${initial_route}";
       window.embeddedMode = true;
@@ -47,8 +48,8 @@
       window.staticPath;
       window.enableZoomControls = true;
     </script>
-    <script type="module" crossorigin src="./static/index-e1f59478.js"></script>
-    <link rel="stylesheet" href="./static/index-51c4a50e.css">
+    <script type="module" crossorigin src="./static/index-7a821a74.js"></script>
+    <link rel="stylesheet" href="./static/index-fed62196.css">
     <script type="module">import.meta.url;import("_").catch(()=>1);async function* g(){};window.__vite_is_modern_browser=true;</script>
     <script type="module">!function(){if(window.__vite_is_modern_browser)return;console.warn("vite: loading legacy chunks, syntax error above and the same error below should be ignored");var e=document.getElementById("vite-legacy-polyfill"),n=document.createElement("script");n.src=e.src,n.onload=function(){System.import(document.getElementById('vite-legacy-entry').getAttribute('data-src'))},document.body.appendChild(n)}();</script>
   </head>
@@ -62,6 +63,6 @@
 
     <script nomodule>!function(){var e=document,t=e.createElement("script");if(!("noModule"in t)&&"onbeforeload"in t){var n=!1;e.addEventListener("beforeload",(function(e){if(e.target===t)n=!0;else if(!e.target.hasAttribute("nomodule")||!n)return;e.preventDefault()}),!0),t.type="module",t.src=".",e.head.appendChild(t),t.remove()}}();</script>
     <script nomodule crossorigin id="vite-legacy-polyfill" src="./static/polyfills-legacy-9486af1f.js"></script>
-    <script nomodule crossorigin id="vite-legacy-entry" data-src="./static/index-legacy-aedef212.js">System.import(document.getElementById('vite-legacy-entry').getAttribute('data-src'))</script>
+    <script nomodule crossorigin id="vite-legacy-entry" data-src="./static/index-legacy-0a47fad0.js">System.import(document.getElementById('vite-legacy-entry').getAttribute('data-src'))</script>
   </body>
 </html>

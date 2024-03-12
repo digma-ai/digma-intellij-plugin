@@ -19,9 +19,13 @@ abstract class AbstractJvmInstrumentationProvider(private val project: Project, 
         try {
 
             EDT.ensureEDT {
-                WriteAction.run<RuntimeException> {
-                    languageService.addDependencyToOtelLib(methodId)
-                    ProjectRefreshAction.refreshProject(project)
+                try {
+                    WriteAction.run<RuntimeException> {
+                        languageService.addDependencyToOtelLib(methodId)
+                        ProjectRefreshAction.refreshProject(project)
+                    }
+                } catch (e: Throwable) {
+                    ErrorReporter.getInstance().reportError(project, "AbstractJvmInstrumentationProvider.addObservabilityDependency", e)
                 }
             }
         } catch (e: Throwable) {
@@ -32,10 +36,16 @@ abstract class AbstractJvmInstrumentationProvider(private val project: Project, 
     override fun addObservability(methodId: String) {
         try {
             EDT.ensureEDT {
-                WriteAction.run<RuntimeException> {
-                    val observabilityInfo = languageService.canInstrumentMethod(methodId)
-                    languageService.instrumentMethod(observabilityInfo)
-                    ProjectRefreshAction.refreshProject(project)
+                try {
+                    WriteAction.run<RuntimeException> {
+                        val observabilityInfo = languageService.canInstrumentMethod(methodId)
+                        if (!observabilityInfo.hasAnnotation) {
+                            languageService.instrumentMethod(observabilityInfo)
+                            ProjectRefreshAction.refreshProject(project)
+                        }
+                    }
+                } catch (e: Throwable) {
+                    ErrorReporter.getInstance().reportError(project, "AbstractJvmInstrumentationProvider.addObservability", e)
                 }
             }
         } catch (e: Throwable) {

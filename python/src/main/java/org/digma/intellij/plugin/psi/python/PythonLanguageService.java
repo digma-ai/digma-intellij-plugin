@@ -1,15 +1,14 @@
 package org.digma.intellij.plugin.psi.python;
 
-import com.intellij.codeInsight.codeVision.CodeVisionEntry;
 import com.intellij.lang.Language;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.fileEditor.*;
+import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.progress.*;
 import com.intellij.openapi.project.*;
 import com.intellij.openapi.roots.ProjectFileIndex;
-import com.intellij.openapi.util.TextRange;
+import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.intellij.psi.search.GlobalSearchScope;
@@ -19,9 +18,7 @@ import com.jetbrains.python.psi.*;
 import com.jetbrains.python.psi.stubs.*;
 import kotlin.Pair;
 import org.digma.intellij.plugin.common.*;
-import org.digma.intellij.plugin.document.DocumentInfoService;
-import org.digma.intellij.plugin.editor.*;
-import org.digma.intellij.plugin.env.Env;
+import org.digma.intellij.plugin.editor.CaretContextService;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.instrumentation.*;
 import org.digma.intellij.plugin.log.Log;
@@ -163,56 +160,20 @@ public class PythonLanguageService implements LanguageService {
             var functions = PyFunctionNameIndex.find(functionName, project, GlobalSearchScope.allScope(project));
 
             //PyFunctionNameIndex may find many functions, we want only one, so if we found it break the loop
-            boolean found = false;
             for (PyFunction function : functions) {
                 if (function.isValid()) {
                     var codeObjectId = PythonLanguageUtils.createPythonMethodCodeObjectId(project, function);
                     List<String> allIds = PythonAdditionalIdsProvider.getAdditionalIdsInclusive(codeObjectId, false);
                     if (allIds.contains(methodId) && (function.canNavigateToSource())) {
                         Log.log(LOGGER::debug, "navigating to method {}", function);
-                        found = true;
                         function.navigate(true);
                         break;
                     }
                 }
             }
-
-            if (!found) {
-                navigateToMethodFallback(methodId);
-            }
         });
 
     }
-
-    private void navigateToMethodFallback(String methodId) {
-
-        PsiFile psiFile = DocumentInfoService.getInstance(project).findPsiFileByMethodId(methodId);
-        if (psiFile instanceof PyFile pyFile) {
-
-            PyFunction pyFunction = PythonLanguageUtils.findMethodInFile(project, pyFile, methodId);
-
-            if (pyFunction != null && pyFunction.canNavigateToSource()) {
-                Log.log(LOGGER::debug, "navigating to method {}", pyFunction);
-                pyFunction.navigate(true);
-            } else if (pyFunction != null) {
-                //it's a fallback. sometimes the psiMethod.canNavigateToSource is false and really the
-                //navigation doesn't work. i can't say why. usually it happens when indexing is not ready yet,
-                // and the user opens files, selects tabs or moves the caret. then when indexing is finished
-                // we have the list of methods but then psiMethod.navigate doesn't work.
-                // navigation to source using the editor does work in these circumstances.
-                var selectedEditor = EditorUtils.getSelectedTextEditorForFile(psiFile.getVirtualFile(), FileEditorManager.getInstance(project));
-                if (selectedEditor != null) {
-                    Log.log(LOGGER::debug, "moving caret to offset of function {}", pyFunction);
-                    selectedEditor.getCaretModel().moveToOffset(pyFunction.getTextOffset());
-                } else {
-                    Log.log(LOGGER::debug, "could not find selected text editor, can't navigate to method  {}", methodId);
-                }
-            } else {
-                Log.log(LOGGER::debug, "could not navigate to method {}, can't find PsiMethod in file {}", methodId, psiFile.getVirtualFile());
-            }
-        }
-    }
-
 
     @Override
     public boolean isServiceFor(@NotNull Language language) {
@@ -298,45 +259,22 @@ public class PythonLanguageService implements LanguageService {
     }
 
     @Override
-    public void environmentChanged(Env newEnv, boolean refreshInsightsView) {
-        if (refreshInsightsView) {
-            EDT.ensureEDT(() -> {
-                var fileEditor = FileEditorManager.getInstance(project).getSelectedEditor();
-                if (fileEditor != null) {
-                    var file = fileEditor.getFile();
-                    if (VfsUtilsKt.isValidVirtualFile(file)) {
-                        var psiFile = PsiManager.getInstance(project).findFile(file);
-                        if (PsiUtils.isValidPsiFile(psiFile) && isRelevant(psiFile)) {
-                            var selectedTextEditor = FileEditorManager.getInstance(project).getSelectedTextEditor();
-                            if (selectedTextEditor != null) {
-                                int offset = selectedTextEditor.getCaretModel().getOffset();
-                                var methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedTextEditor, offset);
-                                LatestMethodUnderCaretHolder.getInstance(project).saveLatestMethodUnderCaret(project, this, methodUnderCaret.getId());
-                                CaretContextService.getInstance(project).contextChanged(methodUnderCaret);
-                            }
-                        }
-                    }
-                }
-            });
+    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFileCachedValueWithUri psiFileCachedValue, BuildDocumentInfoProcessContext context) {
+
+        var psiFile = psiFileCachedValue.getValue();
+        if (!PsiUtils.isValidPsiFile(psiFile)) {
+            return new DocumentInfo(psiFileCachedValue.getUri(), new HashMap<>());
         }
 
-        PythonCodeLensService.getInstance(project).refreshCodeLens();
-    }
+        //todo: when python support is revived pass psiFileCachedValue to PythonCodeObjectsDiscovery.buildDocumentInfo
+        // and use PsiFileCachedValueWithUri to always use a valid file
 
-
-    @Override
-    public void refreshCodeLens() {
-        PythonCodeLensService.getInstance(project).refreshCodeLens();
-    }
-
-
-    @Override
-    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, BuildDocumentInfoProcessContext context) {
         Log.log(LOGGER::debug, "got buildDocumentInfo request for {}", psiFile);
         if (psiFile instanceof PyFile pyFile) {
 
-            return ProgressManager.getInstance().runProcess(() -> Retries.retryWithResult(() -> ReadAction.compute(() -> PythonCodeObjectsDiscovery.buildDocumentInfo(project, pyFile)),
-                    Throwable.class,50,5),new EmptyProgressIndicator());
+            return ProgressManager.getInstance().runProcess(() -> Retries.retryWithResult(() ->
+                            ReadAction.compute(() -> PythonCodeObjectsDiscovery.buildDocumentInfo(project, pyFile)),
+                    Throwable.class, 50, 5), new EmptyProgressIndicator());
 
         } else {
             Log.log(LOGGER::debug, "psi file is noy python, returning empty DocumentInfo for {}", psiFile);
@@ -345,8 +283,8 @@ public class PythonLanguageService implements LanguageService {
     }
 
     @Override
-    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, @Nullable FileEditor newEditor, BuildDocumentInfoProcessContext context) {
-        return buildDocumentInfo(psiFile, context);
+    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFileCachedValueWithUri psiFileCachedValue, @Nullable FileEditor newEditor, BuildDocumentInfoProcessContext context) {
+        return buildDocumentInfo(psiFileCachedValue, context);
     }
 
 
@@ -382,18 +320,12 @@ public class PythonLanguageService implements LanguageService {
     @Override
     public void refreshMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, @Nullable Editor selectedEditor, int offset) {
         MethodUnderCaret methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedEditor, offset);
-        LatestMethodUnderCaretHolder.getInstance(project).saveLatestMethodUnderCaret(project, this, methodUnderCaret.getId());
         CaretContextService.getInstance(project).contextChanged(methodUnderCaret);
     }
 
     @Override
     public boolean isCodeVisionSupported() {
         return true;
-    }
-
-    @Override
-    public @NotNull List<Pair<TextRange, CodeVisionEntry>> getCodeLens(@NotNull PsiFile psiFile) {
-        return PythonCodeLensService.getInstance(project).getCodeLens(psiFile);
     }
 
     @Override
@@ -452,5 +384,30 @@ public class PythonLanguageService implements LanguageService {
     @Override
     public @NotNull InstrumentationProvider getInstrumentationProvider() {
         return new NoOpInstrumentationProvider();
+    }
+
+
+    //this method is called only from CodeLensService, CodeLensService should handle exceptions
+    @Override
+    public @NotNull Map<String, PsiElement> findMethodsByCodeObjectIds(@NotNull PsiFile psiFile, @NotNull List<String> methodIds) {
+        if (methodIds.isEmpty() || !PsiUtils.isValidPsiFile(psiFile)) {
+            return Collections.emptyMap();
+        }
+
+        return PsiAccessUtilsKt.runInReadAccessWithResult((Computable<Map<String, PsiElement>>) () -> {
+            var methods = new HashMap<String, PsiElement>();
+            var traverser = SyntaxTraverser.psiTraverser(psiFile);
+            for (PsiElement element : traverser) {
+                if (element instanceof PyFunction pyFunction) {
+                    var codeObjectId = PythonLanguageUtils.createPythonMethodCodeObjectId(psiFile.getProject(), pyFunction);
+                    var additionalIds = PythonAdditionalIdsProvider.getAdditionalIdsInclusive(codeObjectId, false);
+                    if (methodIds.stream().anyMatch(additionalIds::contains)) {
+                        methods.put(codeObjectId, element);
+                    }
+                }
+            }
+
+            return methods;
+        });
     }
 }

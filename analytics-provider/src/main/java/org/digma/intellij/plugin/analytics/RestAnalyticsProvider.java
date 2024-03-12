@@ -8,6 +8,7 @@ import org.digma.intellij.plugin.model.rest.AboutResult;
 import org.digma.intellij.plugin.model.rest.assets.AssetDisplayInfo;
 import org.digma.intellij.plugin.model.rest.codelens.*;
 import org.digma.intellij.plugin.model.rest.codespans.CodeContextSpans;
+import org.digma.intellij.plugin.model.rest.common.SpanHistogramQuery;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.env.*;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
@@ -19,8 +20,7 @@ import org.digma.intellij.plugin.model.rest.lowlevel.*;
 import org.digma.intellij.plugin.model.rest.navigation.*;
 import org.digma.intellij.plugin.model.rest.notifications.*;
 import org.digma.intellij.plugin.model.rest.recentactivity.*;
-import org.digma.intellij.plugin.model.rest.testing.LatestTestsOfSpanRequest;
-import org.digma.intellij.plugin.model.rest.usage.*;
+import org.digma.intellij.plugin.model.rest.tests.LatestTestsOfSpanRequest;
 import org.digma.intellij.plugin.model.rest.user.*;
 import org.digma.intellij.plugin.model.rest.version.*;
 import retrofit2.Call;
@@ -67,21 +67,12 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
-    public List<CodeObjectInsight> getInsights(InsightsRequest insightsRequest) {
-        return execute(() -> client.analyticsProvider.getInsights(insightsRequest));
+    public List<InsightInfo> getInsightsInfo(InsightsRequest insightsRequest) {
+        return execute(() -> client.analyticsProvider.getInsightsInfo(insightsRequest));
     }
 
     @Override
-    public InsightsOfMethodsResponse getInsightsOfMethods(InsightsOfMethodsRequest insightsOfMethodsRequest) {
-        return execute(() -> client.analyticsProvider.getInsightsOfMethods(insightsOfMethodsRequest));
-    }
-
-    public InsightsOfSingleSpanResponse getInsightsForSingleSpan(InsightsOfSingleSpanRequest insightsOfSingleSpanRequest) {
-        return execute(() -> client.analyticsProvider.getInsightsForSingleSpan(insightsOfSingleSpanRequest));
-    }
-
-    @Override
-    public CodeObjectInsight getInsightBySpan(String environment, String spanCodeObjectId, String insightType) {
+    public String getInsightBySpan(String environment, String spanCodeObjectId, String insightType) {
         return execute(() -> client.analyticsProvider.getInsightBySpan(environment, spanCodeObjectId, insightType));
     }
 
@@ -96,11 +87,6 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
-    public CodeObjectInsightsStatusResponse getCodeObjectInsightStatus(InsightsOfMethodsRequest request) {
-        return execute(() -> client.analyticsProvider.getCodeObjectInsightStatus(request));
-    }
-
-    @Override
     public void setInsightCustomStartTime(CustomStartTimeInsightRequest customStartTimeInsightRequest) {
         execute(() -> client.analyticsProvider.setInsightCustomStartTime(customStartTimeInsightRequest));
     }
@@ -108,11 +94,6 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     @Override
     public CodeObjectErrorDetails getCodeObjectErrorDetails(String errorSourceId) {
         return execute(() -> client.analyticsProvider.getCodeObjectErrorDetails(errorSourceId));
-    }
-
-    @Override
-    public EnvUsageStatusResult getEnvironmentsUsageStatus(EnvsUsageStatusRequest envsUsageStatusRequest) {
-        return execute(() -> client.analyticsProvider.getEnvironmentsUsageStatus(envsUsageStatusRequest));
     }
 
     @Override
@@ -199,7 +180,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
     @Override
     public AboutResult getAbout() {
-        return execute(() -> client.analyticsProvider.getAbout());
+        return execute(client.analyticsProvider::getAbout);
     }
 
     @Override
@@ -224,20 +205,17 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
-    public LinkUnlinkTicketResponse linkTicket(LinkTicketRequest linkRequest)
-    {
+    public LinkUnlinkTicketResponse linkTicket(LinkTicketRequest linkRequest) {
         return execute(() -> client.analyticsProvider.linkTicket(linkRequest));
     }
 
     @Override
-    public LinkUnlinkTicketResponse unlinkTicket(UnlinkTicketRequest unlinkRequest)
-    {
+    public LinkUnlinkTicketResponse unlinkTicket(UnlinkTicketRequest unlinkRequest) {
         return execute(() -> client.analyticsProvider.unlinkTicket(unlinkRequest));
     }
 
     @Override
-    public CodeLensOfMethodsResponse getCodeLensByMethods(CodeLensOfMethodsRequest codeLensOfMethodsRequest)
-    {
+    public CodeLensOfMethodsResponse getCodeLensByMethods(CodeLensOfMethodsRequest codeLensOfMethodsRequest) {
         return execute(() -> client.analyticsProvider.getCodeLensByMethods(codeLensOfMethodsRequest));
     }
 
@@ -261,6 +239,16 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     @Override
     public AssetNavigationResponse getAssetNavigation(String env, String spanCodeObjectId) {
         return execute(() -> client.analyticsProvider.getAssetNavigation(env, spanCodeObjectId));
+    }
+
+    @Override
+    public void dismissInsight(String insightId) {
+        execute(() -> client.analyticsProvider.dismissInsight(new DismissRequest(insightId)));
+    }
+
+    @Override
+    public void undismissInsight(String insightId) {
+        execute(() -> client.analyticsProvider.undismissInsight(new UnDismissRequest(insightId)));
     }
 
     @Override
@@ -435,12 +423,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
             //objectMapper can be configured here is necessary
             objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
             objectMapper.disable(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES);
+            objectMapper.enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE);
             return objectMapper;
         }
 
 
         @Override
-        public void close() throws IOException {
+        public void close() {
             okHttpClient.dispatcher().executorService().shutdown();
             okHttpClient.connectionPool().evictAll();
             //cache will be closed by try with resources
@@ -507,24 +496,15 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Content-Type:application/json"
         })
         @POST("/CodeAnalytics/codeObjects/insights")
-        Call<List<CodeObjectInsight>> getInsights(@Body InsightsRequest insightsRequest);
+        Call<List<InsightInfo>> getInsightsInfo(@Body InsightsRequest insightsRequest);
+
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @POST("/CodeAnalytics/codeObjects/insights_of_methods")
-        Call<InsightsOfMethodsResponse> getInsightsOfMethods(@Body InsightsOfMethodsRequest insightsOfMethodsRequest);
-
-        @Headers({
-                "Accept: application/+json",
-                "Content-Type:application/json"
-        })
-        @POST("/CodeAnalytics/codeObjects/insights_of_single")
-        Call<InsightsOfSingleSpanResponse> getInsightsForSingleSpan(@Body InsightsOfSingleSpanRequest insightsOfSingleSpanRequest);
-
         @GET("/CodeAnalytics/codeObjects/insight")
-        Call<CodeObjectInsight> getInsightBySpan(@Query("environment") String environment, @Query("spanCodeObjectId") String spanCodeObjectId, @Query("insightType") String insightType);
+        Call<String> getInsightBySpan(@Query("environment") String environment, @Query("spanCodeObjectId") String spanCodeObjectId, @Query("insightType") String insightType);
 
         @Headers({
                 "Accept: application/+json",
@@ -532,13 +512,6 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @POST("/CodeAnalytics/events/latest")
         Call<LatestCodeObjectEventsResponse> getLatestEvents(@Body LatestCodeObjectEventsRequest latestCodeObjectEventsRequest);
-
-        @Headers({
-                "Accept: application/+json",
-                "Content-Type:application/json"
-        })
-        @POST("/CodeAnalytics/codeObjects/insight_status")
-        Call<CodeObjectInsightsStatusResponse> getCodeObjectInsightStatus(@Body InsightsOfMethodsRequest insightsRequest);
 
         @Headers({
                 "Accept: application/+json",
@@ -552,14 +525,6 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @GET("/CodeAnalytics/codeObjects/errors/{errorSourceId}")
         Call<CodeObjectErrorDetails> getCodeObjectErrorDetails(@Path("errorSourceId") String errorSourceId);
-
-        @Headers({
-                "Accept: application/+json",
-                "Content-Type:application/json"
-        })
-        @POST("/CodeAnalytics/codeobjects/status")
-            //todo: still uses old api with empty request. replace to new API. maybe the request object is not necessary anymore
-        Call<EnvUsageStatusResult> getEnvironmentsUsageStatus(@Body EnvsUsageStatusRequest envsUsageStatusRequest);
 
 
         @Headers({
@@ -770,6 +735,20 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @GET("/assets/navigation")
         Call<AssetNavigationResponse> getAssetNavigation(@Query("environment") String environment, @Query("spanCodeObjectId") String spanCodeObjectId);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @PUT("/InsightsActions/dismiss")
+        Call<ResponseBody> dismissInsight(@Body DismissRequest insightId);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @PUT("/InsightsActions/unDismiss")
+        Call<ResponseBody> undismissInsight(@Body UnDismissRequest insightId);
     }
 
 }

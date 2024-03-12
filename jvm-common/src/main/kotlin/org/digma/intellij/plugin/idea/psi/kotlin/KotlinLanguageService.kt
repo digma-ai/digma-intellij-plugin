@@ -1,11 +1,9 @@
 package org.digma.intellij.plugin.idea.psi.kotlin
 
-import com.intellij.codeInsight.codeVision.CodeVisionEntry
 import com.intellij.lang.Language
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.TextRange
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
@@ -13,8 +11,10 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
 import org.digma.intellij.plugin.common.ReadActions
+import org.digma.intellij.plugin.common.runInReadAccessWithResult
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.psi.AbstractJvmLanguageService
+import org.digma.intellij.plugin.idea.psi.createMethodCodeObjectId
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscovery
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.GrpcFrameworkEndpointDiscovery
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.JaxrsJakartaFrameworkEndpointDiscovery
@@ -27,6 +27,7 @@ import org.digma.intellij.plugin.instrumentation.MethodObservabilityInfo
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.jetbrains.kotlin.idea.KotlinLanguage
+import org.jetbrains.kotlin.idea.structuralsearch.visitor.KotlinRecursiveElementWalkingVisitor
 import org.jetbrains.kotlin.idea.stubindex.KotlinFileFacadeFqNameIndex
 import org.jetbrains.kotlin.idea.stubindex.KotlinFullClassNameIndex
 import org.jetbrains.kotlin.psi.KtClassOrObject
@@ -98,16 +99,6 @@ class KotlinLanguageService(project: Project) : AbstractJvmLanguageService(proje
             ErrorReporter.getInstance().reportError(project, "KotlinLanguageService.findClassByClassName", e)
             return null
         }
-    }
-
-
-    override fun refreshCodeLens() {
-        project.service<KotlinCodeLensService>().refreshCodeLens()
-    }
-
-
-    override fun getCodeLens(psiFile: PsiFile): List<Pair<TextRange, CodeVisionEntry>> {
-        return project.service<KotlinCodeLensService>().getCodeLens(psiFile)
     }
 
 
@@ -199,4 +190,36 @@ class KotlinLanguageService(project: Project) : AbstractJvmLanguageService(proje
     override fun getInstrumentationProvider(): InstrumentationProvider {
         return KotlinInstrumentationProvider(project, this)
     }
+
+    //this method is called only from CodeLensService, CodeLensService should handle exceptions
+    // the @Throws here is a reminder that this method may throw exception
+    @Throws(Throwable::class)
+    override fun findMethodsByCodeObjectIds(psiFile: PsiFile, methodIds: MutableList<String>): Map<String, PsiElement> {
+
+        if (methodIds.isEmpty() || !PsiUtils.isValidPsiFile(psiFile)) {
+            return emptyMap()
+        }
+
+        return runInReadAccessWithResult {
+            val methods = mutableMapOf<String, PsiElement>()
+
+            val visitor = object : KotlinRecursiveElementWalkingVisitor() {
+
+                override fun visitNamedFunction(function: KtNamedFunction) {
+
+                    function.toUElementOfType<UMethod>()?.let { uMethod ->
+                        val codeObjectId = createMethodCodeObjectId(uMethod)
+                        if (methodIds.contains(codeObjectId)) {
+                            methods[codeObjectId] = function
+                        }
+                    }
+                }
+            }
+
+            psiFile.acceptChildren(visitor)
+
+            return@runInReadAccessWithResult methods
+        }
+    }
+
 }

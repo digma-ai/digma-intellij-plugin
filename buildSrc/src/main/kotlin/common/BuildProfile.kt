@@ -52,7 +52,7 @@ fun Project.platformVersion(): String = when (properties("platformType", this)) 
 }
 
 fun Project.shouldDownloadSources(): Boolean {
-    return if (findProperty("doNotDownloadSources") == null) true else false
+    return findProperty("doNotDownloadSources") == null
 }
 
 
@@ -175,17 +175,17 @@ object BuildProfiles {
             javaVersion = JavaVersion.VERSION_17.majorVersion
         ),
 
-        //next EAP
+        //EAP
         Profiles.p241 to BuildProfile(
 
             profile = Profiles.p241,
             isEAP = true,
-            platformVersion = "241.12662-EAP-CANDIDATE-SNAPSHOT",
-            riderVersion = "2024.1-EAP5-SNAPSHOT",
-            pycharmVersion = "241.12662-EAP-CANDIDATE-SNAPSHOT",
-            riderResharperVersion = "2024.1-eap05",
+            platformVersion = "241.14494-EAP-CANDIDATE-SNAPSHOT",
+            riderVersion = "2024.1-EAP8-SNAPSHOT",
+            pycharmVersion = "241.14494-EAP-CANDIDATE-SNAPSHOT",
+            riderResharperVersion = "2024.1-eap08",
             riderResharperVersionConstant = "PROFILE_2023_2",
-            pythonPluginVersion = "241.12662.62",
+            pythonPluginVersion = "241.14494.17",
             platformVersionCode = "241",
             pluginSinceBuild = "241",
             pluginUntilBuild = "241.*",
@@ -197,7 +197,18 @@ object BuildProfiles {
 
 }
 
-
+/*
+ * Notes:
+ * pythonPluginVersion:
+ *  pythonPluginVersion is necessary when building the python module with type=IC, in that case the version needs to be compatible
+ *  with the IC platform version. if building the python module with type=PC then pythonPluginVersion is not relevant.
+ *  building with type=PC means more disk space in github.
+ *  currently we build python with type=PC because matching the pythonPluginVersion and latest EAP build is not always possible,
+ *  sometimes it takes time before there is a compatible python plugin version. and anyway it's easier to just build with PC.
+ *
+ *
+ *
+ */
 data class BuildProfile(
     val profile: BuildProfiles.Profiles,
     val isEAP: Boolean = false,

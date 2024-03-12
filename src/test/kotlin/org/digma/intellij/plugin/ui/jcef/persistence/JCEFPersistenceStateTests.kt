@@ -1,7 +1,7 @@
 package org.digma.intellij.plugin.ui.jcef.persistence
 
 import com.intellij.util.xmlb.XmlSerializer
-import org.digma.intellij.plugin.ui.jcef.createObjectMapper
+import org.digma.intellij.plugin.common.createObjectMapper
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

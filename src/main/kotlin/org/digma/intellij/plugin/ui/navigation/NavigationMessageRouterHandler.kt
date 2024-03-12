@@ -6,6 +6,8 @@ import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
+import org.digma.intellij.plugin.common.CodeObjectsUtil
+import org.digma.intellij.plugin.editor.EditorRangeHighlighter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.navigation.MainContentViewSwitcher
 import org.digma.intellij.plugin.navigation.View
@@ -49,9 +51,29 @@ class NavigationMessageRouterHandler(project: Project) : BaseMessageRouterHandle
                 goToCode(requestJsonNode)
             }
 
+            "NAVIGATION/HIGHLIGHT_METHOD_IN_EDITOR" -> {
+                highlightMethod(requestJsonNode)
+            }
+
+            "NAVIGATION/CLEAR_HIGHLIGHTS_IN_EDITOR" -> {
+                clearHighlight()
+            }
+
             else -> {
                 Log.log(logger::warn, "got unexpected action='$action'")
             }
+        }
+    }
+
+    private fun clearHighlight() {
+        EditorRangeHighlighter.getInstance(project).clearAllHighlighters()
+    }
+
+    private fun highlightMethod(requestJsonNode: JsonNode) {
+        val payload = getPayloadFromRequest(requestJsonNode)
+        payload?.let { pl ->
+            val methodId = pl.get("methodId").asText()
+            EditorRangeHighlighter.getInstance(project).highlightMethod(CodeObjectsUtil.stripMethodPrefix(methodId))
         }
     }
 
@@ -101,7 +123,7 @@ class NavigationMessageRouterHandler(project: Project) : BaseMessageRouterHandle
         val payload = getPayloadFromRequest(requestJsonNode)
         payload?.let {
             val methodId = payload.get("methodId").asText()
-            NavigationService.getInstance(project).fixMissingDependencies(methodId)
+            NavigationService.getInstance(project).fixMissingDependencies(CodeObjectsUtil.stripMethodPrefix(methodId))
         }
     }
 
@@ -109,7 +131,7 @@ class NavigationMessageRouterHandler(project: Project) : BaseMessageRouterHandle
         val payload = getPayloadFromRequest(requestJsonNode)
         payload?.let {
             val methodId = payload.get("methodId").asText()
-            NavigationService.getInstance(project).addAnnotation(methodId)
+            NavigationService.getInstance(project).addAnnotation(CodeObjectsUtil.stripMethodPrefix(methodId))
         }
     }
 

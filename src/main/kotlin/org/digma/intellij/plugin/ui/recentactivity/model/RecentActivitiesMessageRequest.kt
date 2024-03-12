@@ -7,9 +7,9 @@ import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRespons
 import java.beans.ConstructorProperties
 
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class RecentActivitiesMessageRequest
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-@JsonIgnoreProperties(ignoreUnknown = true)
 @ConstructorProperties("type", "action", "payload")
 constructor(
     val type: String,

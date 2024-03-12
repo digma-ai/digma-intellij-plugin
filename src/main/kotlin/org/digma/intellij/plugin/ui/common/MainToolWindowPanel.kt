@@ -17,7 +17,7 @@ import javax.swing.BoxLayout
 import javax.swing.JLabel
 import javax.swing.JPanel
 
-fun createMainToolWindowPanel(project: Project, mainContentPanel: MainContentPanel): JPanel {
+fun createMainToolWindowPanel(project: Project, mainContentPanel: JPanel): JPanel {
 
     val navigationPanel = NavigationPanel(project)
 
@@ -33,14 +33,14 @@ fun createMainToolWindowPanel(project: Project, mainContentPanel: MainContentPan
     val loadStatusPanel = LoadStatusPanel(project)
 
     val quarkusConfigureDepsPanel: JPanel? =
-        if (IDEUtilsService.getInstance(project).isJavaProject()) {
+        if (IDEUtilsService.getInstance(project).isJavaProject) {
             QuarkusConfigureDepsPanel(project)
         } else {
             null
         }
 
     val springBootConfigureDepsPanel: JPanel? =
-        if (IDEUtilsService.getInstance(project).isJavaProject()) {
+        if (IDEUtilsService.getInstance(project).isJavaProject) {
             SpringBootMicrometerConfigureDepsPanel(project)
         } else {
             null

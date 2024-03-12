@@ -96,7 +96,8 @@ class DockerService {
 
     private fun isDockerDaemonDownExitValue(exitValue: String): Boolean {
         return exitValue.contains("Cannot connect to the Docker daemon", true) ||//mac, linux
-                exitValue.contains("docker daemon is not running", true)//win
+                exitValue.contains("docker daemon is not running", true) || //win
+                exitValue.contains("Error while fetching server API version", true)
     }
 
 
@@ -338,11 +339,10 @@ class DockerService {
 
         val eventName = "docker-daemon-is-down"
 
-        ActivityMonitor.getInstance(project).registerCustomEvent(eventName, null)
+        ActivityMonitor.getInstance(project).registerDigmaEngineEventInfo(eventName)
 
         tryStartDockerDaemon(project)
 
-        ActivityMonitor.getInstance(project).registerCustomEvent(eventName, mapOf("action" to "retry triggered by system"))
         var exitValue = runCommand.get()
 
         if (isDockerDaemonDownExitValue(exitValue)) {
@@ -359,16 +359,16 @@ class DockerService {
                 )
             }
             if (res == MessageConstants.YES) {
-                ActivityMonitor.getInstance(project).registerCustomEvent(eventName, mapOf("action" to "retry triggered by user"))
+                ActivityMonitor.getInstance(project).registerDigmaEngineEventInfo(eventName, mapOf("message" to "retry triggered by user"))
                 exitValue = runCommand.get()
                 if (isDockerDaemonDownExitValue(exitValue)) {
-                    ActivityMonitor.getInstance(project).registerCustomEvent(eventName, null)
+                    ActivityMonitor.getInstance(project).registerDigmaEngineEventInfo(eventName, mapOf("message" to "restart daemon failed"))
                     ApplicationManager.getApplication().invokeAndWait {
                         Messages.showMessageDialog(project, "Digma engine failed to run\nDocker daemon is down", "", null)
                     }
                 }
             } else {
-                ActivityMonitor.getInstance(project).registerCustomEvent(eventName, mapOf("action" to "retry canceled by user"))
+                ActivityMonitor.getInstance(project).registerDigmaEngineEventInfo(eventName, mapOf("message" to "retry canceled by user"))
             }
         }
 
@@ -380,29 +380,48 @@ class DockerService {
 
         Log.log(logger::info, "Trying to start docker daemon")
 
-        val command = if (SystemInfo.isMac) {
-            listOf("docker-machine", "restart")
+        val command: List<List<String>> = if (SystemInfo.isMac) {
+            listOf(listOf("docker-machine", "restart"))
         } else if (SystemInfo.isWindows) {
-            listOf("wsl.exe", "-u", "root", "-e", "sh", "-c", "service docker status || service docker start")
+            listOf(listOf("wsl.exe", "-u", "root", "-e", "sh", "-c", "service docker status || service docker start"))
         } else if (SystemInfo.isLinux) {
-            listOf("systemctl", "start", "docker.service")
+            listOf(
+                listOf("systemctl", "start", "docker.service"),
+                listOf("sudo", "systemctl", "start", "docker.service")
+            )
         } else {
-            listOf("docker", "start")//just a useless fallback to satisfy kotlin
+            listOf(listOf("docker", "start")) //just a useless fallback to satisfy kotlin if/else
         }
 
-        val cmd = GeneralCommandLine(command)
-            .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
 
-        try {
-            Log.log(logger::info, "executing command: {}", cmd.commandLineString)
-            val processOutput = ExecUtil.execAndGetOutput(cmd, 10000)
-            val output = "exitCode:${processOutput.exitCode}, stdout:${processOutput.stdout}, stderr:${processOutput.stderr}"
-            ActivityMonitor.getInstance(project).registerCustomEvent("Engine.start-docker-daemon", mapOf("result" to output))
-            Log.log(logger::info, "start docker command result: {}", output)
-        } catch (ex: Exception) {
-            ActivityMonitor.getInstance(project).registerCustomEvent("Engine.start-docker-daemon", mapOf("error" to ex.message.toString()))
-            ErrorReporter.getInstance().reportError(project, "DockerService.tryStartDockerDaemon", ex)
-            Log.warnWithException(logger, ex, "Failed trying to start docker daemon '{}'", cmd.commandLineString)
+        for (cmd in command) {
+
+            val generalCommandLine = GeneralCommandLine(cmd)
+                .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
+
+            val eventName = "start-docker-daemon"
+            try {
+
+                ActivityMonitor.getInstance(project).registerDigmaEngineEventStart(eventName, mapOf("command" to cmd))
+
+                Log.log(logger::info, "executing command: {}", generalCommandLine.commandLineString)
+                val processOutput = ExecUtil.execAndGetOutput(generalCommandLine, 10000)
+                val output = "exitCode:${processOutput.exitCode}, stdout:${processOutput.stdout}, stderr:${processOutput.stderr}"
+
+                ActivityMonitor.getInstance(project).registerDigmaEngineEventInfo(eventName, mapOf("result" to output))
+                Log.log(logger::info, "start docker command result: {}", output)
+
+                if (processOutput.exitCode == 0) {
+                    break
+                }
+
+            } catch (ex: Exception) {
+                ActivityMonitor.getInstance(project).registerDigmaEngineEventError(eventName, ex.message.toString())
+                ErrorReporter.getInstance().reportError(project, "DockerService.tryStartDockerDaemon", ex)
+                Log.warnWithException(logger, ex, "Failed trying to start docker daemon '{}'", generalCommandLine.commandLineString)
+            } finally {
+                ActivityMonitor.getInstance(project).registerDigmaEngineEventEnd(eventName, mapOf("command" to cmd))
+            }
         }
     }
 

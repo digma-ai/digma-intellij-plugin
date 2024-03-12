@@ -1,12 +1,12 @@
 package org.digma.intellij.plugin.ui.navigation.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
 import org.digma.intellij.plugin.model.rest.codespans.CodeContextSpans
+import org.digma.intellij.plugin.ui.jcef.JCEFGlobalConstants
 
 
 data class CodeContextMessage(val payload: CodeContextMessagePayload) {
-    val type = JCefMessagesUtils.REQUEST_MESSAGE_TYPE
+    val type = JCEFGlobalConstants.REQUEST_MESSAGE_TYPE
     val action = "NAVIGATION/SET_CODE_CONTEXT"
 }
 

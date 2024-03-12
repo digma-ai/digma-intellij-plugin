@@ -63,19 +63,31 @@ class ErrorReporter {
     }
 
     //this method is used to report an error that is not an exception. it should contain some details to say what the error is
-    fun reportError(project: Project?, message: String, details: Map<String, String>) {
+    fun reportError(project: Project?, message: String, action: String, details: Map<String, String>) {
+
+
+        if (isTooFrequentError(message, action)) {
+            return
+        }
+
 
         val projectToUse = project ?: findActiveProject()
 
         projectToUse?.let {
             if (it.isDisposed) return
-            ActivityMonitor.getInstance(it).registerError(null, message, details)
+
+            val detailsToSend = details.toMutableMap()
+            detailsToSend["action"] = action
+            if (!detailsToSend.containsKey(SEVERITY_PROP_NAME)) {
+                detailsToSend[SEVERITY_PROP_NAME] = SEVERITY_HIGH_TRY_FIX
+            }
+
+            ActivityMonitor.getInstance(it).registerError(null, message, detailsToSend)
         }
     }
 
 
-
-    fun reportError(project: Project?, message: String, throwable: Throwable, extraDetails: Map<String, String>) {
+    fun reportError(project: Project?, message: String, throwable: Throwable, details: Map<String, String>) {
 
         try {
             //many times the exception is no-connection exception, and that may happen too many times.
@@ -95,7 +107,16 @@ class ErrorReporter {
 
             projectToUse?.let {
                 if (it.isDisposed) return
-                ActivityMonitor.getInstance(it).registerError(throwable, message, extraDetails)
+
+                //add SEVERITY_HIGH_TRY_FIX if severity doesn't exist
+                val detailsToSend = if (details.containsKey(SEVERITY_PROP_NAME)) {
+                    details
+                } else {
+                    val mm = details.toMutableMap()
+                    mm[SEVERITY_PROP_NAME] = SEVERITY_HIGH_TRY_FIX
+                    mm
+                }
+                ActivityMonitor.getInstance(it).registerError(throwable, message, detailsToSend)
             }
         } catch (e: Exception) {
             Log.warnWithException(logger, e, "error in error reporter")
@@ -146,7 +167,37 @@ class ErrorReporter {
     }
 
 
+    //better to use overloaded method that accepts project
+    fun reportInternalFatalError(source: String, exception: Throwable, details: Map<String, String> = mapOf()) {
+        //todo: change ActivityMonitor to application service
+        val projectToUse = findActiveProject() ?: return
+        reportInternalFatalError(projectToUse, source, exception, details)
+    }
+
+    //this error should be reported only when its a fatal error that we must fix quickly.
+    //don't use it for all errors.
+    //currently will be reported from EDT.assertNonDispatchThread and ReadActions.assertNotInReadAccess
+    // which usually should be caught in development but if not, are very urgent to fix.
+    // if the error is not a result of an exception create a new RuntimeException and send it so we have the stack trace.
+    fun reportInternalFatalError(project: Project, source: String, exception: Throwable, details: Map<String, String> = mapOf()) {
+
+        if (isTooFrequentException(source, exception)) {
+            return
+        }
+
+        ActivityMonitor.getInstance(project).registerInternalFatalError(source, exception, details)
+
+    }
+
+
+
     private fun isTooFrequentBackendError(message: String, action: String): Boolean {
+        val counter = MyCache.getOrCreate(message, action)
+        val occurrences = counter.incrementAndGet()
+        return occurrences > 1
+    }
+
+    private fun isTooFrequentError(message: String, action: String): Boolean {
         val counter = MyCache.getOrCreate(message, action)
         val occurrences = counter.incrementAndGet()
         return occurrences > 1
@@ -195,6 +246,7 @@ class ErrorReporter {
         return null
 
     }
+
 }
 
 

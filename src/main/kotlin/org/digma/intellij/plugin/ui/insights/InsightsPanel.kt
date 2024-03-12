@@ -4,7 +4,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.ui.jcef.JBCefApp
 import com.intellij.util.ui.JBUI
-import org.digma.intellij.plugin.insights.InsightsMessageRouterHandler
 import org.digma.intellij.plugin.ui.jcef.DownloadHandlerAdapter
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
 import org.digma.intellij.plugin.ui.list.listBackground

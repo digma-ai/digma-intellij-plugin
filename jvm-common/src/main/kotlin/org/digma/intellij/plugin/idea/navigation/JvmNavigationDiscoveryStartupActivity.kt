@@ -4,7 +4,7 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.StartupActivity
 import org.digma.intellij.plugin.common.Backgroundable
-import org.digma.intellij.plugin.errorreporting.ErrorReporter.Companion.getInstance
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 
 internal class JvmNavigationDiscoveryStartupActivity : StartupActivity {
@@ -18,14 +18,14 @@ internal class JvmNavigationDiscoveryStartupActivity : StartupActivity {
             try {
                 Log.log(logger::info, "starting navigation mapping")
                 val jvmSpanNavigationProvider = JvmSpanNavigationProvider.getInstance(project)
-                jvmSpanNavigationProvider.buildSpanNavigation()
+                jvmSpanNavigationProvider.buildNavigationDiscovery()
 
                 val javaEndpointNavigationProvider = JvmEndpointNavigationProvider.getInstance(project)
-                javaEndpointNavigationProvider.buildEndpointNavigation()
+                javaEndpointNavigationProvider.buildNavigationDiscovery()
                 Log.log(logger::info, "navigation mapping completed successfully")
             } catch (e: Throwable) {
                 Log.warnWithException(logger, e, "error in navigation mapping {}", e)
-                getInstance().reportError(project, "JvmNavigationDiscoveryStartupActivity.runActivity", e)
+                ErrorReporter.getInstance().reportError(project, "JvmNavigationDiscoveryStartupActivity.runActivity", e)
             }
         }
     }

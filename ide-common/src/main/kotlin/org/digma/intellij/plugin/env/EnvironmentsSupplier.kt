@@ -12,12 +12,11 @@ interface EnvironmentsSupplier {
      * after the environment was changed so that this task will see the new environment, the task should run even if the
      * environment didn't change, so this task must run if its not null
      */
-    fun setCurrent(selectedItem: String, refreshInsightsView: Boolean, taskToRunAfterChange: Runnable?)
+    fun setCurrent(selectedItem: String, taskToRunAfterChange: Runnable?)
 
     fun getCurrent(): Env?
 
     fun refreshNowOnBackground()
     fun setCurrent(env: Env)
 
-//    fun hasUsages(env: String): Boolean
 }

@@ -11,7 +11,6 @@ import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.common.JsonUtils
 import org.digma.intellij.plugin.common.UserId
-import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.rest.AboutResult
 import org.digma.intellij.plugin.model.rest.user.UserUsageStatsResponse
 import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
@@ -48,7 +47,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
 
     private var postHog: PostHog? = null
     private var lastLensClick: LocalDateTime? = null
-    private val lastInsightsViewed = mutableSetOf<InsightType>()
+    private val lastInsightsViewed = mutableSetOf<String>()
 
     private val settingsChangeTracker = SettingsChangeTracker()
 
@@ -58,8 +57,8 @@ class ActivityMonitor(private val project: Project) : Disposable {
         postHog = PostHog.Builder(token).build()
         registerSessionDetails()
 
-        ConnectionActivityMonitor.loadInstance(project)
-        PluginActivityMonitor.loadInstance(project)
+        ServerVersionMonitor.getInstance(project)
+        PluginActivityMonitor.getInstance(project)
 
         settingsChangeTracker.start(this)
 
@@ -203,7 +202,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
     }
 
 
-    fun registerError(exception: Throwable?, message: String, extraDetails: Map<String, String>? = mapOf()) {
+    fun registerError(exception: Throwable?, message: String, extraDetails: Map<String, String> = mapOf()) {
 
         try {
             val osType = System.getProperty("os.name")
@@ -224,6 +223,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
                 "ide.version" to ideVersion,
                 "ide.build" to ideBuildNumber,
                 "plugin.version" to pluginVersion,
+                "server.version" to ServerVersionMonitor.getInstance(project).getServerVersion(),
                 "user.type" to if (isDevUser) "internal" else "external"
             )
 
@@ -247,10 +247,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
                 details["exception.type"] = it.javaClass.name
             }
 
-
-            extraDetails?.let {
-                details.putAll(it)
-            }
+            details.putAll(extraDetails)
 
 
             capture(
@@ -267,9 +264,59 @@ class ActivityMonitor(private val project: Project) : Disposable {
     }
 
 
-    fun registerFatalError(details: MutableMap<String, String>) {
+    fun registerFatalError(details: Map<String, String>) {
         capture(
             "fatal error",
+            details
+        )
+    }
+
+    fun registerInternalFatalError(source: String, exception: Throwable, extraDetails: Map<String, String> = mapOf()) {
+
+        val details = mutableMapOf<String, String>()
+
+        details.putAll(extraDetails)
+
+        details["Note"] = "This is an internal reporting of urgent error caught by plugin code and should be fixed ASAP"
+
+        exception.let {
+            val exceptionStackTrace = it.let {
+                val stringWriter = StringWriter()
+                exception.printStackTrace(PrintWriter(stringWriter))
+                stringWriter.toString()
+            }
+
+            val exceptionMessage: String = it.let {
+                ExceptionUtils.getNonEmptyMessage(it)
+            } ?: ""
+
+            val causeExceptionType = ExceptionUtils.getFirstRealExceptionCauseTypeName(it)
+
+            details["exception.message"] = exceptionMessage
+            details["exception.stack-trace"] = exceptionStackTrace
+            details["cause.exception.type"] = causeExceptionType
+            details["exception.type"] = it.javaClass.name
+        }
+
+        val osType = System.getProperty("os.name")
+        val ideInfo = ApplicationInfo.getInstance()
+        val ideName = ideInfo.versionName
+        val ideVersion = ideInfo.fullVersion
+        val ideBuildNumber = ideInfo.build.asString()
+        val pluginVersion = SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("unknown")
+
+        details["ide.name"] = ideName
+        details["ide.version"] = ideVersion
+        details["ide.build"] = ideBuildNumber
+        details["os.type"] = osType
+        details["user.type"] = if (UserId.isDevUser) "internal" else "external"
+        details["error source"] = source
+        details["plugin.version"] = pluginVersion
+        details["server.version"] = ServerVersionMonitor.getInstance(project).getServerVersion()
+
+
+        capture(
+            "internal fatal error",
             details
         )
     }
@@ -308,6 +355,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
                     "ide.version" to ideVersion,
                     "ide.build" to ideBuildNumber,
                     "plugin.version" to pluginVersion,
+                    "server.version" to ServerVersionMonitor.getInstance(project).getServerVersion(),
                     "user.type" to if (isDevUser) "internal" else "external"
                 )
             )
@@ -402,9 +450,9 @@ class ActivityMonitor(private val project: Project) : Disposable {
         lastInsightsViewed.clear()
     }
 
-    fun registerInsightsViewed(insightsAndCounts: List<Pair<InsightType, Int>>) {
+    fun registerInsightsViewed(insightsAndCounts: List<Pair<String, Int>>) {
 
-        val insightsTypesToRegister = mutableListOf<Pair<InsightType, Int>>()
+        val insightsTypesToRegister = mutableListOf<Pair<String, Int>>()
 
         insightsAndCounts.forEach { (insightType, reopenCount) ->
             if (!lastInsightsViewed.contains(insightType)) {
@@ -458,12 +506,12 @@ class ActivityMonitor(private val project: Project) : Disposable {
         registerUserAction("Clicked on navigation button")
     }
 
-    fun registerSpanLinkClicked(insight: InsightType) {
+    fun registerSpanLinkClicked(insight: String) {
         capture(
             "span-link clicked",
             mapOf(
                 "panel" to MonitoredPanel.Insights.name,
-                "insight" to insight.name
+                "insight" to insight
             )
         )
         registerUserAction("Clicked on span link from insights")
@@ -480,12 +528,12 @@ class ActivityMonitor(private val project: Project) : Disposable {
         registerUserAction("Clicked on span link from ${panel.name}")
     }
 
-    fun registerButtonClicked(button: String, insight: InsightType) {
+    fun registerButtonClicked(button: String, insight: String) {
         capture(
             "insights button-clicked",
             mapOf(
                 "button" to button,
-                "insight" to insight.name
+                "insight" to insight
             )
         )
         registerUserAction("Clicked on button from insights")
@@ -608,7 +656,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
     }
 
 
-    fun registerDigmaEngineEventStart(eventName: String, eventDetails: Map<String, Any>) {
+    fun registerDigmaEngineEventStart(eventName: String, eventDetails: Map<String, Any> = mapOf()) {
         capture(
             "Engine.".plus(eventName).plus(".start"),
             eventDetails
@@ -616,24 +664,33 @@ class ActivityMonitor(private val project: Project) : Disposable {
     }
 
 
-    fun registerDigmaEngineEventEnd(eventName: String, eventDetails: Map<String, Any>) {
+    fun registerDigmaEngineEventEnd(eventName: String, eventDetails: Map<String, Any> = mapOf()) {
         capture(
             "Engine.".plus(eventName).plus(".end"),
             eventDetails
         )
     }
 
-    fun registerDigmaEngineEventRetry(eventName: String, eventDetails: Map<String, Any>) {
+    fun registerDigmaEngineEventRetry(eventName: String, eventDetails: Map<String, Any> = mapOf()) {
         capture(
             "Engine.".plus(eventName).plus(".retry"),
             eventDetails
         )
     }
 
-    fun registerDigmaEngineEventError(eventName: String, errorMessage: String) {
+    fun registerDigmaEngineEventError(eventName: String, errorMessage: String, eventDetails: Map<String, Any> = mapOf()) {
+        val detailsToUse = eventDetails.toMutableMap()
+        detailsToUse["errorMessage"] = errorMessage
         capture(
             "Engine.".plus(eventName).plus(".error"),
-            mapOf("errorMessage" to errorMessage)
+            detailsToUse
+        )
+    }
+
+    fun registerDigmaEngineEventInfo(eventName: String, eventDetails: Map<String, Any> = mapOf()) {
+        capture(
+            "Engine.".plus(eventName),
+            eventDetails
         )
     }
 
@@ -775,15 +832,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
 
 
     private fun getEmailForEvent(): String {
-
-        val userRegistrationEmail = PersistenceService.getInstance().getUserRegistrationEmail()
-
-        return if (!userRegistrationEmail.isNullOrBlank()) {
-            userRegistrationEmail
-        } else {
-            PersistenceService.getInstance().getUserEmail() ?: ""
-        }
-
+        return PersistenceService.getInstance().getUserRegistrationEmail() ?: PersistenceService.getInstance().getUserEmail() ?: ""
     }
 
 }

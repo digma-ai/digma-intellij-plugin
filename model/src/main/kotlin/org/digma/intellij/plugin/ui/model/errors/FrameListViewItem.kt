@@ -3,16 +3,11 @@ package org.digma.intellij.plugin.ui.model.errors
 import org.digma.intellij.plugin.model.rest.errordetails.Frame
 import org.digma.intellij.plugin.model.rest.errordetails.FrameStack
 
-interface FrameListViewItem {
-}
+interface FrameListViewItem
 
-class FrameStackTitle(val frameStack: FrameStack, val traceId: String?) : FrameListViewItem {
+class FrameStackTitle(val frameStack: FrameStack, val traceId: String?) : FrameListViewItem
 
-}
-
-class SpanTitle(val spanName: String) : FrameListViewItem {
-
-}
+class SpanTitle(val spanName: String) : FrameListViewItem
 
 
 class FrameItem(
@@ -24,10 +19,7 @@ class FrameItem(
 ) : FrameListViewItem {
 
     fun isInWorkspace(): Boolean {
-        if (workspaceUri == null) {
-            return false
-        }
-        return true
+        return workspaceUri != null
     }
 
     fun getWorkspaceUrl(): String? {

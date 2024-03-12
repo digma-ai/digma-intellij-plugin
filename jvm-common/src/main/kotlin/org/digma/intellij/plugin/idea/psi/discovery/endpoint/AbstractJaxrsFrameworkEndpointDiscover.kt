@@ -138,13 +138,16 @@ abstract class AbstractJaxrsFrameworkEndpointDiscover(private val project: Proje
         httpMethodsAnnotationStrList.forEach { annotationFqn ->
 
             executeCatchingIgnorePCE({
-                val annotationClass = psiPointers.getPsiClass(project, annotationFqn)
-                annotationClass?.let {
 
-                    val annotatedMethods: List<SmartPsiElementPointer<PsiMethod>> =
-                        findAnnotatedMethods(project, annotationClass, searchScopeProvider)
+                psiPointers.getPsiClass(project, annotationFqn)?.let {
 
-                    annotatedMethods.forEach { annotatedMethodPointer ->
+                    val annotatedMethods: List<SmartPsiElementPointer<PsiMethod>>? =
+                        psiPointers.getPsiClassPointer(project, annotationFqn)?.let { annotationClassPointer ->
+                            findAnnotatedMethods(project, annotationClassPointer, searchScopeProvider)
+                        }
+
+
+                    annotatedMethods?.forEach { annotatedMethodPointer ->
                         executeCatchingIgnorePCE({
                             runInReadAccessWithRetryIgnorePCE {
                                 val annotatedMethod = annotatedMethodPointer.element
@@ -190,7 +193,7 @@ abstract class AbstractJaxrsFrameworkEndpointDiscover(private val project: Proje
         }
     }
 
-    //this method run in read access already, may be long read access..
+    //this method run in read access already, may be too long read access..
     private fun handleCandidateMethods(candidateMethods: Collection<PsiMethod>, context: ProcessContext): Set<EndpointInfo> {
         val retSet = mutableSetOf<EndpointInfo>()
 
@@ -243,9 +246,10 @@ abstract class AbstractJaxrsFrameworkEndpointDiscover(private val project: Proje
     }
 
 
+    //must run in read access
     private fun evaluateApplicationPaths(psiElement: PsiElement): Set<String?> {
 
-        val appPathAnnotationClass = project.service<PsiPointers>().getPsiClass(project, applicationPathAnnotationClassFqn)
+        var appPathAnnotationClass = project.service<PsiPointers>().getPsiClass(project, applicationPathAnnotationClassFqn)
 
         val appPaths: MutableSet<String?> = HashSet()
 
@@ -253,17 +257,19 @@ abstract class AbstractJaxrsFrameworkEndpointDiscover(private val project: Proje
             // check for ApplicationPath in context of module
             val module = ModuleUtilCore.findModuleForPsiElement(psiElement)
             if (module != null) {
-                val appPathPsiClasses = AnnotatedElementsSearch.searchPsiClasses(appPathAnnotationClass, GlobalSearchScope.moduleScope(module))
-                appPathPsiClasses.forEach { appPathClass ->
-                    val appPathAnnotation = appPathClass.getAnnotation(applicationPathAnnotationClassFqn)
-                    appPathAnnotation?.let {
-                        val appPathValue = JavaLanguageUtils.getPsiAnnotationAttributeValue(it, "value")
-                        appPaths.add(appPathValue)
+                //get the class again, maybe its invalidated
+                appPathAnnotationClass = project.service<PsiPointers>().getPsiClass(project, applicationPathAnnotationClassFqn)
+                appPathAnnotationClass?.let { annotationClass ->
+                    val appPathPsiClasses = AnnotatedElementsSearch.searchPsiClasses(annotationClass, GlobalSearchScope.moduleScope(module))
+                    appPathPsiClasses.forEach { appPathClass ->
+                        val appPathAnnotation = appPathClass.getAnnotation(applicationPathAnnotationClassFqn)
+                        appPathAnnotation?.let {
+                            val appPathValue = JavaLanguageUtils.getPsiAnnotationAttributeValue(it, "value")
+                            appPaths.add(appPathValue)
+                        }
                     }
-
                 }
             }
-
         }
 
         if (appPaths.isEmpty()) {

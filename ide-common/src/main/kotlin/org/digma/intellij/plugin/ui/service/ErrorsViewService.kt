@@ -4,7 +4,7 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import org.digma.intellij.plugin.document.CodeObjectsUtil
+import org.digma.intellij.plugin.common.CodeObjectsUtil
 import org.digma.intellij.plugin.errors.ErrorsProvider
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.MethodInfo
@@ -13,8 +13,6 @@ import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.psi.BuildDocumentInfoProcessContext
 import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.psi.PsiUtils
-import org.digma.intellij.plugin.ui.model.EmptyScope
-import org.digma.intellij.plugin.ui.model.MethodScope
 import org.digma.intellij.plugin.ui.model.errors.ErrorDetailsModel
 import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
 import org.digma.intellij.plugin.ui.model.errors.ErrorsTabCard
@@ -37,11 +35,6 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
         fun getInstance(project: Project): ErrorsViewService {
             return project.getService(ErrorsViewService::class.java)
         }
-    }
-
-
-    override fun getViewDisplayName(): String {
-        return "Errors" + if (model.errorsCount > 0) " (${model.count()})" else ""
     }
 
 
@@ -81,8 +74,6 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
             hasErrors = errorsListContainer.listViewItems?.isNotEmpty() ?: false
 
             model.listViewItems = errorsListContainer.listViewItems ?: listOf()
-            model.previewListViewItems = ArrayList()
-            model.scope = MethodScope(methodInfo)
             model.card = ErrorsTabCard.ERRORS_LIST
             model.errorsCount = errorsListContainer.count
 
@@ -135,8 +126,6 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
         Log.log(logger::debug, "empty called")
 
         model.listViewItems = Collections.emptyList()
-        model.previewListViewItems = ArrayList()
-        model.scope = EmptyScope("")
         model.card = ErrorsTabCard.ERRORS_LIST
         model.errorsCount = 0
 
@@ -168,8 +157,9 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
                 val psiFile = PsiUtils.uriToPsiFile(fileUri, project)
                 if (PsiUtils.isValidPsiFile(psiFile)) {
                     BuildDocumentInfoProcessContext.buildDocumentInfoUnderProcessOnCurrentThreadNoRetry { pi ->
+                        val psiFileCachedValue = PsiUtils.getPsiFileCachedValue(project, psiFile.virtualFile)
                         val context = BuildDocumentInfoProcessContext(pi)
-                        val documentInfo = languageService.buildDocumentInfo(psiFile, context)
+                        val documentInfo = languageService.buildDocumentInfo(psiFileCachedValue, context)
                         documentInfo.methods[methodCodeObjectId] ?: defaultResult
                     }
 

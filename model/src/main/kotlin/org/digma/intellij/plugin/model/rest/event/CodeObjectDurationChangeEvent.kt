@@ -3,7 +3,7 @@ package org.digma.intellij.plugin.model.rest.event
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import org.digma.intellij.plugin.model.discovery.SpanInfo
-import org.digma.intellij.plugin.model.rest.insights.SpanDurationsPercentile
+import org.digma.intellij.plugin.model.rest.common.SpanDurationsPercentile
 import java.beans.ConstructorProperties
 import java.time.ZonedDateTime
 

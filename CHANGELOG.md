@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.292] - 2024-03-11
+## [2.0.293] - 2024-03-12
+
+- Api Proxy + Scaling ticket by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1932
+- remove -Xverify:none Closes #1873 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1934
+
+## 2.0.292 - 2024-03-11
 
 - fix-read-access-in-psi-cached-value by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1931
 

@@ -351,17 +351,15 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
 
     //A closable client
-    public static class Client implements Closeable {
+    private static class Client implements Closeable {
 
 
         private final AnalyticsProviderRetrofit analyticsProvider;
         private final OkHttpClient okHttpClient;
-        private final String baseUrl;
 
         @SuppressWarnings("MoveFieldAssignmentToInitializer")
         public Client(String baseUrl, String apiToken) {
 
-            this.baseUrl = baseUrl;
             //configure okHttp here if necessary
             OkHttpClient.Builder builder = new OkHttpClient.Builder();
 

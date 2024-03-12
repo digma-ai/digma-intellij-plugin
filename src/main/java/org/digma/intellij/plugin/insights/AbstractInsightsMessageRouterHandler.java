@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.fileChooser.FileChooserFactory;
 import com.intellij.openapi.project.Project;
 import org.cef.browser.CefBrowser;
 import org.digma.intellij.plugin.analytics.*;
@@ -18,10 +17,7 @@ import org.digma.intellij.plugin.ui.insights.model.*;
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler;
 import org.digma.intellij.plugin.vcs.VcsService;
 import org.jetbrains.annotations.*;
-import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 
-import java.io.IOException;
-import java.nio.file.*;
 import java.util.*;
 import java.util.stream.Collectors;
 

@@ -13,7 +13,7 @@ public class JBCefBrowserBuilderCreator {
 
         var enableDevTools = Boolean.getBoolean("org.digma.plugin.enable.devtools");
 
-        jbCefBrowserBuilder.setEnableOpenDevToolsMenuItem(true);
+        jbCefBrowserBuilder.setEnableOpenDevToolsMenuItem(enableDevTools);
         return jbCefBrowserBuilder;
     }
 }

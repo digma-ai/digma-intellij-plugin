@@ -30,7 +30,6 @@ dependencies {
     api(libs.posthog)
     api(libs.maven.artifact)
     api(libs.glovoapp.versioning)
-    api(libs.okhttp)
 
     implementation(project(":model"))
     implementation(project(":analytics-provider"))

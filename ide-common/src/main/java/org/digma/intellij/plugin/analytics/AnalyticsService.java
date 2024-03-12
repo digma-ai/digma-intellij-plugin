@@ -28,6 +28,7 @@ import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.event.*;
 import org.digma.intellij.plugin.model.rest.insights.*;
 import org.digma.intellij.plugin.model.rest.livedata.*;
+import org.digma.intellij.plugin.model.rest.lowlevel.*;
 import org.digma.intellij.plugin.model.rest.navigation.*;
 import org.digma.intellij.plugin.model.rest.notifications.*;
 import org.digma.intellij.plugin.model.rest.recentactivity.*;
@@ -484,7 +485,7 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.getAssetNavigation(env, spanCodeObjectId));
     }
 
-    public okhttp3.Response lowLevelCall(okhttp3.Request request) throws AnalyticsServiceException {
+    public HttpResponse lowLevelCall(HttpRequest request) throws AnalyticsServiceException {
         return executeCatching(() -> analyticsProviderProxy.lowLevelCall(request));
     }
 

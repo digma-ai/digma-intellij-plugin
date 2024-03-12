@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.analytics;
 
-import okhttp3.*;
 import org.digma.intellij.plugin.model.rest.AboutResult;
 import org.digma.intellij.plugin.model.rest.assets.AssetDisplayInfo;
 import org.digma.intellij.plugin.model.rest.codelens.*;
@@ -12,6 +11,7 @@ import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.event.*;
 import org.digma.intellij.plugin.model.rest.insights.*;
 import org.digma.intellij.plugin.model.rest.livedata.*;
+import org.digma.intellij.plugin.model.rest.lowlevel.*;
 import org.digma.intellij.plugin.model.rest.navigation.*;
 import org.digma.intellij.plugin.model.rest.notifications.*;
 import org.digma.intellij.plugin.model.rest.recentactivity.*;
@@ -108,5 +108,5 @@ public interface AnalyticsProvider extends Closeable {
 
     AssetNavigationResponse getAssetNavigation(String env, String spanCodeObjectId);
 
-    Response lowLevelCall(Request request);
+    HttpResponse lowLevelCall(HttpRequest request);
 }

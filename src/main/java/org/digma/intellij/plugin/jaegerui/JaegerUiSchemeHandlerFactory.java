@@ -7,11 +7,10 @@ import org.jetbrains.annotations.NotNull;
 
 public class JaegerUiSchemeHandlerFactory extends BaseSchemeHandlerFactory {
 
-    private final Project project;
     private final JaegerUIVirtualFile file;
 
     public JaegerUiSchemeHandlerFactory(Project project, JaegerUIVirtualFile file) {
-        this.project = project;
+        super(project);
         this.file = file;
     }
 
@@ -20,9 +19,9 @@ public class JaegerUiSchemeHandlerFactory extends BaseSchemeHandlerFactory {
     @Override
     public CefResourceHandler createResourceHandler(@NotNull String resourceName, boolean resourceExists) {
         if (resourceExists) {
-            return new JaegerUiResourceHandler(project, resourceName, file);
+            return new JaegerUiResourceHandler(getProject(), resourceName, file);
         } else {
-            return new JaegerUiResourceHandler(project, JaegerUIConstants.JAEGER_UI_RESOURCE_FOLDER_NAME + "/index.html", file);
+            return new JaegerUiResourceHandler(getProject(), JaegerUIConstants.JAEGER_UI_RESOURCE_FOLDER_NAME + "/index.html", file);
         }
     }
 

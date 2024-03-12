@@ -13,7 +13,7 @@ import java.net.URL
 private const val COMMON_FILES_FOLDER: String = "/webview/common"
 
 
-abstract class BaseSchemeHandlerFactory(val project: Project) : CefSchemeHandlerFactory {
+abstract class BaseSchemeHandlerFactory(protected val project: Project) : CefSchemeHandlerFactory {
 
 
     override fun create(browser: CefBrowser?, frame: CefFrame?, schemeName: String, request: CefRequest): CefResourceHandler? {

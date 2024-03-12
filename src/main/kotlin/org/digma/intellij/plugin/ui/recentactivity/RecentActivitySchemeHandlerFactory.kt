@@ -4,7 +4,7 @@ import com.intellij.openapi.project.Project
 import org.cef.handler.CefResourceHandler
 import org.digma.intellij.plugin.ui.jcef.BaseSchemeHandlerFactory
 
-class RecentActivitySchemeHandlerFactory(val project: Project) : BaseSchemeHandlerFactory() {
+class RecentActivitySchemeHandlerFactory(project: Project) : BaseSchemeHandlerFactory(project) {
     override fun createResourceHandler(resourceName: String, resourceExists: Boolean): CefResourceHandler {
         return if (resourceExists) {
             RecentActivityResourceHandler(project, resourceName)

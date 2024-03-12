@@ -36,6 +36,7 @@ private const val IS_DIGMA_ENGINE_RUNNING = "isDigmaEngineRunning"
 private const val IS_DOCKER_INSTALLED = "isDockerInstalled"
 private const val IS_DOCKER_COMPOSE_INSTALLED = "isDockerComposeInstalled"
 private const val DIGMA_API_URL = "digmaApiUrl"
+private const val DIGMA_API_PROXY_PREFIX = "digmaApiProxyPrefix"
 private const val JAEGER_URL = "jaegerURL"
 private const val IS_MICROMETER_PROJECT = "isMicrometerProject"
 private const val ENVIRONMENT = "environment"
@@ -74,6 +75,7 @@ abstract class BaseIndexTemplateBuilder(resourceFolderName: String, private val 
             data[IS_DOCKER_INSTALLED] = service<DockerService>().isDockerInstalled()
             data[IS_DOCKER_COMPOSE_INSTALLED] = service<DockerService>().isDockerInstalled()
             data[DIGMA_API_URL] = SettingsState.getInstance().apiUrl
+            data[DIGMA_API_PROXY_PREFIX] = ApiProxyResourceHandler.URL_PREFIX
             data[JAEGER_URL] = getJaegerUrl() ?: ""
             data[IS_MICROMETER_PROJECT] = SpringBootMicrometerConfigureDepsService.isSpringBootWithMicrometer()
             data[ENVIRONMENT] = Env.getCurrentEnv(project)?.let { it: Env -> serializeObjectToJson(it) } ?: "undefined"

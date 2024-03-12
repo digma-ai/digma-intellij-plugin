@@ -16,6 +16,7 @@ import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.event.*;
 import org.digma.intellij.plugin.model.rest.insights.*;
 import org.digma.intellij.plugin.model.rest.livedata.*;
+import org.digma.intellij.plugin.model.rest.lowlevel.*;
 import org.digma.intellij.plugin.model.rest.navigation.*;
 import org.digma.intellij.plugin.model.rest.notifications.*;
 import org.digma.intellij.plugin.model.rest.recentactivity.*;
@@ -248,6 +249,57 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     @Override
     public void undismissInsight(String insightId) {
         execute(() -> client.analyticsProvider.undismissInsight(new UnDismissRequest(insightId)));
+    }
+
+    @Override
+    public HttpResponse lowLevelCall(HttpRequest request) {
+        okhttp3.Response okHttp3Response;
+        try {
+            var okHttp3Request = toOkHttp3Request(request);
+            okHttp3Response = client.okHttpClient.newCall(okHttp3Request).execute();
+        } catch (Exception e) {
+            throw new AnalyticsProviderException(e);
+        }
+
+        if (okHttp3Response.isSuccessful()) {
+            return toHttpResponse(okHttp3Response);
+        } else {
+            String message;
+            try (ResponseBody errorBody = okHttp3Response.body()) {
+                message = String.format("Error %d. %s", okHttp3Response.code(), errorBody == null ? null : errorBody.string());
+            } catch (IOException e) {
+                throw new AnalyticsProviderException(e.getMessage(), e);
+            }
+            throw new AnalyticsProviderException(okHttp3Response.code(), message);
+        }
+    }
+
+    private static Request toOkHttp3Request(HttpRequest request){
+        var okHttp3Body = request.getBody() != null
+                ? RequestBody.create(MediaType.parse(request.getBody().getContentType()), request.getBody().getContent())
+                : null;
+        var okHttp3RequestBuilder = new Request.Builder()
+                .method(request.getMethod(), okHttp3Body)
+                .url(request.getUrl());
+        request.getHeaders().forEach(okHttp3RequestBuilder::header);
+        return okHttp3RequestBuilder.build();
+    }
+
+    private static HttpResponse toHttpResponse(okhttp3.Response response){
+        var body = response.body();
+        var headers = response.headers().toMultimap().entrySet().stream()
+                .filter(i -> !i.getValue().isEmpty())
+                .collect(HashMap<String, String>::new, (m,i) -> m.put(i.getKey(), i.getValue().get(0)), Map::putAll);
+        var contentLength = body != null ? body.contentLength() : null;
+        var contentType = body != null && body.contentType() != null ? body.contentType().toString() : null;
+        var contentStream = body != null ? body.byteStream() : null;
+
+        return new HttpResponse(
+                response.code(),
+                headers,
+                contentLength,
+                contentType,
+                contentStream);
     }
 
     @Override

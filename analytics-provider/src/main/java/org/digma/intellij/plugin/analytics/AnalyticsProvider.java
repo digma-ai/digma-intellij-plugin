@@ -12,6 +12,7 @@ import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.event.*;
 import org.digma.intellij.plugin.model.rest.insights.*;
 import org.digma.intellij.plugin.model.rest.livedata.*;
+import org.digma.intellij.plugin.model.rest.lowlevel.*;
 import org.digma.intellij.plugin.model.rest.navigation.*;
 import org.digma.intellij.plugin.model.rest.notifications.*;
 import org.digma.intellij.plugin.model.rest.recentactivity.*;
@@ -102,4 +103,5 @@ public interface AnalyticsProvider extends Closeable {
 
     void undismissInsight(String insightId);
 
+    HttpResponse lowLevelCall(HttpRequest request);
 }

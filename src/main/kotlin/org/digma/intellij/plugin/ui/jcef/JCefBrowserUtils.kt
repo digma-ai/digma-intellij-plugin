@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.ui.jcef
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.intellij.openapi.diagnostic.Logger
 import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.log.Log
@@ -30,4 +31,8 @@ fun executeWindowPostMessageJavaScript(browser: CefBrowser, message: String) {
 
 fun <T> jsonToObject(jsonStr: String, type: Class<T>): T {
     return CommonObjectMapper.objectMapper.readValue(jsonStr, type)
+}
+
+fun <T> jsonToObject(jsonNode: JsonNode, type: Class<T>): T {
+    return CommonObjectMapper.objectMapper.treeToValue(jsonNode, type)
 }

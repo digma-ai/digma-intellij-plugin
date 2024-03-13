@@ -9,8 +9,8 @@ import com.intellij.ui.jcef.JBCefApp
 import com.posthog.java.PostHog
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.common.ExceptionUtils
-import org.digma.intellij.plugin.common.JsonUtils
 import org.digma.intellij.plugin.common.UserId
+import org.digma.intellij.plugin.common.objectToJson
 import org.digma.intellij.plugin.model.rest.AboutResult
 import org.digma.intellij.plugin.model.rest.user.UserUsageStatsResponse
 import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
@@ -614,7 +614,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
     fun registerPerformanceMetrics(performanceMetrics: PerformanceMetricsResponse, isFirstTime: Boolean) {
 
         val jsonData = try {
-            JsonUtils.objectToJson(performanceMetrics)
+            objectToJson(performanceMetrics)
         } catch (e: JsonProcessingException) {
             "could not write PerformanceMetricsResponse to json $e"
         }

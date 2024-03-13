@@ -1,151 +1,117 @@
 package org.digma.intellij.plugin.dashboard;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.*;
-import com.intellij.ide.BrowserUtil;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
-import com.intellij.ui.jcef.JBCefBrowser;
 import org.cef.browser.*;
-import org.cef.callback.CefQueryCallback;
-import org.cef.handler.CefMessageRouterHandlerAdapter;
-import org.digma.intellij.plugin.analytics.*;
-import org.digma.intellij.plugin.common.Backgroundable;
+import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
 import org.digma.intellij.plugin.dashboard.incoming.GoToSpan;
 import org.digma.intellij.plugin.dashboard.outgoing.*;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.model.rest.AboutResult;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
-import org.digma.intellij.plugin.ui.jcef.JCEFGlobalConstants;
-import org.digma.intellij.plugin.ui.jcef.model.*;
+import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler;
+import org.digma.intellij.plugin.ui.jcef.model.ErrorPayload;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
-import static org.digma.intellij.plugin.common.StopWatchUtilsKt.*;
+import static org.digma.intellij.plugin.common.JsonUtilsKt.objectNodeToMap;
 import static org.digma.intellij.plugin.ui.jcef.JCefBrowserUtilsKt.*;
 
-public class DashboardMessageRouterHandler extends CefMessageRouterHandlerAdapter {
+public class DashboardMessageRouterHandler extends BaseMessageRouterHandler {
 
-    private final Logger logger = Logger.getInstance(DashboardMessageRouterHandler.class);
-    private final Project project;
-    private final JBCefBrowser jbCefBrowser;
+    private final Logger logger = Logger.getInstance(this.getClass());
 
-    public DashboardMessageRouterHandler(Project project, JBCefBrowser jbCefBrowser) {
-        this.project = project;
-        this.jbCefBrowser = jbCefBrowser;
+    public DashboardMessageRouterHandler(Project project) {
+        super(project);
+    }
+
+
+    @NotNull
+    @Override
+    public String getOriginForTroubleshootingEvent() {
+        return "dashboard";
     }
 
     @Override
-    public boolean onQuery(CefBrowser browser, CefFrame frame, long queryId, String request, boolean persistent, CefQueryCallback callback) {
+    public void doOnQuery(@NotNull Project project, @NotNull CefBrowser browser, @NotNull JsonNode requestJsonNode, @NotNull String rawRequest, @NotNull String action) throws Exception {
 
-        var objectMapper = new ObjectMapper();
-        Backgroundable.executeOnPooledThread( () -> {
-            try {
+        switch (action) {
 
-                var stopWatch = stopWatchStart();
+            case "DASHBOARD/INITIALIZE" -> onInitialize(browser);
 
+            case "DASHBOARD/GET_DATA" -> getData(browser, requestJsonNode);
 
-                var jsonNode = objectMapper.readTree(request);
-                String action = jsonNode.get("action").asText();
-
-                switch (action) {
-                    case "DASHBOARD/INITIALIZE" -> onInitialize(browser);
-                    case JCEFGlobalConstants.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER -> {
-                        OpenInDefaultBrowserRequest openBrowserRequest = jsonToObject(request, OpenInDefaultBrowserRequest.class);
-                        if (openBrowserRequest != null && openBrowserRequest.getPayload() != null) {
-                            BrowserUtil.browse(openBrowserRequest.getPayload().getUrl());
-                        }
-                    }
-                    case "DASHBOARD/GET_DATA" -> {
-
-                        Map<String, Object> mapRequest = objectMapper.convertValue(jsonNode, Map.class);
-                        Map<String, Object> payload = (Map<String, Object>) mapRequest.get("payload");
-
-                        Map<String,String> backendQueryParams = new HashMap<>();
-                        // main parameters
-                        backendQueryParams.put("environment", payload.get("environment").toString());
-                        var dashboardType = payload.get("type").toString();
-                        backendQueryParams.put("type", dashboardType);
-                        // query parameters
-                        Map<String, Object> payloadQueryParams = (Map<String, Object>) payload.get("query");
-                        payloadQueryParams.forEach((paramKey, paramValue) -> {
-                            backendQueryParams.put(paramKey, paramValue.toString());
-                        });
-
-                        try {
-                            var dashboardJson = DashboardService.getInstance(project).getDashboard(backendQueryParams);
-                            Log.log(logger::trace, project, "got dashboard data {}", dashboardJson);
-                            var backendPayload = objectMapper.readTree(dashboardJson);
-                            var message = new DashboardData("digma", "DASHBOARD/SET_DATA", backendPayload);
-                            Log.log(logger::debug, project, "sending DASHBOARD/SET_DATA message");
-
-                            executeWindowPostMessageJavaScript(browser, objectMapper.writeValueAsString(message));
-                            ActivityMonitor.getInstance(project).registerSubDashboardViewed(dashboardType);
-                        } catch (AnalyticsServiceException e) {
-                            var errorCode = e.getErrorCode();
-                            var errorMessage = e.getMeaningfulMessage();
-                            if (errorCode == 404) {
-                                errorMessage = "Digma analysis backend version is outdated. Please update.";
-                            }
-                            Log.warnWithException(logger, e, "error setting dashboard data");
-                            var dashboardError = new DashboardError(null, new ErrorPayload(errorMessage), dashboardType);
-                            var errorJsonNode = objectMapper.convertValue(dashboardError, JsonNode.class);
-                            var message = new DashboardData("digma", "DASHBOARD/SET_DATA", errorJsonNode);
-                            Log.log(logger::trace, project, "sending DASHBOARD/SET_DATA message with error");
-                            ErrorReporter.getInstance().reportError(project, "DashboardMessageRouterHandler.SET_DATA", e);
-                            try {
-                                executeWindowPostMessageJavaScript(browser, objectMapper.writeValueAsString(message));
-                            } catch (JsonProcessingException ex) {
-                                throw new RuntimeException(ex);
-                            }
-                        }
-                    }
-                    case "DASHBOARD/GO_TO_SPAN" -> {
-                        GoToSpan goToSpan = objectMapper.treeToValue(jsonNode, GoToSpan.class);
-                        DashboardService.getInstance(project).goToSpan(goToSpan);
-                    }
-                    case "GLOBAL/GET_BACKEND_INFO" -> {
-                        //do nothing, dashboard app sends that for some reason but it's not necessary
-                    }
-
-                    default -> throw new IllegalStateException("Unexpected value: " + action);
-                }
-
-                stopWatchStop(stopWatch, time -> Log.log(logger::trace, "action {} took {}",action, time));
-
+            case "DASHBOARD/GO_TO_SPAN" -> {
+                GoToSpan goToSpan = jsonToObject(requestJsonNode, GoToSpan.class);
+                DashboardService.getInstance(project).goToSpan(goToSpan);
+            }
+            case "GLOBAL/GET_BACKEND_INFO" -> {
+                //do nothing, dashboard app sends that for some reason, but it's not necessary
+            }
+            case "DASHBOARD/GET_ENVIRONMENT_INFO" -> {
+                //do nothing, dashboard app sends that for some reason, but it's not necessary
             }
 
-            catch (Exception e) {
-                Log.warnWithException(logger, e, "error setting dashboard data");
-                var jsonNode = objectMapper.convertValue(new Payload(null, new ErrorPayload(e.toString())), JsonNode.class);
-                var message = new DashboardData("digma", "DASHBOARD/SET_DATA", jsonNode);
-                Log.log(logger::trace, project, "sending DASHBOARD/SET_DATA message with error");
-                ErrorReporter.getInstance().reportError(project, "DashboardMessageRouterHandler.SET_DATA", e);
-                try {
-                    executeWindowPostMessageJavaScript(browser, objectMapper.writeValueAsString(message));
-                } catch (JsonProcessingException ex) {
-                    throw new RuntimeException(ex);
-                }
-
-            }
-        });
-
-        callback.success("");
-
-        return true;
+            default -> throw new IllegalStateException("Unexpected value: " + action);
+        }
     }
 
-    private void onInitialize(CefBrowser browser) {
-        try {
-            AboutResult about = AnalyticsService.getInstance(project).getAbout();
-            var message = new BackendInfoMessage(about);
 
-            Log.log(logger::trace, project, "sending {} message", JCEFGlobalConstants.GLOBAL_SET_BACKEND_INFO);
+    private void getData(CefBrowser browser, JsonNode requestJsonNode) throws JsonProcessingException {
+
+        var payload = getPayloadFromRequestNonNull(requestJsonNode);
+
+        Map<String, String> backendQueryParams = new HashMap<>();
+        // main parameters
+        backendQueryParams.put("environment", payload.get("environment").asText());
+        var dashboardType = payload.get("type").asText();
+        backendQueryParams.put("type", dashboardType);
+        // query parameters
+        Map<String, Object> payloadQueryParams = objectNodeToMap((ObjectNode) payload.get("query"));
+        payloadQueryParams.forEach((paramKey, paramValue) -> backendQueryParams.put(paramKey, paramValue.toString()));
+
+        try {
+            var dashboardJson = DashboardService.getInstance(getProject()).getDashboard(backendQueryParams);
+            Log.log(logger::trace, getProject(), "got dashboard data {}", dashboardJson);
+            var backendPayload = getObjectMapper().readTree(dashboardJson);
+            var message = new DashboardData("digma", "DASHBOARD/SET_DATA", backendPayload);
+            Log.log(logger::debug, getProject(), "sending DASHBOARD/SET_DATA message");
+
             serializeAndExecuteWindowPostMessageJavaScript(browser, message);
+            ActivityMonitor.getInstance(getProject()).registerSubDashboardViewed(dashboardType);
+
         } catch (AnalyticsServiceException e) {
-            Log.warnWithException(logger, e, "error getting backend info");
+
+            Log.warnWithException(logger, e, "error setting dashboard data");
+            ErrorReporter.getInstance().reportError(getProject(), "DashboardMessageRouterHandler.getData", e);
+
+            var errorCode = e.getErrorCode();
+            var errorMessage = e.getMeaningfulMessage();
+            if (errorCode == 404) {
+                errorMessage = "Digma analysis backend version is outdated. Please update.";
+            }
+            sendEmptyDataWithError(browser, errorMessage, dashboardType);
         }
+    }
+
+    private void sendEmptyDataWithError(CefBrowser browser, String errorMessage, String dashboardType) {
+
+        var dashboardError = new DashboardError(null, new ErrorPayload(errorMessage), dashboardType);
+        var errorJsonNode = getObjectMapper().convertValue(dashboardError, JsonNode.class);
+        var message = new DashboardData("digma", "DASHBOARD/SET_DATA", errorJsonNode);
+        Log.log(logger::trace, getProject(), "sending DASHBOARD/SET_DATA message with error");
+        serializeAndExecuteWindowPostMessageJavaScript(browser, message);
+    }
+
+
+
+
+    private void onInitialize(CefBrowser browser) {
+        doCommonInitialize(browser);
     }
 
     @Override

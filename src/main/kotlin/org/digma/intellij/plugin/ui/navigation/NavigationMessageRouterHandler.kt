@@ -12,6 +12,7 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.navigation.MainContentViewSwitcher
 import org.digma.intellij.plugin.navigation.View
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
+import org.digma.intellij.plugin.ui.jcef.sendCurrentViewsState
 
 class NavigationMessageRouterHandler(project: Project) : BaseMessageRouterHandler(project) {
 
@@ -21,7 +22,7 @@ class NavigationMessageRouterHandler(project: Project) : BaseMessageRouterHandle
     }
 
 
-    override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String) {
+    override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
 
         Log.log(logger::trace, project, "got action '$action' with message $requestJsonNode")
 
@@ -60,9 +61,11 @@ class NavigationMessageRouterHandler(project: Project) : BaseMessageRouterHandle
             }
 
             else -> {
-                Log.log(logger::warn, "got unexpected action='$action'")
+                return false
             }
         }
+
+        return true
     }
 
     private fun clearHighlight() {
@@ -101,7 +104,7 @@ class NavigationMessageRouterHandler(project: Project) : BaseMessageRouterHandle
     private fun onInitialize(browser: CefBrowser) {
         try {
             doCommonInitialize(browser)
-            sendCurrentViewsState(browser, View.views, false)
+            sendCurrentViewsState(browser, NAVIGATION_SET_VIEWS_ACTION, View.views, false)
         } catch (e: AnalyticsServiceException) {
             Log.warnWithException(logger, e, "error getting backend info")
         }

@@ -1,7 +1,6 @@
 package org.digma.intellij.plugin.ui.jcef
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.jcef.JBCefBrowser
@@ -11,6 +10,7 @@ import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
+import org.digma.intellij.plugin.navigation.View
 import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.ui.common.isJaegerButtonEnabled
 import org.digma.intellij.plugin.ui.jcef.model.ApiUrlPayload
@@ -37,6 +37,8 @@ import org.digma.intellij.plugin.ui.jcef.model.UiCodeFontPayload
 import org.digma.intellij.plugin.ui.jcef.model.UiFontPayload
 import org.digma.intellij.plugin.ui.jcef.model.UiThemePayload
 import org.digma.intellij.plugin.ui.jcef.model.UserEmailPayload
+import org.digma.intellij.plugin.ui.navigation.model.SetViewMessage
+import org.digma.intellij.plugin.ui.navigation.model.SetViewMessagePayload
 import org.digma.intellij.plugin.ui.settings.Theme
 
 
@@ -68,17 +70,6 @@ fun sendRequestToChangeCodeFont(font: String?, jbCefBrowser: JBCefBrowser) {
     serializeAndExecuteWindowPostMessageJavaScript(jbCefBrowser.cefBrowser, message)
 }
 
-/**
- * try to find a field in the payload without throwing NPE.
- * requestJsonNode is the full request as json node
- */
-fun tryGetFieldFromPayload(objectMapper: ObjectMapper, requestJsonNode: JsonNode, fieldName: String): String? {
-    return try {
-        objectMapper.readTree(requestJsonNode.get("payload").toString()).get(fieldName).asText()
-    } catch (e: NullPointerException) {
-        null
-    }
-}
 
 
 fun updateDigmaEngineStatus(project: Project, cefBrowser: CefBrowser) {
@@ -177,3 +168,10 @@ fun sendIsJaegerButtonEnabledMessage(cefBrowser: CefBrowser) {
     )
 }
 
+
+fun sendCurrentViewsState(cefBrowser: CefBrowser, action: String, views: List<View>, isTriggeredByJcef: Boolean) {
+    serializeAndExecuteWindowPostMessageJavaScript(
+        cefBrowser,
+        SetViewMessage(action, SetViewMessagePayload(views, isTriggeredByJcef))
+    )
+}

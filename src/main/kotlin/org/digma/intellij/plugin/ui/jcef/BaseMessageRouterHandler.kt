@@ -19,7 +19,6 @@ import org.digma.intellij.plugin.common.stopWatchStart
 import org.digma.intellij.plugin.common.stopWatchStop
 import org.digma.intellij.plugin.dashboard.DashboardService
 import org.digma.intellij.plugin.documentation.DocumentationService
-import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
@@ -38,11 +37,15 @@ import org.digma.intellij.plugin.ui.jcef.model.SendTrackingEventRequest
 import org.digma.intellij.plugin.ui.jcef.persistence.JCEFPersistenceService
 import org.digma.intellij.plugin.ui.jcef.state.JCEFStateManager
 
-abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouterHandlerAdapter() {
+/**
+ * BaseMessageRouterHandler is a CommonMessageRouterHandler and also implements CefMessageRouterHandler.
+ * it is meant to be used as base class for CefMessageRouterHandlers and has implementation for common messages.
+ */
+abstract class BaseMessageRouterHandler(protected val project: Project) : CommonMessageRouterHandler, CefMessageRouterHandlerAdapter() {
 
-    val logger = Logger.getInstance(this::class.java)
+    protected val logger = Logger.getInstance(this::class.java)
 
-    val objectMapper: ObjectMapper = createObjectMapper()
+    override val objectMapper: ObjectMapper = createObjectMapper()
 
     override fun onQuery(
         browser: CefBrowser,
@@ -198,7 +201,11 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
 
 
                     else -> {
-                        doOnQuery(project, browser, requestJsonNode, request, action)
+                        val handled = doOnQuery(project, browser, requestJsonNode, request, action)
+                        if (!handled) {
+                            //will be caught bellow and reported by ErrorReporter
+                            throw UnknownActionException("got unknown action $action")
+                        }
                     }
 
                 }
@@ -234,11 +241,6 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
 
     abstract fun getOriginForTroubleshootingEvent(): String
 
-    /**
-     * each app router handler should implement this method for specific app messages
-     */
-    @Throws(Exception::class) // this is necessary for implementations in java that may throw exceptions
-    abstract fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String)
 
 
     override fun onQueryCanceled(browser: CefBrowser?, frame: CefFrame?, queryId: Long) {
@@ -263,29 +265,6 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
         sendScopeChangedMessage(browser, null, CodeLocation(listOf(), listOf()), false)
     }
 
-    protected fun getPayloadFromRequest(requestJsonNode: JsonNode): JsonNode? {
-        val payload = requestJsonNode.get("payload")
-        return payload?.let {
-            objectMapper.readTree(it.toString())
-        }
-    }
-
-    //NPE should be handled by caller
-    @kotlin.jvm.Throws(NullPointerException::class)
-    protected fun getPayloadFromRequestNonNull(requestJsonNode: JsonNode): JsonNode {
-        val payload = requestJsonNode.get("payload")
-        return payload ?: throw NullPointerException("payload is null")
-    }
-
-
-    protected fun getEnvironmentFromPayload(requestJsonNode: JsonNode): Env? {
-        val payload = getPayloadFromRequest(requestJsonNode)
-        return payload?.takeIf { payload.get("environment") != null }?.let { pl ->
-            val envAsString = objectMapper.writeValueAsString(pl.get("environment"))
-            val env: Env = jsonToObject(envAsString, Env::class.java)
-            env
-        }
-    }
 
 
     fun changeScope(requestJsonNode: JsonNode) {
@@ -308,3 +287,4 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
     }
 
 }
+

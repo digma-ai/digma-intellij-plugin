@@ -31,7 +31,7 @@ public class JaegerUIMessageRouterHandler extends BaseMessageRouterHandler {
     }
 
     @Override
-    public void doOnQuery(@NotNull Project project, @NotNull CefBrowser browser, @NotNull JsonNode requestJsonNode, @NotNull String rawRequest, @NotNull String action) throws Exception {
+    public boolean doOnQuery(@NotNull Project project, @NotNull CefBrowser browser, @NotNull JsonNode requestJsonNode, @NotNull String rawRequest, @NotNull String action) throws Exception {
 
         switch (action) {
             case "GET_SPANS_DATA" -> {
@@ -64,8 +64,12 @@ public class JaegerUIMessageRouterHandler extends BaseMessageRouterHandler {
                 JaegerUIService.getInstance(project).goToInsight(goToSpanMessage);
             }
 
-            default -> Log.log(logger::warn, "got unexpected action {}", action);
+            default -> {
+                return false;
+            }
         }
+
+        return true;
     }
 
 }

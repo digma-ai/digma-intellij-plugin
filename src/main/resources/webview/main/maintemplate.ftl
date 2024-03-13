@@ -17,6 +17,9 @@
     <script>
       @GLOBAL_ENV_VARS@
 
+      window.assetsSelectedServices = ${assetsSelectedServices?json_string};
+      window.assetsSearch = ${assetsSearch};
+
     </script>
     <script src="/index.js"></script>
   </body>

@@ -20,6 +20,9 @@ import java.util.function.Predicate
 @Suppress("LightServiceMigrationCode") // as light service it will also register in Rider and that's not necessary
 internal class JvmEndpointNavigationProvider(project: Project) : AbstractNavigationDiscovery(project) {
 
+    override val type: String = "Endpoint"
+
+
     private val endpointsMap = ConcurrentHashMap(mutableMapOf<String, MutableSet<EndpointInfo>>())
 
     companion object {
@@ -37,7 +40,6 @@ internal class JvmEndpointNavigationProvider(project: Project) : AbstractNavigat
     }
 
 
-    override val type: String = "endpoint"
 
 
     override fun getTask(myContext: NavigationProcessContext, origin: Origin, name: String, indicator: ProgressIndicator, retry: Int): Runnable {

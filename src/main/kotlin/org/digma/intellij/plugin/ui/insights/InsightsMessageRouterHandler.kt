@@ -11,7 +11,7 @@ import org.digma.intellij.plugin.posthog.ActivityMonitor
 
 class InsightsMessageRouterHandler(project: Project) : AbstractInsightsMessageRouterHandler(project) {
 
-    override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String) {
+    override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
 
         when (action) {
 
@@ -20,9 +20,11 @@ class InsightsMessageRouterHandler(project: Project) : AbstractInsightsMessageRo
             "INSIGHTS/MARK_INSIGHT_TYPES_AS_VIEWED" -> markInsightsViewed(requestJsonNode)
 
             else -> {
-                super.doOnQuery(project, browser, requestJsonNode, rawRequest, action)
+                return super.doOnQuery(project, browser, requestJsonNode, rawRequest, action)
             }
         }
+
+        return true
     }
 
 

@@ -23,6 +23,7 @@ import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.psi.LanguageServiceLocator
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
+import org.digma.intellij.plugin.ui.jcef.sendCurrentViewsState
 import org.digma.intellij.plugin.ui.navigation.model.InstrumentationResult
 import java.time.Instant
 
@@ -45,7 +46,7 @@ class NavigationService(private val project: Project) : Disposable {
         project.messageBus.connect(this).subscribe(
             ViewChangedEvent.VIEW_CHANGED_TOPIC, ViewChangedEvent { views, isTriggeredByJcef ->
                 jCefComponent?.let {
-                    sendCurrentViewsState(it.jbCefBrowser.cefBrowser, views, isTriggeredByJcef)
+                    sendCurrentViewsState(it.jbCefBrowser.cefBrowser, NAVIGATION_SET_VIEWS_ACTION, views, isTriggeredByJcef)
                 }
             })
     }

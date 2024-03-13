@@ -32,7 +32,7 @@ public class DocumentationFileEditor extends UserDataHolderBase implements FileE
 
         var jbCefClient = jbCefBrowser.getJBCefClient();
         cefMessageRouter = CefMessageRouter.create();
-        cefMessageRouter.addHandler(new DocumentationMessageRouterHandler(project, jbCefBrowser), true);
+        cefMessageRouter.addHandler(new DocumentationMessageRouterHandler(project), true);
         jbCefClient.getCefClient().addMessageRouter(cefMessageRouter);
 
         var lifeSpanHandler = new CefLifeSpanHandlerAdapter() {

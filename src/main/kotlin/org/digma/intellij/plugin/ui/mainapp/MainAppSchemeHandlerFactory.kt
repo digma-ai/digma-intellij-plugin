@@ -1,16 +1,16 @@
-package org.digma.intellij.plugin.ui.assets
+package org.digma.intellij.plugin.ui.mainapp
 
 import com.intellij.openapi.project.Project
 import org.cef.handler.CefResourceHandler
 import org.digma.intellij.plugin.ui.jcef.BaseSchemeHandlerFactory
 
-class AssetsSchemeHandlerFactory(project: Project) : BaseSchemeHandlerFactory(project) {
+class MainAppSchemeHandlerFactory(project: Project) : BaseSchemeHandlerFactory(project) {
 
     override fun createResourceHandler(resourceName: String, resourceExists: Boolean): CefResourceHandler {
         return if (resourceExists) {
-            AssetsResourceHandler(project, resourceName)
+            MainAppResourceHandler(project, resourceName)
         } else {
-            AssetsResourceHandler(project, "$ASSETS_APP_RESOURCE_FOLDER_NAME/index.html")
+            MainAppResourceHandler(project, "$MAIN_APP_RESOURCE_FOLDER_NAME/index.html")
         }
     }
 
@@ -19,10 +19,10 @@ class AssetsSchemeHandlerFactory(project: Project) : BaseSchemeHandlerFactory(pr
     }
 
     override fun getDomain(): String {
-        return ASSETS_APP_DOMAIN_NAME
+        return MAIN_APP_DOMAIN_NAME
     }
 
     override fun getResourceFolderName(): String {
-        return ASSETS_APP_RESOURCE_FOLDER_NAME
+        return MAIN_APP_RESOURCE_FOLDER_NAME
     }
 }

@@ -34,7 +34,7 @@ abstract class NotificationsMessageRouterHandler(project: Project) : BaseMessage
     /**
      * do the query action. this method is executed on a pooled thread
      */
-    override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String) {
+    override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
 
         //exceptions are handles in BaseMessageRouterHandler.onQuery
 
@@ -113,7 +113,11 @@ abstract class NotificationsMessageRouterHandler(project: Project) : BaseMessage
                 project.service<NotificationsService>().markAllRead()
                 doClose()
             }
+
+            else -> return false
         }
+
+        return true
 
     }
 
@@ -142,7 +146,7 @@ class TopNotificationsMessageRouterHandler(project: Project, private val topNoti
     NotificationsMessageRouterHandler(project) {
 
 
-    override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String) {
+    override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
 
 
         when (action) {
@@ -162,11 +166,13 @@ class TopNotificationsMessageRouterHandler(project: Project, private val topNoti
             }
 
             else -> {
-                super.doOnQuery(project, browser, requestJsonNode, rawRequest, action)
+                return super.doOnQuery(project, browser, requestJsonNode, rawRequest, action)
             }
-
         }
+
+        return true
     }
+
 
     override fun getOriginForTroubleshootingEvent(): String {
         return "top notifications"

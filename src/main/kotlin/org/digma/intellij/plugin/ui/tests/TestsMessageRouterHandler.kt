@@ -17,36 +17,30 @@ import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.teststab.TestsRunner
 import org.digma.intellij.plugin.ui.common.openJaegerFromRecentActivity
 import org.digma.intellij.plugin.ui.common.traceButtonName
-import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
-import org.digma.intellij.plugin.ui.tests.TestsPanel.Companion.RUN_TEST_BUTTON_NAME
+import org.digma.intellij.plugin.ui.jcef.BaseCommonMessageRouterHandler
 import java.util.Collections
 
-class TestsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(project) {
+class TestsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHandler(project) {
 
-    override fun getOriginForTroubleshootingEvent(): String {
-        return "tests"
+    companion object {
+        const val RUN_TEST_BUTTON_NAME: String = "run-test"
     }
 
-    override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String) {
+
+    override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
 
         Log.log(logger::trace, project, "got action '$action' with message $requestJsonNode")
 
         when (action) {
-            "TESTS/INITIALIZE" -> initialize(browser)
             "TESTS/SPAN_GET_LATEST_DATA" -> handleQuerySpanGetLatestData(project, requestJsonNode)
             "TESTS/RUN_TEST" -> handleRunTest(project, requestJsonNode)
             "TESTS/GO_TO_TRACE" -> handleGoToTrace(project, requestJsonNode)
             "TESTS/GO_TO_SPAN_OF_TEST" -> handleGoToSpanOfTest(project, requestJsonNode)
 
-            else -> {
-                Log.log(logger::warn, "got unexpected action='$action'")
-            }
+            else -> return false
         }
-    }
 
-    private fun initialize(browser: CefBrowser) {
-        Log.log(logger::info, "got TESTS/INITIALIZE")
-        doCommonInitialize(browser)
+        return true
     }
 
     private fun handleQuerySpanGetLatestData(project: Project, requestJsonNode: JsonNode) {

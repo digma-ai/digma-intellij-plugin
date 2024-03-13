@@ -37,7 +37,7 @@ public class DashboardMessageRouterHandler extends BaseMessageRouterHandler {
     }
 
     @Override
-    public void doOnQuery(@NotNull Project project, @NotNull CefBrowser browser, @NotNull JsonNode requestJsonNode, @NotNull String rawRequest, @NotNull String action) throws Exception {
+    public boolean doOnQuery(@NotNull Project project, @NotNull CefBrowser browser, @NotNull JsonNode requestJsonNode, @NotNull String rawRequest, @NotNull String action) throws Exception {
 
         switch (action) {
 
@@ -56,8 +56,12 @@ public class DashboardMessageRouterHandler extends BaseMessageRouterHandler {
                 //do nothing, dashboard app sends that for some reason, but it's not necessary
             }
 
-            default -> throw new IllegalStateException("Unexpected value: " + action);
+            default -> {
+                return false;
+            }
         }
+
+        return true;
     }
 
 

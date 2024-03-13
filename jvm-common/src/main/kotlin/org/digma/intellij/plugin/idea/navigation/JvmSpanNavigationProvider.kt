@@ -17,6 +17,8 @@ import java.util.function.Consumer
 @Suppress("LightServiceMigrationCode") // as light service it will also register in Rider and that's not necessary
 internal class JvmSpanNavigationProvider(project: Project) : AbstractNavigationDiscovery(project) {
 
+    override val type: String = "Span"
+
     private val spanLocations = ConcurrentHashMap(mutableMapOf<String, SpanLocation>())
 
     private val spanNavigationDiscoveryProviders: List<SpanNavigationDiscoveryProvider> =
@@ -45,8 +47,6 @@ internal class JvmSpanNavigationProvider(project: Project) : AbstractNavigationD
         return workspaceUris
     }
 
-
-    override val type: String = "span"
 
 
     override fun getTask(myContext: NavigationProcessContext, origin: Origin, name: String, indicator: ProgressIndicator, retry: Int): Runnable {

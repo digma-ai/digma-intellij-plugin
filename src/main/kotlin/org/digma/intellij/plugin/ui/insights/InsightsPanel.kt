@@ -42,7 +42,7 @@ class InsightsPanel(private val project: Project) : DisposablePanel() {
         return if (JBCefApp.isSupported()) {
             JCefComponent.JCefComponentBuilder(project, InsightsService.getInstance(project))
                 .url(INSIGHTS_APP_URL)
-                .messageRouterHandler(InsightsMessageRouterHandler(project))
+                .addMessageRouterHandler(InsightsMessageRouterHandler(project))
                 .schemeHandlerFactory(InsightsSchemeHandlerFactory(project))
                 .withDownloadAdapter(DownloadHandlerAdapter())
                 .build()

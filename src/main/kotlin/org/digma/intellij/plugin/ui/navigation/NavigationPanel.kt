@@ -47,7 +47,7 @@ class NavigationPanel(private val project: Project) : DisposablePanel() {
         return if (JBCefApp.isSupported()) {
             JCefComponent.JCefComponentBuilder(project, NavigationService.getInstance(project))
                 .url(NAVIGATION_APP_URL)
-                .messageRouterHandler(NavigationMessageRouterHandler(project))
+                .addMessageRouterHandler(NavigationMessageRouterHandler(project))
                 .schemeHandlerFactory(NavigationSchemeHandlerFactory(project))
                 .withDownloadAdapter(DownloadHandlerAdapter())
                 .build()

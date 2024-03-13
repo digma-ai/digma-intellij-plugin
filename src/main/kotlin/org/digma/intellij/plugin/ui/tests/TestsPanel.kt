@@ -48,7 +48,7 @@ class TestsPanel(private val project: Project) : DisposablePanel() {
         return if (JBCefApp.isSupported()) {
             JCefComponentBuilder(project, project.service<TestsService>())
                 .url(TESTS_APP_URL)
-                .messageRouterHandler(TestsMessageRouterHandler(project))
+                .addMessageRouterHandler(TestsMessageRouterHandler(project))
                 .schemeHandlerFactory(TestsSchemeHandlerFactory(project))
                 .withDownloadAdapter(DownloadHandlerAdapter())
                 .build()

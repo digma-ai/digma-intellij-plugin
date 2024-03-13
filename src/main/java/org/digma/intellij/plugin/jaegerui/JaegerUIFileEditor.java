@@ -29,7 +29,7 @@ public class JaegerUIFileEditor extends UserDataHolderBase implements FileEditor
         if (JBCefApp.isSupported()) {
             return new JCefComponent.JCefComponentBuilder(project, JaegerUIService.getInstance(project))
                     .url(JaegerUIConstants.JAEGER_UI_URL)
-                    .messageRouterHandler(new JaegerUIMessageRouterHandler(project))
+                    .addMessageRouterHandler(new JaegerUIMessageRouterHandler(project))
                     .schemeHandlerFactory(new JaegerUiSchemeHandlerFactory(project, file))
                     .withDownloadAdapter(new DownloadHandlerAdapter())
                     .build();

@@ -17,7 +17,6 @@ import org.cef.handler.CefLifeSpanHandlerAdapter
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
 import org.digma.intellij.plugin.analytics.EnvironmentChanged
-import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator
 import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
@@ -40,7 +39,7 @@ private constructor(
     val project: Project,
     val jbCefBrowser: JBCefBrowser,
     private val cefMessageRouter: CefMessageRouter,
-    val messageRouterHandler: BaseMessageRouterHandler?,
+    val messageRouterHandlers: MutableList<BaseMessageRouterHandler>,
     val schemeHandlerFactory: BaseSchemeHandlerFactory?,
     private val lifeSpanHandler: CefLifeSpanHandlerAdapter,
 ) : Disposable {
@@ -152,7 +151,6 @@ private constructor(
                         isObservabilityEnabled
                     )
                 }
-
             }
         )
 
@@ -205,7 +203,7 @@ private constructor(
     class JCefComponentBuilder(private val project: Project, private var parentDisposable: Disposable) {
 
         private var url: String? = null
-        private var messageRouterHandler: BaseMessageRouterHandler? = null
+        private var messageRouterHandlers: MutableList<BaseMessageRouterHandler> = mutableListOf()
         private var schemeHandlerFactory: BaseSchemeHandlerFactory? = null
         private var downloadAdapter: CefDownloadHandler? = null
 
@@ -213,17 +211,20 @@ private constructor(
         fun build(): JCefComponent {
 
             Objects.requireNonNull(url, "url must not be null")
-            Objects.requireNonNull(messageRouterHandler, "messageRouterHandler must not be null")
+            Objects.requireNonNull(messageRouterHandlers, "messageRouterHandlers must not be null")
             Objects.requireNonNull(schemeHandlerFactory, "schemeHandlerFactory must not be null")
 
-            //todo: move the code from JBCefBrowserBuilderCreator to here when all apps use the same infrastructure
             val jbCefBrowser = JBCefBrowserBuilderCreator.create()
                 .setUrl(url)
                 .build()
 
             val jbCefClient = jbCefBrowser.jbCefClient
             val cefMessageRouter = CefMessageRouter.create()
-            cefMessageRouter.addHandler(messageRouterHandler, true)
+
+            messageRouterHandlers.forEach {
+                cefMessageRouter.addHandler(it, true)
+            }
+
             jbCefClient.cefClient.addMessageRouter(cefMessageRouter)
 
             val lifeSpanHandler: CefLifeSpanHandlerAdapter = object : CefLifeSpanHandlerAdapter() {
@@ -234,7 +235,7 @@ private constructor(
 
             jbCefBrowser.jbCefClient.addLifeSpanHandler(lifeSpanHandler, jbCefBrowser.cefBrowser)
 
-            val jCefComponent = JCefComponent(project, jbCefBrowser, cefMessageRouter, messageRouterHandler, schemeHandlerFactory, lifeSpanHandler)
+            val jCefComponent = JCefComponent(project, jbCefBrowser, cefMessageRouter, messageRouterHandlers, schemeHandlerFactory, lifeSpanHandler)
 
             parentDisposable.let {
                 Disposer.register(it) {
@@ -266,8 +267,8 @@ private constructor(
             return this
         }
 
-        fun messageRouterHandler(messageRouterHandler: BaseMessageRouterHandler): JCefComponentBuilder {
-            this.messageRouterHandler = messageRouterHandler
+        fun addMessageRouterHandler(messageRouterHandler: BaseMessageRouterHandler): JCefComponentBuilder {
+            this.messageRouterHandlers.add(messageRouterHandler)
             return this
         }
 

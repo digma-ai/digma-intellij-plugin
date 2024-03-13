@@ -38,7 +38,7 @@ class AssetsPanel(private val project: Project) : DisposablePanel() {
         return if (JBCefApp.isSupported()) {
             JCefComponent.JCefComponentBuilder(project, AssetsService.getInstance(project))
                 .url(ASSETS_APP_URL)
-                .messageRouterHandler(AssetsMessageRouterHandler(project))
+                .addMessageRouterHandler(AssetsMessageRouterHandler(project))
                 .schemeHandlerFactory(AssetsSchemeHandlerFactory(project))
                 .withDownloadAdapter(DownloadHandlerAdapter())
                 .build()

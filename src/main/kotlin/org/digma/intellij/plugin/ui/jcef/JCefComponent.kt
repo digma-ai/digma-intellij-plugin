@@ -226,10 +226,9 @@ private constructor(
                 cefMessageRouter.addHandler(it, true)
             }
 
-            //todo: add display handler to debug console messages fro mapp
-            jbCefClient.addDisplayHandler(JCefDisplayHandler(name), jbCefBrowser.cefBrowser)
-
             jbCefClient.cefClient.addMessageRouter(cefMessageRouter)
+
+            jbCefClient.addDisplayHandler(JCefDisplayHandler(name), jbCefBrowser.cefBrowser)
 
             val lifeSpanHandler: CefLifeSpanHandlerAdapter = object : CefLifeSpanHandlerAdapter() {
                 override fun onAfterCreated(browser: CefBrowser) {

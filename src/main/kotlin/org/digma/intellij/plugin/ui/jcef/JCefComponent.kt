@@ -228,7 +228,7 @@ private constructor(
 
             jbCefClient.cefClient.addMessageRouter(cefMessageRouter)
 
-            jbCefClient.addDisplayHandler(JCefDisplayHandler(name), jbCefBrowser.cefBrowser)
+            jbCefClient.cefClient.addDisplayHandler(JCefDisplayHandler(name))
 
             val lifeSpanHandler: CefLifeSpanHandlerAdapter = object : CefLifeSpanHandlerAdapter() {
                 override fun onAfterCreated(browser: CefBrowser) {

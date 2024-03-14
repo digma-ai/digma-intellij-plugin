@@ -34,7 +34,7 @@ class TopNotificationsPanel(private val project: Project) : DisposablePanel() {
 
     private fun createJcefComponent(): JCefComponent? {
         return if (JBCefApp.isSupported()) {
-            JCefComponentBuilder(project, project.service<NotificationsService>())
+            JCefComponentBuilder(project, "TopNotifications", project.service<NotificationsService>())
                 .url(NOTIFICATIONS_URL)
                 .addMessageRouterHandler(TopNotificationsMessageRouterHandler(project, this))
                 .schemeHandlerFactory(NotificationsSchemeHandlerFactory(project, NotificationViewMode.popup))

@@ -37,6 +37,7 @@ import javax.swing.JComponent
 class JCefComponent
 private constructor(
     val project: Project,
+    val name: String,
     val jbCefBrowser: JBCefBrowser,
     private val cefMessageRouter: CefMessageRouter,
     val messageRouterHandlers: MutableList<BaseMessageRouterHandler>,
@@ -200,7 +201,7 @@ private constructor(
 
 
     //must provide a parentDisposable that is not the project
-    class JCefComponentBuilder(private val project: Project, private var parentDisposable: Disposable) {
+    class JCefComponentBuilder(private val project: Project, private val name: String, private var parentDisposable: Disposable) {
 
         private var url: String? = null
         private var messageRouterHandlers: MutableList<BaseMessageRouterHandler> = mutableListOf()
@@ -226,7 +227,7 @@ private constructor(
             }
 
             //todo: add display handler to debug console messages fro mapp
-//            jbCefClient.addDisplayHandler()
+            jbCefClient.addDisplayHandler(JCefDisplayHandler(name), jbCefBrowser.cefBrowser)
 
             jbCefClient.cefClient.addMessageRouter(cefMessageRouter)
 
@@ -238,7 +239,8 @@ private constructor(
 
             jbCefBrowser.jbCefClient.addLifeSpanHandler(lifeSpanHandler, jbCefBrowser.cefBrowser)
 
-            val jCefComponent = JCefComponent(project, jbCefBrowser, cefMessageRouter, messageRouterHandlers, schemeHandlerFactory, lifeSpanHandler)
+            val jCefComponent =
+                JCefComponent(project, name, jbCefBrowser, cefMessageRouter, messageRouterHandlers, schemeHandlerFactory, lifeSpanHandler)
 
             parentDisposable.let {
                 Disposer.register(it) {

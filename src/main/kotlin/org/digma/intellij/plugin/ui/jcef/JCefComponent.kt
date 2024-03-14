@@ -232,7 +232,7 @@ private constructor(
 
             val lifeSpanHandler: CefLifeSpanHandlerAdapter = object : CefLifeSpanHandlerAdapter() {
                 override fun onAfterCreated(browser: CefBrowser) {
-                    registerAppSchemeHandler(schemeHandlerFactory)
+                    registerAppSchemeHandler(schemeHandlerFactory!!) //schemeHandlerFactory must not be null here
                 }
             }
 
@@ -256,12 +256,9 @@ private constructor(
         }
 
 
-        private fun registerAppSchemeHandler(schemeHandlerFactory: BaseSchemeHandlerFactory?) {
-
-            Objects.requireNonNull(schemeHandlerFactory, "schemeHandlerFactory must not be null")
-
+        private fun registerAppSchemeHandler(schemeHandlerFactory: BaseSchemeHandlerFactory) {
             CefApp.getInstance().registerSchemeHandlerFactory(
-                schemeHandlerFactory!!.getSchema(), schemeHandlerFactory.getDomain(), schemeHandlerFactory
+                schemeHandlerFactory.getSchema(), schemeHandlerFactory.getDomain(), schemeHandlerFactory
             )
         }
 

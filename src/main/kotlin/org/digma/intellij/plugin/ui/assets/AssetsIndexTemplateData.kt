@@ -5,15 +5,14 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.SystemInfo
 import com.intellij.util.text.VersionComparatorUtil
 import org.digma.intellij.plugin.persistence.PersistenceService
-import org.digma.intellij.plugin.ui.jcef.BaseIndexTemplateBuilder
 
 
 private const val ASSET_SEARCH_ENV_NAME = "assetsSearch"
 private const val SELECTED_SERVICES_VARIABLE = "assetsSelectedServices"
 
-class AssetsIndexTemplateBuilder : BaseIndexTemplateBuilder(ASSETS_APP_RESOURCE_FOLDER_NAME, ASSETS_APP_INDEX_TEMPLATE_NAME) {
+class AssetsIndexTemplateData {
 
-    override fun addAppSpecificEnvVariable(project: Project, data: MutableMap<String, Any>) {
+    fun addAppSpecificEnvVariable(project: Project, data: MutableMap<String, Any>) {
 
         val assetSearchEnabledForLinux: Boolean = VersionComparatorUtil.compare(ApplicationInfo.getInstance().majorVersion, "2023") >= 0
         data[ASSET_SEARCH_ENV_NAME] = if (SystemInfo.isLinux) assetSearchEnabledForLinux.toString() else "true"

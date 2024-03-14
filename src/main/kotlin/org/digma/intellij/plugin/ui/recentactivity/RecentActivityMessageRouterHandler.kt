@@ -15,7 +15,6 @@ import org.digma.intellij.plugin.posthog.MonitoredPanel
 import org.digma.intellij.plugin.ui.common.traceButtonName
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
 import org.digma.intellij.plugin.ui.jcef.jsonToObject
-import org.digma.intellij.plugin.ui.jcef.tryGetFieldFromPayload
 import org.digma.intellij.plugin.ui.recentactivity.model.CloseLiveViewMessage
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityGoToSpanRequest
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityGoToTraceRequest
@@ -28,7 +27,7 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
     }
 
 
-    override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String) {
+    override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
 
 
         //exceptions are handles in BaseMessageRouterHandler.onQuery
@@ -84,8 +83,9 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
             }
 
             "RECENT_ACTIVITY/SET_ENVIRONMENT_TYPE" -> {
+                //todo: change to getPayloadFromRequest
                 val environment = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environment").asText()
-                val type: String? = tryGetFieldFromPayload(objectMapper, requestJsonNode, "type")
+                val type: String? = getPayloadFromRequest(requestJsonNode)?.get("type")?.asText()
                 project.service<ActivityMonitor>()
                     .registerUserActionEvent("set environment type", mapOf("environment" to environment, "type" to type.toString()))
                 if (environment != null) {
@@ -151,7 +151,11 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
                 }
             }
 
+            else -> return false
+
         }
+
+        return true
     }
 
 }

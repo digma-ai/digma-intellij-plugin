@@ -1,20 +1,15 @@
 package org.digma.intellij.plugin.dashboard;
 
-import com.intellij.openapi.fileEditor.FileEditor;
-import com.intellij.openapi.fileEditor.FileEditorState;
+import com.intellij.openapi.fileEditor.*;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.Disposer;
-import com.intellij.openapi.util.UserDataHolderBase;
+import com.intellij.openapi.util.*;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.jcef.JBCefBrowser;
 import org.cef.CefApp;
-import org.cef.browser.CefBrowser;
-import org.cef.browser.CefMessageRouter;
+import org.cef.browser.*;
 import org.cef.handler.CefLifeSpanHandlerAdapter;
-import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator;
-import org.jetbrains.annotations.Nls;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.digma.intellij.plugin.ui.jcef.JBCefBrowserBuilderCreator;
+import org.jetbrains.annotations.*;
 
 import javax.swing.*;
 import java.beans.PropertyChangeListener;
@@ -37,7 +32,7 @@ public class DashboardFileEditor extends UserDataHolderBase implements FileEdito
 
         var jbCefClient = jbCefBrowser.getJBCefClient();
         cefMessageRouter = CefMessageRouter.create();
-        cefMessageRouter.addHandler(new DashboardMessageRouterHandler(project, jbCefBrowser), true);
+        cefMessageRouter.addHandler(new DashboardMessageRouterHandler(project), true);
         jbCefClient.getCefClient().addMessageRouter(cefMessageRouter);
 
         var lifeSpanHandler = new CefLifeSpanHandlerAdapter() {

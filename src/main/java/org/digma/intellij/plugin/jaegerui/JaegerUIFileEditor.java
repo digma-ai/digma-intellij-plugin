@@ -27,9 +27,9 @@ public class JaegerUIFileEditor extends UserDataHolderBase implements FileEditor
     private JCefComponent createJcefComponent(Project project, JaegerUIVirtualFile file) {
 
         if (JBCefApp.isSupported()) {
-            return new JCefComponent.JCefComponentBuilder(project, JaegerUIService.getInstance(project))
+            return new JCefComponent.JCefComponentBuilder(project, "JaegerUI", JaegerUIService.getInstance(project))
                     .url(JaegerUIConstants.JAEGER_UI_URL)
-                    .messageRouterHandler(new JaegerUIMessageRouterHandler(project))
+                    .addMessageRouterHandler(new JaegerUIMessageRouterHandler(project))
                     .schemeHandlerFactory(new JaegerUiSchemeHandlerFactory(project, file))
                     .withDownloadAdapter(new DownloadHandlerAdapter())
                     .build();

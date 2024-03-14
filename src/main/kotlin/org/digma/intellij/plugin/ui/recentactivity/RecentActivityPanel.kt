@@ -43,9 +43,9 @@ class RecentActivityPanel(private val project: Project) : DisposablePanel() {
 
     private fun createJcefComponent(): JCefComponent? {
         return if (JBCefApp.isSupported()) {
-            JCefComponentBuilder(project, project.service<RecentActivityService>())
+            JCefComponentBuilder(project, "RecentActivity", project.service<RecentActivityService>())
                 .url(RECENT_ACTIVITY_URL)
-                .messageRouterHandler(RecentActivityMessageRouterHandler(project))
+                .addMessageRouterHandler(RecentActivityMessageRouterHandler(project))
                 .schemeHandlerFactory(RecentActivitySchemeHandlerFactory(project))
                 .build()
         } else {

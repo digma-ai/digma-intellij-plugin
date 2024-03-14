@@ -7,7 +7,7 @@ import com.intellij.execution.util.ExecUtil
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
-import org.digma.intellij.plugin.common.JsonUtils
+import org.digma.intellij.plugin.common.readTree
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.settings.SettingsUtils
@@ -144,7 +144,7 @@ private fun isExtensionRunning(): Boolean {
         if (processOutput.exitCode == 0) {
             val output = processOutput.stdout
 
-            val extensions: ArrayNode = JsonUtils.readTree(output) as ArrayNode
+            val extensions: ArrayNode = readTree(output) as ArrayNode
             val digmaExtension = extensions.find { jsonNode -> jsonNode.get("image").asText().contains("/digma-docker-extension") }
             if (digmaExtension != null) {
                 return digmaExtension.get("vm")?.get("status")?.asText()?.contains("Running", true) ?: false

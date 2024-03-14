@@ -3,7 +3,6 @@ package org.digma.intellij.plugin.ui.common
 import com.intellij.openapi.project.Project
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.common.EDT
-import org.digma.intellij.plugin.navigation.View
 import org.digma.intellij.plugin.ui.common.statuspanels.createUpgradeBackendMessagePanel
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import org.digma.intellij.plugin.updates.UrgentMessagesService
@@ -29,7 +28,7 @@ class UrgentMessagesPanel(private val project: Project, mainContentPanel: MainCo
 
         val upgradeBackendPanel = createUpgradeBackendMessagePanel(project)
         add(upgradeBackendPanel, UPGRADE_BACKEND_PANEL_NAME)
-        myLayout.addLayoutComponent(upgradeBackendPanel, View.Insights.cardName)
+        myLayout.addLayoutComponent(upgradeBackendPanel, UPGRADE_BACKEND_PANEL_NAME)
 
         myLayout.show(this, MAIN_PANEL_NAME)
 

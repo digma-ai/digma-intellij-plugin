@@ -4,31 +4,25 @@ import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.JsonNode
 import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
-import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.ui.assets.model.SetAssetsDataFiltersMessage
 import org.digma.intellij.plugin.ui.assets.model.SetAssetsDataMessage
 import org.digma.intellij.plugin.ui.assets.model.SetCategoriesDataMessage
 import org.digma.intellij.plugin.ui.assets.model.SetServicesDataMessage
-import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
+import org.digma.intellij.plugin.ui.jcef.BaseCommonMessageRouterHandler
 import org.digma.intellij.plugin.ui.jcef.getQueryMapFromPayload
 import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
 
-class AssetsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(project) {
+class AssetsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHandler(project) {
 
 
-    override fun getOriginForTroubleshootingEvent(): String {
-        return "assets"
-    }
-
-    override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String) {
+    override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
 
         Log.log(logger::trace, project, "got action '$action' with message $requestJsonNode")
 
         when (action) {
 
-            "ASSETS/INITIALIZE" -> onInitialize(browser)
             "ASSETS/GET_CATEGORIES_DATA" -> pushAssetCategories(browser, requestJsonNode)
             "ASSETS/GET_DATA" -> pushAssetsFromGetData(browser, requestJsonNode)
             "ASSETS/GET_ASSET_FILTERS_DATA" -> pushAssetFilters(browser, requestJsonNode)
@@ -39,19 +33,10 @@ class AssetsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pr
                 PersistenceService.getInstance().setSelectedServices(project.name, services)
             }
 
-            else -> {
-                Log.log(logger::warn, "got unexpected action='$action'")
-            }
+            else -> return false
         }
-    }
 
-
-    private fun onInitialize(browser: CefBrowser) {
-        try {
-            doCommonInitialize(browser)
-        } catch (e: AnalyticsServiceException) {
-            Log.warnWithException(logger, e, "error getting backend info")
-        }
+        return true
     }
 
 

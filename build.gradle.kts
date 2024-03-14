@@ -342,7 +342,8 @@ tasks {
             "webview/assets/assetstemplate.ftl",
             "webview/navigation/navigationtemplate.ftl",
             "webview/insights/insightstemplate.ftl",
-            "webview/jaegerui/jaegeruitemplate.ftl"
+            "webview/jaegerui/jaegeruitemplate.ftl",
+            "webview/main/maintemplate.ftl"
         )
 
 

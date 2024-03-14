@@ -130,7 +130,11 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
                         val trackingRequest = jsonToObject(request, SendTrackingEventRequest::class.java)
                         trackingRequest.let {
                             it.payload?.let { pl ->
-                                ActivityMonitor.getInstance(project).registerCustomEvent(pl.eventName, pl.data)
+                                if (pl.data == null) {
+                                    ActivityMonitor.getInstance(project).registerCustomEvent(pl.eventName)
+                                } else {
+                                    ActivityMonitor.getInstance(project).registerCustomEvent(pl.eventName, pl.data)
+                                }
                             }
                         }
                     }
@@ -174,7 +178,7 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
 
                         payload?.let{
                             val skipInstallationStep = it.get("skipInstallationStep").asBoolean()
-                            ActivityMonitor.getInstance(project).registerCustomEvent("show-installation-wizard", null)
+                            ActivityMonitor.getInstance(project).registerCustomEvent("show-installation-wizard")
                             EDT.ensureEDT {
                                 MainToolWindowCardsController.getInstance(project).showWizard(skipInstallationStep)
                                 ToolWindowShower.getInstance(project).showToolWindow()

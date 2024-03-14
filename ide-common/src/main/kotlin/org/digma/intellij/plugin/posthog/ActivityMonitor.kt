@@ -27,8 +27,11 @@ import java.time.LocalDateTime
 import java.util.Date
 
 private const val INSTALL_STATUS_PROPERTY_NAME = "install_status"
+private const val ENVIRONMENT_ADDED_PROPERTY_NAME = "environment_added"
+private const val LOAD_WARNING_APPEARED_PROPERTY_NAME = "load_warning_appeared"
+private const val JIRA_FIELD_COPIED_PROPERTY_NAME = "jira_field_copied"
 
-private enum class InstallStatus { Active, Uninstalled, Disabled }
+enum class InstallStatus { Active, Uninstalled, Disabled }
 
 @Service(Service.Level.PROJECT)
 class ActivityMonitor(private val project: Project) : Disposable {
@@ -40,7 +43,9 @@ class ActivityMonitor(private val project: Project) : Disposable {
         }
     }
 
-    private var currentInstallStatus = InstallStatus.Active
+
+    private val simpleEventInterceptor = SimpleEventInterceptor(project)
+
     private val userId: String = UserId.userId
     private val isDevUser: Boolean = UserId.isDevUser
     private val latestUnknownRunConfigTasks = mutableMapOf<String, Instant>()
@@ -52,6 +57,8 @@ class ActivityMonitor(private val project: Project) : Disposable {
     private val settingsChangeTracker = SettingsChangeTracker()
 
     init {
+
+        SessionMetadata.getInstance().put(getCurrentInstallStatusKey(), InstallStatus.Active)
 
         val token = "phc_5sy6Kuv1EYJ9GAdWPeGl7gx31RAw7BR7NHnOuLCUQZK"
         postHog = PostHog.Builder(token).build()
@@ -106,14 +113,18 @@ class ActivityMonitor(private val project: Project) : Disposable {
         postHog?.identify(
             userId, mapOf(
                 "email" to getEmailForEvent(),
-                INSTALL_STATUS_PROPERTY_NAME to currentInstallStatus
+                INSTALL_STATUS_PROPERTY_NAME to SessionMetadata.getInstance().get(getCurrentInstallStatusKey())
             )
         )
     }
 
-    fun registerCustomEvent(eventName: String, tags: Map<String, Any>?) {
+    fun registerCustomEvent(eventName: String, tags: Map<String, Any> = mapOf()) {
 
-        if (eventName == "user-action" && tags != null)//handling user-action event from jcef component
+        if (simpleEventInterceptor.intercept(eventName, tags)) {
+            return
+        }
+
+        if (eventName == "user-action")//handling user-action event from jcef component
         {
             tags["action"]?.let {
                 registerUserAction(it.toString(), tags)
@@ -121,7 +132,6 @@ class ActivityMonitor(private val project: Project) : Disposable {
         } else {
             capture(eventName, tags ?: mapOf())
         }
-
     }
 
     fun registerLensClicked(lens: String) {
@@ -563,42 +573,55 @@ class ActivityMonitor(private val project: Project) : Disposable {
     }
 
     fun registerPluginUninstalled(): String {
-        currentInstallStatus = InstallStatus.Uninstalled
+
+        SessionMetadata.getInstance().put(getCurrentInstallStatusKey(), InstallStatus.Uninstalled)
+
         capture("plugin uninstalled")
         if(PersistenceService.getInstance().hasEmail()){
             capture(
                 "registered user uninstalled", mapOf(
                     "email" to getEmailForEvent(),
-                    INSTALL_STATUS_PROPERTY_NAME to currentInstallStatus
+                    INSTALL_STATUS_PROPERTY_NAME to SessionMetadata.getInstance().get(getCurrentInstallStatusKey()),
+                    ENVIRONMENT_ADDED_PROPERTY_NAME to PersistenceService.getInstance().isEnvironmentAdded(),
+                    LOAD_WARNING_APPEARED_PROPERTY_NAME to PersistenceService.getInstance().isLoadWarningAppeared(),
+                    JIRA_FIELD_COPIED_PROPERTY_NAME to PersistenceService.getInstance().isJiraFieldCopied()
                 )
             )
         }
         postHog?.set(
             userId, mapOf(
-                INSTALL_STATUS_PROPERTY_NAME to currentInstallStatus
+                INSTALL_STATUS_PROPERTY_NAME to SessionMetadata.getInstance().get(getCurrentInstallStatusKey()),
+                INSTALL_STATUS_PROPERTY_NAME + "_timestamp" to SessionMetadata.getInstance().getCreatedAsString(getCurrentInstallStatusKey())
             )
         )
         return userId
     }
 
     fun registerPluginDisabled(): String {
-        currentInstallStatus = InstallStatus.Disabled
+
+        SessionMetadata.getInstance().put(getCurrentInstallStatusKey(), InstallStatus.Disabled)
+
         capture("plugin disabled")
         if(PersistenceService.getInstance().hasEmail()){
             capture(
                 "registered user disabled", mapOf(
                     "email" to getEmailForEvent(),
-                    INSTALL_STATUS_PROPERTY_NAME to currentInstallStatus
+                    INSTALL_STATUS_PROPERTY_NAME to SessionMetadata.getInstance().get(getCurrentInstallStatusKey()),
+                    ENVIRONMENT_ADDED_PROPERTY_NAME to PersistenceService.getInstance().isEnvironmentAdded(),
+                    LOAD_WARNING_APPEARED_PROPERTY_NAME to PersistenceService.getInstance().isLoadWarningAppeared(),
+                    JIRA_FIELD_COPIED_PROPERTY_NAME to PersistenceService.getInstance().isJiraFieldCopied()
                 )
             )
         }
         postHog?.set(
             userId, mapOf(
-                INSTALL_STATUS_PROPERTY_NAME to currentInstallStatus
+                INSTALL_STATUS_PROPERTY_NAME to SessionMetadata.getInstance().get(getCurrentInstallStatusKey()),
+                INSTALL_STATUS_PROPERTY_NAME + "_timestamp" to SessionMetadata.getInstance().getCreatedAsString(getCurrentInstallStatusKey())
             )
         )
         return userId
     }
+
 
     fun registerServerInfo(serverInfo: AboutResult) {
         postHog?.set(
@@ -717,8 +740,6 @@ class ActivityMonitor(private val project: Project) : Disposable {
 
 
 
-
-
     fun hash(message: String): String {
         val bytes = message.toByteArray()
         val md = MessageDigest.getInstance("SHA-256")
@@ -729,7 +750,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
 
     private fun registerSessionDetails() {
 
-        currentInstallStatus = InstallStatus.Active
+        SessionMetadata.getInstance().put(getCurrentInstallStatusKey(), InstallStatus.Active)
 
         val osType = System.getProperty("os.name")
         val ideInfo = ApplicationInfo.getInstance()
@@ -749,7 +770,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
                 "plugin.version" to pluginVersion,
                 "user.type" to if (isDevUser) "internal" else "external",
                 "jcef.supported" to isJcefSupported,
-                INSTALL_STATUS_PROPERTY_NAME to currentInstallStatus
+                INSTALL_STATUS_PROPERTY_NAME to SessionMetadata.getInstance().get(getCurrentInstallStatusKey())
             )
         )
     }
@@ -770,11 +791,58 @@ class ActivityMonitor(private val project: Project) : Disposable {
     }
 
     fun registerLoadWarning(description: String, lastUpdated: Date) {
+
+        PersistenceService.getInstance().setLoadWarningAppearedTimestamp()
+
         capture(
             "load-warning-appeared",
             mapOf(
                 "description" to description,
                 "last-updated" to lastUpdated,
+                INSTALL_STATUS_PROPERTY_NAME to SessionMetadata.getInstance().get(getCurrentInstallStatusKey()),
+                ENVIRONMENT_ADDED_PROPERTY_NAME to PersistenceService.getInstance().isEnvironmentAdded(),
+                LOAD_WARNING_APPEARED_PROPERTY_NAME to PersistenceService.getInstance().isLoadWarningAppeared(),
+                JIRA_FIELD_COPIED_PROPERTY_NAME to PersistenceService.getInstance().isJiraFieldCopied()
+            )
+        )
+
+        postHog?.identify(
+            userId,
+            mapOf(
+                LOAD_WARNING_APPEARED_PROPERTY_NAME + "_timestamp" to PersistenceService.getInstance().getLoadWarningAppearedTimestamp()
+            ),
+            mapOf(
+                LOAD_WARNING_APPEARED_PROPERTY_NAME to PersistenceService.getInstance().isLoadWarningAppeared()
+            )
+        )
+
+    }
+
+    fun registerAddEnvironment(environment: String) {
+
+        PersistenceService.getInstance().setEnvironmentAddedTimestamp()
+
+        val eventName = "add environment"
+        val eventDetails = mapOf(
+            "environment" to environment,
+            INSTALL_STATUS_PROPERTY_NAME to SessionMetadata.getInstance().get(getCurrentInstallStatusKey()),
+            ENVIRONMENT_ADDED_PROPERTY_NAME to PersistenceService.getInstance().isEnvironmentAdded(),
+            LOAD_WARNING_APPEARED_PROPERTY_NAME to PersistenceService.getInstance().isLoadWarningAppeared(),
+            JIRA_FIELD_COPIED_PROPERTY_NAME to PersistenceService.getInstance().isJiraFieldCopied()
+        )
+        capture(
+            eventName,
+            eventDetails
+        )
+        registerUserAction(eventName, eventDetails)
+
+        postHog?.identify(
+            userId,
+            mapOf(
+                ENVIRONMENT_ADDED_PROPERTY_NAME + "_timestamp" to PersistenceService.getInstance().getEnvironmentAddedTimestamp()
+            ),
+            mapOf(
+                ENVIRONMENT_ADDED_PROPERTY_NAME to PersistenceService.getInstance().isEnvironmentAdded()
             )
         )
     }
@@ -831,8 +899,42 @@ class ActivityMonitor(private val project: Project) : Disposable {
     }
 
 
+    fun registerJiraFieldCopied(eventName: String, details: Map<String, Any>) {
+
+        PersistenceService.getInstance().setJiraFieldCopiedTimestamp()
+
+        val extraDetails = mapOf(
+            INSTALL_STATUS_PROPERTY_NAME to SessionMetadata.getInstance().get(getCurrentInstallStatusKey()),
+            ENVIRONMENT_ADDED_PROPERTY_NAME to PersistenceService.getInstance().isEnvironmentAdded(),
+            LOAD_WARNING_APPEARED_PROPERTY_NAME to PersistenceService.getInstance().isLoadWarningAppeared(),
+            JIRA_FIELD_COPIED_PROPERTY_NAME to PersistenceService.getInstance().isJiraFieldCopied()
+        )
+
+        val mutableDetails = details.toMutableMap()
+        mutableDetails.putAll(extraDetails)
+
+        capture(
+            eventName,
+            mutableDetails
+        )
+
+        postHog?.identify(
+            userId,
+            mapOf(
+                JIRA_FIELD_COPIED_PROPERTY_NAME + "_timestamp" to PersistenceService.getInstance().getJiraFieldCopiedTimestamp()
+            ),
+            mapOf(
+                JIRA_FIELD_COPIED_PROPERTY_NAME to PersistenceService.getInstance().isJiraFieldCopied()
+            )
+        )
+
+    }
+
+
+
     private fun getEmailForEvent(): String {
         return PersistenceService.getInstance().getUserRegistrationEmail() ?: PersistenceService.getInstance().getUserEmail() ?: ""
     }
+
 
 }

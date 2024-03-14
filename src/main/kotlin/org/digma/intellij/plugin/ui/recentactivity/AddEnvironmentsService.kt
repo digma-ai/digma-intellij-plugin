@@ -1,9 +1,7 @@
 package org.digma.intellij.plugin.ui.recentactivity
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.node.ArrayNode
-import com.fasterxml.jackson.databind.util.StdDateFormat
 import com.intellij.execution.CommonProgramRunConfigurationParameters
 import com.intellij.execution.RunManager
 import com.intellij.execution.configuration.AbstractRunConfiguration
@@ -13,6 +11,7 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemRunConfiguration
 import com.intellij.openapi.project.Project
+import org.digma.intellij.plugin.common.createObjectMapper
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
 import org.digma.intellij.plugin.idea.runcfg.DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE
@@ -31,11 +30,9 @@ class AddEnvironmentsService {
 
     private val pendingEnvironments = mutableListOf<PendingEnvironment>()
 
-    private val objectMapper: ObjectMapper = ObjectMapper()
+    private val objectMapper: ObjectMapper = createObjectMapper()
 
     init {
-        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-        objectMapper.setDateFormat(StdDateFormat())
         load()
     }
 

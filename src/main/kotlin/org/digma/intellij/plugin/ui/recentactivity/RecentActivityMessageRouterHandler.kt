@@ -73,7 +73,7 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
 
             "RECENT_ACTIVITY/ADD_ENVIRONMENT" -> {
                 val environment = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environment").asText()
-                project.service<ActivityMonitor>().registerUserActionEvent("add environment", mapOf("environment" to environment))
+                ActivityMonitor.getInstance(project).registerAddEnvironment(environment)
                 environment?.let {
                     service<AddEnvironmentsService>().addEnvironment(it)
                     Backgroundable.executeOnPooledThread {

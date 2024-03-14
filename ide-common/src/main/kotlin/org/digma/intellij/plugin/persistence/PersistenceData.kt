@@ -81,4 +81,13 @@ internal data class PersistenceData(
     @OptionTag(converter = InstantConverter::class)
     var lastUserActionTimestamp: Instant? = null,
 
+    @OptionTag(converter = InstantConverter::class)
+    var environmentAddedTimestamp: Instant? = null,
+
+    @OptionTag(converter = InstantConverter::class)
+    var jiraFieldCopiedTimestamp: Instant? = null,
+
+    @OptionTag(converter = InstantConverter::class)
+    var loadWarningAppearedTimestamp: Instant? = null,
+
     )

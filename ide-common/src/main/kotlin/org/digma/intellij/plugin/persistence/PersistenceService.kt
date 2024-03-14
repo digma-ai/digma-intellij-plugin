@@ -294,4 +294,42 @@ class PersistenceService {
     }
 
 
+    fun setEnvironmentAddedTimestamp() {
+        state.environmentAddedTimestamp = Instant.now()
+    }
+
+    fun getEnvironmentAddedTimestamp(): Instant? {
+        return state.environmentAddedTimestamp
+    }
+
+    fun isEnvironmentAdded(): Boolean {
+        return state.environmentAddedTimestamp != null
+    }
+
+    fun setJiraFieldCopiedTimestamp() {
+        state.jiraFieldCopiedTimestamp = Instant.now()
+    }
+
+    fun getJiraFieldCopiedTimestamp(): Instant? {
+        return state.jiraFieldCopiedTimestamp
+    }
+
+    fun isJiraFieldCopied(): Boolean {
+        return state.jiraFieldCopiedTimestamp != null
+    }
+
+    fun setLoadWarningAppearedTimestamp() {
+        state.loadWarningAppearedTimestamp = Instant.now()
+    }
+
+    fun getLoadWarningAppearedTimestamp(): Instant? {
+        return state.loadWarningAppearedTimestamp
+    }
+
+    fun isLoadWarningAppeared(): Boolean {
+        return state.loadWarningAppearedTimestamp != null
+    }
+
+
+
 }

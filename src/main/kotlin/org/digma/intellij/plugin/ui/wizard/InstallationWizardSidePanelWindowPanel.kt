@@ -178,7 +178,11 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
             if (JCEFGlobalConstants.GLOBAL_SEND_TRACKING_EVENT.equals(action, ignoreCase = true)) {
                 val (_, payload) = jsonToObject(request, SendTrackingEventRequest::class.java)
                 if (payload != null) {
-                    ActivityMonitor.getInstance(project).registerCustomEvent(payload.eventName, payload.data)
+                    if (payload.data == null) {
+                        ActivityMonitor.getInstance(project).registerCustomEvent(payload.eventName)
+                    } else {
+                        ActivityMonitor.getInstance(project).registerCustomEvent(payload.eventName, payload.data)
+                    }
                 }
             }
             if (JCEFGlobalConstants.INSTALLATION_WIZARD_SET_OBSERVABILITY.equals(action, ignoreCase = true)) {

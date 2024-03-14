@@ -6,7 +6,9 @@ import com.intellij.openapi.project.Project
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 
-
+/**
+ * hold data about current IDE session.
+ */
 @Service(Service.Level.APP)
 class SessionMetadata {
 
@@ -17,66 +19,82 @@ class SessionMetadata {
         }
     }
 
-    private val metadata = mutableMapOf<SessionMetadataKey, SessionMetadataValue>()
+    private val metadata =
+        mutableMapOf<SessionMetadataKey<*>, SessionMetadataKey.Value<*>>()
 
-    fun put(key: Any, value: Any) {
-        put(SessionMetadataKey.create(key), value)
+
+    fun <T : Any> put(key: SessionMetadataKey<T>, value: T) {
+        metadata[key] = key.createValue(value)
     }
 
-    fun put(key: SessionMetadataKey, value: Any) {
-        metadata[key] = SessionMetadataValue.create(value)
+    fun <T : Any> getOrNull(key: SessionMetadataKey<T>): T? {
+        return key.getValue(metadata)
     }
 
-    fun get(key: Any): Any? {
-        return get(SessionMetadataKey.create(key))
+    fun <T : Any> get(key: SessionMetadataKey<T>): T {
+        return key.getValue(metadata) ?: key.defaultValue
     }
 
-    fun get(key: SessionMetadataKey): Any? {
-        return metadata[key]?.value
+    fun <T : Any> get(key: SessionMetadataKey<T>, defaultValue: T): T {
+        return key.getValue(metadata) ?: defaultValue
     }
 
-    fun remove(key: Any): Any? {
-        return remove(SessionMetadataKey.create(key))
+    fun remove(key: SessionMetadataKey<*>): Any? {
+        return metadata.remove(key)?.theValue
     }
 
-    fun remove(key: SessionMetadataKey): Any? {
-        return metadata.remove(key)?.value
+    fun getCreated(key: SessionMetadataKey<*>): Instant? {
+        return key.getCreated(metadata)
     }
 
-    fun getCreated(key: Any): Instant? {
-        return getCreated(SessionMetadataKey.create(key))
-    }
-
-    fun getCreated(key: SessionMetadataKey): Instant? {
-        return metadata[key]?.created
+    fun getCreatedAsString(key: SessionMetadataKey<*>): String? {
+        return key.getCreated(metadata)?.toString()
     }
 }
 
 /*
  * key must have a proper equals and hashCode
  */
-data class SessionMetadataKey(val key: Any) {
+data class SessionMetadataKey<T : Any>(val key: Any, val defaultValue: T) {
 
     companion object {
         @JvmStatic
-        fun create(key: Any): SessionMetadataKey {
-            return SessionMetadataKey(key)
+        fun <T : Any> create(key: Any, defaultValue: T): SessionMetadataKey<T> {
+            return SessionMetadataKey(key, defaultValue)
+        }
+    }
+
+    fun createValue(theValue: T): Value<T> {
+        return Value.create(theValue)
+    }
+
+    fun getValue(metadata: Map<SessionMetadataKey<*>, Value<*>>): T? {
+        @Suppress("UNCHECKED_CAST")
+        return metadata[this]?.theValue as T? //casting must succeed here
+    }
+
+    fun getCreated(metadata: Map<SessionMetadataKey<*>, Value<*>>): Instant? {
+        return metadata[this]?.created //casting must succeed here
+    }
+
+    @Suppress("DataClassPrivateConstructor")
+    data class Value<T>
+    private constructor(val theValue: T) {
+        val created = Clock.System.now()
+
+        companion object {
+            fun <T> create(theValue: T): Value<T> {
+                return Value(theValue)
+            }
         }
     }
 }
 
-private data class SessionMetadataValue(val value: Any) {
 
-    val created = Clock.System.now()
-
-    companion object {
-        fun create(value: Any): SessionMetadataValue {
-            return SessionMetadataValue(value)
-        }
-    }
+fun getPluginLoadedKey(project: Project): SessionMetadataKey<Boolean> {
+    return SessionMetadataKey.create("${project.name}-PluginLoadedKey", false)
 }
 
-
-fun getPluginLoadedKey(project: Project): SessionMetadataKey {
-    return SessionMetadataKey.create("${project.name}-PluginLoadedKey")
+fun getCurrentInstallStatusKey(): SessionMetadataKey<InstallStatus> {
+    return SessionMetadataKey.create("CurrentInstallStatus", InstallStatus.Active)
 }

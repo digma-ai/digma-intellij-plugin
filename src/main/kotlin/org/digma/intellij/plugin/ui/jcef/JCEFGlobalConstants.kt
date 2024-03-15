@@ -41,6 +41,7 @@ object JCEFGlobalConstants {
     const val GLOBAL_OPEN_INSTALLATION_WIZARD: String = "GLOBAL/OPEN_INSTALLATION_WIZARD"
     const val GLOBAL_SET_SCOPE: String = "GLOBAL/SET_SCOPE"
     const val GLOBAL_CHANGE_SCOPE: String = "GLOBAL/CHANGE_SCOPE"
+    const val GLOBAL_CHANGE_VIEW: String = "GLOBAL/CHANGE_VIEW"
     const val GLOBAL_SET_STATE: String = "GLOBAL/SET_STATE"
     const val GLOBAL_UPDATE_STATE: String = "GLOBAL/UPDATE_STATE"
     const val GLOBAL_GET_STATE: String = "GLOBAL/GET_STATE"

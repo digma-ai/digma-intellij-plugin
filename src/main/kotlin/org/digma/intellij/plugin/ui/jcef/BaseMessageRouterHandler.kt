@@ -23,6 +23,7 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.insights.InsightsStatsResult
 import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
+import org.digma.intellij.plugin.navigation.MainContentViewSwitcher
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.scope.ScopeManager
 import org.digma.intellij.plugin.scope.SpanScope
@@ -195,6 +196,10 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                         changeScope(requestJsonNode)
                     }
 
+                    JCEFGlobalConstants.GLOBAL_CHANGE_VIEW -> {
+                        changeView(requestJsonNode)
+                    }
+
 
                     JCEFGlobalConstants.GLOBAL_UPDATE_STATE -> {
                         updateState(requestJsonNode)
@@ -230,6 +235,16 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
         //return success regardless of the background thread
         callback.success("")
         return true
+    }
+
+    protected fun changeView(requestJsonNode: JsonNode) {
+        val payload = getPayloadFromRequest(requestJsonNode)
+        payload?.let {
+            val viewId = payload.get("view")?.asText()
+            viewId?.let { vuid ->
+                MainContentViewSwitcher.getInstance(project).showViewById(vuid, true)
+            }
+        }
     }
 
     private fun getState(browser: CefBrowser) {

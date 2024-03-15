@@ -44,7 +44,11 @@ class ScopeManager(private val project: Project) {
             MainToolWindowCardsController.getInstance(project).closeCoveringViewsIfNecessary()
             project.service<ErrorsViewOrchestrator>().closeErrorDetails()
             ToolWindowShower.getInstance(project).showToolWindow()
-            MainContentViewSwitcher.getInstance(project).showInsights()
+
+            val contentViewSwitcher = MainContentViewSwitcher.getInstance(project)
+            if (contentViewSwitcher.getSelectedView() != View.Assets) {
+                contentViewSwitcher.showInsights()
+            }
         }
 
         fireScopeChangedEvent(null, CodeLocation(listOf(), listOf()), false)
@@ -110,9 +114,6 @@ class ScopeManager(private val project: Project) {
 
     private fun showHomeView(scope: SpanScope, insightsStats: InsightsStatsResult?) {
         val contentViewSwitcher =MainContentViewSwitcher.getInstance(project)
-        if (contentViewSwitcher.getSelectedView() == View.Assets) {
-            return
-        }
 
         insightsStats?.let {
             if (it.analyticsInsightsCount > 0 && it.issuesInsightsCount == 0)

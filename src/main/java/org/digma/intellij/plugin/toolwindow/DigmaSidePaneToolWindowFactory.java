@@ -22,6 +22,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.Collections;
 import java.util.function.*;
 
 import static org.digma.intellij.plugin.ui.common.MainToolWindowPanelKt.createMainToolWindowPanel;
@@ -99,11 +100,11 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
                 allNotificationsPanelBuilder);
 
         if (IDEUtilsService.shouldOpenWizard()) {
-            ActivityMonitor.getInstance(project).registerCustomEvent("show-installation-wizard", null);
+            ActivityMonitor.getInstance(project).registerCustomEvent("show-installation-wizard", Collections.emptyMap());
             MainToolWindowCardsController.getInstance(project).showWizard(false);
         }
         else{
-            ActivityMonitor.getInstance(project).registerCustomEvent("skip-installation-wizard", null);
+            ActivityMonitor.getInstance(project).registerCustomEvent("skip-installation-wizard", Collections.emptyMap());
         }
 
     }

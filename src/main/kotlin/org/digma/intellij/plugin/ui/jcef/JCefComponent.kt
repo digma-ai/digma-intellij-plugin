@@ -21,6 +21,8 @@ import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
+import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.model.rest.insights.InsightsStatsResult
 import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
 import org.digma.intellij.plugin.observability.ObservabilityChanged
 import org.digma.intellij.plugin.scope.ScopeChangedEvent
@@ -160,7 +162,27 @@ private constructor(
                 override fun scopeChanged(
                     scope: SpanScope?, codeLocation: CodeLocation, hasErrors: Boolean,
                 ) {
-                    sendScopeChangedMessage(jbCefBrowser.cefBrowser, scope, codeLocation, hasErrors)
+                    var insightsStats: InsightsStatsResult? = null
+                    try {
+                        val analyticsService = AnalyticsService.getInstance(project);
+                        val params = mutableMapOf<String, Any>("Environment" to analyticsService.environment.getLatestKnownEnv())
+                        scope?.spanCodeObjectId?.let {
+                            params.put("ScopedSpanCodeObjectId", it)
+                        }
+
+                        insightsStats = AnalyticsService.getInstance(project).getInsightsStats(params)
+                        Log.log(logger::trace, project, "sending {} message", JCEFGlobalConstants.GLOBAL_SET_BACKEND_INFO)
+                    } catch (e: Exception) {
+                        Log.debugWithException(logger, project, e, "error calling about")
+                    }
+
+                    sendScopeChangedMessage(
+                        jbCefBrowser.cefBrowser,
+                        scope,
+                        codeLocation,
+                        hasErrors,
+                        insightsStats?.analyticsInsightsCount ?: 0,
+                        insightsStats?.issuesInsightsCount ?: 0)
                 }
             }
         )

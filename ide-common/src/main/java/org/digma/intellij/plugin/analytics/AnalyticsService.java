@@ -419,6 +419,10 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.getAssetNavigation(env, spanCodeObjectId));
     }
 
+    public InsightsStatsResult getInsightsStats(Map<String, Object> queryParams) throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.getInsightsStats(queryParams));
+    }
+
     public HttpResponse lowLevelCall(HttpRequest request) throws AnalyticsServiceException {
         return executeCatching(() -> analyticsProviderProxy.lowLevelCall(request));
     }

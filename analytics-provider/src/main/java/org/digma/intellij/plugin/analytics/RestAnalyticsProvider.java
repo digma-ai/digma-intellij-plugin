@@ -252,6 +252,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
+    public InsightsStatsResult getInsightsStats(Map<String, Object> queryParams) {
+        return execute(() -> client.analyticsProvider.getInsightsStats(queryParams));
+    }
+
+    @Override
     public HttpResponse lowLevelCall(HttpRequest request) {
         okhttp3.Response okHttp3Response;
         try {
@@ -747,6 +752,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @PUT("/InsightsActions/unDismiss")
         Call<ResponseBody> undismissInsight(@Body UnDismissRequest insightId);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @GET("/insights/statistics")
+        Call<InsightsStatsResult> getInsightsStats(@QueryMap Map<String, Object> fields);
     }
 
 }

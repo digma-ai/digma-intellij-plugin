@@ -21,6 +21,7 @@ import org.digma.intellij.plugin.dashboard.DashboardService
 import org.digma.intellij.plugin.documentation.DocumentationService
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.model.rest.insights.InsightsStatsResult
 import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.scope.ScopeManager
@@ -179,7 +180,7 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                     JCEFGlobalConstants.GLOBAL_OPEN_INSTALLATION_WIZARD -> {
                         val payload = getPayloadFromRequest(requestJsonNode)
 
-                        payload?.let{
+                        payload?.let {
                             val skipInstallationStep = it.get("skipInstallationStep").asBoolean()
                             ActivityMonitor.getInstance(project).registerCustomEvent("show-installation-wizard")
                             EDT.ensureEDT {
@@ -246,7 +247,6 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
     abstract fun getOriginForTroubleshootingEvent(): String
 
 
-
     override fun onQueryCanceled(browser: CefBrowser?, frame: CefFrame?, queryId: Long) {
         Log.log(logger::trace, "jcef query canceled")
     }
@@ -262,14 +262,29 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
             Log.debugWithException(logger, project, e, "error calling about")
         }
 
+        var insightsStats: InsightsStatsResult? = null;
+        try {
+            val analyticsService = AnalyticsService.getInstance(project);
+            val params = mapOf("Environment" to analyticsService.environment.getLatestKnownEnv())
+            insightsStats = AnalyticsService.getInstance(project).getInsightsStats(params)
+            Log.log(logger::trace, project, "retrieving data regarding insight statistics")
+        } catch (e: Exception) {
+            Log.debugWithException(logger, project, e, "error calling about")
+        }
+
         updateDigmaEngineStatus(project, browser)
 
         sendEnvironmentsList(browser, AnalyticsService.getInstance(project).environment.getEnvironments())
 
-        sendScopeChangedMessage(browser, null, CodeLocation(listOf(), listOf()), false)
+        sendScopeChangedMessage(
+            browser,
+            null,
+            CodeLocation(listOf(), listOf()),
+            false,
+            insightsStats?.analyticsInsightsCount ?: 0,
+            insightsStats?.issuesInsightsCount ?: 0
+        )
     }
-
-
 
     fun changeScope(requestJsonNode: JsonNode) {
         val payload = getPayloadFromRequest(requestJsonNode)

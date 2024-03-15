@@ -17,6 +17,9 @@ interface EnvironmentsSupplier {
     fun getCurrent(): Env?
 
     fun refreshNowOnBackground()
+
     fun setCurrent(env: Env)
+
+    fun getLatestKnownEnv(): String
 
 }

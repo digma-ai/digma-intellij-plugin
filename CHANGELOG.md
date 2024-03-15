@@ -1,6 +1,14 @@
 # Changelog
 
-## [2.0.294] - 2024-03-13
+## [2.0.295] - 2024-03-15
+
+- Add main App, Analytics tab, Insight recalculation bar by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1942
+- Add Posthog state properties Closes #1935 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1941
+- Feature/get insights stats by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1948
+- Fix asset navigation by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1949
+- Fix/asset navigation by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1950
+
+## 2.0.294 - 2024-03-13
 
 - Fix recent activity NPE for old backends by @borisermakof in https://github.com/digma-ai/digma-intellij-plugin/pull/1937
 

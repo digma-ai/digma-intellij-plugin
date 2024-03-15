@@ -113,8 +113,7 @@ class ScopeManager(private val project: Project) {
 
 
     private fun showHomeView(scope: SpanScope, insightsStats: InsightsStatsResult?) {
-        val contentViewSwitcher =MainContentViewSwitcher.getInstance(project)
-
+        val contentViewSwitcher = MainContentViewSwitcher.getInstance(project)
         insightsStats?.let {
             if (it.analyticsInsightsCount > 0 && it.issuesInsightsCount == 0)
                 contentViewSwitcher.showAnalytics()

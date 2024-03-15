@@ -36,7 +36,6 @@ import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
 import org.jetbrains.annotations.*;
-import org.jetbrains.deft.Obj;
 
 import java.io.*;
 import java.lang.reflect.*;

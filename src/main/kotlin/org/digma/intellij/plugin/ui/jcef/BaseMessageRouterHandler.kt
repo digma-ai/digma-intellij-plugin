@@ -262,15 +262,7 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
             Log.debugWithException(logger, project, e, "error calling about")
         }
 
-        var insightsStats: InsightsStatsResult? = null;
-        try {
-            val analyticsService = AnalyticsService.getInstance(project);
-            val params = mapOf("Environment" to analyticsService.environment.getLatestKnownEnv())
-            insightsStats = AnalyticsService.getInstance(project).getInsightsStats(params)
-            Log.log(logger::trace, project, "retrieving data regarding insight statistics")
-        } catch (e: Exception) {
-            Log.debugWithException(logger, project, e, "error calling about")
-        }
+        val insightsStats = AnalyticsService.getInstance(project).getInsightsStats(null)
 
         updateDigmaEngineStatus(project, browser)
 

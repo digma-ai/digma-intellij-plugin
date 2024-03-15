@@ -36,6 +36,7 @@ import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
 import org.jetbrains.annotations.*;
+import org.jetbrains.deft.Obj;
 
 import java.io.*;
 import java.lang.reflect.*;
@@ -419,8 +420,20 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.getAssetNavigation(env, spanCodeObjectId));
     }
 
-    public InsightsStatsResult getInsightsStats(Map<String, Object> queryParams) throws AnalyticsServiceException {
-        return executeCatching(() -> analyticsProviderProxy.getInsightsStats(queryParams));
+    public InsightsStatsResult getInsightsStats(String spanCodeObjectId) throws AnalyticsServiceException {
+        try {
+            var params = new HashMap<String, Object>();
+            params.put("Environment",this.environment.getLatestKnownEnv());
+
+            if(spanCodeObjectId != null){
+                params.put("ScopedSpanCodeObjectId", spanCodeObjectId);
+            }
+
+            return executeCatching(() -> analyticsProviderProxy.getInsightsStats(params));
+        } catch (Exception e) {
+            Log.warnWithException(LOGGER, project, e, "error calling  insights stats", e.getMessage());
+        }
+        return  new InsightsStatsResult(0,0,0);
     }
 
     public HttpResponse lowLevelCall(HttpRequest request) throws AnalyticsServiceException {

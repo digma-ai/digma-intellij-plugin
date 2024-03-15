@@ -162,20 +162,7 @@ private constructor(
                 override fun scopeChanged(
                     scope: SpanScope?, codeLocation: CodeLocation, hasErrors: Boolean,
                 ) {
-                    var insightsStats: InsightsStatsResult? = null
-                    try {
-                        val analyticsService = AnalyticsService.getInstance(project);
-                        val params = mutableMapOf<String, Any>("Environment" to analyticsService.environment.getLatestKnownEnv())
-                        scope?.spanCodeObjectId?.let {
-                            params.put("ScopedSpanCodeObjectId", it)
-                        }
-
-                        insightsStats = AnalyticsService.getInstance(project).getInsightsStats(params)
-                        Log.log(logger::trace, project, "sending {} message", JCEFGlobalConstants.GLOBAL_SET_BACKEND_INFO)
-                    } catch (e: Exception) {
-                        Log.debugWithException(logger, project, e, "error calling about")
-                    }
-
+                    val insightsStats = AnalyticsService.getInstance(project).getInsightsStats(scope?.spanCodeObjectId)
                     sendScopeChangedMessage(
                         jbCefBrowser.cefBrowser,
                         scope,

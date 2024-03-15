@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.scope
 
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.common.CodeObjectsUtil
@@ -9,8 +10,11 @@ import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.errorreporting.SEVERITY_HIGH_TRY_FIX
 import org.digma.intellij.plugin.errorreporting.SEVERITY_PROP_NAME
+import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.model.rest.insights.InsightsStatsResult
 import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
 import org.digma.intellij.plugin.navigation.MainContentViewSwitcher
+import org.digma.intellij.plugin.navigation.View
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
@@ -20,6 +24,7 @@ import org.digma.intellij.plugin.ui.service.ErrorsViewService
 @Service(Service.Level.PROJECT)
 class ScopeManager(private val project: Project) {
 
+    private val logger = Logger.getInstance(this::class.java)
 
     companion object {
         @JvmStatic
@@ -88,20 +93,34 @@ class ScopeManager(private val project: Project) {
         val codeLocation: CodeLocation =
             buildCodeLocation(project, scope.spanCodeObjectId, scope.displayName ?: "", scope.methodId)
 
-
+        val insightsStats = AnalyticsService.getInstance(project).getInsightsStats(scope.spanCodeObjectId);
         EDT.ensureEDT {
             MainToolWindowCardsController.getInstance(project).closeAllNotificationsIfShowing()
             MainToolWindowCardsController.getInstance(project).closeCoveringViewsIfNecessary()
             project.service<ErrorsViewOrchestrator>().closeErrorDetails()
             ToolWindowShower.getInstance(project).showToolWindow()
-            MainContentViewSwitcher.getInstance(project).showInsights()
+            showHomeView(scope, insightsStats)
         }
 
         val hasErrors = tryPopulateErrors(scope)
 
         fireScopeChangedEvent(scope, codeLocation, hasErrors)
+    }
 
 
+    private fun showHomeView(scope: SpanScope, insightsStats: InsightsStatsResult?) {
+        val contentViewSwitcher =MainContentViewSwitcher.getInstance(project)
+        if (contentViewSwitcher.getSelectedView() == View.Assets) {
+            return
+        }
+
+        insightsStats?.let {
+            if (it.analyticsInsightsCount > 0 && it.issuesInsightsCount == 0)
+                contentViewSwitcher.showAnalytics()
+            return
+        }
+
+        contentViewSwitcher.showInsights()
     }
 
     private fun tryPopulateErrors(scope: SpanScope): Boolean {

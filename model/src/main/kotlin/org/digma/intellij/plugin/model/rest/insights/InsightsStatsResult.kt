@@ -8,4 +8,4 @@ import java.beans.ConstructorProperties
 data class InsightsStatsResult
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 @ConstructorProperties("dismissedCount", "issuesInsightsCount", "analyticsInsightsCount")
-constructor(val dismissedCount: Number, val issuesInsightsCount: Number, val analyticsInsightsCount: Number)
+constructor(val dismissedCount: Number, val issuesInsightsCount: Int, val analyticsInsightsCount: Int)

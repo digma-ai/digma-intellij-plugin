@@ -110,18 +110,6 @@ class NavigationMessageRouterHandler(project: Project) : BaseMessageRouterHandle
         }
     }
 
-
-    private fun changeView(requestJsonNode: JsonNode) {
-        val payload = getPayloadFromRequest(requestJsonNode)
-        payload?.let {
-            val viewId = payload.get("view")?.asText()
-            viewId?.let { vuid ->
-                MainContentViewSwitcher.getInstance(project).showViewById(vuid, true)
-            }
-        }
-    }
-
-
     private fun fixMissingDependencies(requestJsonNode: JsonNode) {
         val payload = getPayloadFromRequest(requestJsonNode)
         payload?.let {

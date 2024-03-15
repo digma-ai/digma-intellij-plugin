@@ -103,5 +103,7 @@ public interface AnalyticsProvider extends Closeable {
 
     void undismissInsight(String insightId);
 
+    InsightsStatsResult getInsightsStats(Map<String, Object> queryParams);
+
     HttpResponse lowLevelCall(HttpRequest request);
 }

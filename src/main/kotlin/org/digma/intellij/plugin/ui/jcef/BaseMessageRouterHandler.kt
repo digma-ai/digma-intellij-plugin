@@ -21,7 +21,9 @@ import org.digma.intellij.plugin.dashboard.DashboardService
 import org.digma.intellij.plugin.documentation.DocumentationService
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.model.rest.insights.InsightsStatsResult
 import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
+import org.digma.intellij.plugin.navigation.MainContentViewSwitcher
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.scope.ScopeManager
 import org.digma.intellij.plugin.scope.SpanScope
@@ -179,7 +181,7 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                     JCEFGlobalConstants.GLOBAL_OPEN_INSTALLATION_WIZARD -> {
                         val payload = getPayloadFromRequest(requestJsonNode)
 
-                        payload?.let{
+                        payload?.let {
                             val skipInstallationStep = it.get("skipInstallationStep").asBoolean()
                             ActivityMonitor.getInstance(project).registerCustomEvent("show-installation-wizard")
                             EDT.ensureEDT {
@@ -192,6 +194,10 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
 
                     JCEFGlobalConstants.GLOBAL_CHANGE_SCOPE -> {
                         changeScope(requestJsonNode)
+                    }
+
+                    JCEFGlobalConstants.GLOBAL_CHANGE_VIEW -> {
+                        changeView(requestJsonNode)
                     }
 
 
@@ -231,6 +237,16 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
         return true
     }
 
+    protected fun changeView(requestJsonNode: JsonNode) {
+        val payload = getPayloadFromRequest(requestJsonNode)
+        payload?.let {
+            val viewId = payload.get("view")?.asText()
+            viewId?.let { vuid ->
+                MainContentViewSwitcher.getInstance(project).showViewById(vuid, true)
+            }
+        }
+    }
+
     private fun getState(browser: CefBrowser) {
         val state = JCEFStateManager.getInstance(project).getState()
         sendJcefStateMessage(browser, state)
@@ -244,7 +260,6 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
     }
 
     abstract fun getOriginForTroubleshootingEvent(): String
-
 
 
     override fun onQueryCanceled(browser: CefBrowser?, frame: CefFrame?, queryId: Long) {
@@ -262,14 +277,21 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
             Log.debugWithException(logger, project, e, "error calling about")
         }
 
+        val insightsStats = AnalyticsService.getInstance(project).getInsightsStats(null)
+
         updateDigmaEngineStatus(project, browser)
 
         sendEnvironmentsList(browser, AnalyticsService.getInstance(project).environment.getEnvironments())
 
-        sendScopeChangedMessage(browser, null, CodeLocation(listOf(), listOf()), false)
+        sendScopeChangedMessage(
+            browser,
+            null,
+            CodeLocation(listOf(), listOf()),
+            false,
+            insightsStats?.analyticsInsightsCount ?: 0,
+            insightsStats?.issuesInsightsCount ?: 0
+        )
     }
-
-
 
     fun changeScope(requestJsonNode: JsonNode) {
         val payload = getPayloadFromRequest(requestJsonNode)

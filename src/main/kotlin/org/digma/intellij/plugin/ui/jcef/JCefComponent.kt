@@ -21,6 +21,8 @@ import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
+import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.model.rest.insights.InsightsStatsResult
 import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
 import org.digma.intellij.plugin.observability.ObservabilityChanged
 import org.digma.intellij.plugin.scope.ScopeChangedEvent
@@ -160,7 +162,14 @@ private constructor(
                 override fun scopeChanged(
                     scope: SpanScope?, codeLocation: CodeLocation, hasErrors: Boolean,
                 ) {
-                    sendScopeChangedMessage(jbCefBrowser.cefBrowser, scope, codeLocation, hasErrors)
+                    val insightsStats = AnalyticsService.getInstance(project).getInsightsStats(scope?.spanCodeObjectId)
+                    sendScopeChangedMessage(
+                        jbCefBrowser.cefBrowser,
+                        scope,
+                        codeLocation,
+                        hasErrors,
+                        insightsStats?.analyticsInsightsCount ?: 0,
+                        insightsStats?.issuesInsightsCount ?: 0)
                 }
             }
         )

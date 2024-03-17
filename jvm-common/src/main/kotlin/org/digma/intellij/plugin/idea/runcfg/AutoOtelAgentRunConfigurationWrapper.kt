@@ -244,6 +244,12 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
             }
         }
 
+        if (!SettingsState.getInstance().extendedObservability.isNullOrBlank()) {
+            retVal = retVal
+                .plus("-Ddigma.autoinstrument.packages=${SettingsState.getInstance().extendedObservability}")
+                .plus(" ")
+        }
+
         retVal = retVal
             .plus(getOtelSystemProperties())
             .plus(" ")

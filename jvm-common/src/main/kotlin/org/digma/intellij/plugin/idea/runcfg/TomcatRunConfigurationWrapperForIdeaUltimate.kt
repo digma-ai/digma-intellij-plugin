@@ -80,7 +80,11 @@ class TomcatRunConfigurationWrapperForIdeaUltimate: RunConfigurationWrapper {
             .plus(getOtelSystemProperties())
             .plus(" ")
 
-
+        if (!SettingsState.getInstance().extendedObservability.isNullOrBlank()) {
+            retVal = retVal
+                .plus("-Ddigma.autoinstrument.packages=${SettingsState.getInstance().extendedObservability}")
+                .plus(" ")
+        }
 
         if (!serviceAlreadyDefined) {
             retVal = retVal

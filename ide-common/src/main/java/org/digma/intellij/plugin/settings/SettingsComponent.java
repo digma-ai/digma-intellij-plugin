@@ -28,6 +28,7 @@ public class SettingsComponent {
     private final JBLabel myEmbeddedJaegerMessage = new JBLabel("<html><body><span style=\"color:\"" + JBColor.BLUE + "\"\"><b>Jaeger embedded is only supported for deployment on a local environment.</b></span></body>");
     private final ComboBox<SpringBootObservabilityMode> mySpringBootObservabilityModeComboBox = new ComboBox<>(new EnumComboBoxModel<>(SpringBootObservabilityMode.class));
     private final JBTextField myRuntimeObservabilityBackendUrlText = new JBTextField();
+    private final JBTextField extendedObservabilityTextBox = new JBTextField();
 
     public SettingsComponent() {
 
@@ -154,6 +155,7 @@ public class SettingsComponent {
                 .addLabeledComponent(mySpringBootObservabilityModeLabel, mySpringBootObservabilityModeComboBox, 1, false)
                 .addLabeledComponent(myRuntimeObservabilityBackendUrlLabel, myRuntimeObservabilityBackendUrlText, 1, false)
                 .addComponentToRightColumn(feedbackForRuntimeObservabilityBackendUrl, 1)
+                .addLabeledComponent("Extended Observability (beta)", extendedObservabilityTextBox, 1, false)
                 .addComponent(resetButton)
                 .addComponentFillVertically(new JPanel(), 0)
                 .getPanel();
@@ -279,6 +281,15 @@ public class SettingsComponent {
         myRefreshDelay.setText(newText.trim());
     }
 
+    public void setExtendedObservability(@Nullable String extendedObservability) {
+        extendedObservabilityTextBox.setText(extendedObservability);
+    }
+
+    @Nullable
+    public String getExtendedObservability() {
+        return extendedObservabilityTextBox.getText();
+    }
+
     private void resetToDefaults() {
         this.setApiUrlText(SettingsState.DEFAULT_API_URL);
         this.setApiToken(null);
@@ -289,5 +300,6 @@ public class SettingsComponent {
         this.myEmbeddedJaegerMessage.setVisible(true);
         this.setSpringBootObservabilityMode(SettingsState.DEFAULT_SPRING_BOOT_OBSERVABILITY_MODE);
         this.setRuntimeObservabilityBackendUrl(SettingsState.DEFAULT_RUNTIME_OBSERVABILITY_BACKEND_URL);
+        this.setExtendedObservability(null);
     }
 }

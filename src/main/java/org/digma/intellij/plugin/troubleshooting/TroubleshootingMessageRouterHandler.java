@@ -18,6 +18,8 @@ import org.digma.intellij.plugin.ui.jcef.model.*;
 import org.digma.intellij.plugin.ui.settings.Theme;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Collections;
+
 import static org.digma.intellij.plugin.ui.jcef.JCefBrowserUtilsKt.jsonToObject;
 
 class TroubleshootingMessageRouterHandler extends CefMessageRouterHandlerAdapter {
@@ -64,7 +66,11 @@ class TroubleshootingMessageRouterHandler extends CefMessageRouterHandlerAdapter
                     case JCEFGlobalConstants.GLOBAL_SEND_TRACKING_EVENT -> {
                         SendTrackingEventRequest trackingRequest = jsonToObject(request, SendTrackingEventRequest.class);
                         if (trackingRequest != null && trackingRequest.getPayload() != null) {
-                            ActivityMonitor.getInstance(project).registerCustomEvent(trackingRequest.getPayload().getEventName(), trackingRequest.getPayload().getData());
+                            if (trackingRequest.getPayload().getData() == null) {
+                                ActivityMonitor.getInstance(project).registerCustomEvent(trackingRequest.getPayload().getEventName(), Collections.emptyMap());
+                            } else {
+                                ActivityMonitor.getInstance(project).registerCustomEvent(trackingRequest.getPayload().getEventName(), trackingRequest.getPayload().getData());
+                            }
                         }
                     }
 

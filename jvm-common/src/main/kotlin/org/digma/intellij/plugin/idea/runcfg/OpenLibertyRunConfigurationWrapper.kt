@@ -87,6 +87,12 @@ class OpenLibertyRunConfigurationWrapper : RunConfigurationWrapper {
                 .plus(" ")
         }
 
+        if (!SettingsState.getInstance().extendedObservability.isNullOrBlank()) {
+            retVal = retVal
+                .plus("-Ddigma.autoinstrument.packages=${SettingsState.getInstance().extendedObservability}")
+                .plus(" ")
+        }
+
         return retVal
     }
 

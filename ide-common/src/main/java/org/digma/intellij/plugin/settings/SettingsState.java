@@ -2,19 +2,14 @@ package org.digma.intellij.plugin.settings;
 
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.components.PersistentStateComponent;
-import com.intellij.openapi.components.State;
-import com.intellij.openapi.components.Storage;
+import com.intellij.openapi.components.*;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import org.digma.intellij.plugin.common.CommonUtils;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.*;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
+import java.net.*;
+import java.util.*;
 
 import static com.intellij.util.net.NetUtils.isLocalhost;
 
@@ -54,6 +49,9 @@ public class SettingsState implements PersistentStateComponent<SettingsState>, D
     public String runtimeObservabilityBackendUrl = DEFAULT_RUNTIME_OBSERVABILITY_BACKEND_URL;
     @Nullable
     public String posthogToken;
+    @Nullable
+    public String extendedObservability;
+
 
     private final List<SettingsChangeListener> listeners = new ArrayList<>();
 

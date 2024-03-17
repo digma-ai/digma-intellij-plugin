@@ -103,6 +103,12 @@ class EeAppServerAtIdeaUltimateRunConfigurationWrapper : RunConfigurationWrapper
             .plus(" ")
 
 
+        if (!SettingsState.getInstance().extendedObservability.isNullOrBlank()) {
+            retVal = retVal
+                .plus("-Ddigma.autoinstrument.packages=${SettingsState.getInstance().extendedObservability}")
+                .plus(" ")
+        }
+
         if (!serviceAlreadyDefined) {
             retVal = retVal
                 .plus("-Dotel.service.name=${evalServiceName(configuration)}")

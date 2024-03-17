@@ -1,7 +1,6 @@
 package org.digma.intellij.plugin.settings;
 
-import com.intellij.openapi.options.Configurable;
-import com.intellij.openapi.options.ConfigurationException;
+import com.intellij.openapi.options.*;
 import com.intellij.openapi.util.NlsContexts;
 import org.digma.intellij.plugin.common.CommonUtils;
 import org.jetbrains.annotations.Nullable;
@@ -46,7 +45,8 @@ public class ProjectSettings implements Configurable {
                 isJaegerQueryUrlChanged(settings) ||
                 isJaegerLinkModeChanged(settings) ||
                 isSpringBootObservabilityModeChanged(settings) ||
-                isRuntimeObservabilityBackendUrlChanged(settings);
+                isRuntimeObservabilityBackendUrlChanged(settings) ||
+                isExtendedObservabilityChanged(settings);
     }
 
     private boolean isRefreshDelayChanged(SettingsState settings) {
@@ -79,6 +79,10 @@ public class ProjectSettings implements Configurable {
 
     private boolean isRuntimeObservabilityBackendUrlChanged(SettingsState settings) {
         return !Objects.equals(settings.runtimeObservabilityBackendUrl, mySettingsComponent.getRuntimeObservabilityBackendUrl());
+    }
+
+    private boolean isExtendedObservabilityChanged(SettingsState settings) {
+        return !Objects.equals(settings.extendedObservability, mySettingsComponent.getExtendedObservability());
     }
 
     @Override
@@ -129,6 +133,7 @@ public class ProjectSettings implements Configurable {
         settings.jaegerLinkMode = mySettingsComponent.getJaegerLinkMode();
         settings.springBootObservabilityMode = mySettingsComponent.getSpringBootObservabilityMode();
         settings.runtimeObservabilityBackendUrl = mySettingsComponent.getRuntimeObservabilityBackendUrl();
+        settings.extendedObservability = mySettingsComponent.getExtendedObservability();
         settings.fireChanged();
     }
 
@@ -143,6 +148,7 @@ public class ProjectSettings implements Configurable {
         mySettingsComponent.setJaegerLinkMode(settings.jaegerLinkMode);
         mySettingsComponent.setSpringBootObservabilityMode(settings.springBootObservabilityMode);
         mySettingsComponent.setRuntimeObservabilityBackendUrl(settings.runtimeObservabilityBackendUrl);
+        mySettingsComponent.setExtendedObservability(settings.extendedObservability);
     }
 
 

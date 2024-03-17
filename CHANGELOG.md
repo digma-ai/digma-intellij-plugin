@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.295] - 2024-03-15
+## [2.0.296] - 2024-03-17
+
+- fix possible NPE by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1955
+
+## 2.0.295 - 2024-03-15
 
 - Add main App, Analytics tab, Insight recalculation bar by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1942
 - Add Posthog state properties Closes #1935 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1941

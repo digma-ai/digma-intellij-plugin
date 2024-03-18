@@ -147,7 +147,7 @@ private constructor(
 
     companion object {
 
-        val Insights = View(title = "Insights", id = "insights", cardName = "insights", isSelected = true)
+        val Insights = View(title = "Issues", id = "insights", cardName = "insights", isSelected = true)
         val Assets = View("Assets", "assets", "assets")
         val Errors = View("Errors", "errors", "errors")
         val ErrorDetails = View(title = "Error Details", id = "errorsDetails", cardName = "errors", isHidden = true)

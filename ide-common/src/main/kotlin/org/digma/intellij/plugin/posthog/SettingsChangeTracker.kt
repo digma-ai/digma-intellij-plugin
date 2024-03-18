@@ -48,6 +48,7 @@ class SettingsChangeTracker {
         myTrackedSettings["refreshDelay"] = SettingsState.getInstance().refreshDelay.toString()
         myTrackedSettings["springBootObservabilityMode"] = SettingsState.getInstance().springBootObservabilityMode.name
         myTrackedSettings["runtimeObservabilityBackendUrl"] = SettingsState.getInstance().runtimeObservabilityBackendUrl
+        myTrackedSettings["extendedObservability"] = SettingsState.getInstance().extendedObservability.toString()
     }
 
 

@@ -87,6 +87,12 @@ class OpenLibertyRunConfigurationWrapper : RunConfigurationWrapper {
                 .plus(" ")
         }
 
+        if (java.lang.Boolean.getBoolean("digma.otel.debug")) {
+            retVal = retVal
+                .plus("-Dotel.javaagent.debug=true")
+                .plus(" ")
+        }
+
         if (!SettingsState.getInstance().extendedObservability.isNullOrBlank()) {
             retVal = retVal
                 .plus("-Ddigma.autoinstrument.packages=${SettingsState.getInstance().extendedObservability}")

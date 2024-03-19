@@ -21,14 +21,11 @@ import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
-import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.model.rest.insights.InsightsStatsResult
 import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
 import org.digma.intellij.plugin.observability.ObservabilityChanged
 import org.digma.intellij.plugin.scope.ScopeChangedEvent
 import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.settings.SettingsState
-import org.digma.intellij.plugin.ui.jcef.model.BackendInfoMessage
 import org.digma.intellij.plugin.ui.jcef.state.StateChangedEvent
 import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier
 import org.digma.intellij.plugin.ui.settings.SettingsChangeListener
@@ -103,9 +100,7 @@ private constructor(
                             val status = service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionGained()
                             updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
 
-                            val about = AnalyticsService.getInstance(project).about
-                            val message = BackendInfoMessage(about)
-                            serializeAndExecuteWindowPostMessageJavaScript(jbCefBrowser.cefBrowser, message)
+                            sendBackendAboutInfo(jbCefBrowser.cefBrowser, project)
 
                         } catch (e: Exception) {
                             ErrorReporter.getInstance().reportError(project, "JCefComponent.connectionGained", e)
@@ -116,17 +111,28 @@ private constructor(
 
 
         SettingsState.getInstance().addChangeListener({ settings ->
-            val apiUrl = settings.apiUrl
-            sendApiUrl(jbCefBrowser.cefBrowser, apiUrl)
-            sendIsMicrometerProject(jbCefBrowser.cefBrowser, SpringBootMicrometerConfigureDepsService.isSpringBootWithMicrometer())
-            sendIsJaegerButtonEnabledMessage(jbCefBrowser.cefBrowser)
+            try {
+                val apiUrl = settings.apiUrl
+                sendApiUrl(jbCefBrowser.cefBrowser, apiUrl)
+                sendIsMicrometerProject(jbCefBrowser.cefBrowser, SpringBootMicrometerConfigureDepsService.isSpringBootWithMicrometer())
+                sendIsJaegerButtonEnabledMessage(jbCefBrowser.cefBrowser)
+                sendBackendAboutInfo(jbCefBrowser.cefBrowser, project)
+                val status = service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionLost()
+                updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
+            } catch (e: Throwable) {
+                ErrorReporter.getInstance().reportError("JCefComponent.settingsChanged", e)
+            }
         }, settingsListenerParentDisposable)
 
 
         project.messageBus.connect(userRegistrationParentDisposable).subscribe(
             UserRegistrationEvent.USER_REGISTRATION_TOPIC, object : UserRegistrationEvent {
                 override fun userRegistered(email: String) {
-                    sendUserEmail(jbCefBrowser.cefBrowser, email)
+                    try {
+                        sendUserEmail(jbCefBrowser.cefBrowser, email)
+                    } catch (e: Throwable) {
+                        ErrorReporter.getInstance().reportError("JCefComponent.userRegistered", e)
+                    }
                 }
             })
 
@@ -134,14 +140,22 @@ private constructor(
         project.messageBus.connect(environmentChangeParentDisposable).subscribe(
             EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC, object : EnvironmentChanged {
                 override fun environmentChanged(newEnv: Env) {
-                    sendCurrentEnvironment(jbCefBrowser.cefBrowser, newEnv)
+                    try {
+                        sendCurrentEnvironment(jbCefBrowser.cefBrowser, newEnv)
+                    } catch (e: Throwable) {
+                        ErrorReporter.getInstance().reportError("JCefComponent.environmentChanged", e)
+                    }
                 }
 
                 override fun environmentsListChanged(newEnvironments: MutableList<Env>?) {
-                    sendEnvironmentsList(
-                        jbCefBrowser.cefBrowser,
-                        AnalyticsService.getInstance(project).environment.getEnvironments()
-                    )
+                    try {
+                        sendEnvironmentsList(
+                            jbCefBrowser.cefBrowser,
+                            AnalyticsService.getInstance(project).environment.getEnvironments()
+                        )
+                    } catch (e: Throwable) {
+                        ErrorReporter.getInstance().reportError("JCefComponent.environmentsListChanged", e)
+                    }
                 }
             })
 
@@ -149,10 +163,14 @@ private constructor(
         project.messageBus.connect(observabilityChangeParentDisposable).subscribe(
             ObservabilityChanged.OBSERVABILITY_CHANGED_TOPIC, object : ObservabilityChanged {
                 override fun observabilityChanged(isObservabilityEnabled: Boolean) {
-                    sendObservabilityEnabledMessage(
-                        jbCefBrowser.cefBrowser,
-                        isObservabilityEnabled
-                    )
+                    try {
+                        sendObservabilityEnabledMessage(
+                            jbCefBrowser.cefBrowser,
+                            isObservabilityEnabled
+                        )
+                    } catch (e: Throwable) {
+                        ErrorReporter.getInstance().reportError("JCefComponent.observabilityChanged", e)
+                    }
                 }
             }
         )
@@ -162,14 +180,19 @@ private constructor(
                 override fun scopeChanged(
                     scope: SpanScope?, codeLocation: CodeLocation, hasErrors: Boolean,
                 ) {
-                    val insightsStats = AnalyticsService.getInstance(project).getInsightsStats(scope?.spanCodeObjectId)
-                    sendScopeChangedMessage(
-                        jbCefBrowser.cefBrowser,
-                        scope,
-                        codeLocation,
-                        hasErrors,
-                        insightsStats?.analyticsInsightsCount ?: 0,
-                        insightsStats?.issuesInsightsCount ?: 0)
+                    try {
+                        val insightsStats = AnalyticsService.getInstance(project).getInsightsStats(scope?.spanCodeObjectId)
+                        sendScopeChangedMessage(
+                            jbCefBrowser.cefBrowser,
+                            scope,
+                            codeLocation,
+                            hasErrors,
+                            insightsStats?.analyticsInsightsCount ?: 0,
+                            insightsStats?.issuesInsightsCount ?: 0
+                        )
+                    } catch (e: Throwable) {
+                        ErrorReporter.getInstance().reportError("JCefComponent.scopeChanged", e)
+                    }
                 }
             }
         )
@@ -177,7 +200,11 @@ private constructor(
         project.messageBus.connect(stateChangeParentDisposable).subscribe(
             StateChangedEvent.JCEF_STATE_CHANGED_TOPIC, object : StateChangedEvent {
                 override fun stateChanged(state: JsonNode) {
-                    sendJcefStateMessage(jbCefBrowser.cefBrowser, state)
+                    try {
+                        sendJcefStateMessage(jbCefBrowser.cefBrowser, state)
+                    } catch (e: Throwable) {
+                        ErrorReporter.getInstance().reportError("JCefComponent.stateChanged", e)
+                    }
                 }
             }
         )

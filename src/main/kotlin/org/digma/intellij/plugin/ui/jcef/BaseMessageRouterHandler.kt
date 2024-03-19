@@ -29,7 +29,6 @@ import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import org.digma.intellij.plugin.ui.common.updateObservabilityValue
-import org.digma.intellij.plugin.ui.jcef.model.BackendInfoMessage
 import org.digma.intellij.plugin.ui.jcef.model.GetFromPersistenceRequest
 import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest
 import org.digma.intellij.plugin.ui.jcef.model.OpenInInternalBrowserRequest
@@ -268,10 +267,8 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
 
     protected fun doCommonInitialize(browser: CefBrowser) {
         try {
-            val about = AnalyticsService.getInstance(project).about
-            val message = BackendInfoMessage(about)
             Log.log(logger::trace, project, "sending {} message", JCEFGlobalConstants.GLOBAL_SET_BACKEND_INFO)
-            serializeAndExecuteWindowPostMessageJavaScript(browser, message)
+            sendBackendAboutInfo(browser, project)
         } catch (e: Exception) {
             Log.debugWithException(logger, project, e, "error calling about")
         }

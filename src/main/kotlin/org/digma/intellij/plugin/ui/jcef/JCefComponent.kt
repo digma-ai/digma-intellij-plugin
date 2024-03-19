@@ -17,6 +17,7 @@ import org.cef.handler.CefLifeSpanHandlerAdapter
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
 import org.digma.intellij.plugin.analytics.EnvironmentChanged
+import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
@@ -111,16 +112,19 @@ private constructor(
 
 
         SettingsState.getInstance().addChangeListener({ settings ->
-            try {
-                val apiUrl = settings.apiUrl
-                sendApiUrl(jbCefBrowser.cefBrowser, apiUrl)
-                sendIsMicrometerProject(jbCefBrowser.cefBrowser, SpringBootMicrometerConfigureDepsService.isSpringBootWithMicrometer())
-                sendIsJaegerButtonEnabledMessage(jbCefBrowser.cefBrowser)
-                sendBackendAboutInfo(jbCefBrowser.cefBrowser, project)
-                val status = service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionLost()
-                updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
-            } catch (e: Throwable) {
-                ErrorReporter.getInstance().reportError("JCefComponent.settingsChanged", e)
+            //this event run on EDT
+            Backgroundable.executeOnPooledThread {
+                try {
+                    val apiUrl = settings.apiUrl
+                    sendApiUrl(jbCefBrowser.cefBrowser, apiUrl)
+                    sendIsMicrometerProject(jbCefBrowser.cefBrowser, SpringBootMicrometerConfigureDepsService.isSpringBootWithMicrometer())
+                    sendIsJaegerButtonEnabledMessage(jbCefBrowser.cefBrowser)
+                    sendBackendAboutInfo(jbCefBrowser.cefBrowser, project)
+                    val status = service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionLost()
+                    updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
+                } catch (e: Throwable) {
+                    ErrorReporter.getInstance().reportError("JCefComponent.settingsChanged", e)
+                }
             }
         }, settingsListenerParentDisposable)
 

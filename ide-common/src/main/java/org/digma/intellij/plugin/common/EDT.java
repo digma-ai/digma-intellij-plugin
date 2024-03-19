@@ -47,10 +47,10 @@ public class EDT {
 
     public static void assertNonDispatchThread(){
         if (ApplicationManager.getApplication().isDispatchThread()) {
-            RuntimeException runtimeException = new RuntimeException("Must not run on EDT");
-            LOGGER.error("Must not run on EDT", runtimeException);
-            ErrorReporter.getInstance().reportInternalFatalError("assertNonDispatchThread", runtimeException, Collections.emptyMap());
-            throw runtimeException;
+            EDTAccessException edtAccessException = new EDTAccessException("Must not run on EDT");
+            LOGGER.error("Must not run on EDT", edtAccessException);
+            ErrorReporter.getInstance().reportInternalFatalError("assertNonDispatchThread", edtAccessException, Collections.emptyMap());
+            throw edtAccessException;
         }
     }
 
@@ -63,4 +63,12 @@ public class EDT {
     public static void invokeAndWait(@NotNull Runnable task) {
         ApplicationManager.getApplication().invokeAndWait(task);
     }
+
+
+    public static class EDTAccessException extends RuntimeException {
+        public EDTAccessException(String message) {
+            super(message);
+        }
+    }
+
 }

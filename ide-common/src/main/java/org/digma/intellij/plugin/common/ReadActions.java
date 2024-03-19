@@ -17,10 +17,10 @@ public class ReadActions {
 
     public static void assertNotInReadAccess() {
         if (ApplicationManager.getApplication().isReadAccessAllowed()) {
-            RuntimeException runtimeException = new RuntimeException("Must not run in read access");
-            LOGGER.error("Must not run in read access", runtimeException);
-            ErrorReporter.getInstance().reportInternalFatalError("assertNotInReadAccess", runtimeException, Collections.emptyMap());
-            throw runtimeException;
+            ReadAccessException readAccessException = new ReadAccessException("Must not run in read access");
+            LOGGER.error("Must not run in read access", readAccessException);
+            ErrorReporter.getInstance().reportInternalFatalError("assertNotInReadAccess", readAccessException, Collections.emptyMap());
+            throw readAccessException;
         }
     }
 
@@ -46,5 +46,12 @@ public class ReadActions {
 
     public static boolean isReadAccessAllowed() {
         return ApplicationManager.getApplication().isReadAccessAllowed();
+    }
+
+
+    public static class ReadAccessException extends RuntimeException {
+        public ReadAccessException(String message) {
+            super(message);
+        }
     }
 }

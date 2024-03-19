@@ -1,6 +1,13 @@
 # Changelog
 
-## [2.0.297] - 2024-03-17
+## [2.0.298] - 2024-03-19
+
+- Rename Insights tab to Issues by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1960
+- Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1961
+- add otel debug option by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1962
+- add-extended-instrumentation-to-settings-change-tracker by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1963
+
+## 2.0.297 - 2024-03-17
 
 - extended observability Closes #1954 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1957
 

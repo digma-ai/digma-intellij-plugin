@@ -21,7 +21,6 @@ import org.digma.intellij.plugin.dashboard.DashboardService
 import org.digma.intellij.plugin.documentation.DocumentationService
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.model.rest.insights.InsightsStatsResult
 import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
 import org.digma.intellij.plugin.navigation.MainContentViewSwitcher
 import org.digma.intellij.plugin.posthog.ActivityMonitor
@@ -307,8 +306,7 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
 
             spanScope?.let {
                 ScopeManager.getInstance(project).changeScope(it)
-            } ?: ScopeManager.getInstance(project).changeToHome()
-
+            } ?: ScopeManager.getInstance(project).changeToHome(true)
         }
     }
 

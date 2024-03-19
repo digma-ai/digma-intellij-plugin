@@ -5,6 +5,7 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.jcef.JBCefBrowser
 import org.cef.browser.CefBrowser
+import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.docker.DigmaInstallationStatus
 import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.env.Env
@@ -14,6 +15,7 @@ import org.digma.intellij.plugin.navigation.View
 import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.ui.common.isJaegerButtonEnabled
 import org.digma.intellij.plugin.ui.jcef.model.ApiUrlPayload
+import org.digma.intellij.plugin.ui.jcef.model.BackendInfoMessage
 import org.digma.intellij.plugin.ui.jcef.model.DigmaEngineStatusMessage
 import org.digma.intellij.plugin.ui.jcef.model.IsJaegerButtonEnabledMessage
 import org.digma.intellij.plugin.ui.jcef.model.IsJaegerButtonEnabledMessagePayload
@@ -83,6 +85,12 @@ fun updateDigmaEngineStatus(project: Project, cefBrowser: CefBrowser) {
 
 fun updateDigmaEngineStatus(cefBrowser: CefBrowser, status: DigmaInstallationStatus) {
     sendDigmaEngineStatus(cefBrowser, status)
+}
+
+fun sendBackendAboutInfo(cefBrowser: CefBrowser, project: Project) {
+    val about = AnalyticsService.getInstance(project).about
+    val message = BackendInfoMessage(about)
+    serializeAndExecuteWindowPostMessageJavaScript(cefBrowser, message)
 }
 
 

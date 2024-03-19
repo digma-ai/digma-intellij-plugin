@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.posthog
 
+import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.settings.SettingsState
 
 class SettingsChangeTracker {
@@ -12,18 +13,20 @@ class SettingsChangeTracker {
 
     fun start(activityMonitor: ActivityMonitor) {
 
-        activityMonitor.registerSettingsEvent("initial",myTrackedSettings)
+        activityMonitor.registerSettingsEvent("initial", myTrackedSettings)
 
         SettingsState.getInstance().addChangeListener(
             {
-                val oldSettings = mutableMapOf<String,String>()
-                oldSettings.putAll(myTrackedSettings)
-                updateTrackedSettings()
-                val diff = getDiff(oldSettings,myTrackedSettings)
-                activityMonitor.registerSettingsEvent("change",diff)
-
+                Backgroundable.executeOnPooledThread {
+                    val oldSettings = mutableMapOf<String, String>()
+                    oldSettings.putAll(myTrackedSettings)
+                    updateTrackedSettings()
+                    val diff = getDiff(oldSettings, myTrackedSettings)
+                    activityMonitor.registerSettingsEvent("change", diff)
+                }
             },
-            activityMonitor)
+            activityMonitor
+        )
     }
 
     private fun getDiff(oldSettings: MutableMap<String, String>, myTrackedSettings: MutableMap<String, String>): Map<String,String> {

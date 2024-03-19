@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.299] - 2024-03-19
+## [2.0.300] - 2024-03-19
+
+- send-server-about-info by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1967
+- Background thread on settings change by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1968
+
+## 2.0.299 - 2024-03-19
 
 - dont-show-window-on-change-to-home-from-react by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1964
 - Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1965

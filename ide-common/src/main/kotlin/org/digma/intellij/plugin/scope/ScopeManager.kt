@@ -10,7 +10,6 @@ import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.errorreporting.SEVERITY_HIGH_TRY_FIX
 import org.digma.intellij.plugin.errorreporting.SEVERITY_PROP_NAME
-import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.insights.InsightsStatsResult
 import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
 import org.digma.intellij.plugin.navigation.MainContentViewSwitcher
@@ -33,7 +32,7 @@ class ScopeManager(private val project: Project) {
         }
     }
 
-    fun changeToHome() {
+    fun changeToHome(isCalledFromReact: Boolean = false) {
 
         EDT.assertNonDispatchThread()
 
@@ -43,7 +42,13 @@ class ScopeManager(private val project: Project) {
             MainToolWindowCardsController.getInstance(project).closeAllNotificationsIfShowing()
             MainToolWindowCardsController.getInstance(project).closeCoveringViewsIfNecessary()
             project.service<ErrorsViewOrchestrator>().closeErrorDetails()
-            ToolWindowShower.getInstance(project).showToolWindow()
+
+            if (!isCalledFromReact) {
+                //if the tool window is not shown already don't show it.
+                // if react called changeToHome it's ok not to show the tool window, usually its on connection events.
+                //if change to home was called because of user click then the window is already shown.
+                ToolWindowShower.getInstance(project).showToolWindow()
+            }
 
             val contentViewSwitcher = MainContentViewSwitcher.getInstance(project)
             if (contentViewSwitcher.getSelectedView() != View.Assets) {

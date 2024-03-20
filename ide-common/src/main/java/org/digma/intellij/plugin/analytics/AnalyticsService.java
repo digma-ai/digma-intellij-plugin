@@ -399,6 +399,21 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.getInsights(queryParams));
     }
 
+    public void markInsightsAsRead(@NotNull List<String> insightIds) throws AnalyticsServiceException {
+        executeCatching(() -> {
+            analyticsProviderProxy.markInsightsAsRead(insightIds);
+            return null;
+        });
+    }
+
+    public void markAllInsightsAsRead(MarkInsightsAsReadScope scope) throws AnalyticsServiceException {
+        var env = getCurrentEnvironment();
+        executeCatching(() -> {
+            analyticsProviderProxy.markAllInsightsAsRead(env, scope);
+            return null;
+        });
+    }
+
     public void dismissInsight(String insightId) throws AnalyticsServiceException {
         executeCatching(() -> {
             analyticsProviderProxy.dismissInsight(insightId);
@@ -432,7 +447,7 @@ public class AnalyticsService implements Disposable {
         } catch (Exception e) {
             Log.warnWithException(LOGGER, project, e, "error calling  insights stats", e.getMessage());
         }
-        return  new InsightsStatsResult(0,0,0);
+        return  new InsightsStatsResult(0,0,0, 0);
     }
 
     public HttpResponse lowLevelCall(HttpRequest request) throws AnalyticsServiceException {

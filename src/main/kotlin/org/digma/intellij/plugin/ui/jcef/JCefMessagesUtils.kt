@@ -161,10 +161,11 @@ fun sendScopeChangedMessage(
     codeLocation: CodeLocation,
     hasErrors: Boolean,
     analyticsInsightsCount: Number,
-    issuesInsightsCount: Number
+    issuesInsightsCount: Number,
+    unreadInsightsCount: Number
 ) {
     serializeAndExecuteWindowPostMessageJavaScript(
-        cefBrowser, SetScopeMessage(SetScopeMessagePayload(scope, codeLocation, hasErrors, analyticsInsightsCount,issuesInsightsCount))
+        cefBrowser, SetScopeMessage(SetScopeMessagePayload(scope, codeLocation, hasErrors, analyticsInsightsCount, issuesInsightsCount, unreadInsightsCount))
     )
 }
 

@@ -99,6 +99,9 @@ public interface AnalyticsProvider extends Closeable {
 
     AssetNavigationResponse getAssetNavigation(String env, String spanCodeObjectId);
 
+    void markInsightsAsRead(List<String> insightIds);
+    void markAllInsightsAsRead(String environment, MarkInsightsAsReadScope scope);
+
     void dismissInsight(String  insightId);
 
     void undismissInsight(String insightId);

@@ -192,7 +192,8 @@ private constructor(
                             codeLocation,
                             hasErrors,
                             insightsStats?.analyticsInsightsCount ?: 0,
-                            insightsStats?.issuesInsightsCount ?: 0
+                            insightsStats?.issuesInsightsCount ?: 0,
+                            insightsStats?.unreadInsightsCount ?: 0
                         )
                     } catch (e: Throwable) {
                         ErrorReporter.getInstance().reportError("JCefComponent.scopeChanged", e)

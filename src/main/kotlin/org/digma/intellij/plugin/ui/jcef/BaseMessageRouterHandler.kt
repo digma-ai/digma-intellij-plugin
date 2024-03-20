@@ -285,7 +285,8 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
             CodeLocation(listOf(), listOf()),
             false,
             insightsStats?.analyticsInsightsCount ?: 0,
-            insightsStats?.issuesInsightsCount ?: 0
+            insightsStats?.issuesInsightsCount ?: 0,
+            insightsStats?.unreadInsightsCount ?: 0
         )
     }
 

@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.300] - 2024-03-19
+## [2.0.301] - 2024-03-20
+
+- add-idea.trace.stub.index.update-to-development-instance by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1972
+- micronaut otel properties Closes #1971 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1977
+
+## 2.0.300 - 2024-03-19
 
 - send-server-about-info by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1967
 - Background thread on settings change by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1968

@@ -70,6 +70,7 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
                         params,
                         useAgent,
                         isSpringBootWithMicrometerTracing,
+                        isMicronautModule,
                         isOtelServiceNameAlreadyDefined(params),
                         runConfigType.isTest
                     )
@@ -91,6 +92,7 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
                         params,
                         useAgent,
                         isSpringBootWithMicrometerTracing,
+                        isMicronautModule,
                         isOtelServiceNameAlreadyDefined(params),
                         runConfigType.isTest
                     )
@@ -119,6 +121,7 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
                         params,
                         useAgent,
                         isSpringBootWithMicrometerTracing,
+                        isMicronautModule,
                         isOtelServiceNameAlreadyDefined(configuration),
                         runConfigType.isTest
                     )
@@ -137,6 +140,7 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
                         params,
                         useAgent,
                         isSpringBootWithMicrometerTracing,
+                        isMicronautModule,
                         isOtelServiceNameAlreadyDefined(params),
                         runConfigType.isTest
                     )
@@ -190,6 +194,7 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
         params: JavaParameters?,
         useAgent: Boolean,
         isSpringBootWithMicrometerTracing: Boolean,
+        isMicronautModule: Boolean,
         serviceAlreadyDefined: Boolean,
         isTest: Boolean,
     ): String? {
@@ -226,6 +231,23 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
                 .plus("-Dotel.exporter.otlp.traces.endpoint=${getExporterUrl()}")
                 .plus(" ")
         }
+
+        if (isMicronautModule) {
+            retVal = retVal
+                .plus("-Dotel.java.global-autoconfigure.enabled=true")
+                .plus(" ")
+                .plus("-Dotel.traces.exporter=otlp")
+                .plus(" ")
+                .plus("-Dotel.exporter.otlp.endpoint=${getExporterUrl()}")
+                .plus(" ")
+                .plus("-Dotel.exporter.otlp.insecure=true")
+                .plus(" ")
+                .plus("-Dotel.exporter.otlp.compression=gzip")
+                .plus(" ")
+                .plus("-Dotel.exporter.experimental.expoter.otlp.retry.enabled=true")
+                .plus(" ")
+        }
+
 
         if (isTest) {
             if (!alreadyHasTestEnv(configuration, params)) {

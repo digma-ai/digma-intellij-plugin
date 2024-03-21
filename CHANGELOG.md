@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.302] - 2024-03-21
+## [2.0.303] - 2024-03-21
+
+- fix performance matrix report by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1980
+
+## 2.0.302 - 2024-03-21
 
 - change jaeger schema to http by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1979
 

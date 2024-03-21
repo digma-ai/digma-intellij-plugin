@@ -15,7 +15,7 @@ class NavigationSchemeHandlerFactory(project: Project) : BaseSchemeHandlerFactor
     }
 
     override fun getSchema(): String {
-        return "https"
+        return NAVIGATION_APP_SCHEMA
     }
 
     override fun getDomain(): String {

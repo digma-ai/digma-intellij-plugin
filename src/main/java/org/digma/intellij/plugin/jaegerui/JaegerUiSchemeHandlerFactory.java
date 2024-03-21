@@ -5,6 +5,8 @@ import org.cef.handler.CefResourceHandler;
 import org.digma.intellij.plugin.ui.jcef.BaseSchemeHandlerFactory;
 import org.jetbrains.annotations.NotNull;
 
+import static org.digma.intellij.plugin.jaegerui.JaegerUIConstants.JAEGER_UI_SCHEMA;
+
 public class JaegerUiSchemeHandlerFactory extends BaseSchemeHandlerFactory {
 
     private final JaegerUIVirtualFile file;
@@ -28,7 +30,7 @@ public class JaegerUiSchemeHandlerFactory extends BaseSchemeHandlerFactory {
     @NotNull
     @Override
     public String getSchema() {
-        return "https";
+        return JAEGER_UI_SCHEMA;
     }
 
     @NotNull

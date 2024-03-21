@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.301] - 2024-03-20
+## [2.0.302] - 2024-03-21
+
+- change jaeger schema to http by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1979
+
+## 2.0.301 - 2024-03-20
 
 - add-idea.trace.stub.index.update-to-development-instance by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1972
 - micronaut otel properties Closes #1971 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1977

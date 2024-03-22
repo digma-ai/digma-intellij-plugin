@@ -15,7 +15,7 @@ class MainAppSchemeHandlerFactory(project: Project) : BaseSchemeHandlerFactory(p
     }
 
     override fun getSchema(): String {
-        return "https"
+        return MAIN_APP_SCHEMA
     }
 
     override fun getDomain(): String {

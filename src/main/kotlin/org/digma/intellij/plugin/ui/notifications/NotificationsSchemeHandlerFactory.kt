@@ -17,7 +17,7 @@ class NotificationsSchemeHandlerFactory(project: Project, val notificationViewMo
     }
 
     override fun getSchema(): String {
-        return "http"
+        return NOTIFICATIONS_APP_SCHEMA
     }
 
     override fun getDomain(): String {

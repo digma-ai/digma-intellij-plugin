@@ -14,7 +14,7 @@ class RecentActivitySchemeHandlerFactory(project: Project) : BaseSchemeHandlerFa
     }
 
     override fun getSchema(): String {
-        return "https"
+        return RECENT_ACTIVITY_APP_SCHEMA
     }
 
     override fun getDomain(): String {

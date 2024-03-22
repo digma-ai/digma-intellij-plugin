@@ -20,6 +20,9 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.version.PerformanceMetricsResponse
 import org.digma.intellij.plugin.persistence.PersistenceService
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
 
 class PerformanceMetricsPosthogEventStartupActivity : StartupActivity {
     override fun runActivity(project: Project) {
@@ -53,11 +56,14 @@ class ContinuousPerformanceMetricsReporter : Disposable {
         @Suppress("UnstableApiUsage")
         disposingScope().launch {
 
-            waitForFirstTime(this)
-
-            //after first time is registered, launch continuous report.
-            // this coroutine will end and a new coroutine will start
-            launchContinuousReport()
+            if (!PersistenceService.getInstance().isFirstTimePerformanceMetrics()) {
+                waitForFirstTime(this)
+                //after first time wait 6 hours for next report
+                launchContinuousReport(6.hours)
+            } else {
+                //this will happen on startup, make sure we have a report in 10 minutes and then every 6 hours
+                launchContinuousReport(10.minutes)
+            }
         }
 
     }
@@ -68,7 +74,7 @@ class ContinuousPerformanceMetricsReporter : Disposable {
         while (!PersistenceService.getInstance().isFirstTimePerformanceMetrics() && coroutineScope.isActive) {
             try {
 
-                delay(30000)
+                delay(10.minutes.inWholeMilliseconds)
 
                 getAnalyticsService()?.let { analyticsService ->
                     val result: PerformanceMetricsResponse = Retries.retryWithResult({
@@ -83,8 +89,6 @@ class ContinuousPerformanceMetricsReporter : Disposable {
                             if (!PersistenceService.getInstance().isFirstTimePerformanceMetrics()) {
                                 PersistenceService.getInstance().setFirstTimePerformanceMetrics()
                             }
-
-
                         }
                     }
                 }
@@ -98,16 +102,15 @@ class ContinuousPerformanceMetricsReporter : Disposable {
     }
 
 
-    private fun launchContinuousReport() {
+    private fun launchContinuousReport(nextReport: Duration) {
 
         @Suppress("UnstableApiUsage")
         disposingScope().launch {
 
+            delay(nextReport.inWholeMilliseconds)
+
             while (isActive) {
                 try {
-
-                    delay(1000 * 60 * 60 * 6)
-
                     getAnalyticsService()?.let { analyticsService ->
                         val result: PerformanceMetricsResponse = Retries.retryWithResult({
                             analyticsService.performanceMetrics
@@ -120,10 +123,13 @@ class ContinuousPerformanceMetricsReporter : Disposable {
                         }
                     }
 
+                    delay(6.hours.inWholeMilliseconds)
+
                 } catch (e: Exception) {
                     Log.warnWithException(logger, e, "failed in continuous registerPerformanceMetrics")
                     ErrorReporter.getInstance()
-                        .reportError(findActiveProject(), "PerformanceMetricsPosthogEventStartupActivity.continuousPerformanceMetrics", e)
+                        .reportError("PerformanceMetricsPosthogEventStartupActivity.continuousPerformanceMetrics", e)
+                    delay(1.hours.inWholeMilliseconds)
                 }
             }
         }

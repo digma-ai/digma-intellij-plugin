@@ -1,6 +1,12 @@
 # Changelog
 
-## [2.0.303] - 2024-03-21
+## [2.0.304] - 2024-03-22
+
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1981
+- Mark Insights as read by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1983
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1986
+
+## 2.0.303 - 2024-03-21
 
 - fix performance matrix report by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1980
 

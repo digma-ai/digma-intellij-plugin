@@ -242,6 +242,17 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
+    public void markInsightsAsRead(List<String> insightIds) {
+        execute(() -> client.analyticsProvider.markInsightsAsRead(new MarkInsightsAsReadRequest(insightIds)));
+    }
+
+    @Override
+    public void markAllInsightsAsRead(String environment, MarkInsightsAsReadScope scope) {
+        execute(() -> client.analyticsProvider.markAllInsightsAsRead(
+                new MarkAllInsightsAsReadRequest(environment, scope)));
+    }
+
+    @Override
     public void dismissInsight(String insightId) {
         execute(() -> client.analyticsProvider.dismissInsight(new DismissRequest(insightId)));
     }
@@ -738,6 +749,20 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @GET("/assets/navigation")
         Call<AssetNavigationResponse> getAssetNavigation(@Query("environment") String environment, @Query("spanCodeObjectId") String spanCodeObjectId);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/Insights/markRead")
+        Call<ResponseBody> markInsightsAsRead(@Body MarkInsightsAsReadRequest request);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/Insights/markAllRead")
+        Call<ResponseBody> markAllInsightsAsRead(@Body MarkAllInsightsAsReadRequest request);
 
         @Headers({
                 "Accept: application/+json",

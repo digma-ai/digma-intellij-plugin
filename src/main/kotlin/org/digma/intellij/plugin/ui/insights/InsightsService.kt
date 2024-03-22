@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.ui.insights
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
@@ -10,11 +11,16 @@ import org.digma.intellij.plugin.common.createObjectMapper
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.insights.InsightsServiceImpl
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.model.rest.insights.MarkInsightsAsReadScope
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.ui.insights.model.SetAllInsightsAsReadData
+import org.digma.intellij.plugin.ui.insights.model.SetAllInsightsMarkAsReadMessage
 import org.digma.intellij.plugin.ui.insights.model.SetDismissedData
 import org.digma.intellij.plugin.ui.insights.model.SetDismissedMessage
 import org.digma.intellij.plugin.ui.insights.model.SetInsightDataListMessage
+import org.digma.intellij.plugin.ui.insights.model.SetInsightsAsReadData
+import org.digma.intellij.plugin.ui.insights.model.SetInsightsMarkAsReadMessage
 import org.digma.intellij.plugin.ui.insights.model.SetUnDismissedData
 import org.digma.intellij.plugin.ui.insights.model.SetUnDismissedMessage
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
@@ -40,7 +46,6 @@ class InsightsService(val project: Project) : InsightsServiceImpl(project) {
     fun setJCefComponent(jCefComponent: JCefComponent?) {
         this.jCefComponent = jCefComponent
     }
-
 
     fun refreshInsightsList(backendQueryParams: MutableMap<String, Any>) {
 
@@ -77,6 +82,41 @@ class InsightsService(val project: Project) : InsightsServiceImpl(project) {
         }
     }
 
+    fun markAllInsightsAsRead(scope: JsonNode?, markAsReadScope: MarkInsightsAsReadScope?) {
+        var status = ""
+        var error: String? = null
+        try {
+            AnalyticsService.getInstance(project).markAllInsightsAsRead(markAsReadScope)
+            status = "success"
+        } catch (e: AnalyticsServiceException) {
+            status = "failure"
+            error = "Error mark as read insight";
+            Log.warnWithException(logger, project, e, error, e.message)
+        }
+
+        val msg = SetAllInsightsMarkAsReadMessage(SetAllInsightsAsReadData(scope, status, error))
+        jCefComponent?.let {
+            serializeAndExecuteWindowPostMessageJavaScript(it.jbCefBrowser.cefBrowser, msg)
+        }
+    }
+
+    fun markInsightsAsRead(insightIds: List<String>) {
+        var status = ""
+        var error: String? = null
+        try {
+            AnalyticsService.getInstance(project).markInsightsAsRead(insightIds)
+            status = "success"
+        } catch (e: AnalyticsServiceException) {
+            status = "failure"
+            error = "Error mark as read insight";
+            Log.warnWithException(logger, project, e, error, e.message)
+        }
+
+        val msg = SetInsightsMarkAsReadMessage(SetInsightsAsReadData(insightIds, status, error))
+        jCefComponent?.let {
+            serializeAndExecuteWindowPostMessageJavaScript(it.jbCefBrowser.cefBrowser, msg)
+        }
+    }
 
     fun dismissInsight(insightId: String) {
         var status = ""

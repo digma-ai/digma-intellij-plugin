@@ -12,6 +12,7 @@ import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.event.*;
 import org.digma.intellij.plugin.model.rest.insights.*;
 import org.digma.intellij.plugin.model.rest.livedata.*;
+import org.digma.intellij.plugin.model.rest.login.*;
 import org.digma.intellij.plugin.model.rest.lowlevel.*;
 import org.digma.intellij.plugin.model.rest.navigation.*;
 import org.digma.intellij.plugin.model.rest.notifications.*;
@@ -24,6 +25,11 @@ import java.io.Closeable;
 import java.util.*;
 
 public interface AnalyticsProvider extends Closeable {
+
+    LoginResponse login(LoginRequest loginRequest);
+
+    LoginResponse refreshToken(RefreshRequest loginRequest);
+
 
     List<String> getEnvironments();
 

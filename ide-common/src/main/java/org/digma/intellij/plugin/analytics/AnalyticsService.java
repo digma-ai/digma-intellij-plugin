@@ -7,6 +7,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.ui.JBColor;
 import com.intellij.util.Alarm;
 import org.apache.commons.lang3.time.StopWatch;
+import org.digma.intellij.plugin.auth.AuthManager;
 import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.env.Env;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
@@ -132,7 +133,9 @@ public class AnalyticsService implements Disposable {
                 Log.log(LOGGER::warn, e.getMessage());
             }
         }
-        RestAnalyticsProvider analyticsProvider = new RestAnalyticsProvider(url, token);
+
+        AnalyticsProvider analyticsProvider =
+                AuthManager.getInstance().withAuth(new RestAnalyticsProvider(url, AuthManager.getInstance()), url);
         analyticsProviderProxy = newAnalyticsProviderProxy(analyticsProvider);
 
         environment.refreshNowOnBackground();
@@ -142,7 +145,13 @@ public class AnalyticsService implements Disposable {
 
     @NotNull
     public ConnectionTestResult testRemoteConnection(@NotNull String serverUrl, @Nullable String token) {
-        try (RestAnalyticsProvider analyticsProvider = new RestAnalyticsProvider(serverUrl, token)) {
+        try (RestAnalyticsProvider analyticsProvider = new RestAnalyticsProvider(serverUrl, new AuthenticationProvider() {
+            @Nullable
+            @Override
+            public String getAuthenticationToken() {
+                return token;
+            }
+        })) {
             //todo: use health check to test connection
             var envs = analyticsProvider.getEnvironments();
             if (envs != null) {

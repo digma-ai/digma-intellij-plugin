@@ -16,6 +16,7 @@ import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.event.*;
 import org.digma.intellij.plugin.model.rest.insights.*;
 import org.digma.intellij.plugin.model.rest.livedata.*;
+import org.digma.intellij.plugin.model.rest.login.*;
 import org.digma.intellij.plugin.model.rest.lowlevel.*;
 import org.digma.intellij.plugin.model.rest.navigation.*;
 import org.digma.intellij.plugin.model.rest.notifications.*;
@@ -31,6 +32,7 @@ import retrofit2.converter.scalars.ScalarsConverterFactory;
 import retrofit2.http.Headers;
 import retrofit2.http.*;
 
+import javax.annotation.CheckForNull;
 import javax.net.ssl.*;
 import java.io.*;
 import java.security.*;
@@ -43,14 +45,31 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
     private final Client client;
 
-    public RestAnalyticsProvider(String baseUrl) {
-        this(baseUrl, null);
+    //this constructor is used only in tests
+    RestAnalyticsProvider(String baseUrl) {
+        this(baseUrl, new AuthenticationProvider() {
+            @CheckForNull
+            @Override
+            public String getAuthenticationToken() {
+                return null;
+            }
+        });
     }
 
-    public RestAnalyticsProvider(String baseUrl, String apiToken) {
-        this.client = createClient(baseUrl, apiToken);
+    public RestAnalyticsProvider(String baseUrl, AuthenticationProvider authenticationProvider) {
+        this.client = createClient(baseUrl, authenticationProvider);
     }
 
+
+    @Override
+    public LoginResponse login(LoginRequest loginRequest) {
+        return execute(() -> client.analyticsProvider.login(loginRequest));
+    }
+
+    @Override
+    public LoginResponse refreshToken(RefreshRequest loginRequest) {
+        return execute(() -> client.analyticsProvider.refreshToken(loginRequest));
+    }
 
     public List<String> getEnvironments() {
         var envs = execute(client.analyticsProvider::getEnvironments);
@@ -269,6 +288,9 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
     @Override
     public HttpResponse lowLevelCall(HttpRequest request) {
+
+        //todo: throw AuthenticationException
+
         okhttp3.Response okHttp3Response;
         try {
             var okHttp3Request = toOkHttp3Request(request);
@@ -333,6 +355,8 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
     public <T> T execute(Supplier<Call<T>> supplier) {
 
+        //todo: throw AuthenticationException
+
         Response<T> response;
         try {
             Call<T> call = supplier.get();
@@ -355,8 +379,8 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
 
-    private Client createClient(String baseUrl, String apiToken) {
-        return new Client(baseUrl, apiToken);
+    private Client createClient(String baseUrl, AuthenticationProvider authenticationProvider) {
+        return new Client(baseUrl, authenticationProvider);
     }
 
 
@@ -374,7 +398,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         private final OkHttpClient okHttpClient;
 
         @SuppressWarnings("MoveFieldAssignmentToInitializer")
-        public Client(String baseUrl, String apiToken) {
+        public Client(String baseUrl, AuthenticationProvider authenticationProvider) {
 
             //configure okHttp here if necessary
             OkHttpClient.Builder builder = new OkHttpClient.Builder();
@@ -385,12 +409,16 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
             }
 
 
-            if (apiToken != null && !apiToken.isBlank()) {
-                builder.addInterceptor(chain -> {
-                    Request request = chain.request().newBuilder().addHeader("Authorization", "Token " + apiToken).build();
+            builder.addInterceptor(chain -> {
+                var token = authenticationProvider.getAuthenticationToken();
+                if (token != null) {
+                    Request request = chain.request().newBuilder().addHeader("Authorization", token).build();
                     return chain.proceed(request);
-                });
-            }
+                } else {
+                    return chain.proceed(chain.request());
+                }
+            });
+
 
             builder.callTimeout(10, TimeUnit.SECONDS)
                     .connectTimeout(5, TimeUnit.SECONDS)
@@ -784,6 +812,21 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @GET("/insights/statistics")
         Call<InsightsStatsResult> getInsightsStats(@QueryMap Map<String, Object> fields);
+
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/authenticate/login")
+        Call<LoginResponse> login(@Body LoginRequest loginRequest);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/authenticate/refresh-token")
+        Call<LoginResponse> refreshToken(@Body RefreshRequest loginRequest);
     }
 
 }

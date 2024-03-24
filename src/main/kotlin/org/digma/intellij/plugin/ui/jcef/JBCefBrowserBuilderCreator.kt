@@ -9,7 +9,7 @@ object JBCefBrowserBuilderCreator {
     fun create(): JBCefBrowserBuilder {
 
         val jbCefBrowserBuilder = JBCefBrowserBuilder()
-        if (SystemInfo.isLinux) {
+        if (SystemInfo.isLinux && isOffScreenRenderingModeEnabled()) {
             jbCefBrowserBuilder.setOffScreenRendering(true) // setting it to false may cause focus issues on some linux os
         }
 
@@ -17,5 +17,10 @@ object JBCefBrowserBuilderCreator {
         jbCefBrowserBuilder.setEnableOpenDevToolsMenuItem(enableDevTools)
 
         return jbCefBrowserBuilder
+    }
+
+
+    private fun isOffScreenRenderingModeEnabled(): Boolean {
+        return java.lang.Boolean.getBoolean("ide.browser.jcef.osr.enabled")
     }
 }

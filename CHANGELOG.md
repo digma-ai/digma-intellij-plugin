@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.304] - 2024-03-22
+## [2.0.305] - 2024-03-24
+
+- update eap profile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1987
+- fix fatal error check off screen rendering mode enabled by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1988
+
+## 2.0.304 - 2024-03-22
 
 - Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1981
 - Mark Insights as read by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1983

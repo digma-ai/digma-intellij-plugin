@@ -30,7 +30,6 @@ import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import org.digma.intellij.plugin.ui.common.updateObservabilityValue
 import org.digma.intellij.plugin.ui.jcef.model.GetFromPersistenceRequest
-import org.digma.intellij.plugin.ui.jcef.model.InsightStatsScope
 import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest
 import org.digma.intellij.plugin.ui.jcef.model.OpenInInternalBrowserRequest
 import org.digma.intellij.plugin.ui.jcef.model.SaveToPersistenceRequest
@@ -211,16 +210,17 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                         val payload = getPayloadFromRequest(requestJsonNode)
                         payload?.let {
                             val scopeNode = payload.get("scope");
-                            scopeNode?.let { scope ->
-                                var spanCodeObjectId = scope.get("spanCodeObjectId").asText()
-                                var stats = AnalyticsService.getInstance(project).getInsightsStats(spanCodeObjectId);
-                                sendSetInsightStatsMessage(browser, InsightStatsScope(spanCodeObjectId), stats.analyticsInsightsCount, stats.issuesInsightsCount, stats.unreadInsightsCount)
-                            }?: {
+                            if (scopeNode is NullNode){
                                 var stats = AnalyticsService.getInstance(project).getInsightsStats(null);
                                 sendSetInsightStatsMessage(browser, null, stats.analyticsInsightsCount, stats.issuesInsightsCount, stats.unreadInsightsCount)
+                            } else {
+                                var spanCodeObjectId = scopeNode.get("span").get("spanCodeObjectId").asText()
+                                var stats = AnalyticsService.getInstance(project).getInsightsStats(spanCodeObjectId);
+                                sendSetInsightStatsMessage(browser, scopeNode, stats.analyticsInsightsCount, stats.issuesInsightsCount, stats.unreadInsightsCount)
                             }
                         }
                     }
+
 
                     else -> {
                         val handled = doOnQuery(project, browser, requestJsonNode, request, action)

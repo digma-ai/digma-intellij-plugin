@@ -17,7 +17,6 @@ import org.digma.intellij.plugin.ui.common.isJaegerButtonEnabled
 import org.digma.intellij.plugin.ui.jcef.model.ApiUrlPayload
 import org.digma.intellij.plugin.ui.jcef.model.BackendInfoMessage
 import org.digma.intellij.plugin.ui.jcef.model.DigmaEngineStatusMessage
-import org.digma.intellij.plugin.ui.jcef.model.InsightStatsScope
 import org.digma.intellij.plugin.ui.jcef.model.IsJaegerButtonEnabledMessage
 import org.digma.intellij.plugin.ui.jcef.model.IsJaegerButtonEnabledMessagePayload
 import org.digma.intellij.plugin.ui.jcef.model.IsMicrometerPayload
@@ -194,7 +193,7 @@ fun sendCurrentViewsState(cefBrowser: CefBrowser, action: String, views: List<Vi
 
 fun sendSetInsightStatsMessage(
     cefBrowser: CefBrowser,
-    scope: InsightStatsScope?,
+    scope: JsonNode?,
     analyticsInsightsCount: Number,
     issuesInsightsCount: Number,
     unreadInsightsCount: Number

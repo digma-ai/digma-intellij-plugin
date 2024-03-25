@@ -1,8 +1,8 @@
 package org.digma.intellij.plugin.ui.jcef.model
 
-import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.databind.JsonNode
 import org.digma.intellij.plugin.ui.jcef.JCEFGlobalConstants
-import java.beans.ConstructorProperties
+
 
 data class SetInsightStatsMessage(val payload: SetInsightStatsMessagePayload) {
     val type = JCEFGlobalConstants.REQUEST_MESSAGE_TYPE
@@ -10,17 +10,8 @@ data class SetInsightStatsMessage(val payload: SetInsightStatsMessagePayload) {
 }
 
 data class SetInsightStatsMessagePayload(
-    val scope: InsightStatsScope?,
+    val scope: JsonNode?,
     val analyticsInsightsCount: Number,
     val issuesInsightsCount: Number,
     val unreadInsightsCount: Number
-)
-
-data class InsightStatsScope
-@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-@ConstructorProperties(
-    "spanCodeObjectId"
-)
-constructor (
-    val spanCodeObjectId: String
 )

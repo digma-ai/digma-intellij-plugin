@@ -214,13 +214,11 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                             val scopeNode = payload.get("scope");
                             if (scopeNode is NullNode){
                                 var stats = AnalyticsService.getInstance(project).getInsightsStats(null);
-//                                sendSetInsightStatsMessage(browser, null, stats.analyticsInsightsCount, stats.issuesInsightsCount, stats.unreadInsightsCount)
                                 project.messageBus.syncPublisher(InsightStatsChangedEvent.INSIGHT_STATS_CHANGED_TOPIC)
                                     .insightStatsChanged(null, stats.analyticsInsightsCount, stats.issuesInsightsCount, stats.unreadInsightsCount)
                             } else {
                                 var spanCodeObjectId = scopeNode.get("span").get("spanCodeObjectId").asText()
                                 var stats = AnalyticsService.getInstance(project).getInsightsStats(spanCodeObjectId);
-//                                sendSetInsightStatsMessage(browser, scopeNode, stats.analyticsInsightsCount, stats.issuesInsightsCount, stats.unreadInsightsCount)
                                 project.messageBus.syncPublisher(InsightStatsChangedEvent.INSIGHT_STATS_CHANGED_TOPIC)
                                     .insightStatsChanged(scopeNode, stats.analyticsInsightsCount, stats.issuesInsightsCount, stats.unreadInsightsCount)
                             }

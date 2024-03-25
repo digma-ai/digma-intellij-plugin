@@ -12,6 +12,7 @@ import org.cef.browser.CefFrame
 import org.cef.callback.CefQueryCallback
 import org.cef.handler.CefMessageRouterHandlerAdapter
 import org.digma.intellij.plugin.analytics.AnalyticsService
+import org.digma.intellij.plugin.analytics.InsightStatsChangedEvent
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.createObjectMapper
@@ -24,6 +25,7 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
 import org.digma.intellij.plugin.navigation.MainContentViewSwitcher
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.scope.ScopeChangedEvent
 import org.digma.intellij.plugin.scope.ScopeManager
 import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
@@ -212,13 +214,23 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                             val scopeNode = payload.get("scope");
                             if (scopeNode is NullNode){
                                 var stats = AnalyticsService.getInstance(project).getInsightsStats(null);
-                                sendSetInsightStatsMessage(browser, null, stats.analyticsInsightsCount, stats.issuesInsightsCount, stats.unreadInsightsCount)
+//                                sendSetInsightStatsMessage(browser, null, stats.analyticsInsightsCount, stats.issuesInsightsCount, stats.unreadInsightsCount)
+                                project.messageBus.syncPublisher(InsightStatsChangedEvent.INSIGHT_STATS_CHANGED_TOPIC)
+                                    .insightStatsChanged(null, stats.analyticsInsightsCount, stats.issuesInsightsCount, stats.unreadInsightsCount)
                             } else {
                                 var spanCodeObjectId = scopeNode.get("span").get("spanCodeObjectId").asText()
                                 var stats = AnalyticsService.getInstance(project).getInsightsStats(spanCodeObjectId);
-                                sendSetInsightStatsMessage(browser, scopeNode, stats.analyticsInsightsCount, stats.issuesInsightsCount, stats.unreadInsightsCount)
+//                                sendSetInsightStatsMessage(browser, scopeNode, stats.analyticsInsightsCount, stats.issuesInsightsCount, stats.unreadInsightsCount)
+                                project.messageBus.syncPublisher(InsightStatsChangedEvent.INSIGHT_STATS_CHANGED_TOPIC)
+                                    .insightStatsChanged(scopeNode, stats.analyticsInsightsCount, stats.issuesInsightsCount, stats.unreadInsightsCount)
                             }
+
+
                         }
+                    }
+
+                    JCEFGlobalConstants.GLOBAL_CHANGE_ENVIRONMENT -> {
+                        changeEnvironment(requestJsonNode)
                     }
 
 
@@ -249,7 +261,7 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
         return true
     }
 
-    protected fun changeView(requestJsonNode: JsonNode) {
+    private fun changeView(requestJsonNode: JsonNode) {
         val payload = getPayloadFromRequest(requestJsonNode)
         payload?.let {
             val viewId = payload.get("view")?.asText()
@@ -304,7 +316,7 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
         )
     }
 
-    fun changeScope(requestJsonNode: JsonNode) {
+    private fun changeScope(requestJsonNode: JsonNode) {
         val payload = getPayloadFromRequest(requestJsonNode)
         payload?.let { pl ->
             val span = pl.get("span")
@@ -319,6 +331,13 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
             spanScope?.let {
                 ScopeManager.getInstance(project).changeScope(it)
             } ?: ScopeManager.getInstance(project).changeToHome(true)
+        }
+    }
+
+    private fun changeEnvironment(requestJsonNode: JsonNode) {
+        val environment = getEnvironmentFromPayload(requestJsonNode)
+        environment?.let { env ->
+            AnalyticsService.getInstance(project).environment.setCurrent(env)
         }
     }
 }

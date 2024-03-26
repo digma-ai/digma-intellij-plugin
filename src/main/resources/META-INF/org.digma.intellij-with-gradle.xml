@@ -1,0 +1,12 @@
+<!--suppress LightServiceMigrationXML -->
+<idea-plugin>
+
+    <depends>org.jetbrains.plugins.gradle</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <applicationService
+                serviceImplementation="org.digma.intellij.plugin.idea.gradle.execution.GradleRunConfigurationService"/>
+        <applicationService serviceImplementation="org.digma.intellij.plugin.idea.gradle.helper.GradleService"/>
+    </extensions>
+
+</idea-plugin>

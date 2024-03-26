@@ -62,6 +62,8 @@ dependencies {
     implementation(project(":jvm-common"))
     implementation(project(":python"))
     implementation(project(":rider"))
+    implementation(project(":gradle-support"))
+    implementation(project(":maven-support"))
 
     riderDotNetObjects(project(mapOf(
         "path" to ":rider",

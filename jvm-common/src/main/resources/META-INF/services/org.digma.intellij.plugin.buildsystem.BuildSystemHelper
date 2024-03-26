@@ -1,0 +1,2 @@
+org.digma.intellij.plugin.idea.buildsystem.helper.GradleBuildSystemHelper
+org.digma.intellij.plugin.idea.buildsystem.helper.MavenBuildSystemHelper

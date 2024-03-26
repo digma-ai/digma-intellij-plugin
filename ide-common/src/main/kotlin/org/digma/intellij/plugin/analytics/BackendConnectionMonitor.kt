@@ -10,6 +10,7 @@ import com.intellij.util.messages.MessageBusConnection
  * no connection message in the plugin window.
  * see also class NoConnectionPanel
  */
+//todo: change to application service , and AnalyticsServiceConnectionEvent too
 @Service(Service.Level.PROJECT)
 class BackendConnectionMonitor(val project: Project) : Disposable, AnalyticsServiceConnectionEvent {
 

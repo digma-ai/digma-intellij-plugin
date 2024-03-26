@@ -1,0 +1,9 @@
+org.digma.intellij.plugin.idea.execution.handlers.GradleRunConfigurationInstrumentationHandler
+org.digma.intellij.plugin.idea.execution.handlers.MavenRunConfigurationInstrumentationHandler
+org.digma.intellij.plugin.idea.execution.handlers.JavaRunConfigurationInstrumentationHandler
+org.digma.intellij.plugin.idea.execution.handlers.JarRunConfigurationInstrumentationHandler
+org.digma.intellij.plugin.idea.execution.handlers.TomcatRunConfigurationInstrumentationHandler
+org.digma.intellij.plugin.idea.execution.handlers.QuarkusRunConfigurationInstrumentationHandler
+org.digma.intellij.plugin.idea.execution.handlers.JavaEEAppServerRunConfigurationInstrumentationHandler
+org.digma.intellij.plugin.idea.execution.handlers.OpenLibertyServerRunConfigurationInstrumentationHandler
+org.digma.intellij.plugin.idea.execution.handlers.KotlinRunConfigurationInstrumentationHandler

@@ -2,35 +2,44 @@ package org.digma.intellij.plugin.idea.buildsystem
 
 import com.intellij.openapi.externalSystem.ExternalSystemModulePropertyManager
 import com.intellij.openapi.module.Module
-import org.jetbrains.annotations.NotNull
-import org.jetbrains.idea.maven.utils.MavenUtil
-import org.jetbrains.plugins.gradle.util.GradleConstants
+import com.intellij.openapi.project.Project
+import org.digma.intellij.plugin.buildsystem.BuildSystem
+import org.digma.intellij.plugin.buildsystem.BuildSystemHelper
+import java.util.ServiceLoader
+
+//Do not change to light service because it will always register.
+// we want it to register only in Idea.
+// see: org.digma.intellij-with-jvm.xml
+@Suppress("LightServiceMigrationCode")
+class BuildSystemChecker(private val project: Project) {
+
+    private var buildSystemHelpers: List<BuildSystemHelper>
+
+    init {
+        //ServiceLoader doesn't work in intellij as it is in any other java application.
+        //see https://youtrack.jetbrains.com/issue/IDEA-241229
+        //so changing the context class loader for loading is the workaround
+        val currentClassLoader = Thread.currentThread().contextClassLoader
+        Thread.currentThread().setContextClassLoader(this::class.java.classLoader)
+        buildSystemHelpers =
+            ServiceLoader.load(BuildSystemHelper::class.java).stream().map { it.get() }.toList()
+        Thread.currentThread().setContextClassLoader(currentClassLoader)
+    }
 
 
-class BuildSystemChecker {
-
-    companion object {
-
-        // if cannot determine will return UNKNOWN
-        @NotNull
-        fun determineBuildSystem(module: Module?): JavaBuildSystem {
-            if (module == null) {
-                return JavaBuildSystem.UNKNOWN
-            }
-
-            val moduleProperties = ExternalSystemModulePropertyManager.getInstance(module)
-            val externalSystemId = moduleProperties.getExternalSystemId()
-
-            if (GradleConstants.SYSTEM_ID.id.equals(externalSystemId, true)) {
-                return JavaBuildSystem.GRADLE
-            }
-
-            if (MavenUtil.SYSTEM_ID.id.equals(externalSystemId, true)) {
-                return JavaBuildSystem.MAVEN
-            }
-
-            return JavaBuildSystem.UNKNOWN
+    fun determineBuildSystem(module: Module?): BuildSystem {
+        if (module == null) {
+            return BuildSystem.INTELLIJ
         }
+
+        val moduleProperties = ExternalSystemModulePropertyManager.getInstance(module)
+        val externalSystemId = moduleProperties.getExternalSystemId()
+
+
+        return externalSystemId?.let { systemId ->
+            val buildSystemHelper = buildSystemHelpers.find { it.isBuildSystem(systemId) }
+            buildSystemHelper?.getBuildSystem(systemId) ?: BuildSystem.INTELLIJ
+        } ?: BuildSystem.INTELLIJ
     }
 
 }

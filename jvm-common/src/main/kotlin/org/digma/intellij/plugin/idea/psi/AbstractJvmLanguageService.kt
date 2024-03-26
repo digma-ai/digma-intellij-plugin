@@ -4,6 +4,7 @@ import com.intellij.buildsystem.model.unified.UnifiedCoordinates
 import com.intellij.buildsystem.model.unified.UnifiedDependency
 import com.intellij.externalSystem.DependencyModifierService
 import com.intellij.lang.Language
+import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditor
@@ -28,6 +29,7 @@ import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
 import org.digma.intellij.plugin.WITH_SPAN_ANNOTATION_FQN
 import org.digma.intellij.plugin.WITH_SPAN_DEPENDENCY_DESCRIPTION
+import org.digma.intellij.plugin.buildsystem.BuildSystem
 import org.digma.intellij.plugin.common.CodeObjectsUtil
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.ReadActions
@@ -44,8 +46,7 @@ import org.digma.intellij.plugin.editor.CaretContextService
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.errorreporting.SEVERITY_MEDIUM_TRY_FIX
 import org.digma.intellij.plugin.errorreporting.SEVERITY_PROP_NAME
-import org.digma.intellij.plugin.idea.buildsystem.BuildSystemChecker.Companion.determineBuildSystem
-import org.digma.intellij.plugin.idea.buildsystem.JavaBuildSystem
+import org.digma.intellij.plugin.idea.buildsystem.BuildSystemChecker
 import org.digma.intellij.plugin.idea.deps.ModulesDepsService
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
 import org.digma.intellij.plugin.idea.navigation.JvmEndpointNavigationProvider
@@ -82,10 +83,10 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
     private val otelDependencyVersion = "1.26.0"
     private val otelCoordinates =
         UnifiedCoordinates("io.opentelemetry.instrumentation", "opentelemetry-instrumentation-annotations", otelDependencyVersion)
-    private val mapBuildSystem2Dependency: Map<JavaBuildSystem, UnifiedDependency> = mapOf(
-        JavaBuildSystem.UNKNOWN to UnifiedDependency(otelCoordinates, "compile"),
-        JavaBuildSystem.MAVEN to UnifiedDependency(otelCoordinates, null),
-        JavaBuildSystem.GRADLE to UnifiedDependency(otelCoordinates, "implementation")
+    private val mapBuildSystem2Dependency: Map<BuildSystem, UnifiedDependency> = mapOf(
+        BuildSystem.INTELLIJ to UnifiedDependency(otelCoordinates, "compile"),
+        BuildSystem.MAVEN to UnifiedDependency(otelCoordinates, null),
+        BuildSystem.GRADLE to UnifiedDependency(otelCoordinates, "implementation")
     )
 
 
@@ -678,7 +679,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
         if (isSpringBootAndMicrometer(module)) {
             addDepsForSpringBootAndMicrometer(module)
         } else {
-            val moduleBuildSystem = determineBuildSystem(module)
+            val moduleBuildSystem = project.service<BuildSystemChecker>().determineBuildSystem(module)
             val dependencyLib = mapBuildSystem2Dependency[moduleBuildSystem]
 
             val dependencyModifierService = DependencyModifierService.getInstance(project)

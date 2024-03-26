@@ -1,0 +1,29 @@
+<!--suppress LightServiceMigrationXML -->
+<idea-plugin>
+
+    <extensions defaultExtensionNs="com.intellij">
+
+        <runConfigurationExtension
+                implementation="org.digma.intellij.plugin.idea.execution.InstrumentationRunConfigurationExtension"/>
+        <postStartupActivity implementation="org.digma.intellij.plugin.idea.execution.RunConfigurationStartupActivity"/>
+        <applicationService serviceImplementation="org.digma.intellij.plugin.idea.execution.OTELJarProvider"/>
+        <postStartupActivity implementation="org.digma.intellij.plugin.idea.execution.OTELJarProviderStartup"/>
+
+        <applicationService
+                serviceImplementation="org.digma.intellij.plugin.idea.execution.services.JarRunConfigurationInstrumentationService"/>
+        <applicationService
+                serviceImplementation="org.digma.intellij.plugin.idea.execution.services.JavaEEAppServerRunConfigurationInstrumentationService"/>
+        <applicationService
+                serviceImplementation="org.digma.intellij.plugin.idea.execution.services.JavaRunConfigurationInstrumentationService"/>
+        <applicationService
+                serviceImplementation="org.digma.intellij.plugin.idea.execution.services.OpenLibertyRunConfigurationInstrumentationService"/>
+        <applicationService
+                serviceImplementation="org.digma.intellij.plugin.idea.execution.services.QuarkusRunConfigurationInstrumentationService"/>
+        <applicationService
+                serviceImplementation="org.digma.intellij.plugin.idea.execution.services.TomcatRunConfigurationInstrumentationService"/>
+        <applicationService
+                serviceImplementation="org.digma.intellij.plugin.idea.execution.services.KotlinRunConfigurationInstrumentationService"/>
+
+    </extensions>
+
+</idea-plugin>

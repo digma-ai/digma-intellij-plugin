@@ -21,6 +21,8 @@
     <depends optional="true" config-file="org.digma.intellij-with-jvm.xml">com.intellij.modules.java</depends>
     <depends optional="true" config-file="org.digma.intellij-with-kotlin.xml">org.jetbrains.kotlin</depends>
     <depends optional="true" config-file="org.digma.intellij-with-rider.xml">com.intellij.modules.rider</depends>
+    <depends optional="true" config-file="org.digma.intellij-with-gradle.xml">org.jetbrains.plugins.gradle</depends>
+    <depends optional="true" config-file="org.digma.intellij-with-maven.xml">org.jetbrains.idea.maven</depends>
 
 
     <extensions defaultExtensionNs="com.intellij">

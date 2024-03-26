@@ -6,17 +6,18 @@ import com.intellij.collaboration.async.disposingScope
 import com.intellij.externalSystem.DependencyModifierService
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.WriteAction
+import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.externalSystem.autoimport.ProjectRefreshAction
 import com.intellij.openapi.project.Project
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import org.digma.intellij.plugin.buildsystem.BuildSystem
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
-import org.digma.intellij.plugin.idea.buildsystem.BuildSystemChecker.Companion.determineBuildSystem
-import org.digma.intellij.plugin.idea.buildsystem.JavaBuildSystem
+import org.digma.intellij.plugin.idea.buildsystem.BuildSystemChecker
 import org.digma.intellij.plugin.idea.deps.ModuleExt
 import org.digma.intellij.plugin.idea.deps.ModulesDepsService
 import org.digma.intellij.plugin.log.Log
@@ -28,6 +29,10 @@ import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
+//Do not change to light service because it will always register.
+// we want it to register only in Idea.
+// see: org.digma.intellij-with-jvm.xml
+@Suppress("LightServiceMigrationCode")
 class SpringBootMicrometerConfigureDepsService(private val project: Project) : Disposable {
 
     companion object {
@@ -49,31 +54,31 @@ class SpringBootMicrometerConfigureDepsService(private val project: Project) : D
         fun isSpringBootWithMicrometer(): Boolean =
             SettingsState.getInstance().springBootObservabilityMode == SpringBootObservabilityMode.Micrometer
 
-        fun getSpringBootStarterActuatorDependency(javaBuildSystem: JavaBuildSystem, springBootVersion: String): UnifiedDependency {
+        fun getSpringBootStarterActuatorDependency(javaBuildSystem: BuildSystem, springBootVersion: String): UnifiedDependency {
             val libCoordinates = UnifiedCoordinates("org.springframework.boot", "spring-boot-starter-actuator", springBootVersion)
 
             return buildUnifiedDependency(libCoordinates, javaBuildSystem)
         }
 
-        fun getSpringBootStarterAopDependency(javaBuildSystem: JavaBuildSystem, springBootVersion: String): UnifiedDependency {
+        fun getSpringBootStarterAopDependency(javaBuildSystem: BuildSystem, springBootVersion: String): UnifiedDependency {
             val libCoordinates = UnifiedCoordinates("org.springframework.boot", "spring-boot-starter-aop", springBootVersion)
 
             return buildUnifiedDependency(libCoordinates, javaBuildSystem)
         }
 
-        fun buildUnifiedDependency(libCoordinates: UnifiedCoordinates, javaBuildSystem: JavaBuildSystem): UnifiedDependency {
+        fun buildUnifiedDependency(libCoordinates: UnifiedCoordinates, javaBuildSystem: BuildSystem): UnifiedDependency {
             return buildUnifiedDependency(libCoordinates, javaBuildSystem, true)
         }
 
         fun buildUnifiedDependency(
             libCoordinates: UnifiedCoordinates,
-            javaBuildSystem: JavaBuildSystem,
+            javaBuildSystem: BuildSystem,
             removeVersionIfCan: Boolean,
         ): UnifiedDependency {
             val dep: UnifiedDependency =
                 when (javaBuildSystem) {
-                    JavaBuildSystem.MAVEN -> UnifiedDependency(libCoordinates, null)
-                    JavaBuildSystem.GRADLE -> {
+                    BuildSystem.MAVEN -> UnifiedDependency(libCoordinates, null)
+                    BuildSystem.GRADLE -> {
                         val newLibCoordinates =
                             if (!removeVersionIfCan) {
                                 libCoordinates
@@ -162,7 +167,7 @@ class SpringBootMicrometerConfigureDepsService(private val project: Project) : D
 
     fun addMissingDependenciesForSpringBootObservability(moduleExt: ModuleExt) {
         val module = moduleExt.module
-        val moduleBuildSystem = determineBuildSystem(module)
+        val moduleBuildSystem = project.service<BuildSystemChecker>().determineBuildSystem(module)
 
         val uniDeps = mutableSetOf<UnifiedDependency>()
         if (!moduleExt.metadata.hasSpringBootStarterActuator) {

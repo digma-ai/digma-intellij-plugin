@@ -30,22 +30,12 @@ class NavigationMessageRouterHandler(project: Project) : BaseMessageRouterHandle
 
             "NAVIGATION/INITIALIZE" -> onInitialize(browser)
 
-            "NAVIGATION/CHANGE_VIEW" -> changeView(requestJsonNode)
-
-            "NAVIGATION/CHANGE_ENVIRONMENT" -> {
-                changeEnvironment(requestJsonNode)
-            }
-
             "NAVIGATION/AUTOFIX_MISSING_DEPENDENCY" -> {
                 fixMissingDependencies(requestJsonNode)
             }
 
             "NAVIGATION/ADD_ANNOTATION" -> {
                 addAnnotation(requestJsonNode)
-            }
-
-            "NAVIGATION/CHANGE_SCOPE" -> {
-                changeScope(requestJsonNode)
             }
 
             "NAVIGATION/GO_TO_CODE_LOCATION" -> {
@@ -91,15 +81,6 @@ class NavigationMessageRouterHandler(project: Project) : BaseMessageRouterHandle
             }
         }
     }
-
-
-    private fun changeEnvironment(requestJsonNode: JsonNode) {
-        val environment = getEnvironmentFromPayload(requestJsonNode)
-        environment?.let { env ->
-            AnalyticsService.getInstance(project).environment.setCurrent(env)
-        }
-    }
-
 
     private fun onInitialize(browser: CefBrowser) {
         try {

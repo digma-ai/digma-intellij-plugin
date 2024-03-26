@@ -17,6 +17,7 @@ import org.cef.handler.CefLifeSpanHandlerAdapter
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
 import org.digma.intellij.plugin.analytics.EnvironmentChanged
+import org.digma.intellij.plugin.analytics.InsightStatsChangedEvent
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.env.Env
@@ -55,6 +56,7 @@ private constructor(
     private val observabilityChangeParentDisposable = Disposer.newDisposable()
     private val scopeChangeParentDisposable = Disposer.newDisposable()
     private val stateChangeParentDisposable = Disposer.newDisposable()
+    private val insightStatsChangeParentDisposable = Disposer.newDisposable()
 
 
     init {
@@ -214,6 +216,18 @@ private constructor(
             }
         )
 
+        project.messageBus.connect(insightStatsChangeParentDisposable).subscribe(
+            InsightStatsChangedEvent.INSIGHT_STATS_CHANGED_TOPIC, object : InsightStatsChangedEvent {
+                override fun insightStatsChanged(scope: JsonNode?, analyticsInsightsCount: Int, issuesInsightsCount: Int, unreadInsightsCount: Int) {
+                    try {
+                        sendSetInsightStatsMessage(jbCefBrowser.cefBrowser, scope, analyticsInsightsCount, issuesInsightsCount, unreadInsightsCount)
+                    } catch (e: Throwable) {
+                        ErrorReporter.getInstance().reportError("JCefComponent.insightStatsChanged", e)
+                    }
+                }
+            }
+        )
+
     }
 
 
@@ -227,6 +241,7 @@ private constructor(
             Disposer.dispose(observabilityChangeParentDisposable)
             Disposer.dispose(scopeChangeParentDisposable)
             Disposer.dispose(stateChangeParentDisposable)
+            Disposer.dispose(insightStatsChangeParentDisposable)
             jbCefBrowser.jbCefClient.removeLifeSpanHandler(lifeSpanHandler, jbCefBrowser.cefBrowser)
             jbCefBrowser.dispose()
             cefMessageRouter.dispose()

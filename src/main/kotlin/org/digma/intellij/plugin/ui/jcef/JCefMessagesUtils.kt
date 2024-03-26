@@ -27,6 +27,8 @@ import org.digma.intellij.plugin.ui.jcef.model.SetEnvironmentMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetEnvironmentMessagePayload
 import org.digma.intellij.plugin.ui.jcef.model.SetEnvironmentsMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetEnvironmentsMessagePayload
+import org.digma.intellij.plugin.ui.jcef.model.SetInsightStatsMessage
+import org.digma.intellij.plugin.ui.jcef.model.SetInsightStatsMessagePayload
 import org.digma.intellij.plugin.ui.jcef.model.SetIsMicrometerMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetScopeMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetScopeMessagePayload
@@ -186,5 +188,17 @@ fun sendCurrentViewsState(cefBrowser: CefBrowser, action: String, views: List<Vi
     serializeAndExecuteWindowPostMessageJavaScript(
         cefBrowser,
         SetViewMessage(action, SetViewMessagePayload(views, isTriggeredByJcef))
+    )
+}
+
+fun sendSetInsightStatsMessage(
+    cefBrowser: CefBrowser,
+    scope: JsonNode?,
+    analyticsInsightsCount: Number,
+    issuesInsightsCount: Number,
+    unreadInsightsCount: Number
+) {
+    serializeAndExecuteWindowPostMessageJavaScript(
+        cefBrowser, SetInsightStatsMessage(SetInsightStatsMessagePayload(scope, analyticsInsightsCount, issuesInsightsCount, unreadInsightsCount))
     )
 }

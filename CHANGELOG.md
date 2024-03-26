@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.306] - 2024-03-25
+## [2.0.307] - 2024-03-26
+
+- Add global messages to get insight stats and change environment by @borisermakof in https://github.com/digma-ai/digma-intellij-plugin/pull/1992
+- separation of gradle and maven classes Closes #1616 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1995
+
+## 2.0.306 - 2024-03-25
 
 - Update Recent Activity UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1991
 

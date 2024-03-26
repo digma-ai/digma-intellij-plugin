@@ -14,15 +14,15 @@ import org.digma.intellij.plugin.idea.execution.JavaToolOptionsBuilder
 import org.digma.intellij.plugin.idea.execution.JavaToolOptionsMerger
 import org.digma.intellij.plugin.idea.execution.ParametersExtractor
 import org.digma.intellij.plugin.idea.execution.ServiceNameProvider
-import org.digma.intellij.plugin.idea.execution.findGradleService
-import org.digma.intellij.plugin.idea.execution.findMavenService
+import org.digma.intellij.plugin.idea.externalsystem.findGradleRunConfigurationInstrumentationService
+import org.digma.intellij.plugin.idea.externalsystem.findMavenRunConfigurationInstrumentationService
 
 //don't change to light service because it will register always. we want it to register only for Idea
 @Suppress("LightServiceMigrationCode")
 class OpenLibertyRunConfigurationInstrumentationService : BaseJvmRunConfigurationInstrumentationService() {
 
-    private val gradleInstrumentationService: RunConfigurationInstrumentationService? = findGradleService()
-    private val mavenInstrumentationService: RunConfigurationInstrumentationService? = findMavenService()
+    private val gradleInstrumentationService: RunConfigurationInstrumentationService? = findGradleRunConfigurationInstrumentationService()
+    private val mavenInstrumentationService: RunConfigurationInstrumentationService? = findMavenRunConfigurationInstrumentationService()
 
     private fun isGradleConfiguration(configuration: RunConfigurationBase<*>): Boolean {
         return gradleInstrumentationService?.isHandlingType(configuration) ?: false

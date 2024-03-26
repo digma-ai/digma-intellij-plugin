@@ -9,6 +9,7 @@ class ExternalSystemConfigurationCleaner(configuration: RunConfigurationBase<*>)
     //currently we need to clean only for gradle
     override fun cleanConfiguration() {
 
+        //casting must succeed or we have a bug
         val myConfiguration = configuration as ExternalSystemRunConfiguration
 
         if (myConfiguration.settings.env.containsKey(ORG_JAVA_TOOL_OPTIONS)) {

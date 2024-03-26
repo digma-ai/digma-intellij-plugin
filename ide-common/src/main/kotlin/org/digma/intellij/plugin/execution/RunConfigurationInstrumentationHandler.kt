@@ -12,7 +12,7 @@ import org.digma.intellij.plugin.buildsystem.BuildSystem
 interface RunConfigurationInstrumentationHandler {
 
     /**
-     * user to sort handlers. we need it to find a handler that can help with extracting details from configuration.
+     * used to sort handlers. we need it to find a handler that can help with extracting details from configuration.
      * in which case order matters, gradle for example is first, then maven etc.
      */
     fun getOrder(): Int
@@ -37,8 +37,10 @@ interface RunConfigurationInstrumentationHandler {
     fun cleanConfigurationAfterStart(configuration: RunConfigurationBase<*>)
 
     /**
-     * this method should only be used in combination with order. used to find a configuration handler that can help
+     * this method should only be used in combination with order, or to find any instrumentation handler that
+     * can handle the type. used to find a configuration handler that can help
      * extract details from the configuration for reporting.
+     * do not use for attaching instrumentation handler to configuration.
      */
     fun isHandlingType(configuration: RunConfigurationBase<*>): Boolean
 

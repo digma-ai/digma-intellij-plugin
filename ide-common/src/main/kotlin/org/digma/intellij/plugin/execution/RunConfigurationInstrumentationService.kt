@@ -8,13 +8,15 @@ import org.digma.intellij.plugin.buildsystem.BuildSystem
 interface RunConfigurationInstrumentationService {
 
     /**
-     * a not accurate method because there os no params to resolve the module.
-     * should be used in combination with other conditions or if matching is not supposed to be accurate.
+     * not an accurate method because there is no params to resolve the module.
+     * should be used in combination with other conditions or when matching is not supposed to be accurate.
+     * do not use to attach an instrumentation handler to configuration, use fot other needs when
+     * the matching doesn't need to be accurate, like for reporting unhandled configuration.
      */
     fun isApplicableFor(configuration: RunConfigurationBase<*>): Boolean
 
     /**
-     * this is the method to check for matching a service to a configuration.
+     * this is the method to check for attaching a service to a configuration.
      */
     fun isApplicableFor(configuration: RunConfigurationBase<*>, params: SimpleProgramParameters): Boolean
 

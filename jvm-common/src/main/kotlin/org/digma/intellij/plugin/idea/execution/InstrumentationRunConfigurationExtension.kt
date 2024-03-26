@@ -24,9 +24,6 @@ class InstrumentationRunConfigurationExtension : RunConfigurationExtension() {
 
     private val logger: Logger = Logger.getInstance(this::class.java)
 
-    //assign a local member for comfortability
-    private val runConfigurationHandlers = RunConfigurationHandlersHolder.runConfigurationHandlers
-
     private fun isObservabilityEnabled(): Boolean {
         return PersistenceService.getInstance().isObservabilityEnabled()
     }
@@ -36,7 +33,7 @@ class InstrumentationRunConfigurationExtension : RunConfigurationExtension() {
     }
 
     override fun isApplicableFor(configuration: RunConfigurationBase<*>): Boolean {
-        // always return true , so could later log unknown tasks
+        // always return true , so could later log unknown configurations
         return true
     }
 
@@ -81,7 +78,7 @@ class InstrumentationRunConfigurationExtension : RunConfigurationExtension() {
 
 
     private fun getHandlerForConfiguration(configuration: RunConfigurationBase<*>, params: JavaParameters): RunConfigurationInstrumentationHandler? {
-        return runConfigurationHandlers.find { it.isApplicableFor(configuration, params) }
+        return RunConfigurationHandlersHolder.runConfigurationHandlers.find { it.isApplicableFor(configuration, params) }
     }
 
 
@@ -90,7 +87,7 @@ class InstrumentationRunConfigurationExtension : RunConfigurationExtension() {
         //this should only be used to find a handler that can handle this configuration and help
         // extract details from the configuration for reporting an unhandled configuration
         fun getHandlerForConfigurationTypeSorted(configuration: RunConfigurationBase<*>): RunConfigurationInstrumentationHandler? {
-            return runConfigurationHandlers.sortedBy { it.getOrder() }
+            return RunConfigurationHandlersHolder.sortedByOrder()
                 .find { it.isHandlingType(configuration) }
         }
 
@@ -133,9 +130,10 @@ class InstrumentationRunConfigurationExtension : RunConfigurationExtension() {
         try {
 
             //find a handler that wants to handle this configuration and also that should clean after start
-            val configurationInstrumentationHandler = runConfigurationHandlers.find {
-                it.isApplicableFor(configuration) && it.shouldCleanConfigurationAfterStart(configuration)
-            }
+            val configurationInstrumentationHandler =
+                RunConfigurationHandlersHolder.runConfigurationHandlers.find {
+                    it.isApplicableFor(configuration) && it.shouldCleanConfigurationAfterStart(configuration)
+                }
 
             //we need to clean gradle configuration from our JAVA_TOOL_OPTIONS
             if (isObservabilityEnabled() && configurationInstrumentationHandler != null) {

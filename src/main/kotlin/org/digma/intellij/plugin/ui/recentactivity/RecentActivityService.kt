@@ -12,7 +12,6 @@ import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.common.EDT
-import org.digma.intellij.plugin.env.EnvironmentsSupplier
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult
@@ -85,28 +84,10 @@ class RecentActivityService(val project: Project) : Disposable {
         Log.log(logger::trace, project, "processRecentActivityGoToSpanRequest called with {}", payload)
 
         payload?.let {
-            EDT.ensureEDT {
-
-                try {
-
-                    //todo: we need to show the insights only after the environment changes. but environment change is done in the background
-                    // and its not easy to sync the change environment and showing the insights.
-                    // this actually comes to solve the case that the recent activity and the main environment combo
-                    // are not the same one and they need to sync. when this is fixed we can remove
-                    // the methods EnvironmentsSupplier.setCurrent(java.lang.String, boolean, java.lang.Runnable)
-                    // changing environment should be atomic and should not be effected by user activities like
-                    // clicking a link in recent activity
-
-                    val spanId = payload.span.spanCodeObjectId
-                    spanId?.let {
-                        ScopeManager.getInstance(project).changeScope(SpanScope(spanId))
-                        project.service<ActivityMonitor>().registerSpanLinkClicked(MonitoredPanel.RecentActivity)
-                    }
-
-                } catch (e: Exception) {
-                    Log.warnWithException(logger, project, e, "error in processRecentActivityGoToSpanRequest")
-                    ErrorReporter.getInstance().reportError(project, "RecentActivityService.processRecentActivityGoToSpanRequest", e)
-                }
+            val spanId = payload.span.spanCodeObjectId
+            spanId?.let {
+                ScopeManager.getInstance(project).changeScope(SpanScope(spanId))
+                ActivityMonitor.getInstance(project).registerSpanLinkClicked(MonitoredPanel.RecentActivity)
             }
         }
     }
@@ -114,17 +95,12 @@ class RecentActivityService(val project: Project) : Disposable {
 
     fun processRecentActivityGoToTraceRequest(payload: RecentActivityEntrySpanForTracePayload?) {
 
-        try {
-            Log.log(logger::trace, project, "processRecentActivityGoToTraceRequest called with {}", payload)
+        Log.log(logger::trace, project, "processRecentActivityGoToTraceRequest called with {}", payload)
 
-            if (payload != null) {
-                openJaegerFromRecentActivity(project, payload.traceId, payload.span.scopeId, payload.span.spanCodeObjectId)
-            } else {
-                Log.log({ message: String? -> logger.debug(message) }, "processRecentActivityGoToTraceRequest payload is empty")
-            }
-        } catch (e: Exception) {
-            Log.warnWithException(logger, project, e, "error in processRecentActivityGoToTraceRequest")
-            ErrorReporter.getInstance().reportError(project, "RecentActivityService.processRecentActivityGoToTraceRequest", e)
+        if (payload != null) {
+            openJaegerFromRecentActivity(project, payload.traceId, payload.span.scopeId, payload.span.spanCodeObjectId)
+        } else {
+            Log.log({ message: String? -> logger.debug(message) }, "processRecentActivityGoToTraceRequest payload is empty")
         }
     }
 

@@ -13,9 +13,9 @@ import com.intellij.openapi.externalSystem.service.execution.ExternalSystemRunCo
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.common.createObjectMapper
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import org.digma.intellij.plugin.idea.execution.DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE
+import org.digma.intellij.plugin.idea.execution.OTEL_RESOURCE_ATTRIBUTES
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
-import org.digma.intellij.plugin.idea.runcfg.DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE
-import org.digma.intellij.plugin.idea.runcfg.OTEL_RESOURCE_ATTRIBUTES
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.ui.recentactivity.model.AdditionToConfigResult

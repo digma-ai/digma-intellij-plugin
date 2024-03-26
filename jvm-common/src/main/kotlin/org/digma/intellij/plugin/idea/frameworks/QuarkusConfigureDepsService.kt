@@ -6,17 +6,18 @@ import com.intellij.collaboration.async.disposingScope
 import com.intellij.externalSystem.DependencyModifierService
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.WriteAction
+import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.externalSystem.autoimport.ProjectRefreshAction
 import com.intellij.openapi.project.Project
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import org.digma.intellij.plugin.buildsystem.BuildSystem
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
-import org.digma.intellij.plugin.idea.buildsystem.BuildSystemChecker.Companion.determineBuildSystem
-import org.digma.intellij.plugin.idea.buildsystem.JavaBuildSystem
+import org.digma.intellij.plugin.idea.buildsystem.BuildSystemChecker
 import org.digma.intellij.plugin.idea.deps.ModuleExt
 import org.digma.intellij.plugin.idea.deps.ModulesDepsService
 import org.digma.intellij.plugin.log.Log
@@ -26,6 +27,9 @@ import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
+//Do not change to light service because it will always register.
+// we want it to register only in Idea.
+// see: org.digma.intellij-with-jvm.xml
 @Suppress("LightServiceMigrationCode")
 class QuarkusConfigureDepsService(private val project: Project) : Disposable {
 
@@ -37,13 +41,13 @@ class QuarkusConfigureDepsService(private val project: Project) : Disposable {
             return project.getService(QuarkusConfigureDepsService::class.java)
         }
 
-        fun getQuarkusOtelDependency(javaBuildSystem: JavaBuildSystem, quarkusVersion: String): UnifiedDependency {
+        fun getQuarkusOtelDependency(javaBuildSystem: BuildSystem, quarkusVersion: String): UnifiedDependency {
             val quarkusOtelCoordinates = UnifiedCoordinates("io.quarkus", "quarkus-opentelemetry", quarkusVersion)
 
             val dep: UnifiedDependency =
                 when (javaBuildSystem) {
-                    JavaBuildSystem.MAVEN -> UnifiedDependency(quarkusOtelCoordinates, null)
-                    JavaBuildSystem.GRADLE -> UnifiedDependency(quarkusOtelCoordinates, "implementation")
+                    BuildSystem.MAVEN -> UnifiedDependency(quarkusOtelCoordinates, null)
+                    BuildSystem.GRADLE -> UnifiedDependency(quarkusOtelCoordinates, "implementation")
                     else -> UnifiedDependency(quarkusOtelCoordinates, "compile")
                 }
 
@@ -117,7 +121,7 @@ class QuarkusConfigureDepsService(private val project: Project) : Disposable {
 
     private fun addDependenciesOfQuarkusOtelTo(moduleExt: ModuleExt) {
         val module = moduleExt.module
-        val moduleBuildSystem = determineBuildSystem(module)
+        val moduleBuildSystem = project.service<BuildSystemChecker>().determineBuildSystem(module)
         val dependencyLib = getQuarkusOtelDependency(moduleBuildSystem, moduleExt.metadata.quarkusVersion!!)
 
         val dependencyModifierService = DependencyModifierService.getInstance(project)

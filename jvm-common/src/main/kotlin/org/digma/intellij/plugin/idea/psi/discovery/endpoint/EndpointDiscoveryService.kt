@@ -7,6 +7,9 @@ import org.digma.intellij.plugin.idea.psi.JvmLanguageService
 import org.digma.intellij.plugin.idea.psi.SupportedJvmLanguages
 import org.digma.intellij.plugin.psi.LanguageService
 
+//Do not change to light service because it will always register.
+// we want it to register only in Idea.
+// see: org.digma.intellij-with-jvm.xml
 @Suppress("LightServiceMigrationCode")
 class EndpointDiscoveryService(private val project: Project) {
 

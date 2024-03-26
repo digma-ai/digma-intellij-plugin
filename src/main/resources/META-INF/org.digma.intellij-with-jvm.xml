@@ -1,6 +1,8 @@
+<!--suppress LightServiceMigrationXML -->
 <idea-plugin xmlns:xi="http://www.w3.org/2001/XInclude">
 
     <xi:include href="/META-INF/org.digma.intellij-with-codevision.xml" xpointer="xpointer(/idea-plugin/*)"/>
+    <xi:include href="/META-INF/org.digma.intellij-with-jvm-run-configuration.xml" xpointer="xpointer(/idea-plugin/*)"/>
 
 
     <depends>org.jetbrains.idea.maven</depends>
@@ -38,22 +40,7 @@
         <projectService serviceImplementation="org.digma.intellij.plugin.idea.userstats.UserStatsService"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.idea.userstats.UserStatsServiceStarter"/>
 
-
-        <runConfigurationExtension
-                implementation="org.digma.intellij.plugin.idea.runcfg.OtelRunConfigurationExtension"/>
-        <postStartupActivity implementation="org.digma.intellij.plugin.idea.runcfg.RunConfigurationStartupActivity"/>
-        <projectService
-                serviceImplementation="org.digma.intellij.plugin.idea.runcfg.AutoOtelAgentRunConfigurationWrapper"/>
-        <projectService
-                serviceImplementation="org.digma.intellij.plugin.idea.runcfg.EeAppServerAtIdeaUltimateRunConfigurationWrapper"/>
-        <projectService
-                serviceImplementation="org.digma.intellij.plugin.idea.runcfg.TomcatRunConfigurationWrapperForIdeaUltimate"/>
-        <projectService serviceImplementation="org.digma.intellij.plugin.idea.runcfg.QuarkusRunConfigurationWrapper"/>
-        <projectService
-                serviceImplementation="org.digma.intellij.plugin.idea.runcfg.OpenLibertyRunConfigurationWrapper"/>
-        <applicationService serviceImplementation="org.digma.intellij.plugin.idea.runcfg.OTELJarProvider"/>
-        <postStartupActivity implementation="org.digma.intellij.plugin.idea.runcfg.OTELJarProviderStartup"/>
-
+        <projectService serviceImplementation="org.digma.intellij.plugin.idea.buildsystem.BuildSystemChecker"/>
 
         <projectService
                 serviceImplementation="org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService"/>

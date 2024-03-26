@@ -12,6 +12,8 @@ plugins {
 dependencies {
     compileOnly(project(":ide-common"))
     compileOnly(project(":model"))
+
+    testImplementation(project(":ide-common"))
 }
 
 //jvm module should always build with IC
@@ -21,7 +23,7 @@ logBuildProfile(project)
 
 intellij {
     version.set("$platformType-${project.platformVersion()}")
-    plugins.set(listOf("com.intellij.java", "org.jetbrains.kotlin", "org.jetbrains.idea.maven", "org.jetbrains.plugins.gradle"))
+    plugins.set(listOf("com.intellij.java", "org.jetbrains.kotlin"))
     downloadSources.set(project.shouldDownloadSources())
 }
 

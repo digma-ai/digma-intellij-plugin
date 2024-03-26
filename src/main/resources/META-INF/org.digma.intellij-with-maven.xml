@@ -1,0 +1,12 @@
+<!--suppress LightServiceMigrationXML -->
+<idea-plugin>
+
+    <depends>org.jetbrains.idea.maven</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <applicationService
+                serviceImplementation="org.digma.intellij.plugin.idea.maven.execution.MavenRunConfigurationService"/>
+        <applicationService serviceImplementation="org.digma.intellij.plugin.idea.maven.helper.MavenService"/>
+    </extensions>
+
+</idea-plugin>

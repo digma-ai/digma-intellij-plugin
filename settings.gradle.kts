@@ -88,4 +88,4 @@ dependencyResolutionManagement {
 rootProject.name = "digma-intellij-plugin"
 include("rider:protocol")
 findProject(":rider:protocol")?.name = "protocol"
-include("model", "analytics-provider", "ide-common", "rider", "python", "jvm-common")
+include("model", "analytics-provider", "ide-common", "rider", "python", "jvm-common", "gradle-support", "maven-support")

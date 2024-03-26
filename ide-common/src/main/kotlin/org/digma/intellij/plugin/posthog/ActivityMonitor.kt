@@ -408,12 +408,12 @@ class ActivityMonitor(private val project: Project) : Disposable {
         )
     }
 
-    fun reportRunConfig(runConfigTypeName: String, taskNames: Collection<String>, observabilityEnabled: Boolean, connectedToBackend: Boolean) {
+    fun reportRunConfig(runConfigTypeName: String, description: String, observabilityEnabled: Boolean, connectedToBackend: Boolean) {
         capture(
             "run config",
             mapOf(
                 "run.config.type" to runConfigTypeName,
-                "task.names" to taskNames,
+                "description" to description,
                 "observability.enabled" to observabilityEnabled,
                 "backend.connected" to connectedToBackend,
             )
@@ -427,7 +427,23 @@ class ActivityMonitor(private val project: Project) : Disposable {
         )
     }
 
-    fun reportUnknownTaskRunning(buildSystem: String, taskNames: Collection<String>, configurationClassName: String, configurationType: String) {
+    fun reportUnknownConfiguration(configurationClassName: String, configurationType: String) {
+        capture(
+            "unknown-config ran",
+            mapOf(
+                "config.class-name" to configurationClassName,
+                "config.type" to configurationType,
+            )
+        )
+    }
+
+    fun reportUnhandledConfiguration(
+        description: String,
+        buildSystem: String,
+        taskNames: Collection<String>,
+        configurationClassName: String,
+        configurationType: String
+    ) {
 
         // Purge tasks older than 1 minute
         latestUnknownRunConfigTasks.entries.removeIf {
@@ -445,12 +461,13 @@ class ActivityMonitor(private val project: Project) : Disposable {
             return
 
         capture(
-            "unknown-config ran",
+            "unhandled-config ran",
             mapOf(
                 "config.build-system" to buildSystem,
                 "config.tasks" to taskNamesToReport,
                 "config.class-name" to configurationClassName,
                 "config.type" to configurationType,
+                "config.description" to description
             )
         )
     }

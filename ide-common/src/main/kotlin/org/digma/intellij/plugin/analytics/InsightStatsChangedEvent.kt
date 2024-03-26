@@ -2,8 +2,6 @@ package org.digma.intellij.plugin.analytics
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.intellij.util.messages.Topic
-import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
-import org.digma.intellij.plugin.scope.SpanScope
 
 interface InsightStatsChangedEvent {
     companion object {

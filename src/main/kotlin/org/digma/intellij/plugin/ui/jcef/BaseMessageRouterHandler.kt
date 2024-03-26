@@ -25,7 +25,6 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
 import org.digma.intellij.plugin.navigation.MainContentViewSwitcher
 import org.digma.intellij.plugin.posthog.ActivityMonitor
-import org.digma.intellij.plugin.scope.ScopeChangedEvent
 import org.digma.intellij.plugin.scope.ScopeManager
 import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
@@ -213,12 +212,12 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                         payload?.let {
                             val scopeNode = payload.get("scope");
                             if (scopeNode is NullNode){
-                                var stats = AnalyticsService.getInstance(project).getInsightsStats(null);
+                                val stats = AnalyticsService.getInstance(project).getInsightsStats(null);
                                 project.messageBus.syncPublisher(InsightStatsChangedEvent.INSIGHT_STATS_CHANGED_TOPIC)
                                     .insightStatsChanged(null, stats.analyticsInsightsCount, stats.issuesInsightsCount, stats.unreadInsightsCount)
                             } else {
-                                var spanCodeObjectId = scopeNode.get("span").get("spanCodeObjectId").asText()
-                                var stats = AnalyticsService.getInstance(project).getInsightsStats(spanCodeObjectId);
+                                val spanCodeObjectId = scopeNode.get("span").get("spanCodeObjectId").asText()
+                                val stats = AnalyticsService.getInstance(project).getInsightsStats(spanCodeObjectId);
                                 project.messageBus.syncPublisher(InsightStatsChangedEvent.INSIGHT_STATS_CHANGED_TOPIC)
                                     .insightStatsChanged(scopeNode, stats.analyticsInsightsCount, stats.issuesInsightsCount, stats.unreadInsightsCount)
                             }

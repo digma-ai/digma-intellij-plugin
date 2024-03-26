@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.307] - 2024-03-26
+## [2.0.308] - 2024-03-26
+
+- Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1999
+- fix error on EDT by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2001
+
+## 2.0.307 - 2024-03-26
 
 - Add global messages to get insight stats and change environment by @borisermakof in https://github.com/digma-ai/digma-intellij-plugin/pull/1992
 - separation of gradle and maven classes Closes #1616 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1995

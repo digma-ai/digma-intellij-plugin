@@ -502,7 +502,7 @@ public class AnalyticsService implements Disposable {
         } catch (RuntimeExceptionWithAttachments e) {
             //this is a platform exception as a result of asserting non UI thread when calling backend API
             throw e;
-        } catch (Exception e) {
+        } catch (Throwable e) {
             throw new AnalyticsServiceException("Unknown exception", e);
         }
     }
@@ -636,7 +636,12 @@ public class AnalyticsService implements Disposable {
                 //handleInvocationTargetException may rethrow an exception, if it didn't then always
                 // an AnalyticsServiceException will be throws
                 handleInvocationTargetException(e, method, args);
-                throw new AnalyticsServiceException(e);
+                if (e.getCause() != null) {
+                    //this is caught in executeCatching
+                    throw e.getCause();
+                } else {
+                    throw new AnalyticsServiceException(e);
+                }
 
             } catch (Exception e) {
                 errorReportingHelper.addIfNewError(e);
@@ -688,10 +693,6 @@ public class AnalyticsService implements Disposable {
             }
 
             ErrorReporter.getInstance().reportAnalyticsServiceError(project, "AnalyticsInvocationHandler.invoke." + method.getName(), method.getName(), invocationTargetException, isConnectionException);
-
-            if (invocationTargetException.getCause() instanceof AnalyticsProviderException) {
-                throw invocationTargetException.getCause();
-            }
 
         }
 

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.io.CharStreams;
 import okhttp3.*;
+import okhttp3.logging.HttpLoggingInterceptor;
 import org.digma.intellij.plugin.model.rest.AboutResult;
 import org.digma.intellij.plugin.model.rest.assets.AssetDisplayInfo;
 import org.digma.intellij.plugin.model.rest.codelens.*;
@@ -39,7 +40,7 @@ import java.security.*;
 import java.security.cert.X509Certificate;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
+import java.util.function.*;
 
 public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
@@ -60,11 +61,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
             public String getHeaderValue() {
                 return null;
             }
-        }));
+        }), System.out::println);
     }
 
-    public RestAnalyticsProvider(String baseUrl, List<AuthenticationProvider> authenticationProviders) {
-        this.client = createClient(baseUrl, authenticationProviders);
+    public RestAnalyticsProvider(String baseUrl, List<AuthenticationProvider> authenticationProviders, Consumer<String> logger) {
+        this.client = createClient(baseUrl, authenticationProviders, logger);
     }
 
 
@@ -388,8 +389,8 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
 
-    private Client createClient(String baseUrl, List<AuthenticationProvider> authenticationProviders) {
-        return new Client(baseUrl, authenticationProviders);
+    private Client createClient(String baseUrl, List<AuthenticationProvider> authenticationProviders, Consumer<String> logger) {
+        return new Client(baseUrl, authenticationProviders, logger);
     }
 
 
@@ -407,7 +408,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         private final OkHttpClient okHttpClient;
 
         @SuppressWarnings("MoveFieldAssignmentToInitializer")
-        public Client(String baseUrl, List<AuthenticationProvider> authenticationProviders) {
+        public Client(String baseUrl, List<AuthenticationProvider> authenticationProviders, Consumer<String> logger) {
 
             //configure okHttp here if necessary
             OkHttpClient.Builder builder = new OkHttpClient.Builder();
@@ -430,6 +431,9 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
             }));
 
 
+            //always add the logging interceptor last, so it will log info from all other interceptors
+            addLoggingInterceptor(builder, logger);
+
             builder.callTimeout(10, TimeUnit.SECONDS)
                     .connectTimeout(5, TimeUnit.SECONDS)
                     .readTimeout(5, TimeUnit.SECONDS);
@@ -449,6 +453,25 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
             analyticsProvider = retrofit.create(AnalyticsProviderRetrofit.class);
         }
+
+
+        private void addLoggingInterceptor(OkHttpClient.Builder builder, Consumer<String> logger) {
+
+            var logSensitive = Boolean.getBoolean("api.digma.org.log.sensitive");
+
+            HttpLoggingInterceptor logging = new HttpLoggingInterceptor(message -> {
+                if (!logSensitive && message != null && message.contains("accessToken")) {
+                    return;
+                }
+                logger.accept(message);
+            });
+            logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+            if (!logSensitive) {
+                logging.redactHeader("Authorization");
+            }
+            builder.addInterceptor(logging);
+        }
+
 
         private void applyInsecureSsl(OkHttpClient.Builder builder) {
             SSLContext sslContext;

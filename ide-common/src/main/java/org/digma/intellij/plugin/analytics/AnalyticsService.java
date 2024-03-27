@@ -137,7 +137,11 @@ public class AnalyticsService implements Disposable {
 
         Log.log(LOGGER::debug, "calling AuthManager.withAuth for url {}", url);
         AnalyticsProvider analyticsProvider =
-                AuthManager.getInstance().withAuth(new RestAnalyticsProvider(url, AuthManager.getInstance().getAuthenticationProviders()), url);
+                AuthManager.getInstance().withAuth(new RestAnalyticsProvider(url, AuthManager.getInstance().getAuthenticationProviders(),
+                        message -> {
+                            var apiLogger = Logger.getInstance("api.digma.org");
+                            Log.log(apiLogger::debug, "API:{}", message);
+                        }), url);
         Log.log(LOGGER::debug, "AuthManager.withAuth successfully wrapped AnalyticsProvider for url {}", url);
         analyticsProviderProxy = newAnalyticsProviderProxy(analyticsProvider);
 
@@ -160,7 +164,7 @@ public class AnalyticsService implements Disposable {
             public String getHeaderValue() {
                 return token;
             }
-        }))) {
+        }), message -> Log.log(LOGGER::debug, message))) {
             //todo: use health check to test connection
             var envs = analyticsProvider.getEnvironments();
             if (envs != null) {
@@ -237,13 +241,13 @@ public class AnalyticsService implements Disposable {
     }
 
 
-    public LinkUnlinkTicketResponse linkTicket(String codeObjectId, String insightType, String ticketLink) throws AnalyticsServiceException{
+    public LinkUnlinkTicketResponse linkTicket(String codeObjectId, String insightType, String ticketLink) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
         var linkRequest = new LinkTicketRequest(env, codeObjectId, insightType, ticketLink);
         return executeCatching(() -> analyticsProviderProxy.linkTicket(linkRequest));
     }
 
-    public LinkUnlinkTicketResponse unlinkTicket(String codeObjectId, String insightType) throws AnalyticsServiceException{
+    public LinkUnlinkTicketResponse unlinkTicket(String codeObjectId, String insightType) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
         var unlinkRequest = new UnlinkTicketRequest(env, codeObjectId, insightType);
         return executeCatching(() -> analyticsProviderProxy.unlinkTicket(unlinkRequest));
@@ -455,9 +459,9 @@ public class AnalyticsService implements Disposable {
     public InsightsStatsResult getInsightsStats(String spanCodeObjectId) throws AnalyticsServiceException {
         try {
             var params = new HashMap<String, Object>();
-            params.put("Environment",this.environment.getLatestKnownEnv());
+            params.put("Environment", this.environment.getLatestKnownEnv());
 
-            if(spanCodeObjectId != null){
+            if (spanCodeObjectId != null) {
                 params.put("ScopedSpanCodeObjectId", spanCodeObjectId);
             }
 
@@ -465,7 +469,7 @@ public class AnalyticsService implements Disposable {
         } catch (Exception e) {
             Log.debugWithException(LOGGER, project, e, "error calling  insights stats", e.getMessage());
         }
-        return  new InsightsStatsResult(0,0,0, 0);
+        return new InsightsStatsResult(0, 0, 0, 0);
     }
 
     public HttpResponse lowLevelCall(HttpRequest request) throws AnalyticsServiceException {
@@ -506,7 +510,6 @@ public class AnalyticsService implements Disposable {
             throw new AnalyticsServiceException("Unknown exception " + e.getMessage(), e);
         }
     }
-
 
 
     private AnalyticsProvider newAnalyticsProviderProxy(AnalyticsProvider obj) {

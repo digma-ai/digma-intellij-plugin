@@ -64,7 +64,8 @@ class DigmaAccountManager
 
 
     override suspend fun findCredentials(account: DigmaAccount): DigmaCredentials? {
-        Log.log(logger::debug, "findCredentials called for account {}", account)
+        //too many log messages...
+//        Log.log(logger::debug, "findCredentials called for account {}", account)
         return super.findCredentials(account)
     }
 

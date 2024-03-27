@@ -13,6 +13,11 @@ dependencies {
     implementation(libs.retrofit.scalars)
     implementation(libs.jackson.datetime)
     implementation(libs.guava)
+    //todo: find a way to resolve libs.okhttp.logging to the same okhttp version as retrofit brings as dependency.
+    // probably using resolution strategy
+    implementation(libs.okhttp.logging) {
+        isTransitive = false
+    }
 }
 
 

@@ -52,6 +52,10 @@ public class ExceptionUtils {
     }
 
 
+    public static boolean isAnyConnectionException(@NotNull Throwable e) {
+        return isConnectionException(e) || isSslConnectionException(e);
+    }
+
     public static boolean isConnectionException(@NotNull Throwable e) {
 
         var ex = e.getCause();
@@ -138,6 +142,7 @@ public class ExceptionUtils {
                 }
             }
         }
+
 
         return exceptionMessage;
     }

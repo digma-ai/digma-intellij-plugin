@@ -36,7 +36,7 @@ class DefaultAccountTokenProvider : TokenProvider {
                 val account = DigmaDefaultAccountHolder.getInstance().account
                 account?.let {
                     val credentials = DigmaAccountManager.getInstance().findCredentials(account)
-                    credentials?.takeIf { credentials.isAccessTokenValid() }?.let { creds ->
+                    credentials?.let { creds ->
                         "${creds.tokenType} ${creds.accessToken}"
                     }
                 }

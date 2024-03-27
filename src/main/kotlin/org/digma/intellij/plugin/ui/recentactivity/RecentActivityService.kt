@@ -74,7 +74,7 @@ class RecentActivityService(val project: Project) : Disposable {
             recentActivityData
 
         } catch (e: AnalyticsServiceException) {
-            Log.warnWithException(logger, project, e, "AnalyticsServiceException for getRecentActivity: {}", e.meaningfulMessage)
+            Log.debugWithException(logger, project, e, "AnalyticsServiceException for getRecentActivity: {}", e.meaningfulMessage)
             ErrorReporter.getInstance().reportError(project, "RecentActivityService.getRecentActivities", e)
             null
         }
@@ -102,7 +102,7 @@ class RecentActivityService(val project: Project) : Disposable {
         if (payload != null) {
             openJaegerFromRecentActivity(project, payload.traceId, payload.span.scopeId, payload.span.spanCodeObjectId)
         } else {
-            Log.log({ message: String? -> logger.debug(message) }, "processRecentActivityGoToTraceRequest payload is empty")
+            Log.log(logger::debug, "processRecentActivityGoToTraceRequest payload is empty")
         }
     }
 
@@ -133,7 +133,7 @@ class RecentActivityService(val project: Project) : Disposable {
             project.service<AnalyticsService>().environment.refreshNowOnBackground()
 
         } catch (e: Exception) {
-            Log.warnWithException(logger, project, e, "error deleting environment")
+            Log.debugWithException(logger, project, e, "error deleting environment")
             ErrorReporter.getInstance().reportError(project, "RecentActivityService.deleteEnvironment", e)
         }
     }

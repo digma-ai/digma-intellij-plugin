@@ -27,6 +27,9 @@ import java.lang.reflect.Proxy
 import java.util.concurrent.locks.ReentrantLock
 
 
+const val SILENT_LOGIN_USER = "admin@digma.ai"
+const val SILENT_LOGIN_PASSWORD = "admin"
+
 @Service(Service.Level.APP)
 class AuthManager {
 
@@ -54,7 +57,7 @@ class AuthManager {
     //the analyticsProvider here will usually be a non proxied RestAnalyticsProvider
     fun withAuth(analyticsProvider: RestAnalyticsProvider, url: String): AnalyticsProvider {
 
-        Log.log(logger::info, "wrapping analyticsProvider with auth url={}", url)
+        Log.log(logger::info, "wrapping analyticsProvider with auth for url={}", url)
 
         //loginOrRefresh will fail if backend is not up. it should catch all possible exceptions so that a proxy will always be returned.
         loginOrRefresh(analyticsProvider, url)
@@ -75,7 +78,7 @@ class AuthManager {
         loginOrRefreshLock.lock()
         return try {
 
-            Log.log(logger::info, "loginOrRefresh, url={}", url)
+            Log.log(logger::info, "loginOrRefresh called, url={}", url)
 
 
             val digmaAccount = DigmaDefaultAccountHolder.getInstance().account
@@ -101,7 +104,12 @@ class AuthManager {
                     DigmaAccountManager.getInstance().findCredentials(digmaAccount)
                 }
                 if (credentials == null) {
-                    Log.log(logger::info, "loginOrRefresh, no credentials for account {},calling login, url={}", digmaAccount.name, url)
+                    Log.log(
+                        logger::warn,
+                        "loginOrRefresh, no credentials found for account {} maybe credentials deleted from password safe? doing new login, url={}",
+                        digmaAccount.name,
+                        url
+                    )
                     runBlocking {
                         DigmaAccountManager.getInstance().removeAccount(digmaAccount)
                         DigmaDefaultAccountHolder.getInstance().account = null
@@ -109,28 +117,39 @@ class AuthManager {
                         login(analyticsProvider, url)
                     }
                 } else if (!credentials.isAccessTokenValid() || forceRefresh) {
-                    Log.log(logger::info, "loginOrRefresh, refreshing credentials for account {}, url={}", digmaAccount.name, url)
-                    refresh(analyticsProvider, digmaAccount, credentials, url)
+                    val because = if (!credentials.isAccessTokenValid()) "access token expired" else "called with force refresh"
+                    Log.log(
+                        logger::info,
+                        "loginOrRefresh, need to refresh credentials for account {} because {}, url={}",
+                        digmaAccount.name,
+                        because,
+                        url
+                    )
+                    refreshToken(analyticsProvider, digmaAccount, credentials, url)
                 } else {
                     Log.log(logger::info, "loginOrRefresh, got account {} with valid credentials, url={}", digmaAccount.name, url)
                 }
             }
 //            }
+            Log.log(logger::info, "loginOrRefresh success, url={}", url)
             true
         } catch (e: AuthenticationException) {
-            Log.warnWithException(logger, e, "AuthenticationException in loginOrRefresh")
+            Log.warnWithException(logger, e, "AuthenticationException in loginOrRefresh {}", e)
             //should never get AuthenticationException because all the apis used here are not protected
             ErrorReporter.getInstance().reportInternalFatalError("AuthManager.loginOrRefresh", e)
             false
         } catch (e: AnalyticsProviderException) {
-            Log.warnWithException(logger, e, "AnalyticsProviderException in loginOrRefresh")
             //this may be a connection error if backend is not up so just treat it as regular analytics error
-            val isConnectionException =
-                ExceptionUtils.isConnectionException(e) || ExceptionUtils.isSslConnectionException(e)
+            val isConnectionException = ExceptionUtils.isAnyConnectionException(e)
+            if (isConnectionException) {
+                Log.debugWithException(logger, e, "AnalyticsProviderException in loginOrRefresh {}", e)
+            } else {
+                Log.warnWithException(logger, e, "AnalyticsProviderException in loginOrRefresh {}", e)
+            }
             ErrorReporter.getInstance().reportAnalyticsServiceError("AuthManager.loginOrRefresh", "loginOrRefresh", e, isConnectionException)
             false
         } catch (e: Throwable) {
-            Log.warnWithException(logger, e, "Exception in loginOrRefresh")
+            Log.warnWithException(logger, e, "Exception in loginOrRefresh {}", e)
             ErrorReporter.getInstance().reportInternalFatalError("AuthManager.loginOrRefresh", e)
             false
         } finally {
@@ -144,7 +163,7 @@ class AuthManager {
     private fun login(analyticsProvider: RestAnalyticsProvider, url: String) {
         Log.log(logger::info, "doing login for url={}", url)
         val email = PersistenceService.getInstance().getUserRegistrationEmail() ?: PersistenceService.getInstance().getUserEmail()
-        val loginResponse = analyticsProvider.login(LoginRequest("admin@digma.ai", email, "admin"))
+        val loginResponse = analyticsProvider.login(LoginRequest(SILENT_LOGIN_USER, email, SILENT_LOGIN_PASSWORD))
         val digmaAccount = DigmaAccountManager.createAccount(url)
         val digmaCredentials = DigmaCredentials(
             loginResponse.accessToken,
@@ -157,10 +176,11 @@ class AuthManager {
             DigmaAccountManager.getInstance().updateAccount(digmaAccount, digmaCredentials)
             DigmaDefaultAccountHolder.getInstance().account = digmaAccount
         }
+        Log.log(logger::info, "login success for url={}", url)
     }
 
 
-    private fun refresh(analyticsProvider: RestAnalyticsProvider, digmaAccount: DigmaAccount, credentials: DigmaCredentials, url: String) {
+    private fun refreshToken(analyticsProvider: RestAnalyticsProvider, digmaAccount: DigmaAccount, credentials: DigmaCredentials, url: String) {
 
         try {
             Log.log(logger::info, "refreshing credentials for account {}, url={}", digmaAccount.name, url)
@@ -176,6 +196,7 @@ class AuthManager {
                 DigmaAccountManager.getInstance().updateAccount(digmaAccount, digmaCredentials)
                 DigmaDefaultAccountHolder.getInstance().account = digmaAccount
             }
+            Log.log(logger::info, "refresh token success for url={}", url)
         } catch (e: AuthenticationException) {
             Log.warnWithException(logger, e, "AuthenticationException in refresh")
             ErrorReporter.getInstance().reportInternalFatalError("AuthManager.refresh", e)
@@ -183,7 +204,7 @@ class AuthManager {
             //usually refresh should not fail on AuthenticationException.
             //but,if refresh fails on AuthenticationException there is probably some corruption with the refresh token
             // or some other server issue that caused it. in that case delete the account and login again hopefully it will succeed.
-            Log.log(logger::info, "refresh failed on AuthenticationException, trying login again. account {}, url={}", digmaAccount.name, url)
+            Log.log(logger::info, "refresh token failed on AuthenticationException, trying login again. account {}, url={}", digmaAccount.name, url)
             runBlocking {
                 DigmaAccountManager.getInstance().removeAccount(digmaAccount)
                 DigmaDefaultAccountHolder.getInstance().account = null
@@ -220,16 +241,19 @@ class AuthManager {
                 val authenticationException = ExceptionUtils.find(e, AuthenticationException::class.java)
                     ?: throw e
 
+                Log.log(logger::info, "got AuthenticationException, calling loginOrRefresh")
                 //if loginOrRefresh fails here there is no point in calling the method again.
                 // it will probably fail again and will cause an endless loop.
                 //just wait for the next invocation to try login or refresh again.
                 if (loginOrRefresh(analyticsProvider, url, true)) {
+                    Log.log(logger::info, "loginOrRefresh success after AuthenticationException")
                     if (args == null) {
                         method.invoke(analyticsProvider)
                     } else {
                         method.invoke(analyticsProvider, *args)
                     }
                 } else {
+                    Log.log(logger::info, "loginOrRefresh failed after AuthenticationException, rethrowing exception {}", e)
                     //must return a value ot throw the exception
                     throw e
                 }

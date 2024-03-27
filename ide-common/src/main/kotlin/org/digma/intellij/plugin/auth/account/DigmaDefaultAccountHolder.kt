@@ -87,8 +87,8 @@ class DigmaDefaultAccountHolder :
     }
 
     override fun loadState(state: AccountState) {
-        fireNotification = false
         Log.log(logger::info, "loadState called {}", state)
+        fireNotification = false
         try {
             account = state.defaultAccountId?.let { id ->
                 accountManager.accountsState.value.find { it.id == id }.also {
@@ -103,13 +103,13 @@ class DigmaDefaultAccountHolder :
 
 
     override fun noStateLoaded() {
+        Log.log(logger::info, "noStateLoaded called")
         super.noStateLoaded()
-        Log.log(logger::info, "noStateLoaded")
     }
 
     override fun initializeComponent() {
+        Log.log(logger::info, "initializeComponent called")
         super.initializeComponent()
-        Log.log(logger::info, "noStateLoaded")
     }
 
 }

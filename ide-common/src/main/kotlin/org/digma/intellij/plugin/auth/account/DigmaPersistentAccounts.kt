@@ -46,12 +46,12 @@ internal class DigmaPersistentAccounts
 
 
     override fun noStateLoaded() {
-        Log.log(logger::info, "noStateLoaded")
+        Log.log(logger::info, "noStateLoaded called")
         super.noStateLoaded()
     }
 
     override fun initializeComponent() {
-        Log.log(logger::info, "initializeComponent")
+        Log.log(logger::info, "initializeComponent called")
         super.initializeComponent()
     }
 

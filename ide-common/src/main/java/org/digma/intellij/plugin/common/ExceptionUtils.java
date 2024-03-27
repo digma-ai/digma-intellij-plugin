@@ -52,6 +52,10 @@ public class ExceptionUtils {
     }
 
 
+    public static boolean isAnyConnectionException(@NotNull Throwable e) {
+        return isConnectionException(e) || isSslConnectionException(e);
+    }
+
     public static boolean isConnectionException(@NotNull Throwable e) {
 
         var ex = e.getCause();
@@ -139,11 +143,12 @@ public class ExceptionUtils {
             }
         }
 
+
         return exceptionMessage;
     }
 
     @Nullable
-    public static <T> T find(@NotNull InvocationTargetException e, @NotNull Class<T> javaClass) {
+    public static <T> T find(@NotNull Exception e, @NotNull Class<T> javaClass) {
 
         var ex = e.getCause();
         while (ex != null && !(javaClass.equals(ex.getClass()))) {

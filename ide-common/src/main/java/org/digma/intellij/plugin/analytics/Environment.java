@@ -161,7 +161,7 @@ public class Environment implements EnvironmentsSupplier {
             List<String> envsFromBackend = analyticsService.getRawEnvironments();
 
             if (envsFromBackend.isEmpty()) {
-                Log.log(LOGGER::warn, "Error loading environments or no environments added yet: {}", envsFromBackend);
+                Log.log(LOGGER::trace, "Error loading environments or no environments added yet: {}", envsFromBackend);
                 envsFromBackend = new ArrayList<>();
             } else {
                 Log.log(LOGGER::trace, "Got environments {}", envsFromBackend);

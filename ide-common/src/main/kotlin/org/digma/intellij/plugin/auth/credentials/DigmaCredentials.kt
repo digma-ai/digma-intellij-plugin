@@ -37,8 +37,12 @@ class DigmaCredentials
     @JsonIgnore
     override fun isAccessTokenValid(): Boolean = Date(System.currentTimeMillis()).time < expirationTime
 
-    @JsonIgnore
-    fun getExpirationTime(): Date {
+    fun getExpirationTimeAsDate(): Date {
         return Date(System.currentTimeMillis())
+    }
+
+    //prevent accidental logging of credential secrets
+    override fun toString(): String {
+        return "Credential for url $url (no details printed,see in password safe)"
     }
 }

@@ -18,6 +18,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.PluginId
 import org.digma.intellij.plugin.analytics.AnalyticsService
+import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.createObjectMapper
 import org.digma.intellij.plugin.env.Env
@@ -66,9 +67,9 @@ class EventsNotificationsService(val project: Project) : Disposable {
                         lastEventTime = ZonedDateTime.now().minus(7, ChronoUnit.DAYS).withZoneSameInstant(ZoneOffset.UTC).toString()
                     }
 
-                    Log.log(logger::info, "sending getLatestEvents query with lastEventTime={}", lastEventTime)
+                    Log.log(logger::trace, "sending getLatestEvents query with lastEventTime={}", lastEventTime)
                     val events = AnalyticsService.getInstance(project).getLatestEvents(lastEventTime)
-                    Log.log(logger::info, "got latest events {}", events)
+                    Log.log(logger::trace, "got latest events {}", events)
 
                     events.events.forEach {
                         when (it) {
@@ -79,8 +80,11 @@ class EventsNotificationsService(val project: Project) : Disposable {
 
                     updateLastEventTime(events)
 
+                } catch (e: AnalyticsServiceException) {
+                    Log.debugWithException(logger, e, "could not get latest events {}", e)
+                    ErrorReporter.getInstance().reportError(project, "EventsNotificationsService.waitForEvents", e)
                 } catch (e: Exception) {
-                    Log.log(logger::warn, "could not get latest events {}", e.message)
+                    Log.warnWithException(logger, e, "could not get latest events {}", e.message)
                     ErrorReporter.getInstance().reportError(project, "EventsNotificationsService.waitForEvents", e)
                 }
             }

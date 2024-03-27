@@ -91,6 +91,8 @@ public class AnalyticsService implements Disposable {
 
         settingsState.addChangeListener(state -> {
 
+            Log.log(LOGGER::debug, "settings changed event");
+
             boolean shouldReplaceClient = false;
 
             if (!Objects.equals(state.apiUrl, myApiUrl)) {
@@ -102,6 +104,7 @@ public class AnalyticsService implements Disposable {
             //there is no need top replace the client when api token is changed because there is an
             // AuthenticationProvider that always takes it from the settings
             if (shouldReplaceClient) {
+                Log.log(LOGGER::debug, "api url changed to {}, calling replace client", myApiUrl);
                 replaceClient(myApiUrl);
             }
 
@@ -121,6 +124,9 @@ public class AnalyticsService implements Disposable {
     //just replace the client and do not fire any events
     //this method should be synchronized, and it shouldn't be a problem, it doesn't happen too often.
     private synchronized void replaceClient(String url) {
+
+        Log.log(LOGGER::debug, "replacing AnalyticsProvider for url {}", url);
+
         if (analyticsProviderProxy != null) {
             try {
                 analyticsProviderProxy.close();
@@ -129,8 +135,10 @@ public class AnalyticsService implements Disposable {
             }
         }
 
+        Log.log(LOGGER::debug, "calling AuthManager.withAuth for url {}", url);
         AnalyticsProvider analyticsProvider =
                 AuthManager.getInstance().withAuth(new RestAnalyticsProvider(url, AuthManager.getInstance().getAuthenticationProviders()), url);
+        Log.log(LOGGER::debug, "AuthManager.withAuth successfully wrapped AnalyticsProvider for url {}", url);
         analyticsProviderProxy = newAnalyticsProviderProxy(analyticsProvider);
 
         environment.refreshNowOnBackground();
@@ -455,7 +463,7 @@ public class AnalyticsService implements Disposable {
 
             return executeCatching(() -> analyticsProviderProxy.getInsightsStats(params));
         } catch (Exception e) {
-            Log.warnWithException(LOGGER, project, e, "error calling  insights stats", e.getMessage());
+            Log.debugWithException(LOGGER, project, e, "error calling  insights stats", e.getMessage());
         }
         return  new InsightsStatsResult(0,0,0, 0);
     }
@@ -614,7 +622,7 @@ public class AnalyticsService implements Disposable {
                 // is known. these methods should not impact the connection status or mark connectionLost.
                 //so just throw an exception, code that calls these methods should be ready for AnalyticsServiceException.
                 if (methodsToIgnoreExceptions.contains(method.getName())) {
-                    Log.warnWithException(LOGGER, e, "failed executing method {}", method);
+                    Log.debugWithException(LOGGER, e, "failed executing method {}", method);
                     throw new AnalyticsServiceException(e);
                 }
 

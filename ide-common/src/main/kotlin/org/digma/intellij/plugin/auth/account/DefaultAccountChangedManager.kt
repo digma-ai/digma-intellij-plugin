@@ -28,7 +28,7 @@ class DefaultAccountChangedManager : Disposable {
         myAccountChangedAlarm.cancelAllRequests()
         myAccountChangedAlarm.addRequest({
 
-            Log.log(logger::debug, "firing defaultAccountChanged event")
+            Log.log(logger::info, "firing defaultAccountChanged event")
             ApplicationManager.getApplication().messageBus.syncPublisher(DefaultAccountChanged.DEFAULT_ACCOUNT_CHANGED_TOPIC).defaultAccountChanged()
 
             try {
@@ -43,7 +43,7 @@ class DefaultAccountChangedManager : Disposable {
     }
 
     override fun dispose() {
-        Log.log(logger::debug, "disposing")
+        Log.log(logger::info, "disposing")
         myAccountChangedAlarm.dispose()
     }
 }

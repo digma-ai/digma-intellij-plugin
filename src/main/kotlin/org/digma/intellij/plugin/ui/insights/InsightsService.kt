@@ -54,7 +54,7 @@ class InsightsService(val project: Project) : InsightsServiceImpl(project) {
             onInsightReceived(insights)
             insights
         } catch (e: AnalyticsServiceException) {
-            Log.warnWithException(logger, project, e, "Error loading insights {}", e.message)
+            Log.debugWithException(logger, project, e, "Error loading insights {}", e.message)
             "{\"totalCount\":0,\"insights\":[]}"
         }
 

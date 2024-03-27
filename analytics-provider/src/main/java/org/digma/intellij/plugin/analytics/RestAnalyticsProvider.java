@@ -54,13 +54,6 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
             public String getHeaderName() {
                 return null;
             }
-        });
-    }
-
-    public RestAnalyticsProvider(String baseUrl, AuthenticationProvider authenticationProvider) {
-        this.client = createClient(baseUrl, authenticationProvider);
-    }
-
             @CheckForNull
             @Override
             public String getHeaderValue() {
@@ -72,7 +65,6 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     public RestAnalyticsProvider(String baseUrl, List<AuthenticationProvider> authenticationProviders) {
         this.client = createClient(baseUrl, authenticationProviders);
     }
-
 
     @Override
     public LoginResponse login(LoginRequest loginRequest) {
@@ -280,14 +272,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
     @Override
     public String createEnvironments(Map<String, Object> request) {
-        try {
-            return execute(() -> client.analyticsProvider.createEnvironment(request));
-        } catch (AnalyticsProviderException exception) {
-            if (exception.getResponseCode() == 400 && exception.GetSourceError() != null)
-                return exception.GetSourceError();
-
-            throw exception;
-        }
+        return execute(() -> client.analyticsProvider.createEnvironment(request));
     }
 
     @Override
@@ -397,14 +382,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         if (response.isSuccessful()) {
             return response.body();
         } else {
-            String sourceError;
+
+            String sourceError = null;
             try (ResponseBody errorBody = response.errorBody()) {
-                sourceError = errorBody.string();
                 throw createUnsuccessfulResponseException(response.code(), errorBody);
             } catch (IOException e) {
                 throw new AnalyticsProviderException(e.getMessage(), e);
             }
-            throw new AnalyticsProviderException(response.code(), message, sourceError);
         }
     }
 
@@ -414,8 +398,9 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
             return new AuthenticationException(code, "Unauthorized " + code);
         }
 
-        String message = String.format("Error %d. %s", code, errorBody == null ? null : errorBody.string());
-        return new AnalyticsProviderException(code, message);
+        String sourceError = errorBody == null ? null : errorBody.string();
+        String message = String.format("Error %d. %s", code, sourceError);
+        return new AnalyticsProviderException(code, message, sourceError);
     }
 
 

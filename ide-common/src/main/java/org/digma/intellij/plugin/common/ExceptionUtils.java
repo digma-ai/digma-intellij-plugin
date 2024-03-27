@@ -143,7 +143,7 @@ public class ExceptionUtils {
     }
 
     @Nullable
-    public static <T> T find(@NotNull InvocationTargetException e, @NotNull Class<T> javaClass) {
+    public static <T> T find(@NotNull Exception e, @NotNull Class<T> javaClass) {
 
         var ex = e.getCause();
         while (ex != null && !(javaClass.equals(ex.getClass()))) {

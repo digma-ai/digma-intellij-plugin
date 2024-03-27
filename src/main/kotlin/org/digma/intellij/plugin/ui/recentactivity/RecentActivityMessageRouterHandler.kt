@@ -14,6 +14,7 @@ import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.MonitoredPanel
 import org.digma.intellij.plugin.ui.common.traceButtonName
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
+import org.digma.intellij.plugin.ui.jcef.getMapFromNode
 import org.digma.intellij.plugin.ui.jcef.getQueryMapFromPayload
 import org.digma.intellij.plugin.ui.jcef.jsonToObject
 import org.digma.intellij.plugin.ui.recentactivity.model.CloseLiveViewMessage
@@ -153,7 +154,7 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
             }
 
             "RECENT_ACTIVITY/CREATE_ENVIRONMENT" -> {
-                val request: MutableMap<String, Any> = getQueryMapFromPayload(requestJsonNode, objectMapper)
+                val request: MutableMap<String, Any> = getMapFromNode(requestJsonNode.get("payload"), objectMapper)
                 project.service<RecentActivityService>().createEnvironment(request)
             }
 

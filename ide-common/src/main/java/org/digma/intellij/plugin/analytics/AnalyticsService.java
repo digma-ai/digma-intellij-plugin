@@ -5,7 +5,7 @@ import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.*;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.JBColor;
-import com.intellij.util.Alarm;
+import com.intellij.util.*;
 import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.auth.AuthManager;
 import org.digma.intellij.plugin.common.*;
@@ -452,8 +452,17 @@ public class AnalyticsService implements Disposable {
     }
 
     public String createEnvironment(@NotNull Map<String, Object> queryParams) throws AnalyticsServiceException {
-        return executeCatching(() ->
-                analyticsProviderProxy.createEnvironments(queryParams));
+        try{
+            return executeCatching(() ->
+                analyticsProviderProxy.createEnvironments(queryParams));}
+        catch (AnalyticsServiceException exception) {
+            var sourceException = ExceptionUtils.find(exception,AnalyticsProviderException.class);
+           if( sourceException!=null &&  sourceException.getResponseCode() == 400){
+               return  sourceException.GetSourceError();
+           }
+
+           throw exception;
+        }
     }
 
 

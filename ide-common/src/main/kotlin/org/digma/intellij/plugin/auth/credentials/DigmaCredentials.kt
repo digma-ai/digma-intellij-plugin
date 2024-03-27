@@ -39,7 +39,7 @@ class DigmaCredentials
 
     @JsonIgnore
     fun getExpirationTimeAsDate(): Date {
-        return Date(System.currentTimeMillis())
+        return Date(expirationTime)
     }
 
     //prevent accidental logging of credential secrets

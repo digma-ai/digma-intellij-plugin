@@ -37,6 +37,7 @@ public class AnalyticsServiceException extends Exception {
         return -1;
     }
 
+
     @NotNull
     public String getMeaningfulMessage() {
 

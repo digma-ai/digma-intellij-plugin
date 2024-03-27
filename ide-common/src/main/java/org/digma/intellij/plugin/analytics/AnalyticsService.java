@@ -498,14 +498,15 @@ public class AnalyticsService implements Disposable {
         } catch (AnalyticsProviderException e) {
             throw new AnalyticsServiceException("An AnalyticsProviderException was caught", e);
         } catch (UndeclaredThrowableException e) {
-            throw new AnalyticsServiceException("UndeclaredThrowableException caught", e.getUndeclaredThrowable());
+            throw new AnalyticsServiceException("UndeclaredThrowableException caught " + e.getMessage(), e.getUndeclaredThrowable());
         } catch (RuntimeExceptionWithAttachments e) {
             //this is a platform exception as a result of asserting non UI thread when calling backend API
             throw e;
         } catch (Throwable e) {
-            throw new AnalyticsServiceException("Unknown exception", e);
+            throw new AnalyticsServiceException("Unknown exception " + e.getMessage(), e);
         }
     }
+
 
 
     private AnalyticsProvider newAnalyticsProviderProxy(AnalyticsProvider obj) {
@@ -638,7 +639,8 @@ public class AnalyticsService implements Disposable {
                 handleInvocationTargetException(e, method, args);
                 if (e.getCause() != null) {
                     //this is caught in executeCatching
-                    throw e.getCause();
+                    var analyticsProviderException = ExceptionUtils.findCause(AnalyticsProviderException.class, e);
+                    throw Objects.requireNonNullElse(analyticsProviderException, e.getCause());
                 } else {
                     throw new AnalyticsServiceException(e);
                 }

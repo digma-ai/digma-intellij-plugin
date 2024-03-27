@@ -14,6 +14,7 @@ import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.MonitoredPanel
 import org.digma.intellij.plugin.ui.common.traceButtonName
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
+import org.digma.intellij.plugin.ui.jcef.getQueryMapFromPayload
 import org.digma.intellij.plugin.ui.jcef.jsonToObject
 import org.digma.intellij.plugin.ui.recentactivity.model.CloseLiveViewMessage
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityGoToSpanRequest
@@ -149,6 +150,16 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
                     service<AddEnvironmentsService>().addToCurrentRunConfig(project, it)
                     project.service<RecentActivityUpdater>().updateLatestActivities()
                 }
+            }
+
+            "RECENT_ACTIVITY/CREATE_ENVIRONMENT" -> {
+                val request: MutableMap<String, Any> = getQueryMapFromPayload(requestJsonNode, objectMapper)
+                project.service<RecentActivityService>().createEnvironment(request)
+            }
+
+            "RECENT_ACTIVITY/DELETE_ENVIRONMENT_V2" -> {
+                val id = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environmentId").asText()
+                project.service<RecentActivityService>().deleteEnvironmentV2(id)
             }
 
             else -> return false

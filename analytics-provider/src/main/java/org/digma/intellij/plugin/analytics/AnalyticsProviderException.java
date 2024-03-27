@@ -3,10 +3,16 @@ package org.digma.intellij.plugin.analytics;
 public class AnalyticsProviderException extends RuntimeException {
 
     private int responseCode = -1;
+    private String sourceError= null;
 
     public AnalyticsProviderException(int code, String message) {
         super(message);
         this.responseCode = code;
+    }
+
+    public AnalyticsProviderException(int code, String message, String sourceError) {
+        this(code, message);
+        this.sourceError = sourceError;
     }
 
     public AnalyticsProviderException(String message, Throwable cause) {
@@ -20,6 +26,8 @@ public class AnalyticsProviderException extends RuntimeException {
     public int getResponseCode() {
         return responseCode;
     }
+
+    public String GetSourceError() { return sourceError;}
 
     @Override
     public String getMessage() {

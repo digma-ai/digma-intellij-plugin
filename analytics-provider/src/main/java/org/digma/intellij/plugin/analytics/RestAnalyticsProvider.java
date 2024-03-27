@@ -261,6 +261,28 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
+    public String getAllEnvironments() {
+        return execute(client.analyticsProvider::getAllEnvironments);
+    }
+
+    @Override
+    public String createEnvironments(Map<String, Object> request) {
+        try {
+            return execute(() -> client.analyticsProvider.createEnvironment(request));
+        } catch (AnalyticsProviderException exception) {
+            if (exception.getResponseCode() == 400 && exception.GetSourceError() != null)
+                return exception.GetSourceError();
+
+            throw exception;
+        }
+    }
+
+    @Override
+    public void deleteEnvironmentV2(String id) {
+        execute(() -> client.analyticsProvider.deleteEnvironment(id));
+    }
+
+    @Override
     public void markInsightsAsRead(List<String> insightIds) {
         execute(() -> client.analyticsProvider.markInsightsAsRead(new MarkInsightsAsReadRequest(insightIds)));
     }
@@ -369,15 +391,17 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
             return response.body();
         } else {
             String message;
+            String sourceError;
+
             try (ResponseBody errorBody = response.errorBody()) {
-                message = String.format("Error %d. %s", response.code(), errorBody == null ? null : errorBody.string());
+                sourceError = errorBody == null ? null : errorBody.string();
+                message = String.format("Error %d. %s", response.code(), sourceError);
             } catch (IOException e) {
                 throw new AnalyticsProviderException(e.getMessage(), e);
             }
-            throw new AnalyticsProviderException(response.code(), message);
+            throw new AnalyticsProviderException(response.code(), message, sourceError);
         }
     }
-
 
     private Client createClient(String baseUrl, AuthenticationProvider authenticationProvider) {
         return new Client(baseUrl, authenticationProvider);
@@ -827,6 +851,27 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @POST("/authenticate/refresh-token")
         Call<LoginResponse> refreshToken(@Body RefreshRequest loginRequest);
-    }
 
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/environments")
+        Call<String> createEnvironment(@Body Map<String, Object> request);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @DELETE("/environments/{envId}")
+        Call<Void> deleteEnvironment(@Path("envId") String envId);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @GET("/environments")
+        Call<String> getAllEnvironments();
+
+    }
 }

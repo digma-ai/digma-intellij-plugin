@@ -21,12 +21,14 @@ import org.digma.intellij.plugin.posthog.MonitoredPanel
 import org.digma.intellij.plugin.scope.ScopeManager
 import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.ui.common.openJaegerFromRecentActivity
+import org.digma.intellij.plugin.ui.insights.model.SetInsightDataListMessage
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
 import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
 import org.digma.intellij.plugin.ui.recentactivity.model.CloseLiveViewMessage
 import org.digma.intellij.plugin.ui.recentactivity.model.OpenRegistrationDialogMessage
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityEntrySpanForTracePayload
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityEntrySpanPayload
+import org.digma.intellij.plugin.ui.recentactivity.model.SetEnvironmentCreatedMessage
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.atomic.AtomicBoolean
@@ -133,6 +135,29 @@ class RecentActivityService(val project: Project) : Disposable {
         } catch (e: Exception) {
             Log.warnWithException(logger, project, e, "error deleting environment")
             ErrorReporter.getInstance().reportError(project, "RecentActivityService.deleteEnvironment", e)
+        }
+    }
+
+    fun createEnvironment(request: MutableMap<String, Any>) {
+        val response = try {
+            val result = project.service<AnalyticsService>().createEnvironment(request);
+            result
+        } catch (e: AnalyticsServiceException) {
+            Log.warnWithException(logger, project, e, "Error creation {}", e.message)
+            ""
+        }
+
+        val msg = SetEnvironmentCreatedMessage(response)
+        jCefComponent?.let {
+            serializeAndExecuteWindowPostMessageJavaScript(it.jbCefBrowser.cefBrowser, msg)
+        }
+    }
+
+    fun deleteEnvironmentV2(id: String) {
+        try {
+            project.service<AnalyticsService>().deleteEnvironmentV2(id);
+        } catch (e: AnalyticsServiceException) {
+            Log.warnWithException(logger, project, e, "Error creation {}", e.message)
         }
     }
 

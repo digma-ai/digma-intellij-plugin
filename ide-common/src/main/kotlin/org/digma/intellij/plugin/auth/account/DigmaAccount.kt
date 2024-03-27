@@ -20,7 +20,7 @@ class DigmaAccount(
     override val id: String = generateId(),
     @NlsSafe
     @Attribute("name")
-    override val name: String = "",
+    override val name: String = DEFAULT_ACCOUNT_NAME,
     @Property(style = Property.Style.ATTRIBUTE, surroundWithTag = false)
     override val server: MyServerPath = MyServerPath(),
 ) : ServerAccount() {

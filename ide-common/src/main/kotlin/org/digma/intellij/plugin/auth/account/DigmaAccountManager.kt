@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.auth.account
 
-import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.util.StdDateFormat
@@ -60,7 +59,7 @@ class DigmaAccountManager
                     objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(credentials)
 
                 override fun deserialize(credentials: String): DigmaCredentials =
-                    objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES).readValue(credentials, DigmaCredentials::class.java)
+                    objectMapper.readValue(credentials, DigmaCredentials::class.java)
             })
 
 

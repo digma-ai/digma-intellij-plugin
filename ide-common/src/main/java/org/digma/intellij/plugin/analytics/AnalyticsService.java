@@ -60,8 +60,6 @@ public class AnalyticsService implements Disposable {
 
     private final Environment environment;
     private String myApiUrl;
-    @Nullable
-    private String myApiToken;
     private final Project project;
 
     /**
@@ -88,8 +86,7 @@ public class AnalyticsService implements Disposable {
         environment = new Environment(project, this);
         this.project = project;
         myApiUrl = settingsState.apiUrl;
-        myApiToken = settingsState.apiToken;
-        replaceClient(myApiUrl, myApiToken);
+        replaceClient(myApiUrl);
         scheduleEnvironmentRefresh(this, environment);
 
         settingsState.addChangeListener(state -> {
@@ -98,16 +95,14 @@ public class AnalyticsService implements Disposable {
 
             if (!Objects.equals(state.apiUrl, myApiUrl)) {
                 myApiUrl = state.apiUrl;
-                myApiToken = state.apiToken;
-                shouldReplaceClient = true;
-            }
-            if (!Objects.equals(state.apiToken, myApiToken)) {
-                myApiToken = state.apiToken;
                 shouldReplaceClient = true;
             }
 
+            //replace the client only when apiUrl is changed.
+            //there is no need top replace the client when api token is changed because there is an
+            // AuthenticationProvider that always takes it from the settings
             if (shouldReplaceClient) {
-                replaceClient(myApiUrl, myApiToken);
+                replaceClient(myApiUrl);
             }
 
         }, this);
@@ -125,7 +120,7 @@ public class AnalyticsService implements Disposable {
 
     //just replace the client and do not fire any events
     //this method should be synchronized, and it shouldn't be a problem, it doesn't happen too often.
-    private synchronized void replaceClient(String url, String token) {
+    private synchronized void replaceClient(String url) {
         if (analyticsProviderProxy != null) {
             try {
                 analyticsProviderProxy.close();
@@ -135,7 +130,7 @@ public class AnalyticsService implements Disposable {
         }
 
         AnalyticsProvider analyticsProvider =
-                AuthManager.getInstance().withAuth(new RestAnalyticsProvider(url, AuthManager.getInstance()), url);
+                AuthManager.getInstance().withAuth(new RestAnalyticsProvider(url, AuthManager.getInstance().getAuthenticationProviders()), url);
         analyticsProviderProxy = newAnalyticsProviderProxy(analyticsProvider);
 
         environment.refreshNowOnBackground();
@@ -145,13 +140,19 @@ public class AnalyticsService implements Disposable {
 
     @NotNull
     public ConnectionTestResult testRemoteConnection(@NotNull String serverUrl, @Nullable String token) {
-        try (RestAnalyticsProvider analyticsProvider = new RestAnalyticsProvider(serverUrl, new AuthenticationProvider() {
+        try (RestAnalyticsProvider analyticsProvider = new RestAnalyticsProvider(serverUrl, Collections.singletonList(new AuthenticationProvider() {
             @Nullable
             @Override
-            public String getAuthenticationToken() {
+            public String getHeaderName() {
+                return "Authorization";
+            }
+
+            @Nullable
+            @Override
+            public String getHeaderValue() {
                 return token;
             }
-        })) {
+        }))) {
             //todo: use health check to test connection
             var envs = analyticsProvider.getEnvironments();
             if (envs != null) {
@@ -643,7 +644,7 @@ public class AnalyticsService implements Disposable {
 
             } catch (Exception e) {
                 errorReportingHelper.addIfNewError(e);
-                Log.log(LOGGER::warn, "Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getMessage());
+                Log.log(LOGGER::warn, "Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e);
                 Log.warnWithException(LOGGER, project, e, "error in analytics service method {},{}", method.getName(), e);
                 ErrorReporter.getInstance().reportAnalyticsServiceError(project, "AnalyticsInvocationHandler.invoke", method.getName(), e, false);
                 throw e;

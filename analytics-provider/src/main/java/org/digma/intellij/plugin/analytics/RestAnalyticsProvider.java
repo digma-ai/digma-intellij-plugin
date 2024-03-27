@@ -47,10 +47,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
     //this constructor is used only in tests
     RestAnalyticsProvider(String baseUrl) {
-        this(baseUrl, new AuthenticationProvider() {
+
+        this(baseUrl, Collections.singletonList(new AuthenticationProvider() {
             @CheckForNull
             @Override
-            public String getAuthenticationToken() {
+            public String getHeaderName() {
                 return null;
             }
         });
@@ -60,6 +61,18 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         this.client = createClient(baseUrl, authenticationProvider);
     }
 
+            @CheckForNull
+            @Override
+            public String getHeaderValue() {
+                return null;
+            }
+        }));
+    }
+
+    public RestAnalyticsProvider(String baseUrl, List<AuthenticationProvider> authenticationProviders) {
+        this.client = createClient(baseUrl, authenticationProviders);
+    }
+
 
     @Override
     public LoginResponse login(LoginRequest loginRequest) {
@@ -67,8 +80,8 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
-    public LoginResponse refreshToken(RefreshRequest loginRequest) {
-        return execute(() -> client.analyticsProvider.refreshToken(loginRequest));
+    public LoginResponse refreshToken(RefreshRequest refreshRequest) {
+        return execute(() -> client.analyticsProvider.refreshToken(refreshRequest));
     }
 
     public List<String> getEnvironments() {
@@ -311,8 +324,6 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     @Override
     public HttpResponse lowLevelCall(HttpRequest request) {
 
-        //todo: throw AuthenticationException
-
         okhttp3.Response okHttp3Response;
         try {
             var okHttp3Request = toOkHttp3Request(request);
@@ -324,17 +335,15 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         if (okHttp3Response.isSuccessful()) {
             return toHttpResponse(okHttp3Response);
         } else {
-            String message;
             try (ResponseBody errorBody = okHttp3Response.body()) {
-                message = String.format("Error %d. %s", okHttp3Response.code(), errorBody == null ? null : errorBody.string());
+                throw createUnsuccessfulResponseException(okHttp3Response.code(), errorBody);
             } catch (IOException e) {
                 throw new AnalyticsProviderException(e.getMessage(), e);
             }
-            throw new AnalyticsProviderException(okHttp3Response.code(), message);
         }
     }
 
-    private static Request toOkHttp3Request(HttpRequest request){
+    private Request toOkHttp3Request(HttpRequest request) {
         var okHttp3Body = request.getBody() != null
                 ? RequestBody.create(MediaType.parse(request.getBody().getContentType()), request.getBody().getContent())
                 : null;
@@ -345,7 +354,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         return okHttp3RequestBuilder.build();
     }
 
-    private static HttpResponse toHttpResponse(okhttp3.Response response){
+    private HttpResponse toHttpResponse(okhttp3.Response response) {
         var body = response.body();
         var headers = response.headers().toMultimap().entrySet().stream()
                 .filter(i -> !i.getValue().isEmpty())
@@ -377,8 +386,6 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
     public <T> T execute(Supplier<Call<T>> supplier) {
 
-        //todo: throw AuthenticationException
-
         Response<T> response;
         try {
             Call<T> call = supplier.get();
@@ -390,12 +397,10 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         if (response.isSuccessful()) {
             return response.body();
         } else {
-            String message;
             String sourceError;
-
             try (ResponseBody errorBody = response.errorBody()) {
-                sourceError = errorBody == null ? null : errorBody.string();
-                message = String.format("Error %d. %s", response.code(), sourceError);
+                sourceError = errorBody.string();
+                throw createUnsuccessfulResponseException(response.code(), errorBody);
             } catch (IOException e) {
                 throw new AnalyticsProviderException(e.getMessage(), e);
             }
@@ -403,8 +408,19 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         }
     }
 
-    private Client createClient(String baseUrl, AuthenticationProvider authenticationProvider) {
-        return new Client(baseUrl, authenticationProvider);
+    private AnalyticsProviderException createUnsuccessfulResponseException(int code, ResponseBody errorBody) throws IOException {
+
+        if (code == HTTPConstants.UNAUTHORIZED) {
+            return new AuthenticationException(code, "Unauthorized " + code);
+        }
+
+        String message = String.format("Error %d. %s", code, errorBody == null ? null : errorBody.string());
+        return new AnalyticsProviderException(code, message);
+    }
+
+
+    private Client createClient(String baseUrl, List<AuthenticationProvider> authenticationProviders) {
+        return new Client(baseUrl, authenticationProviders);
     }
 
 
@@ -422,7 +438,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         private final OkHttpClient okHttpClient;
 
         @SuppressWarnings("MoveFieldAssignmentToInitializer")
-        public Client(String baseUrl, AuthenticationProvider authenticationProvider) {
+        public Client(String baseUrl, List<AuthenticationProvider> authenticationProviders) {
 
             //configure okHttp here if necessary
             OkHttpClient.Builder builder = new OkHttpClient.Builder();
@@ -433,15 +449,16 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
             }
 
 
-            builder.addInterceptor(chain -> {
-                var token = authenticationProvider.getAuthenticationToken();
-                if (token != null) {
-                    Request request = chain.request().newBuilder().addHeader("Authorization", token).build();
+            authenticationProviders.forEach(authenticationProvider -> builder.addInterceptor(chain -> {
+                var headerName = authenticationProvider.getHeaderName();
+                var headerValue = authenticationProvider.getHeaderValue();
+                if (headerName != null && headerValue != null) {
+                    Request request = chain.request().newBuilder().addHeader(headerName, headerValue).build();
                     return chain.proceed(request);
                 } else {
                     return chain.proceed(chain.request());
                 }
-            });
+            }));
 
 
             builder.callTimeout(10, TimeUnit.SECONDS)

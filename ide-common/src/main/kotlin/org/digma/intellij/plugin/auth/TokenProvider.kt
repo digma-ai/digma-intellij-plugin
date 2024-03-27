@@ -1,8 +1,11 @@
 package org.digma.intellij.plugin.auth
 
+import com.intellij.openapi.diagnostic.Logger
 import kotlinx.coroutines.runBlocking
 import org.digma.intellij.plugin.auth.account.DigmaAccountManager
 import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.settings.SettingsState
 
 
@@ -12,7 +15,7 @@ interface TokenProvider {
     fun provideToken(): String?
 }
 
-
+//always takes the token from settings
 class SettingsTokenProvider : TokenProvider {
     override fun provideToken(): String? {
         return SettingsState.getInstance().apiToken?.let {
@@ -22,18 +25,26 @@ class SettingsTokenProvider : TokenProvider {
 }
 
 
+//takes the token from default account if exists
 class DefaultAccountTokenProvider : TokenProvider {
 
-    //todo: consider caching the token. on refresh or when the api client is replaced this object will be replaced too
+    private val logger = Logger.getInstance(this::class.java)
+
     override fun provideToken(): String? {
-        return runBlocking {
-            val account = DigmaDefaultAccountHolder.getInstance().account
-            account?.let {
-                val credentials = DigmaAccountManager.getInstance().findCredentials(account)
-                credentials?.let {
-                    "${TokenType.Bearer.name} ${it.accessToken}"
+        return try {
+            runBlocking {
+                val account = DigmaDefaultAccountHolder.getInstance().account
+                account?.let {
+                    val credentials = DigmaAccountManager.getInstance().findCredentials(account)
+                    credentials?.takeIf { credentials.isAccessTokenValid() }?.let { creds ->
+                        "${creds.tokenType} ${creds.accessToken}"
+                    }
                 }
             }
+        } catch (e: Throwable) {
+            Log.warnWithException(logger, e, "Unable to provide token")
+            ErrorReporter.getInstance().reportInternalFatalError("DefaultAccountTokenProvider.provideToken", e)
+            null
         }
     }
 }

@@ -20,6 +20,7 @@ class DefaultAccountChangedManager : Disposable {
     private val myAccountChangedAlarm = Alarm(Alarm.ThreadToUse.POOLED_THREAD, this)
 
     //a property that can be listed to
+    //todo: not sure we need this feature
     var changingDefaultAccount = AtomicBooleanProperty(false)
 
     fun defaultAccountChanged() {
@@ -33,7 +34,7 @@ class DefaultAccountChangedManager : Disposable {
             try {
                 changingDefaultAccount.set(true)
 
-                //todo: maybe need tyo do something
+                //todo: maybe need to do something
 
             } finally {
                 changingDefaultAccount.set(false)

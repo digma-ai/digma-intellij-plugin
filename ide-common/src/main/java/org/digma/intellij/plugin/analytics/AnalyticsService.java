@@ -632,7 +632,7 @@ public class AnalyticsService implements Disposable {
 
             } catch (Exception e) {
                 errorReportingHelper.addIfNewError(e);
-                Log.log(LOGGER::warn, "Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getMessage());
+                Log.log(LOGGER::warn, "Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e);
                 Log.warnWithException(LOGGER, project, e, "error in analytics service method {},{}", method.getName(), e);
                 ErrorReporter.getInstance().reportAnalyticsServiceError(project, "AnalyticsInvocationHandler.invoke", method.getName(), e, false);
                 throw e;

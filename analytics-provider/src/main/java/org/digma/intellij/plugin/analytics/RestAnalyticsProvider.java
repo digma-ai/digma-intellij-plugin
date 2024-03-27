@@ -74,8 +74,8 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
-    public LoginResponse refreshToken(RefreshRequest loginRequest) {
-        return execute(() -> client.analyticsProvider.refreshToken(loginRequest));
+    public LoginResponse refreshToken(RefreshRequest refreshRequest) {
+        return execute(() -> client.analyticsProvider.refreshToken(refreshRequest));
     }
 
     public List<String> getEnvironments() {

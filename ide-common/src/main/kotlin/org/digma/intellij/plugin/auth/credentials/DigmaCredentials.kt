@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.auth.credentials
 
 import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.intellij.collaboration.auth.credentials.CredentialsWithRefresh
 import java.beans.ConstructorProperties
 import java.util.Date
@@ -26,14 +27,17 @@ class DigmaCredentials
 
     //expiresIn and expirationTime are the same. the name expiresIn is not so clear, sounds like
     // the time left until expiration. must be implemented coz it's an interface var.
+    @JsonIgnore
     override val expiresIn: Long = expirationTime
 
     /**
      * @return true if the token has not expired yet;
      *         false if the token has already expired.
      */
+    @JsonIgnore
     override fun isAccessTokenValid(): Boolean = Date(System.currentTimeMillis()).time < expirationTime
 
+    @JsonIgnore
     fun getExpirationTime(): Date {
         return Date(System.currentTimeMillis())
     }

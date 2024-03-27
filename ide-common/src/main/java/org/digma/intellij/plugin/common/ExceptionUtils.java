@@ -1,17 +1,12 @@
 package org.digma.intellij.plugin.common;
 
-import org.digma.intellij.plugin.analytics.AnalyticsProviderException;
-import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.digma.intellij.plugin.analytics.*;
+import org.jetbrains.annotations.*;
 
 import javax.net.ssl.SSLException;
-import java.io.EOFException;
-import java.io.InterruptedIOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.UndeclaredThrowableException;
-import java.net.SocketException;
-import java.net.UnknownHostException;
+import java.io.*;
+import java.lang.reflect.*;
+import java.net.*;
 import java.net.http.HttpTimeoutException;
 
 public class ExceptionUtils {
@@ -147,4 +142,18 @@ public class ExceptionUtils {
         return exceptionMessage;
     }
 
+    @Nullable
+    public static <T> T find(@NotNull InvocationTargetException e, @NotNull Class<T> javaClass) {
+
+        var ex = e.getCause();
+        while (ex != null && !(javaClass.equals(ex.getClass()))) {
+            ex = ex.getCause();
+        }
+
+        if (ex != null) {
+            return javaClass.cast(ex);
+        }
+
+        return null;
+    }
 }

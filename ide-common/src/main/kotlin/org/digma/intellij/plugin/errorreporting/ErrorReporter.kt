@@ -129,6 +129,10 @@ class ErrorReporter {
        see usage examples.
        the event will contain the stack trace and exception message.
      */
+    fun reportAnalyticsServiceError(message: String, methodName: String, exception: Exception, isConnectionException: Boolean) {
+        reportAnalyticsServiceError(findActiveProject(), methodName, message, exception, isConnectionException)
+    }
+
     fun reportAnalyticsServiceError(project: Project?, message: String, methodName: String, exception: Exception, isConnectionException: Boolean) {
 
         try {

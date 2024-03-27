@@ -14,6 +14,7 @@ import org.digma.intellij.plugin.model.rest.env.*;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.event.*;
+import org.digma.intellij.plugin.model.rest.highlights.HighlightsPerformanceResponse;
 import org.digma.intellij.plugin.model.rest.insights.*;
 import org.digma.intellij.plugin.model.rest.livedata.*;
 import org.digma.intellij.plugin.model.rest.lowlevel.*;
@@ -288,6 +289,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
             }
             throw new AnalyticsProviderException(okHttp3Response.code(), message);
         }
+    }
+
+    @Override
+    public List<HighlightsPerformanceResponse> getHighlightsPerformance(Map<String, Object> queryParams) {
+        return execute(() -> client.analyticsProvider.getHighlightsPerformance(queryParams));
     }
 
     private static Request toOkHttp3Request(HttpRequest request){
@@ -784,6 +790,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @GET("/insights/statistics")
         Call<InsightsStatsResult> getInsightsStats(@QueryMap Map<String, Object> fields);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @GET("/highlights/performance")
+        Call<List<HighlightsPerformanceResponse>> getHighlightsPerformance(@QueryMap Map<String, Object> fields);
     }
 
 }

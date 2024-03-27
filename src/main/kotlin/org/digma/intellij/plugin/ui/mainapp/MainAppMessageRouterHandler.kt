@@ -7,6 +7,7 @@ import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.navigation.View
 import org.digma.intellij.plugin.ui.assets.AssetsMessageRouterHandler
+import org.digma.intellij.plugin.ui.highlights.HighlightsMessageRouterHandler
 import org.digma.intellij.plugin.ui.insights.InsightsMessageRouterHandler
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
 import org.digma.intellij.plugin.ui.jcef.sendCurrentViewsState
@@ -21,6 +22,7 @@ class MainAppMessageRouterHandler(project: Project) : BaseMessageRouterHandler(p
     private val handlers = listOf(
         AssetsMessageRouterHandler(project),
         InsightsMessageRouterHandler(project),
+        HighlightsMessageRouterHandler(project),
         TestsMessageRouterHandler(project)
     )
 

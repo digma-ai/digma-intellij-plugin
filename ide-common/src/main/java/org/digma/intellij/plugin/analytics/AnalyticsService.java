@@ -21,6 +21,7 @@ import org.digma.intellij.plugin.model.rest.env.*;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.event.*;
+import org.digma.intellij.plugin.model.rest.highlights.HighlightsPerformanceResponse;
 import org.digma.intellij.plugin.model.rest.insights.*;
 import org.digma.intellij.plugin.model.rest.livedata.*;
 import org.digma.intellij.plugin.model.rest.lowlevel.*;
@@ -375,6 +376,10 @@ public class AnalyticsService implements Disposable {
 
     public PerformanceMetricsResponse getPerformanceMetrics() throws AnalyticsServiceException {
         return executeCatching(() -> analyticsProviderProxy.getPerformanceMetrics());
+    }
+
+    public List<HighlightsPerformanceResponse> getHighlightsPerformance(@NotNull Map<String, Object> queryParams) throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.getHighlightsPerformance(queryParams));
     }
 
     public Optional<LoadStatusResponse> getLoadStatus() throws AnalyticsServiceException {

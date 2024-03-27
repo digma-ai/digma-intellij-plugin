@@ -7,6 +7,7 @@ import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.insights.AbstractInsightsMessageRouterHandler
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.ui.highlights.model.SetHighlightsPerformanceMessage
+import org.digma.intellij.plugin.ui.highlights.model.SetHighlightsTopInsightsMessage
 import org.digma.intellij.plugin.ui.jcef.getQueryMapFromPayload
 import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
 
@@ -16,6 +17,7 @@ class HighlightsMessageRouterHandler(project: Project) : AbstractInsightsMessage
 
         when (action) {
             "HIGHLIGHTS/GET_PERFORMANCE" -> getHighlightsPerformance(browser, requestJsonNode)
+            "MAIN/GET_HIGHLIGHTS_TOP_ISSUES_DATA" -> getHighlightsTopInsights(browser, requestJsonNode)
 
             else -> {
                 return super.doOnQuery(project, browser, requestJsonNode, rawRequest, action)
@@ -34,6 +36,16 @@ class HighlightsMessageRouterHandler(project: Project) : AbstractInsightsMessage
         val backendQueryParams = getQueryMapFromPayload(requestJsonNode, objectMapper)
         val payload = HighlightsService.getInstance(project).getHighlightsPerformance(backendQueryParams)
         val message = SetHighlightsPerformanceMessage(payload)
+        Log.log(logger::trace, project, "sending HIGHLIGHTS/SET_PERFORMANCE message")
+        serializeAndExecuteWindowPostMessageJavaScript(browser, message)
+    }
+
+    private fun getHighlightsTopInsights(browser: CefBrowser, requestJsonNode: JsonNode) {
+        Log.log(logger::trace, project, "getHighlightsTopInsights called")
+
+        val backendQueryParams = getQueryMapFromPayload(requestJsonNode, objectMapper)
+        val payload = HighlightsService.getInstance(project).getHighlightsTopInsights(backendQueryParams)
+        val message = SetHighlightsTopInsightsMessage(payload)
         Log.log(logger::trace, project, "sending HIGHLIGHTS/SET_PERFORMANCE message")
         serializeAndExecuteWindowPostMessageJavaScript(browser, message)
     }

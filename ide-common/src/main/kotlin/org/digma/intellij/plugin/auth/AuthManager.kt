@@ -120,14 +120,15 @@ class AuthManager {
                     val because = if (!credentials.isAccessTokenValid()) "access token expired" else "called with force refresh"
                     Log.log(
                         logger::info,
-                        "loginOrRefresh, need to refresh credentials for account {} because {}, url={}",
+                        "loginOrRefresh, need to refresh credentials for account {} because {},credentials {}, url={}",
                         digmaAccount.name,
                         because,
+                        credentials,
                         url
                     )
                     refreshToken(analyticsProvider, digmaAccount, credentials, url)
                 } else {
-                    Log.log(logger::info, "loginOrRefresh, got account {} with valid credentials, url={}", digmaAccount.name, url)
+                    Log.log(logger::info, "loginOrRefresh, got account {} with valid credentials {}, url={}", digmaAccount.name, url, credentials)
                 }
             }
 //            }

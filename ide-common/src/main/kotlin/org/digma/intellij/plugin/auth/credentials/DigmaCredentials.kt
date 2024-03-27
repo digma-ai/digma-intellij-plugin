@@ -44,6 +44,6 @@ class DigmaCredentials
 
     //prevent accidental logging of credential secrets
     override fun toString(): String {
-        return "Credential for url $url (no details printed,see in password safe)"
+        return "Credential for url $url, expiration:${getExpirationTimeAsDate()} (no details printed,see in password safe)"
     }
 }

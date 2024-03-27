@@ -35,4 +35,16 @@ class HighlightsService(val project: Project) : InsightsServiceImpl(project) {
             null
         }
     }
+
+    fun getHighlightsTopInsights(queryParams: MutableMap<String, Any>): String {
+        EDT.assertNonDispatchThread()
+
+        return try {
+            val highlightsPerformance = AnalyticsService.getInstance(project).getHighlightsTopInsights(queryParams)
+            highlightsPerformance
+        } catch (e: AnalyticsServiceException) {
+            Log.warnWithException(logger, project, e, "Error loading highlights top insights {}", e.message)
+            return "{}"
+        }
+    }
 }

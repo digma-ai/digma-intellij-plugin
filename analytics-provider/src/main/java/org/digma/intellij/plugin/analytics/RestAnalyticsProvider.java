@@ -296,6 +296,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         return execute(() -> client.analyticsProvider.getHighlightsPerformance(queryParams));
     }
 
+    @Override
+    public String getHighlightsTopInsights(Map<String, Object> queryParams) {
+        return execute(() -> client.analyticsProvider.getHighlightsTopInsights(queryParams));
+    }
+
     private static Request toOkHttp3Request(HttpRequest request){
         var okHttp3Body = request.getBody() != null
                 ? RequestBody.create(MediaType.parse(request.getBody().getContentType()), request.getBody().getContent())
@@ -797,6 +802,14 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @GET("/highlights/performance")
         Call<List<HighlightsPerformanceResponse>> getHighlightsPerformance(@QueryMap Map<String, Object> fields);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @GET("/highlights/topinsights")
+        Call<String> getHighlightsTopInsights(@QueryMap Map<String, Object> fields);
+
     }
 
 }

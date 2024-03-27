@@ -382,6 +382,10 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.getHighlightsPerformance(queryParams));
     }
 
+    public String getHighlightsTopInsights(@NotNull Map<String, Object> queryParams) throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.getHighlightsTopInsights(queryParams));
+    }
+
     public Optional<LoadStatusResponse> getLoadStatus() throws AnalyticsServiceException {
         return executeCatching(() -> analyticsProviderProxy.getLoadStatus());
     }

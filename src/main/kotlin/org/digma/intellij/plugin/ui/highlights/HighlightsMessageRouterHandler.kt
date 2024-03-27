@@ -16,7 +16,7 @@ class HighlightsMessageRouterHandler(project: Project) : AbstractInsightsMessage
     override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
 
         when (action) {
-            "HIGHLIGHTS/GET_PERFORMANCE" -> getHighlightsPerformance(browser, requestJsonNode)
+            "MAIN/GET_HIGHLIGHTS_PERFORMANCE_DATA" -> getHighlightsPerformance(browser, requestJsonNode)
             "MAIN/GET_HIGHLIGHTS_TOP_ISSUES_DATA" -> getHighlightsTopInsights(browser, requestJsonNode)
 
             else -> {
@@ -36,7 +36,7 @@ class HighlightsMessageRouterHandler(project: Project) : AbstractInsightsMessage
         val backendQueryParams = getQueryMapFromPayload(requestJsonNode, objectMapper)
         val payload = HighlightsService.getInstance(project).getHighlightsPerformance(backendQueryParams)
         val message = SetHighlightsPerformanceMessage(payload)
-        Log.log(logger::trace, project, "sending HIGHLIGHTS/SET_PERFORMANCE message")
+        Log.log(logger::trace, project, "sending MAIN/GET_HIGHLIGHTS_TOP_ISSUES_DATA message")
         serializeAndExecuteWindowPostMessageJavaScript(browser, message)
     }
 
@@ -46,7 +46,7 @@ class HighlightsMessageRouterHandler(project: Project) : AbstractInsightsMessage
         val backendQueryParams = getQueryMapFromPayload(requestJsonNode, objectMapper)
         val payload = HighlightsService.getInstance(project).getHighlightsTopInsights(backendQueryParams)
         val message = SetHighlightsTopInsightsMessage(payload)
-        Log.log(logger::trace, project, "sending HIGHLIGHTS/SET_PERFORMANCE message")
+        Log.log(logger::trace, project, "sending MAIN/GET_HIGHLIGHTS_TOP_ISSUES_DATA message")
         serializeAndExecuteWindowPostMessageJavaScript(browser, message)
     }
 }

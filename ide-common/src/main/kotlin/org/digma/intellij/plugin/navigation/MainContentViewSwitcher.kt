@@ -156,7 +156,7 @@ private constructor(
         val Analytics = View("Analytics", "analytics", "analytics")
 
 
-        val views = listOf(Highlights, Insights, Assets, Analytics, Errors, ErrorDetails, Tests)
+        val views = listOf(/*Highlights,*/ Insights, Assets, Analytics, Errors, ErrorDetails, Tests)
 
         fun findById(id: String): View? {
             return views.find { it.id == id }

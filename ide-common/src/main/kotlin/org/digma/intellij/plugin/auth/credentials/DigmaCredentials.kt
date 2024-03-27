@@ -37,6 +37,7 @@ class DigmaCredentials
     @JsonIgnore
     override fun isAccessTokenValid(): Boolean = Date(System.currentTimeMillis()).time < expirationTime
 
+    @JsonIgnore
     fun getExpirationTimeAsDate(): Date {
         return Date(System.currentTimeMillis())
     }

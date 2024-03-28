@@ -4,11 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
-import org.digma.intellij.plugin.analytics.AnalyticsService
-import org.digma.intellij.plugin.analytics.ConnectionTestResult
+import org.digma.intellij.plugin.analytics.getAllEnvironments
 import org.digma.intellij.plugin.common.Backgroundable
-import org.digma.intellij.plugin.common.ExceptionUtils
-import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.MonitoredPanel
@@ -37,7 +34,7 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
             "RECENT_ACTIVITY/INITIALIZE" -> {
                 try {
                     doCommonInitialize(browser)
-                    val environments = AnalyticsService.getInstance(project).environment.getEnvironments()
+                    val environments = getAllEnvironments(project)
                     project.service<RecentActivityUpdater>().updateLatestActivities(environments)
                 } finally {
                     //if there is an exception it will be handled by BaseMessageRouterHandler.
@@ -54,7 +51,7 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
             }
 
             "RECENT_ACTIVITY/GO_TO_TRACE" -> {
-                project.service<ActivityMonitor>().registerButtonClicked(MonitoredPanel.RecentActivity, traceButtonName)
+                ActivityMonitor.getInstance(project).registerButtonClicked(MonitoredPanel.RecentActivity, traceButtonName)
                 val recentActivityGoToTraceRequest = jsonToObject(rawRequest, RecentActivityGoToTraceRequest::class.java)
                 project.service<RecentActivityService>().processRecentActivityGoToTraceRequest(recentActivityGoToTraceRequest.payload)
             }
@@ -82,19 +79,6 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
                 }
             }
 
-            "RECENT_ACTIVITY/SET_ENVIRONMENT_TYPE" -> {
-                //todo: change to getPayloadFromRequest
-                val environment = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environment").asText()
-                val type: String? = getPayloadFromRequest(requestJsonNode)?.get("type")?.asText()
-                project.service<ActivityMonitor>()
-                    .registerUserActionEvent("set environment type", mapOf("environment" to environment, "type" to type.toString()))
-                if (environment != null) {
-                    service<AddEnvironmentsService>().setEnvironmentType(project, environment, type)
-                    Backgroundable.executeOnPooledThread {
-                        project.service<RecentActivityUpdater>().updateLatestActivities()
-                    }
-                }
-            }
 
             "RECENT_ACTIVITY/FINISH_ORG_DIGMA_SETUP" -> {
                 val environment = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environment").asText()
@@ -107,25 +91,25 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
                 }
             }
 
-            "RECENT_ACTIVITY/CHECK_REMOTE_ENVIRONMENT_CONNECTION" -> {
-                try {
-                    val environment = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environment").asText()
-                    val serverUrl = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("serverAddress").asText()
-                    val token = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("token").asText()
-                    project.service<ActivityMonitor>()
-                        .registerUserActionEvent("check connection", mapOf("environment" to environment, "serverUrl" to serverUrl))
-                    if (environment != null && serverUrl != null) {
-                        service<AddEnvironmentsService>().setEnvironmentServerUrl(project, environment, serverUrl, token)
-                        Backgroundable.executeOnPooledThread {
-                            val connectionTestResult = project.service<AnalyticsService>().testRemoteConnection(serverUrl, token)
-                            sendRemoteConnectionCheckResult(browser, connectionTestResult)
-                        }
-                    }
-                } catch (e: Exception) {
-                    ErrorReporter.getInstance().reportError(project, "RecentActivityMessageRouterHandler.CHECK_REMOTE_ENVIRONMENT_CONNECTION", e)
-                    sendRemoteConnectionCheckResult(browser, ConnectionTestResult.failure(ExceptionUtils.getNonEmptyMessage(e)))
-                }
-            }
+//            "RECENT_ACTIVITY/CHECK_REMOTE_ENVIRONMENT_CONNECTION" -> {
+//                try {
+//                    val environment = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environment").asText()
+//                    val serverUrl = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("serverAddress").asText()
+//                    val token = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("token").asText()
+//                    project.service<ActivityMonitor>()
+//                        .registerUserActionEvent("check connection", mapOf("environment" to environment, "serverUrl" to serverUrl))
+//                    if (environment != null && serverUrl != null) {
+//                        service<AddEnvironmentsService>().setEnvironmentServerUrl(project, environment, serverUrl, token)
+//                        Backgroundable.executeOnPooledThread {
+//                            val connectionTestResult = project.service<AnalyticsService>().testRemoteConnection(serverUrl, token)
+//                            sendRemoteConnectionCheckResult(browser, connectionTestResult)
+//                        }
+//                    }
+//                } catch (e: Exception) {
+//                    ErrorReporter.getInstance().reportError(project, "RecentActivityMessageRouterHandler.CHECK_REMOTE_ENVIRONMENT_CONNECTION", e)
+//                    sendRemoteConnectionCheckResult(browser, ConnectionTestResult.failure(ExceptionUtils.getNonEmptyMessage(e)))
+//                }
+//            }
 
             "RECENT_ACTIVITY/DELETE_ENVIRONMENT" -> {
                 val environment = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environment").asText()
@@ -143,9 +127,10 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
             }
 
             "RECENT_ACTIVITY/ADD_ENVIRONMENT_TO_RUN_CONFIG" -> {
-                val environment = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environment").asText()
-                project.service<ActivityMonitor>().registerUserActionEvent("add environment to run config", mapOf("environment" to environment))
-                environment?.let {
+                val environmentId = getEnvironmentIdFromPayload(requestJsonNode)
+                environmentId?.let {
+                    ActivityMonitor.getInstance(project)
+                        .registerUserActionEvent("add environment to run config", mapOf("environment" to environmentId))
                     service<AddEnvironmentsService>().addToCurrentRunConfig(project, it)
                     project.service<RecentActivityUpdater>().updateLatestActivities()
                 }

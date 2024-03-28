@@ -13,13 +13,11 @@ import com.intellij.openapi.externalSystem.service.execution.ExternalSystemRunCo
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.common.createObjectMapper
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
-import org.digma.intellij.plugin.idea.execution.DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE
+import org.digma.intellij.plugin.idea.execution.DIGMA_ENVIRONMENT_ID_RESOURCE_ATTRIBUTE
 import org.digma.intellij.plugin.idea.execution.OTEL_RESOURCE_ATTRIBUTES
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
-import org.digma.intellij.plugin.ui.recentactivity.model.AdditionToConfigResult
-import org.digma.intellij.plugin.ui.recentactivity.model.EnvironmentType
 import org.digma.intellij.plugin.ui.recentactivity.model.PendingEnvironment
 
 //app level service so includes pending environments from all projects
@@ -47,9 +45,9 @@ class AddEnvironmentsService {
         flush()
     }
 
-    fun getPendingEnvironment(environment: String): PendingEnvironment? {
-        return pendingEnvironments.find { pendingEnvironment -> pendingEnvironment.name == environment }
-    }
+//    fun getPendingEnvironment(environment: String): PendingEnvironment? {
+//        return pendingEnvironments.find { pendingEnvironment -> pendingEnvironment.name == environment }
+//    }
 
     fun isPendingEnv(environment: String): Boolean {
         return pendingEnvironments.any { pendingEnvironment -> pendingEnvironment.name == environment }
@@ -61,37 +59,37 @@ class AddEnvironmentsService {
         flush()
     }
 
-    fun setEnvironmentType(project: Project, environment: String, type: String?) {
-        val pendingEnvironment: PendingEnvironment? = pendingEnvironments.find { pendingEnvironment -> pendingEnvironment.name == environment }
-        pendingEnvironment?.let {
+//    fun setEnvironmentType(project: Project, environment: String, type: String?) {
+//        val pendingEnvironment: PendingEnvironment? = pendingEnvironments.find { pendingEnvironment -> pendingEnvironment.name == environment }
+//        pendingEnvironment?.let {
+//
+//            if (type == null) {
+//                it.type = null
+//            } else {
+//                it.type = try {
+//                    EnvironmentType.valueOf(type)
+//                } catch (e: Exception) {
+//                    ErrorReporter.getInstance().reportError(project, "AddEnvironmentsService.setEnvironmentType", e)
+//                    null
+//                }
+//            }
+//        }
+//        flush()
+//    }
 
-            if (type == null) {
-                it.type = null
-            } else {
-                it.type = try {
-                    EnvironmentType.valueOf(type)
-                } catch (e: Exception) {
-                    ErrorReporter.getInstance().reportError(project, "AddEnvironmentsService.setEnvironmentType", e)
-                    null
-                }
-            }
-        }
-        flush()
-    }
 
-
-    fun setEnvironmentServerUrl(project: Project, environment: String, serverUrl: String, token: String?) {
-        val pendingEnvironment: PendingEnvironment? = pendingEnvironments.find { pendingEnvironment -> pendingEnvironment.name == environment }
-        pendingEnvironment?.let {
-            try {
-                it.serverApiUrl = serverUrl
-                it.token = token
-            } catch (e: Exception) {
-                ErrorReporter.getInstance().reportError(project, "AddEnvironmentsService.setEnvironmentServerUrl", e)
-            }
-        }
-        flush()
-    }
+//    fun setEnvironmentServerUrl(project: Project, environment: String, serverUrl: String, token: String?) {
+//        val pendingEnvironment: PendingEnvironment? = pendingEnvironments.find { pendingEnvironment -> pendingEnvironment.name == environment }
+//        pendingEnvironment?.let {
+//            try {
+//                it.serverApiUrl = serverUrl
+//                it.token = token
+//            } catch (e: Exception) {
+//                ErrorReporter.getInstance().reportError(project, "AddEnvironmentsService.setEnvironmentServerUrl", e)
+//            }
+//        }
+//        flush()
+//    }
 
     fun setEnvironmentSetupFinished(project: Project, environment: String) {
         val pendingEnvironment: PendingEnvironment? = pendingEnvironments.find { pendingEnvironment -> pendingEnvironment.name == environment }
@@ -140,34 +138,22 @@ class AddEnvironmentsService {
     }
 
 
-    fun addToCurrentRunConfig(project: Project, environment: String): Boolean {
+    fun addToCurrentRunConfig(project: Project, environmentId: String): Boolean {
         val result = try {
-            Log.log(logger::info, "addToCurrentRunConfig invoked for environment {}", environment)
-            addDigmaEnvironmentToSelectedRunConfiguration(project, environment)
+            Log.log(logger::info, "addToCurrentRunConfig invoked for environment {}", environmentId)
+            addDigmaEnvironmentToSelectedRunConfiguration(project, environmentId)
         } catch (e: Exception) {
-            Log.warnWithException(logger, e, "failed adding environment {} to current run config", environment)
+            Log.warnWithException(logger, e, "failed adding environment {} to current run config", environmentId)
             service<ErrorReporter>().reportError(project, "AddEnvironmentsService.addToCurrentRunConfig", e)
             false
         }
 
-        //not sure necessary, just in case addToCurrentRunConfig is called for environment that is not
-        // in the map, it may happen if flush failed
-        if (pendingEnvironments.none { pendingEnvironment -> pendingEnvironment.name == environment }) {
-            addEnvironment(environment)
-        }
-
-        val pendingEnv: PendingEnvironment? = pendingEnvironments.find { pendingEnvironment -> pendingEnvironment.name == environment }
-
-        pendingEnv?.let {
-            it.additionToConfigResult = if (result) AdditionToConfigResult.success else AdditionToConfigResult.failure
-        }
-        flush()
         return result
     }
 
 
     //will only work for idea
-    private fun addDigmaEnvironmentToSelectedRunConfiguration(project: Project, environment: String): Boolean {
+    private fun addDigmaEnvironmentToSelectedRunConfiguration(project: Project, environmentId: String): Boolean {
 
         val selectedConfiguration = RunManager.getInstance(project).selectedConfiguration
         if (selectedConfiguration == null) {
@@ -196,7 +182,7 @@ class AddEnvironmentsService {
         //nested local function
         fun addEnvironmentToOtelResourceAttributes(envVars: MutableMap<String, String>) {
             if (isSpringBootWithMicroMeter(project, config)) {
-                envVars["MANAGEMENT_OPENTELEMETRY_RESOURCE-ATTRIBUTES_digma_environment"] = environment
+                envVars["MANAGEMENT_OPENTELEMETRY_RESOURCE-ATTRIBUTES_digma_environment"] = environmentId
             } else {
                 //maybe OTEL_RESOURCE_ATTRIBUTES  already exists and has values other than digma.environment,
                 // so preserve them
@@ -226,13 +212,13 @@ class AddEnvironmentsService {
                         mutableMapOf()
                     }
 
-                    valuesMap[DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE] = environment
+                    valuesMap[DIGMA_ENVIRONMENT_ID_RESOURCE_ATTRIBUTE] = environmentId
 
                     envVars[OTEL_RESOURCE_ATTRIBUTES] = valuesMap.entries
                         .filter { entry -> !entry.key.isNullOrBlank() }.joinToString(separator = ",")
 
                 } else {
-                    envVars[OTEL_RESOURCE_ATTRIBUTES] = "$DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE=$environment"
+                    envVars[OTEL_RESOURCE_ATTRIBUTES] = "$DIGMA_ENVIRONMENT_ID_RESOURCE_ATTRIBUTE=$environmentId"
                 }
             }
         }

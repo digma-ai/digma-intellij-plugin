@@ -9,7 +9,6 @@ import com.intellij.util.Alarm;
 import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.auth.AuthManager;
 import org.digma.intellij.plugin.common.*;
-import org.digma.intellij.plugin.env.Env;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.rest.AboutResult;
@@ -19,6 +18,7 @@ import org.digma.intellij.plugin.model.rest.codespans.CodeContextSpans;
 import org.digma.intellij.plugin.model.rest.common.SpanHistogramQuery;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.env.*;
+import org.digma.intellij.plugin.model.rest.environment.Env;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.event.*;
@@ -48,6 +48,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import static org.digma.intellij.plugin.analytics.EnvUtilsKt.getAllEnvironmentsNames;
 import static org.digma.intellij.plugin.analytics.EnvironmentRefreshSchedulerKt.scheduleEnvironmentRefresh;
 import static org.digma.intellij.plugin.common.ExceptionUtils.*;
 
@@ -179,26 +180,32 @@ public class AnalyticsService implements Disposable {
     }
 
 
-    @NotNull
-    public List<String> getRawEnvironments() {
+    public List<Env> getEnvironments() {
         try {
-
-            var environments = analyticsProviderProxy.getEnvironments();
-
-            return Env.filterRawEnvironments(environments);
-
-        } catch (Exception e) {
-            //getEnvironments should never throw exception.
+            var envs = executeCatching(() -> analyticsProviderProxy.getEnvironments());
+            //warn about duplicates
+            if (new HashSet<>(envs).size() < envs.size()) {
+                var details = new HashMap<String, String>();
+                details.put("error", "duplicate environments in getEnvironments");
+                details.put("environments", String.join(",", envs.stream().map(env -> env.getId() + ":" + env.getName()).toList()));
+                ErrorReporter.getInstance().reportError(project, "AnalyticsService.getEnvironments", "get environments", details);
+            }
+            return envs;
+        } catch (AnalyticsServiceException e) {
+            if (!ExceptionUtils.isAnyConnectionException(e)) {
+                ErrorReporter.getInstance().reportError("AnalyticsService.getEnvironments", e);
+            }
             return Collections.emptyList();
         }
     }
 
-    private String getCurrentEnvironment() throws AnalyticsServiceException {
-        Env currentEnv = environment.getCurrent();
-        if (currentEnv == null || currentEnv.getOriginalName().isEmpty()) {
+
+    private String getCurrentEnvironmentId() throws AnalyticsServiceException {
+        var envId = EnvUtilsKt.getCurrentEnvironmentId(project);
+        if (envId == null) {
             throw new NoSelectedEnvironmentException("No selected environment");
         }
-        return currentEnv.getOriginalName();
+        return envId;
     }
 
 
@@ -211,12 +218,12 @@ public class AnalyticsService implements Disposable {
 
 
     public LatestCodeObjectEventsResponse getLatestEvents(@NotNull String lastReceivedTime) throws AnalyticsServiceException {
-        return executeCatching(() -> analyticsProviderProxy.getLatestEvents(new LatestCodeObjectEventsRequest(environment.getEnvironmentsNames(), lastReceivedTime)));
+        return executeCatching(() -> analyticsProviderProxy.getLatestEvents(new LatestCodeObjectEventsRequest(getAllEnvironmentsNames(project), lastReceivedTime)));
     }
 
 
     public List<InsightInfo> getInsightsInfo(List<String> objectIds) throws AnalyticsServiceException {
-        var env = getCurrentEnvironment();
+        var env = getCurrentEnvironmentId();
         var insights = executeCatching(() -> analyticsProviderProxy.getInsightsInfo(new InsightsRequest(env, objectIds)));
         if (insights == null) {
             insights = Collections.emptyList();
@@ -227,14 +234,14 @@ public class AnalyticsService implements Disposable {
 
     @NotNull
     public CodeContextSpans getSpansForCodeLocation(@NotNull List<String> idsWithType) throws AnalyticsServiceException {
-        var env = getCurrentEnvironment();
+        var env = getCurrentEnvironmentId();
         Log.log(LOGGER::debug, "Requesting spans for code objects {}", idsWithType);
         return executeCatching(() -> analyticsProviderProxy.getSpansForCodeLocation(env, idsWithType));
     }
 
 
     public String getInsightBySpan(String spanCodeObjectId, String insightType) throws AnalyticsServiceException {
-        var env = getCurrentEnvironment();
+        var env = getCurrentEnvironmentId();
         Log.log(LOGGER::debug, "Requesting insight for span {}", spanCodeObjectId);
         return executeCatching(() -> analyticsProviderProxy.getInsightBySpan(env, spanCodeObjectId, insightType));
 
@@ -242,32 +249,32 @@ public class AnalyticsService implements Disposable {
 
 
     public LinkUnlinkTicketResponse linkTicket(String codeObjectId, String insightType, String ticketLink) throws AnalyticsServiceException {
-        var env = getCurrentEnvironment();
+        var env = getCurrentEnvironmentId();
         var linkRequest = new LinkTicketRequest(env, codeObjectId, insightType, ticketLink);
         return executeCatching(() -> analyticsProviderProxy.linkTicket(linkRequest));
     }
 
     public LinkUnlinkTicketResponse unlinkTicket(String codeObjectId, String insightType) throws AnalyticsServiceException {
-        var env = getCurrentEnvironment();
+        var env = getCurrentEnvironmentId();
         var unlinkRequest = new UnlinkTicketRequest(env, codeObjectId, insightType);
         return executeCatching(() -> analyticsProviderProxy.unlinkTicket(unlinkRequest));
     }
 
     public CodeLensOfMethodsResponse getCodeLensByMethods(List<MethodWithCodeObjects> methods) throws AnalyticsServiceException {
-        var env = getCurrentEnvironment();
+        var env = getCurrentEnvironmentId();
         var request = new CodeLensOfMethodsRequest(env, methods);
         return executeCatching(() -> analyticsProviderProxy.getCodeLensByMethods(request));
     }
 
 
     public AssetDisplayInfo getAssetDisplayInfo(String codeObjectId) throws AnalyticsServiceException {
-        var env = getCurrentEnvironment();
+        var env = getCurrentEnvironmentId();
         return executeCatching(() -> analyticsProviderProxy.getAssetDisplayInfo(env, codeObjectId));
     }
 
 
     public List<CodeObjectError> getErrorsOfCodeObject(List<String> codeObjectIds) throws AnalyticsServiceException {
-        var env = getCurrentEnvironment();
+        var env = getCurrentEnvironmentId();
         Log.log(LOGGER::trace, "Requesting insights for next codeObjectId {} and next environment {}", codeObjectIds, env);
         var errors = executeCatching(() -> analyticsProviderProxy.getErrorsOfCodeObject(env, codeObjectIds));
         if (errors == null) {
@@ -278,7 +285,7 @@ public class AnalyticsService implements Disposable {
 
 
     public void setInsightCustomStartTime(String insightId) throws AnalyticsServiceException {
-        var env = getCurrentEnvironment();
+        var env = getCurrentEnvironmentId();
         String formattedActualDate = Instant.now().toString();//FYI: by UTC time zone
         executeCatching(() -> {
             analyticsProviderProxy.setInsightCustomStartTime(
@@ -300,8 +307,8 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.getVersions(request));
     }
 
-    public RecentActivityResult getRecentActivity(List<String> environments) throws AnalyticsServiceException {
-        return executeCatching(() -> analyticsProviderProxy.getRecentActivity(new RecentActivityRequest(environments)));
+    public RecentActivityResult getRecentActivity(List<String> environmentsIds) throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.getRecentActivity(new RecentActivityRequest(environmentsIds)));
     }
 
     public UserUsageStatsResponse getUserUsageStats() throws AnalyticsServiceException {
@@ -309,30 +316,30 @@ public class AnalyticsService implements Disposable {
     }
 
     public DurationLiveData getDurationLiveData(String codeObjectId) throws AnalyticsServiceException {
-        var env = getCurrentEnvironment();
+        var env = getCurrentEnvironmentId();
         return executeCatching(() ->
                 analyticsProviderProxy.getDurationLiveData(new DurationLiveDataRequest(env, codeObjectId)));
     }
 
     public CodeObjectNavigation getCodeObjectNavigation(String spanCodeObjectId) throws AnalyticsServiceException {
-        var env = getCurrentEnvironment();
+        var env = getCurrentEnvironmentId();
         return executeCatching(() ->
                 analyticsProviderProxy.getCodeObjectNavigation(new CodeObjectNavigationRequest(env, spanCodeObjectId)));
     }
 
 
     public String getHtmlGraphForSpanPercentiles(String instrumentationLibrary, String spanName, String backgroundColor) throws AnalyticsServiceException {
-        final SpanHistogramQuery spanHistogramQuery = new SpanHistogramQuery(getCurrentEnvironment(), spanName, instrumentationLibrary, JBColor.isBright() ? "light" : "dark", backgroundColor);
+        final SpanHistogramQuery spanHistogramQuery = new SpanHistogramQuery(getCurrentEnvironmentId(), spanName, instrumentationLibrary, JBColor.isBright() ? "light" : "dark", backgroundColor);
         return executeCatching(() -> analyticsProviderProxy.getHtmlGraphForSpanPercentiles(spanHistogramQuery));
     }
 
     public String getHtmlGraphForSpanScaling(String instrumentationLibrary, String spanName, String backgroundColor) throws AnalyticsServiceException {
-        final SpanHistogramQuery spanHistogramQuery = new SpanHistogramQuery(getCurrentEnvironment(), spanName, instrumentationLibrary, JBColor.isBright() ? "light" : "dark", backgroundColor);
+        final SpanHistogramQuery spanHistogramQuery = new SpanHistogramQuery(getCurrentEnvironmentId(), spanName, instrumentationLibrary, JBColor.isBright() ? "light" : "dark", backgroundColor);
         return executeCatching(() -> analyticsProviderProxy.getHtmlGraphForSpanScaling(spanHistogramQuery));
     }
 
     public String getAssetCategories(@NotNull Map<String, Object> queryParams) throws AnalyticsServiceException {
-        var env = getCurrentEnvironment();
+        var env = getCurrentEnvironmentId();
         queryParams.put(ENVIRONMENT_QUERY_PARAM_NAME, env);
         return executeCatching(() ->
                 analyticsProviderProxy.getAssetCategories(queryParams));
@@ -340,20 +347,20 @@ public class AnalyticsService implements Disposable {
 
 
     public String getInsightsExist() throws AnalyticsServiceException {
-        var env = getCurrentEnvironment();
+        var env = getCurrentEnvironmentId();
         return executeCatching(() -> analyticsProviderProxy.insightExists(env));
     }
 
 
     public String getAssetFilters(@NotNull Map<String, Object> queryParams) throws AnalyticsServiceException {
-        var env = getCurrentEnvironment();
+        var env = getCurrentEnvironmentId();
         queryParams.put(ENVIRONMENT_QUERY_PARAM_NAME, env);
         return executeCatching(() ->
                 analyticsProviderProxy.getAssetFilters(queryParams));
     }
 
     public String getAssets(@NotNull Map<String, Object> queryParams) throws AnalyticsServiceException {
-        var env = getCurrentEnvironment();
+        var env = getCurrentEnvironmentId();
         queryParams.put(ENVIRONMENT_QUERY_PARAM_NAME, env);
         return executeCatching(() ->
                 analyticsProviderProxy.getAssets(queryParams));
@@ -361,20 +368,20 @@ public class AnalyticsService implements Disposable {
 
     public String getServices() throws AnalyticsServiceException {
 
-        var env = getCurrentEnvironment();
+        var env = getCurrentEnvironmentId();
         return executeCatching(() ->
                 analyticsProviderProxy.getServices(env));
     }
 
 
     public String getNotifications(String notificationsStartDate, String userId, int pageNumber, int pageSize, boolean isRead) throws AnalyticsServiceException {
-        var env = getCurrentEnvironment();
+        var env = getCurrentEnvironmentId();
         return executeCatching(() ->
                 analyticsProviderProxy.getNotifications(new NotificationsRequest(env, userId, notificationsStartDate, pageNumber, pageSize, isRead)));
     }
 
     public void setReadNotificationsTime(String upToDateTime, String userId) throws AnalyticsServiceException {
-        var env = getCurrentEnvironment();
+        var env = getCurrentEnvironmentId();
         executeCatching(() -> {
             analyticsProviderProxy.setReadNotificationsTime(new SetReadNotificationsRequest(env, userId, upToDateTime));
             return null;
@@ -382,7 +389,7 @@ public class AnalyticsService implements Disposable {
     }
 
     public UnreadNotificationsCountResponse getUnreadNotificationsCount(String notificationsStartDate, String userId) throws AnalyticsServiceException {
-        var env = getCurrentEnvironment();
+        var env = getCurrentEnvironmentId();
         return executeCatching(() -> analyticsProviderProxy.getUnreadNotificationsCount(new GetUnreadNotificationsCountRequest(env, userId, notificationsStartDate)));
     }
 
@@ -416,7 +423,7 @@ public class AnalyticsService implements Disposable {
     }
 
     public String getInsights(@NotNull Map<String, Object> queryParams) throws AnalyticsServiceException {
-        var env = getCurrentEnvironment();
+        var env = getCurrentEnvironmentId();
         queryParams.put(ENVIRONMENT_QUERY_PARAM_NAME, env);
         return executeCatching(() -> analyticsProviderProxy.getInsights(queryParams));
     }
@@ -429,7 +436,7 @@ public class AnalyticsService implements Disposable {
     }
 
     public void markAllInsightsAsRead(MarkInsightsAsReadScope scope) throws AnalyticsServiceException {
-        var env = getCurrentEnvironment();
+        var env = getCurrentEnvironmentId();
         executeCatching(() -> {
             analyticsProviderProxy.markAllInsightsAsRead(env, scope);
             return null;
@@ -452,14 +459,14 @@ public class AnalyticsService implements Disposable {
 
     @NotNull
     public AssetNavigationResponse getAssetNavigation(@NotNull String spanCodeObjectId) throws AnalyticsServiceException {
-        var env = getCurrentEnvironment();
+        var env = getCurrentEnvironmentId();
         return executeCatching(() -> analyticsProviderProxy.getAssetNavigation(env, spanCodeObjectId));
     }
 
     public InsightsStatsResult getInsightsStats(String spanCodeObjectId) throws AnalyticsServiceException {
         try {
             var params = new HashMap<String, Object>();
-            params.put("Environment", this.environment.getLatestKnownEnv());
+            params.put("Environment", getCurrentEnvironmentId());
 
             if (spanCodeObjectId != null) {
                 params.put("ScopedSpanCodeObjectId", spanCodeObjectId);

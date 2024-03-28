@@ -12,6 +12,7 @@ import org.digma.intellij.plugin.model.rest.codespans.CodeContextSpans;
 import org.digma.intellij.plugin.model.rest.common.SpanHistogramQuery;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.env.*;
+import org.digma.intellij.plugin.model.rest.environment.Env;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.event.*;
@@ -79,13 +80,8 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         return execute(() -> client.analyticsProvider.refreshToken(refreshRequest));
     }
 
-    public List<String> getEnvironments() {
-        var envs = execute(client.analyticsProvider::getEnvironments);
-        //make sure environments list is always a mutable list because we change it
-        if (envs != null) {
-            envs = new ArrayList<>(envs);
-        }
-        return envs;
+    public List<Env> getEnvironments() {
+        return execute(client.analyticsProvider::getEnvironments);
     }
 
 
@@ -563,8 +559,8 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @GET("/CodeAnalytics/environments")
-        Call<List<String>> getEnvironments();
+        @GET("/environments")
+        Call<List<Env>> getEnvironments();
 
         @Headers({
                 "Accept: application/+json",

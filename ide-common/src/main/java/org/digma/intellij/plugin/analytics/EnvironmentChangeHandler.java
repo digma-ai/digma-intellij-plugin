@@ -6,9 +6,9 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiManager;
 import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.editor.CaretContextService;
-import org.digma.intellij.plugin.env.Env;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.model.rest.environment.Env;
 import org.digma.intellij.plugin.psi.*;
 
 import java.util.List;

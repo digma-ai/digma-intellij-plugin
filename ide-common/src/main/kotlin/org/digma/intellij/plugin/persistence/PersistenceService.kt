@@ -23,14 +23,13 @@ class PersistenceService {
 
     /**
      * Do not use this method to get the current environment.
-     * @see org.digma.intellij.plugin.env.Env.Companion.getCurrentEnvName
      */
-    fun getCurrentEnv(): String? {
-        return state.currentEnv
+    fun getLatestSelectedEnvId(): String? {
+        return state.latestSelectedEnvId
     }
 
-    fun setCurrentEnv(env: String?) {
-        state.currentEnv = env
+    fun setLatestSelectedEnvId(envId: String?) {
+        state.latestSelectedEnvId = envId
     }
 
 
@@ -329,7 +328,6 @@ class PersistenceService {
     fun isLoadWarningAppeared(): Boolean {
         return state.loadWarningAppearedTimestamp != null
     }
-
 
 
 }

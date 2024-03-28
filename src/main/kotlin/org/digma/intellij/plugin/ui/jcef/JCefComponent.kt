@@ -18,11 +18,12 @@ import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
 import org.digma.intellij.plugin.analytics.EnvironmentChanged
 import org.digma.intellij.plugin.analytics.InsightStatsChangedEvent
+import org.digma.intellij.plugin.analytics.getAllEnvironments
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.docker.DockerService
-import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
+import org.digma.intellij.plugin.model.rest.environment.Env
 import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
 import org.digma.intellij.plugin.observability.ObservabilityChanged
 import org.digma.intellij.plugin.scope.ScopeChangedEvent
@@ -157,7 +158,7 @@ private constructor(
                     try {
                         sendEnvironmentsList(
                             jbCefBrowser.cefBrowser,
-                            AnalyticsService.getInstance(project).environment.getEnvironments()
+                            getAllEnvironments(project)
                         )
                     } catch (e: Throwable) {
                         ErrorReporter.getInstance().reportError("JCefComponent.environmentsListChanged", e)

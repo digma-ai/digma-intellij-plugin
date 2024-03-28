@@ -6,12 +6,13 @@ import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.execution.configurations.RunnerSettings
 import com.intellij.execution.configurations.SimpleProgramParameters
 import com.intellij.openapi.module.Module
+import org.digma.intellij.plugin.analytics.LOCAL_TESTS_ENV
 import org.digma.intellij.plugin.buildsystem.BuildSystem
-import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.execution.RunConfigurationInstrumentationService
 import org.digma.intellij.plugin.execution.RunConfigurationType
 import org.digma.intellij.plugin.idea.deps.ModulesDepsService
 import org.digma.intellij.plugin.idea.execution.ConfigurationCleaner
+import org.digma.intellij.plugin.idea.execution.DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE
 import org.digma.intellij.plugin.idea.execution.ExternalSystemConfigurationCleaner
 import org.digma.intellij.plugin.idea.execution.ExternalSystemJavaToolOptionsMerger
 import org.digma.intellij.plugin.idea.execution.JavaToolOptionsBuilder
@@ -200,7 +201,7 @@ class QuarkusRunConfigurationInstrumentationService : BaseJvmRunConfigurationIns
 
         override fun withTest(isTest: Boolean): JavaToolOptionsBuilder {
             if (isTest) {
-                val envPart = "digma.environment=${Env.buildEnvForLocalTests()}"
+                val envPart = "$DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE=$LOCAL_TESTS_ENV"
                 javaToolOptions
                     .append("-Dquarkus.otel.resource.attributes=\"$envPart\"")
                     .append(" ")

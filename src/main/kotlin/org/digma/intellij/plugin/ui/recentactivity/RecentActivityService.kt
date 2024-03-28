@@ -11,6 +11,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
+import org.digma.intellij.plugin.analytics.refreshEnvironmentsNowOnBackground
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
@@ -54,17 +55,17 @@ class RecentActivityService(val project: Project) : Disposable {
     }
 
 
-    fun getRecentActivities(environments: List<String>): RecentActivityResult? {
+    fun getRecentActivities(environmentsIds: List<String>): RecentActivityResult? {
 
         return try {
 
-            Log.log(logger::trace, project, "getRecentActivities called with envs: {}", environments)
+            Log.log(logger::trace, project, "getRecentActivities called with envs: {}", environmentsIds)
 
-            val recentActivityData = project.service<AnalyticsService>().getRecentActivity(environments)
+            val recentActivityData = AnalyticsService.getInstance(project).getRecentActivity(environmentsIds)
 
             if (recentActivityData.entries.isNotEmpty() && !service<PersistenceService>().isFirstTimeRecentActivityReceived()) {
                 service<PersistenceService>().setFirstTimeRecentActivityReceived()
-                project.service<ActivityMonitor>().registerFirstTimeRecentActivityReceived()
+                ActivityMonitor.getInstance(project).registerFirstTimeRecentActivityReceived()
             }
 
             Log.log(logger::trace, project, "got recent activity {}", recentActivityData)
@@ -128,7 +129,7 @@ class RecentActivityService(val project: Project) : Disposable {
             } else {
                 Log.log(logger::trace, project, "deleteEnvironment {} faled", environment)
             }
-            project.service<AnalyticsService>().environment.refreshNowOnBackground()
+            refreshEnvironmentsNowOnBackground(project)
 
         } catch (e: Exception) {
             Log.debugWithException(logger, project, e, "error deleting environment")

@@ -10,11 +10,12 @@ import com.intellij.util.ui.UIUtil
 import freemarker.template.Configuration
 import freemarker.template.Template
 import freemarker.template.TemplateExceptionHandler
+import org.digma.intellij.plugin.analytics.getCurrentEnvironment
 import org.digma.intellij.plugin.docker.DockerService
-import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.model.rest.environment.Env
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.ui.common.getJaegerUrl
@@ -78,7 +79,7 @@ abstract class BaseIndexTemplateBuilder(resourceFolderName: String, private val 
             data[DIGMA_API_PROXY_PREFIX] = ApiProxyResourceHandler.URL_PREFIX
             data[JAEGER_URL] = getJaegerUrl() ?: ""
             data[IS_MICROMETER_PROJECT] = SpringBootMicrometerConfigureDepsService.isSpringBootWithMicrometer()
-            data[ENVIRONMENT] = Env.getCurrentEnv(project)?.let { it: Env -> serializeObjectToJson(it) } ?: "undefined"
+            data[ENVIRONMENT] = getCurrentEnvironment(project)?.let { it: Env -> serializeObjectToJson(it) } ?: "undefined"
 
             addAppSpecificEnvVariable(project, data)
 

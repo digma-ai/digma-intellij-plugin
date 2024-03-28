@@ -7,6 +7,7 @@ import org.digma.intellij.plugin.model.rest.codespans.CodeContextSpans;
 import org.digma.intellij.plugin.model.rest.common.SpanHistogramQuery;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.env.*;
+import org.digma.intellij.plugin.model.rest.environment.Env;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.event.*;
@@ -31,7 +32,7 @@ public interface AnalyticsProvider extends Closeable {
     LoginResponse refreshToken(RefreshRequest loginRequest);
 
 
-    List<String> getEnvironments();
+    List<Env> getEnvironments();
 
     void sendDebuggerEvent(DebuggerEventRequest debuggerEventRequest);
 

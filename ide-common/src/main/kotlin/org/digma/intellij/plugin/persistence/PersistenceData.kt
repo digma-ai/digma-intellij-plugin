@@ -13,7 +13,7 @@ internal data class PersistenceData(
     // is enough. for new users only the timestamp will be used.
 
 
-    var currentEnv: String? = null,
+    var latestSelectedEnvId: String? = null,
     var isWorkspaceOnly: Boolean = false,
     //todo: we want to change the name to isObservabilityEnabled.
     // remove isAutoOtel after some versions, can remove in June 2024 when probably all users updated the plugin

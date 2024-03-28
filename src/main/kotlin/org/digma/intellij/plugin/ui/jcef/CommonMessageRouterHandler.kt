@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
-import org.digma.intellij.plugin.env.Env
 
 
 /**
@@ -38,14 +37,19 @@ interface CommonMessageRouterHandler {
     }
 
 
-    fun getEnvironmentFromPayload(requestJsonNode: JsonNode): Env? {
+    fun getEnvironmentIdFromPayload(requestJsonNode: JsonNode): String? {
         val payload = getPayloadFromRequest(requestJsonNode)
-        return payload?.takeIf { payload.get("environment") != null }?.let { pl ->
-            val envAsString = objectMapper.writeValueAsString(pl.get("environment"))
-            val env: Env = jsonToObject(envAsString, Env::class.java)
-            env
-        }
+        return payload?.takeIf { payload.get("environment") != null }?.get("environment")?.asText()
     }
 
+//    fun getEnvironmentIdFromPayload(requestJsonNode: JsonNode): String? {
+//        val payload = getPayloadFromRequest(requestJsonNode)
+//        return payload?.takeIf { payload.get("environment") != null }?.let { pl ->
+//            val envAsString = objectMapper.writeValueAsString(pl.get("environment"))
+//            val env: Env = jsonToObject(envAsString, Env::class.java)
+//            env
+//        }
+//    }
+//
 }
 

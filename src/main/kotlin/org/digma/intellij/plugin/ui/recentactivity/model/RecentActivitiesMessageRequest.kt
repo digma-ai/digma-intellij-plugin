@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.ui.recentactivity.model
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
+import org.digma.intellij.plugin.model.rest.environment.EnvType
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResponseEntry
 import java.beans.ConstructorProperties
 
@@ -28,13 +29,10 @@ data class RecentActivityEnvironment
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 @ConstructorProperties("name", "originalName", "isPending", "additionToConfigResult", "type", "serverApiUrl", "token", "isOrgDigmaSetupFinished")
 constructor(
+    val id: String,
     val name: String,
-    val originalName: String,
-    @get:JsonProperty("isPending")
-    @param:JsonProperty("isPending")
-    val isPending: Boolean,
+    val type: EnvType, //Private or Public
     val additionToConfigResult: AdditionToConfigResult? = null,
-    var type: EnvironmentType? = null,
     val serverApiUrl: String? = null,
     val token: String? = null,
     @get:JsonProperty("isOrgDigmaSetupFinished")

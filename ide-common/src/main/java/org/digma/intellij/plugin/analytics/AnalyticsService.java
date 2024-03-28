@@ -137,7 +137,11 @@ public class AnalyticsService implements Disposable {
 
         Log.log(LOGGER::debug, "calling AuthManager.withAuth for url {}", url);
         AnalyticsProvider analyticsProvider =
-                AuthManager.getInstance().withAuth(new RestAnalyticsProvider(url, AuthManager.getInstance().getAuthenticationProviders()), url);
+                AuthManager.getInstance().withAuth(new RestAnalyticsProvider(url, AuthManager.getInstance().getAuthenticationProviders(),
+                        message -> {
+                            var apiLogger = Logger.getInstance("api.digma.org");
+                            Log.log(apiLogger::debug, "API: {}", message);
+                        }), url);
         Log.log(LOGGER::debug, "AuthManager.withAuth successfully wrapped AnalyticsProvider for url {}", url);
         analyticsProviderProxy = newAnalyticsProviderProxy(analyticsProvider);
 
@@ -160,7 +164,7 @@ public class AnalyticsService implements Disposable {
             public String getHeaderValue() {
                 return token;
             }
-        }))) {
+        }), message -> Log.log(LOGGER::debug, message))) {
             //todo: use health check to test connection
             var envs = analyticsProvider.getEnvironments();
             if (envs != null) {
@@ -237,13 +241,13 @@ public class AnalyticsService implements Disposable {
     }
 
 
-    public LinkUnlinkTicketResponse linkTicket(String codeObjectId, String insightType, String ticketLink) throws AnalyticsServiceException{
+    public LinkUnlinkTicketResponse linkTicket(String codeObjectId, String insightType, String ticketLink) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
         var linkRequest = new LinkTicketRequest(env, codeObjectId, insightType, ticketLink);
         return executeCatching(() -> analyticsProviderProxy.linkTicket(linkRequest));
     }
 
-    public LinkUnlinkTicketResponse unlinkTicket(String codeObjectId, String insightType) throws AnalyticsServiceException{
+    public LinkUnlinkTicketResponse unlinkTicket(String codeObjectId, String insightType) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
         var unlinkRequest = new UnlinkTicketRequest(env, codeObjectId, insightType);
         return executeCatching(() -> analyticsProviderProxy.unlinkTicket(unlinkRequest));
@@ -467,9 +471,9 @@ public class AnalyticsService implements Disposable {
     public InsightsStatsResult getInsightsStats(String spanCodeObjectId) throws AnalyticsServiceException {
         try {
             var params = new HashMap<String, Object>();
-            params.put("Environment",this.environment.getLatestKnownEnv());
+            params.put("Environment", this.environment.getLatestKnownEnv());
 
-            if(spanCodeObjectId != null){
+            if (spanCodeObjectId != null) {
                 params.put("ScopedSpanCodeObjectId", spanCodeObjectId);
             }
 
@@ -477,7 +481,7 @@ public class AnalyticsService implements Disposable {
         } catch (Exception e) {
             Log.debugWithException(LOGGER, project, e, "error calling  insights stats", e.getMessage());
         }
-        return  new InsightsStatsResult(0,0,0, 0);
+        return new InsightsStatsResult(0, 0, 0, 0);
     }
 
     public HttpResponse lowLevelCall(HttpRequest request) throws AnalyticsServiceException {
@@ -509,12 +513,12 @@ public class AnalyticsService implements Disposable {
         } catch (AnalyticsProviderException e) {
             throw new AnalyticsServiceException("An AnalyticsProviderException was caught", e);
         } catch (UndeclaredThrowableException e) {
-            throw new AnalyticsServiceException("UndeclaredThrowableException caught", e.getUndeclaredThrowable());
+            throw new AnalyticsServiceException("UndeclaredThrowableException caught " + e.getMessage(), e.getUndeclaredThrowable());
         } catch (RuntimeExceptionWithAttachments e) {
             //this is a platform exception as a result of asserting non UI thread when calling backend API
             throw e;
-        } catch (Exception e) {
-            throw new AnalyticsServiceException("Unknown exception", e);
+        } catch (Throwable e) {
+            throw new AnalyticsServiceException("Unknown exception " + e.getMessage(), e);
         }
     }
 
@@ -647,7 +651,13 @@ public class AnalyticsService implements Disposable {
                 //handleInvocationTargetException may rethrow an exception, if it didn't then always
                 // an AnalyticsServiceException will be throws
                 handleInvocationTargetException(e, method, args);
-                throw new AnalyticsServiceException(e);
+                if (e.getCause() != null) {
+                    //this is caught in executeCatching
+                    var analyticsProviderException = ExceptionUtils.findCause(AnalyticsProviderException.class, e);
+                    throw Objects.requireNonNullElse(analyticsProviderException, e.getCause());
+                } else {
+                    throw new AnalyticsServiceException(e);
+                }
 
             } catch (Exception e) {
                 errorReportingHelper.addIfNewError(e);
@@ -699,10 +709,6 @@ public class AnalyticsService implements Disposable {
             }
 
             ErrorReporter.getInstance().reportAnalyticsServiceError(project, "AnalyticsInvocationHandler.invoke." + method.getName(), method.getName(), invocationTargetException, isConnectionException);
-
-            if (invocationTargetException.getCause() instanceof AnalyticsProviderException) {
-                throw invocationTargetException.getCause();
-            }
 
         }
 

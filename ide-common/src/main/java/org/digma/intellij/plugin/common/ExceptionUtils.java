@@ -22,6 +22,21 @@ public class ExceptionUtils {
         return (T) cause;
     }
 
+    @Nullable
+    public static <T> T find(@NotNull Exception e, @NotNull Class<T> javaClass) {
+
+        var ex = e.getCause();
+        while (ex != null && !(javaClass.equals(ex.getClass()))) {
+            ex = ex.getCause();
+        }
+
+        if (ex != null) {
+            return javaClass.cast(ex);
+        }
+
+        return null;
+    }
+
 
     public static Throwable findFirstRealExceptionCause(@NotNull Throwable throwable) {
         Throwable cause = throwable;
@@ -147,18 +162,5 @@ public class ExceptionUtils {
         return exceptionMessage;
     }
 
-    @Nullable
-    public static <T> T find(@NotNull Exception e, @NotNull Class<T> javaClass) {
 
-        var ex = e.getCause();
-        while (ex != null && !(javaClass.equals(ex.getClass()))) {
-            ex = ex.getCause();
-        }
-
-        if (ex != null) {
-            return javaClass.cast(ex);
-        }
-
-        return null;
-    }
 }

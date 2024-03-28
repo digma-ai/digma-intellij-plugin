@@ -14,11 +14,13 @@ import org.digma.intellij.plugin.auth.account.DigmaAccountManager
 import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
 import org.digma.intellij.plugin.auth.credentials.DigmaCredentials
 import org.digma.intellij.plugin.common.ExceptionUtils
+import org.digma.intellij.plugin.common.findActiveProject
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.login.LoginRequest
 import org.digma.intellij.plugin.model.rest.login.RefreshRequest
 import org.digma.intellij.plugin.persistence.PersistenceService
+import org.digma.intellij.plugin.posthog.ActivityMonitor
 import java.io.Closeable
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.InvocationTargetException
@@ -120,14 +122,15 @@ class AuthManager {
                     val because = if (!credentials.isAccessTokenValid()) "access token expired" else "called with force refresh"
                     Log.log(
                         logger::info,
-                        "loginOrRefresh, need to refresh credentials for account {} because {}, url={}",
+                        "loginOrRefresh, need to refresh credentials for account {} because {},credentials {}, url={}",
                         digmaAccount.name,
                         because,
+                        credentials,
                         url
                     )
                     refreshToken(analyticsProvider, digmaAccount, credentials, url)
                 } else {
-                    Log.log(logger::info, "loginOrRefresh, got account {} with valid credentials, url={}", digmaAccount.name, url)
+                    Log.log(logger::info, "loginOrRefresh, got account {} with valid credentials {}, url={}", digmaAccount.name, url, credentials)
                 }
             }
 //            }
@@ -136,16 +139,12 @@ class AuthManager {
         } catch (e: AuthenticationException) {
             Log.warnWithException(logger, e, "AuthenticationException in loginOrRefresh {}", e)
             //should never get AuthenticationException because all the apis used here are not protected
+            //so report it as reportInternalFatalError
             ErrorReporter.getInstance().reportInternalFatalError("AuthManager.loginOrRefresh", e)
             false
         } catch (e: AnalyticsProviderException) {
-            //this may be a connection error if backend is not up so just treat it as regular analytics error
+            Log.warnWithException(logger, e, "AnalyticsProviderException in loginOrRefresh {}", e)
             val isConnectionException = ExceptionUtils.isAnyConnectionException(e)
-            if (isConnectionException) {
-                Log.debugWithException(logger, e, "AnalyticsProviderException in loginOrRefresh {}", e)
-            } else {
-                Log.warnWithException(logger, e, "AnalyticsProviderException in loginOrRefresh {}", e)
-            }
             ErrorReporter.getInstance().reportAnalyticsServiceError("AuthManager.loginOrRefresh", "loginOrRefresh", e, isConnectionException)
             false
         } catch (e: Throwable) {
@@ -161,22 +160,47 @@ class AuthManager {
 
 
     private fun login(analyticsProvider: RestAnalyticsProvider, url: String) {
-        Log.log(logger::info, "doing login for url={}", url)
-        val email = PersistenceService.getInstance().getUserRegistrationEmail() ?: PersistenceService.getInstance().getUserEmail()
-        val loginResponse = analyticsProvider.login(LoginRequest(SILENT_LOGIN_USER, email, SILENT_LOGIN_PASSWORD))
-        val digmaAccount = DigmaAccountManager.createAccount(url)
-        val digmaCredentials = DigmaCredentials(
-            loginResponse.accessToken,
-            loginResponse.refreshToken,
-            url,
-            TokenType.Bearer.name,
-            loginResponse.expiration.time
+
+        reportPosthogEvent(
+            "login", mapOf(
+                "user" to SILENT_LOGIN_USER
+            )
         )
-        runBlocking {
-            DigmaAccountManager.getInstance().updateAccount(digmaAccount, digmaCredentials)
-            DigmaDefaultAccountHolder.getInstance().account = digmaAccount
+
+        try {
+            Log.log(logger::info, "doing login for url={}", url)
+            val email = PersistenceService.getInstance().getUserRegistrationEmail() ?: PersistenceService.getInstance().getUserEmail()
+            val loginResponse = analyticsProvider.login(LoginRequest(SILENT_LOGIN_USER, email, SILENT_LOGIN_PASSWORD))
+            val digmaAccount = DigmaAccountManager.createAccount(url)
+            val digmaCredentials = DigmaCredentials(
+                loginResponse.accessToken,
+                loginResponse.refreshToken,
+                url,
+                TokenType.Bearer.name,
+                loginResponse.expiration.time
+            )
+            runBlocking {
+                DigmaAccountManager.getInstance().updateAccount(digmaAccount, digmaCredentials)
+                DigmaDefaultAccountHolder.getInstance().account = digmaAccount
+            }
+            Log.log(logger::info, "login success for url={}", url)
+
+            reportPosthogEvent(
+                "login success", mapOf(
+                    "user" to SILENT_LOGIN_USER
+                )
+            )
+
+        } catch (e: Throwable) {
+            //just for reporting, never swallow the exception
+            reportPosthogEvent(
+                "login failed", mapOf(
+                    "user" to SILENT_LOGIN_USER,
+                    "error" to e.message.toString()
+                )
+            )
+            throw e
         }
-        Log.log(logger::info, "login success for url={}", url)
     }
 
 
@@ -221,6 +245,13 @@ class AuthManager {
             arrayOf(AnalyticsProvider::class.java, Closeable::class.java),
             MyAuthInvocationHandler(analyticsProvider, url)
         ) as AnalyticsProvider
+    }
+
+
+    private fun reportPosthogEvent(evenName: String, details: Map<String, String> = mapOf()) {
+        findActiveProject()?.let { project ->
+            ActivityMonitor.getInstance(project).registerCustomEvent(evenName, details)
+        }
     }
 
 

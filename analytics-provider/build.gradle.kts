@@ -6,15 +6,34 @@ plugins {
 }
 
 
+abstract class OkhttpAlignmentRule : ComponentMetadataRule {
+    override fun execute(ctx: ComponentMetadataContext) {
+        ctx.details.run {
+            if (id.group.startsWith("com.squareup.okhttp3")) {
+                belongsTo("com.squareup.okhttp3:okhttp-virtual-platform:${id.version}")
+            }
+        }
+    }
+}
+
+configurations.all {
+    resolutionStrategy {
+        failOnVersionConflict()
+    }
+}
+
 dependencies {
+
+    //make sure all okhttp dependencies are of the same version.
+    //do not add a dependency to okhttp modules that is higher than what retrofit brings. check with dependencies task.
+    components.all<OkhttpAlignmentRule>()
+
     implementation(project(":model"))
     implementation(libs.retrofit.client)
     implementation(libs.retrofit.jackson)
     implementation(libs.retrofit.scalars)
     implementation(libs.jackson.datetime)
     implementation(libs.guava)
-    //todo: find a way to resolve libs.okhttp.logging to the same okhttp version as retrofit brings as dependency.
-    // probably using resolution strategy
     implementation(libs.okhttp.logging) {
         isTransitive = false
     }

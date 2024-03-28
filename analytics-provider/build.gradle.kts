@@ -16,11 +16,6 @@ abstract class OkhttpAlignmentRule : ComponentMetadataRule {
     }
 }
 
-configurations.all {
-    resolutionStrategy {
-        failOnVersionConflict()
-    }
-}
 
 dependencies {
 

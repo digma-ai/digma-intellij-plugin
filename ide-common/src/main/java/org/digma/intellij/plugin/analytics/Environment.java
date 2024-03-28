@@ -41,6 +41,9 @@ public class Environment {
     }
 
 
+    //most methods are protected. don't use this object directly, use EnvUtils.kt
+
+
     @Nullable
     Env getCurrent() {
         return current;

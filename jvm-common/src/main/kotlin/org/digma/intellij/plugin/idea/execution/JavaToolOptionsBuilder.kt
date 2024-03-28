@@ -24,7 +24,7 @@ open class JavaToolOptionsBuilder(
         return this
     }
 
-    open fun withOtelExportedEndpoint(): JavaToolOptionsBuilder {
+    open fun withOtelExporterEndpoint(): JavaToolOptionsBuilder {
         javaToolOptions
             .append("-Dotel.exporter.otlp.endpoint=${getExporterUrl()}")
             .append(" ")

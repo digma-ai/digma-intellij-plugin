@@ -175,7 +175,7 @@ class OpenLibertyRunConfigurationInstrumentationService : BaseJvmRunConfiguratio
             //add at the beginning.
             //can also override build and use insert
             withOtelSdkDisabled()
-            withOtelExportedEndpoint()
+            withOtelExporterEndpoint()
         }
 
         //no need for common properties here

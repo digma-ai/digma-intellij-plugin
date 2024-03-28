@@ -9,7 +9,7 @@ api.digma.org:all<br>
 
 Sensitive data is hidden by default, to include sensitive data:<br>
 in Idea go to Help -> Edit Custom Properties<br>
-add<br>
+add:<br>
 api.digma.org.log.sensitive=true<br>
 and restart
 

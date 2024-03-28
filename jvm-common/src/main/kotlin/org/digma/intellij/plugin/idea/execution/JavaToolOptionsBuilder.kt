@@ -4,6 +4,7 @@ import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.execution.configurations.SimpleProgramParameters
 import com.intellij.openapi.module.Module
 import org.digma.intellij.plugin.analytics.LOCAL_TESTS_ENV
+import org.digma.intellij.plugin.analytics.isCentralized
 import org.digma.intellij.plugin.settings.SettingsState
 
 open class JavaToolOptionsBuilder(
@@ -83,7 +84,7 @@ open class JavaToolOptionsBuilder(
     }
 
     open fun withTest(isTest: Boolean): JavaToolOptionsBuilder {
-        if (isTest) {
+        if (isTest && !isCentralized(configuration.project)) {
             if (!parametersExtractor.alreadyHasTestEnv(configuration, params)) {
                 val envPart = "$DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE=$LOCAL_TESTS_ENV"
                 javaToolOptions

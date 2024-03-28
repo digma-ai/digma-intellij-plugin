@@ -42,3 +42,4 @@ fun setCurrentEnvironmentById(project: Project, envId: String, taskToRunAfterCha
 fun refreshEnvironmentsNowOnBackground(project: Project) {
     AnalyticsService.getInstance(project).environment.refreshNowOnBackground()
 }
+

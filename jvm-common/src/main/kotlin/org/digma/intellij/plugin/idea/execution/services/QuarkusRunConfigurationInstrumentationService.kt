@@ -7,6 +7,7 @@ import com.intellij.execution.configurations.RunnerSettings
 import com.intellij.execution.configurations.SimpleProgramParameters
 import com.intellij.openapi.module.Module
 import org.digma.intellij.plugin.analytics.LOCAL_TESTS_ENV
+import org.digma.intellij.plugin.analytics.isCentralized
 import org.digma.intellij.plugin.buildsystem.BuildSystem
 import org.digma.intellij.plugin.execution.RunConfigurationInstrumentationService
 import org.digma.intellij.plugin.execution.RunConfigurationType
@@ -200,7 +201,7 @@ class QuarkusRunConfigurationInstrumentationService : BaseJvmRunConfigurationIns
         }
 
         override fun withTest(isTest: Boolean): JavaToolOptionsBuilder {
-            if (isTest) {
+            if (isTest && !isCentralized(configuration.project)) {
                 val envPart = "$DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE=$LOCAL_TESTS_ENV"
                 javaToolOptions
                     .append("-Dquarkus.otel.resource.attributes=\"$envPart\"")

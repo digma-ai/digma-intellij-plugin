@@ -106,6 +106,10 @@ public interface AnalyticsProvider extends Closeable {
 
     AssetNavigationResponse getAssetNavigation(String env, String spanCodeObjectId);
 
+    String createEnvironments(Map<String, Object> request);
+
+    void deleteEnvironmentV2(String id);
+
     void markInsightsAsRead(List<String> insightIds);
     void markAllInsightsAsRead(String environment, MarkInsightsAsReadScope scope);
 

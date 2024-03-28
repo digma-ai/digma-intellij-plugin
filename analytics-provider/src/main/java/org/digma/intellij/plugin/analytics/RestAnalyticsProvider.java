@@ -56,7 +56,6 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
             public String getHeaderName() {
                 return null;
             }
-
             @CheckForNull
             @Override
             public String getHeaderValue() {
@@ -68,7 +67,6 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     public RestAnalyticsProvider(String baseUrl, List<AuthenticationProvider> authenticationProviders, Consumer<String> logger) {
         this.client = createClient(baseUrl, authenticationProviders, logger);
     }
-
 
     @Override
     public LoginResponse login(LoginRequest loginRequest) {
@@ -262,6 +260,16 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     @Override
     public AssetNavigationResponse getAssetNavigation(String env, String spanCodeObjectId) {
         return execute(() -> client.analyticsProvider.getAssetNavigation(env, spanCodeObjectId));
+    }
+
+    @Override
+    public String createEnvironments(Map<String, Object> request) {
+        return execute(() -> client.analyticsProvider.createEnvironment(request));
+    }
+
+    @Override
+    public void deleteEnvironmentV2(String id) {
+        execute(() -> client.analyticsProvider.deleteEnvironment(id));
     }
 
     @Override
@@ -856,6 +864,20 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @POST("/authenticate/refresh-token")
         Call<LoginResponse> refreshToken(@Body RefreshRequest loginRequest);
-    }
 
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/environments")
+        Call<String> createEnvironment(@Body Map<String, Object> request);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @DELETE("/environments/{envId}")
+        Call<Void> deleteEnvironment(@Path("envId") String envId);
+
+    }
 }

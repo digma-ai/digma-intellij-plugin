@@ -10,11 +10,6 @@ public class AnalyticsProviderException extends RuntimeException {
         this.responseCode = code;
     }
 
-    public AnalyticsProviderException(int code, String message, String sourceError) {
-        this(code, message);
-        this.sourceError = sourceError;
-    }
-
     public AnalyticsProviderException(String message, Throwable cause) {
         super(message, cause);
     }
@@ -26,8 +21,6 @@ public class AnalyticsProviderException extends RuntimeException {
     public int getResponseCode() {
         return responseCode;
     }
-
-    public String GetSourceError() { return sourceError;}
 
     @Override
     public String getMessage() {

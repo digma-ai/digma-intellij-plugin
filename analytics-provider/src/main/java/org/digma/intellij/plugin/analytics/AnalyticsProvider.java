@@ -30,7 +30,6 @@ public interface AnalyticsProvider extends Closeable {
 
     LoginResponse refreshToken(RefreshRequest loginRequest);
 
-
     List<String> getEnvironments();
 
     void sendDebuggerEvent(DebuggerEventRequest debuggerEventRequest);
@@ -104,8 +103,6 @@ public interface AnalyticsProvider extends Closeable {
     String getInsights(Map<String, Object> queryParams);
 
     AssetNavigationResponse getAssetNavigation(String env, String spanCodeObjectId);
-
-    String getAllEnvironments();
 
     String createEnvironments(Map<String, Object> request);
 

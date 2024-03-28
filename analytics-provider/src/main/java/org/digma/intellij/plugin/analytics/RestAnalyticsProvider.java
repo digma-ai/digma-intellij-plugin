@@ -267,11 +267,6 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
-    public String getAllEnvironments() {
-        return execute(client.analyticsProvider::getAllEnvironments);
-    }
-
-    @Override
     public String createEnvironments(Map<String, Object> request) {
         return execute(() -> client.analyticsProvider.createEnvironment(request));
     }
@@ -399,9 +394,8 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
             return new AuthenticationException(code, "Unauthorized " + code);
         }
 
-        String sourceError = errorBody == null ? null : errorBody.string();
-        String message = String.format("Error %d. %s", code, sourceError);
-        return new AnalyticsProviderException(code, message, sourceError);
+        String message = String.format("Error %d. %s", code,  errorBody == null ? null : errorBody.string());
+        return new AnalyticsProviderException(code, message);
     }
 
 
@@ -890,13 +884,6 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @DELETE("/environments/{envId}")
         Call<Void> deleteEnvironment(@Path("envId") String envId);
-
-        @Headers({
-                "Accept: application/+json",
-                "Content-Type:application/json"
-        })
-        @GET("/environments")
-        Call<String> getAllEnvironments();
 
     }
 }

@@ -418,6 +418,13 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.deleteEnvironment(new DeleteEnvironmentRequest(environmentName)));
     }
 
+    public void deleteEnvironmentV2(@NotNull String id) throws AnalyticsServiceException {
+        executeCatching(() -> {
+            analyticsProviderProxy.deleteEnvironmentV2(id);
+            return null;
+        });
+    }
+
     public String getDashboard(@NotNull Map<String, String> queryParams) throws AnalyticsServiceException {
         return executeCatching(() -> analyticsProviderProxy.getDashboard(queryParams));
     }
@@ -462,6 +469,11 @@ public class AnalyticsService implements Disposable {
         var env = getCurrentEnvironmentId();
         return executeCatching(() -> analyticsProviderProxy.getAssetNavigation(env, spanCodeObjectId));
     }
+
+    public String createEnvironment(@NotNull Map<String, Object> queryParams) throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.createEnvironments(queryParams));
+    }
+
 
     public InsightsStatsResult getInsightsStats(String spanCodeObjectId) throws AnalyticsServiceException {
         try {

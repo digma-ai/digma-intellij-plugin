@@ -10,11 +10,16 @@ fun getQueryMapFromPayload(requestJsonNode: JsonNode, objectMapper: ObjectMapper
     val payloadNode: JsonNode = objectMapper.readTree(requestJsonNode.get("payload").toString())
     val payloadQuery: JsonNode = objectMapper.readTree(payloadNode.get("query").toString())
 
+    return getMapFromNode(payloadQuery, objectMapper)
+}
+
+fun getMapFromNode(requestJsonNode: JsonNode, objectMapper: ObjectMapper): MutableMap<String, Any> {
+
     val backendQueryParams = mutableMapOf<String, Any>()
 
-    if (payloadQuery is ObjectNode) {
+    if (requestJsonNode is ObjectNode) {
 
-        val payloadQueryAsMap = objectMapper.convertValue(payloadQuery, Map::class.java)
+        val payloadQueryAsMap = objectMapper.convertValue(requestJsonNode, Map::class.java)
 
         payloadQueryAsMap.forEach { entry: Map.Entry<Any?, Any?> ->
             entry.key?.let {

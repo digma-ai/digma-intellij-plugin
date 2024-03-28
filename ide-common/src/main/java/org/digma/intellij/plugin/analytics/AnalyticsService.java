@@ -460,17 +460,7 @@ public class AnalyticsService implements Disposable {
     }
 
     public String createEnvironment(@NotNull Map<String, Object> queryParams) throws AnalyticsServiceException {
-        try{
-            return executeCatching(() ->
-                analyticsProviderProxy.createEnvironments(queryParams));}
-        catch (AnalyticsServiceException exception) {
-            var sourceException = ExceptionUtils.find(exception,AnalyticsProviderException.class);
-           if( sourceException!=null &&  sourceException.getResponseCode() == 400){
-               return  sourceException.GetSourceError();
-           }
-
-           throw exception;
-        }
+        return executeCatching(() -> analyticsProviderProxy.createEnvironments(queryParams));
     }
 
 

@@ -140,7 +140,7 @@ public class AnalyticsService implements Disposable {
                 AuthManager.getInstance().withAuth(new RestAnalyticsProvider(url, AuthManager.getInstance().getAuthenticationProviders(),
                         message -> {
                             var apiLogger = Logger.getInstance("api.digma.org");
-                            Log.log(apiLogger::debug, "API:{}", message);
+                            Log.log(apiLogger::debug, "API: {}", message);
                         }), url);
         Log.log(LOGGER::debug, "AuthManager.withAuth successfully wrapped AnalyticsProvider for url {}", url);
         analyticsProviderProxy = newAnalyticsProviderProxy(analyticsProvider);

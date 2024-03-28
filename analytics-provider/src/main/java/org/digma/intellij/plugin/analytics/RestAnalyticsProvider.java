@@ -16,6 +16,7 @@ import org.digma.intellij.plugin.model.rest.environment.Env;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.event.*;
+import org.digma.intellij.plugin.model.rest.highlights.HighlightsPerformanceResponse;
 import org.digma.intellij.plugin.model.rest.insights.*;
 import org.digma.intellij.plugin.model.rest.livedata.*;
 import org.digma.intellij.plugin.model.rest.login.*;
@@ -296,6 +297,17 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     @Override
     public InsightsStatsResult getInsightsStats(Map<String, Object> queryParams) {
         return execute(() -> client.analyticsProvider.getInsightsStats(queryParams));
+    }
+
+
+    @Override
+    public List<HighlightsPerformanceResponse> getHighlightsPerformance(Map<String, Object> queryParams) {
+        return execute(() -> client.analyticsProvider.getHighlightsPerformance(queryParams));
+    }
+
+    @Override
+    public String getHighlightsTopInsights(Map<String, Object> queryParams) {
+        return execute(() -> client.analyticsProvider.getHighlightsTopInsights(queryParams));
     }
 
     @Override
@@ -849,6 +861,21 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @GET("/insights/statistics")
         Call<InsightsStatsResult> getInsightsStats(@QueryMap Map<String, Object> fields);
+
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @GET("/highlights/performance")
+        Call<List<HighlightsPerformanceResponse>> getHighlightsPerformance(@QueryMap Map<String, Object> fields);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @GET("/highlights/topinsights")
+        Call<String> getHighlightsTopInsights(@QueryMap Map<String, Object> fields);
 
 
         @Headers({

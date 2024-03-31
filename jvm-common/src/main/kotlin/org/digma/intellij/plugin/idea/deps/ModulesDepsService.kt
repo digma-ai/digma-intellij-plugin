@@ -259,7 +259,7 @@ class ModulesDepsService(private val project: Project) : Disposable {
     private val timer = Timer()
 
     @NotNull
-    private var mapName2Module: ConcurrentMap<String, ModuleExt> = ConcurrentHashMap<String, ModuleExt>()
+    private var mapName2Module: ConcurrentMap<String, ModuleExt> = ConcurrentHashMap()
 
     init {
         //todo: change to coroutines
@@ -297,7 +297,7 @@ class ModulesDepsService(private val project: Project) : Disposable {
         moduleManager.modules.forEach { module ->
             val modName = module.name
             val moduleMetadata = buildMetadata(module)
-            theMap.put(modName, ModuleExt(module, moduleMetadata))
+            theMap[modName] = ModuleExt(module, moduleMetadata)
         }
         return theMap
     }
@@ -332,7 +332,7 @@ class ModulesDepsService(private val project: Project) : Disposable {
     }
 
     fun getModuleExt(moduleName: String): ModuleExt? {
-        var mExt = mapName2Module.get(moduleName)
+        var mExt = mapName2Module[moduleName]
         if (mExt == null) {
 //            println("DBG: module '${moduleName}' - metadata not built yet, building it...")
             //try to build MD for this entry
@@ -345,14 +345,11 @@ class ModulesDepsService(private val project: Project) : Disposable {
 
     private fun tryBuildAndStoreModuleExt(moduleName: String): ModuleExt? {
         val moduleManager = ModuleManager.getInstance(project)
-        val module = moduleManager.findModuleByName(moduleName)
-        if (module == null) {
-            return null
-        }
+        val module = moduleManager.findModuleByName(moduleName) ?: return null
 
         val moduleMetadata = buildMetadata(module)
         val moduleExt = ModuleExt(module, moduleMetadata)
-        mapName2Module.put(moduleName, moduleExt)
+        mapName2Module[moduleName] = moduleExt
 //        println("DBG: module '${moduleName}' - built moduleExt = $moduleExt")
         return moduleExt
     }

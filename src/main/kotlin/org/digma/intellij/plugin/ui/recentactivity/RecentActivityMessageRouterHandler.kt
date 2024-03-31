@@ -140,11 +140,13 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
             "RECENT_ACTIVITY/CREATE_ENVIRONMENT" -> {
                 val request: MutableMap<String, Any> = getMapFromNode(requestJsonNode.get("payload"), objectMapper)
                 project.service<RecentActivityService>().createEnvironment(request)
+                project.service<RecentActivityUpdater>().updateLatestActivities()
             }
 
             "RECENT_ACTIVITY/DELETE_ENVIRONMENT_V2" -> {
-                val id = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environmentId").asText()
+                val id = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environment").asText()
                 project.service<RecentActivityService>().deleteEnvironmentV2(id)
+                project.service<RecentActivityUpdater>().updateLatestActivities()
             }
 
             else -> return false

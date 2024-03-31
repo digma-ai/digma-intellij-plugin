@@ -146,7 +146,7 @@ class RecentActivityService(val project: Project) : Disposable {
             Log.warnWithException(logger, project, e, "Error creation {}", e.message)
             ""
         }
-
+        refreshEnvironmentsNowOnBackground(project)
         val msg = SetEnvironmentCreatedMessage(response)
         jCefComponent?.let {
             serializeAndExecuteWindowPostMessageJavaScript(it.jbCefBrowser.cefBrowser, msg)
@@ -156,6 +156,7 @@ class RecentActivityService(val project: Project) : Disposable {
     fun deleteEnvironmentV2(id: String) {
         try {
             project.service<AnalyticsService>().deleteEnvironmentV2(id);
+            refreshEnvironmentsNowOnBackground(project)
         } catch (e: AnalyticsServiceException) {
             Log.warnWithException(logger, project, e, "Error creation {}", e.message)
         }

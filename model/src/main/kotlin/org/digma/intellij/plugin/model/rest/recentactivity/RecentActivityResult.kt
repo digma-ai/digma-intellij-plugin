@@ -19,9 +19,10 @@ constructor(
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class RecentActivityResponseEntry
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-@ConstructorProperties("environment", "traceFlowDisplayName", "firstEntrySpan", "lastEntrySpan", "latestTraceId", "latestTraceTimestamp", "latestTraceDuration", "slimAggregatedInsights")
+@ConstructorProperties("environment", "environmentId", "traceFlowDisplayName", "firstEntrySpan", "lastEntrySpan", "latestTraceId", "latestTraceTimestamp", "latestTraceDuration", "slimAggregatedInsights")
 constructor(
         val environment: String,
+        val environmentId: String,
         val traceFlowDisplayName: String,
         val firstEntrySpan: EntrySpan,
         val lastEntrySpan: EntrySpan?,

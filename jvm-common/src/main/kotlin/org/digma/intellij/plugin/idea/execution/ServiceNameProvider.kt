@@ -1,11 +1,8 @@
 package org.digma.intellij.plugin.idea.execution
 
-import com.intellij.execution.configurations.ModuleBasedConfiguration
 import com.intellij.execution.configurations.ModuleRunConfiguration
 import com.intellij.execution.configurations.RunConfigurationBase
-import com.intellij.execution.configurations.SimpleJavaParameters
 import com.intellij.execution.configurations.SimpleProgramParameters
-import com.intellij.openapi.module.Module
 
 open class ServiceNameProvider(
     protected val configuration: RunConfigurationBase<*>,
@@ -13,26 +10,12 @@ open class ServiceNameProvider(
 ) {
 
 
-    open fun provideServiceName(resolvedModule: Module?): String {
+    open fun provideServiceName(moduleResolver: ModuleResolver): String {
+
+        val resolvedModule = moduleResolver.resolveModule()
 
         if (resolvedModule != null) {
             return trimName(resolvedModule.name)
-        }
-
-        if (configuration is ModuleBasedConfiguration<*, *> &&
-            configuration.configurationModule != null &&
-            configuration.configurationModule.module != null
-        ) {
-            //another null check to satisfy kotlin
-            val moduleName = configuration.configurationModule.module?.name
-            if (moduleName != null) {
-                return trimName(moduleName)
-            }
-        }
-
-
-        if (params is SimpleJavaParameters && params.moduleName != null) {
-            return trimName(params.moduleName)
         }
 
 

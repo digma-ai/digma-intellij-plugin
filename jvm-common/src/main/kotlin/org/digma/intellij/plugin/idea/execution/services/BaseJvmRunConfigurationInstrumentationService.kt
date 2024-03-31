@@ -4,18 +4,18 @@ import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.execution.configurations.RunnerSettings
 import com.intellij.execution.configurations.SimpleProgramParameters
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemRunConfiguration
-import com.intellij.openapi.module.Module
+import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.buildsystem.BuildSystem
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.execution.RunConfigurationInstrumentationService
 import org.digma.intellij.plugin.idea.execution.ConfigurationCleaner
+import org.digma.intellij.plugin.idea.execution.InstrumentationFlavor
 import org.digma.intellij.plugin.idea.execution.JavaToolOptionsBuilder
 import org.digma.intellij.plugin.idea.execution.JavaToolOptionsMerger
 import org.digma.intellij.plugin.idea.execution.ModuleResolver
 import org.digma.intellij.plugin.idea.execution.ParametersExtractor
+import org.digma.intellij.plugin.idea.execution.ProjectHeuristics
 import org.digma.intellij.plugin.idea.execution.ServiceNameProvider
-import org.digma.intellij.plugin.idea.execution.getModuleMetadata
-import org.digma.intellij.plugin.idea.execution.isMicrometerTracingInSettings
 
 /**
  * base class that covers most of the configuration types.
@@ -24,10 +24,16 @@ abstract class BaseJvmRunConfigurationInstrumentationService : RunConfigurationI
 
     override fun updateParameters(configuration: RunConfigurationBase<*>, params: SimpleProgramParameters, runnerSettings: RunnerSettings?) {
 
+        val projectHeuristics = getProjectHeuristics(configuration.project)
         val moduleResolver = getModuleResolver(configuration, params)
         val parametersExtractor = getParametersExtractor(configuration, params)
 
-        val resolvedModule = moduleResolver.resolveModule()
+        val instrumentationFlavor = getInstrumentationFlavor(
+            configuration,
+            projectHeuristics,
+            moduleResolver,
+            parametersExtractor
+        )
 
         val serviceNameProvider = getServiceNameProvider(configuration, params)
 
@@ -35,11 +41,11 @@ abstract class BaseJvmRunConfigurationInstrumentationService : RunConfigurationI
 
         val javaToolOptions: String? = try {
             javaToolOptionsBuilder
-                .withOtelAgent(shouldUseOtelAgent(resolvedModule))
-                .withSpringBootWithMicrometerTracing(isSpringBootMicrometerTracing(resolvedModule))
-                .withMicronautTracing(isMicronautModule(resolvedModule))
+                .withOtelAgent(instrumentationFlavor.shouldUseOtelAgent())
+                .withSpringBootWithMicrometerTracing(instrumentationFlavor.isSpringBootMicrometerTracing())
+                .withMicronautTracing(instrumentationFlavor.isMicronautTracing())
                 .withTest(isTest(configuration, params))
-                .withServiceName(resolvedModule)
+                .withServiceName(moduleResolver)
                 .withExtendedObservability()
                 .withOtelDebug()
                 .withCommonProperties()
@@ -57,28 +63,19 @@ abstract class BaseJvmRunConfigurationInstrumentationService : RunConfigurationI
     }
 
 
-    open fun shouldUseOtelAgent(resolvedModule: Module?): Boolean {
-        return !(isMicronautModule(resolvedModule) || isSpringBootMicrometerTracing(resolvedModule))
+    open fun getInstrumentationFlavor(
+        configuration: RunConfigurationBase<*>,
+        projectHeuristics: ProjectHeuristics,
+        moduleResolver: ModuleResolver,
+        parametersExtractor: ParametersExtractor
+    ): InstrumentationFlavor {
+        return InstrumentationFlavor(configuration, projectHeuristics, moduleResolver, parametersExtractor)
     }
 
 
-    open fun isSpringBootMicrometerTracing(module: Module?): Boolean {
-        val micrometerTracingInSettings = isMicrometerTracingInSettings()
-        val moduleMetadata = getModuleMetadata(module)
-        if (moduleMetadata != null) {
-            if (moduleMetadata.hasSpringBoot() && micrometerTracingInSettings) {
-                return true
-            }
-        }
-        return false
+    open fun getProjectHeuristics(project: Project): ProjectHeuristics {
+        return ProjectHeuristics(project)
     }
-
-
-    open fun isMicronautModule(module: Module?): Boolean {
-        val moduleMetadata = getModuleMetadata(module)
-        return moduleMetadata?.hasMicronaut() ?: false
-    }
-
 
     open fun getModuleResolver(
         configuration: RunConfigurationBase<*>,

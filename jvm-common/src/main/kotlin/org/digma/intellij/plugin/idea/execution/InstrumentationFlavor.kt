@@ -16,7 +16,7 @@ open class InstrumentationFlavor(
     //todo: this class can have a getFlavor method to use all over. can init the flavor when the object is initialized.
     // but needs first to research a bit and decide on the possible flavors.
     // it can be changed without changing the API.
-    // currently the API of isXXX is find and maybe even clearer then getFlavor
+    // currently the API of isXXX is fine and maybe even clearer then getFlavor
 
 
     private enum class Flavors { Default, Micronaut, Quarkus, SpringBootMicrometer }

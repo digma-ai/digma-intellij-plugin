@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.309] - 2024-03-29
+## [2.0.310] - 2024-03-31
+
+- better understanding of instrumentation flavor Closes #2013 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2016
+
+## 2.0.309 - 2024-03-29
 
 - Added highlights by @ohrebeniuk in https://github.com/digma-ai/digma-intellij-plugin/pull/2000
 - Top insights highlights by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/2004

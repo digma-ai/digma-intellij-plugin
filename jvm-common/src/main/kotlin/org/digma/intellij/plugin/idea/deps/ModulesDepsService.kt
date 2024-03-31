@@ -250,9 +250,9 @@ class ModulesDepsService(private val project: Project) : Disposable {
     }
 
     // delay for first check for update since startup
-    private val DelayMilliseconds = TimeUnit.SECONDS.toMillis(5)
+    private val delayMilliseconds = TimeUnit.SECONDS.toMillis(5)
 
-    private val PeriodMilliseconds =
+    private val periodMilliseconds =
         TimeUnit.MINUTES.toMillis(1) // production value is 1 minutes
 //        TimeUnit.SECONDS.toMillis(12) // use short period (few seconds) when debugging
 
@@ -262,6 +262,7 @@ class ModulesDepsService(private val project: Project) : Disposable {
     private var mapName2Module: ConcurrentMap<String, ModuleExt> = ConcurrentHashMap<String, ModuleExt>()
 
     init {
+        //todo: change to coroutines
         val fetchTask = object : TimerTask() {
             override fun run() {
                 try {
@@ -273,7 +274,7 @@ class ModulesDepsService(private val project: Project) : Disposable {
         }
 
         timer.schedule(
-            fetchTask, DelayMilliseconds, PeriodMilliseconds
+            fetchTask, delayMilliseconds, periodMilliseconds
         )
     }
 
@@ -410,8 +411,8 @@ class ModulesDepsService(private val project: Project) : Disposable {
 
 class ModuleDepsStarter : StartupActivity {
     override fun runActivity(project: Project) {
-        // its enough just to have reference to the service, and it will get initialized
-        val service = ModulesDepsService.getInstance(project)
+        // its enough just call getInstance and it will be initialized
+        ModulesDepsService.getInstance(project)
     }
 }
 

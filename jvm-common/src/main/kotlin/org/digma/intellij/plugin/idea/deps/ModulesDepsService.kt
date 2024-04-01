@@ -250,18 +250,19 @@ class ModulesDepsService(private val project: Project) : Disposable {
     }
 
     // delay for first check for update since startup
-    private val DelayMilliseconds = TimeUnit.SECONDS.toMillis(5)
+    private val delayMilliseconds = TimeUnit.SECONDS.toMillis(5)
 
-    private val PeriodMilliseconds =
+    private val periodMilliseconds =
         TimeUnit.MINUTES.toMillis(1) // production value is 1 minutes
 //        TimeUnit.SECONDS.toMillis(12) // use short period (few seconds) when debugging
 
     private val timer = Timer()
 
     @NotNull
-    private var mapName2Module: ConcurrentMap<String, ModuleExt> = ConcurrentHashMap<String, ModuleExt>()
+    private var mapName2Module: ConcurrentMap<String, ModuleExt> = ConcurrentHashMap()
 
     init {
+        //todo: change to coroutines
         val fetchTask = object : TimerTask() {
             override fun run() {
                 try {
@@ -273,7 +274,7 @@ class ModulesDepsService(private val project: Project) : Disposable {
         }
 
         timer.schedule(
-            fetchTask, DelayMilliseconds, PeriodMilliseconds
+            fetchTask, delayMilliseconds, periodMilliseconds
         )
     }
 
@@ -296,7 +297,7 @@ class ModulesDepsService(private val project: Project) : Disposable {
         moduleManager.modules.forEach { module ->
             val modName = module.name
             val moduleMetadata = buildMetadata(module)
-            theMap.put(modName, ModuleExt(module, moduleMetadata))
+            theMap[modName] = ModuleExt(module, moduleMetadata)
         }
         return theMap
     }
@@ -331,7 +332,7 @@ class ModulesDepsService(private val project: Project) : Disposable {
     }
 
     fun getModuleExt(moduleName: String): ModuleExt? {
-        var mExt = mapName2Module.get(moduleName)
+        var mExt = mapName2Module[moduleName]
         if (mExt == null) {
 //            println("DBG: module '${moduleName}' - metadata not built yet, building it...")
             //try to build MD for this entry
@@ -344,14 +345,11 @@ class ModulesDepsService(private val project: Project) : Disposable {
 
     private fun tryBuildAndStoreModuleExt(moduleName: String): ModuleExt? {
         val moduleManager = ModuleManager.getInstance(project)
-        val module = moduleManager.findModuleByName(moduleName)
-        if (module == null) {
-            return null
-        }
+        val module = moduleManager.findModuleByName(moduleName) ?: return null
 
         val moduleMetadata = buildMetadata(module)
         val moduleExt = ModuleExt(module, moduleMetadata)
-        mapName2Module.put(moduleName, moduleExt)
+        mapName2Module[moduleName] = moduleExt
 //        println("DBG: module '${moduleName}' - built moduleExt = $moduleExt")
         return moduleExt
     }
@@ -410,8 +408,8 @@ class ModulesDepsService(private val project: Project) : Disposable {
 
 class ModuleDepsStarter : StartupActivity {
     override fun runActivity(project: Project) {
-        // its enough just to have reference to the service, and it will get initialized
-        val service = ModulesDepsService.getInstance(project)
+        // its enough just call getInstance and it will be initialized
+        ModulesDepsService.getInstance(project)
     }
 }
 

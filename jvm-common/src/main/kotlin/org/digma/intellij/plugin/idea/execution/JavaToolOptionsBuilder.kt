@@ -2,7 +2,6 @@ package org.digma.intellij.plugin.idea.execution
 
 import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.execution.configurations.SimpleProgramParameters
-import com.intellij.openapi.module.Module
 import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.settings.SettingsState
 
@@ -131,10 +130,10 @@ open class JavaToolOptionsBuilder(
     }
 
 
-    open fun withServiceName(resolvedModule: Module?): JavaToolOptionsBuilder {
+    open fun withServiceName(moduleResolver: ModuleResolver): JavaToolOptionsBuilder {
         if (!parametersExtractor.isOtelServiceNameAlreadyDefined()) {
             javaToolOptions
-                .append("-Dotel.service.name=${serviceNameProvider.provideServiceName(resolvedModule)}")
+                .append("-Dotel.service.name=${serviceNameProvider.provideServiceName(moduleResolver)}")
                 .append(" ")
         }
         return this

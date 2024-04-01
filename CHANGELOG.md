@@ -1,6 +1,17 @@
 # Changelog
 
-## [2.0.308] - 2024-03-26
+## [2.0.310] - 2024-03-31
+
+- better understanding of instrumentation flavor Closes #2013 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2016
+
+## 2.0.309 - 2024-03-29
+
+- Added highlights by @ohrebeniuk in https://github.com/digma-ai/digma-intellij-plugin/pull/2000
+- Top insights highlights by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/2004
+- Changed routing by @ohrebeniuk in https://github.com/digma-ai/digma-intellij-plugin/pull/2006
+- Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2012
+
+## 2.0.308 - 2024-03-26
 
 - Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1999
 - fix error on EDT by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2001

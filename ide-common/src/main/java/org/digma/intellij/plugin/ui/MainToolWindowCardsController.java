@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.ui;
 
 import com.intellij.openapi.Disposable;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
@@ -9,6 +10,7 @@ import org.digma.intellij.plugin.analytics.*;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.ui.panels.DisposablePanel;
+import org.digma.intellij.plugin.updates.*;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -30,8 +32,10 @@ public class MainToolWindowCardsController implements Disposable {
 
     private static final Logger LOGGER = Logger.getInstance(MainToolWindowCardsController.class);
 
+
+
     public enum MainWindowCard {
-        MAIN, NO_CONNECTION
+        MAIN, NO_CONNECTION, UPDATE_MODE
     }
 
 
@@ -45,6 +49,8 @@ public class MainToolWindowCardsController implements Disposable {
     //the main card panel, our main view and no-connection panel
     private JPanel cardsPanel;
 
+    //never use latestCalledCard , only in initComponents
+    private MainWindowCard latestCalledCard;
 
     //wizard content is created and disposed when necessary. WizardComponents keeps the reference to the content and the panel.
     private final WizardComponents wizard = new WizardComponents();
@@ -62,9 +68,9 @@ public class MainToolWindowCardsController implements Disposable {
     public MainToolWindowCardsController(@NotNull Project project) {
         this.project = project;
 
-        project.getMessageBus()
-                .connect(this)
-                .subscribe(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC, new AnalyticsServiceConnectionEvent() {
+        ApplicationManager.getApplication().getMessageBus()
+                .connect()
+                .subscribe(BackendConnectionEvent.getBACKEND_CONNECTION_STATE_TOPIC(), new BackendConnectionEvent() {
                     @Override
                     public void connectionLost() {
                         Log.log(LOGGER::debug, "Got connectionLost");
@@ -79,6 +85,10 @@ public class MainToolWindowCardsController implements Disposable {
                         showMainPanel();
                     }
                 });
+
+
+        ApplicationManager.getApplication().getMessageBus().connect().subscribe(AggressiveUpdateStateChangedEvent.Companion.getUPDATE_STATE_CHANGED_TOPIC(),
+                (AggressiveUpdateStateChangedEvent) this::updateStateChanged);
 
     }
 
@@ -125,7 +135,24 @@ public class MainToolWindowCardsController implements Disposable {
         if (isConnectionLost.get() || BackendConnectionMonitor.getInstance(project).isConnectionError()) {
             showNoConnection();
         }
+
+        //it may be that some showXXX is called before the components are initialized and
+        // cardPanel was still null. one example is showUpdateBackendPanel that may be called very early.
+        // so keep the latest called card and show it here after all components are initialized.
+        if (latestCalledCard != null) {
+            showCard(latestCalledCard);
+        }
     }
+
+
+    public void updateStateChanged(@NotNull PublicUpdateState updateState) {
+        if (updateState.getUpdateState() == CurrentUpdateState.OK) {
+            closeUpdateBackendPanel();
+        } else {
+            showUpdateBackendPanel();
+        }
+    }
+
 
 
     public void showWizard(Boolean wizardSkipInstallationStep) {
@@ -311,7 +338,40 @@ public class MainToolWindowCardsController implements Disposable {
             Log.log(LOGGER::debug, "Not showing MainPanel because connection lost, showing NoConnection");
             showNoConnection();
         } else {
-            //FileEditorManager must be called on EDT
+
+            EDT.ensureEDT(() -> showCard(MainWindowCard.MAIN));
+        }
+    }
+
+    private void showUpdateBackendPanel() {
+
+        Log.log(LOGGER::debug, "showUpdateBackendPanel called");
+
+        //replace the card even if wizard is on. it will not show until wizard content is removed.
+
+        //this may happen on startup,showMainPanel is called from the tool window factory,
+        // but there may be a connection lost before the content was built and before this controller was initialized
+        if (isConnectionLost.get()) {
+            Log.log(LOGGER::debug, "Not showing MainPanel because connection lost, showing NoConnection");
+            showNoConnection();
+        } else {
+            EDT.ensureEDT(() -> showCard(MainWindowCard.UPDATE_MODE));
+        }
+    }
+
+    private void closeUpdateBackendPanel() {
+
+        Log.log(LOGGER::debug, "closeUpdateBackendPanel called");
+
+
+        //replace the card even if wizard is on. it will not show until wizard content is removed.
+
+        //this may happen on startup,showMainPanel is called from the tool window factory,
+        // but there may be a connection lost before the content was built and before this controller was initialized
+        if (isConnectionLost.get()) {
+            Log.log(LOGGER::debug, "Not showing MainPanel because connection lost, showing NoConnection");
+            showNoConnection();
+        } else {
             EDT.ensureEDT(() -> showCard(MainWindowCard.MAIN));
         }
     }
@@ -328,11 +388,25 @@ public class MainToolWindowCardsController implements Disposable {
 
     private void showCard(MainWindowCard card) {
         Log.log(LOGGER::debug, "showCard called with {}", card);
+
+        //need to keep the UPDATE_MODE if AggressiveUpdateService is still in update mode.
+        // after AggressiveUpdateService enters update mode there may be connection lost, the connectionLost
+        // will change to NO_CONNECTION, in that case we want to see the no connection message.
+        // on connectionGained the listener will try to change it to MAIN but if
+        // AggressiveUpdateService is still in update mode we need to replace back to UPDATE_MODE
+        MainWindowCard cardToUse;
+        if (AggressiveUpdateService.getInstance().isInUpdateMode() && card == MainWindowCard.MAIN) {
+            cardToUse = MainWindowCard.UPDATE_MODE;
+        } else {
+            cardToUse = card;
+        }
+
+        latestCalledCard = card;
         if (cardsPanel == null) {
             Log.log(LOGGER::debug, project, "show {} was called but cardsPanel is null", card);
         } else {
             Log.log(LOGGER::debug, project, "Showing card {}", card);
-            EDT.ensureEDT(() -> ((CardLayout) cardsPanel.getLayout()).show(cardsPanel, card.name()));
+            EDT.ensureEDT(() -> ((CardLayout) cardsPanel.getLayout()).show(cardsPanel, cardToUse.name()));
         }
     }
 

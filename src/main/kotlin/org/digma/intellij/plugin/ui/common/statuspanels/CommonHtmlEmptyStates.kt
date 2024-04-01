@@ -12,6 +12,7 @@ import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.MonitoredPanel
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.Links
+import org.digma.intellij.plugin.ui.list.listBackground
 import java.awt.BorderLayout
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
@@ -246,6 +247,7 @@ fun wrapWithScrollable(componentsPanel: JPanel): JPanel {
     scrollablePanel.isOpaque = false
     scrollablePanel.border = JBUI.Borders.empty()
     scrollablePanel.add(scrollPane, BorderLayout.CENTER)
+    scrollablePanel.background = listBackground()
     return scrollablePanel
 }
 

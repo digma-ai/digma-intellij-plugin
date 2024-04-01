@@ -45,12 +45,6 @@ public class Environment implements EnvironmentsSupplier {
         return current;
     }
 
-    @Override
-    @NotNull
-    public String getLatestKnownEnv() {
-        return latestKnownEnv;
-    }
-
 
     @Override
     public void setCurrent(@NotNull Env env) {

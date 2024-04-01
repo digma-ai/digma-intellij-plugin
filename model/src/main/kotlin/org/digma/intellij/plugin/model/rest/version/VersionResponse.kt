@@ -12,11 +12,13 @@ data class VersionResponse
     "plugin",
     "backend",
     "errors",
+    "forceUpdate"
 )
 constructor(
     val plugin: PluginVersionResponse,
     val backend: BackendVersionResponse,
     val errors: List<String>,
+    val forceUpdate: ForceUpdate? = null
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -46,6 +48,17 @@ constructor(
     val currentVersion: String? = "",
     val deploymentType: BackendDeploymentType = BackendDeploymentType.Unknown,
 )
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class ForceUpdate
+@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+@ConstructorProperties(
+    "minPluginVersionRequired",
+    "minBackendVersionRequired"
+)
+constructor(val minPluginVersionRequired: String?, val minBackendVersionRequired: String?)
+
+
 
 enum class BackendDeploymentType {
     SAAS,

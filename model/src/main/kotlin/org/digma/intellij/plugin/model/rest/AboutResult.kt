@@ -11,5 +11,5 @@ data class AboutResult @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 @ConstructorProperties("applicationVersion","deploymentType")
 constructor(
     val applicationVersion: String,
-    val deploymentType: BackendDeploymentType ?= BackendDeploymentType.Unknown
+    val deploymentType: BackendDeploymentType? = BackendDeploymentType.Unknown
 )

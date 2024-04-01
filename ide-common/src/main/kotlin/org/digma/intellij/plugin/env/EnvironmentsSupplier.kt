@@ -20,6 +20,4 @@ interface EnvironmentsSupplier {
 
     fun setCurrent(env: Env)
 
-    fun getLatestKnownEnv(): String
-
 }

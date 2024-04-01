@@ -444,15 +444,19 @@ public class AnalyticsService implements Disposable {
     }
 
     public InsightsStatsResult getInsightsStats(String spanCodeObjectId) throws AnalyticsServiceException {
+
         try {
+            var env = getCurrentEnvironment();
             var params = new HashMap<String, Object>();
-            params.put("Environment",this.environment.getLatestKnownEnv());
+            params.put("Environment", env);
 
             if(spanCodeObjectId != null){
                 params.put("ScopedSpanCodeObjectId", spanCodeObjectId);
             }
 
             return executeCatching(() -> analyticsProviderProxy.getInsightsStats(params));
+        } catch (NoSelectedEnvironmentException e) {
+            Log.debugWithException(LOGGER, project, e, "error calling  insights stats", e.getMessage());
         } catch (Exception e) {
             Log.warnWithException(LOGGER, project, e, "error calling  insights stats", e.getMessage());
         }

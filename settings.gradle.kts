@@ -81,6 +81,7 @@ dependencyResolutionManagement {
             library("google-gson", "com.google.code.gson", "gson").version("2.10.1")
             library("maven-artifact", "org.apache.maven", "maven-artifact").version("3.9.2")
             library("glovoapp-versioning", "com.glovoapp.gradle", "versioning").version("1.1.10")
+            library("byte-buddy", "net.bytebuddy", "byte-buddy").version("1.14.13")
         }
     }
 }

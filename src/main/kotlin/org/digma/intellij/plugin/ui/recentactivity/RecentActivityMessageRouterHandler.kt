@@ -132,19 +132,22 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
                 environmentId?.let {
                     ActivityMonitor.getInstance(project)
                         .registerUserActionEvent("add environment to run config", mapOf("environment" to environmentId))
-                    service<AddEnvironmentsService>().addToCurrentRunConfig(project, it)
-                    project.service<RecentActivityUpdater>().updateLatestActivities()
+                    project.service<RecentActivityService>().addVarRunToConfig(it)
                 }
             }
 
             "RECENT_ACTIVITY/CREATE_ENVIRONMENT" -> {
                 val request: MutableMap<String, Any> = getMapFromNode(requestJsonNode.get("payload"), objectMapper)
                 project.service<RecentActivityService>().createEnvironment(request)
+                project.service<RecentActivityUpdater>().updateLatestActivities()
             }
 
             "RECENT_ACTIVITY/DELETE_ENVIRONMENT_V2" -> {
-                val id = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environmentId").asText()
-                project.service<RecentActivityService>().deleteEnvironmentV2(id)
+                val environmentId = getEnvironmentIdFromPayload(requestJsonNode)
+                environmentId?.let {
+                    project.service<RecentActivityService>().deleteEnvironmentV2(environmentId)
+                    project.service<RecentActivityUpdater>().updateLatestActivities()
+                }
             }
 
             else -> return false

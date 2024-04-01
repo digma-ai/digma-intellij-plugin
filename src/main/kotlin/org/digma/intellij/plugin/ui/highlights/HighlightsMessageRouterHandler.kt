@@ -8,10 +8,11 @@ import org.digma.intellij.plugin.insights.AbstractInsightsMessageRouterHandler
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.ui.highlights.model.SetHighlightsPerformanceMessage
 import org.digma.intellij.plugin.ui.highlights.model.SetHighlightsTopInsightsMessage
+import org.digma.intellij.plugin.ui.jcef.BaseCommonMessageRouterHandler
 import org.digma.intellij.plugin.ui.jcef.getQueryMapFromPayload
 import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
 
-class HighlightsMessageRouterHandler(project: Project) : AbstractInsightsMessageRouterHandler(project) {
+class HighlightsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHandler(project) {
 
     override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
 
@@ -20,7 +21,7 @@ class HighlightsMessageRouterHandler(project: Project) : AbstractInsightsMessage
             "MAIN/GET_HIGHLIGHTS_TOP_ISSUES_DATA" -> getHighlightsTopInsights(browser, requestJsonNode)
 
             else -> {
-                return super.doOnQuery(project, browser, requestJsonNode, rawRequest, action)
+                return false
             }
         }
 

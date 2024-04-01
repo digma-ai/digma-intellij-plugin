@@ -132,8 +132,7 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
                 environmentId?.let {
                     ActivityMonitor.getInstance(project)
                         .registerUserActionEvent("add environment to run config", mapOf("environment" to environmentId))
-                    service<AddEnvironmentsService>().addToCurrentRunConfig(project, it)
-                    project.service<RecentActivityUpdater>().updateLatestActivities()
+                    project.service<RecentActivityService>().addVarRunToConfig(it)
                 }
             }
 

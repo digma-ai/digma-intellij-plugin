@@ -3,16 +3,18 @@ package org.digma.intellij.plugin.idea.execution.services
 import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.execution.configurations.RunnerSettings
 import com.intellij.execution.configurations.SimpleProgramParameters
-import com.intellij.openapi.module.Module
 import org.digma.intellij.plugin.buildsystem.BuildSystem
 import org.digma.intellij.plugin.execution.RunConfigurationInstrumentationService
 import org.digma.intellij.plugin.execution.RunConfigurationType
 import org.digma.intellij.plugin.idea.execution.ConfigurationCleaner
 import org.digma.intellij.plugin.idea.execution.ExternalSystemConfigurationCleaner
 import org.digma.intellij.plugin.idea.execution.ExternalSystemJavaToolOptionsMerger
+import org.digma.intellij.plugin.idea.execution.InstrumentationFlavor
 import org.digma.intellij.plugin.idea.execution.JavaToolOptionsBuilder
 import org.digma.intellij.plugin.idea.execution.JavaToolOptionsMerger
+import org.digma.intellij.plugin.idea.execution.ModuleResolver
 import org.digma.intellij.plugin.idea.execution.ParametersExtractor
+import org.digma.intellij.plugin.idea.execution.ProjectHeuristics
 import org.digma.intellij.plugin.idea.execution.ServiceNameProvider
 import org.digma.intellij.plugin.idea.externalsystem.findGradleRunConfigurationInstrumentationService
 import org.digma.intellij.plugin.idea.externalsystem.findMavenRunConfigurationInstrumentationService
@@ -99,18 +101,6 @@ class OpenLibertyRunConfigurationInstrumentationService : BaseJvmRunConfiguratio
         return isGradleTest(configuration) || isMavenTest(configuration)
     }
 
-    override fun shouldUseOtelAgent(resolvedModule: Module?): Boolean {
-        return false
-    }
-
-    override fun isSpringBootMicrometerTracing(module: Module?): Boolean {
-        return false
-    }
-
-    override fun isMicronautModule(module: Module?): Boolean {
-        return false
-    }
-
 
     override fun getJavaToolOptionsMerger(
         configuration: RunConfigurationBase<*>,
@@ -163,6 +153,15 @@ class OpenLibertyRunConfigurationInstrumentationService : BaseJvmRunConfiguratio
     }
 
 
+    override fun getInstrumentationFlavor(
+        configuration: RunConfigurationBase<*>,
+        projectHeuristics: ProjectHeuristics,
+        moduleResolver: ModuleResolver,
+        parametersExtractor: ParametersExtractor
+    ): InstrumentationFlavor {
+        return OpenLibertyInstrumentationFlavor(configuration, projectHeuristics, moduleResolver, parametersExtractor)
+    }
+
     private class OpenLibertyJavaToolOptionsBuilder(
         configuration: RunConfigurationBase<*>,
         params: SimpleProgramParameters,
@@ -185,6 +184,27 @@ class OpenLibertyRunConfigurationInstrumentationService : BaseJvmRunConfiguratio
 
         override fun getCommonOtelSystemProperties(): String {
             return ""
+        }
+    }
+
+
+    private class OpenLibertyInstrumentationFlavor(
+        configuration: RunConfigurationBase<*>,
+        projectHeuristics: ProjectHeuristics,
+        moduleResolver: ModuleResolver,
+        parametersExtractor: ParametersExtractor
+    ) : InstrumentationFlavor(configuration, projectHeuristics, moduleResolver, parametersExtractor) {
+
+        override fun shouldUseOtelAgent(): Boolean {
+            return false
+        }
+
+        override fun isSpringBootMicrometerTracing(): Boolean {
+            return false
+        }
+
+        override fun isMicronautTracing(): Boolean {
+            return false
         }
     }
 

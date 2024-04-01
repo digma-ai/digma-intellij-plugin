@@ -3,9 +3,7 @@ package org.digma.intellij.plugin.idea.maven.execution
 import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.execution.configurations.SimpleProgramParameters
 import org.digma.intellij.plugin.buildsystem.BuildSystem
-import org.digma.intellij.plugin.common.StringUtils.Companion.evalBoolean
 import org.digma.intellij.plugin.execution.RunConfigurationType
-import org.digma.intellij.plugin.idea.execution.DIGMA_OBSERVABILITY_ENV_VAR_NAME
 import org.digma.intellij.plugin.idea.execution.services.BaseJvmRunConfigurationInstrumentationService
 import org.jetbrains.idea.maven.execution.MavenRunConfiguration
 
@@ -35,16 +33,9 @@ class MavenRunConfigurationService : BaseJvmRunConfigurationInstrumentationServi
                         (it.startsWith("jetty") && it.endsWith(":run")) ||
                         (it.contains(":jetty-maven-plugin:") && it.endsWith(":run"))
             }
-            if (hasRelevantGoal) {
-                true
-            } else {
-                // runnerSettings are not null when actually running the goal
-                //todo: not clear why presence of DIGMA_OBSERVABILITY_ENV_VAR_NAME makes this Applicable
-                configuration.runnerSettings?.let {
-                    val envVarValue = it.environmentProperties[DIGMA_OBSERVABILITY_ENV_VAR_NAME]
-                    envVarValue != null && evalBoolean(envVarValue)
-                } ?: isTest(configuration, params)
-            }
+
+            val isTest = isTest(configuration, params)
+            return hasRelevantGoal || isTest
         } else {
             false
         }

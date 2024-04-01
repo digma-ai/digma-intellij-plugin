@@ -2,8 +2,11 @@ package org.digma.intellij.plugin.idea.execution.services
 
 import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.execution.configurations.SimpleProgramParameters
-import com.intellij.openapi.module.Module
 import org.digma.intellij.plugin.execution.RunConfigurationType
+import org.digma.intellij.plugin.idea.execution.InstrumentationFlavor
+import org.digma.intellij.plugin.idea.execution.ModuleResolver
+import org.digma.intellij.plugin.idea.execution.ParametersExtractor
+import org.digma.intellij.plugin.idea.execution.ProjectHeuristics
 
 //don't change to light service because it will register always. we want it to register only for Idea
 @Suppress("LightServiceMigrationCode")
@@ -41,16 +44,34 @@ class JavaEEAppServerRunConfigurationInstrumentationService : BaseJvmRunConfigur
         return isHandlingConfiguration(configuration)
     }
 
-    override fun shouldUseOtelAgent(resolvedModule: Module?): Boolean {
-        return true
+
+    override fun getInstrumentationFlavor(
+        configuration: RunConfigurationBase<*>,
+        projectHeuristics: ProjectHeuristics,
+        moduleResolver: ModuleResolver,
+        parametersExtractor: ParametersExtractor
+    ): InstrumentationFlavor {
+        return JavaEEInstrumentationFlavor(configuration, projectHeuristics, moduleResolver, parametersExtractor)
     }
 
-    override fun isSpringBootMicrometerTracing(module: Module?): Boolean {
-        return false
-    }
+    private class JavaEEInstrumentationFlavor(
+        configuration: RunConfigurationBase<*>,
+        projectHeuristics: ProjectHeuristics,
+        moduleResolver: ModuleResolver,
+        parametersExtractor: ParametersExtractor
+    ) : InstrumentationFlavor(configuration, projectHeuristics, moduleResolver, parametersExtractor) {
 
-    override fun isMicronautModule(module: Module?): Boolean {
-        return false
+        override fun shouldUseOtelAgent(): Boolean {
+            return true
+        }
+
+        override fun isSpringBootMicrometerTracing(): Boolean {
+            return false
+        }
+
+        override fun isMicronautTracing(): Boolean {
+            return false
+        }
     }
 
 }

@@ -50,15 +50,20 @@ open class ModuleResolver(
             }
         }
 
-        val moduleByClassName = findByClassName(configuration, params)
-        if (moduleByClassName != null) {
-            return moduleByClassName
+        run {
+            val moduleByClassName = findByClassName(configuration, params)
+            if (moduleByClassName != null) {
+                return moduleByClassName
+            }
         }
 
-        val moduleByWorkingDirectory = findByWorkingDirectory(configuration, params)
-        if (moduleByWorkingDirectory != null) {
-            return moduleByWorkingDirectory
+        run {
+            val moduleByWorkingDirectory = findByWorkingDirectory(configuration, params)
+            if (moduleByWorkingDirectory != null) {
+                return moduleByWorkingDirectory
+            }
         }
+
 
         return null
 

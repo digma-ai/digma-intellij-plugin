@@ -31,6 +31,10 @@ fun getEnvironmentNameById(project: Project, envId: String): String? {
     return AnalyticsService.getInstance(project).environment.findById(envId)?.name
 }
 
+fun getEnvironmentById(project: Project, envId: String): Env? {
+    return AnalyticsService.getInstance(project).environment.findById(envId)
+}
+
 fun setCurrentEnvironmentById(project: Project, envId: String) {
     AnalyticsService.getInstance(project).environment.setCurrentById(envId)
 }

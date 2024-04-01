@@ -11,15 +11,18 @@ import org.digma.intellij.plugin.analytics.isCentralized
 import org.digma.intellij.plugin.buildsystem.BuildSystem
 import org.digma.intellij.plugin.execution.RunConfigurationInstrumentationService
 import org.digma.intellij.plugin.execution.RunConfigurationType
-import org.digma.intellij.plugin.idea.deps.ModulesDepsService
 import org.digma.intellij.plugin.idea.execution.ConfigurationCleaner
 import org.digma.intellij.plugin.idea.execution.DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE
 import org.digma.intellij.plugin.idea.execution.ExternalSystemConfigurationCleaner
 import org.digma.intellij.plugin.idea.execution.ExternalSystemJavaToolOptionsMerger
+import org.digma.intellij.plugin.idea.execution.InstrumentationFlavor
 import org.digma.intellij.plugin.idea.execution.JavaToolOptionsBuilder
 import org.digma.intellij.plugin.idea.execution.JavaToolOptionsMerger
+import org.digma.intellij.plugin.idea.execution.ModuleResolver
 import org.digma.intellij.plugin.idea.execution.ParametersExtractor
+import org.digma.intellij.plugin.idea.execution.ProjectHeuristics
 import org.digma.intellij.plugin.idea.execution.ServiceNameProvider
+import org.digma.intellij.plugin.idea.execution.getModuleMetadata
 import org.digma.intellij.plugin.idea.externalsystem.findGradleRunConfigurationInstrumentationService
 import org.digma.intellij.plugin.idea.externalsystem.findMavenRunConfigurationInstrumentationService
 
@@ -81,14 +84,36 @@ class QuarkusRunConfigurationInstrumentationService : BaseJvmRunConfigurationIns
         return configuration is JavaTestConfigurationBase
     }
 
-    private fun isJavaTest(configuration: RunConfiguration, params: SimpleProgramParameters?): Boolean {
-        return configuration is JavaTestConfigurationBase && params != null && isQuarkusModule(configuration, params)
+    private fun isJavaTest(configuration: RunConfigurationBase<*>, params: SimpleProgramParameters?): Boolean {
+        return configuration is JavaTestConfigurationBase &&
+                params != null &&
+                isQuarkusTestTracing(configuration, params)
+    }
+
+
+    private fun isQuarkusTestTracing(configuration: JavaTestConfigurationBase, params: SimpleProgramParameters): Boolean {
+        val instrumentationFlavor = getInstrumentationFlavor(
+            configuration,
+            getProjectHeuristics(configuration.project),
+            getModuleResolver(configuration, params),
+            getParametersExtractor(configuration, params)
+        )
+
+        return instrumentationFlavor.isUserConfiguredQuarkusInEnv() ||
+                isQuarkusModule(configuration, params) ||
+                getProjectHeuristics(configuration.project).hasOnlyQuarkusModules()
     }
 
     private fun isQuarkusModule(configuration: JavaTestConfigurationBase, params: SimpleProgramParameters): Boolean {
-        val module = getModuleResolver(configuration, params).resolveModule() ?: return false
-        return ModulesDepsService.getInstance(module.project).isQuarkusModule(module)
+        val module = getModuleResolver(configuration, params).resolveModule()
+        return isQuarkusModule(module)
     }
+
+    private fun isQuarkusModule(module: Module?): Boolean {
+        val moduleMetadata = getModuleMetadata(module)
+        return moduleMetadata?.hasQuarkus() ?: false
+    }
+
 
     private fun isHandlingConfiguration(configuration: RunConfigurationBase<*>): Boolean {
         return isGradle(configuration) || isGradleTest(configuration) || isMaven(configuration) || isMavenTest(configuration)
@@ -120,18 +145,15 @@ class QuarkusRunConfigurationInstrumentationService : BaseJvmRunConfigurationIns
         return isGradleTest(configuration) || isMavenTest(configuration) || isJavaTest(configuration, params)
     }
 
-    override fun shouldUseOtelAgent(resolvedModule: Module?): Boolean {
-        return false
-    }
 
-    override fun isSpringBootMicrometerTracing(module: Module?): Boolean {
-        return false
+    override fun getInstrumentationFlavor(
+        configuration: RunConfigurationBase<*>,
+        projectHeuristics: ProjectHeuristics,
+        moduleResolver: ModuleResolver,
+        parametersExtractor: ParametersExtractor
+    ): InstrumentationFlavor {
+        return QuarkusInstrumentationFlavor(configuration, projectHeuristics, moduleResolver, parametersExtractor)
     }
-
-    override fun isMicronautModule(module: Module?): Boolean {
-        return false
-    }
-
 
     override fun getJavaToolOptionsMerger(
         configuration: RunConfigurationBase<*>,
@@ -222,6 +244,27 @@ class QuarkusRunConfigurationInstrumentationService : BaseJvmRunConfigurationIns
                 .insert(0, " ")
 
             return super.build()
+        }
+    }
+
+
+    private class QuarkusInstrumentationFlavor(
+        configuration: RunConfigurationBase<*>,
+        projectHeuristics: ProjectHeuristics,
+        moduleResolver: ModuleResolver,
+        parametersExtractor: ParametersExtractor
+    ) : InstrumentationFlavor(configuration, projectHeuristics, moduleResolver, parametersExtractor) {
+
+        override fun shouldUseOtelAgent(): Boolean {
+            return false
+        }
+
+        override fun isSpringBootMicrometerTracing(): Boolean {
+            return false
+        }
+
+        override fun isMicronautTracing(): Boolean {
+            return false
         }
     }
 

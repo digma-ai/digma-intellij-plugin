@@ -132,10 +132,10 @@ open class JavaToolOptionsBuilder(
     }
 
 
-    open fun withServiceName(resolvedModule: Module?): JavaToolOptionsBuilder {
+    open fun withServiceName(moduleResolver: ModuleResolver): JavaToolOptionsBuilder {
         if (!parametersExtractor.isOtelServiceNameAlreadyDefined()) {
             javaToolOptions
-                .append("-Dotel.service.name=${serviceNameProvider.provideServiceName(resolvedModule)}")
+                .append("-Dotel.service.name=${serviceNameProvider.provideServiceName(moduleResolver)}")
                 .append(" ")
         }
         return this

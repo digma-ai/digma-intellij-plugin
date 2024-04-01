@@ -486,8 +486,9 @@ public class AnalyticsService implements Disposable {
 
     public InsightsStatsResult getInsightsStats(String spanCodeObjectId) throws AnalyticsServiceException {
         try {
+            var envId = getCurrentEnvironmentId();
             var params = new HashMap<String, Object>();
-            params.put("Environment", getCurrentEnvironmentId());
+            params.put("Environment", envId);
 
             if (spanCodeObjectId != null) {
                 params.put("ScopedSpanCodeObjectId", spanCodeObjectId);

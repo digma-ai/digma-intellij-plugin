@@ -66,35 +66,29 @@ class SpringBootMicrometerConfigureDepsService(private val project: Project) : D
             return buildUnifiedDependency(libCoordinates, javaBuildSystem)
         }
 
-        fun buildUnifiedDependency(libCoordinates: UnifiedCoordinates, javaBuildSystem: BuildSystem): UnifiedDependency {
-            return buildUnifiedDependency(libCoordinates, javaBuildSystem, true)
-        }
-
         fun buildUnifiedDependency(
             libCoordinates: UnifiedCoordinates,
             javaBuildSystem: BuildSystem,
-            removeVersionIfCan: Boolean,
+            removeVersion: Boolean = true,
         ): UnifiedDependency {
-            val dep: UnifiedDependency =
-                when (javaBuildSystem) {
-                    BuildSystem.MAVEN -> UnifiedDependency(libCoordinates, null)
-                    BuildSystem.GRADLE -> {
-                        val newLibCoordinates =
-                            if (!removeVersionIfCan) {
-                                libCoordinates
-                            } else {
-                                coordsWithoutVersion(libCoordinates)
-                            }
-                        return UnifiedDependency(newLibCoordinates, "implementation")
-                    }
 
-                    else -> UnifiedDependency(libCoordinates, "compile")
+            val coordinatesWithoutVersionIfNecessary =
+                if (removeVersion) {
+                    coordinatesWithoutVersion(libCoordinates)
+                } else {
+                    libCoordinates
                 }
 
-            return dep
+            return when (javaBuildSystem) {
+                BuildSystem.MAVEN -> UnifiedDependency(coordinatesWithoutVersionIfNecessary, null)
+                BuildSystem.GRADLE -> UnifiedDependency(coordinatesWithoutVersionIfNecessary, "implementation")
+                //if not maven or gradle always add with version, probably not so relevant coz we will not get here
+                // if it's not maven or gradle
+                else -> UnifiedDependency(libCoordinates, "compile")
+            }
         }
 
-        private fun coordsWithoutVersion(orig: UnifiedCoordinates): UnifiedCoordinates {
+        private fun coordinatesWithoutVersion(orig: UnifiedCoordinates): UnifiedCoordinates {
             // version as empty string works well, while null value throws exception (both for maven and gradle)
             return UnifiedCoordinates(orig.groupId, orig.artifactId, "")
         }

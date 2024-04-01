@@ -144,6 +144,7 @@ class RecentActivityService(val project: Project) : Disposable {
             result
         } catch (e: AnalyticsServiceException) {
             Log.warnWithException(logger, project, e, "Error creation {}", e.message)
+            ErrorReporter.getInstance().reportError(project, "RecentActivityService.createEnvironment", e)
             ""
         }
         refreshEnvironmentsNowOnBackground(project)
@@ -158,7 +159,8 @@ class RecentActivityService(val project: Project) : Disposable {
             project.service<AnalyticsService>().deleteEnvironmentV2(id);
             refreshEnvironmentsNowOnBackground(project)
         } catch (e: AnalyticsServiceException) {
-            Log.warnWithException(logger, project, e, "Error creation {}", e.message)
+            Log.warnWithException(logger, project, e, "Error delete {}", e.message)
+            ErrorReporter.getInstance().reportError(project, "RecentActivityService.deleteEnvironmentV2", e)
         }
     }
 

@@ -144,9 +144,11 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
             }
 
             "RECENT_ACTIVITY/DELETE_ENVIRONMENT_V2" -> {
-                val id = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environment").asText()
-                project.service<RecentActivityService>().deleteEnvironmentV2(id)
-                project.service<RecentActivityUpdater>().updateLatestActivities()
+                val environmentId = getEnvironmentIdFromPayload(requestJsonNode)
+                environmentId?.let {
+                    project.service<RecentActivityService>().deleteEnvironmentV2(environmentId)
+                    project.service<RecentActivityUpdater>().updateLatestActivities()
+                }
             }
 
             else -> return false

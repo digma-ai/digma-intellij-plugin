@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.JsonNode
 import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
-import org.digma.intellij.plugin.insights.AbstractInsightsMessageRouterHandler
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.ui.highlights.model.SetHighlightsPerformanceMessage
 import org.digma.intellij.plugin.ui.highlights.model.SetHighlightsTopInsightsMessage

@@ -24,10 +24,13 @@ import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.ui.common.openJaegerFromRecentActivity
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
 import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
+import org.digma.intellij.plugin.ui.recentactivity.model.AddToConfigData
+import org.digma.intellij.plugin.ui.recentactivity.model.AdditionToConfigResult
 import org.digma.intellij.plugin.ui.recentactivity.model.CloseLiveViewMessage
 import org.digma.intellij.plugin.ui.recentactivity.model.OpenRegistrationDialogMessage
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityEntrySpanForTracePayload
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityEntrySpanPayload
+import org.digma.intellij.plugin.ui.recentactivity.model.SetAddToConfigResult
 import org.digma.intellij.plugin.ui.recentactivity.model.SetEnvironmentCreatedMessage
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -144,9 +147,10 @@ class RecentActivityService(val project: Project) : Disposable {
             result
         } catch (e: AnalyticsServiceException) {
             Log.warnWithException(logger, project, e, "Error creation {}", e.message)
+            ErrorReporter.getInstance().reportError(project, "RecentActivityService.createEnvironment", e)
             ""
         }
-
+        refreshEnvironmentsNowOnBackground(project)
         val msg = SetEnvironmentCreatedMessage(response)
         jCefComponent?.let {
             serializeAndExecuteWindowPostMessageJavaScript(it.jbCefBrowser.cefBrowser, msg)
@@ -156,9 +160,23 @@ class RecentActivityService(val project: Project) : Disposable {
     fun deleteEnvironmentV2(id: String) {
         try {
             project.service<AnalyticsService>().deleteEnvironmentV2(id);
+            refreshEnvironmentsNowOnBackground(project)
         } catch (e: AnalyticsServiceException) {
-            Log.warnWithException(logger, project, e, "Error creation {}", e.message)
+            Log.warnWithException(logger, project, e, "Error delete {}", e.message)
+            ErrorReporter.getInstance().reportError(project, "RecentActivityService.deleteEnvironmentV2", e)
         }
+    }
+
+    fun addVarRunToConfig(environment: String){
+        val result =  service<AddEnvironmentsService>().addToCurrentRunConfig(project, environment)
+
+        val msg = SetAddToConfigResult(
+            AddToConfigData(environment, if(result) AdditionToConfigResult.success else AdditionToConfigResult.failure))
+        jCefComponent?.let {
+            serializeAndExecuteWindowPostMessageJavaScript(it.jbCefBrowser.cefBrowser, msg)
+        }
+
+        project.service<RecentActivityUpdater>().updateLatestActivities()
     }
 
     fun openRegistrationDialog() {

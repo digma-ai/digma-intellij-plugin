@@ -18,6 +18,7 @@ import org.digma.intellij.plugin.idea.execution.OTEL_RESOURCE_ATTRIBUTES
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
+import org.digma.intellij.plugin.ui.jcef.JCefComponent
 import org.digma.intellij.plugin.ui.recentactivity.model.PendingEnvironment
 
 //app level service so includes pending environments from all projects

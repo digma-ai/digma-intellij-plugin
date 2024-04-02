@@ -899,10 +899,6 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         @POST("/environments")
         Call<String> createEnvironment(@Body Map<String, Object> request);
 
-        @Headers({
-                "Accept: application/+json",
-                "Content-Type:application/json"
-        })
         @DELETE("/environments/{envId}")
         Call<Void> deleteEnvironment(@Path("envId") String envId);
 

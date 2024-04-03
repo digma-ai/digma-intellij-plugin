@@ -147,7 +147,7 @@ private constructor(
 
     companion object {
 
-        val Highlights = View(title = "Highlights", id = "highlights", cardName = "highlights")
+        val Highlights = View(title = "", id = "highlights", cardName = "highlights")
         val Insights = View(title = "Issues", id = "insights", cardName = "insights", isSelected = true)
         val Assets = View("Assets", "assets", "assets")
         val Errors = View("Errors", "errors", "errors")
@@ -156,7 +156,7 @@ private constructor(
         val Analytics = View("Analytics", "analytics", "analytics")
 
 
-        val views = listOf(/*Highlights,*/ Insights, Assets, Analytics, Errors, ErrorDetails, Tests)
+        val views = listOf(Highlights, Insights, Assets, Analytics, Errors, ErrorDetails, Tests)
 
         fun findById(id: String): View? {
             return views.find { it.id == id }

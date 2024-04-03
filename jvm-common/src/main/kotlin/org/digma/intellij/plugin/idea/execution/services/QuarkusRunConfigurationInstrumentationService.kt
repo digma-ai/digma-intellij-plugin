@@ -5,13 +5,12 @@ import com.intellij.execution.configurations.RunConfiguration
 import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.execution.configurations.RunnerSettings
 import com.intellij.execution.configurations.SimpleProgramParameters
-import com.intellij.openapi.components.service
 import com.intellij.openapi.module.Module
 import org.digma.intellij.plugin.analytics.LOCAL_ENV
 import org.digma.intellij.plugin.analytics.LOCAL_TESTS_ENV
 import org.digma.intellij.plugin.analytics.isCentralized
+import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
 import org.digma.intellij.plugin.buildsystem.BuildSystem
-import org.digma.intellij.plugin.common.UserId
 import org.digma.intellij.plugin.execution.RunConfigurationInstrumentationService
 import org.digma.intellij.plugin.execution.RunConfigurationType
 import org.digma.intellij.plugin.idea.execution.ConfigurationCleaner
@@ -29,7 +28,6 @@ import org.digma.intellij.plugin.idea.execution.ServiceNameProvider
 import org.digma.intellij.plugin.idea.execution.getModuleMetadata
 import org.digma.intellij.plugin.idea.externalsystem.findGradleRunConfigurationInstrumentationService
 import org.digma.intellij.plugin.idea.externalsystem.findMavenRunConfigurationInstrumentationService
-import org.digma.intellij.plugin.persistence.PersistenceService
 
 //don't change to light service because it will register always. we want it to register only for Idea
 @Suppress("LightServiceMigrationCode")
@@ -240,11 +238,13 @@ class QuarkusRunConfigurationInstrumentationService : BaseJvmRunConfigurationIns
 
         override fun withResourceAttributes(isTest: Boolean): JavaToolOptionsBuilder {
             if (!parametersExtractor.hasDigmaEnvironmentIdAttribute(configuration, params)) {
-                var attributes = "$DIGMA_USER_ID_RESOURCE_ATTRIBUTE=${service<PersistenceService>().getLoggedUserId()!!}"
+                var attributes = DigmaDefaultAccountHolder.getInstance().account?.userId?.let {
+                    "$DIGMA_USER_ID_RESOURCE_ATTRIBUTE=${it},"
+                } ?: ""
                 attributes += if (isTest) {
-                    ",$DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE=$LOCAL_TESTS_ENV"
+                    "$DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE=$LOCAL_TESTS_ENV,"
                 } else {
-                    ",$DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE=$LOCAL_ENV"
+                    "$DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE=$LOCAL_ENV"
                 }
                 javaToolOptions
                     .append("-Dquarkus.otel.resource.attributes=\"$attributes\"")

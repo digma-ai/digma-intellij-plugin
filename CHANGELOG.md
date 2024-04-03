@@ -1,6 +1,12 @@
 # Changelog
 
-## [2.0.310] - 2024-03-31
+## [2.0.312] - 2024-04-03
+
+- Fixed Highlights message handler by @ohrebeniuk in https://github.com/digma-ai/digma-intellij-plugin/pull/2025
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2008
+- Bump version by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2027
+
+## 2.0.310 - 2024-03-31
 
 - better understanding of instrumentation flavor Closes #2013 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2016
 

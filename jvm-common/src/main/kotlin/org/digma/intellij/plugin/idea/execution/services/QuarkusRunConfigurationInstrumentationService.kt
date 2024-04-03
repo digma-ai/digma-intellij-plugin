@@ -6,16 +6,11 @@ import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.execution.configurations.RunnerSettings
 import com.intellij.execution.configurations.SimpleProgramParameters
 import com.intellij.openapi.module.Module
-import org.digma.intellij.plugin.analytics.LOCAL_ENV
-import org.digma.intellij.plugin.analytics.LOCAL_TESTS_ENV
 import org.digma.intellij.plugin.analytics.isCentralized
-import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
 import org.digma.intellij.plugin.buildsystem.BuildSystem
 import org.digma.intellij.plugin.execution.RunConfigurationInstrumentationService
 import org.digma.intellij.plugin.execution.RunConfigurationType
 import org.digma.intellij.plugin.idea.execution.ConfigurationCleaner
-import org.digma.intellij.plugin.idea.execution.DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE
-import org.digma.intellij.plugin.idea.execution.DIGMA_USER_ID_RESOURCE_ATTRIBUTE
 import org.digma.intellij.plugin.idea.execution.ExternalSystemConfigurationCleaner
 import org.digma.intellij.plugin.idea.execution.ExternalSystemJavaToolOptionsMerger
 import org.digma.intellij.plugin.idea.execution.InstrumentationFlavor
@@ -238,16 +233,9 @@ class QuarkusRunConfigurationInstrumentationService : BaseJvmRunConfigurationIns
 
         override fun withResourceAttributes(isTest: Boolean): JavaToolOptionsBuilder {
             if (!parametersExtractor.hasDigmaEnvironmentIdAttribute(configuration, params)) {
-                var attributes = DigmaDefaultAccountHolder.getInstance().account?.userId?.let {
-                    "$DIGMA_USER_ID_RESOURCE_ATTRIBUTE=${it},"
-                } ?: ""
-                attributes += if (isTest) {
-                    "$DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE=$LOCAL_TESTS_ENV,"
-                } else {
-                    "$DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE=$LOCAL_ENV"
-                }
+                val commonAttributes = buildCommonResourceAttributes(isTest)
                 javaToolOptions
-                    .append("-Dquarkus.otel.resource.attributes=\"$attributes\"")
+                    .append("-Dquarkus.otel.resource.attributes=\"$commonAttributes\"")
                     .append(" ")
             }
             else {

@@ -2,9 +2,12 @@ package org.digma.intellij.plugin.idea.execution
 
 import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.execution.configurations.SimpleProgramParameters
-import com.intellij.openapi.module.Module
+import com.intellij.openapi.components.service
+import org.digma.intellij.plugin.analytics.LOCAL_ENV
 import org.digma.intellij.plugin.analytics.LOCAL_TESTS_ENV
 import org.digma.intellij.plugin.analytics.isCentralized
+import org.digma.intellij.plugin.common.UserId
+import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.settings.SettingsState
 
 open class JavaToolOptionsBuilder(
@@ -85,13 +88,6 @@ open class JavaToolOptionsBuilder(
 
     open fun withTest(isTest: Boolean): JavaToolOptionsBuilder {
         if (isTest && !isCentralized(configuration.project)) {
-            if (!parametersExtractor.alreadyHasTestEnv(configuration, params)) {
-                val envPart = "$DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE=$LOCAL_TESTS_ENV"
-                javaToolOptions
-                    .append("-Dotel.resource.attributes=\"$envPart\"")
-                    .append(" ")
-            }
-
             val hasMockito = true //currently do not check for mockito since flag is minor and won't affect other cases
             if (hasMockito) {
                 // based on git issue https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/8862#issuecomment-1619722050 it seems to help
@@ -104,6 +100,24 @@ open class JavaToolOptionsBuilder(
         return this
     }
 
+    open fun withResourceAttributes(isTest: Boolean): JavaToolOptionsBuilder {
+        if (!parametersExtractor.hasDigmaEnvironmentIdAttribute(configuration, params)) {
+            var attributes = "$DIGMA_USER_ID_RESOURCE_ATTRIBUTE=${service<PersistenceService>().getLoggedUserId()!!}"
+            attributes += if (isTest) {
+                ",$DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE=$LOCAL_TESTS_ENV"
+            } else {
+                ",$DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE=$LOCAL_ENV"
+            }
+            javaToolOptions
+                .append("-Dotel.resource.attributes=\"$attributes\"")
+                .append(" ")
+        }
+        else {
+            return this
+        }
+
+        return this
+    }
 
     open fun withOtelDebug(): JavaToolOptionsBuilder {
         if (java.lang.Boolean.getBoolean("digma.otel.debug")) {

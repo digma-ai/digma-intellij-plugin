@@ -10,9 +10,11 @@ data class LoginResponse
 @ConstructorProperties(
     "accessToken",
     "refreshToken",
-    "expiration"
+    "expiration",
+    "userId"
 ) constructor(
     val accessToken: String,
     val refreshToken: String,
     val expiration: Date,
+    val userId: String
 )

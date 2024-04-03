@@ -222,6 +222,13 @@ class PersistenceService {
         state.userRegistrationEmail = userRegistrationEmail
     }
 
+    fun getLoggedUserId(): String? {
+        return state.loggedUserId
+    }
+
+    fun setLoggedUserId(userId: String) {
+        state.loggedUserId = userId
+    }
 
     fun getUserId(): String? {
         return state.userId

@@ -45,6 +45,7 @@ abstract class BaseJvmRunConfigurationInstrumentationService : RunConfigurationI
                 .withSpringBootWithMicrometerTracing(instrumentationFlavor.isSpringBootMicrometerTracing())
                 .withMicronautTracing(instrumentationFlavor.isMicronautTracing())
                 .withTest(isTest(configuration, params))
+                .withResourceAttributes(isTest(configuration, params))
                 .withServiceName(moduleResolver)
                 .withExtendedObservability()
                 .withOtelDebug()

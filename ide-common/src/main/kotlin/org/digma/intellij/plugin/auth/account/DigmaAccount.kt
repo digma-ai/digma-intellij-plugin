@@ -12,6 +12,7 @@ import java.net.URI
 
 
 const val DEFAULT_ACCOUNT_NAME = "default"
+const val DEFAULT_LOGIN_ID = "unknown"
 
 @Tag("account")
 class DigmaAccount(
@@ -23,10 +24,12 @@ class DigmaAccount(
     override val name: String = DEFAULT_ACCOUNT_NAME,
     @Property(style = Property.Style.ATTRIBUTE, surroundWithTag = false)
     override val server: MyServerPath = MyServerPath(),
+    @Attribute("userId")
+    val userId: String = DEFAULT_LOGIN_ID
 ) : ServerAccount() {
 
     override fun toString(): String {
-        return "DigmaAccount(id=$id, name=$name, url=${server.url})"
+        return "DigmaAccount(id=$id, name=$name, url=${server.url}), id=$userId"
     }
 }
 

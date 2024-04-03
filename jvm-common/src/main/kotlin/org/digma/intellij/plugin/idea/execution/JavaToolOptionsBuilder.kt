@@ -2,12 +2,10 @@ package org.digma.intellij.plugin.idea.execution
 
 import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.execution.configurations.SimpleProgramParameters
-import com.intellij.openapi.components.service
 import org.digma.intellij.plugin.analytics.LOCAL_ENV
 import org.digma.intellij.plugin.analytics.LOCAL_TESTS_ENV
 import org.digma.intellij.plugin.analytics.isCentralized
-import org.digma.intellij.plugin.common.UserId
-import org.digma.intellij.plugin.persistence.PersistenceService
+import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
 import org.digma.intellij.plugin.settings.SettingsState
 
 open class JavaToolOptionsBuilder(
@@ -102,11 +100,14 @@ open class JavaToolOptionsBuilder(
 
     open fun withResourceAttributes(isTest: Boolean): JavaToolOptionsBuilder {
         if (!parametersExtractor.hasDigmaEnvironmentIdAttribute(configuration, params)) {
-            var attributes = "$DIGMA_USER_ID_RESOURCE_ATTRIBUTE=${service<PersistenceService>().getLoggedUserId()!!}"
+            var attributes = DigmaDefaultAccountHolder.getInstance().account?.userId?.let {
+                "$DIGMA_USER_ID_RESOURCE_ATTRIBUTE=${it},"
+            } ?: ""
+
             attributes += if (isTest) {
-                ",$DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE=$LOCAL_TESTS_ENV"
+                "$DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE=$LOCAL_TESTS_ENV,"
             } else {
-                ",$DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE=$LOCAL_ENV"
+                "$DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE=$LOCAL_ENV"
             }
             javaToolOptions
                 .append("-Dotel.resource.attributes=\"$attributes\"")

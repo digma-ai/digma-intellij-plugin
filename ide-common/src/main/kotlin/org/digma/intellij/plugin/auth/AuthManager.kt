@@ -49,7 +49,7 @@ class AuthManager {
 
     fun getAuthenticationProviders(): List<AuthenticationProvider> {
         return listOf(
-            HeaderTokenAuthenticationProvider(SettingsTokenProvider()),
+            DigmaAccessTokenAuthenticationProvider(SettingsTokenProvider()),
             HeaderTokenAuthenticationProvider(DefaultAccountTokenProvider())
         )
     }

@@ -21,6 +21,4 @@ object UserId {
             isDevUser = false
         }
     }
-
-
 }

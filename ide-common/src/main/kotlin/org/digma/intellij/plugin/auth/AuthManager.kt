@@ -182,6 +182,7 @@ class AuthManager {
             runBlocking {
                 DigmaAccountManager.getInstance().updateAccount(digmaAccount, digmaCredentials)
                 DigmaDefaultAccountHolder.getInstance().account = digmaAccount
+                service<PersistenceService>().setLoggedUserId(loginResponse.userId)
             }
             Log.log(logger::info, "login success for url={}", url)
 

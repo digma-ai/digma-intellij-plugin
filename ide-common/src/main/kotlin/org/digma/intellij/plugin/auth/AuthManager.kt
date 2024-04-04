@@ -171,7 +171,7 @@ class AuthManager {
             Log.log(logger::info, "doing login for url={}", url)
             val email = PersistenceService.getInstance().getUserRegistrationEmail() ?: PersistenceService.getInstance().getUserEmail()
             val loginResponse = analyticsProvider.login(LoginRequest(SILENT_LOGIN_USER, email, SILENT_LOGIN_PASSWORD))
-            val digmaAccount = DigmaAccountManager.createAccount(url)
+            val digmaAccount = DigmaAccountManager.createAccount(url, loginResponse.userId)
             val digmaCredentials = DigmaCredentials(
                 loginResponse.accessToken,
                 loginResponse.refreshToken,
@@ -182,7 +182,6 @@ class AuthManager {
             runBlocking {
                 DigmaAccountManager.getInstance().updateAccount(digmaAccount, digmaCredentials)
                 DigmaDefaultAccountHolder.getInstance().account = digmaAccount
-                service<PersistenceService>().setLoggedUserId(loginResponse.userId)
             }
             Log.log(logger::info, "login success for url={}", url)
 

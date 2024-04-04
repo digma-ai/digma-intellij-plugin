@@ -2,12 +2,10 @@ package org.digma.intellij.plugin.idea.execution
 
 import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.execution.configurations.SimpleProgramParameters
-import com.intellij.openapi.components.service
 import org.digma.intellij.plugin.analytics.LOCAL_ENV
 import org.digma.intellij.plugin.analytics.LOCAL_TESTS_ENV
 import org.digma.intellij.plugin.analytics.isCentralized
-import org.digma.intellij.plugin.common.UserId
-import org.digma.intellij.plugin.persistence.PersistenceService
+import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
 import org.digma.intellij.plugin.settings.SettingsState
 
 open class JavaToolOptionsBuilder(
@@ -102,14 +100,9 @@ open class JavaToolOptionsBuilder(
 
     open fun withResourceAttributes(isTest: Boolean): JavaToolOptionsBuilder {
         if (!parametersExtractor.hasDigmaEnvironmentIdAttribute(configuration, params)) {
-            var attributes = "$DIGMA_USER_ID_RESOURCE_ATTRIBUTE=${service<PersistenceService>().getLoggedUserId()!!}"
-            attributes += if (isTest) {
-                ",$DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE=$LOCAL_TESTS_ENV"
-            } else {
-                ",$DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE=$LOCAL_ENV"
-            }
+            val commonAttributes = buildCommonResourceAttributes(isTest)
             javaToolOptions
-                .append("-Dotel.resource.attributes=\"$attributes\"")
+                .append("-Dotel.resource.attributes=\"$commonAttributes\"")
                 .append(" ")
         }
         else {
@@ -118,6 +111,20 @@ open class JavaToolOptionsBuilder(
 
         return this
     }
+
+
+    open fun buildCommonResourceAttributes(isTest: Boolean): String {
+        var attributes = DigmaDefaultAccountHolder.getInstance().account?.userId?.let {
+            "$DIGMA_USER_ID_RESOURCE_ATTRIBUTE=${it},"
+        } ?: ""
+        attributes += if (isTest) {
+            "$DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE=$LOCAL_TESTS_ENV,"
+        } else {
+            "$DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE=$LOCAL_ENV"
+        }
+        return attributes
+    }
+
 
     open fun withOtelDebug(): JavaToolOptionsBuilder {
         if (java.lang.Boolean.getBoolean("digma.otel.debug")) {

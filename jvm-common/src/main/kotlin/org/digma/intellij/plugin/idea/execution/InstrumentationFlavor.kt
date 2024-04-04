@@ -6,6 +6,7 @@ import com.intellij.openapi.module.Module
 
 const val INSTRUMENTATION_FLAVOR_ENV_NAME = "INSTRUMENTATION_FLAVOR"
 
+@Suppress("unused", "CanBeParameter", "MemberVisibilityCanBePrivate")
 open class InstrumentationFlavor(
     private val configuration: RunConfigurationBase<*>,
     private val projectHeuristics: ProjectHeuristics,
@@ -23,28 +24,28 @@ open class InstrumentationFlavor(
 
     private val resolvedModule: Module? = moduleResolver.resolveModule()
 
-    private val flavorInEnv: Flavors = try {
+    private val flavorInEnv: Flavors? = try {
         val flavorValueInEnv = parametersExtractor.extractEnvValue(INSTRUMENTATION_FLAVOR_ENV_NAME)
         flavorValueInEnv?.let {
             Flavors.valueOf(it)
-        } ?: Flavors.Default
-
+        }
     } catch (e: IllegalArgumentException) {
-        Flavors.Default
+        null
     }
 
     open fun shouldUseOtelAgent(): Boolean {
-        return listOf(isMicronautTracing(), isSpringBootMicrometerTracing()).none { it }
+        return isUserConfiguredDefaultInEnv() ||
+                listOf(isMicronautTracing(), isSpringBootMicrometerTracing()).none { it }
     }
 
     open fun isSpringBootMicrometerTracing(): Boolean {
-        return isUserConfiguredSpringBootMicrometerInEnv() ||
-                isSpringBootMicrometerTracing(resolvedModule, projectHeuristics)
+        if (isUserConfiguredDefaultInEnv()) return false
+        return isUserConfiguredSpringBootMicrometerInEnv() || isSpringBootMicrometerTracing(resolvedModule, projectHeuristics)
     }
 
     open fun isMicronautTracing(): Boolean {
-        return isUserConfiguredMicronautInEnv() ||
-                isMicronautTracing(resolvedModule, projectHeuristics)
+        if (isUserConfiguredDefaultInEnv()) return false
+        return isUserConfiguredMicronautInEnv() || isMicronautTracing(resolvedModule, projectHeuristics)
     }
 
     private fun isSpringBootMicrometerTracing(module: Module?, projectHeuristics: ProjectHeuristics): Boolean {
@@ -80,6 +81,10 @@ open class InstrumentationFlavor(
 
     fun isUserConfiguredQuarkusInEnv(): Boolean {
         return flavorInEnv == Flavors.Quarkus
+    }
+
+    fun isUserConfiguredDefaultInEnv(): Boolean {
+        return flavorInEnv == Flavors.Default
     }
 
 }

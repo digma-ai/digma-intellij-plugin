@@ -1,8 +1,10 @@
 package org.digma.intellij.plugin.auth
 
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.util.Disposer
 import kotlinx.coroutines.runBlocking
 import org.digma.intellij.plugin.analytics.AnalyticsProvider
 import org.digma.intellij.plugin.analytics.AnalyticsProviderException
@@ -36,8 +38,8 @@ const val SILENT_LOGIN_PASSWORD = "admin"
 class AuthManager {
 
     private val logger: Logger = Logger.getInstance(AuthManager::class.java)
-
     private val loginOrRefreshLock = ReentrantLock()
+    private val listeners: MutableList<AuthInfoChangeListener> = ArrayList()
 
     companion object {
         @JvmStatic
@@ -52,6 +54,16 @@ class AuthManager {
             DigmaAccessTokenAuthenticationProvider(SettingsTokenProvider()),
             HeaderTokenAuthenticationProvider(DefaultAccountTokenProvider())
         )
+    }
+
+    fun addAuthInfoChangeListener(listener: AuthInfoChangeListener, parentDisposable: Disposable) {
+        listeners.add(listener);
+
+        Disposer.register(parentDisposable) { removeAuthInfoChangeListener(listener) }
+    }
+
+    fun removeAuthInfoChangeListener(listener: AuthInfoChangeListener) {
+        listeners.remove(listener)
     }
 
     //withAuth should not be called concurrently by multiple threads. it is called only from AnalyticsService.replaceClient.
@@ -69,10 +81,26 @@ class AuthManager {
     }
 
 
+    private fun loginOrRefresh(analyticsProvider: RestAnalyticsProvider, url: String, forceRefresh: Boolean = false): Boolean {
+
+        val result = loginOrRefreshInternal(analyticsProvider, url, forceRefresh)
+
+        val authInfo =  AuthInfo(DigmaDefaultAccountHolder.getInstance().account?.userId)
+        listeners.forEach {
+            try {
+                it.authInfoChanged(authInfo)
+            } catch (e: Throwable) {
+                ErrorReporter.getInstance().reportInternalFatalError("Failed notify auth info change", e)
+            }
+        }
+
+        return result
+    }
+
     //why forceRefresh: theoretically we can rely on credentials.isAccessTokenValid to decide if to refresh.
     // but it's a week decision because we don't know what the server is doing and if the server really considers expiration time.
     // so forceRefresh is sent on AuthenticationException and if we have credentials we try to refresh ignoring credentials.isAccessTokenValid
-    private fun loginOrRefresh(analyticsProvider: RestAnalyticsProvider, url: String, forceRefresh: Boolean = false): Boolean {
+    private fun loginOrRefreshInternal(analyticsProvider: RestAnalyticsProvider, url: String, forceRefresh: Boolean = false): Boolean {
 
         //loginOrRefresh should never throw exception but return true or false
 

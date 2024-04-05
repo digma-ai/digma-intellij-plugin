@@ -8,7 +8,7 @@ import org.digma.intellij.plugin.buildsystem.BuildSystem
 interface RunConfigurationInstrumentationService {
 
     /**
-     * not an accurate method because there is no params to resolve the module.
+     * not an accurate method because there is no params to resolve the module or environment variables.
      * should be used in combination with other conditions or when matching is not supposed to be accurate.
      * do not use to attach an instrumentation handler to configuration, use fot other needs when
      * the matching doesn't need to be accurate, like for reporting unhandled configuration.

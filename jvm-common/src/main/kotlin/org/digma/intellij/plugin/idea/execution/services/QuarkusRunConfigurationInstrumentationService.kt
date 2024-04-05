@@ -49,13 +49,21 @@ class QuarkusRunConfigurationInstrumentationService : BaseJvmRunConfigurationIns
 
 
     private fun isGradle(configuration: RunConfigurationBase<*>): Boolean {
-        //TODO: support Quarkus with gradle
-        return false
+        return isGradleConfiguration(configuration) && getGradleTasks(configuration).any {
+            it == "quarkusDev" ||
+                    it == "quarkusRun" ||
+                    it.contains(":quarkusDev") ||
+                    it.contains(":quarkusRun")
+        }
     }
 
     private fun isGradleTest(configuration: RunConfigurationBase<*>): Boolean {
-        //TODO: support Quarkus with gradle
-        return false
+        return isGradleConfiguration(configuration) && getGradleTasks(configuration).any {
+            it == "quarkusIntTest" ||
+                    it == "quarkusTest" ||
+                    it.contains(":quarkusIntTest") ||
+                    it.contains(":quarkusTest")
+        }
     }
 
     private fun isMaven(configuration: RunConfigurationBase<*>): Boolean {

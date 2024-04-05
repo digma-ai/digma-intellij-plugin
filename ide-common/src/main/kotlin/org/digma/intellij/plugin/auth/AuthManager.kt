@@ -54,6 +54,16 @@ class AuthManager {
         )
     }
 
+    fun addAuthInfoChangeListener(listener: AuthInfoChangeListener, parentDisposable: Disposable) {
+        listeners.add(listener);
+
+        Disposer.register(parentDisposable) { removeAuthInfoChangeListener(listener) }
+    }
+
+    fun removeAuthInfoChangeListener(listener: AuthInfoChangeListener) {
+        listeners.remove(listener)
+    }
+
     //withAuth should not be called concurrently by multiple threads. it is called only from AnalyticsService.replaceClient.
     //AnalyticsService.replaceClient is called on startup and when a relevant settings change and is synchronized.
     //the analyticsProvider here will usually be a non proxied RestAnalyticsProvider

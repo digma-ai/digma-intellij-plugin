@@ -34,6 +34,7 @@ import org.digma.intellij.plugin.ui.jcef.model.SetScopeMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetScopeMessagePayload
 import org.digma.intellij.plugin.ui.jcef.model.SetStateMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetUserEmailMessage
+import org.digma.intellij.plugin.ui.jcef.model.SetUserInfoMessage
 import org.digma.intellij.plugin.ui.jcef.model.UICodeFontRequest
 import org.digma.intellij.plugin.ui.jcef.model.UIFontRequest
 import org.digma.intellij.plugin.ui.jcef.model.UIThemeRequest
@@ -41,6 +42,7 @@ import org.digma.intellij.plugin.ui.jcef.model.UiCodeFontPayload
 import org.digma.intellij.plugin.ui.jcef.model.UiFontPayload
 import org.digma.intellij.plugin.ui.jcef.model.UiThemePayload
 import org.digma.intellij.plugin.ui.jcef.model.UserEmailPayload
+import org.digma.intellij.plugin.ui.jcef.model.UserInfoPayload
 import org.digma.intellij.plugin.ui.navigation.model.SetViewMessage
 import org.digma.intellij.plugin.ui.navigation.model.SetViewMessagePayload
 import org.digma.intellij.plugin.ui.settings.Theme
@@ -127,6 +129,14 @@ fun sendUserEmail(cefBrowser: CefBrowser, email: String) {
     val setUserEmailMessage = SetUserEmailMessage(
         JCEFGlobalConstants.REQUEST_MESSAGE_TYPE,
         "GLOBAL/SET_USER_REGISTRATION_EMAIL", UserEmailPayload(email)
+    )
+    serializeAndExecuteWindowPostMessageJavaScript(cefBrowser, setUserEmailMessage)
+}
+
+fun sendUserInfo(cefBrowser: CefBrowser, userId: String?) {
+    val setUserEmailMessage = SetUserInfoMessage(
+        JCEFGlobalConstants.REQUEST_MESSAGE_TYPE,
+        "GLOBAL/SET_USER_INFO", UserInfoPayload(userId)
     )
     serializeAndExecuteWindowPostMessageJavaScript(cefBrowser, setUserEmailMessage)
 }

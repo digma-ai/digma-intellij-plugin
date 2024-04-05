@@ -16,8 +16,6 @@ import org.digma.intellij.plugin.analytics.InsightStatsChangedEvent
 import org.digma.intellij.plugin.analytics.getAllEnvironments
 import org.digma.intellij.plugin.analytics.getEnvironmentNameById
 import org.digma.intellij.plugin.analytics.setCurrentEnvironmentById
-import org.digma.intellij.plugin.auth.account.DigmaAccount
-import org.digma.intellij.plugin.auth.account.DigmaAccountManager
 import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
@@ -314,7 +312,7 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
 
         sendEnvironmentsList(browser, getAllEnvironments(project))
 
-        sendUserInfo(browser, DigmaDefaultAccountHolder.getInstance().account?.userId)
+        sendUserInfoMessage(browser, DigmaDefaultAccountHolder.getInstance().account?.userId)
 
         sendScopeChangedMessage(
             browser,

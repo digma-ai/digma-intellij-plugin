@@ -133,11 +133,8 @@ fun sendUserEmail(cefBrowser: CefBrowser, email: String) {
     serializeAndExecuteWindowPostMessageJavaScript(cefBrowser, setUserEmailMessage)
 }
 
-fun sendUserInfo(cefBrowser: CefBrowser, userId: String?) {
-    val setUserEmailMessage = SetUserInfoMessage(
-        JCEFGlobalConstants.REQUEST_MESSAGE_TYPE,
-        "GLOBAL/SET_USER_INFO", UserInfoPayload(userId)
-    )
+fun sendUserInfoMessage(cefBrowser: CefBrowser, userId: String?) {
+    val setUserEmailMessage = SetUserInfoMessage(UserInfoPayload(userId))
     serializeAndExecuteWindowPostMessageJavaScript(cefBrowser, setUserEmailMessage)
 }
 

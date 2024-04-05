@@ -19,11 +19,8 @@ import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
 import org.digma.intellij.plugin.analytics.EnvironmentChanged
 import org.digma.intellij.plugin.analytics.InsightStatsChangedEvent
 import org.digma.intellij.plugin.analytics.getAllEnvironments
-import org.digma.intellij.plugin.auth.AuthInfoChangeListener
 import org.digma.intellij.plugin.auth.AuthManager
-import org.digma.intellij.plugin.auth.account.DEFAULT_LOGIN_ID
 import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
-import org.digma.intellij.plugin.auth.credentials.AuthInfo
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
@@ -54,10 +51,9 @@ private constructor(
 
 
     private val settingsChangeListener: SettingsChangeListener
-    private val authInfoChangeListener: AuthInfoChangeListener
     private val analyticsServiceConnectionEventMessageBusConnection: MessageBusConnection
     private val settingsListenerParentDisposable = Disposer.newDisposable()
-    private val authInfoChangeListenerDisposable = Disposer.newDisposable()
+    private val authInfoChangeListenerParentDisposable = Disposer.newDisposable()
     private val connectionEventAlarmParentDisposable = Disposer.newDisposable()
     private val userRegistrationParentDisposable = Disposer.newDisposable()
     private val environmentChangeParentDisposable = Disposer.newDisposable()
@@ -84,18 +80,14 @@ private constructor(
             }
         }
 
-        authInfoChangeListener = object : AuthInfoChangeListener {
-            override fun authInfoChanged(authInfo: AuthInfo) {
-                try {
-                    sendUserInfo(jbCefBrowser.cefBrowser, authInfo.userId)
-                } catch (e: Throwable) {
-                    ErrorReporter.getInstance().reportError("JCefComponent.userChanged", e)
-                }
-            }
-        }
-
         ApplicationUISettingsChangeNotifier.getInstance(project).addSettingsChangeListener(settingsChangeListener)
-        AuthManager.getInstance().addAuthInfoChangeListener(authInfoChangeListener, authInfoChangeListenerDisposable)
+        AuthManager.getInstance().addAuthInfoChangeListener({ authInfo ->
+            try {
+                sendUserInfoMessage(jbCefBrowser.cefBrowser, authInfo.userId)
+            } catch (e: Throwable) {
+                ErrorReporter.getInstance().reportError("JCefComponent.userChanged", e)
+            }
+        }, authInfoChangeListenerParentDisposable)
 
         analyticsServiceConnectionEventMessageBusConnection = project.messageBus.connect()
         analyticsServiceConnectionEventMessageBusConnection.subscribe(
@@ -143,7 +135,7 @@ private constructor(
                     sendBackendAboutInfo(jbCefBrowser.cefBrowser, project)
                     val status = service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionLost()
                     updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
-                    sendUserInfo(jbCefBrowser.cefBrowser, DigmaDefaultAccountHolder.getInstance().account?.userId)
+                    sendUserInfoMessage(jbCefBrowser.cefBrowser, DigmaDefaultAccountHolder.getInstance().account?.userId)
                 } catch (e: Throwable) {
                     ErrorReporter.getInstance().reportError("JCefComponent.settingsChanged", e)
                 }
@@ -260,12 +252,11 @@ private constructor(
             Disposer.dispose(scopeChangeParentDisposable)
             Disposer.dispose(stateChangeParentDisposable)
             Disposer.dispose(insightStatsChangeParentDisposable)
-            Disposer.dispose(authInfoChangeListenerDisposable)
+            Disposer.dispose(authInfoChangeListenerParentDisposable)
             jbCefBrowser.jbCefClient.removeLifeSpanHandler(lifeSpanHandler, jbCefBrowser.cefBrowser)
             jbCefBrowser.dispose()
             cefMessageRouter.dispose()
             ApplicationUISettingsChangeNotifier.getInstance(project).removeSettingsChangeListener(settingsChangeListener)
-            AuthManager.getInstance().removeAuthInfoChangeListener(authInfoChangeListener)
         } catch (e: Exception) {
             ErrorReporter.getInstance().reportError(project, "JCefComponent.dispose", e)
         }

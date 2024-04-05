@@ -1,7 +1,7 @@
 package org.digma.intellij.plugin.auth
 
-import org.digma.intellij.plugin.auth.credentials.AuthInfo
+data class AuthInfo(val userId: String?);
 
-interface AuthInfoChangeListener {
+fun interface AuthInfoChangeListener {
     fun authInfoChanged(authInfo: AuthInfo)
 }

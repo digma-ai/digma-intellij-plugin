@@ -5,7 +5,6 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.util.Disposer
-import com.jetbrains.rd.util.UUID
 import kotlinx.coroutines.runBlocking
 import org.digma.intellij.plugin.analytics.AnalyticsProvider
 import org.digma.intellij.plugin.analytics.AnalyticsProviderException
@@ -15,7 +14,6 @@ import org.digma.intellij.plugin.analytics.RestAnalyticsProvider
 import org.digma.intellij.plugin.auth.account.DigmaAccount
 import org.digma.intellij.plugin.auth.account.DigmaAccountManager
 import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
-import org.digma.intellij.plugin.auth.credentials.AuthInfo
 import org.digma.intellij.plugin.auth.credentials.DigmaCredentials
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.common.findActiveProject
@@ -87,12 +85,12 @@ class AuthManager {
 
         val result = loginOrRefreshInternal(analyticsProvider, url, forceRefresh)
 
-        val authInfo =  if(result) AuthInfo(DigmaDefaultAccountHolder.getInstance().account?.userId) else AuthInfo(null)
+        val authInfo =  AuthInfo(DigmaDefaultAccountHolder.getInstance().account?.userId)
         listeners.forEach {
             try {
                 it.authInfoChanged(authInfo)
             } catch (e: Throwable) {
-                Log.log(logger::error, "Failed to notify auth info changed listener")
+                ErrorReporter.getInstance().reportInternalFatalError("Failed notify auth info change", e)
             }
         }
 

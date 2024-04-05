@@ -52,8 +52,8 @@ class QuarkusRunConfigurationInstrumentationService : BaseJvmRunConfigurationIns
         return isGradleConfiguration(configuration) && getGradleTasks(configuration).any {
             it == "quarkusDev" ||
                     it == "quarkusRun" ||
-                    it.contains(":quarkusDev") ||
-                    it.contains(":quarkusRun")
+                    it.endsWith(":quarkusDev") ||
+                    it.endsWith(":quarkusRun")
         }
     }
 
@@ -61,8 +61,8 @@ class QuarkusRunConfigurationInstrumentationService : BaseJvmRunConfigurationIns
         return isGradleConfiguration(configuration) && getGradleTasks(configuration).any {
             it == "quarkusIntTest" ||
                     it == "quarkusTest" ||
-                    it.contains(":quarkusIntTest") ||
-                    it.contains(":quarkusTest")
+                    it.endsWith(":quarkusIntTest") ||
+                    it.endsWith(":quarkusTest")
         }
     }
 

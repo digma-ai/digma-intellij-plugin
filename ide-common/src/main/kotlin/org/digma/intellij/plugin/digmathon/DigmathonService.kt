@@ -11,6 +11,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import org.digma.intellij.plugin.common.allowSlowOperation
 import org.digma.intellij.plugin.common.findActiveProject
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
@@ -21,6 +22,7 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
+import java.util.function.Supplier
 import kotlin.time.Duration.Companion.minutes
 
 
@@ -47,24 +49,25 @@ class DigmathonService : Disposable {
     }
 
 
-    init {
-        if (java.lang.Boolean.getBoolean("org.digma.digmathon.simulate5MinutesEvent")) {
-            digmathonInfo.set(
-                DigmathonInfo(
-                    LocalDateTime.now().plusMinutes(2).atZone(ZoneId.systemDefault()),
-                    LocalDateTime.now().plusMinutes(7).atZone(ZoneId.systemDefault())
-                )
-            )
-        }
-    }
-
-
     override fun dispose() {
         //do nothing, used as parent disposable
     }
 
 
     init {
+
+        //for development,simulate a 5 minutes event that starts 2 minutes after IDE start and lasts for 5 minutes
+        if (java.lang.Boolean.getBoolean("org.digma.digmathon.simulate5MinutesEvent")) {
+            DigmathonProductKey().clear()
+            digmathonInfo.set(
+                DigmathonInfo(
+                    LocalDateTime.now().plusMinutes(1).atZone(ZoneId.systemDefault()),
+                    LocalDateTime.now().plusMinutes(3).atZone(ZoneId.systemDefault())
+                )
+            )
+            isDigmathonActive.set(digmathonInfo.get().isActive())
+        }
+
 
         if (isDigmathonActive.get() && digmathonInfo.get().isEnded()) {
             end()
@@ -130,8 +133,10 @@ class DigmathonService : Disposable {
 
     fun setProductKey(productKey: String) {
         try {
-            DigmathonProductKey().validateAndSave(productKey)
-            reportEvent("set product key")
+            allowSlowOperation {
+                DigmathonProductKey().validateAndSave(productKey)
+                reportEvent("set product key")
+            }
         } catch (e: InvalidProductKeyException) {
             reportEvent("product key invalid")
             ErrorReporter.getInstance().reportError("${this::class.java.simpleName}.setProductKey", e)
@@ -150,7 +155,9 @@ class DigmathonService : Disposable {
 
     fun getProductKey(): String? {
         return try {
-            DigmathonProductKey().validateAndGet()
+            allowSlowOperation(Supplier {
+                DigmathonProductKey().validateAndGet()
+            })
         } catch (e: InvalidProductKeyException) {
             reportEvent("product key invalid")
             ErrorReporter.getInstance().reportError("${this::class.java.simpleName}.setProductKey", e)

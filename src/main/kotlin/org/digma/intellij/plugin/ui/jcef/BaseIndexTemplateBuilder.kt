@@ -10,6 +10,7 @@ import com.intellij.util.ui.UIUtil
 import freemarker.template.Configuration
 import freemarker.template.Template
 import freemarker.template.TemplateExceptionHandler
+import org.digma.intellij.plugin.digmathon.DigmathonService
 import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
@@ -24,6 +25,7 @@ import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.io.StringWriter
 import java.nio.charset.StandardCharsets
+import kotlin.collections.set
 
 
 private const val ENV_VARIABLE_IDE = "ide"
@@ -43,6 +45,8 @@ private const val ENVIRONMENT = "environment"
 private const val ENV_VARIABLE_THEME = "theme"
 private const val ENV_VARIABLE_FONT = "mainFont"
 private const val ENV_VARIABLE_CODE_FONT = "codeFont"
+const val DIGMATHON_ENABLED = "isDigmathonModeEnabled"
+const val DIGMATHON_PRODUCT_KEY = "productKey"
 
 
 abstract class BaseIndexTemplateBuilder(resourceFolderName: String, private val indexTemplateName: String) {
@@ -79,6 +83,8 @@ abstract class BaseIndexTemplateBuilder(resourceFolderName: String, private val 
             data[JAEGER_URL] = getJaegerUrl() ?: ""
             data[IS_MICROMETER_PROJECT] = SpringBootMicrometerConfigureDepsService.isSpringBootWithMicrometer()
             data[ENVIRONMENT] = Env.getCurrentEnv(project)?.let { it: Env -> serializeObjectToJson(it) } ?: "undefined"
+            data[DIGMATHON_ENABLED] = DigmathonService.getInstance().getDigmathonState().isActive()
+            data[DIGMATHON_PRODUCT_KEY] = DigmathonService.getInstance().getProductKey().orEmpty()
 
             addAppSpecificEnvVariable(project, data)
 

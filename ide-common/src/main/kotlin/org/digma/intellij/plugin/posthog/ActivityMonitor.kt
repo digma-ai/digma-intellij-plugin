@@ -967,6 +967,21 @@ class ActivityMonitor(private val project: Project) : Disposable {
     }
 
 
+    fun reportDigmathonEvent(eventType: String, details: Map<String, String>) {
+
+        val mutableDetails = details.toMutableMap()
+        mutableDetails["event type"] = eventType
+
+        capture(
+            "Digmathon",
+            mutableDetails
+        )
+
+    }
+
+
+
+
     private fun getEmailForEvent(): String {
         return PersistenceService.getInstance().getUserRegistrationEmail() ?: PersistenceService.getInstance().getUserEmail() ?: ""
     }

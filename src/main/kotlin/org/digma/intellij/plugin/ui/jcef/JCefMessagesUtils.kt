@@ -17,12 +17,16 @@ import org.digma.intellij.plugin.ui.common.isJaegerButtonEnabled
 import org.digma.intellij.plugin.ui.jcef.model.ApiUrlPayload
 import org.digma.intellij.plugin.ui.jcef.model.BackendInfoMessage
 import org.digma.intellij.plugin.ui.jcef.model.DigmaEngineStatusMessage
+import org.digma.intellij.plugin.ui.jcef.model.DigmathonProductKeyPayload
+import org.digma.intellij.plugin.ui.jcef.model.DigmathonStatePayload
 import org.digma.intellij.plugin.ui.jcef.model.IsJaegerButtonEnabledMessage
 import org.digma.intellij.plugin.ui.jcef.model.IsJaegerButtonEnabledMessagePayload
 import org.digma.intellij.plugin.ui.jcef.model.IsMicrometerPayload
 import org.digma.intellij.plugin.ui.jcef.model.IsObservabilityEnabledMessage
 import org.digma.intellij.plugin.ui.jcef.model.IsObservabilityEnabledPayload
 import org.digma.intellij.plugin.ui.jcef.model.SetApiUrlMessage
+import org.digma.intellij.plugin.ui.jcef.model.SetDigmathonProductKey
+import org.digma.intellij.plugin.ui.jcef.model.SetDigmathonState
 import org.digma.intellij.plugin.ui.jcef.model.SetEnvironmentMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetEnvironmentMessagePayload
 import org.digma.intellij.plugin.ui.jcef.model.SetEnvironmentsMessage
@@ -72,6 +76,21 @@ fun sendRequestToChangeCodeFont(font: String?, jbCefBrowser: JBCefBrowser) {
         UiCodeFontPayload(font!!)
     )
     serializeAndExecuteWindowPostMessageJavaScript(jbCefBrowser.cefBrowser, message)
+}
+
+
+fun sendDigmathonState(isActive: Boolean, cefBrowser: CefBrowser) {
+    serializeAndExecuteWindowPostMessageJavaScript(
+        cefBrowser,
+        SetDigmathonState(DigmathonStatePayload(isActive))
+    )
+}
+
+fun sendDigmathonProductKey(productKey: String?, cefBrowser: CefBrowser) {
+    serializeAndExecuteWindowPostMessageJavaScript(
+        cefBrowser,
+        SetDigmathonProductKey(DigmathonProductKeyPayload(productKey))
+    )
 }
 
 

@@ -27,6 +27,8 @@
   window.isDigmaEngineRunning = ${isDigmaEngineRunning?string('true', 'false')};
   window.isDockerInstalled = ${isDockerInstalled?string('true', 'false')};
   window.isDockerComposeInstalled = ${isDockerComposeInstalled?string('true', 'false')};
+  window.isDigmathonModeEnabled = ${isDigmathonModeEnabled?string('true', 'false')};
+  window.productKey = "${productKey}";
 
   window.wizardFirstLaunch = ${wizardFirstLaunch?string('true', 'false')};
   window.wizardSkipInstallationStep = ${wizardSkipInstallationStep?string('true', 'false')};

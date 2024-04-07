@@ -21,8 +21,6 @@ enum class Flavor { Default, Micronaut, Quarkus, SpringBootMicrometer, OpenLiber
         the selected flavor is SpringBootMicrometer but it doesn't produce data. changing to
         INSTRUMENTATION_FLAVOR=Default works.
       * a test annotated with @MicronautTest does not produce test data
-
-
  */
 
 interface InstrumentationFlavor {
@@ -84,6 +82,16 @@ interface InstrumentationFlavor {
     }
 
 
+    /**
+     * the order in which accept method is invoked to select a flavor.
+     * it is necessary because in some cases more than one flavor may be applicable for a configuration.
+     * for example: both Quarkus and Default are applicable when running a quarkus app using intellij ApplicationConfiguration,
+     * but if it's a quarkus module we want the quarkus to be selected.
+     * so making quarkus higher order than default will select quarkus.
+     * there are not so many cases, the above is the first and currently the only one we know of.
+     * some flavors are the same higher order, but they should not accept the same configuration.
+     * DefaultInstrumentationFlavor should be the lowest order
+     */
     fun getOrder(): Int
 
     fun getPreferredUserFlavor(): Flavor

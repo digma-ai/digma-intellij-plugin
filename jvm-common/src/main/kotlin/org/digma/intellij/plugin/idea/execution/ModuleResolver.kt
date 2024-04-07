@@ -2,7 +2,7 @@ package org.digma.intellij.plugin.idea.execution
 
 import com.intellij.execution.CommonJavaRunConfigurationParameters
 import com.intellij.execution.configurations.ModuleBasedConfiguration
-import com.intellij.execution.configurations.RunConfigurationBase
+import com.intellij.execution.configurations.RunConfiguration
 import com.intellij.execution.configurations.SimpleJavaParameters
 import com.intellij.execution.configurations.SimpleProgramParameters
 import com.intellij.openapi.module.Module
@@ -16,7 +16,7 @@ import org.digma.intellij.plugin.common.runInReadAccessWithResult
 import java.util.function.Supplier
 
 open class ModuleResolver(
-    protected val configuration: RunConfigurationBase<*>,
+    protected val configuration: RunConfiguration,
     protected val params: SimpleProgramParameters
 ) {
 
@@ -70,7 +70,7 @@ open class ModuleResolver(
     }
 
 
-    open fun findByClassName(configuration: RunConfigurationBase<*>, params: SimpleProgramParameters): Module? {
+    open fun findByClassName(configuration: RunConfiguration, params: SimpleProgramParameters): Module? {
         val mainClassName = findMainClassName()
         return mainClassName?.let { className ->
 
@@ -97,7 +97,7 @@ open class ModuleResolver(
     }
 
 
-    open fun findByWorkingDirectory(configuration: RunConfigurationBase<*>, params: SimpleProgramParameters): Module? {
+    open fun findByWorkingDirectory(configuration: RunConfiguration, params: SimpleProgramParameters): Module? {
         val workingDirectory = params.workingDirectory
 
         return workingDirectory?.let { workDir ->

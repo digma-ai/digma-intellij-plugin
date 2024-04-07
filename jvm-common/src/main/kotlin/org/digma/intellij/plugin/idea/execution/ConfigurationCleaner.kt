@@ -1,9 +1,9 @@
 package org.digma.intellij.plugin.idea.execution
 
-import com.intellij.execution.configurations.RunConfigurationBase
+import com.intellij.execution.configurations.RunConfiguration
 
 open class ConfigurationCleaner(
-    protected val configuration: RunConfigurationBase<*>
+    protected val configuration: RunConfiguration
 ) {
     //for most configuration we add our properties and env in a way that is not persistent
     // so there is no need to clean.

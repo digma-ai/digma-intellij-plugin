@@ -1,6 +1,6 @@
 package org.digma.intellij.plugin.execution
 
-import com.intellij.execution.configurations.RunConfigurationBase
+import com.intellij.execution.configurations.RunConfiguration
 import com.intellij.execution.configurations.RunnerSettings
 import com.intellij.execution.configurations.SimpleProgramParameters
 import org.digma.intellij.plugin.buildsystem.BuildSystem
@@ -12,43 +12,35 @@ import org.digma.intellij.plugin.buildsystem.BuildSystem
 interface RunConfigurationInstrumentationHandler {
 
     /**
-     * used to sort handlers. we need it to find a handler that can help with extracting details from configuration.
-     * in which case order matters, gradle for example is first, then maven etc.
+     * this is the method used to attach an instrumentation handler to configuration
      */
-    fun getOrder(): Int
+    fun isApplicableFor(configuration: RunConfiguration): Boolean
 
     /**
-     * this method should not be used to find an instrumentation handler, it should only  be used in combination
-     * with more conditions. the reason is that there is no params and finding a module is not guaranteed.
-     * some instrumentation must have knowledge of the module, for example Quarkus+JavaTest
+     * updates the configuration with instrumentation parameters.
+     * returns the java tool options for reporting, or null, or error message.
      */
-    fun isApplicableFor(configuration: RunConfigurationBase<*>): Boolean
+    fun updateParameters(configuration: RunConfiguration, params: SimpleProgramParameters, runnerSettings: RunnerSettings?): String?
 
     /**
-     * this is the method used to attach an instrumentation handler to configuration. it has all the objects necessary to resolve
-     * parameters and the module
+     * returns a description for logging
      */
-    fun isApplicableFor(configuration: RunConfigurationBase<*>, params: SimpleProgramParameters): Boolean
-
-    fun updateParameters(configuration: RunConfigurationBase<*>, params: SimpleProgramParameters, runnerSettings: RunnerSettings?)
-    fun getConfigurationDescription(configuration: RunConfigurationBase<*>): String
-    fun getConfigurationType(configuration: RunConfigurationBase<*>, params: SimpleProgramParameters): RunConfigurationType
-    fun shouldCleanConfigurationAfterStart(configuration: RunConfigurationBase<*>): Boolean
-    fun cleanConfigurationAfterStart(configuration: RunConfigurationBase<*>)
+    fun getConfigurationDescription(configuration: RunConfiguration, params: SimpleProgramParameters): String
 
     /**
-     * this method should only be used in combination with order, or to find any instrumentation handler that
-     * can handle the type. used to find a configuration handler that can help
-     * extract details from the configuration for reporting.
-     * do not use for attaching instrumentation handler to configuration.
+     * returns a configuration type. this is an internal type that we use for logging only
      */
-    fun isHandlingType(configuration: RunConfigurationBase<*>): Boolean
+    fun getConfigurationType(configuration: RunConfiguration): RunConfigurationType
+
+    fun shouldCleanConfigurationAfterStart(configuration: RunConfiguration): Boolean
+
+    fun cleanConfigurationAfterStart(configuration: RunConfiguration)
 
     /**
      * this method is relevant only for gradle and maven, others will return empty set.
      */
-    fun getTaskNames(configuration: RunConfigurationBase<*>): Set<String>
+    fun getTaskNames(configuration: RunConfiguration): Set<String>
 
-    fun getBuildSystem(configuration: RunConfigurationBase<*>): BuildSystem
+    fun getBuildSystem(configuration: RunConfiguration): BuildSystem
 
 }

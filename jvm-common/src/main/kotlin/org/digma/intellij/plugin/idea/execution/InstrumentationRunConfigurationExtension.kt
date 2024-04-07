@@ -3,8 +3,10 @@ package org.digma.intellij.plugin.idea.execution
 import com.intellij.execution.Executor
 import com.intellij.execution.RunConfigurationExtension
 import com.intellij.execution.configurations.JavaParameters
+import com.intellij.execution.configurations.RunConfiguration
 import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.execution.configurations.RunnerSettings
+import com.intellij.execution.configurations.SimpleProgramParameters
 import com.intellij.execution.process.ProcessEvent
 import com.intellij.execution.process.ProcessHandler
 import com.intellij.execution.process.ProcessListener
@@ -37,6 +39,10 @@ class InstrumentationRunConfigurationExtension : RunConfigurationExtension() {
         return true
     }
 
+    private fun getHandlerForConfiguration(configuration: RunConfiguration): RunConfigurationInstrumentationHandler? {
+        return RunConfigurationHandlersHolder.runConfigurationHandlers.find { it.isApplicableFor(configuration) }
+    }
+
     override fun <T : RunConfigurationBase<*>?> updateJavaParameters(
         configuration: T & Any,
         params: JavaParameters,
@@ -52,57 +58,79 @@ class InstrumentationRunConfigurationExtension : RunConfigurationExtension() {
 
             if (isObservabilityEnabled() && isConnectedToBackend(configuration.project)) {
 
-                val runConfigurationHandler = getHandlerForConfiguration(configuration, params)
+                val runConfigurationHandler = getHandlerForConfiguration(configuration)
 
                 if (runConfigurationHandler == null) {
-                    reportUnhandledConfiguration(configuration, params)
+                    reportUnknownConfigurationType(configuration)
                 } else {
-
-                    val runConfigDescription = runConfigurationHandler.getConfigurationDescription(configuration)
-                    val runConfigurationType = runConfigurationHandler.getConfigurationType(configuration, params)
-                    ActivityMonitor.getInstance(configuration.project)
-                        .reportRunConfig(
-                            runConfigurationType.name,
-                            runConfigDescription,
-                            isObservabilityEnabled(),
-                            isConnectedToBackend(configuration.project)
-                        )
-
-                    runConfigurationHandler.updateParameters(configuration, params, runnerSettings)
+                    val javaToolOptions = runConfigurationHandler.updateParameters(configuration, params, runnerSettings)
+                    if (javaToolOptions != null) {
+                        reportRunConfig(runConfigurationHandler, javaToolOptions, configuration, params)
+                    } else {
+                        reportUnhandledConfiguration(runConfigurationHandler, configuration, params)
+                    }
                 }
             }
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("InstrumentationRunConfigurationExtension.updateJavaParameters", e)
+            ErrorReporter.getInstance().reportError("${this::class.java.simpleName}.updateJavaParameters", e)
         }
     }
 
 
-    private fun getHandlerForConfiguration(configuration: RunConfigurationBase<*>, params: JavaParameters): RunConfigurationInstrumentationHandler? {
-        return RunConfigurationHandlersHolder.runConfigurationHandlers.find { it.isApplicableFor(configuration, params) }
-    }
-
-
-    private fun reportUnhandledConfiguration(configuration: RunConfigurationBase<*>, params: JavaParameters) {
-
-        //this should only be used to find a handler that can handle this configuration and help
-        // extract details from the configuration for reporting an unhandled configuration
-        fun getHandlerForConfigurationTypeSorted(configuration: RunConfigurationBase<*>): RunConfigurationInstrumentationHandler? {
-            return RunConfigurationHandlersHolder.sortedByOrder()
-                .find { it.isHandlingType(configuration) }
-        }
-
-        val handler = getHandlerForConfigurationTypeSorted(configuration)
-
-        if (handler == null) {
+    private fun reportRunConfig(
+        runConfigurationHandler: RunConfigurationInstrumentationHandler,
+        javaToolOptions: String,
+        configuration: RunConfiguration,
+        params: SimpleProgramParameters
+    ) {
+        try {
+            val runConfigDescription = runConfigurationHandler.getConfigurationDescription(configuration, params)
+            val runConfigurationType = runConfigurationHandler.getConfigurationType(configuration)
             ActivityMonitor.getInstance(configuration.project)
-                .reportUnknownConfiguration(configuration.javaClass.name, configuration.type.displayName)
-        } else {
-            val desc = handler.getConfigurationDescription(configuration)
+                .reportRunConfig(
+                    runConfigurationType.name,
+                    runConfigDescription,
+                    javaToolOptions,
+                    isObservabilityEnabled(),
+                    isConnectedToBackend(configuration.project)
+                )
+
+
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError("${this::class.java.simpleName}.reportRunConfig", e)
+        }
+    }
+
+
+    private fun reportUnknownConfigurationType(configuration: RunConfiguration) {
+        try {
+            ActivityMonitor.getInstance(configuration.project)
+                .reportUnknownConfigurationType(configuration.javaClass.name, configuration.type.id, configuration.type.displayName)
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError("${this::class.java.simpleName}.reportUnknownConfigurationType", e)
+        }
+    }
+
+
+    private fun reportUnhandledConfiguration(
+        handler: RunConfigurationInstrumentationHandler,
+        configuration: RunConfiguration,
+        params: SimpleProgramParameters
+    ) {
+        try {
+            val desc = handler.getConfigurationDescription(configuration, params)
             val taskNames = handler.getTaskNames(configuration).toMutableSet()
-            taskNames.removeAll(KNOWN_IRRELEVANT_TASKS)
+            taskNames.removeAll { task ->
+                //gradle tasks may start with ':'
+                val toRemoveWithoutColon = if (task.startsWith(":")) task.substring(1) else task
+                KNOWN_IRRELEVANT_TASKS.contains(toRemoveWithoutColon) ||
+                        KNOWN_IRRELEVANT_TASKS.any { task.endsWith(it) }
+            }
             val buildSystem = handler.getBuildSystem(configuration)
             ActivityMonitor.getInstance(configuration.project)
                 .reportUnhandledConfiguration(desc, buildSystem.name, taskNames, configuration.javaClass.name, configuration.type.displayName)
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError("${this::class.java.simpleName}.reportUnhandledConfiguration", e)
         }
     }
 
@@ -121,6 +149,7 @@ class InstrumentationRunConfigurationExtension : RunConfigurationExtension() {
         }
         return console
     }
+
 
     override fun attachToProcess(
         configuration: RunConfigurationBase<*>,
@@ -147,7 +176,7 @@ class InstrumentationRunConfigurationExtension : RunConfigurationExtension() {
                 })
             }
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("OtelRunConfigurationExtension.attachToProcess", e)
+            ErrorReporter.getInstance().reportError("${this::class.java.simpleName}.attachToProcess", e)
         }
     }
 

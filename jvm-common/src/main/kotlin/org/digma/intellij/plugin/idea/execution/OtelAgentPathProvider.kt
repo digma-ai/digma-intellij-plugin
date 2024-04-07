@@ -9,7 +9,7 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.util.SystemInfo
 import org.digma.intellij.plugin.common.FileUtils
 
-class OtelAgentPathProvider(configuration: RunConfigurationBase<*>) {
+class OtelAgentPathProvider(configuration: RunConfiguration) {
 
     val otelAgentPath: String?
     val digmaExtensionPath: String?
@@ -32,7 +32,7 @@ class OtelAgentPathProvider(configuration: RunConfigurationBase<*>) {
 
     }
 
-    private fun isWsl(configuration: RunConfigurationBase<*>): Boolean {
+    private fun isWsl(configuration: RunConfiguration): Boolean {
         if (!SystemInfo.isWindows)
             return false
 
@@ -46,18 +46,23 @@ class OtelAgentPathProvider(configuration: RunConfigurationBase<*>) {
     }
 
 
-    private fun isConfigurationTargetWsl(configuration: RunConfigurationBase<*>): Boolean {
-        val targets = TargetEnvironmentsManager.getInstance(configuration.project).targets.resolvedConfigs()
-        val targetName = (configuration.state as? RunConfigurationOptions)?.remoteTarget ?: return false
+    private fun isConfigurationTargetWsl(configuration: RunConfiguration): Boolean {
 
-        val target = targets.firstOrNull { it.displayName == targetName }
-        if (target == null)
-            return false
+        if (configuration is RunConfigurationBase<*>) {
 
-        if (target !is WslTargetEnvironmentConfiguration)
-            return false
+            val targets = TargetEnvironmentsManager.getInstance(configuration.project).targets.resolvedConfigs()
+            val targetName = (configuration.state as? RunConfigurationOptions)?.remoteTarget ?: return false
 
-        return true
+            val target = targets.firstOrNull { it.displayName == targetName }
+            if (target == null)
+                return false
+
+            if (target !is WslTargetEnvironmentConfiguration)
+                return false
+
+            return true
+        }
+        return false
     }
 
 

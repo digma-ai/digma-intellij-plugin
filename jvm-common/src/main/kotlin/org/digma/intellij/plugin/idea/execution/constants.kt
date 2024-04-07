@@ -57,6 +57,16 @@ val KNOWN_IRRELEVANT_TASKS = setOf(
     "quarkus:update",
 
     /*
+     * Maven spring boot
+     */
+    "stop",
+
+    /*
+     * Maven others
+     */
+    "build-image",
+
+    /*
      * Gradle -> build
      */
     "assemble",
@@ -111,5 +121,9 @@ val KNOWN_IRRELEVANT_TASKS = setOf(
     "compileKotlin",
     "compileTestJava",
     "compileTestKotlin",
+    "processResources",
+    "processTestResources",
+    "prepareKotlinBuildScriptModel",
+    "resolveMainClassName"
 
     )

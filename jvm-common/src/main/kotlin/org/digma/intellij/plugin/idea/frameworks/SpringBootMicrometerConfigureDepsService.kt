@@ -121,6 +121,15 @@ class SpringBootMicrometerConfigureDepsService(private val project: Project) : D
                 }
             }
         }
+
+
+        SettingsState.getInstance().addChangeListener({
+            @Suppress("UnstableApiUsage")
+            disposingScope().launch {
+                periodicAction()
+            }
+        }, this)
+
     }
 
     override fun dispose() {

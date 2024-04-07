@@ -11,6 +11,7 @@ import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.common.UserId
 import org.digma.intellij.plugin.common.objectToJson
+import org.digma.intellij.plugin.execution.DIGMA_INSTRUMENTATION_ERROR
 import org.digma.intellij.plugin.model.rest.AboutResult
 import org.digma.intellij.plugin.model.rest.user.UserUsageStatsResponse
 import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
@@ -130,7 +131,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
                 registerUserAction(it.toString(), tags)
             }
         } else {
-            capture(eventName, tags ?: mapOf())
+            capture(eventName, tags)
         }
     }
 
@@ -408,15 +409,33 @@ class ActivityMonitor(private val project: Project) : Disposable {
         )
     }
 
-    fun reportRunConfig(runConfigTypeName: String, description: String, observabilityEnabled: Boolean, connectedToBackend: Boolean) {
+    fun reportRunConfig(
+        runConfigTypeName: String,
+        description: String,
+        javaToolOptions: String,
+        observabilityEnabled: Boolean,
+        connectedToBackend: Boolean
+    ) {
+
+        val details = mutableMapOf(
+            "run.config.type" to runConfigTypeName,
+            "configuration description" to description,
+            "observability.enabled" to observabilityEnabled,
+            "backend.connected" to connectedToBackend,
+        )
+
+        //javaToolOptions may be an error message in case instrumentation failed
+        if (javaToolOptions.startsWith(DIGMA_INSTRUMENTATION_ERROR)) {
+            details["java tool options"] = ""
+            details["error message"] = javaToolOptions
+            details["error"] = "true"
+        } else {
+            details["java tool options"] = javaToolOptions
+        }
+
         capture(
-            "run config",
-            mapOf(
-                "run.config.type" to runConfigTypeName,
-                "description" to description,
-                "observability.enabled" to observabilityEnabled,
-                "backend.connected" to connectedToBackend,
-            )
+            "instrumented run configuration",
+            details
         )
     }
 
@@ -427,12 +446,13 @@ class ActivityMonitor(private val project: Project) : Disposable {
         )
     }
 
-    fun reportUnknownConfiguration(configurationClassName: String, configurationType: String) {
+    fun reportUnknownConfigurationType(configurationClassName: String, configurationTypeId: String, configurationTypeDisplayName: String) {
         capture(
-            "unknown-config ran",
+            "unknown configuration type run",
             mapOf(
                 "config.class-name" to configurationClassName,
-                "config.type" to configurationType,
+                "config.type.id" to configurationTypeId,
+                "config.type.displayName" to configurationTypeDisplayName
             )
         )
     }
@@ -461,7 +481,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
             return
 
         capture(
-            "unhandled-config ran",
+            "unhandled configuration ran",
             mapOf(
                 "config.build-system" to buildSystem,
                 "config.tasks" to taskNamesToReport,
@@ -472,8 +492,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
         )
     }
 
-    fun clearLastInsightsViewed()
-    {
+    fun clearLastInsightsViewed() {
         lastInsightsViewed.clear()
     }
 
@@ -499,8 +518,9 @@ class ActivityMonitor(private val project: Project) : Disposable {
             mapOf(
                 "insights" to insightsTypesToRegister.map { it.first },
                 "insights_v2" to insightsToReopenCount,
-                "maxReopenCount" to insightsToReopenCount.maxByOrNull  { it.reopenCount }?.reopenCount.toString()
-        ))
+                "maxReopenCount" to insightsToReopenCount.maxByOrNull { it.reopenCount }?.reopenCount.toString()
+            )
+        )
     }
 
     fun registerSubDashboardViewed(dashboardType: String) {
@@ -521,28 +541,28 @@ class ActivityMonitor(private val project: Project) : Disposable {
         registerUserAction("Clicked on $button")
     }
 
-    fun registerNavigationButtonClicked(navigable: Boolean) {
-        capture(
-            "button-clicked",
-            mapOf(
-                "panel" to MonitoredPanel.Scope.name,
-                "button" to "NavigateToCode",
-                "navigable" to navigable.toString()
-            )
-        )
-        registerUserAction("Clicked on navigation button")
-    }
+//    fun registerNavigationButtonClicked(navigable: Boolean) {
+//        capture(
+//            "button-clicked",
+//            mapOf(
+//                "panel" to MonitoredPanel.Scope.name,
+//                "button" to "NavigateToCode",
+//                "navigable" to navigable.toString()
+//            )
+//        )
+//        registerUserAction("Clicked on navigation button")
+//    }
 
-    fun registerSpanLinkClicked(insight: String) {
-        capture(
-            "span-link clicked",
-            mapOf(
-                "panel" to MonitoredPanel.Insights.name,
-                "insight" to insight
-            )
-        )
-        registerUserAction("Clicked on span link from insights")
-    }
+//    fun registerSpanLinkClicked(insight: String) {
+//        capture(
+//            "span-link clicked",
+//            mapOf(
+//                "panel" to MonitoredPanel.Insights.name,
+//                "insight" to insight
+//            )
+//        )
+//        registerUserAction("Clicked on span link from insights")
+//    }
 
 
     fun registerSpanLinkClicked(panel: MonitoredPanel) {
@@ -594,7 +614,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
         SessionMetadata.getInstance().put(getCurrentInstallStatusKey(), InstallStatus.Uninstalled)
 
         capture("plugin uninstalled")
-        if(PersistenceService.getInstance().hasEmail()){
+        if (PersistenceService.getInstance().hasEmail()) {
             capture(
                 "registered user uninstalled", mapOf(
                     "email" to getEmailForEvent(),
@@ -619,7 +639,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
         SessionMetadata.getInstance().put(getCurrentInstallStatusKey(), InstallStatus.Disabled)
 
         capture("plugin disabled")
-        if(PersistenceService.getInstance().hasEmail()){
+        if (PersistenceService.getInstance().hasEmail()) {
             capture(
                 "registered user disabled", mapOf(
                     "email" to getEmailForEvent(),
@@ -735,11 +755,11 @@ class ActivityMonitor(private val project: Project) : Disposable {
     }
 
 
-    fun registerPythonNavigationDiscoveryEvent(eventName: String, details: Map<String, Any> = mapOf()) {
-        val enrichedDetails = details.toMutableMap()
-        enrichedDetails["type"] = "python"
-        registerNavigationDiscoveryEvent(eventName, enrichedDetails)
-    }
+//    fun registerPythonNavigationDiscoveryEvent(eventName: String, details: Map<String, Any> = mapOf()) {
+//        val enrichedDetails = details.toMutableMap()
+//        enrichedDetails["type"] = "python"
+//        registerNavigationDiscoveryEvent(eventName, enrichedDetails)
+//    }
 
     fun registerJvmNavigationDiscoveryEvent(eventName: String, details: Map<String, Any> = mapOf()) {
         val enrichedDetails = details.toMutableMap()
@@ -754,7 +774,6 @@ class ActivityMonitor(private val project: Project) : Disposable {
             details
         )
     }
-
 
 
     fun hash(message: String): String {
@@ -946,7 +965,6 @@ class ActivityMonitor(private val project: Project) : Disposable {
         )
 
     }
-
 
 
     private fun getEmailForEvent(): String {

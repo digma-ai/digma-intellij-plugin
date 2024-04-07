@@ -10,8 +10,5 @@ class KotlinRunConfigurationInstrumentationHandler : BaseRunConfigurationInstrum
         return service<KotlinRunConfigurationInstrumentationService>()
     }
 
-    override fun getOrder(): Int {
-        return 50
-    }
 
 }

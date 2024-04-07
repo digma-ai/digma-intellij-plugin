@@ -1,7 +1,6 @@
 package org.digma.intellij.plugin.idea.execution.services
 
-import com.intellij.execution.configurations.RunConfigurationBase
-import com.intellij.execution.configurations.SimpleProgramParameters
+import com.intellij.execution.configurations.RunConfiguration
 import org.digma.intellij.plugin.execution.RunConfigurationType
 import org.digma.intellij.plugin.idea.psi.kotlin.isKotlinRunConfiguration
 
@@ -10,31 +9,15 @@ import org.digma.intellij.plugin.idea.psi.kotlin.isKotlinRunConfiguration
 @Suppress("LightServiceMigrationCode")
 class KotlinRunConfigurationInstrumentationService : BaseJvmRunConfigurationInstrumentationService() {
 
-    override fun isApplicableFor(configuration: RunConfigurationBase<*>): Boolean {
+    override fun isApplicableFor(configuration: RunConfiguration): Boolean {
         return isKotlinRunConfiguration(configuration)
     }
 
-    override fun isApplicableFor(configuration: RunConfigurationBase<*>, params: SimpleProgramParameters): Boolean {
-        return isKotlinRunConfiguration(configuration)
-    }
-
-    //todo: maybe necessary to implement kotlin test ?
-    override fun isTest(configuration: RunConfigurationBase<*>, params: SimpleProgramParameters?): Boolean {
-        return false
-    }
-
-    override fun getConfigurationType(configuration: RunConfigurationBase<*>, params: SimpleProgramParameters): RunConfigurationType {
-        if (isKotlinRunConfiguration(configuration)) {
-            if (isTest(configuration, params)) {
-                return RunConfigurationType.KotlinTest
-            } else {
-                return RunConfigurationType.KotlinRun
-            }
+    override fun getConfigurationType(configuration: RunConfiguration): RunConfigurationType {
+        return if (isKotlinRunConfiguration(configuration)) {
+            RunConfigurationType.Kotlin
+        } else {
+            RunConfigurationType.Unknown
         }
-        return RunConfigurationType.Unknown
-    }
-
-    override fun isHandlingType(configuration: RunConfigurationBase<*>): Boolean {
-        return isKotlinRunConfiguration(configuration)
     }
 }

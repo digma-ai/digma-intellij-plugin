@@ -1,11 +1,11 @@
 package org.digma.intellij.plugin.idea.execution
 
 import com.intellij.execution.configurations.ModuleRunConfiguration
-import com.intellij.execution.configurations.RunConfigurationBase
+import com.intellij.execution.configurations.RunConfiguration
 import com.intellij.execution.configurations.SimpleProgramParameters
 
 open class ServiceNameProvider(
-    protected val configuration: RunConfigurationBase<*>,
+    protected val configuration: RunConfiguration,
     protected val params: SimpleProgramParameters
 ) {
 

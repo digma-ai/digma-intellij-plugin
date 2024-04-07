@@ -1,13 +1,13 @@
 package org.digma.intellij.plugin.idea.gradle.execution
 
-import com.intellij.execution.configurations.RunConfigurationBase
+import com.intellij.execution.configurations.RunConfiguration
 import com.intellij.execution.configurations.SimpleProgramParameters
 import com.intellij.util.keyFMap.KeyFMap
 import org.digma.intellij.plugin.idea.execution.ModuleResolver
 import org.jetbrains.plugins.gradle.service.execution.GradleRunConfiguration
 import org.jetbrains.plugins.gradle.service.task.GradleTaskManager
 
-class GradleModuleResolver(configuration: RunConfigurationBase<*>, params: SimpleProgramParameters) : ModuleResolver(configuration, params) {
+class GradleModuleResolver(configuration: RunConfiguration, params: SimpleProgramParameters) : ModuleResolver(configuration, params) {
 
     override fun findMainClassName(): String? {
 

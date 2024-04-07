@@ -15,13 +15,6 @@ const val INSTRUMENTATION_FLAVOR_ENV_NAME = "INSTRUMENTATION_FLAVOR"
 
 enum class Flavor { Default, Micronaut, Quarkus, SpringBootMicrometer, OpenLiberty, JavaServer }
 
-/*
-    todo and known issues:
-      * when the project is setup to spring boot and micrometer and running test from intellij
-        the selected flavor is SpringBootMicrometer but it doesn't produce data. changing to
-        INSTRUMENTATION_FLAVOR=Default works.
-      * a test annotated with @MicronautTest does not produce test data
- */
 
 interface InstrumentationFlavor {
 

@@ -14,8 +14,8 @@ import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.troubleshooting.TroubleshootingPanel;
 import org.digma.intellij.plugin.ui.*;
-import org.digma.intellij.plugin.ui.common.*;
-import org.digma.intellij.plugin.ui.common.statuspanels.NoConnectionPanelKt;
+import org.digma.intellij.plugin.ui.common.MainContentPanel;
+import org.digma.intellij.plugin.ui.common.statuspanels.*;
 import org.digma.intellij.plugin.ui.notifications.AllNotificationsPanel;
 import org.digma.intellij.plugin.ui.panels.DisposablePanel;
 import org.jetbrains.annotations.NotNull;
@@ -69,9 +69,8 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
 
         //contentPanel contains the main views, insights,assets,errors and tests
         var mainContentPanel = new MainContentPanel(project);
-        var contentPanel = new UrgentMessagesPanel(project, mainContentPanel);
-        //mainToolWindowPanel contains the navigation and update panels and the contentPanel
-        var mainToolWindowPanel = createMainToolWindowPanel(project,contentPanel);
+        //mainToolWindowPanel contains the navigation and mainContentPanel
+        var mainToolWindowPanel = createMainToolWindowPanel(project, mainContentPanel);
         //mainCardsPanel contains the mainToolWindowPanel and no connection panel
         var mainCardsPanel = createCardsPanel(project, mainToolWindowPanel, AnalyticsService.getInstance(project));
         //mainContent contains the mainCardsPanel ,MainToolWindowCardsController switches between no connection and mainToolWindowPanel
@@ -117,6 +116,7 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
         cardsPanel.setBorder(JBUI.Borders.empty());
 
         var noConnectionPanel = NoConnectionPanelKt.createNoConnectionPanel(project,parentDisposable);
+        var updateBackendPanel = AggressiveUpdatePanelKt.createAggressiveUpdatePanel(project, parentDisposable, "main");
 
 
         cardsPanel.add(mainPanel, MainToolWindowCardsController.MainWindowCard.MAIN.name());
@@ -125,7 +125,10 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
         cardsPanel.add(noConnectionPanel, MainToolWindowCardsController.MainWindowCard.NO_CONNECTION.name());
         cardLayout.addLayoutComponent(noConnectionPanel, MainToolWindowCardsController.MainWindowCard.NO_CONNECTION.name());
 
-        //start at home
+        cardsPanel.add(updateBackendPanel, MainToolWindowCardsController.MainWindowCard.UPDATE_MODE.name());
+        cardLayout.addLayoutComponent(updateBackendPanel, MainToolWindowCardsController.MainWindowCard.UPDATE_MODE.name());
+
+        //start at MAIN
         cardLayout.show(cardsPanel, MainToolWindowCardsController.MainWindowCard.MAIN.name());
 
         return cardsPanel;

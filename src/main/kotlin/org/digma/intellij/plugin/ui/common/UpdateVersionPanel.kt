@@ -1,41 +1,25 @@
 package org.digma.intellij.plugin.ui.common
 
-import com.intellij.codeInsight.hint.HintManager
-import com.intellij.ide.BrowserUtil
-import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.observable.properties.AtomicProperty
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
 import com.intellij.ui.JBColor
-import com.intellij.ui.awt.RelativePoint
 import com.intellij.util.ui.JBUI
-import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
 import org.digma.intellij.plugin.posthog.ActivityMonitor
-import org.digma.intellij.plugin.service.EditorService
-import org.digma.intellij.plugin.ui.common.Links.DIGMA_DOCKER_APP_URL
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
+import org.digma.intellij.plugin.updates.AggressiveUpdateService
 import org.digma.intellij.plugin.updates.UpdateState
 import org.digma.intellij.plugin.updates.UpdatesService
-import org.digma.intellij.plugin.updates.UrgentMessagesService
-import java.awt.event.MouseAdapter
-import java.awt.event.MouseEvent
 import javax.swing.BorderFactory
 import javax.swing.Box
 import javax.swing.BoxLayout
 import javax.swing.Icon
-import javax.swing.JButton
 import javax.swing.JLabel
 import javax.swing.JPanel
-import javax.swing.SwingConstants
 
 
-const val UPDATE_GUIDE_DOCKER_COMPOSE_PATH = "/guides/upgrade_docker_compose.md"
-const val UPDATE_GUIDE_DOCKER_COMPOSE_NAME = "upgrade_docker_compose.md"
-const val UPDATE_GUIDE_HELM_PATH = "/guides/upgrade_helm.md"
-const val UPDATE_GUIDE_HELM_NAME = "upgrade_helm.md"
 
 class UpdateVersionPanel(
     val project: Project,
@@ -61,11 +45,13 @@ class UpdateVersionPanel(
     }
 
     private fun changeState() {
+        //don't show if in update mode. will maybe show the next time
+        if (AggressiveUpdateService.getInstance().isInUpdateMode()) {
+            return
+        }
+
         updateTextProperty.set(buildText(updateState))
         isVisible = updateState.shouldUpdateAny()
-        if (isVisible) {
-            UrgentMessagesService.getInstance(project).checkUrgentBackendUpdate()
-        }
         Log.log(logger::debug,"state changed , isVisible={}, text={}",isVisible,updateTextProperty.get())
     }
 
@@ -119,36 +105,10 @@ class UpdateVersionPanel(
                 )
             )
 
+
             // the update action itself
             if (updateState.shouldUpdateBackend) {
-                when (updateState.backendDeploymentType) {
-                    BackendDeploymentType.Helm -> {
-                        EditorService.getInstance(project).openClasspathResourceReadOnly(UPDATE_GUIDE_HELM_NAME,UPDATE_GUIDE_HELM_PATH)
-                    }
-
-                    BackendDeploymentType.DockerCompose -> {
-                        if (service<DockerService>().isEngineInstalled()) {
-                            val upgradePopupLabel = JLabel(asHtml("<p>" +
-                                    "<b>The Digma local engine is being updated</b>" +
-                                    "</p><p>This can take a few minutes in which Digma may be offline</p>"))
-                            upgradePopupLabel.border = JBUI.Borders.empty(3)
-                            HintManager.getInstance().showHint(upgradePopupLabel, RelativePoint.getNorthWestOf(updateButton), HintManager.HIDE_BY_ESCAPE, 3000)
-                            service<DockerService>().upgradeEngine(project)
-                        }
-                        else{
-                            EditorService.getInstance(project).openClasspathResourceReadOnly(UPDATE_GUIDE_DOCKER_COMPOSE_NAME,UPDATE_GUIDE_DOCKER_COMPOSE_PATH)
-                        }
-                    }
-
-                    BackendDeploymentType.DockerExtension -> {
-                        BrowserUtil.browse(DIGMA_DOCKER_APP_URL, project)
-                    }
-
-                    else -> {
-                        // default fallback to Docker Extension
-                        BrowserUtil.browse(DIGMA_DOCKER_APP_URL, project)
-                    }
-                }
+                UpdateBackendAction().updateBackend(project, updateState.backendDeploymentType, updateButton)
             } else if (updateState.shouldUpdatePlugin) {
                 ShowSettingsUtil.getInstance().showSettingsDialog(project, "Plugins")
             } else {
@@ -184,54 +144,3 @@ class UpdateVersionPanel(
 
 }
 
-class UpdateActionButton : JButton() {
-
-    companion object {
-        val bg = Laf.Colors.BUTTON_BACKGROUND
-    }
-
-
-    init {
-        text = "Update"
-        boldFonts(this)
-        isContentAreaFilled = false
-        horizontalAlignment = SwingConstants.CENTER
-        background = bg
-        isOpaque = true
-        border = JBUI.Borders.empty(2)
-        margin = JBUI.emptyInsets()
-
-        addMouseListener(object : MouseAdapter() {
-            override fun mouseEntered(e: MouseEvent?) {
-                if (!isEnabled) return
-                border = JBUI.Borders.customLine(JBColor.GRAY, 2)
-            }
-
-            override fun mouseExited(e: MouseEvent?) {
-                border = JBUI.Borders.empty(2)
-            }
-
-            override fun mousePressed(e: MouseEvent?) {
-                if (!isEnabled) return
-                background = JBColor.BLUE
-            }
-
-            override fun mouseReleased(e: MouseEvent?) {
-                if (!isEnabled) return
-                background = bg
-            }
-        })
-
-    }
-
-    override fun setEnabled(b: Boolean) {
-        super.setEnabled(b)
-        if (b) {
-            background = bg
-            isBorderPainted = true
-        } else {
-            background = JBColor.LIGHT_GRAY
-            isBorderPainted = false
-        }
-    }
-}

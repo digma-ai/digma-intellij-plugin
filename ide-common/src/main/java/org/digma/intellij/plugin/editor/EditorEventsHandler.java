@@ -13,7 +13,6 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.*;
 import org.digma.intellij.plugin.psi.*;
-import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
 import org.jetbrains.annotations.NotNull;
 
 import static org.digma.intellij.plugin.common.AlarmUtilsKt.addRequestWithErrorReporting;
@@ -212,8 +211,6 @@ public class EditorEventsHandler implements FileEditorManagerListener {
                             Log.log(LOGGER::trace, "Found relevant psi file for :{}", newFile);
                             caretListener.maybeAddCaretListener(selectedTextEditor);
                             documentChangeListener.maybeAddDocumentListener(selectedTextEditor);
-
-                            MainToolWindowCardsController.getInstance(project).showMainPanel();
 
                             int offset = selectedTextEditor.getCaretModel().getOffset();
 

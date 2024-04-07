@@ -15,6 +15,7 @@ import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import org.digma.intellij.plugin.ui.common.Laf
+import org.digma.intellij.plugin.ui.list.listBackground
 import java.awt.BorderLayout
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
@@ -30,10 +31,12 @@ fun createNoConnectionPanel(project: Project, parentDisposable: Disposable):JPan
     val mainPanel = JPanel(GridBagLayout())
     mainPanel.isOpaque = false
     mainPanel.border = empty()
+    mainPanel.background = listBackground()
 
     val htmlText = getNoConnectionMessageHtml(settingsState.apiUrl)
     val textPane = createTextPaneWithHtml(htmlText)
     val messagePanel = createCommonEmptyStatePanelWIthIconAndTextPane(getNoConnectionIcon(),textPane)
+    messagePanel.background = listBackground()
 
     settingsState.addChangeListener( {
         EDT.ensureEDT{
@@ -66,6 +69,7 @@ fun createNoConnectionPanel(project: Project, parentDisposable: Disposable):JPan
 
     constraints.gridy = 4
     val buttonsPanel = JPanel(BorderLayout(20,10))
+    buttonsPanel.background = listBackground()
     val refreshLink = ActionLink("Refresh"){
         ActivityMonitor.getInstance(project).registerButtonClicked(MonitoredPanel.NoConnection, "refresh")
         AnalyticsService.getInstance(project).environment.refreshNowOnBackground()

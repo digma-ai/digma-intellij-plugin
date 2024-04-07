@@ -21,7 +21,7 @@ class ShowTroubleshootingAction(
         try {
             Log.log(AppNotificationCenter.logger::info, "in ShowTroubleshootingAction, action clicked")
 
-            ActivityMonitor.getInstance(project).registerCustomEvent(
+            ActivityMonitor.getInstance(project).registerUserAction(
                 "troubleshooting link clicked",
                 mapOf(
                     "origin" to notificationName

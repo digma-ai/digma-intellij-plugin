@@ -7,22 +7,22 @@ import com.intellij.openapi.wm.IdeFocusManager
 
 fun findActiveProject(): Project? {
 
-    //best effort to find a project for the notification
+    //best effort to find aa active project
 
     var project = ProjectUtil.getActiveProject()
-    if (project == null || project.isDisposed) {
+    if (project == null || !isProjectValid(project)) {
         project = IdeFocusManager.getGlobalInstance().lastFocusedFrame?.project
     }
 
-    if (project == null || project.isDisposed) {
+    if (project == null || !isProjectValid(project)) {
         project = ProjectManager.getInstance().openProjects.firstOrNull { p -> !p.isDisposed }
     }
 
-    return project
+    return project?.takeIf { isProjectValid(project) }
 
 }
 
 
 fun isProjectValid(project: Project): Boolean {
-    return !project.isDisposed && !project.isDefault
+    return !project.isDisposed && !project.isDefault && project.isOpen
 }

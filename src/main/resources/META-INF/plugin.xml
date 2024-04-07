@@ -39,6 +39,8 @@
                     factoryClass="org.digma.intellij.plugin.ui.recentactivity.RecentActivityToolWindowFactory"/>
 
 
+        <applicationService serviceImplementation="org.digma.intellij.plugin.errorreporting.ErrorReporter"/>
+
         <projectService serviceImplementation="org.digma.intellij.plugin.jaegerui.JaegerUIService"/>
         <fileEditorProvider implementation="org.digma.intellij.plugin.jaegerui.JaegerUIFileEditorProvider"/>
         <fileEditorProvider implementation="org.digma.intellij.plugin.documentation.DocumentationFileEditorProvider"/>
@@ -124,6 +126,12 @@
 
         <errorHandler implementation="org.digma.intellij.plugin.ui.reports.DigmaErrorReportSubmitter"/>
 
+        <postStartupActivity
+                implementation="org.digma.intellij.plugin.updates.AggressiveUpdateServiceStarter"/>
+        <postStartupActivity
+                implementation="org.digma.intellij.plugin.ui.updates.AggressiveUpdateProjectStartup"/>
+
+
     </extensions>
 
 
@@ -149,6 +157,11 @@
                 topic="org.digma.intellij.plugin.analytics.EnvironmentChanged"/>
     </projectListeners>
 
+    <applicationListeners>
+        <listener
+                class="org.digma.intellij.plugin.ui.notificationcenter.AppNotificationCenter$AggressiveUpdateStateChangedEventListener"
+                topic="org.digma.intellij.plugin.updates.AggressiveUpdateStateChangedEvent"/>
+    </applicationListeners>
 
 
 </idea-plugin>

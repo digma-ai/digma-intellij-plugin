@@ -2,7 +2,6 @@ package org.digma.intellij.plugin.updates
 
 import com.intellij.collaboration.async.disposingScope
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
@@ -14,17 +13,16 @@ import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.common.EDT
+import org.digma.intellij.plugin.common.buildVersionRequest
+import org.digma.intellij.plugin.common.getPluginVersion
 import org.digma.intellij.plugin.common.newerThan
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
 import org.digma.intellij.plugin.model.rest.version.BackendVersionResponse
 import org.digma.intellij.plugin.model.rest.version.PluginVersionResponse
-import org.digma.intellij.plugin.model.rest.version.VersionRequest
 import org.digma.intellij.plugin.model.rest.version.VersionResponse
-import org.digma.intellij.plugin.semanticversion.SemanticVersionUtil
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
-import org.jetbrains.annotations.NotNull
 import org.jetbrains.annotations.VisibleForTesting
 import java.time.LocalDateTime
 import java.util.Timer
@@ -217,32 +215,6 @@ class UpdatesService(private val project: Project) : Disposable {
         return latestCompVersion.newerThan(currCompVersion)
     }
 
-    @NotNull
-    private fun buildVersionRequest(): VersionRequest {
-        return VersionRequest(
-            getPluginVersion(), getPlatformType(), getPlatformVersion()
-        )
-    }
-
-    // returns one of:
-    // IC - Intellij Community
-    // RD - Rider
-    @NotNull
-    fun getPlatformType(): String {
-        val appInfo = ApplicationInfo.getInstance()
-        return appInfo.build.productCode
-    }
-
-    @NotNull
-    fun getPlatformVersion(): String {
-        val appInfo = ApplicationInfo.getInstance()
-        return appInfo.fullVersion
-    }
-
-    // when plugin is not installed it will return 0.0.0
-    private fun getPluginVersion(): String {
-        return SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("0.0.0")
-    }
 }
 
 data class PluginVersion(val currentVersion: String) {

@@ -40,6 +40,12 @@ class RecentActivityService(val project: Project) : Disposable {
 
     private val appInitialized: AtomicBoolean = AtomicBoolean(false)
 
+    companion object {
+        fun getInstance(project: Project): RecentActivityService {
+            return project.service<RecentActivityService>()
+        }
+    }
+
     override fun dispose() {
         //nothing to do , used as parent disposable
     }

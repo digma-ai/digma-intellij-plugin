@@ -28,10 +28,8 @@ class MailtoResourceHandler : CefResourceHandlerAdapter() {
     override fun processRequest(request: CefRequest?, callback: CefCallback?): Boolean {
         try {
             if (request != null) {
-                if (request.url?.startsWith("mailto:") == true) {
-                    if (Desktop.isDesktopSupported()) {
-                        Desktop.getDesktop().mail(URI(request.url))
-                    }
+                if (Desktop.isDesktopSupported()) {
+                    Desktop.getDesktop().mail(URI(request.url))
                 }
             }
         } catch (e: Exception) {

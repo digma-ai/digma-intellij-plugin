@@ -22,6 +22,7 @@ import org.digma.intellij.plugin.analytics.InsightStatsChangedEvent
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.digmathon.DigmathonActivationEvent
 import org.digma.intellij.plugin.digmathon.DigmathonProductKeyStateChangedEvent
+import org.digma.intellij.plugin.digmathon.UserFinishedDigmathonEvent
 import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
@@ -62,11 +63,19 @@ private constructor(
     private val insightStatsChangeParentDisposable = Disposer.newDisposable()
     private val digmathonActivatedParentDisposable = Disposer.newDisposable()
     private val productKeyAddedParentDisposable = Disposer.newDisposable()
+    private val userFinishedDigmathonParentDisposable = Disposer.newDisposable()
 
 
     init {
         val connectionEventAlarm = AlarmFactory.getInstance().create(Alarm.ThreadToUse.POOLED_THREAD, connectionEventAlarmParentDisposable)
 
+
+        ApplicationManager.getApplication().messageBus.connect(userFinishedDigmathonParentDisposable)
+            .subscribe(
+                UserFinishedDigmathonEvent.USER_FINISHED_DIGMATHON_TOPIC,
+                UserFinishedDigmathonEvent {
+                    sendUserFinishedDigmathon(jbCefBrowser.cefBrowser)
+                })
 
         ApplicationManager.getApplication().messageBus.connect(digmathonActivatedParentDisposable)
             .subscribe(DigmathonProductKeyStateChangedEvent.PRODUCT_KEY_STATE_CHANGED_TOPIC,
@@ -250,6 +259,7 @@ private constructor(
 
     override fun dispose() {
         try {
+            Disposer.dispose(userFinishedDigmathonParentDisposable)
             Disposer.dispose(productKeyAddedParentDisposable)
             Disposer.dispose(digmathonActivatedParentDisposable)
             Disposer.dispose(connectionEventAlarmParentDisposable)

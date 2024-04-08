@@ -90,4 +90,6 @@ internal data class PersistenceData(
     @OptionTag(converter = InstantConverter::class)
     var loadWarningAppearedTimestamp: Instant? = null,
 
+    var isFinishDigmathonGameForUser: Boolean = false
+
     )

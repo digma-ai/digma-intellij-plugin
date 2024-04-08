@@ -6,10 +6,12 @@ import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.NullNode
 import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
+import org.digma.intellij.plugin.digmathon.DigmathonService
 import org.digma.intellij.plugin.insights.AbstractInsightsMessageRouterHandler
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.insights.MarkInsightsAsReadScope
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.ui.recentactivity.RecentActivityService
 
 class InsightsMessageRouterHandler(project: Project) : AbstractInsightsMessageRouterHandler(project) {
 
@@ -81,6 +83,10 @@ class InsightsMessageRouterHandler(project: Project) : AbstractInsightsMessageRo
             }
             Log.log({ message: String? -> LOGGER.trace(message) }, project, "got insights types {}", insightTypeList)
             ActivityMonitor.getInstance(project).registerInsightsViewed(insightTypeList)
+            if (DigmathonService.getInstance().isUserActive()) {
+                DigmathonService.getInstance().addInsightsViewed(insightTypeList.map { it.first })
+                RecentActivityService.getInstance(project).setDigmathonProgressData(DigmathonService.getInstance().viewedInsights)
+            }
         }
     }
 

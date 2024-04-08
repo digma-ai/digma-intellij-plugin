@@ -8,6 +8,7 @@ import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.ConnectionTestResult
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.ExceptionUtils
+import org.digma.intellij.plugin.digmathon.DigmathonService
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
@@ -149,6 +150,10 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
                     service<AddEnvironmentsService>().addToCurrentRunConfig(project, it)
                     project.service<RecentActivityUpdater>().updateLatestActivities()
                 }
+            }
+
+            "RECENT_ACTIVITY/GET_DIGMATHON_PROGRESS_DATA" -> {
+                RecentActivityService.getInstance(project).setDigmathonProgressData(DigmathonService.getInstance().viewedInsights)
             }
 
             else -> return false

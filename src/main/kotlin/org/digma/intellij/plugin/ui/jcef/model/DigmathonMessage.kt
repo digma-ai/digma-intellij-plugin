@@ -26,3 +26,16 @@ data class SetDigmathonProductKey(
 data class DigmathonProductKeyPayload(
     val productKey: String?,
 )
+
+data class SetUserFinishedDigmathon(
+    val payload: UserFinishedDigmathonPayload,
+) {
+    val type = JCEFGlobalConstants.REQUEST_MESSAGE_TYPE
+    val action = JCEFGlobalConstants.GLOBAL_SET_IS_DIGMATHON_GAME_FINISHED
+}
+
+data class UserFinishedDigmathonPayload(
+    @get:JsonProperty("isDigmathonGameFinished")
+    @param:JsonProperty("isDigmathonGameFinished")
+    val isDigmathonGameFinished: Boolean,
+)

@@ -38,6 +38,7 @@ import org.digma.intellij.plugin.ui.jcef.model.SetScopeMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetScopeMessagePayload
 import org.digma.intellij.plugin.ui.jcef.model.SetStateMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetUserEmailMessage
+import org.digma.intellij.plugin.ui.jcef.model.SetUserFinishedDigmathon
 import org.digma.intellij.plugin.ui.jcef.model.UICodeFontRequest
 import org.digma.intellij.plugin.ui.jcef.model.UIFontRequest
 import org.digma.intellij.plugin.ui.jcef.model.UIThemeRequest
@@ -45,6 +46,7 @@ import org.digma.intellij.plugin.ui.jcef.model.UiCodeFontPayload
 import org.digma.intellij.plugin.ui.jcef.model.UiFontPayload
 import org.digma.intellij.plugin.ui.jcef.model.UiThemePayload
 import org.digma.intellij.plugin.ui.jcef.model.UserEmailPayload
+import org.digma.intellij.plugin.ui.jcef.model.UserFinishedDigmathonPayload
 import org.digma.intellij.plugin.ui.navigation.model.SetViewMessage
 import org.digma.intellij.plugin.ui.navigation.model.SetViewMessagePayload
 import org.digma.intellij.plugin.ui.settings.Theme
@@ -90,6 +92,13 @@ fun sendDigmathonProductKey(productKey: String?, cefBrowser: CefBrowser) {
     serializeAndExecuteWindowPostMessageJavaScript(
         cefBrowser,
         SetDigmathonProductKey(DigmathonProductKeyPayload(productKey))
+    )
+}
+
+fun sendUserFinishedDigmathon(cefBrowser: CefBrowser) {
+    serializeAndExecuteWindowPostMessageJavaScript(
+        cefBrowser,
+        SetUserFinishedDigmathon(UserFinishedDigmathonPayload(true))
     )
 }
 

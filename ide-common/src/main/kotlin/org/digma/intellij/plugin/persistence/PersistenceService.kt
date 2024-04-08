@@ -330,6 +330,12 @@ class PersistenceService {
         return state.loadWarningAppearedTimestamp != null
     }
 
+    fun setFinishDigmathonGameForUser() {
+        state.isFinishDigmathonGameForUser = true
+    }
 
+    fun isFinishDigmathonGameForUser(): Boolean {
+        return state.isFinishDigmathonGameForUser
+    }
 
 }

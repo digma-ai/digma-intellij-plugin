@@ -1,15 +1,19 @@
 package org.digma.intellij.plugin.digmathon
 
+import com.google.common.hash.Hashing
 import com.intellij.credentialStore.CredentialAttributes
 import com.intellij.credentialStore.generateServiceName
 import com.intellij.ide.passwordSafe.PasswordSafe
 import org.digma.intellij.plugin.common.UserId
+import java.nio.charset.StandardCharsets
 
 
 private const val MY_SERVICE = "org.digma.digmathon.productKey"
 private const val MY_KEY = "product-key"
 
 class DigmathonProductKey {
+
+    private val myHash = "b9fe040958b98f68533511125bc104435bfefd4293b328060992767d51333321"
 
     @Throws(InvalidProductKeyException::class)
     fun validateAndSave(productKey: String) {
@@ -31,12 +35,12 @@ class DigmathonProductKey {
 
     @Throws(InvalidProductKeyException::class)
     private fun validate(productKey: String) {
-        //todo:
-        //validate
-        //send posthog event
-        //throw InvalidProductKeyException
         if (productKey.isBlank()) {
-            throw InvalidProductKeyException("product key is empty")
+            throw InvalidProductKeyException(productKey, "product key is empty")
+        }
+        val hash = Hashing.sha256().hashString(productKey, StandardCharsets.UTF_8).toString()
+        if (hash != myHash) {
+            throw InvalidProductKeyException(productKey, "product key invalid")
         }
     }
 
@@ -49,10 +53,6 @@ class DigmathonProductKey {
         )
     }
 
-    @Throws(InvalidProductKeyException::class)
-    fun exists(): Boolean {
-        return validateAndGet() != null
-    }
 
     fun clear() {
         val credentialAttributes = createCredentialAttributes()
@@ -61,4 +61,4 @@ class DigmathonProductKey {
 
 }
 
-class InvalidProductKeyException(message: String) : RuntimeException(message)
+class InvalidProductKeyException(val productKey: String, message: String) : RuntimeException(message)

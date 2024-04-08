@@ -15,6 +15,7 @@ import org.digma.intellij.plugin.common.allowSlowOperation
 import org.digma.intellij.plugin.common.findActiveProject
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -41,6 +42,11 @@ class DigmathonService : Disposable {
 
     private val isDigmathonActive = AtomicBoolean(digmathonInfo.get().isActive())
 
+    val viewedInsights = mutableSetOf<String>()
+
+    var isUserFinishedDigmathon = PersistenceService.getInstance().isFinishDigmathonGameForUser()
+
+
     companion object {
         @JvmStatic
         fun getInstance(): DigmathonService {
@@ -61,8 +67,8 @@ class DigmathonService : Disposable {
             DigmathonProductKey().clear()
             digmathonInfo.set(
                 DigmathonInfo(
-                    LocalDateTime.now().plusMinutes(1).atZone(ZoneId.systemDefault()),
-                    LocalDateTime.now().plusMinutes(3).atZone(ZoneId.systemDefault())
+                    LocalDateTime.now().plusMinutes(2).atZone(ZoneId.systemDefault()),
+                    LocalDateTime.now().plusMinutes(10).atZone(ZoneId.systemDefault())
                 )
             )
             isDigmathonActive.set(digmathonInfo.get().isActive())
@@ -77,8 +83,7 @@ class DigmathonService : Disposable {
             disposingScope().launch {
 
                 //let the project load and hopefully all jcef apps
-                //todo: temp, uncomment
-//                delay(1.minutes.inWholeMilliseconds)
+                delay(1.minutes.inWholeMilliseconds)
 
                 while (isActive) {
                     try {
@@ -105,6 +110,7 @@ class DigmathonService : Disposable {
         }
     }
 
+
     private fun start() {
         isDigmathonActive.set(true)
         fireStateChangedEvent()
@@ -120,6 +126,11 @@ class DigmathonService : Disposable {
         reportEvent("end")
     }
 
+
+    //used to decide if to keep sending digmathon progress to apps
+    fun isUserActive(): Boolean {
+        return digmathonInfo.get().isActive() && getProductKey() != null && !isUserFinishedDigmathon
+    }
 
     private fun fireStateChangedEvent() {
         ApplicationManager.getApplication().messageBus.syncPublisher(DigmathonActivationEvent.DIGMATHON_ACTIVATION_TOPIC)
@@ -138,7 +149,7 @@ class DigmathonService : Disposable {
                 reportEvent("set product key")
             }
         } catch (e: InvalidProductKeyException) {
-            reportEvent("product key invalid")
+            reportEvent("product key invalid", mapOf("productKey" to e.productKey))
             ErrorReporter.getInstance().reportError("${this::class.java.simpleName}.setProductKey", e)
         } catch (e: Throwable) {
             ErrorReporter.getInstance().reportError("${this::class.java.simpleName}.setProductKey", e)
@@ -159,7 +170,7 @@ class DigmathonService : Disposable {
                 DigmathonProductKey().validateAndGet()
             })
         } catch (e: InvalidProductKeyException) {
-            reportEvent("product key invalid")
+            reportEvent("product key invalid", mapOf("productKey" to e.productKey))
             ErrorReporter.getInstance().reportError("${this::class.java.simpleName}.setProductKey", e)
             null
         } catch (e: Throwable) {
@@ -181,8 +192,6 @@ class DigmathonService : Disposable {
         fun isEnded(): Boolean {
             return !isActive()
         }
-
-
     }
 
 
@@ -190,6 +199,25 @@ class DigmathonService : Disposable {
         findActiveProject()?.let {
             ActivityMonitor.getInstance(it).reportDigmathonEvent(eventType, details)
         }
+    }
+
+    fun addInsightsViewed(insightsTypesViewed: List<String>) {
+        if (digmathonInfo.get().isActive()) {
+            this.viewedInsights.addAll(insightsTypesViewed)
+        }
+    }
+
+    fun setFinishDigmathonGameForUser() {
+        PersistenceService.getInstance().setFinishDigmathonGameForUser()
+        isUserFinishedDigmathon = true
+        fireUserFinishedDigmathon()
+        reportEvent("user finished game")
+    }
+
+
+    private fun fireUserFinishedDigmathon() {
+        ApplicationManager.getApplication().messageBus.syncPublisher(UserFinishedDigmathonEvent.USER_FINISHED_DIGMATHON_TOPIC)
+            .userFinishedDigmathon()
     }
 
 }

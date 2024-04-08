@@ -18,4 +18,6 @@
       window.isMicrometerProject = ${isMicrometerProject?string('true', 'false')};
       window.environment = ${environment};
       window.isDigmathonModeEnabled = ${isDigmathonModeEnabled?string('true', 'false')};
+      window.isDigmathonGameFinished = ${isDigmathonGameFinished?string('true', 'false')};
       window.productKey = "${productKey}";
+      window.userId = "${userId}";

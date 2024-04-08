@@ -28,10 +28,12 @@ import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
+import org.digma.intellij.plugin.common.UserId
 import org.digma.intellij.plugin.common.createObjectMapper
 import org.digma.intellij.plugin.digmathon.DigmathonActivationEvent
 import org.digma.intellij.plugin.digmathon.DigmathonProductKeyStateChangedEvent
 import org.digma.intellij.plugin.digmathon.DigmathonService
+import org.digma.intellij.plugin.digmathon.UserFinishedDigmathonEvent
 import org.digma.intellij.plugin.docker.DigmaInstallationStatus
 import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
@@ -48,6 +50,8 @@ import org.digma.intellij.plugin.ui.jcef.DIGMATHON_ENABLED
 import org.digma.intellij.plugin.ui.jcef.DIGMATHON_PRODUCT_KEY
 import org.digma.intellij.plugin.ui.jcef.JBCefBrowserBuilderCreator
 import org.digma.intellij.plugin.ui.jcef.JCEFGlobalConstants
+import org.digma.intellij.plugin.ui.jcef.USER_FINISHED_DIGMATHON
+import org.digma.intellij.plugin.ui.jcef.USER_ID
 import org.digma.intellij.plugin.ui.jcef.jsonToObject
 import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest
 import org.digma.intellij.plugin.ui.jcef.model.SendTrackingEventRequest
@@ -56,6 +60,7 @@ import org.digma.intellij.plugin.ui.jcef.sendDigmathonState
 import org.digma.intellij.plugin.ui.jcef.sendRequestToChangeCodeFont
 import org.digma.intellij.plugin.ui.jcef.sendRequestToChangeFont
 import org.digma.intellij.plugin.ui.jcef.sendRequestToChangeUiTheme
+import org.digma.intellij.plugin.ui.jcef.sendUserFinishedDigmathon
 import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
 import org.digma.intellij.plugin.ui.jcef.updateDigmaEngineStatus
 import org.digma.intellij.plugin.ui.notificationcenter.AppNotificationCenter
@@ -130,7 +135,9 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
         IS_JAEGER_ENABLED to isJaegerButtonEnabled(),
         IS_WIZARD_SKIP_INSTALLATION_STEP to wizardSkipInstallationStep,
         DIGMATHON_ENABLED to DigmathonService.getInstance().getDigmathonState().isActive(),
-        DIGMATHON_PRODUCT_KEY to DigmathonService.getInstance().getProductKey().orEmpty()
+        DIGMATHON_PRODUCT_KEY to DigmathonService.getInstance().getProductKey().orEmpty(),
+        USER_ID to UserId.userId,
+        USER_FINISHED_DIGMATHON to DigmathonService.getInstance().isUserFinishedDigmathon
     )
 
 
@@ -544,6 +551,14 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                 }
             }
         })
+
+
+    ApplicationManager.getApplication().messageBus.connect(jbCefBrowser)
+        .subscribe(
+            UserFinishedDigmathonEvent.USER_FINISHED_DIGMATHON_TOPIC,
+            UserFinishedDigmathonEvent {
+                sendUserFinishedDigmathon(jbCefBrowser.cefBrowser)
+            })
 
 
     ApplicationManager.getApplication().messageBus.connect(jbCefBrowser)

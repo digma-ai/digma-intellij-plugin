@@ -24,9 +24,11 @@ import org.digma.intellij.plugin.ui.common.openJaegerFromRecentActivity
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
 import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
 import org.digma.intellij.plugin.ui.recentactivity.model.CloseLiveViewMessage
+import org.digma.intellij.plugin.ui.recentactivity.model.DigmathonProgressDataPayload
 import org.digma.intellij.plugin.ui.recentactivity.model.OpenRegistrationDialogMessage
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityEntrySpanForTracePayload
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityEntrySpanPayload
+import org.digma.intellij.plugin.ui.recentactivity.model.SetDigmathonProgressData
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.atomic.AtomicBoolean
@@ -83,6 +85,7 @@ class RecentActivityService(val project: Project) : Disposable {
             null
         }
     }
+
 
 
     fun processRecentActivityGoToSpanRequest(payload: RecentActivityEntrySpanPayload?) {
@@ -167,7 +170,17 @@ class RecentActivityService(val project: Project) : Disposable {
                 serializeAndExecuteWindowPostMessageJavaScript(it.jbCefBrowser.cefBrowser, message)
             }
         }
+    }
 
+
+    fun setDigmathonProgressData(insightsTypes: Set<String>) {
+
+        jCefComponent?.jbCefBrowser?.cefBrowser?.let {
+            serializeAndExecuteWindowPostMessageJavaScript(
+                it,
+                SetDigmathonProgressData(DigmathonProgressDataPayload(insightsTypes))
+            )
+        }
     }
 
 }

@@ -6,10 +6,10 @@ import org.cef.callback.CefCallback
 import org.cef.callback.CefSchemeHandlerFactory
 import org.cef.handler.CefResourceHandler
 import org.cef.handler.CefResourceHandlerAdapter
-import org.cef.misc.IntRef
-import org.cef.misc.StringRef
 import org.cef.network.CefRequest
-import org.cef.network.CefResponse
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import java.awt.Desktop
+import java.net.URI
 
 class MailtoSchemaHandlerFactory : CefSchemeHandlerFactory {
 
@@ -26,19 +26,18 @@ class MailtoSchemaHandlerFactory : CefSchemeHandlerFactory {
 class MailtoResourceHandler : CefResourceHandlerAdapter() {
 
     override fun processRequest(request: CefRequest?, callback: CefCallback?): Boolean {
+        try {
+            if (request != null) {
+                if (request.url?.startsWith("mailto:") == true) {
+                    if (Desktop.isDesktopSupported()) {
+                        Desktop.getDesktop().mail(URI(request.url))
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            ErrorReporter.getInstance().reportError("MailtoResourceHandler.processRequest", e)
+        }
         callback?.Continue()
-        return true
-    }
-
-    override fun getResponseHeaders(response: CefResponse?, responseLength: IntRef?, redirectUrl: StringRef?) {
-        super.getResponseHeaders(response, responseLength, redirectUrl)
-    }
-
-    override fun readResponse(dataOut: ByteArray?, bytesToRead: Int, bytesRead: IntRef?, callback: CefCallback?): Boolean {
-        return super.readResponse(dataOut, bytesToRead, bytesRead, callback)
-    }
-
-    override fun cancel() {
-        super.cancel()
+        return false
     }
 }

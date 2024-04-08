@@ -13,8 +13,6 @@ import com.intellij.util.messages.MessageBusConnection
 import org.cef.CefApp
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefMessageRouter
-import org.cef.callback.CefSchemeRegistrar
-import org.cef.handler.CefAppHandlerAdapter
 import org.cef.handler.CefDownloadHandler
 import org.cef.handler.CefLifeSpanHandlerAdapter
 import org.digma.intellij.plugin.analytics.AnalyticsService
@@ -51,19 +49,6 @@ private constructor(
     val schemeHandlerFactory: BaseSchemeHandlerFactory?,
     private val lifeSpanHandler: CefLifeSpanHandlerAdapter,
 ) : Disposable {
-
-
-    companion object {
-        init {
-            //this is supposed to be a static initialization. the problem is that not all
-            // our jcef apps use JCefComponent and that may cause issues.
-            CefApp.addAppHandler(object : CefAppHandlerAdapter(arrayOf()) {
-                override fun onRegisterCustomSchemes(registrar: CefSchemeRegistrar?) {
-                    registrar?.addCustomScheme("mailto", false, false, false, false, true, false, false)
-                }
-            })
-        }
-    }
 
 
     private val settingsChangeListener: SettingsChangeListener
@@ -327,7 +312,7 @@ private constructor(
                 cefMessageRouter.addHandler(it, true)
             }
 
-            jbCefClient.addRequestHandler(CommonRequestHandler(), jbCefBrowser.cefBrowser)
+//            jbCefClient.addRequestHandler(CommonRequestHandler(), jbCefBrowser.cefBrowser)
 
             jbCefClient.cefClient.addMessageRouter(cefMessageRouter)
 
@@ -339,7 +324,7 @@ private constructor(
                     //we currently don't need MailtoSchemaHandlerFactory. we register a custom schema,
                     // see above in companion object. MailtoSchemaHandlerFactory can be a replacement,
                     // but then we need to handle the mailto in the plugin
-                    //registerMailtoSchemeHandler(MailtoSchemaHandlerFactory())
+                    registerMailtoSchemeHandler(MailtoSchemaHandlerFactory())
                 }
             }
 

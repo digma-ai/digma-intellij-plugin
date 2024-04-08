@@ -38,9 +38,10 @@ class DigmathonProductKey {
         if (productKey.isBlank()) {
             throw InvalidProductKeyException(productKey, "product key is empty")
         }
-        val hash = Hashing.sha256().hashString(productKey, StandardCharsets.UTF_8).toString()
+        //the sha256 was produces for upper case so uppercase before validation
+        val hash = Hashing.sha256().hashString(productKey.uppercase(), StandardCharsets.UTF_8).toString()
         if (hash != myHash) {
-            throw InvalidProductKeyException(productKey, "product key invalid")
+            throw InvalidProductKeyException(productKey, "product key invalid,hash don't match")
         }
     }
 

@@ -28,7 +28,12 @@ import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
+import org.digma.intellij.plugin.common.UserId
 import org.digma.intellij.plugin.common.createObjectMapper
+import org.digma.intellij.plugin.digmathon.DigmathonActivationEvent
+import org.digma.intellij.plugin.digmathon.DigmathonProductKeyStateChangedEvent
+import org.digma.intellij.plugin.digmathon.DigmathonService
+import org.digma.intellij.plugin.digmathon.UserFinishedDigmathonEvent
 import org.digma.intellij.plugin.docker.DigmaInstallationStatus
 import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
@@ -41,14 +46,21 @@ import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import org.digma.intellij.plugin.ui.common.isJaegerButtonEnabled
 import org.digma.intellij.plugin.ui.common.updateObservabilityValue
+import org.digma.intellij.plugin.ui.jcef.DIGMATHON_ENABLED
+import org.digma.intellij.plugin.ui.jcef.DIGMATHON_PRODUCT_KEY
 import org.digma.intellij.plugin.ui.jcef.JBCefBrowserBuilderCreator
 import org.digma.intellij.plugin.ui.jcef.JCEFGlobalConstants
+import org.digma.intellij.plugin.ui.jcef.USER_FINISHED_DIGMATHON
+import org.digma.intellij.plugin.ui.jcef.USER_ID
 import org.digma.intellij.plugin.ui.jcef.jsonToObject
 import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest
 import org.digma.intellij.plugin.ui.jcef.model.SendTrackingEventRequest
+import org.digma.intellij.plugin.ui.jcef.sendDigmathonProductKey
+import org.digma.intellij.plugin.ui.jcef.sendDigmathonState
 import org.digma.intellij.plugin.ui.jcef.sendRequestToChangeCodeFont
 import org.digma.intellij.plugin.ui.jcef.sendRequestToChangeFont
 import org.digma.intellij.plugin.ui.jcef.sendRequestToChangeUiTheme
+import org.digma.intellij.plugin.ui.jcef.sendUserFinishedDigmathon
 import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
 import org.digma.intellij.plugin.ui.jcef.updateDigmaEngineStatus
 import org.digma.intellij.plugin.ui.notificationcenter.AppNotificationCenter
@@ -122,7 +134,12 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
         IS_WIZARD_FIRST_LAUNCH to PersistenceService.getInstance().isFirstWizardLaunch(),
         IS_JAEGER_ENABLED to isJaegerButtonEnabled(),
         IS_WIZARD_SKIP_INSTALLATION_STEP to wizardSkipInstallationStep,
+        DIGMATHON_ENABLED to DigmathonService.getInstance().getDigmathonState().isActive(),
+        DIGMATHON_PRODUCT_KEY to DigmathonService.getInstance().getProductKey().orEmpty(),
+        USER_ID to UserId.userId,
+        USER_FINISHED_DIGMATHON to DigmathonService.getInstance().isUserFinishedDigmathon
     )
+
 
     PersistenceService.getInstance().firstWizardLaunchDone()
 
@@ -199,6 +216,11 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                 if (email != null) {
                     ActivityMonitor.getInstance(project).registerEmail(email)
                 }
+
+                payload?.productKey?.let {
+                    DigmathonService.getInstance().setProductKey(it)
+                }
+
                 EDT.ensureEDT {
                     updateInstallationWizardFlag()
                     ToolWindowShower.getInstance(project).showToolWindow()
@@ -481,8 +503,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
     jcefDigmaPanel.add(browserPanel, BorderLayout.CENTER)
 
 
-
-    ApplicationUISettingsChangeNotifier.getInstance(project).addSettingsChangeListener(object : SettingsChangeListener {
+    val settingsChangeListener = object : SettingsChangeListener {
         override fun systemFontChange(fontName: String) {
             sendRequestToChangeFont(fontName, jbCefBrowser)
         }
@@ -494,10 +515,16 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
         override fun editorFontChange(fontName: String) {
             sendRequestToChangeCodeFont(fontName, jbCefBrowser)
         }
-    })
+    }
+    ApplicationUISettingsChangeNotifier.getInstance(project).addSettingsChangeListener(settingsChangeListener)
+    Disposer.register(jbCefBrowser) {
+        ApplicationUISettingsChangeNotifier.getInstance(project).removeSettingsChangeListener(settingsChangeListener)
+    }
 
 
-    project.messageBus.connect()
+
+
+    project.messageBus.connect(jbCefBrowser)
         .subscribe(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC, object : AnalyticsServiceConnectionEvent {
             override fun connectionLost() {
                 if (localEngineOperationRunning.get()) {
@@ -524,6 +551,32 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                 }
             }
         })
+
+
+    ApplicationManager.getApplication().messageBus.connect(jbCefBrowser)
+        .subscribe(
+            UserFinishedDigmathonEvent.USER_FINISHED_DIGMATHON_TOPIC,
+            UserFinishedDigmathonEvent {
+                sendUserFinishedDigmathon(jbCefBrowser.cefBrowser)
+            })
+
+
+    ApplicationManager.getApplication().messageBus.connect(jbCefBrowser)
+        .subscribe(
+            DigmathonProductKeyStateChangedEvent.PRODUCT_KEY_STATE_CHANGED_TOPIC,
+            DigmathonProductKeyStateChangedEvent { productKey ->
+                sendDigmathonProductKey(productKey, jbCefBrowser.cefBrowser)
+            })
+
+
+    //dispose in InstallationWizardService dispose
+    ApplicationManager.getApplication().messageBus.connect(jbCefBrowser)
+        .subscribe(
+            DigmathonActivationEvent.DIGMATHON_ACTIVATION_TOPIC,
+            DigmathonActivationEvent { isActive ->
+                sendDigmathonState(isActive, jbCefBrowser.cefBrowser)
+            })
+
 
 
 

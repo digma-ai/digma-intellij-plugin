@@ -132,6 +132,9 @@
                 implementation="org.digma.intellij.plugin.ui.updates.AggressiveUpdateProjectStartup"/>
 
 
+        <postStartupActivity implementation="org.digma.intellij.plugin.digmathon.DigmathonStartup"/>
+
+
     </extensions>
 
 

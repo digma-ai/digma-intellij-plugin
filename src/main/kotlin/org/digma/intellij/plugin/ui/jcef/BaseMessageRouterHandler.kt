@@ -19,6 +19,7 @@ import org.digma.intellij.plugin.common.createObjectMapper
 import org.digma.intellij.plugin.common.stopWatchStart
 import org.digma.intellij.plugin.common.stopWatchStop
 import org.digma.intellij.plugin.dashboard.DashboardService
+import org.digma.intellij.plugin.digmathon.DigmathonService
 import org.digma.intellij.plugin.documentation.DocumentationService
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
@@ -228,6 +229,10 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
 
                     JCEFGlobalConstants.GLOBAL_CHANGE_ENVIRONMENT -> {
                         changeEnvironment(requestJsonNode)
+                    }
+
+                    JCEFGlobalConstants.GLOBAL_FINISH_DIGMATHON_GAME -> {
+                        DigmathonService.getInstance().setFinishDigmathonGameForUser()
                     }
 
 

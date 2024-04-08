@@ -15,6 +15,7 @@ import org.digma.intellij.plugin.common.allowSlowOperation
 import org.digma.intellij.plugin.common.findActiveProject
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.notifications.NotificationUtil
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import java.time.LocalDate
@@ -159,6 +160,10 @@ class DigmathonService : Disposable {
         } catch (e: InvalidProductKeyException) {
             reportEvent("product key invalid", mapOf("productKey" to e.productKey))
             ErrorReporter.getInstance().reportError("${this::class.java.simpleName}.setProductKey", e)
+            findActiveProject()?.let {
+                NotificationUtil.showBalloonWarning(it, "invalid Digmathon product key")
+            }
+
         } catch (e: Throwable) {
             ErrorReporter.getInstance().reportError("${this::class.java.simpleName}.setProductKey", e)
         } finally {

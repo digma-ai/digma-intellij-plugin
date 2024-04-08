@@ -9,7 +9,6 @@ import org.cef.network.CefRequest
 class CommonResourceRequestHandler : CefResourceRequestHandlerAdapter() {
 
     override fun onProtocolExecution(browser: CefBrowser?, frame: CefFrame?, request: CefRequest?, allowOsExecution: BoolRef?) {
-
         allowOsExecution?.set(true)
     }
 }

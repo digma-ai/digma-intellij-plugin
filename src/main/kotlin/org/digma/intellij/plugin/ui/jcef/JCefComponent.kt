@@ -304,12 +304,16 @@ private constructor(
                 .setUrl(url)
                 .build()
 
+
             val jbCefClient = jbCefBrowser.jbCefClient
             val cefMessageRouter = CefMessageRouter.create()
 
             messageRouterHandlers.forEach {
                 cefMessageRouter.addHandler(it, true)
             }
+
+
+            jbCefClient.addRequestHandler(CommonRequestHandler(), jbCefBrowser.cefBrowser)
 
             jbCefClient.cefClient.addMessageRouter(cefMessageRouter)
 
@@ -318,6 +322,7 @@ private constructor(
             val lifeSpanHandler: CefLifeSpanHandlerAdapter = object : CefLifeSpanHandlerAdapter() {
                 override fun onAfterCreated(browser: CefBrowser) {
                     registerAppSchemeHandler(schemeHandlerFactory!!) //schemeHandlerFactory must not be null here
+//                    registerMailtoSchemeHandler(MailtoSchemaHandlerFactory())
                 }
             }
 
@@ -344,6 +349,12 @@ private constructor(
         private fun registerAppSchemeHandler(schemeHandlerFactory: BaseSchemeHandlerFactory) {
             CefApp.getInstance().registerSchemeHandlerFactory(
                 schemeHandlerFactory.getSchema(), schemeHandlerFactory.getDomain(), schemeHandlerFactory
+            )
+        }
+
+        private fun registerMailtoSchemeHandler(schemeHandlerFactory: MailtoSchemaHandlerFactory) {
+            CefApp.getInstance().registerSchemeHandlerFactory(
+                schemeHandlerFactory.getSchema(), null, schemeHandlerFactory
             )
         }
 

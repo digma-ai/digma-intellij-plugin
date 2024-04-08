@@ -65,23 +65,23 @@ class DigmathonService : Disposable {
     init {
 
         //for development,simulate a 5 minutes event that starts 2 minutes after IDE start and lasts for 5 minutes
-//        val simulateStart = System.getProperty("org.digma.digmathon.simulate.startAfterMinutes")
-//        val simulatePeriod = System.getProperty("org.digma.digmathon.simulate.periodMinutes")
-//
-//        if (simulateStart != null) {
-//            val startAfter = simulateStart.toLong()
-//            val endAfter = (simulatePeriod.toLongOrNull() ?: 10) + startAfter
-//
-//            digmathonInfo.set(
-//                DigmathonInfo(
-//                    LocalDateTime.now().plusMinutes(startAfter).atZone(ZoneId.systemDefault()),
-//                    LocalDateTime.now().plusMinutes(endAfter).atZone(ZoneId.systemDefault())
-//                )
-//            )
-//            DigmathonProductKey().clear()
-//            isDigmathonActive.set(digmathonInfo.get().isActive())
-//            isUserFinishedDigmathon = false
-//        }
+        val simulateStart = System.getProperty("org.digma.digmathon.simulate.startAfterMinutes")
+        val simulatePeriod = System.getProperty("org.digma.digmathon.simulate.periodMinutes")
+
+        if (simulateStart != null) {
+            val startAfter = simulateStart.toLong()
+            val endAfter = (simulatePeriod.toLongOrNull() ?: 10) + startAfter
+
+            digmathonInfo.set(
+                DigmathonInfo(
+                    LocalDateTime.now().plusMinutes(startAfter).atZone(ZoneId.systemDefault()),
+                    LocalDateTime.now().plusMinutes(endAfter).atZone(ZoneId.systemDefault())
+                )
+            )
+            DigmathonProductKey().clear()
+            isDigmathonActive.set(digmathonInfo.get().isActive())
+            isUserFinishedDigmathon = false
+        }
 
 
         if (isDigmathonActive.get() && digmathonInfo.get().isEnded()) {

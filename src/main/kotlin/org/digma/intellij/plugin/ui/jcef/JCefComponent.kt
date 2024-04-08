@@ -304,7 +304,6 @@ private constructor(
                 .setUrl(url)
                 .build()
 
-
             val jbCefClient = jbCefBrowser.jbCefClient
             val cefMessageRouter = CefMessageRouter.create()
 
@@ -312,18 +311,14 @@ private constructor(
                 cefMessageRouter.addHandler(it, true)
             }
 
-//            jbCefClient.addRequestHandler(CommonRequestHandler(), jbCefBrowser.cefBrowser)
-
             jbCefClient.cefClient.addMessageRouter(cefMessageRouter)
 
             jbCefClient.cefClient.addDisplayHandler(JCefDisplayHandler(name))
 
             val lifeSpanHandler: CefLifeSpanHandlerAdapter = object : CefLifeSpanHandlerAdapter() {
                 override fun onAfterCreated(browser: CefBrowser) {
-                    registerAppSchemeHandler(schemeHandlerFactory!!) //schemeHandlerFactory must not be null here
-                    //we currently don't need MailtoSchemaHandlerFactory. we register a custom schema,
-                    // see above in companion object. MailtoSchemaHandlerFactory can be a replacement,
-                    // but then we need to handle the mailto in the plugin
+                    //schemeHandlerFactory must not be null here!
+                    registerAppSchemeHandler(schemeHandlerFactory!!)
                     registerMailtoSchemeHandler(MailtoSchemaHandlerFactory())
                 }
             }

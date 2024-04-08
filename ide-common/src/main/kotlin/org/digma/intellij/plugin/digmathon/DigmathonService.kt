@@ -42,7 +42,8 @@ class DigmathonService : Disposable {
 
     private val isDigmathonActive = AtomicBoolean(digmathonInfo.get().isActive())
 
-    val viewedInsights = mutableSetOf<String>()
+    val viewedInsights = PersistenceService.getInstance().getDigmathonInsightsViewed()
+        ?.split(",")?.toMutableSet() ?: mutableSetOf()
 
     var isUserFinishedDigmathon = PersistenceService.getInstance().isFinishDigmathonGameForUser()
 
@@ -134,9 +135,9 @@ class DigmathonService : Disposable {
     }
 
 
-    //used to decide if to keep sending digmathon progress to apps
+    //user is active only with these conditions
     fun isUserActive(): Boolean {
-        return digmathonInfo.get().isActive() && getProductKey() != null && !isUserFinishedDigmathon
+        return digmathonInfo.get().isActive() && getProductKey() != null
     }
 
     private fun fireStateChangedEvent() {
@@ -211,7 +212,12 @@ class DigmathonService : Disposable {
     fun addInsightsViewed(insightsTypesViewed: List<String>) {
         if (digmathonInfo.get().isActive()) {
             this.viewedInsights.addAll(insightsTypesViewed)
+            flushInsightsViewedToPersistence()
         }
+    }
+
+    private fun flushInsightsViewedToPersistence() {
+        PersistenceService.getInstance().setDigmathonInsightsViewed(viewedInsights.joinToString(","))
     }
 
     fun setFinishDigmathonGameForUser() {

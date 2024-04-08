@@ -338,4 +338,12 @@ class PersistenceService {
         return state.isFinishDigmathonGameForUser
     }
 
+    fun setDigmathonInsightsViewed(insights: String) {
+        state.digmathonViewedInsights = insights
+    }
+
+    fun getDigmathonInsightsViewed(): String? {
+        return state.digmathonViewedInsights
+    }
+
 }

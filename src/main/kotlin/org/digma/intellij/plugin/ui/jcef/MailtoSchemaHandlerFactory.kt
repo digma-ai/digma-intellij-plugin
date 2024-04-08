@@ -36,6 +36,6 @@ class MailtoResourceHandler : CefResourceHandlerAdapter() {
             ErrorReporter.getInstance().reportError("MailtoResourceHandler.processRequest", e)
         }
         callback?.Continue()
-        return false
+        return true
     }
 }

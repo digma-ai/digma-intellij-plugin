@@ -59,7 +59,7 @@ private constructor(
             // our jcef apps use JCefComponent and that may cause issues.
             CefApp.addAppHandler(object : CefAppHandlerAdapter(arrayOf()) {
                 override fun onRegisterCustomSchemes(registrar: CefSchemeRegistrar?) {
-                    registrar?.addCustomScheme("mailto", true, true, false, false, true, false, false)
+                    registrar?.addCustomScheme("mailto", false, false, false, false, true, false, false)
                 }
             })
         }

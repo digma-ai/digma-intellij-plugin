@@ -34,6 +34,7 @@ import org.digma.intellij.plugin.updates.CurrentUpdateState.OK
 import org.digma.intellij.plugin.updates.CurrentUpdateState.UPDATE_BACKEND
 import org.digma.intellij.plugin.updates.CurrentUpdateState.UPDATE_BOTH
 import org.digma.intellij.plugin.updates.CurrentUpdateState.UPDATE_PLUGIN
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.locks.ReentrantLock
@@ -231,6 +232,17 @@ class AggressiveUpdateService : Disposable {
         val newUpdateState = PublicUpdateState(updateTo, versions.backendDeploymentType)
         updateStateRef.set(newUpdateState)
         if (prevState.updateState != newUpdateState.updateState) {
+
+            //the panel is going to show the update button.
+            //in case when the plugin needs update, when user clicks the button we will open the intellij plugins settings.
+            //sometimes the plugin list is not refreshed and user will not be able to update the plugin,
+            // so we refresh plugins metadata before showing the button. waiting maximum 10 seconds for
+            // the refresh to complete, and show the button anyway.
+            if (listOf(UPDATE_PLUGIN, UPDATE_BOTH).any { it == updateTo }) {
+                val future = refreshPluginsMetadata()
+                //refreshPluginsMetadata returns a future that doesn't throw exception from get.
+                future.get(10, TimeUnit.SECONDS)
+            }
 
             registerPosthogEvent(updateTo, versions)
 

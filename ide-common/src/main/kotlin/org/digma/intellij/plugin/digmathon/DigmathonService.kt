@@ -37,7 +37,7 @@ class DigmathonService : Disposable {
     private val digmathonInfo = AtomicReference(
         DigmathonInfo(
             LocalDate.of(2024, 4, 5).atStartOfDay().atZone(ZoneId.systemDefault()),
-            LocalDate.of(2024, 4, 13).atStartOfDay().atZone(ZoneId.systemDefault())
+            LocalDate.of(2024, 4, 17).atStartOfDay().atZone(ZoneId.systemDefault())
         )
     )
 

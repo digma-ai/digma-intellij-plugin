@@ -161,7 +161,11 @@ class DigmathonService : Disposable {
             reportEvent("product key invalid", mapOf("productKey" to e.productKey))
             ErrorReporter.getInstance().reportError("${this::class.java.simpleName}.setProductKey", e)
             findActiveProject()?.let {
-                NotificationUtil.showBalloonWarning(it, "invalid Digmathon product key")
+                NotificationUtil.showBalloonWarning(
+                    it,
+                    "Invalid Product Key",
+                    "You can reopen the onboarding menu from the main panel menu to try again"
+                )
             }
 
         } catch (e: Throwable) {

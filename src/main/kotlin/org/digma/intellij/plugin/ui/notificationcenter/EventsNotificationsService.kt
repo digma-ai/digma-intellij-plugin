@@ -66,9 +66,9 @@ class EventsNotificationsService(val project: Project) : Disposable {
                         lastEventTime = ZonedDateTime.now().minus(7, ChronoUnit.DAYS).withZoneSameInstant(ZoneOffset.UTC).toString()
                     }
 
-                    Log.log(logger::info, "sending getLatestEvents query with lastEventTime={}", lastEventTime)
+                    Log.log(logger::trace, "sending getLatestEvents query with lastEventTime={}", lastEventTime)
                     val events = AnalyticsService.getInstance(project).getLatestEvents(lastEventTime)
-                    Log.log(logger::info, "got latest events {}", events)
+                    Log.log(logger::trace, "got latest events {}", events)
 
                     events.events.forEach {
                         when (it) {
@@ -80,7 +80,7 @@ class EventsNotificationsService(val project: Project) : Disposable {
                     updateLastEventTime(events)
 
                 } catch (e: Exception) {
-                    Log.log(logger::warn, "could not get latest events {}", e.message)
+                    Log.log(logger::trace, "could not get latest events {}", e.message)
                     ErrorReporter.getInstance().reportError(project, "EventsNotificationsService.waitForEvents", e)
                 }
             }
@@ -97,7 +97,7 @@ class EventsNotificationsService(val project: Project) : Disposable {
         val latest = events.events.maxByOrNull { codeObjectEvent: CodeObjectEvent -> codeObjectEvent.eventRecognitionTime }
         latest?.let {
             service<PersistenceService>().setLastInsightsEventTime(it.eventRecognitionTime.withZoneSameInstant(ZoneOffset.UTC).toString())
-            Log.log(logger::info, "latest event time updated to {}", service<PersistenceService>().getLastInsightsEventTime())
+            Log.log(logger::trace, "latest event time updated to {}", service<PersistenceService>().getLastInsightsEventTime())
         }
     }
 
@@ -131,7 +131,7 @@ class EventsNotificationsService(val project: Project) : Disposable {
                 importantInsight.environment
             )
         } else {
-            Log.log(logger::info, "Not showing Notification For FirstImportantInsight because codeObjectId is null {}", importantInsight)
+            Log.log(logger::trace, "Not showing Notification For FirstImportantInsight because codeObjectId is null {}", importantInsight)
         }
     }
 

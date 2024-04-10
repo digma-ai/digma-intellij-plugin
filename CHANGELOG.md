@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.317] - 2024-04-09
+## [2.0.318] - 2024-04-10
+
+- updated dates by @doppleware in https://github.com/digma-ai/digma-intellij-plugin/pull/2055
+
+## 2.0.317 - 2024-04-09
 
 - invalid product key notification text by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2051
 

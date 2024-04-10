@@ -100,7 +100,7 @@ class UpdateVersionPanel(
 
             myActionAlarm.cancelAllRequests()
             myActionAlarm.addRequest({
-                ActivityMonitor.getInstance(project).registerCustomEvent(
+                ActivityMonitor.getInstance(project).registerUserAction(
                     "update button clicked",
                     mapOf(
                         "shouldUpdateBackend" to updateState.shouldUpdateBackend,

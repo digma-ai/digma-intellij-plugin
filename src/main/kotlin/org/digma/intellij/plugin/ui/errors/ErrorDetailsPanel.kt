@@ -18,7 +18,7 @@ import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
-import org.digma.intellij.plugin.posthog.MonitoredPanel
+import org.digma.intellij.plugin.posthog.UserActionOrigin
 import org.digma.intellij.plugin.service.ErrorsActionsService
 import org.digma.intellij.plugin.ui.common.CopyableLabel
 import org.digma.intellij.plugin.ui.common.CopyableLabelHtml
@@ -249,7 +249,7 @@ fun bottomPanel(project: Project,errorsModel: ErrorsModel, framesList: Scrollabl
                         errorsModel.errorDetails.flowStacks.isWorkspaceOnly = isSelected
                         PersistenceService.getInstance().setWorkspaceOnly(isSelected)
                         framesList.getModel().setListData(errorsModel.errorDetails.flowStacks.getCurrentStack())
-                        ActivityMonitor.getInstance(project).registerButtonClicked(MonitoredPanel.ErrorDetails, "error-frame-workspace-only")
+                        ActivityMonitor.getInstance(project).registerUserActionWithOrigin("workspace only clicked", UserActionOrigin.ErrorDetails)
                     }
                 }
 
@@ -258,7 +258,7 @@ fun bottomPanel(project: Project,errorsModel: ErrorsModel, framesList: Scrollabl
                 val currentStack = errorsModel.errorDetails.flowStacks.current
                 val stackTrace = errorsModel.errorDetails.delegate?.errors?.get(currentStack)?.stackTrace
                 actionListener.openRawStackTrace(stackTrace)
-                ActivityMonitor.getInstance(project).registerButtonClicked(MonitoredPanel.ErrorDetails, "open-raw-trace")
+                ActivityMonitor.getInstance(project).registerUserActionWithOrigin("open raw trace clicked", UserActionOrigin.Tests)
             }.horizontalAlign(HorizontalAlign.RIGHT).gap(RightGap.SMALL)
 
 
@@ -292,7 +292,7 @@ fun flowStackNavigation(errorsModel: ErrorsModel, framesList: ScrollablePanelLis
         val currentStack = errorsModel.errorDetails.flowStacks.current.plus(1)
         currentLabel.text = "${currentStack}/${stackSize} Flow Stacks"
         framesList.getModel().setListData(errorsModel.errorDetails.flowStacks.getCurrentStack())
-        ActivityMonitor.getInstance(project).registerButtonClicked(MonitoredPanel.ErrorDetails, "error-previous-flow")
+        ActivityMonitor.getInstance(project).registerUserActionWithOrigin("previous error flow clicked", UserActionOrigin.Tests)
     }
 
     val forwardButton = IconButton(Laf.Icons.ErrorDetails.FORWARD)
@@ -304,7 +304,7 @@ fun flowStackNavigation(errorsModel: ErrorsModel, framesList: ScrollablePanelLis
         val currentStack = errorsModel.errorDetails.flowStacks.current.plus(1)
         currentLabel.text = "${currentStack}/${stackSize} Flow Stacks"
         framesList.getModel().setListData(errorsModel.errorDetails.flowStacks.getCurrentStack())
-        ActivityMonitor.getInstance(project).registerButtonClicked(MonitoredPanel.ErrorDetails, "error-next-flow")
+        ActivityMonitor.getInstance(project).registerUserActionWithOrigin("next error flow clicked", UserActionOrigin.Tests)
     }
 
     val panel = JTransparentPanel()
@@ -476,7 +476,7 @@ private fun scorePanel(errorsModel: ErrorsModel): DialogPanel {
             val scorePanelWrapper = JPanel()
             scorePanelWrapper.isOpaque = false
             cell(scorePanelWrapper).onReset {
-                if (scorePanelWrapper.components.size > 0) {
+                if (scorePanelWrapper.components.isNotEmpty()) {
                     scorePanelWrapper.remove(0)
                 }
                 if (errorsModel.errorDetails.delegate != null) {
@@ -498,8 +498,9 @@ private fun tempCodeObjectError(errorDetails: CodeObjectErrorDetails): CodeObjec
         errorDetails.sourceCodeObjectId,
         "",
         "",
-        false,
-        false,
-        errorDetails.firstOccurenceTime,
-        errorDetails.lastOccurenceTime)
+        startsHere = false,
+        endsHere = false,
+        firstOccurenceTime = errorDetails.firstOccurenceTime,
+        lastOccurenceTime = errorDetails.lastOccurenceTime
+    )
 }

@@ -21,8 +21,6 @@ import org.jetbrains.annotations.*;
 
 import java.util.*;
 
-import static org.digma.intellij.plugin.common.CodeObjectsUtil.*;
-
 
 public class JaegerUIService implements Disposable {
 
@@ -157,7 +155,7 @@ public class JaegerUIService implements Disposable {
                 .map(Span::methodId)
                 .filter(Objects::nonNull).toList();
 
-        Map<String, List<Insight>> allInsights = getInsights(spanIds, methodIds);
+        Map<String, List<Insight>> allInsights = getInsights(spanIds);
 
         for (SupportedLanguages value : SupportedLanguages.values()) {
             var languageService = LanguageService.findLanguageServiceByName(project, value.getLanguageServiceClassName());
@@ -217,25 +215,22 @@ public class JaegerUIService implements Disposable {
     }
 
     @NotNull
-    private Map<String, List<Insight>> getInsights(@NotNull List<String> spanIds, @NotNull List<String> methodIds) {
+    private Map<String, List<Insight>> getInsights(@NotNull List<String> spanIds) {
 
         if (spanIds.size() > 500) {
             return Collections.emptyMap();
         }
 
-        var ids = new ArrayList<>(addSpanTypeToIds(spanIds));
-        ids.addAll(addMethodTypeToIds(methodIds));
-
-        var insights = new HashMap<String, List<Insight>>();
+        var insightsMap = new HashMap<String, List<Insight>>();
 
         try {
-            var insightsFromBackend = AnalyticsService.getInstance(project).getInsightsInfo(ids);
-            insightsFromBackend.forEach(codeObjectInsight -> {
-                var id = codeObjectInsight.getCodeObjectId();
-                var objectInsights = insights.computeIfAbsent(id, s -> new ArrayList<>());
-                objectInsights.add(new Insight(codeObjectInsight.getType(), codeObjectInsight.getImportance()));
+            var spanInsights = AnalyticsService.getInstance(project).getInsightsForJaeger(spanIds);
+
+            spanInsights.forEach(o -> {
+                List<Insight> insights = o.getInsights().stream().map(s -> new Insight(s.getType(), s.getImportance())).toList();
+                insightsMap.put(o.getSpanCodeObjectId(), insights);
             });
-            return insights;
+            return insightsMap;
         } catch (AnalyticsServiceException e) {
             Log.debugWithException(logger, e, "Exception in getInsights {}", e.getMessage());
             return Collections.emptyMap();

@@ -121,10 +121,10 @@ public abstract class AbstractInsightsMessageRouterHandler extends BaseCommonMes
     private void linkTicket(@NotNull CefBrowser browser, JsonNode jsonNode) throws JsonProcessingException, AnalyticsServiceException {
         Log.log(LOGGER::trace, getProject(), "got INSIGHTS/LINK_TICKET message");
         var payload = getObjectMapper().readTree(jsonNode.get("payload").toString());
-        var codeObjectId = payload.get("codeObjectId").asText();
+        var insightId = payload.get("insightId").asText();
         var insightType = payload.get("insightType").asText();
         var ticketLink = payload.get("ticketLink").asText();
-        var linkTicketResponse = AnalyticsService.getInstance(getProject()).linkTicket(codeObjectId, insightType, ticketLink);
+        var linkTicketResponse = AnalyticsService.getInstance(getProject()).linkTicket(insightId, ticketLink);
         var message = new SetLinkUnlinkResponseMessage("digma", "INSIGHTS/SET_TICKET_LINK", linkTicketResponse);
         serializeAndExecuteWindowPostMessageJavaScript(browser, message);
         ActivityMonitor.getInstance(getProject()).registerUserActionEvent("link ticket", Map.of("insight", insightType));
@@ -133,9 +133,9 @@ public abstract class AbstractInsightsMessageRouterHandler extends BaseCommonMes
     private void unlinkTicket(@NotNull CefBrowser browser, JsonNode jsonNode) throws JsonProcessingException, AnalyticsServiceException {
         Log.log(LOGGER::trace, getProject(), "got INSIGHTS/UNLINK_TICKET message");
         var payload = getObjectMapper().readTree(jsonNode.get("payload").toString());
-        var codeObjectId = payload.get("codeObjectId").asText();
+        var insightId = payload.get("insightId").asText();
         var insightType = payload.get("insightType").asText();
-        var unlinkTicketResponse = AnalyticsService.getInstance(getProject()).unlinkTicket(codeObjectId, insightType);
+        var unlinkTicketResponse = AnalyticsService.getInstance(getProject()).unlinkTicket(insightId);
         var message = new SetLinkUnlinkResponseMessage("digma", "INSIGHTS/SET_TICKET_LINK", unlinkTicketResponse);
         serializeAndExecuteWindowPostMessageJavaScript(browser, message);
         ActivityMonitor.getInstance(getProject()).registerUserActionEvent("unlink ticket", Map.of("insight", insightType));
@@ -242,18 +242,17 @@ public abstract class AbstractInsightsMessageRouterHandler extends BaseCommonMes
     private void openHistogram(JsonNode jsonNode) throws JsonProcessingException {
         Log.log(LOGGER::debug, getProject(), "got INSIGHTS/OPEN_HISTOGRAM message");
         var payload = getObjectMapper().readTree(jsonNode.get("payload").toString());
-        var instrumentationLibrary = payload.get("instrumentationLibrary").asText();
-        var name = payload.get("name").asText();
+        var spanCodeObjectId = payload.get("spanCodeObjectId").asText();
         var insightType = payload.get("insightType").asText();
         var displayName = payload.has("displayName") ? payload.get("displayName").asText() : null;
-        org.digma.intellij.plugin.ui.insights.InsightsService.getInstance(getProject()).openHistogram(instrumentationLibrary, name, insightType, displayName);
+        org.digma.intellij.plugin.ui.insights.InsightsService.getInstance(getProject()).openHistogram(spanCodeObjectId, insightType, displayName);
     }
 
     private void openLiveView(JsonNode jsonNode) throws JsonProcessingException {
         Log.log(LOGGER::debug, getProject(), "got INSIGHTS/OPEN_LIVE_VIEW message");
-        var prefixedCodeObjectId = getObjectMapper().readTree(jsonNode.get("payload").toString()).get("prefixedCodeObjectId").asText();
-        Log.log(LOGGER::debug, getProject(), "got prefixedCodeObjectId {}", prefixedCodeObjectId);
-        InsightsService.getInstance(getProject()).openLiveView(prefixedCodeObjectId);
+        var codeObjectId = getObjectMapper().readTree(jsonNode.get("payload").toString()).get("codeObjectId").asText();
+        Log.log(LOGGER::debug, getProject(), "got codeObjectId {}", codeObjectId);
+        InsightsService.getInstance(getProject()).openLiveView(codeObjectId);
     }
 
 

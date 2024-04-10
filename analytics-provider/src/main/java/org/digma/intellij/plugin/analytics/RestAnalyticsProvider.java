@@ -68,8 +68,8 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
-    public List<InsightInfo> getInsightsInfo(InsightsRequest insightsRequest) {
-        return execute(() -> client.analyticsProvider.getInsightsInfo(insightsRequest));
+    public List<InsightTypesForJaegerResponse> getInsightsForJaeger(InsightTypesForJaegerRequest request) {
+        return execute(() -> client.analyticsProvider.getInsightsForJaeger(request));
     }
 
     @Override
@@ -520,8 +520,8 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @POST("/CodeAnalytics/codeObjects/insights")
-        Call<List<InsightInfo>> getInsightsInfo(@Body InsightsRequest insightsRequest);
+        @POST("/insights/typesForJaeger")
+        Call<List<InsightTypesForJaegerResponse>> getInsightsForJaeger(@Body InsightTypesForJaegerRequest request);
 
 
         @Headers({

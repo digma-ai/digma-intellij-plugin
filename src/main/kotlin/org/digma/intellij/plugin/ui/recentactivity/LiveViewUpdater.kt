@@ -58,7 +58,7 @@ class LiveViewUpdater(val project: Project) : Disposable {
     @Synchronized
     fun sendLiveData(codeObjectId: String) {
 
-        Log.log(logger::trace, project, "Got sendLiveData request for {}", codeObjectId)
+        Log.log(logger::trace, project, "Got sendLiveData request for: {}", codeObjectId)
 
         myDisposable?.let {
             Disposer.dispose(it)
@@ -71,7 +71,7 @@ class LiveViewUpdater(val project: Project) : Disposable {
         @Suppress("UnstableApiUsage")
         myJob = myDisposable!!.disposingScope().launch {
 
-            Log.log(logger::trace, project, "live view timer started for {}", codeObjectId)
+            Log.log(logger::trace, project, "live view timer started for: {}", codeObjectId)
 
             //if clicking live view before the app was initialized, this code needs to wait for it to initialize before
             // sending live data.

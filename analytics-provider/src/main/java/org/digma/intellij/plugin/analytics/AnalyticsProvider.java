@@ -30,7 +30,7 @@ public interface AnalyticsProvider extends Closeable {
 
     void sendDebuggerEvent(DebuggerEventRequest debuggerEventRequest);
 
-    List<InsightInfo> getInsightsInfo(InsightsRequest insightsRequest);
+    List<InsightTypesForJaegerResponse> getInsightsForJaeger(InsightTypesForJaegerRequest request);
 
     String getInsightBySpan(String environment, String spanCodeObjectId, String insightType);
 

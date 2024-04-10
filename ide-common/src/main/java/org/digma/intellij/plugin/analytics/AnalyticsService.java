@@ -194,13 +194,9 @@ public class AnalyticsService implements Disposable {
     }
 
 
-    public List<InsightInfo> getInsightsInfo(List<String> objectIds) throws AnalyticsServiceException {
+    public List<InsightTypesForJaegerResponse> getInsightsForJaeger(List<String> spanCodeObjectIds) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
-        var insights = executeCatching(() -> analyticsProviderProxy.getInsightsInfo(new InsightsRequest(env, objectIds)));
-        if (insights == null) {
-            insights = Collections.emptyList();
-        }
-        return insights;
+        return executeCatching(() -> analyticsProviderProxy.getInsightsForJaeger(new InsightTypesForJaegerRequest(env, spanCodeObjectIds)));
     }
 
 
@@ -220,15 +216,15 @@ public class AnalyticsService implements Disposable {
     }
 
 
-    public LinkUnlinkTicketResponse linkTicket(String codeObjectId, String insightType, String ticketLink) throws AnalyticsServiceException{
+    public LinkUnlinkTicketResponse linkTicket(String insightId, String ticketLink) throws AnalyticsServiceException{
         var env = getCurrentEnvironment();
-        var linkRequest = new LinkTicketRequest(env, codeObjectId, insightType, ticketLink);
+        var linkRequest = new LinkTicketRequest(env, insightId, ticketLink);
         return executeCatching(() -> analyticsProviderProxy.linkTicket(linkRequest));
     }
 
-    public LinkUnlinkTicketResponse unlinkTicket(String codeObjectId, String insightType) throws AnalyticsServiceException{
+    public LinkUnlinkTicketResponse unlinkTicket(String insightId) throws AnalyticsServiceException{
         var env = getCurrentEnvironment();
-        var unlinkRequest = new UnlinkTicketRequest(env, codeObjectId, insightType);
+        var unlinkRequest = new UnlinkTicketRequest(env, insightId);
         return executeCatching(() -> analyticsProviderProxy.unlinkTicket(unlinkRequest));
     }
 
@@ -300,13 +296,13 @@ public class AnalyticsService implements Disposable {
     }
 
 
-    public String getHtmlGraphForSpanPercentiles(String instrumentationLibrary, String spanName, String backgroundColor) throws AnalyticsServiceException {
-        final SpanHistogramQuery spanHistogramQuery = new SpanHistogramQuery(getCurrentEnvironment(), spanName, instrumentationLibrary, JBColor.isBright() ? "light" : "dark", backgroundColor);
+    public String getHtmlGraphForSpanPercentiles(String spanCodeObjectId, String backgroundColor) throws AnalyticsServiceException {
+        final SpanHistogramQuery spanHistogramQuery = new SpanHistogramQuery(getCurrentEnvironment(), spanCodeObjectId, JBColor.isBright() ? "light" : "dark", backgroundColor);
         return executeCatching(() -> analyticsProviderProxy.getHtmlGraphForSpanPercentiles(spanHistogramQuery));
     }
 
-    public String getHtmlGraphForSpanScaling(String instrumentationLibrary, String spanName, String backgroundColor) throws AnalyticsServiceException {
-        final SpanHistogramQuery spanHistogramQuery = new SpanHistogramQuery(getCurrentEnvironment(), spanName, instrumentationLibrary, JBColor.isBright() ? "light" : "dark", backgroundColor);
+    public String getHtmlGraphForSpanScaling(String spanCodeObjectId, String backgroundColor) throws AnalyticsServiceException {
+        final SpanHistogramQuery spanHistogramQuery = new SpanHistogramQuery(getCurrentEnvironment(), spanCodeObjectId, JBColor.isBright() ? "light" : "dark", backgroundColor);
         return executeCatching(() -> analyticsProviderProxy.getHtmlGraphForSpanScaling(spanHistogramQuery));
     }
 

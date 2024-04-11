@@ -17,7 +17,8 @@ constructor(
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class FinishPayload
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-@ConstructorProperties("email")
+@ConstructorProperties("email", "productKey")
 constructor(
-    val email: String?
+    val email: String?,
+    val productKey: String?
 )

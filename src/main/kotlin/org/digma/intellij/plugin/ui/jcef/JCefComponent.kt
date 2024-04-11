@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.ui.jcef
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
@@ -22,6 +23,9 @@ import org.digma.intellij.plugin.analytics.getAllEnvironments
 import org.digma.intellij.plugin.auth.AuthManager
 import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
 import org.digma.intellij.plugin.common.Backgroundable
+import org.digma.intellij.plugin.digmathon.DigmathonActivationEvent
+import org.digma.intellij.plugin.digmathon.DigmathonProductKeyStateChangedEvent
+import org.digma.intellij.plugin.digmathon.UserFinishedDigmathonEvent
 import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
@@ -61,10 +65,32 @@ private constructor(
     private val scopeChangeParentDisposable = Disposer.newDisposable()
     private val stateChangeParentDisposable = Disposer.newDisposable()
     private val insightStatsChangeParentDisposable = Disposer.newDisposable()
+    private val digmathonActivatedParentDisposable = Disposer.newDisposable()
+    private val productKeyAddedParentDisposable = Disposer.newDisposable()
+    private val userFinishedDigmathonParentDisposable = Disposer.newDisposable()
 
 
     init {
         val connectionEventAlarm = AlarmFactory.getInstance().create(Alarm.ThreadToUse.POOLED_THREAD, connectionEventAlarmParentDisposable)
+
+
+        ApplicationManager.getApplication().messageBus.connect(userFinishedDigmathonParentDisposable)
+            .subscribe(
+                UserFinishedDigmathonEvent.USER_FINISHED_DIGMATHON_TOPIC,
+                UserFinishedDigmathonEvent {
+                    sendUserFinishedDigmathon(jbCefBrowser.cefBrowser)
+                })
+
+        ApplicationManager.getApplication().messageBus.connect(digmathonActivatedParentDisposable)
+            .subscribe(DigmathonProductKeyStateChangedEvent.PRODUCT_KEY_STATE_CHANGED_TOPIC,
+                DigmathonProductKeyStateChangedEvent { productKey ->
+                    sendDigmathonProductKey(productKey, jbCefBrowser.cefBrowser)
+                })
+
+        ApplicationManager.getApplication().messageBus.connect(productKeyAddedParentDisposable)
+            .subscribe(DigmathonActivationEvent.DIGMATHON_ACTIVATION_TOPIC,
+                DigmathonActivationEvent { isActive -> sendDigmathonState(isActive, jbCefBrowser.cefBrowser) })
+
 
         settingsChangeListener = object : SettingsChangeListener {
             override fun systemFontChange(fontName: String) {
@@ -243,6 +269,9 @@ private constructor(
 
     override fun dispose() {
         try {
+            Disposer.dispose(userFinishedDigmathonParentDisposable)
+            Disposer.dispose(productKeyAddedParentDisposable)
+            Disposer.dispose(digmathonActivatedParentDisposable)
             Disposer.dispose(connectionEventAlarmParentDisposable)
             Disposer.dispose(analyticsServiceConnectionEventMessageBusConnection)
             Disposer.dispose(settingsListenerParentDisposable)
@@ -299,7 +328,9 @@ private constructor(
 
             val lifeSpanHandler: CefLifeSpanHandlerAdapter = object : CefLifeSpanHandlerAdapter() {
                 override fun onAfterCreated(browser: CefBrowser) {
-                    registerAppSchemeHandler(schemeHandlerFactory!!) //schemeHandlerFactory must not be null here
+                    //schemeHandlerFactory must not be null here!
+                    registerAppSchemeHandler(schemeHandlerFactory!!)
+                    registerMailtoSchemeHandler(MailtoSchemaHandlerFactory())
                 }
             }
 
@@ -326,6 +357,12 @@ private constructor(
         private fun registerAppSchemeHandler(schemeHandlerFactory: BaseSchemeHandlerFactory) {
             CefApp.getInstance().registerSchemeHandlerFactory(
                 schemeHandlerFactory.getSchema(), schemeHandlerFactory.getDomain(), schemeHandlerFactory
+            )
+        }
+
+        private fun registerMailtoSchemeHandler(schemeHandlerFactory: MailtoSchemaHandlerFactory) {
+            CefApp.getInstance().registerSchemeHandlerFactory(
+                schemeHandlerFactory.getSchema(), null, schemeHandlerFactory
             )
         }
 

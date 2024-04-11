@@ -1,12 +1,12 @@
 package org.digma.intellij.plugin.idea.execution
 
-import com.intellij.execution.configurations.RunConfigurationBase
+import com.intellij.execution.configurations.RunConfiguration
 import com.intellij.execution.configurations.SimpleProgramParameters
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemRunConfiguration
 import org.digma.intellij.plugin.vcs.VcsService
 
 class ExternalSystemJavaToolOptionsMerger(
-    configuration: RunConfigurationBase<*>,
+    configuration: RunConfiguration,
     params: SimpleProgramParameters,
     parametersExtractor: ParametersExtractor
 ) : JavaToolOptionsMerger(configuration, params, parametersExtractor) {

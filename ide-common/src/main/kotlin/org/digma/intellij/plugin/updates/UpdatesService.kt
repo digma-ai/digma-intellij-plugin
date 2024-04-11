@@ -2,11 +2,13 @@ package org.digma.intellij.plugin.updates
 
 import com.intellij.collaboration.async.disposingScope
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.apache.maven.artifact.versioning.ComparableVersion
 import org.digma.intellij.plugin.analytics.AnalyticsProviderException
@@ -14,51 +16,32 @@ import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.common.EDT
+import org.digma.intellij.plugin.common.buildVersionRequest
+import org.digma.intellij.plugin.common.getPluginVersion
 import org.digma.intellij.plugin.common.newerThan
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
 import org.digma.intellij.plugin.model.rest.version.BackendVersionResponse
 import org.digma.intellij.plugin.model.rest.version.PluginVersionResponse
-import org.digma.intellij.plugin.model.rest.version.VersionRequest
 import org.digma.intellij.plugin.model.rest.version.VersionResponse
-import org.digma.intellij.plugin.semanticversion.SemanticVersionUtil
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
-import org.jetbrains.annotations.NotNull
-import org.jetbrains.annotations.VisibleForTesting
-import java.time.LocalDateTime
-import java.util.Timer
-import java.util.TimerTask
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.minutes
 
 @Service(Service.Level.PROJECT)
 class UpdatesService(private val project: Project) : Disposable {
 
-    companion object {
-        private val logger = Logger.getInstance(UpdatesService::class.java)
+    private val logger = Logger.getInstance(UpdatesService::class.java)
 
+    companion object {
         @JvmStatic
         fun getInstance(project: Project): UpdatesService {
-            return project.getService(UpdatesService::class.java)
+            return project.service<UpdatesService>()
         }
     }
 
-    private val BlackoutDurationSeconds =
-        TimeUnit.MINUTES.toSeconds(5) // production value
-//        TimeUnit.SECONDS.toSeconds(12) // use short period (few seconds) when debugging
-
-    // delay for first check for update since startup
-    private val DelayMilliseconds = TimeUnit.SECONDS.toMillis(0)
-
-    private val PeriodMilliseconds =
-        TimeUnit.MINUTES.toMillis(5) // production value is 5 minutes
-//        TimeUnit.SECONDS.toMillis(12) // use short period (few seconds) when debugging
-
-    private val timer = Timer()
-
     var affectedPanel: DigmaResettablePanel? = null // late init
-
-    private var blackoutStopTime: LocalDateTime = LocalDateTime.now().minusMonths(3)
 
     private var prevBackendErrorsList: List<String> = emptyList()
     private var stateBackendVersion: BackendVersionResponse
@@ -68,29 +51,31 @@ class UpdatesService(private val project: Project) : Disposable {
         stateBackendVersion = BackendVersionResponse(false, "0.0.1", "0.0.1", BackendDeploymentType.Unknown)
         statePluginVersion = PluginVersion(getPluginVersion())
 
-        val fetchTask = object : TimerTask() {
-            override fun run() {
-                try {
+        @Suppress("UnstableApiUsage")
+        disposingScope().launch {
+            try {
+
+                while (isActive) {
                     checkForNewerVersions()
-                } catch (e: Exception) {
-                    Log.warnWithException(logger, e, "Exception in checkForNewerVersions")
-                    ErrorReporter.getInstance().reportError(project, "UpdatesService.checkForNewerVersions", e)
+                    delay(5.minutes.inWholeMilliseconds)
                 }
+
+            } catch (e: CancellationException) {
+                Log.debugWithException(logger, e, "Exception in checkForNewerVersions")
+            } catch (e: Throwable) {
+                Log.warnWithException(logger, e, "Exception in checkForNewerVersions")
+                ErrorReporter.getInstance().reportError("UpdatesService.timer", e)
             }
         }
-
-        timer.schedule(
-            fetchTask, DelayMilliseconds, PeriodMilliseconds
-        )
     }
 
     override fun dispose() {
-        timer.cancel()
+        //nothing to do , used as parent disposable
     }
 
-    fun checkForNewerVersions() {
+    private fun checkForNewerVersions() {
 
-        Log.log(logger::debug,"checking for new versions")
+        Log.log(logger::debug, "checking for new versions")
 
         val backendConnectionMonitor = BackendConnectionMonitor.getInstance(project)
         if (backendConnectionMonitor.isConnectionError()) {
@@ -102,7 +87,7 @@ class UpdatesService(private val project: Project) : Disposable {
         var versionsResp: VersionResponse? = null
         try {
             versionsResp = analyticsService.getVersions(buildVersionRequest())
-            Log.log(logger::debug,"got version response {}",versionsResp)
+            Log.log(logger::debug, "got version response {}", versionsResp)
         } catch (ase: AnalyticsServiceException) {
             var logException = true
             if (ase.cause is AnalyticsProviderException) {
@@ -141,13 +126,23 @@ class UpdatesService(private val project: Project) : Disposable {
         stateBackendVersion = versionsResp.backend
         statePluginVersion.latestVersion = versionsResp.plugin.latestVersion
 
+        //the panel is going to show the update button if shouldUpdatePlugin is true.
+        //when user clicks the button we will open the intellij plugins settings.
+        //sometimes the plugin list is not refreshed and user will not be able to update the plugin,
+        // so we refresh plugins metadata before showing the button. waiting maximum 10 seconds for
+        // the refresh to complete, and show the button anyway.
+        if (shouldUpdatePlugin()) {
+            //refreshPluginsMetadata returns a future that doesn't throw exception from get.
+            val future = refreshPluginsMetadata()
+            future.get(10, TimeUnit.SECONDS)
+        }
+
         EDT.ensureEDT {
             affectedPanel?.reset()
         }
     }
 
-    @VisibleForTesting
-    protected fun createResponseToInduceBackendUpdate(): VersionResponse {
+    private fun createResponseToInduceBackendUpdate(): VersionResponse {
         val pluginVersionResp = PluginVersionResponse(false, "0.0.1")
         val backendVersionResp = BackendVersionResponse(
             true, "0.0.2", "0.0.1",
@@ -157,18 +152,6 @@ class UpdatesService(private val project: Project) : Disposable {
         return resp
     }
 
-    fun updateButtonClicked() {
-        // start blackout time that update-state won't be displayed
-        blackoutStopTime = LocalDateTime.now().plusSeconds(BlackoutDurationSeconds)
-
-        // give some time for the user/system to make the desired update, and only then recheck for newer version
-        @Suppress("UnstableApiUsage")
-        disposingScope().launch {
-            delay(TimeUnit.SECONDS.toMillis(BlackoutDurationSeconds) + 500)
-
-            checkForNewerVersions()
-        }
-    }
 
     fun evalAndGetState(): UpdateState {
         Log.log(logger::debug, "evalAndGetState called")
@@ -179,70 +162,27 @@ class UpdatesService(private val project: Project) : Disposable {
         )
     }
 
-    @VisibleForTesting
-    protected fun isDuringBlackout(): Boolean {
-        val now = LocalDateTime.now()
-        return now < blackoutStopTime
+    private fun shouldUpdateBackend(): Boolean {
+        return evalHasNewerVersion(stateBackendVersion)
     }
 
-    @VisibleForTesting
-    protected fun shouldUpdateBackend(): Boolean {
-        if (isDuringBlackout()) return false
-
-        var hasNewVersion = evalHasNewerVersion(stateBackendVersion)
-//        hasNewVersion = true // use const only when debugging
-        return hasNewVersion
+    private fun shouldUpdatePlugin(): Boolean {
+        return evalHasNewerVersion(statePluginVersion)
     }
 
-    @VisibleForTesting
-    protected fun shouldUpdatePlugin(): Boolean {
-        if (isDuringBlackout()) return false
 
-        var hasNewVersion = evalHasNewerVersion(statePluginVersion)
-//        hasNewVersion = true // use const only when debugging
-        return hasNewVersion
-    }
-
-    @VisibleForTesting
-    protected fun evalHasNewerVersion(backend: BackendVersionResponse): Boolean {
+    private fun evalHasNewerVersion(backend: BackendVersionResponse): Boolean {
         val currCompVersion = ComparableVersion(backend.currentVersion)
         val latestCompVersion = ComparableVersion(backend.latestVersion)
         return latestCompVersion.newerThan(currCompVersion)
     }
 
-    @VisibleForTesting
-    protected fun evalHasNewerVersion(plugin: PluginVersion): Boolean {
+    private fun evalHasNewerVersion(plugin: PluginVersion): Boolean {
         val currCompVersion = ComparableVersion(plugin.currentVersion)
         val latestCompVersion = ComparableVersion(plugin.latestVersion)
         return latestCompVersion.newerThan(currCompVersion)
     }
 
-    @NotNull
-    private fun buildVersionRequest(): VersionRequest {
-        return VersionRequest(
-            getPluginVersion(), getPlatformType(), getPlatformVersion()
-        )
-    }
-
-    // returns one of:
-    // IC - Intellij Community
-    // RD - Rider
-    @NotNull
-    fun getPlatformType(): String {
-        val appInfo = ApplicationInfo.getInstance()
-        return appInfo.build.productCode
-    }
-
-    @NotNull
-    fun getPlatformVersion(): String {
-        val appInfo = ApplicationInfo.getInstance()
-        return appInfo.fullVersion
-    }
-
-    // when plugin is not installed it will return 0.0.0
-    private fun getPluginVersion(): String {
-        return SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("0.0.0")
-    }
 }
 
 data class PluginVersion(val currentVersion: String) {

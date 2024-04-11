@@ -1,6 +1,43 @@
 # Changelog
 
-## [2.0.310] - 2024-03-31
+## [2.0.318] - 2024-04-10
+
+- updated dates by @doppleware in https://github.com/digma-ai/digma-intellij-plugin/pull/2055
+
+## 2.0.317 - 2024-04-09
+
+- invalid product key notification text by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2051
+
+## 2.0.316 - 2024-04-09
+
+- Digmathon by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2048
+- Update Installation Wizard UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2049
+- Update Recent Activity UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2050
+
+## 2.0.315 - 2024-04-07
+
+- force update Closes #2015 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2035
+- Enhance instrumentation flavor for all configuration types by @shalom938
+  in https://github.com/digma-ai/digma-intellij-plugin/pull/2045
+
+## 2.0.314 - 2024-04-05
+
+- update build profile to 2024.1 release by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2038
+- support quarkus gradle plugin by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2042
+- change contains to endWith by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2044
+
+## 2.0.313 - 2024-04-04
+
+- fix instrumentation flavor by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2033
+- Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2031
+
+## 2.0.312 - 2024-04-03
+
+- Fixed Highlights message handler by @ohrebeniuk in https://github.com/digma-ai/digma-intellij-plugin/pull/2025
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2008
+- Bump version by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2027
+
+## 2.0.310 - 2024-03-31
 
 - better understanding of instrumentation flavor Closes #2013 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2016
 

@@ -11,8 +11,4 @@ class MavenRunConfigurationInstrumentationHandler : BaseRunConfigurationInstrume
         return mavenInstrumentationService
     }
 
-    override fun getOrder(): Int {
-        return 20
-    }
-
 }

@@ -10,8 +10,5 @@ class JarRunConfigurationInstrumentationHandler : BaseRunConfigurationInstrument
         return service<JarRunConfigurationInstrumentationService>()
     }
 
-    override fun getOrder(): Int {
-        return 40
-    }
 
 }

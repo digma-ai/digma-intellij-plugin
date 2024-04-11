@@ -6,10 +6,10 @@ import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.analytics.getAllEnvironments
 import org.digma.intellij.plugin.common.Backgroundable
+import org.digma.intellij.plugin.digmathon.DigmathonService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
-import org.digma.intellij.plugin.posthog.MonitoredPanel
-import org.digma.intellij.plugin.ui.common.traceButtonName
+import org.digma.intellij.plugin.posthog.UserActionOrigin
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
 import org.digma.intellij.plugin.ui.jcef.getMapFromNode
 import org.digma.intellij.plugin.ui.jcef.jsonToObject
@@ -52,7 +52,7 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
             }
 
             "RECENT_ACTIVITY/GO_TO_TRACE" -> {
-                ActivityMonitor.getInstance(project).registerButtonClicked(MonitoredPanel.RecentActivity, traceButtonName)
+                ActivityMonitor.getInstance(project).registerUserActionWithOrigin("trace button clicked", UserActionOrigin.RecentActivity)
                 val recentActivityGoToTraceRequest = jsonToObject(rawRequest, RecentActivityGoToTraceRequest::class.java)
                 project.service<RecentActivityService>().processRecentActivityGoToTraceRequest(recentActivityGoToTraceRequest.payload)
             }
@@ -83,7 +83,7 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
 
             "RECENT_ACTIVITY/FINISH_ORG_DIGMA_SETUP" -> {
                 val environment = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environment").asText()
-                project.service<ActivityMonitor>().registerUserActionEvent("finish environment setup", mapOf("environment" to environment))
+                ActivityMonitor.getInstance(project).registerUserAction("finish environment setup", mapOf("environment" to environment))
                 if (environment != null) {
                     service<AddEnvironmentsService>().setEnvironmentSetupFinished(project, environment)
                     Backgroundable.executeOnPooledThread {
@@ -114,7 +114,7 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
 
             "RECENT_ACTIVITY/DELETE_ENVIRONMENT" -> {
                 val environment = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environment").asText()
-                project.service<ActivityMonitor>().registerUserActionEvent("delete environment", mapOf("environment" to environment))
+                ActivityMonitor.getInstance(project).registerUserAction("delete environment", mapOf("environment" to environment))
                 environment?.let {
                     Backgroundable.executeOnPooledThread {
                         if (service<AddEnvironmentsService>().isPendingEnv(environment)) {
@@ -131,7 +131,7 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
                 val environmentId = getEnvironmentIdFromPayload(requestJsonNode)
                 environmentId?.let {
                     ActivityMonitor.getInstance(project)
-                        .registerUserActionEvent("add environment to run config", mapOf("environment" to environmentId))
+                        .registerUserAction("add environment to run config", mapOf("environment" to environmentId))
                     project.service<RecentActivityService>().addVarRunToConfig(it)
                 }
             }
@@ -148,6 +148,10 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
                     project.service<RecentActivityService>().deleteEnvironmentV2(environmentId)
                     project.service<RecentActivityUpdater>().updateLatestActivities()
                 }
+            }
+
+            "RECENT_ACTIVITY/GET_DIGMATHON_PROGRESS_DATA" -> {
+                RecentActivityService.getInstance(project).setDigmathonProgressData(DigmathonService.getInstance().viewedInsights)
             }
 
             else -> return false

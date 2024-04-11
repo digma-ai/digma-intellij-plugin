@@ -1,9 +1,9 @@
 package org.digma.intellij.plugin.idea.execution
 
-import com.intellij.execution.configurations.RunConfigurationBase
+import com.intellij.execution.configurations.RunConfiguration
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemRunConfiguration
 
-class ExternalSystemConfigurationCleaner(configuration: RunConfigurationBase<*>) : ConfigurationCleaner(configuration) {
+class ExternalSystemConfigurationCleaner(configuration: RunConfiguration) : ConfigurationCleaner(configuration) {
 
 
     //currently we need to clean only for gradle

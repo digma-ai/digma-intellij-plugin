@@ -84,6 +84,7 @@ class EventsNotificationsService(val project: Project) : Disposable {
                     Log.debugWithException(logger, e, "could not get latest events {}", e)
                     ErrorReporter.getInstance().reportError(project, "EventsNotificationsService.waitForEvents", e)
                 } catch (e: Exception) {
+                    Log.log(logger::trace, "could not get latest events {}", e.message)
                     Log.warnWithException(logger, e, "could not get latest events {}", e.message)
                     ErrorReporter.getInstance().reportError(project, "EventsNotificationsService.waitForEvents", e)
                 }
@@ -101,7 +102,7 @@ class EventsNotificationsService(val project: Project) : Disposable {
         val latest = events.events.maxByOrNull { codeObjectEvent: CodeObjectEvent -> codeObjectEvent.eventRecognitionTime }
         latest?.let {
             service<PersistenceService>().setLastInsightsEventTime(it.eventRecognitionTime.withZoneSameInstant(ZoneOffset.UTC).toString())
-            Log.log(logger::info, "latest event time updated to {}", service<PersistenceService>().getLastInsightsEventTime())
+            Log.log(logger::trace, "latest event time updated to {}", service<PersistenceService>().getLastInsightsEventTime())
         }
     }
 
@@ -135,7 +136,7 @@ class EventsNotificationsService(val project: Project) : Disposable {
                 importantInsight.environment
             )
         } else {
-            Log.log(logger::info, "Not showing Notification For FirstImportantInsight because codeObjectId is null {}", importantInsight)
+            Log.log(logger::trace, "Not showing Notification For FirstImportantInsight because codeObjectId is null {}", importantInsight)
         }
     }
 

@@ -18,7 +18,6 @@ import org.digma.intellij.plugin.idea.execution.OTEL_RESOURCE_ATTRIBUTES
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
-import org.digma.intellij.plugin.ui.jcef.JCefComponent
 import org.digma.intellij.plugin.ui.recentactivity.model.PendingEnvironment
 
 //app level service so includes pending environments from all projects
@@ -36,19 +35,11 @@ class AddEnvironmentsService {
     }
 
 
-    fun getPendingEnvironments(): List<PendingEnvironment> {
-        return pendingEnvironments
-    }
-
     fun addEnvironment(environment: String) {
         Log.log(logger::info, "adding environment {}", environment)
         pendingEnvironments.add(PendingEnvironment(environment))
         flush()
     }
-
-//    fun getPendingEnvironment(environment: String): PendingEnvironment? {
-//        return pendingEnvironments.find { pendingEnvironment -> pendingEnvironment.name == environment }
-//    }
 
     fun isPendingEnv(environment: String): Boolean {
         return pendingEnvironments.any { pendingEnvironment -> pendingEnvironment.name == environment }
@@ -60,37 +51,6 @@ class AddEnvironmentsService {
         flush()
     }
 
-//    fun setEnvironmentType(project: Project, environment: String, type: String?) {
-//        val pendingEnvironment: PendingEnvironment? = pendingEnvironments.find { pendingEnvironment -> pendingEnvironment.name == environment }
-//        pendingEnvironment?.let {
-//
-//            if (type == null) {
-//                it.type = null
-//            } else {
-//                it.type = try {
-//                    EnvironmentType.valueOf(type)
-//                } catch (e: Exception) {
-//                    ErrorReporter.getInstance().reportError(project, "AddEnvironmentsService.setEnvironmentType", e)
-//                    null
-//                }
-//            }
-//        }
-//        flush()
-//    }
-
-
-//    fun setEnvironmentServerUrl(project: Project, environment: String, serverUrl: String, token: String?) {
-//        val pendingEnvironment: PendingEnvironment? = pendingEnvironments.find { pendingEnvironment -> pendingEnvironment.name == environment }
-//        pendingEnvironment?.let {
-//            try {
-//                it.serverApiUrl = serverUrl
-//                it.token = token
-//            } catch (e: Exception) {
-//                ErrorReporter.getInstance().reportError(project, "AddEnvironmentsService.setEnvironmentServerUrl", e)
-//            }
-//        }
-//        flush()
-//    }
 
     fun setEnvironmentSetupFinished(project: Project, environment: String) {
         val pendingEnvironment: PendingEnvironment? = pendingEnvironments.find { pendingEnvironment -> pendingEnvironment.name == environment }

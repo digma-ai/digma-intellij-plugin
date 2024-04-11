@@ -10,17 +10,11 @@
         <postStartupActivity implementation="org.digma.intellij.plugin.idea.execution.OTELJarProviderStartup"/>
 
         <applicationService
-                serviceImplementation="org.digma.intellij.plugin.idea.execution.services.JarRunConfigurationInstrumentationService"/>
-        <applicationService
-                serviceImplementation="org.digma.intellij.plugin.idea.execution.services.JavaEEAppServerRunConfigurationInstrumentationService"/>
-        <applicationService
                 serviceImplementation="org.digma.intellij.plugin.idea.execution.services.JavaRunConfigurationInstrumentationService"/>
         <applicationService
-                serviceImplementation="org.digma.intellij.plugin.idea.execution.services.OpenLibertyRunConfigurationInstrumentationService"/>
+                serviceImplementation="org.digma.intellij.plugin.idea.execution.services.JarRunConfigurationInstrumentationService"/>
         <applicationService
-                serviceImplementation="org.digma.intellij.plugin.idea.execution.services.QuarkusRunConfigurationInstrumentationService"/>
-        <applicationService
-                serviceImplementation="org.digma.intellij.plugin.idea.execution.services.TomcatRunConfigurationInstrumentationService"/>
+                serviceImplementation="org.digma.intellij.plugin.idea.execution.services.JavaServerRunConfigurationInstrumentationService"/>
         <applicationService
                 serviceImplementation="org.digma.intellij.plugin.idea.execution.services.KotlinRunConfigurationInstrumentationService"/>
 

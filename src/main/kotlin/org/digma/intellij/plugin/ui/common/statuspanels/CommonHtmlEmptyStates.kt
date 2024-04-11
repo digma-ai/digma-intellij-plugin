@@ -9,9 +9,9 @@ import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.JBUI.emptyInsets
 import com.intellij.util.ui.JBUI.insets
 import org.digma.intellij.plugin.posthog.ActivityMonitor
-import org.digma.intellij.plugin.posthog.MonitoredPanel
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.Links
+import org.digma.intellij.plugin.ui.list.listBackground
 import java.awt.BorderLayout
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
@@ -246,6 +246,7 @@ fun wrapWithScrollable(componentsPanel: JPanel): JPanel {
     scrollablePanel.isOpaque = false
     scrollablePanel.border = JBUI.Borders.empty()
     scrollablePanel.add(scrollPane, BorderLayout.CENTER)
+    scrollablePanel.background = listBackground()
     return scrollablePanel
 }
 
@@ -258,7 +259,7 @@ fun createSlackLinkPanel(project: Project): JPanel {
 
     slackLinkPanel.add(JLabel(Laf.Icons.General.SLACK), BorderLayout.WEST)
     val slackLink = ActionLink("Join Our Slack Channel for Support") {
-        ActivityMonitor.getInstance(project).registerButtonClicked(MonitoredPanel.NoConnection, "slack")
+        ActivityMonitor.getInstance(project).registerUserAction("slack button clicked")
         BrowserUtil.browse(Links.DIGMA_SLACK_SUPPORT_CHANNEL, project)
     }
     slackLink.toolTipText = "Join Our Slack Channel for Support"

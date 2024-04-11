@@ -1,9 +1,10 @@
 package org.digma.intellij.plugin.docker
 
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.util.SystemProperties
 import org.digma.intellij.plugin.common.Retries
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import org.digma.intellij.plugin.errorreporting.SEVERITY_HIGH_TRY_FIX
+import org.digma.intellij.plugin.errorreporting.SEVERITY_PROP_NAME
 import org.digma.intellij.plugin.log.Log
 import java.io.File
 import java.io.FileOutputStream
@@ -25,9 +26,9 @@ class Downloader {
     val composeFile: File = File(downloadDir, COMPOSE_FILE_NAME)
 
 
-    private fun unpackAndTryDownloadLatest() {
+    private fun unpackAndDownloadLatestNow() {
         unpack()
-        tryDownloadLatest()
+        downloadNow()
     }
 
 
@@ -52,6 +53,14 @@ class Downloader {
         if (!downloadDir.exists()) {
             if (!downloadDir.mkdirs()) {
                 Log.log(logger::warn, "could not create directory for docker-compose.yml {}", downloadDir)
+                ErrorReporter.getInstance().reportError(
+                    null, "Downloader.ensureDirectoryExist",
+                    "ensureDirectoryExist,could not create directory for docker-compose.yml in $downloadDir",
+                    mapOf(
+                        SEVERITY_PROP_NAME to SEVERITY_HIGH_TRY_FIX,
+                        "error hint" to "could not create directory for docker-compose.yml in $downloadDir"
+                    )
+                )
             }
         }
     }
@@ -69,21 +78,6 @@ class Downloader {
         com.intellij.openapi.util.io.StreamUtil.copy(inputStream, outputStream)
     }
 
-
-    private fun tryDownloadLatest() {
-
-        val runnable = Runnable {
-
-            try {
-                downloadNow()
-            } catch (e: Exception) {
-                ErrorReporter.getInstance().reportError("Downloader.tryDownloadLatest", e)
-                Log.warnWithException(logger, e, "could not download latest compose file")
-            }
-        }
-
-        Thread(runnable).start()
-    }
 
 
     private fun downloadNow() {
@@ -129,63 +123,24 @@ class Downloader {
     }
 
 
-    fun downloadComposeFile(forceDownloadNow: Boolean = false): Boolean {
+    fun downloadComposeFile(forceDownloadLatest: Boolean = false): Boolean {
 
-        if (composeFile.exists() && !forceDownloadNow) {
+        if (composeFile.exists() && !forceDownloadLatest) {
             Log.log(logger::warn, "compose file already exists {}", composeFile)
             return true
         }
 
-        if (composeFile.exists() && forceDownloadNow) {
+        if (composeFile.exists() && forceDownloadLatest) {
             Log.log(logger::warn, "compose file already exists but forcing download latest {}", composeFile)
             downloadNow()
             return true
         }
 
-        //compose file does not exist, but we want to force download latest now, may be on first install
-        //or on upgrade
-        if (forceDownloadNow) {
-            unpack()
-            downloadNow()
-        } else {
-            unpackAndTryDownloadLatest()
-        }
+        //compose file does not exist. probably first install or the file was deleted.
+        // in case the file was deleted this will actually upgrade the backend to latest compose file
+        unpackAndDownloadLatestNow()
 
         return composeFile.exists()
-
-    }
-
-
-    //todo: backwards compatibility support for users that installed local engine before
-    // we changed to save the is-installed in persistence
-    // can be removed in few versions
-    fun findOldComposeFile(): Boolean {
-        val homeDir = SystemProperties.getUserHome()
-        val downloadDir = File(homeDir, "digma")
-        val composeFile = File(downloadDir, COMPOSE_FILE_NAME)
-        return composeFile.exists()
-    }
-
-
-    //todo: backwards compatibility support for users that installed local engine before
-    // we changed to save the is-installed in persistence
-    // can be removed in few versions
-    fun deleteOldFileIfExists() {
-        //delete file in user home if exists
-        try {
-            val homeDir = SystemProperties.getUserHome()
-            val downloadDir = File(homeDir, "digma")
-            val composeFile = File(downloadDir, COMPOSE_FILE_NAME)
-            val dir = composeFile.parentFile
-            if (composeFile.exists()) {
-                composeFile.delete()
-            }
-            if (dir.exists()) {
-                dir.delete()
-            }
-        } catch (e: Exception) {
-            //ignore
-        }
 
     }
 

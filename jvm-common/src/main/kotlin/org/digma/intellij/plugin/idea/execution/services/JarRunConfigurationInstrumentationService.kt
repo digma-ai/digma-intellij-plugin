@@ -1,6 +1,6 @@
 package org.digma.intellij.plugin.idea.execution.services
 
-import com.intellij.execution.configurations.RunConfigurationBase
+import com.intellij.execution.configurations.RunConfiguration
 import com.intellij.execution.configurations.RunnerSettings
 import com.intellij.execution.configurations.SimpleProgramParameters
 import com.intellij.execution.jar.JarApplicationConfiguration
@@ -12,33 +12,20 @@ import org.digma.intellij.plugin.idea.execution.ModuleResolver
 @Suppress("LightServiceMigrationCode")
 class JarRunConfigurationInstrumentationService : BaseJvmRunConfigurationInstrumentationService() {
 
-    private fun isHandlingConfiguration(configuration: RunConfigurationBase<*>): Boolean {
+    override fun isApplicableFor(configuration: RunConfiguration): Boolean {
         return configuration is JarApplicationConfiguration
     }
 
-    override fun isApplicableFor(configuration: RunConfigurationBase<*>): Boolean {
-        return isHandlingConfiguration(configuration)
-    }
-
-    override fun isApplicableFor(configuration: RunConfigurationBase<*>, params: SimpleProgramParameters): Boolean {
-        return isHandlingConfiguration(configuration)
-    }
-
-
-    override fun getConfigurationType(configuration: RunConfigurationBase<*>, params: SimpleProgramParameters): RunConfigurationType {
-        if (isHandlingConfiguration(configuration)) {
-            return RunConfigurationType.Jar
+    override fun getConfigurationType(configuration: RunConfiguration): RunConfigurationType {
+        return if (isApplicableFor(configuration)) {
+            RunConfigurationType.Jar
+        } else {
+            RunConfigurationType.Unknown
         }
-        return RunConfigurationType.Unknown
     }
-
-    override fun isHandlingType(configuration: RunConfigurationBase<*>): Boolean {
-        return isHandlingConfiguration(configuration)
-    }
-
 
     override fun getModuleResolver(
-        configuration: RunConfigurationBase<*>,
+        configuration: RunConfiguration,
         params: SimpleProgramParameters,
         runnerSettings: RunnerSettings?
     ): ModuleResolver {
@@ -48,7 +35,7 @@ class JarRunConfigurationInstrumentationService : BaseJvmRunConfigurationInstrum
 }
 
 
-private class JarConfigurationModuleResolver(configuration: RunConfigurationBase<*>, params: SimpleProgramParameters) :
+private class JarConfigurationModuleResolver(configuration: RunConfiguration, params: SimpleProgramParameters) :
     ModuleResolver(configuration, params) {
 
     override fun resolveModule(): Module? {

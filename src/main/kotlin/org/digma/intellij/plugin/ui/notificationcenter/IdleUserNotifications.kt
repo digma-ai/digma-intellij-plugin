@@ -111,6 +111,7 @@ private fun showNotification(name: String, text: String, formName: String) {
         notification.addAction(GoAwayAction(project, notification, name))
 
         notification.whenExpired {
+            ActivityMonitor.getInstance(project).registerNotificationCenterEvent("$name.expired", mapOf())
             Log.log(AppNotificationCenter.logger::debug, "in $name, notification expired")
         }
         notification.setImportant(true)
@@ -164,7 +165,7 @@ class ShowTypeformAction(
         try {
             Log.log(AppNotificationCenter.logger::info, "in ShowTypeformAction, action clicked")
 
-            ActivityMonitor.getInstance(project).registerCustomEvent(
+            ActivityMonitor.getInstance(project).registerUserAction(
                 "ShowTypeform link clicked",
                 mapOf(
                     "origin" to notificationName
@@ -206,7 +207,7 @@ class GoAwayAction(
         try {
             Log.log(AppNotificationCenter.logger::info, "in GoAwayAction, action clicked")
 
-            ActivityMonitor.getInstance(project).registerCustomEvent(
+            ActivityMonitor.getInstance(project).registerUserAction(
                 "GoAway link clicked",
                 mapOf(
                     "origin" to notificationName

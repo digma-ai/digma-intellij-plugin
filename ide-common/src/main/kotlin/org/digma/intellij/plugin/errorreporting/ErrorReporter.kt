@@ -1,11 +1,16 @@
 package org.digma.intellij.plugin.errorreporting
 
 import com.github.benmanes.caffeine.cache.Caffeine
-import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.diagnostic.UntraceableException
 import com.intellij.openapi.project.Project
+import net.bytebuddy.ByteBuddy
+import net.bytebuddy.description.method.MethodDescription
+import net.bytebuddy.dynamic.loading.ClassLoadingStrategy
+import net.bytebuddy.implementation.MethodDelegation
+import net.bytebuddy.implementation.bind.annotation.RuntimeType
+import net.bytebuddy.matcher.ElementMatchers
 import org.digma.intellij.plugin.analytics.NoSelectedEnvironmentException
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.common.findActiveProject
@@ -15,22 +20,71 @@ import java.lang.reflect.Field
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
+
 const val SEVERITY_PROP_NAME = "severity"
 const val SEVERITY_LOW_NO_FIX = "low, reporting only,no need to fix"
 const val SEVERITY_MEDIUM_TRY_FIX = "medium, try to fix"
 const val SEVERITY_HIGH_TRY_FIX = "high, try to fix"
 
-@Service(Service.Level.APP)
-class ErrorReporter {
+//class and all public methods should be open so that NoOpProxy will work
+open class ErrorReporter {
 
     private val logger: Logger = Logger.getInstance(this::class.java)
 
 
+    //must be public class
+    class MyPauseInterceptor {
+
+        companion object {
+            @JvmStatic
+            @RuntimeType
+            @Throws(Throwable::class)
+            fun intercept(): Any? {
+                return null
+            }
+        }
+    }
+
     companion object {
+
+        private var active = true
+
+        //a proxy that is returned from getInstance when ErrorReporter is paused.
+        // the proxy will be returned only when using ErrorReporter.getInstance() which should be the convention
+        // for getting a reference to a service. but one can call service<ErrorReported> which will return the real one
+        private fun getNoOpProxy() = try {
+            ByteBuddy()
+                .subclass(ErrorReporter::class.java)
+                .method(ElementMatchers.isDeclaredBy<MethodDescription?>(ErrorReporter::class.java).and(ElementMatchers.isPublic()))
+                .intercept(
+                    MethodDelegation.to(MyPauseInterceptor::class.java)
+                )
+                .make()
+                .load(ErrorReporter::class.java.getClassLoader(), ClassLoadingStrategy.Default.WRAPPER)
+                .loaded.getConstructor().newInstance()
+
+        } catch (e: Throwable) {
+            Log.warnWithException(Logger.getInstance(this::class.java), e, "can not create bytebuddy proxy")
+            service<ErrorReporter>().reportError("ErrorReporter.getNoOpProxy", e)
+            service<ErrorReporter>()
+        }
+
 
         @JvmStatic
         fun getInstance(): ErrorReporter {
-            return service<ErrorReporter>()
+            return if (active) {
+                service<ErrorReporter>()
+            } else {
+                getNoOpProxy()
+            }
+        }
+
+        fun pause() {
+            active = false
+        }
+
+        fun resume() {
+            active = true
         }
     }
 
@@ -38,14 +92,14 @@ class ErrorReporter {
     /*
         try not to use this method and always send the project reference if available.
      */
-    fun reportError(message: String, t: Throwable) {
+    open fun reportError(message: String, t: Throwable) {
         reportError(findActiveProject(), message, t)
     }
 
     /*
         try not to use this method and always send the project reference if available.
      */
-    fun reportError(message: String, t: Throwable, extraDetails: Map<String, String>) {
+    open fun reportError(message: String, t: Throwable, extraDetails: Map<String, String>) {
         reportError(findActiveProject(), message, t, extraDetails)
     }
 
@@ -54,7 +108,7 @@ class ErrorReporter {
         see usage examples.
         the event will contain the stack trace and exception message.
      */
-    fun reportError(project: Project?, message: String, throwable: Throwable) {
+    open fun reportError(project: Project?, message: String, throwable: Throwable) {
         reportError(
             project, message, throwable, mapOf(
                 SEVERITY_PROP_NAME to SEVERITY_HIGH_TRY_FIX
@@ -63,7 +117,7 @@ class ErrorReporter {
     }
 
     //this method is used to report an error that is not an exception. it should contain some details to say what the error is
-    fun reportError(project: Project?, message: String, action: String, details: Map<String, String>) {
+    open fun reportError(project: Project?, message: String, action: String, details: Map<String, String>) {
 
 
         if (isTooFrequentError(message, action)) {
@@ -87,7 +141,7 @@ class ErrorReporter {
     }
 
 
-    fun reportError(project: Project?, message: String, throwable: Throwable, details: Map<String, String>) {
+    open fun reportError(project: Project?, message: String, throwable: Throwable, details: Map<String, String>) {
 
         try {
             //many times the exception is no-connection exception, and that may happen too many times.
@@ -129,11 +183,17 @@ class ErrorReporter {
        see usage examples.
        the event will contain the stack trace and exception message.
      */
-    fun reportAnalyticsServiceError(message: String, methodName: String, exception: Exception, isConnectionException: Boolean) {
+    open fun reportAnalyticsServiceError(message: String, methodName: String, exception: Exception, isConnectionException: Boolean) {
         reportAnalyticsServiceError(findActiveProject(), methodName, message, exception, isConnectionException)
     }
 
-    fun reportAnalyticsServiceError(project: Project?, message: String, methodName: String, exception: Exception, isConnectionException: Boolean) {
+    open fun reportAnalyticsServiceError(
+        project: Project?,
+        message: String,
+        methodName: String,
+        exception: Exception,
+        isConnectionException: Boolean
+    ) {
 
         try {
             if (isTooFrequentException(message, exception)) {
@@ -154,11 +214,11 @@ class ErrorReporter {
     }
 
 
-    fun reportBackendError(message: String, action: String) {
+    open fun reportBackendError(message: String, action: String) {
         reportBackendError(findActiveProject(), message, action)
     }
 
-    fun reportBackendError(project: Project?, message: String, action: String) {
+    open fun reportBackendError(project: Project?, message: String, action: String) {
         if (isTooFrequentBackendError(message, action)) {
             return
         }
@@ -172,7 +232,7 @@ class ErrorReporter {
 
 
     //better to use overloaded method that accepts project
-    fun reportInternalFatalError(source: String, exception: Throwable, details: Map<String, String> = mapOf()) {
+    open fun reportInternalFatalError(source: String, exception: Throwable, details: Map<String, String> = mapOf()) {
         //todo: change ActivityMonitor to application service
         val projectToUse = findActiveProject() ?: return
         reportInternalFatalError(projectToUse, source, exception, details)
@@ -183,7 +243,7 @@ class ErrorReporter {
     //currently will be reported from EDT.assertNonDispatchThread and ReadActions.assertNotInReadAccess
     // which usually should be caught in development but if not, are very urgent to fix.
     // if the error is not a result of an exception create a new RuntimeException and send it so we have the stack trace.
-    fun reportInternalFatalError(project: Project, source: String, exception: Throwable, details: Map<String, String> = mapOf()) {
+    open fun reportInternalFatalError(project: Project, source: String, exception: Throwable, details: Map<String, String> = mapOf()) {
 
         if (isTooFrequentException(source, exception)) {
             return

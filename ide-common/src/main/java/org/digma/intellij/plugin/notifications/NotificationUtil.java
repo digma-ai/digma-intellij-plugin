@@ -52,5 +52,12 @@ public class NotificationUtil {
                 .notify(project);
     }
 
+    public static void showBalloonWarning(Project project, String title, String content) {
+        NotificationGroupManager.getInstance()
+                .getNotificationGroup(DIGMA_STICKY_BALLOON_NOTIFICATION_GROUP)
+                .createNotification(title, content, NotificationType.WARNING)
+                .notify(project);
+    }
+
 
 }

@@ -11,7 +11,7 @@ class RunConfigurationHandlersHolderTests {
 
     @Test
     fun testAllRegistered() {
-        assertEquals(9, ServiceLoader.load(RunConfigurationInstrumentationHandler::class.java).stream().count())
+        assertEquals(6, ServiceLoader.load(RunConfigurationInstrumentationHandler::class.java).stream().count())
     }
 
 }

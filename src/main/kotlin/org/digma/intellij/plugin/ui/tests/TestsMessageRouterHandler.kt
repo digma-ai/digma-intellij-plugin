@@ -10,21 +10,15 @@ import org.digma.intellij.plugin.common.CodeObjectsUtil
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.tests.FilterForLatestTests
 import org.digma.intellij.plugin.posthog.ActivityMonitor
-import org.digma.intellij.plugin.posthog.MonitoredPanel
+import org.digma.intellij.plugin.posthog.UserActionOrigin
 import org.digma.intellij.plugin.scope.ScopeManager
 import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.teststab.TestsRunner
 import org.digma.intellij.plugin.ui.common.openJaegerFromRecentActivity
-import org.digma.intellij.plugin.ui.common.traceButtonName
 import org.digma.intellij.plugin.ui.jcef.BaseCommonMessageRouterHandler
 import java.util.Collections
 
 class TestsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHandler(project) {
-
-    companion object {
-        const val RUN_TEST_BUTTON_NAME: String = "run-test"
-    }
-
 
     override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
 
@@ -68,7 +62,7 @@ class TestsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHandl
     }
 
     private fun handleRunTest(project: Project, requestJsonNode: JsonNode) {
-        ActivityMonitor.getInstance(project).registerButtonClicked(MonitoredPanel.Tests, RUN_TEST_BUTTON_NAME)
+        ActivityMonitor.getInstance(project).registerUserActionWithOrigin("run test button clicked", UserActionOrigin.Tests)
         val payloadNode: JsonNode = objectMapper.readTree(requestJsonNode.get("payload").toString())
         val methodCodeObjectId = payloadNode.get("methodCodeObjectId").textValue()
         val methodId = CodeObjectsUtil.stripMethodPrefix(methodCodeObjectId)
@@ -78,11 +72,10 @@ class TestsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHandl
 
     private fun handleGoToSpanOfTest(project: Project, requestJsonNode: JsonNode) {
 
-        ActivityMonitor.getInstance(project).registerSpanLinkClicked(MonitoredPanel.Tests)
-
         val payloadNode: JsonNode = objectMapper.readTree(requestJsonNode.get("payload").toString())
         val environment = payloadNode.get("environment").textValue()
         val spanCodeObjectId = payloadNode.get("spanCodeObjectId").textValue()
+        ActivityMonitor.getInstance(project).registerSpanLinkClicked(spanCodeObjectId, UserActionOrigin.Tests)
 
         Backgroundable.ensurePooledThread {
             setCurrentEnvironmentById(project, environment) {
@@ -91,8 +84,9 @@ class TestsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHandl
         }
     }
 
+
     private fun handleGoToTrace(project: Project, requestJsonNode: JsonNode) {
-        ActivityMonitor.getInstance(project).registerButtonClicked(MonitoredPanel.Tests, traceButtonName)
+        ActivityMonitor.getInstance(project).registerUserActionWithOrigin("trace button clicked", UserActionOrigin.Tests)
 
         val payloadNode: JsonNode = objectMapper.readTree(requestJsonNode.get("payload").toString())
         val traceId = payloadNode.get("traceId").textValue().orEmpty()

@@ -12,7 +12,7 @@ import org.digma.intellij.plugin.common.createObjectMapper
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
-import org.digma.intellij.plugin.posthog.MonitoredPanel
+import org.digma.intellij.plugin.posthog.UserActionOrigin
 import org.digma.intellij.plugin.scope.ScopeManager
 import org.digma.intellij.plugin.scope.SpanScope
 
@@ -94,7 +94,7 @@ class AssetsService(private val project: Project) : Disposable {
     fun showAsset(spanId: String) {
         EDT.assertNonDispatchThread()
         Log.log(logger::trace, project, "showAsset called for {}", spanId)
-        ActivityMonitor.getInstance(project).registerSpanLinkClicked(MonitoredPanel.Assets)
+        ActivityMonitor.getInstance(project).registerSpanLinkClicked(spanId, UserActionOrigin.Assets)
         ScopeManager.getInstance(project).changeScope(SpanScope(spanId))
     }
 

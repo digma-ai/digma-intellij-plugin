@@ -18,7 +18,7 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
-import org.digma.intellij.plugin.posthog.MonitoredPanel
+import org.digma.intellij.plugin.posthog.UserActionOrigin
 import org.digma.intellij.plugin.scope.ScopeManager
 import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.ui.common.openJaegerFromRecentActivity
@@ -27,10 +27,12 @@ import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJav
 import org.digma.intellij.plugin.ui.recentactivity.model.AddToConfigData
 import org.digma.intellij.plugin.ui.recentactivity.model.AdditionToConfigResult
 import org.digma.intellij.plugin.ui.recentactivity.model.CloseLiveViewMessage
+import org.digma.intellij.plugin.ui.recentactivity.model.DigmathonProgressDataPayload
 import org.digma.intellij.plugin.ui.recentactivity.model.OpenRegistrationDialogMessage
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityEntrySpanForTracePayload
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityEntrySpanPayload
 import org.digma.intellij.plugin.ui.recentactivity.model.SetAddToConfigResult
+import org.digma.intellij.plugin.ui.recentactivity.model.SetDigmathonProgressData
 import org.digma.intellij.plugin.ui.recentactivity.model.SetEnvironmentCreatedMessage
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -44,6 +46,12 @@ class RecentActivityService(val project: Project) : Disposable {
     private var jCefComponent: JCefComponent? = null
 
     private val appInitialized: AtomicBoolean = AtomicBoolean(false)
+
+    companion object {
+        fun getInstance(project: Project): RecentActivityService {
+            return project.service<RecentActivityService>()
+        }
+    }
 
     override fun dispose() {
         //nothing to do , used as parent disposable
@@ -84,6 +92,7 @@ class RecentActivityService(val project: Project) : Disposable {
     }
 
 
+
     fun processRecentActivityGoToSpanRequest(payload: RecentActivityEntrySpanPayload?) {
 
         Log.log(logger::trace, project, "processRecentActivityGoToSpanRequest called with {}", payload)
@@ -92,7 +101,7 @@ class RecentActivityService(val project: Project) : Disposable {
             val spanId = payload.span.spanCodeObjectId
             spanId?.let {
                 ScopeManager.getInstance(project).changeScope(SpanScope(spanId))
-                ActivityMonitor.getInstance(project).registerSpanLinkClicked(MonitoredPanel.RecentActivity)
+                ActivityMonitor.getInstance(project).registerSpanLinkClicked(it, UserActionOrigin.RecentActivity)
             }
         }
     }
@@ -119,7 +128,12 @@ class RecentActivityService(val project: Project) : Disposable {
 
     fun liveViewClosed(closeLiveViewMessage: CloseLiveViewMessage?) {
         project.service<LiveViewUpdater>().stopLiveView(closeLiveViewMessage?.payload?.codeObjectId)
-        project.service<ActivityMonitor>().registerCustomEvent("live view closed", emptyMap())
+        if (closeLiveViewMessage == null) {
+            ActivityMonitor.getInstance(project).registerCustomEvent("live view closed without message", emptyMap())
+        } else {
+            ActivityMonitor.getInstance(project)
+                .registerUserAction("live view closed", mapOf("code object id" to closeLiveViewMessage.payload.codeObjectId))
+        }
     }
 
     fun deleteEnvironment(environment: String) {
@@ -127,7 +141,7 @@ class RecentActivityService(val project: Project) : Disposable {
 
             Log.log(logger::trace, project, "deleteEnvironment called with {}", environment)
 
-            val response = project.service<AnalyticsService>().deleteEnvironment(environment)
+            val response = AnalyticsService.getInstance(project).deleteEnvironment(environment)
             if (response.success) {
                 Log.log(logger::trace, project, "deleteEnvironment {} finished successfully", environment)
             } else {
@@ -204,7 +218,17 @@ class RecentActivityService(val project: Project) : Disposable {
                 serializeAndExecuteWindowPostMessageJavaScript(it.jbCefBrowser.cefBrowser, message)
             }
         }
+    }
 
+
+    fun setDigmathonProgressData(insightsTypes: Set<String>) {
+
+        jCefComponent?.jbCefBrowser?.cefBrowser?.let {
+            serializeAndExecuteWindowPostMessageJavaScript(
+                it,
+                SetDigmathonProgressData(DigmathonProgressDataPayload(insightsTypes))
+            )
+        }
     }
 
 }

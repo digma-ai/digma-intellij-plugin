@@ -15,8 +15,6 @@ import org.digma.intellij.plugin.posthog.ActivityMonitor
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
-const val STICKY_REMINDERS_NOTIFICATION_GROUP = "Digma sticky Reminders Group"
-const val FADING_REMINDERS_NOTIFICATION_GROUP = "Digma fading Reminders Group"
 
 fun startNoInsightsYetNotificationTimer(parentDisposable: Disposable) {
 
@@ -69,14 +67,17 @@ private fun showNoInsightsYetNotification() {
     //if a project was not found there is no notification
     findActiveProject()?.let { project ->
 
-        ActivityMonitor.getInstance(project).registerNotificationCenterEvent("Show.NoInsightsYetNotification", mapOf())
+        val notificationName = "NoInsightsYetNotification"
+
+        ActivityMonitor.getInstance(project).registerNotificationCenterEvent("Show.$notificationName", mapOf())
 
         val notification = NotificationGroupManager.getInstance().getNotificationGroup(STICKY_REMINDERS_NOTIFICATION_GROUP)
             .createNotification("We noticed Digma hasn't received any data yet, do you need help with setup?", NotificationType.INFORMATION)
 
-        notification.addAction(ShowTroubleshootingAction(project, notification, "NoInsightsYetNotification"))
+        notification.addAction(ShowTroubleshootingAction(project, notification, notificationName))
 
         notification.whenExpired {
+            ActivityMonitor.getInstance(project).registerNotificationCenterEvent("$notificationName.expired", mapOf())
             Log.log(AppNotificationCenter.logger::info, "in NoInsightsYetNotification, notification expired")
             service<PersistenceService>().setNoInsightsYetNotificationPassed()
         }

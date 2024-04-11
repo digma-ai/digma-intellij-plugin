@@ -11,10 +11,12 @@ data class LoginResponse
     "accessToken",
     "refreshToken",
     "expiration",
-    "userId"
+    "userId",
+    "errors"
 ) constructor(
     val accessToken: String,
     val refreshToken: String,
     val expiration: Date,
-    val userId: String
+    val userId: String,
+    val errors: String?
 )

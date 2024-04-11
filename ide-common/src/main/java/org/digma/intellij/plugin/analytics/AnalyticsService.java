@@ -108,6 +108,7 @@ public class AnalyticsService implements Disposable {
             if (shouldReplaceClient) {
                 Log.log(LOGGER::debug, "api url changed to {}, calling replace client", myApiUrl);
                 replaceClient(myApiUrl);
+                AuthManager.getInstance().logout();
             }
 
         }, this);
@@ -143,7 +144,7 @@ public class AnalyticsService implements Disposable {
                         message -> {
                             var apiLogger = Logger.getInstance("api.digma.org");
                             Log.log(apiLogger::debug, "API: {}", message);
-                        }), url);
+                        }));
         Log.log(LOGGER::debug, "AuthManager.withAuth successfully wrapped AnalyticsProvider for url {}", url);
         analyticsProviderProxy = newAnalyticsProviderProxy(analyticsProvider);
 
@@ -483,6 +484,9 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.createEnvironments(queryParams));
     }
 
+    public String register(@NotNull Map<String, Object> queryParams) throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.register(queryParams));
+    }
 
     public InsightsStatsResult getInsightsStats(String spanCodeObjectId) throws AnalyticsServiceException {
         try {

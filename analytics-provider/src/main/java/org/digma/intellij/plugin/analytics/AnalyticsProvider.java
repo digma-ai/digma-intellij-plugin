@@ -28,10 +28,11 @@ import java.util.*;
 
 public interface AnalyticsProvider extends Closeable {
 
+    String getApiUrl();
+
     LoginResponse login(LoginRequest loginRequest);
 
     LoginResponse refreshToken(RefreshRequest loginRequest);
-
 
     List<Env> getEnvironments();
 
@@ -108,6 +109,8 @@ public interface AnalyticsProvider extends Closeable {
     AssetNavigationResponse getAssetNavigation(String env, String spanCodeObjectId);
 
     String createEnvironments(Map<String, Object> request);
+
+    String register(Map<String, Object> request);
 
     void deleteEnvironmentV2(String id);
 

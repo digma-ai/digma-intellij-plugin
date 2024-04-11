@@ -8,6 +8,7 @@ import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider
 import org.digma.intellij.plugin.jaegerui.JaegerUIService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.posthog.UserActionOrigin
 import org.digma.intellij.plugin.settings.LinkMode
 import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.ui.model.TraceSample
@@ -15,9 +16,6 @@ import java.io.InputStreamReader
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.util.Collections
-
-const val traceButtonName: String = "show-in-jaeger"
-
 
 
 fun openJaegerFromRecentActivity(
@@ -82,7 +80,7 @@ fun openJaegerFromInsight(
     spanCodeObjectId: String?,
 ) {
 
-    ActivityMonitor.getInstance(project).registerButtonClicked(traceButtonName, insightType)
+    ActivityMonitor.getInstance(project).registerUserActionWithOrigin("trace button clicked", UserActionOrigin.Insights)
 
     val settingsState = SettingsState.getInstance()
     val jaegerBaseUrl = settingsState.jaegerUrl?.trim()?.trimEnd('/')
@@ -139,7 +137,7 @@ fun openJaegerComparisonFromInsight(
     insightType: String,
 ) {
 
-    ActivityMonitor.getInstance(project).registerButtonClicked(traceButtonName, insightType)
+    ActivityMonitor.getInstance(project).registerUserActionWithOrigin("trace button clicked", UserActionOrigin.Insights)
 
     val settingsState = SettingsState.getInstance()
     val jaegerBaseUrl = settingsState.jaegerUrl?.trim()?.trimEnd('/')

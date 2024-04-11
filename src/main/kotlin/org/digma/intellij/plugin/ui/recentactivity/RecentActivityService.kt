@@ -17,7 +17,7 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
-import org.digma.intellij.plugin.posthog.MonitoredPanel
+import org.digma.intellij.plugin.posthog.UserActionOrigin
 import org.digma.intellij.plugin.scope.ScopeManager
 import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.ui.common.openJaegerFromRecentActivity
@@ -96,7 +96,7 @@ class RecentActivityService(val project: Project) : Disposable {
             val spanId = payload.span.spanCodeObjectId
             spanId?.let {
                 ScopeManager.getInstance(project).changeScope(SpanScope(spanId))
-                ActivityMonitor.getInstance(project).registerSpanLinkClicked(MonitoredPanel.RecentActivity)
+                ActivityMonitor.getInstance(project).registerSpanLinkClicked(it, UserActionOrigin.RecentActivity)
             }
         }
     }
@@ -123,7 +123,12 @@ class RecentActivityService(val project: Project) : Disposable {
 
     fun liveViewClosed(closeLiveViewMessage: CloseLiveViewMessage?) {
         project.service<LiveViewUpdater>().stopLiveView(closeLiveViewMessage?.payload?.codeObjectId)
-        project.service<ActivityMonitor>().registerCustomEvent("live view closed", emptyMap())
+        if (closeLiveViewMessage == null) {
+            ActivityMonitor.getInstance(project).registerCustomEvent("live view closed without message", emptyMap())
+        } else {
+            ActivityMonitor.getInstance(project)
+                .registerUserAction("live view closed", mapOf("code object id" to closeLiveViewMessage.payload.codeObjectId))
+        }
     }
 
     fun deleteEnvironment(environment: String) {
@@ -131,13 +136,13 @@ class RecentActivityService(val project: Project) : Disposable {
 
             Log.log(logger::trace, project, "deleteEnvironment called with {}", environment)
 
-            val response = project.service<AnalyticsService>().deleteEnvironment(environment)
+            val response = AnalyticsService.getInstance(project).deleteEnvironment(environment)
             if (response.success) {
                 Log.log(logger::trace, project, "deleteEnvironment {} finished successfully", environment)
             } else {
                 Log.log(logger::trace, project, "deleteEnvironment {} faled", environment)
             }
-            project.service<AnalyticsService>().environment.refreshNowOnBackground()
+            AnalyticsService.getInstance(project).environment.refreshNowOnBackground()
 
         } catch (e: Exception) {
             Log.warnWithException(logger, project, e, "error deleting environment")

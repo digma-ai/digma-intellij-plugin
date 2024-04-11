@@ -99,7 +99,8 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
                 allNotificationsPanelBuilder);
 
         if (IDEUtilsService.shouldOpenWizard()) {
-            ActivityMonitor.getInstance(project).registerCustomEvent("show-installation-wizard", Collections.emptyMap());
+            ActivityMonitor.getInstance(project).registerCustomEvent("show-installation-wizard",
+                    Collections.singletonMap("reason", "show on startup,probably new installation"));
             MainToolWindowCardsController.getInstance(project).showWizard(false);
         }
         else{

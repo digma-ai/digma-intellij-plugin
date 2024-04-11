@@ -45,8 +45,6 @@ public final class DashboardService {
 
     public void openDashboard(@NotNull String dashboardName) {
 
-        ActivityMonitor.getInstance(project).openDashboardButtonClicked("DashboardButton");
-
         if (showExisting(dashboardName)) {
             return;
         }
@@ -81,7 +79,7 @@ public final class DashboardService {
 
         Log.log(logger::debug, project, "goToSpan request {}", goToSpan);
 
-        ActivityMonitor.getInstance(project).registerSpanLinkClicked(MonitoredPanel.Dashboard);
+        ActivityMonitor.getInstance(project).registerSpanLinkClicked(goToSpan.payload().spanCodeObjectId(), UserActionOrigin.Dashboard);
 
         var span = goToSpan.payload();
 

@@ -3,11 +3,12 @@ package org.digma.intellij.plugin.common;
 import com.intellij.ide.util.RunOnceUtil;
 import com.intellij.openapi.project.*;
 import com.intellij.openapi.startup.StartupActivity;
-import org.digma.intellij.plugin.posthog.*;
+import org.digma.intellij.plugin.posthog.ActivityMonitor;
+import org.digma.intellij.plugin.session.SessionMetadataProperties;
 import org.digma.intellij.plugin.ui.ToolWindowShower;
 import org.jetbrains.annotations.NotNull;
 
-import static org.digma.intellij.plugin.posthog.SessionMetadataKt.getPluginLoadedKey;
+import static org.digma.intellij.plugin.session.SessionMetadataPropertiesKt.getPluginLoadedKey;
 
 public class StartupStartupActivity implements StartupActivity.DumbAware {
 
@@ -20,6 +21,6 @@ public class StartupStartupActivity implements StartupActivity.DumbAware {
             project.getService(DumbService.class).runWhenSmart(() -> EDT.ensureEDT(() -> ToolWindowShower.getInstance(project).showToolWindow()));
         });
         ActivityMonitor.getInstance(project).registerPluginLoaded();
-        SessionMetadata.getInstance().put(getPluginLoadedKey(project), true);
+        SessionMetadataProperties.getInstance().put(getPluginLoadedKey(project), true);
     }
 }

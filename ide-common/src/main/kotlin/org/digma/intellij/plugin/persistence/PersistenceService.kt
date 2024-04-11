@@ -256,15 +256,6 @@ class PersistenceService {
     }
 
 
-    fun getPendingEnvironment(): String? {
-        return state.pendingEnvironment
-    }
-
-    fun setPendingEnvironment(pendingEnvironment: String) {
-        state.pendingEnvironment = pendingEnvironment
-    }
-
-
     fun getSelectedServices(): MutableMap<String, Array<String>> {
         return state.selectedServices
     }

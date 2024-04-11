@@ -5,7 +5,6 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.analytics.getAllEnvironments
-import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.digmathon.DigmathonService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
@@ -66,64 +65,6 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
                     // close the live view even if there is an error parsing the message.
                     Log.debugWithException(logger, project, e, "Exception while parsing CloseLiveViewMessage {}", e.message)
                     project.service<RecentActivityService>().liveViewClosed(null)
-                }
-            }
-
-            "RECENT_ACTIVITY/ADD_ENVIRONMENT" -> {
-                val environment = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environment").asText()
-                ActivityMonitor.getInstance(project).registerAddEnvironment(environment)
-                environment?.let {
-                    service<AddEnvironmentsService>().addEnvironment(it)
-                    Backgroundable.executeOnPooledThread {
-                        project.service<RecentActivityUpdater>().updateLatestActivities()
-                    }
-                }
-            }
-
-
-            "RECENT_ACTIVITY/FINISH_ORG_DIGMA_SETUP" -> {
-                val environment = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environment").asText()
-                ActivityMonitor.getInstance(project).registerUserAction("finish environment setup", mapOf("environment" to environment))
-                if (environment != null) {
-                    service<AddEnvironmentsService>().setEnvironmentSetupFinished(project, environment)
-                    Backgroundable.executeOnPooledThread {
-                        project.service<RecentActivityUpdater>().updateLatestActivities()
-                    }
-                }
-            }
-
-//            "RECENT_ACTIVITY/CHECK_REMOTE_ENVIRONMENT_CONNECTION" -> {
-//                try {
-//                    val environment = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environment").asText()
-//                    val serverUrl = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("serverAddress").asText()
-//                    val token = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("token").asText()
-//                    project.service<ActivityMonitor>()
-//                        .registerUserActionEvent("check connection", mapOf("environment" to environment, "serverUrl" to serverUrl))
-//                    if (environment != null && serverUrl != null) {
-//                        service<AddEnvironmentsService>().setEnvironmentServerUrl(project, environment, serverUrl, token)
-//                        Backgroundable.executeOnPooledThread {
-//                            val connectionTestResult = project.service<AnalyticsService>().testRemoteConnection(serverUrl, token)
-//                            sendRemoteConnectionCheckResult(browser, connectionTestResult)
-//                        }
-//                    }
-//                } catch (e: Exception) {
-//                    ErrorReporter.getInstance().reportError(project, "RecentActivityMessageRouterHandler.CHECK_REMOTE_ENVIRONMENT_CONNECTION", e)
-//                    sendRemoteConnectionCheckResult(browser, ConnectionTestResult.failure(ExceptionUtils.getNonEmptyMessage(e)))
-//                }
-//            }
-
-            "RECENT_ACTIVITY/DELETE_ENVIRONMENT" -> {
-                val environment = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environment").asText()
-                ActivityMonitor.getInstance(project).registerUserAction("delete environment", mapOf("environment" to environment))
-                environment?.let {
-                    Backgroundable.executeOnPooledThread {
-                        if (service<AddEnvironmentsService>().isPendingEnv(environment)) {
-                            service<AddEnvironmentsService>().removeEnvironment(it)
-                        } else {
-                            project.service<RecentActivityService>().deleteEnvironment(environment)
-                        }
-                        project.service<RecentActivityUpdater>().updateLatestActivities()
-                    }
                 }
             }
 

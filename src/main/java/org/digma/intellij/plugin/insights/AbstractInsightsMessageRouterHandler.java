@@ -11,7 +11,7 @@ import org.digma.intellij.plugin.common.CodeObjectsUtil;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.rest.navigation.*;
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator;
-import org.digma.intellij.plugin.posthog.ActivityMonitor;
+import org.digma.intellij.plugin.posthog.*;
 import org.digma.intellij.plugin.ui.insights.InsightsService;
 import org.digma.intellij.plugin.ui.insights.model.*;
 import org.digma.intellij.plugin.ui.jcef.BaseCommonMessageRouterHandler;
@@ -127,7 +127,7 @@ public abstract class AbstractInsightsMessageRouterHandler extends BaseCommonMes
         var linkTicketResponse = AnalyticsService.getInstance(getProject()).linkTicket(insightId, ticketLink);
         var message = new SetLinkUnlinkResponseMessage("digma", "INSIGHTS/SET_TICKET_LINK", linkTicketResponse);
         serializeAndExecuteWindowPostMessageJavaScript(browser, message);
-        ActivityMonitor.getInstance(getProject()).registerUserActionEvent("link ticket", Map.of("insight", insightType));
+        ActivityMonitor.getInstance(getProject()).registerUserAction("link ticket", Map.of("insight", insightType));
     }
 
     private void unlinkTicket(@NotNull CefBrowser browser, JsonNode jsonNode) throws JsonProcessingException, AnalyticsServiceException {
@@ -138,7 +138,7 @@ public abstract class AbstractInsightsMessageRouterHandler extends BaseCommonMes
         var unlinkTicketResponse = AnalyticsService.getInstance(getProject()).unlinkTicket(insightId);
         var message = new SetLinkUnlinkResponseMessage("digma", "INSIGHTS/SET_TICKET_LINK", unlinkTicketResponse);
         serializeAndExecuteWindowPostMessageJavaScript(browser, message);
-        ActivityMonitor.getInstance(getProject()).registerUserActionEvent("unlink ticket", Map.of("insight", insightType));
+        ActivityMonitor.getInstance(getProject()).registerUserAction("unlink ticket", Map.of("insight", insightType));
     }
 
     @Nullable
@@ -237,6 +237,7 @@ public abstract class AbstractInsightsMessageRouterHandler extends BaseCommonMes
         var spanId = getObjectMapper().readTree(jsonNode.get("payload").toString()).get("spanCodeObjectId").asText();
         Log.log(LOGGER::debug, getProject(), "got span id {}", spanId);
         InsightsService.getInstance(getProject()).showInsight(spanId);
+        ActivityMonitor.getInstance(getProject()).registerSpanLinkClicked(spanId, UserActionOrigin.Insights);
     }
 
     private void openHistogram(JsonNode jsonNode) throws JsonProcessingException {

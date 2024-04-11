@@ -7,7 +7,7 @@ import org.digma.intellij.plugin.analytics.*;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.posthog.ActivityMonitor;
+import org.digma.intellij.plugin.posthog.*;
 import org.digma.intellij.plugin.scope.*;
 import org.digma.intellij.plugin.ui.common.*;
 import org.digma.intellij.plugin.ui.recentactivity.RecentActivityService;
@@ -41,8 +41,7 @@ public abstract class InsightsServiceImpl implements Disposable {
     public void openHistogram(@NotNull String spanCodeObjectId, @NotNull String insightType, @Nullable String displayName) {
 
         Log.log(logger::debug, project, "openHistogram called {}", spanCodeObjectId);
-
-        ActivityMonitor.getInstance(project).registerButtonClicked("histogram", insightType);
+        ActivityMonitor.getInstance(project).registerUserActionWithOrigin("open histogram", UserActionOrigin.Insights, Collections.singletonMap("insight type", insightType));
         var title  = displayName;
         try {
 
@@ -78,7 +77,7 @@ public abstract class InsightsServiceImpl implements Disposable {
     public void openLiveView(@NotNull String codeObjectId) {
         Log.log(logger::debug, project, "openLiveView called {}", codeObjectId);
         project.getService(RecentActivityService.class).startLiveView(codeObjectId);
-        ActivityMonitor.getInstance(project).registerCustomEvent("live view clicked", Collections.emptyMap());
+        ActivityMonitor.getInstance(project).registerUserAction("live view clicked", Collections.singletonMap("code object id", prefixedCodeObjectId));
     }
 
 

@@ -124,6 +124,10 @@ val KNOWN_IRRELEVANT_TASKS = setOf(
     "processResources",
     "processTestResources",
     "prepareKotlinBuildScriptModel",
-    "resolveMainClassName"
+    "resolveMainClassName",
+    "runClientTester",
+    "javaToolchains",
+    "outgoingVariants",
+    "resolvableConfigurations"
 
     )

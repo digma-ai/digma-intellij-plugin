@@ -15,6 +15,7 @@ import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
 import org.digma.intellij.plugin.navigation.MainContentViewSwitcher
 import org.digma.intellij.plugin.navigation.View
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator
+import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import org.digma.intellij.plugin.ui.service.ErrorsViewOrchestrator
@@ -35,6 +36,8 @@ class ScopeManager(private val project: Project) {
     fun changeToHome(isCalledFromReact: Boolean = false) {
 
         EDT.assertNonDispatchThread()
+
+        ActivityMonitor.getInstance(project).registerScopeChanged("home")
 
         ErrorsViewService.getInstance(project).empty()
 
@@ -62,6 +65,8 @@ class ScopeManager(private val project: Project) {
     fun changeScope(scope: Scope) {
 
         EDT.assertNonDispatchThread()
+
+        ActivityMonitor.getInstance(project).registerScopeChanged(scope.toString())
 
         try {
             when (scope) {

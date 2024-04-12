@@ -33,7 +33,7 @@ import java.util.concurrent.locks.ReentrantLock
 const val SILENT_LOGIN_USER = "admin@digma.ai"
 const val SILENT_LOGIN_PASSWORD = "admin"
 
-data class LoginResult(val isSuccess: Boolean, val userId: String?, val errors: String?);
+data class LoginResult(val isSuccess: Boolean, val userId: String?, val error: String?)
 
 @Service(Service.Level.APP)
 class AuthManager {
@@ -90,13 +90,21 @@ class AuthManager {
                 DigmaDefaultAccountHolder.getInstance().account = null
             }
         }
+
+        fireChange()
     }
 
-
     fun login(analyticsProvider: RestAnalyticsProvider, userName: String, password: String): LoginResult {
-
         val loginResult = loginInternal(analyticsProvider, userName, password);
-        val authInfo =  AuthInfo(DigmaDefaultAccountHolder.getInstance().account?.userId)
+        if (loginResult.isSuccess) {
+            fireChange()
+        }
+
+        return loginResult
+    }
+
+    private fun fireChange() {
+        val authInfo = AuthInfo(DigmaDefaultAccountHolder.getInstance().account?.userId)
         listeners.forEach {
             try {
                 it.authInfoChanged(authInfo)
@@ -104,8 +112,6 @@ class AuthManager {
                 ErrorReporter.getInstance().reportInternalFatalError("Failed notify auth info change", e)
             }
         }
-
-        return loginResult
     }
 
     private fun loginInternal(analyticsProvider: RestAnalyticsProvider, userName: String, password: String): LoginResult {
@@ -118,8 +124,6 @@ class AuthManager {
         try {
             Log.log(logger::info, "doing login for url={}", analyticsProvider.apiUrl)
             val loginResponse = analyticsProvider.login(LoginRequest(userName, password))
-            val isSuccess = loginResponse.errors == null
-            if (isSuccess) {
 
                 val digmaAccount = DigmaAccountManager.createAccount(analyticsProvider.apiUrl, loginResponse.userId)
                 val digmaCredentials = DigmaCredentials(
@@ -134,17 +138,19 @@ class AuthManager {
                     DigmaDefaultAccountHolder.getInstance().account = digmaAccount
                 }
                 Log.log(logger::info, "login success for url={}", analyticsProvider.apiUrl)
-            }
 
             reportPosthogEvent(
-                "login " +  if (isSuccess) "success" else "failed",  mapOf(
+                "login success",  mapOf(
                     "user" to SILENT_LOGIN_USER
                 )
             )
 
-            return LoginResult(isSuccess, loginResponse.userId, loginResponse.errors);
+            return LoginResult(true, loginResponse.userId, null);
 
-        } catch (e: Throwable) {
+        } catch (e: AuthenticationException) {
+            return LoginResult(false, null, e.detailedMessage);
+        }
+        catch (e: Throwable) {
             //just for reporting, never swallow the exception
             reportPosthogEvent(
                 "login failed", mapOf(

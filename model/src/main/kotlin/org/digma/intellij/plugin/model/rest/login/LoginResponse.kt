@@ -18,5 +18,5 @@ data class LoginResponse
     val refreshToken: String,
     val expiration: Date,
     val userId: String,
-    val errors: String?
 )
+

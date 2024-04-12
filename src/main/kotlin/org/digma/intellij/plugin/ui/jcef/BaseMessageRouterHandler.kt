@@ -38,7 +38,6 @@ import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
-import org.digma.intellij.plugin.ui.assets.model.SetCategoriesDataMessage
 import org.digma.intellij.plugin.ui.common.updateObservabilityValue
 import org.digma.intellij.plugin.ui.jcef.model.GetFromPersistenceRequest
 import org.digma.intellij.plugin.ui.jcef.model.LoginResultPayload
@@ -48,8 +47,6 @@ import org.digma.intellij.plugin.ui.jcef.model.SaveToPersistenceRequest
 import org.digma.intellij.plugin.ui.jcef.model.SendTrackingEventRequest
 import org.digma.intellij.plugin.ui.jcef.model.SetLoginResultMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetRegistrationMessage
-import org.digma.intellij.plugin.ui.jcef.model.SetUserInfoMessage
-import org.digma.intellij.plugin.ui.jcef.model.UserInfoPayload
 import org.digma.intellij.plugin.ui.jcef.persistence.JCEFPersistenceService
 import org.digma.intellij.plugin.ui.jcef.state.JCEFStateManager
 
@@ -217,38 +214,18 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                             val result = AnalyticsService.getInstance(project).register(requestParams)
                             val message = SetRegistrationMessage(result)
                             serializeAndExecuteWindowPostMessageJavaScript(browser, message)
+                            UserRegistrationManager.getInstance(project).register(mapOf("email" to payload.get("email").asText()))
                         }
                     }
 
+                    JCEFGlobalConstants.GLOBAL_LOGOUT -> {
+                        AuthManager.getInstance().logout()
+                    }
+
                     JCEFGlobalConstants.GLOBAL_LOGIN -> {
-                        val payload = getPayloadFromRequest(requestJsonNode)
-                        val settingsState: SettingsState = SettingsState.getInstance()
-                        val result = payload?.let {
-                            try {
-                                val provider = (RestAnalyticsProvider(
-                                    settingsState.apiUrl, getInstance().getAuthenticationProviders()
-                                ) { logMsg: String? ->
-                                    val apiLogger =
-                                        Logger.getInstance("api.digma.org")
-                                    Log.log({ msg: String? ->
-                                        apiLogger.debug(
-                                            msg
-                                        )
-                                    }, "API: {}", logMsg)
-                                })
-
-                                return@let AuthManager.getInstance().login(provider, it.get("email").asText(), it.get("password").asText())
-                            } catch (e: Exception) {
-                                return@let LoginResult(false, null, null);
-                            }
-                        }
-
-                        if (result != null && result.isSuccess) {
-                            settingsState.fireChanged()
-                        }
-
+                        val result = login(requestJsonNode)
                         val message = result?.let {
-                            SetLoginResultMessage(LoginResultPayload(result.isSuccess, result.errors))
+                            SetLoginResultMessage(LoginResultPayload(result.isSuccess, result.error))
                         } ?: SetLoginResultMessage(LoginResultPayload(false, null))
 
                         serializeAndExecuteWindowPostMessageJavaScript(browser, message)
@@ -285,15 +262,12 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                                         stats.unreadInsightsCount
                                     )
                             }
-
-
                         }
                     }
 
                     JCEFGlobalConstants.GLOBAL_CHANGE_ENVIRONMENT -> {
                         changeEnvironment(requestJsonNode)
                     }
-
 
                     else -> {
                         val handled = doOnQuery(project, browser, requestJsonNode, request, action)
@@ -402,6 +376,31 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
         environment?.let { envId ->
             setCurrentEnvironmentById(project, envId)
         }
+    }
+
+    private fun login (requestJsonNode: JsonNode): LoginResult? {
+        val payload = getPayloadFromRequest(requestJsonNode)
+        val settingsState: SettingsState = SettingsState.getInstance()
+        val result = payload?.let {
+            try {
+                val provider = (RestAnalyticsProvider(
+                    settingsState.apiUrl, getInstance().getAuthenticationProviders()
+                ) { logMsg: String? ->
+                    val apiLogger =
+                        Logger.getInstance("api.digma.org")
+                    Log.log({ msg: String? ->
+                        apiLogger.debug(
+                            msg
+                        )
+                    }, "API: {}", logMsg)
+                })
+
+                return@let AuthManager.getInstance().login(provider, it.get("email").asText(), it.get("password").asText())
+            } catch (e: Exception) {
+                return@let LoginResult(false, null, null);
+            }
+        }
+        return result;
     }
 }
 

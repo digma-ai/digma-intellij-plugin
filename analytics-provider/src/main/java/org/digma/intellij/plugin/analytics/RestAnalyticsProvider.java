@@ -406,12 +406,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     private AnalyticsProviderException createUnsuccessfulResponseException(int code, ResponseBody errorBody) throws IOException {
-
+        var errorMessage = errorBody == null ? null : errorBody.string();
         if (code == HTTPConstants.UNAUTHORIZED) {
-            return new AuthenticationException(code, "Unauthorized " + code);
+            var message = errorMessage != null && !errorMessage.isEmpty() ? errorMessage: "Unauthorized " + code;
+            return new AuthenticationException(code, message);
         }
 
-        String message = String.format("Error %d. %s", code, errorBody == null ? null : errorBody.string());
+        String message = String.format("Error %d. %s", code, errorMessage);
         return new AnalyticsProviderException(code, message);
     }
 

@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.ui.jcef.model
 
-import com.fasterxml.jackson.annotation.JsonRawValue
 import org.digma.intellij.plugin.ui.jcef.JCEFGlobalConstants
 
 data class SetLoginResultMessage(
@@ -10,4 +9,4 @@ data class SetLoginResultMessage(
     val action = "GLOBAL/LOGIN_RESULT"
 }
 
-data class LoginResultPayload(val isSuccess: Boolean, @JsonRawValue val errors:String? )
+data class LoginResultPayload(val isSuccess: Boolean, val error: String?)

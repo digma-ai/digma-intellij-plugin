@@ -117,7 +117,7 @@ open class DefaultInstrumentationFlavor : BaseInstrumentationFlavor() {
 
             javaToolOptionsBuilder
                 .withOtelAgent(useOtelAgent())
-                .withTest(isTest, parametersExtractor)
+                .withCommonResourceAttributes(isTest, parametersExtractor)
                 .withMockitoSupport(isTest)
                 .withServiceName(moduleResolver, parametersExtractor, serviceNameProvider)
                 .withExtendedObservability()

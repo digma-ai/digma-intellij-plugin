@@ -5,9 +5,9 @@ import com.intellij.openapi.project.Project;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.common.Backgroundable;
-import org.digma.intellij.plugin.env.*;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.model.rest.environment.Env;
 import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.jetbrains.annotations.*;
 
@@ -15,17 +15,19 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class Environment implements EnvironmentsSupplier {
+public class Environment {
 
     private static final Logger LOGGER = Logger.getInstance(Environment.class);
 
+    @Nullable
     private Env current;
 
     @NotNull
     private List<Env> environments = new ArrayList<>();
 
-    //used to try restore environment after connections are lost and regained
-    private String latestKnownEnv = null;
+    //used to try restore selected environment on startup and after connections are lost and regained
+    @Nullable
+    private String latestKnownEnvId;
 
     private final Project project;
     private final AnalyticsService analyticsService;
@@ -35,57 +37,51 @@ public class Environment implements EnvironmentsSupplier {
     public Environment(@NotNull Project project, @NotNull AnalyticsService analyticsService) {
         this.project = project;
         this.analyticsService = analyticsService;
-        latestKnownEnv = PersistenceService.getInstance().getCurrentEnv();
+        latestKnownEnvId = PersistenceService.getInstance().getLatestSelectedEnvId();
     }
 
 
-    @Override
+    //most methods are protected. don't use this object directly, use EnvUtils.kt
+
+
     @Nullable
-    public Env getCurrent() {
+    Env getCurrent() {
         return current;
     }
 
 
-    @Override
-    public void setCurrent(@NotNull Env env) {
-        setCurrent(env.getOriginalName());
-    }
+    void setCurrentById(@Nullable String envId) {
 
-
-    @Override
-    public void setCurrent(@Nullable String newEnv) {
-
-        if (StringUtils.isEmpty(newEnv)) {
+        if (StringUtils.isEmpty(envId)) {
             return;
         }
 
-        setCurrent(newEnv, null);
+        setCurrentById(envId, null);
     }
 
 
     //this method does not handle illegal or null environment. it should be called with a non-null newEnv
     // that exists in the DB.
-    @Override
-    public void setCurrent(@NotNull String newEnv, @Nullable Runnable taskToRunAfterChange) {
+    void setCurrentById(@NotNull String envId, @Nullable Runnable taskToRunAfterChange) {
 
         try {
-            Log.log(LOGGER::debug, "Setting current environment , old={},new={}", this.current, newEnv);
+            Log.log(LOGGER::debug, "Setting current environment by id , old={},new={}", current, envId);
 
-            if (StringUtils.isEmpty(newEnv)) {
-                Log.log(LOGGER::debug, "setCurrent was called with an empty environment {}", newEnv);
+            if (StringUtils.isEmpty(envId)) {
+                Log.log(LOGGER::debug, "setCurrent was called with an empty environment {}", envId);
                 return;
             }
 
-            //this setCurrent method may send an env that does not exist in the
+            //this setCurrentById method may send an env that does not exist in the
             // list of environments. so refresh if necessary.
             Runnable task = () -> {
                 envChangeLock.lock();
                 try {
                     //run both refreshEnvironments and updateCurrentEnv under same lock
-                    if (environments.isEmpty() || !contains(newEnv)) {
+                    if (environments.isEmpty() || !contains(envId)) {
                         refreshEnvironments();
                     }
-                    updateCurrentEnv(newEnv);
+                    updateCurrentEnv(envId);
                 } finally {
                     if (envChangeLock.isHeldByCurrentThread()) {
                         envChangeLock.unlock();
@@ -98,7 +94,7 @@ public class Environment implements EnvironmentsSupplier {
                 }
             };
 
-            Backgroundable.ensureBackground(project, "Digma: environment changed " + newEnv, task);
+            Backgroundable.ensureBackground(project, "Digma: environment changed " + envId, task);
 
         } catch (Throwable e) {
             ErrorReporter.getInstance().reportError(project, "Environment.setCurrent", e);
@@ -107,20 +103,12 @@ public class Environment implements EnvironmentsSupplier {
 
 
     @NotNull
-    @Override
-    public List<Env> getEnvironments() {
+    List<Env> getEnvironments() {
         return environments;
     }
 
-    @NotNull
-    @Override
-    public List<String> getEnvironmentsNames() {
-        return getEnvironments().stream().map(Env::getOriginalName).toList();
-    }
 
-
-    @Override
-    public void refreshNowOnBackground() {
+    void refreshNowOnBackground() {
 
         Log.log(LOGGER::trace, "Refreshing Environments on background thread.");
         Backgroundable.ensureBackground(project, "Refreshing Environments", () -> {
@@ -128,7 +116,7 @@ public class Environment implements EnvironmentsSupplier {
             try {
                 //run both refreshEnvironments and updateCurrentEnv under same lock
                 refreshEnvironments();
-                updateCurrentEnv(latestKnownEnv);
+                updateCurrentEnv(latestKnownEnvId);
             } catch (Exception e) {
                 Log.warnWithException(LOGGER, e, "Exception in refreshNowOnBackground");
                 ErrorReporter.getInstance().reportError(project, "Environment.refreshNowOnBackground", e);
@@ -152,7 +140,7 @@ public class Environment implements EnvironmentsSupplier {
             Log.log(LOGGER::trace, "Refresh Environments called");
 
             Log.log(LOGGER::trace, "Refreshing Environments list");
-            List<String> envsFromBackend = analyticsService.getRawEnvironments();
+            List<Env> envsFromBackend = analyticsService.getEnvironments();
 
             if (envsFromBackend.isEmpty()) {
                 Log.log(LOGGER::trace, "Error loading environments or no environments added yet: {}", envsFromBackend);
@@ -162,14 +150,11 @@ public class Environment implements EnvironmentsSupplier {
             }
 
 
-            var newEnvironments = envsFromBackend.stream().map(Env::toEnv).toList();
-
-
-            if (collectionsEquals(newEnvironments, environments)) {
+            if (collectionsEquals(envsFromBackend, environments)) {
                 return;
             }
 
-            this.environments = newEnvironments;
+            this.environments = envsFromBackend;
             notifyEnvironmentsListChange();
 
         } finally {
@@ -196,10 +181,10 @@ public class Environment implements EnvironmentsSupplier {
         }
 
         if (current != null) {
-            latestKnownEnv = current.getOriginalName();
-            PersistenceService.getInstance().setCurrentEnv(current.getOriginalName());
+            latestKnownEnvId = current.getId();
+            PersistenceService.getInstance().setLatestSelectedEnvId(latestKnownEnvId);
         } else {
-            PersistenceService.getInstance().setCurrentEnv(null);
+            PersistenceService.getInstance().setLatestSelectedEnvId(null);
         }
 
         if (!Objects.equals(oldEnv, current)) {
@@ -207,12 +192,17 @@ public class Environment implements EnvironmentsSupplier {
         }
     }
 
-    private Optional<Env> find(@Nullable String envToFind) {
-        return environments.stream().filter(env -> env.getOriginalName().equals(envToFind)).findFirst();
+    @Nullable
+    public Env findById(@NotNull String envId) {
+        return find(envId).orElse(null);
     }
 
-    private boolean contains(String envToFind) {
-        return environments.stream().anyMatch(env -> env.getOriginalName().equals(envToFind));
+    private Optional<Env> find(@Nullable String envIdToFind) {
+        return environments.stream().filter(env -> env.getId().equals(envIdToFind)).findFirst();
+    }
+
+    private boolean contains(String envIdToFind) {
+        return environments.stream().anyMatch(env -> env.getId().equals(envIdToFind));
     }
 
 
@@ -230,10 +220,10 @@ public class Environment implements EnvironmentsSupplier {
 
 
     private void notifyEnvironmentsListChange() {
-        Log.log(LOGGER::trace, "Firing EnvironmentsListChange event for {}", environments);
         if (project.isDisposed()) {
             return;
         }
+        Log.log(LOGGER::trace, "Firing EnvironmentsListChange event for {}", environments);
 
         //run in new background thread so locks can be freed because this method is called under lock
         Backgroundable.runInNewBackgroundThread(project, "environmentsListChanged", () -> {
@@ -245,10 +235,10 @@ public class Environment implements EnvironmentsSupplier {
 
 
     private void notifyEnvironmentChanged(Env oldEnv, Env newEnv) {
-        Log.log(LOGGER::trace, "Firing EnvironmentChanged event for {}", newEnv);
         if (project.isDisposed()) {
             return;
         }
+        Log.log(LOGGER::trace, "Firing EnvironmentChanged event for {}", newEnv);
 
         Log.log(LOGGER::info, "Digma: Changing environment " + oldEnv + " to " + newEnv);
 

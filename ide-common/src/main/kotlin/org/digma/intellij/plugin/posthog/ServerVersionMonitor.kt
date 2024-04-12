@@ -9,6 +9,7 @@ import com.intellij.openapi.project.Project
 import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
+import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.log.Log
 
 @Service(Service.Level.PROJECT)
@@ -58,6 +59,8 @@ class ServerVersionMonitor(private val project: Project) : AnalyticsServiceConne
                     appVersion = about.applicationVersion
                     ActivityMonitor.getInstance(project).registerServerInfo(about)
                 }
+            } catch (e: AnalyticsServiceException) {
+                Log.debugWithException(LOGGER, e, "Failed to get+register server version: {}", e.message)
             } catch (e: Exception) {
                 Log.warnWithException(LOGGER, e, "Failed to get+register server version: {}", e.message)
             }

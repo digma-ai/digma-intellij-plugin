@@ -37,7 +37,6 @@ open class JavaToolOptionsMerger(
         }.plus("scm.commit.id=$commitId")
 
         params.env[OTEL_RESOURCE_ATTRIBUTES] = otelResourceAttributes
-
     }
 
 

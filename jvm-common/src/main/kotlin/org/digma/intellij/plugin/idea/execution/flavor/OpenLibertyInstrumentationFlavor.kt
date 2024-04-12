@@ -88,7 +88,7 @@ class OpenLibertyInstrumentationFlavor : BaseInstrumentationFlavor() {
             javaToolOptionsBuilder
                 .withOtelSdkDisabledEqualsFalse()
                 .withOtelExporterEndpoint()
-                .withTest(isTest, parametersExtractor)
+                .withCommonResourceAttributes(isTest, parametersExtractor)
                 .withMockitoSupport(isTest)
                 .withServiceName(moduleResolver, parametersExtractor, serviceNameProvider)
                 .withExtendedObservability()

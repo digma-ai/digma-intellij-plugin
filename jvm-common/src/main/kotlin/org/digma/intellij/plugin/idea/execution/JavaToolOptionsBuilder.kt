@@ -3,7 +3,10 @@ package org.digma.intellij.plugin.idea.execution
 import com.intellij.execution.configurations.RunConfiguration
 import com.intellij.execution.configurations.RunnerSettings
 import com.intellij.execution.configurations.SimpleProgramParameters
-import org.digma.intellij.plugin.env.Env
+import org.digma.intellij.plugin.analytics.LOCAL_ENV
+import org.digma.intellij.plugin.analytics.LOCAL_TESTS_ENV
+import org.digma.intellij.plugin.analytics.isCentralized
+import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
 import org.digma.intellij.plugin.settings.SettingsState
 
 open class JavaToolOptionsBuilder(
@@ -17,6 +20,7 @@ open class JavaToolOptionsBuilder(
     protected val javaToolOptions = StringBuilder(" ")
 
     private val otelResourceAttributes = mutableListOf<String>()
+
 
     open fun withOtelSdkDisabledEqualsFalse(): JavaToolOptionsBuilder {
         javaToolOptions
@@ -57,6 +61,26 @@ open class JavaToolOptionsBuilder(
         return this
     }
 
+    open fun withCommonResourceAttributes(isTest: Boolean, parametersExtractor: ParametersExtractor): JavaToolOptionsBuilder {
+
+        if (!parametersExtractor.hasDigmaEnvironmentIdAttribute(configuration, params)) {
+            val envAttribute = if (isTest && !isCentralized(configuration.project)) {
+                "$DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE=$LOCAL_TESTS_ENV"
+            } else {
+                "$DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE=$LOCAL_ENV"
+            }
+
+            withOtelResourceAttribute(envAttribute)
+
+            DigmaDefaultAccountHolder.getInstance().account?.userId?.let {
+                val userIdAttribute = "$DIGMA_USER_ID_RESOURCE_ATTRIBUTE=${it}"
+                withOtelResourceAttribute(userIdAttribute)
+            }
+        }
+
+        return this
+    }
+
 
     open fun withSpringBootWithMicrometerTracing(isSpringBootWithMicrometerTracing: Boolean): JavaToolOptionsBuilder {
         if (isSpringBootWithMicrometerTracing) {
@@ -90,16 +114,16 @@ open class JavaToolOptionsBuilder(
         return this
     }
 
-    open fun withTest(isTest: Boolean, parametersExtractor: ParametersExtractor): JavaToolOptionsBuilder {
-        if (isTest) {
-            if (!parametersExtractor.alreadyHasTestEnv(configuration, params)) {
-                val envPart = "digma.environment=${Env.buildEnvForLocalTests()}"
-                withOtelResourceAttribute(envPart)
-            }
-        }
-
-        return this
-    }
+//    open fun withTest(isTest: Boolean, parametersExtractor: ParametersExtractor): JavaToolOptionsBuilder {
+//        if (isTest && !isCentralized(configuration.project)) {
+//            if (!parametersExtractor.hasDigmaEnvironmentIdAttribute(configuration, params)) {
+//                val testEnv = "$DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE=$LOCAL_TESTS_ENV"
+//                withOtelResourceAttribute(testEnv)
+//            }
+//        }
+//
+//        return this
+//    }
 
 
     open fun withMockitoSupport(isTest: Boolean): JavaToolOptionsBuilder {
@@ -118,6 +142,7 @@ open class JavaToolOptionsBuilder(
 
 
     open fun withOtelResourceAttribute(attribute: String): JavaToolOptionsBuilder {
+        //collection otel resource attributes , they are built in build method
         otelResourceAttributes.add(attribute)
         return this
     }
@@ -167,7 +192,7 @@ open class JavaToolOptionsBuilder(
     //only for quarkus
     fun withQuarkusTest(isTest: Boolean): JavaToolOptionsBuilder {
         if (isTest) {
-            val envPart = "digma.environment=${Env.buildEnvForLocalTests()}"
+            val envPart = "$DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE=$LOCAL_TESTS_ENV"
             javaToolOptions
                 .append("-Dquarkus.otel.resource.attributes=\"$envPart\"")
                 .append(" ")

@@ -17,7 +17,8 @@
 ## 2.0.315 - 2024-04-07
 
 - force update Closes #2015 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2035
-- Enhance instrumentation flavor for all configuration types by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2045
+- Enhance instrumentation flavor for all configuration types by @shalom938
+  in https://github.com/digma-ai/digma-intellij-plugin/pull/2045
 
 ## 2.0.314 - 2024-04-05
 

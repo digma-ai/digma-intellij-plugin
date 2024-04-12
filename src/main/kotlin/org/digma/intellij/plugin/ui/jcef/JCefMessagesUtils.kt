@@ -8,8 +8,8 @@ import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.docker.DigmaInstallationStatus
 import org.digma.intellij.plugin.docker.DockerService
-import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import org.digma.intellij.plugin.model.rest.environment.Env
 import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
 import org.digma.intellij.plugin.navigation.View
 import org.digma.intellij.plugin.scope.SpanScope
@@ -39,6 +39,7 @@ import org.digma.intellij.plugin.ui.jcef.model.SetScopeMessagePayload
 import org.digma.intellij.plugin.ui.jcef.model.SetStateMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetUserEmailMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetUserFinishedDigmathon
+import org.digma.intellij.plugin.ui.jcef.model.SetUserInfoMessage
 import org.digma.intellij.plugin.ui.jcef.model.UICodeFontRequest
 import org.digma.intellij.plugin.ui.jcef.model.UIFontRequest
 import org.digma.intellij.plugin.ui.jcef.model.UIThemeRequest
@@ -47,6 +48,7 @@ import org.digma.intellij.plugin.ui.jcef.model.UiFontPayload
 import org.digma.intellij.plugin.ui.jcef.model.UiThemePayload
 import org.digma.intellij.plugin.ui.jcef.model.UserEmailPayload
 import org.digma.intellij.plugin.ui.jcef.model.UserFinishedDigmathonPayload
+import org.digma.intellij.plugin.ui.jcef.model.UserInfoPayload
 import org.digma.intellij.plugin.ui.navigation.model.SetViewMessage
 import org.digma.intellij.plugin.ui.navigation.model.SetViewMessagePayload
 import org.digma.intellij.plugin.ui.settings.Theme
@@ -156,6 +158,11 @@ fun sendUserEmail(cefBrowser: CefBrowser, email: String) {
         JCEFGlobalConstants.REQUEST_MESSAGE_TYPE,
         "GLOBAL/SET_USER_REGISTRATION_EMAIL", UserEmailPayload(email)
     )
+    serializeAndExecuteWindowPostMessageJavaScript(cefBrowser, setUserEmailMessage)
+}
+
+fun sendUserInfoMessage(cefBrowser: CefBrowser, userId: String?) {
+    val setUserEmailMessage = SetUserInfoMessage(UserInfoPayload(userId))
     serializeAndExecuteWindowPostMessageJavaScript(cefBrowser, setUserEmailMessage)
 }
 

@@ -5,7 +5,6 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import freemarker.template.*;
 import org.digma.intellij.plugin.docker.DockerService;
-import org.digma.intellij.plugin.env.Env;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.settings.SettingsState;
@@ -15,6 +14,8 @@ import org.digma.intellij.plugin.ui.jcef.BaseIndexTemplateBuilderKt;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+
+import static org.digma.intellij.plugin.analytics.EnvUtilsKt.getCurrentEnvironmentName;
 
 public class DashboardIndexTemplateBuilder {
     private final Logger logger = Logger.getInstance(DashboardIndexTemplateBuilder.class);
@@ -60,7 +61,7 @@ public class DashboardIndexTemplateBuilder {
             data.put(DIGMA_API_URL, SettingsState.getInstance().apiUrl);
 
             data.put(DASHBOARD_REFRESH_INTERVAL, 10*1000);
-            data.put(DASHBOARD_ENVIRONMENT, Env.getCurrentEnvName(project));
+            data.put(DASHBOARD_ENVIRONMENT, getCurrentEnvironmentName(project));
 
             Template template = freemarketConfiguration.getTemplate(INDEX_TEMPLATE_NAME);
             StringWriter stringWriter = new StringWriter();

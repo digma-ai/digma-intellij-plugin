@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.io.CharStreams;
 import okhttp3.*;
+import okhttp3.logging.HttpLoggingInterceptor;
 import org.digma.intellij.plugin.model.rest.AboutResult;
 import org.digma.intellij.plugin.model.rest.assets.AssetDisplayInfo;
 import org.digma.intellij.plugin.model.rest.codelens.*;
@@ -11,12 +12,14 @@ import org.digma.intellij.plugin.model.rest.codespans.CodeContextSpans;
 import org.digma.intellij.plugin.model.rest.common.SpanHistogramQuery;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.env.*;
+import org.digma.intellij.plugin.model.rest.environment.Env;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.event.*;
 import org.digma.intellij.plugin.model.rest.highlights.HighlightsPerformanceResponse;
 import org.digma.intellij.plugin.model.rest.insights.*;
 import org.digma.intellij.plugin.model.rest.livedata.*;
+import org.digma.intellij.plugin.model.rest.login.*;
 import org.digma.intellij.plugin.model.rest.lowlevel.*;
 import org.digma.intellij.plugin.model.rest.navigation.*;
 import org.digma.intellij.plugin.model.rest.notifications.*;
@@ -32,34 +35,52 @@ import retrofit2.converter.scalars.ScalarsConverterFactory;
 import retrofit2.http.Headers;
 import retrofit2.http.*;
 
+import javax.annotation.CheckForNull;
 import javax.net.ssl.*;
 import java.io.*;
 import java.security.*;
 import java.security.cert.X509Certificate;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
+import java.util.function.*;
 
 public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
     private final Client client;
 
-    public RestAnalyticsProvider(String baseUrl) {
-        this(baseUrl, null);
+    //this constructor is used only in tests
+    RestAnalyticsProvider(String baseUrl) {
+
+        this(baseUrl, Collections.singletonList(new AuthenticationProvider() {
+            @CheckForNull
+            @Override
+            public String getHeaderName() {
+                return null;
+            }
+            @CheckForNull
+            @Override
+            public String getHeaderValue() {
+                return null;
+            }
+        }), System.out::println);
     }
 
-    public RestAnalyticsProvider(String baseUrl, String apiToken) {
-        this.client = createClient(baseUrl, apiToken);
+    public RestAnalyticsProvider(String baseUrl, List<AuthenticationProvider> authenticationProviders, Consumer<String> logger) {
+        this.client = createClient(baseUrl, authenticationProviders, logger);
     }
 
+    @Override
+    public LoginResponse login(LoginRequest loginRequest) {
+        return execute(() -> client.analyticsProvider.login(loginRequest));
+    }
 
-    public List<String> getEnvironments() {
-        var envs = execute(client.analyticsProvider::getEnvironments);
-        //make sure environments list is always a mutable list because we change it
-        if (envs != null) {
-            envs = new ArrayList<>(envs);
-        }
-        return envs;
+    @Override
+    public LoginResponse refreshToken(RefreshRequest refreshRequest) {
+        return execute(() -> client.analyticsProvider.refreshToken(refreshRequest));
+    }
+
+    public List<Env> getEnvironments() {
+        return execute(client.analyticsProvider::getEnvironments);
     }
 
 
@@ -243,6 +264,16 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
+    public String createEnvironments(Map<String, Object> request) {
+        return execute(() -> client.analyticsProvider.createEnvironment(request));
+    }
+
+    @Override
+    public void deleteEnvironmentV2(String id) {
+        execute(() -> client.analyticsProvider.deleteEnvironment(id));
+    }
+
+    @Override
     public void markInsightsAsRead(List<String> insightIds) {
         execute(() -> client.analyticsProvider.markInsightsAsRead(new MarkInsightsAsReadRequest(insightIds)));
     }
@@ -268,28 +299,6 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         return execute(() -> client.analyticsProvider.getInsightsStats(queryParams));
     }
 
-    @Override
-    public HttpResponse lowLevelCall(HttpRequest request) {
-        okhttp3.Response okHttp3Response;
-        try {
-            var okHttp3Request = toOkHttp3Request(request);
-            okHttp3Response = client.okHttpClient.newCall(okHttp3Request).execute();
-        } catch (Exception e) {
-            throw new AnalyticsProviderException(e);
-        }
-
-        if (okHttp3Response.isSuccessful()) {
-            return toHttpResponse(okHttp3Response);
-        } else {
-            String message;
-            try (ResponseBody errorBody = okHttp3Response.body()) {
-                message = String.format("Error %d. %s", okHttp3Response.code(), errorBody == null ? null : errorBody.string());
-            } catch (IOException e) {
-                throw new AnalyticsProviderException(e.getMessage(), e);
-            }
-            throw new AnalyticsProviderException(okHttp3Response.code(), message);
-        }
-    }
 
     @Override
     public List<HighlightsPerformanceResponse> getHighlightsPerformance(Map<String, Object> queryParams) {
@@ -301,7 +310,29 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         return execute(() -> client.analyticsProvider.getHighlightsTopInsights(queryParams));
     }
 
-    private static Request toOkHttp3Request(HttpRequest request){
+    @Override
+    public HttpResponse lowLevelCall(HttpRequest request) {
+
+        okhttp3.Response okHttp3Response;
+        try {
+            var okHttp3Request = toOkHttp3Request(request);
+            okHttp3Response = client.okHttpClient.newCall(okHttp3Request).execute();
+        } catch (Exception e) {
+            throw new AnalyticsProviderException(e);
+        }
+
+        if (okHttp3Response.isSuccessful()) {
+            return toHttpResponse(okHttp3Response);
+        } else {
+            try (ResponseBody errorBody = okHttp3Response.body()) {
+                throw createUnsuccessfulResponseException(okHttp3Response.code(), errorBody);
+            } catch (IOException e) {
+                throw new AnalyticsProviderException(e.getMessage(), e);
+            }
+        }
+    }
+
+    private Request toOkHttp3Request(HttpRequest request) {
         var okHttp3Body = request.getBody() != null
                 ? RequestBody.create(MediaType.parse(request.getBody().getContentType()), request.getBody().getContent())
                 : null;
@@ -312,7 +343,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         return okHttp3RequestBuilder.build();
     }
 
-    private static HttpResponse toHttpResponse(okhttp3.Response response){
+    private HttpResponse toHttpResponse(okhttp3.Response response) {
         var body = response.body();
         var headers = response.headers().toMultimap().entrySet().stream()
                 .filter(i -> !i.getValue().isEmpty())
@@ -355,19 +386,27 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         if (response.isSuccessful()) {
             return response.body();
         } else {
-            String message;
             try (ResponseBody errorBody = response.errorBody()) {
-                message = String.format("Error %d. %s", response.code(), errorBody == null ? null : errorBody.string());
+                throw createUnsuccessfulResponseException(response.code(), errorBody);
             } catch (IOException e) {
                 throw new AnalyticsProviderException(e.getMessage(), e);
             }
-            throw new AnalyticsProviderException(response.code(), message);
         }
     }
 
+    private AnalyticsProviderException createUnsuccessfulResponseException(int code, ResponseBody errorBody) throws IOException {
 
-    private Client createClient(String baseUrl, String apiToken) {
-        return new Client(baseUrl, apiToken);
+        if (code == HTTPConstants.UNAUTHORIZED) {
+            return new AuthenticationException(code, "Unauthorized " + code);
+        }
+
+        String message = String.format("Error %d. %s", code, errorBody == null ? null : errorBody.string());
+        return new AnalyticsProviderException(code, message);
+    }
+
+
+    private Client createClient(String baseUrl, List<AuthenticationProvider> authenticationProviders, Consumer<String> logger) {
+        return new Client(baseUrl, authenticationProviders, logger);
     }
 
 
@@ -385,7 +424,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         private final OkHttpClient okHttpClient;
 
         @SuppressWarnings("MoveFieldAssignmentToInitializer")
-        public Client(String baseUrl, String apiToken) {
+        public Client(String baseUrl, List<AuthenticationProvider> authenticationProviders, Consumer<String> logger) {
 
             //configure okHttp here if necessary
             OkHttpClient.Builder builder = new OkHttpClient.Builder();
@@ -396,12 +435,20 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
             }
 
 
-            if (apiToken != null && !apiToken.isBlank()) {
-                builder.addInterceptor(chain -> {
-                    Request request = chain.request().newBuilder().addHeader("Authorization", "Token " + apiToken).build();
+            authenticationProviders.forEach(authenticationProvider -> builder.addInterceptor(chain -> {
+                var headerName = authenticationProvider.getHeaderName();
+                var headerValue = authenticationProvider.getHeaderValue();
+                if (headerName != null && headerValue != null) {
+                    Request request = chain.request().newBuilder().addHeader(headerName, headerValue).build();
                     return chain.proceed(request);
-                });
-            }
+                } else {
+                    return chain.proceed(chain.request());
+                }
+            }));
+
+
+            //always add the logging interceptor last, so it will log info from all other interceptors
+            addLoggingInterceptor(builder, logger);
 
             builder.callTimeout(10, TimeUnit.SECONDS)
                     .connectTimeout(5, TimeUnit.SECONDS)
@@ -422,6 +469,25 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
             analyticsProvider = retrofit.create(AnalyticsProviderRetrofit.class);
         }
+
+
+        private void addLoggingInterceptor(OkHttpClient.Builder builder, Consumer<String> logger) {
+
+            var logSensitive = Boolean.getBoolean("api.digma.org.log.sensitive");
+
+            HttpLoggingInterceptor logging = new HttpLoggingInterceptor(message -> {
+                if (!logSensitive && message != null && message.contains("accessToken")) {
+                    return;
+                }
+                logger.accept(message);
+            });
+            logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+            if (!logSensitive) {
+                logging.redactHeader("Authorization");
+            }
+            builder.addInterceptor(logging);
+        }
+
 
         private void applyInsecureSsl(OkHttpClient.Builder builder) {
             SSLContext sslContext;
@@ -513,8 +579,8 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @GET("/CodeAnalytics/environments")
-        Call<List<String>> getEnvironments();
+        @GET("/environments")
+        Call<List<Env>> getEnvironments();
 
         @Headers({
                 "Accept: application/+json",
@@ -796,6 +862,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         @GET("/insights/statistics")
         Call<InsightsStatsResult> getInsightsStats(@QueryMap Map<String, Object> fields);
 
+
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
@@ -810,6 +877,30 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         @GET("/highlights/topinsights")
         Call<String> getHighlightsTopInsights(@QueryMap Map<String, Object> fields);
 
-    }
 
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/authenticate/login")
+        Call<LoginResponse> login(@Body LoginRequest loginRequest);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/authenticate/refresh-token")
+        Call<LoginResponse> refreshToken(@Body RefreshRequest loginRequest);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/environments")
+        Call<String> createEnvironment(@Body Map<String, Object> request);
+
+        @DELETE("/environments/{envId}")
+        Call<Void> deleteEnvironment(@Path("envId") String envId);
+
+    }
 }

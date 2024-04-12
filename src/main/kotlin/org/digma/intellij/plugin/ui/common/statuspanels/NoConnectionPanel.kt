@@ -6,7 +6,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.ActionLink
 import com.intellij.util.ui.JBUI.Borders.empty
-import org.digma.intellij.plugin.analytics.AnalyticsService
+import org.digma.intellij.plugin.analytics.refreshEnvironmentsNowOnBackground
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.UserActionOrigin
@@ -72,7 +72,7 @@ fun createNoConnectionPanel(project: Project, parentDisposable: Disposable):JPan
     buttonsPanel.background = listBackground()
     val refreshLink = ActionLink("Refresh"){
         ActivityMonitor.getInstance(project).registerUserActionWithOrigin("refresh link clicked", UserActionOrigin.NoConnectionPanel)
-        AnalyticsService.getInstance(project).environment.refreshNowOnBackground()
+        refreshEnvironmentsNowOnBackground(project)
     }
     buttonsPanel.add(refreshLink,BorderLayout.WEST)
 

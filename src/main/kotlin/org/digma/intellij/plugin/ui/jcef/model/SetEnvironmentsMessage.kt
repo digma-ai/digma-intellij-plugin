@@ -1,6 +1,6 @@
 package org.digma.intellij.plugin.ui.jcef.model
 
-import org.digma.intellij.plugin.env.Env
+import org.digma.intellij.plugin.model.rest.environment.Env
 import org.digma.intellij.plugin.ui.jcef.JCEFGlobalConstants
 
 data class SetEnvironmentsMessage(val payload: SetEnvironmentsMessagePayload) {

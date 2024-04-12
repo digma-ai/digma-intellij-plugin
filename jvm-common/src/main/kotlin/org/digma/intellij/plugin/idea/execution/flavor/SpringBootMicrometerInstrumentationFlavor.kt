@@ -81,7 +81,7 @@ class SpringBootMicrometerInstrumentationFlavor : DefaultInstrumentationFlavor()
 
             javaToolOptionsBuilder
                 .withSpringBootWithMicrometerTracing(true)
-                .withTest(isTest, parametersExtractor)
+                .withCommonResourceAttributes(isTest, parametersExtractor)
                 .withMockitoSupport(isTest)
                 .withServiceName(moduleResolver, parametersExtractor, serviceNameProvider)
                 .withExtendedObservability()

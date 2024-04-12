@@ -17,10 +17,12 @@ data class HighlightsPerformanceResponse
     "lastSpanInstanceInfo",
     "histogramPlot"
 )
-constructor(val environment: String,
+constructor(
+    val environment: String,
     val percentiles: Array<SpanDurationsPercentile>,
     val lastSpanInstanceInfo: SpanInstanceInfo?,
-    val histogramPlot: SpanDurationsPlot?)
+    val histogramPlot: SpanDurationsPlot?
+)
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class SpanInstanceInfo

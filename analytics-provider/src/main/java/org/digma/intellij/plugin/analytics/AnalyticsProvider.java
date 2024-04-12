@@ -7,12 +7,14 @@ import org.digma.intellij.plugin.model.rest.codespans.CodeContextSpans;
 import org.digma.intellij.plugin.model.rest.common.SpanHistogramQuery;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.env.*;
+import org.digma.intellij.plugin.model.rest.environment.Env;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.event.*;
 import org.digma.intellij.plugin.model.rest.highlights.HighlightsPerformanceResponse;
 import org.digma.intellij.plugin.model.rest.insights.*;
 import org.digma.intellij.plugin.model.rest.livedata.*;
+import org.digma.intellij.plugin.model.rest.login.*;
 import org.digma.intellij.plugin.model.rest.lowlevel.*;
 import org.digma.intellij.plugin.model.rest.navigation.*;
 import org.digma.intellij.plugin.model.rest.notifications.*;
@@ -26,7 +28,12 @@ import java.util.*;
 
 public interface AnalyticsProvider extends Closeable {
 
-    List<String> getEnvironments();
+    LoginResponse login(LoginRequest loginRequest);
+
+    LoginResponse refreshToken(RefreshRequest loginRequest);
+
+
+    List<Env> getEnvironments();
 
     void sendDebuggerEvent(DebuggerEventRequest debuggerEventRequest);
 
@@ -99,6 +106,10 @@ public interface AnalyticsProvider extends Closeable {
     String getInsights(Map<String, Object> queryParams);
 
     AssetNavigationResponse getAssetNavigation(String env, String spanCodeObjectId);
+
+    String createEnvironments(Map<String, Object> request);
+
+    void deleteEnvironmentV2(String id);
 
     void markInsightsAsRead(List<String> insightIds);
     void markAllInsightsAsRead(String environment, MarkInsightsAsReadScope scope);

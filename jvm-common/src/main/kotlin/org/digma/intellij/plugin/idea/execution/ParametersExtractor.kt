@@ -46,14 +46,14 @@ open class ParametersExtractor(protected val configuration: RunConfiguration, pr
     }
 
 
-    open fun alreadyHasTestEnv(configuration: RunConfiguration, params: SimpleProgramParameters): Boolean {
+    open fun hasDigmaEnvironmentIdAttribute(configuration: RunConfiguration, params: SimpleProgramParameters): Boolean {
         if (configuration is ExternalSystemRunConfiguration &&
-            configuration.settings.env[OTEL_RESOURCE_ATTRIBUTES]?.contains("$DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE=") == true
+            configuration.settings.env[OTEL_RESOURCE_ATTRIBUTES]?.contains("$DIGMA_ENVIRONMENT_ID_RESOURCE_ATTRIBUTE=") == true
         ) {
             return true
         }
 
-        return params.env[OTEL_RESOURCE_ATTRIBUTES]?.contains("$DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE=") ?: false
+        return params.env[OTEL_RESOURCE_ATTRIBUTES]?.contains("$DIGMA_ENVIRONMENT_ID_RESOURCE_ATTRIBUTE=") ?: false
     }
 
     fun extractEnvValue(envKeyName: String): String? {

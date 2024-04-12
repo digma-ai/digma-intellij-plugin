@@ -28,7 +28,6 @@ object InternalFileSettings {
     }
 
 
-
     fun getAggressiveUpdateServiceEnabled(): Boolean {
         return getProperty("AggressiveUpdateService.enabled")?.toBoolean() ?: true
     }
@@ -44,7 +43,6 @@ object InternalFileSettings {
     fun getAggressiveUpdateNotificationsDelayMinutes(defaultValue: Int): Int {
         return getProperty("AggressiveUpdateService.notification.delay.minutes")?.toInt() ?: defaultValue
     }
-
 
 
 }

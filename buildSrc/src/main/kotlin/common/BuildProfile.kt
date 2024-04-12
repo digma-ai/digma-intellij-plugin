@@ -70,7 +70,7 @@ fun Project.currentProfile(): BuildProfile = BuildProfiles.currentProfile(this)
 
 object BuildProfiles {
 
-    enum class Profiles { p223, p231, p232, p233, p241 }
+    enum class Profiles { p223, p231, p232, p233, p241, p242 }
 
     fun currentProfile(project: Project): BuildProfile {
 
@@ -92,7 +92,7 @@ object BuildProfiles {
     private val profileAliases = mapOf(
         "lowest" to Profiles.p223.name,
         "latest" to Profiles.p233.name,
-        "eap" to Profiles.p241.name,
+        "eap" to Profiles.p242.name,
     )
 
 
@@ -175,17 +175,37 @@ object BuildProfiles {
             javaVersion = JavaVersion.VERSION_17.majorVersion
         ),
 
-        //EAP
+
         Profiles.p241 to BuildProfile(
 
             profile = Profiles.p241,
-            isEAP = true,
-            platformVersion = "241-EAP-SNAPSHOT",
-            riderVersion = "2024.1-EAP9-SNAPSHOT",
-            pycharmVersion = "241-EAP-SNAPSHOT",
-            riderResharperVersion = "2024.1-eap09",
+            platformVersion = "2024.1",
+            riderVersion = "2024.1",
+            pycharmVersion = "2024.1",
+            riderResharperVersion = "2024.1.0",
             riderResharperVersionConstant = "PROFILE_2023_2",
-            pythonPluginVersion = "241.14494.158",
+            pythonPluginVersion = "241.14494.240",
+            platformVersionCode = "241",
+            pluginSinceBuild = "241",
+            pluginUntilBuild = "241.*",
+            versionToRunPluginVerifier = "2024.1",
+            kotlinTarget = KotlinVersion.KOTLIN_1_8.version, //todo: maybe need to upgrade to 20
+            javaVersion = JavaVersion.VERSION_17.majorVersion,
+        ),
+
+        //EAP
+        //todo: currently same as 241, update to EAP when started, create launchers.
+        // add to github matrix
+        Profiles.p242 to BuildProfile(
+
+            isEAP = true,
+            profile = Profiles.p242,
+            platformVersion = "2024.1",
+            riderVersion = "2024.1",
+            pycharmVersion = "2024.1",
+            riderResharperVersion = "2024.1.0",
+            riderResharperVersionConstant = "PROFILE_2023_2",
+            pythonPluginVersion = "241.14494.240",
             platformVersionCode = "241",
             pluginSinceBuild = "241",
             pluginUntilBuild = "241.*",
@@ -193,6 +213,7 @@ object BuildProfiles {
             kotlinTarget = KotlinVersion.KOTLIN_1_8.version, //todo: maybe need to upgrade to 20
             javaVersion = JavaVersion.VERSION_17.majorVersion,
         )
+
     )
 
 }

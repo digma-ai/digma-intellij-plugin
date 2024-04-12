@@ -1,7 +1,5 @@
 package org.digma.intellij.plugin.ui.recentactivity
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.node.ArrayNode
 import com.intellij.execution.CommonProgramRunConfigurationParameters
 import com.intellij.execution.RunManager
 import com.intellij.execution.configuration.AbstractRunConfiguration
@@ -11,132 +9,17 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemRunConfiguration
 import com.intellij.openapi.project.Project
-import org.digma.intellij.plugin.common.createObjectMapper
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.execution.DIGMA_ENVIRONMENT_ID_RESOURCE_ATTRIBUTE
 import org.digma.intellij.plugin.idea.execution.OTEL_RESOURCE_ATTRIBUTES
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.persistence.PersistenceService
-import org.digma.intellij.plugin.ui.jcef.JCefComponent
-import org.digma.intellij.plugin.ui.recentactivity.model.PendingEnvironment
 
 //app level service so includes pending environments from all projects
 @Service(Service.Level.APP)
 class AddEnvironmentsService {
 
     private val logger = Logger.getInstance(this::class.java)
-
-    private val pendingEnvironments = mutableListOf<PendingEnvironment>()
-
-    private val objectMapper: ObjectMapper = createObjectMapper()
-
-    init {
-        load()
-    }
-
-
-    fun getPendingEnvironments(): List<PendingEnvironment> {
-        return pendingEnvironments
-    }
-
-    fun addEnvironment(environment: String) {
-        Log.log(logger::info, "adding environment {}", environment)
-        pendingEnvironments.add(PendingEnvironment(environment))
-        flush()
-    }
-
-//    fun getPendingEnvironment(environment: String): PendingEnvironment? {
-//        return pendingEnvironments.find { pendingEnvironment -> pendingEnvironment.name == environment }
-//    }
-
-    fun isPendingEnv(environment: String): Boolean {
-        return pendingEnvironments.any { pendingEnvironment -> pendingEnvironment.name == environment }
-    }
-
-    fun removeEnvironment(environment: String) {
-        Log.log(logger::info, "removing environment {}", environment)
-        pendingEnvironments.removeIf { p: PendingEnvironment -> p.name == environment }
-        flush()
-    }
-
-//    fun setEnvironmentType(project: Project, environment: String, type: String?) {
-//        val pendingEnvironment: PendingEnvironment? = pendingEnvironments.find { pendingEnvironment -> pendingEnvironment.name == environment }
-//        pendingEnvironment?.let {
-//
-//            if (type == null) {
-//                it.type = null
-//            } else {
-//                it.type = try {
-//                    EnvironmentType.valueOf(type)
-//                } catch (e: Exception) {
-//                    ErrorReporter.getInstance().reportError(project, "AddEnvironmentsService.setEnvironmentType", e)
-//                    null
-//                }
-//            }
-//        }
-//        flush()
-//    }
-
-
-//    fun setEnvironmentServerUrl(project: Project, environment: String, serverUrl: String, token: String?) {
-//        val pendingEnvironment: PendingEnvironment? = pendingEnvironments.find { pendingEnvironment -> pendingEnvironment.name == environment }
-//        pendingEnvironment?.let {
-//            try {
-//                it.serverApiUrl = serverUrl
-//                it.token = token
-//            } catch (e: Exception) {
-//                ErrorReporter.getInstance().reportError(project, "AddEnvironmentsService.setEnvironmentServerUrl", e)
-//            }
-//        }
-//        flush()
-//    }
-
-    fun setEnvironmentSetupFinished(project: Project, environment: String) {
-        val pendingEnvironment: PendingEnvironment? = pendingEnvironments.find { pendingEnvironment -> pendingEnvironment.name == environment }
-        pendingEnvironment?.let {
-            try {
-                it.isOrgDigmaSetupFinished = true
-            } catch (e: Exception) {
-                ErrorReporter.getInstance().reportError(project, "AddEnvironmentsService.setEnvironmentSetupFinished", e)
-            }
-        }
-        flush()
-    }
-
-
-    private fun flush() {
-        try {
-            Log.log(logger::info, "flushing environments {}", pendingEnvironments)
-            val asJson = objectMapper.writeValueAsString(pendingEnvironments)
-            service<PersistenceService>().setPendingEnvironment(asJson)
-        } catch (e: Exception) {
-            Log.warnWithException(logger, e, "Error flushing pending environments")
-            service<ErrorReporter>().reportError("AddEnvironmentsService.flush", e)
-        }
-    }
-
-    private fun load() {
-        try {
-
-            Log.log(logger::info, "loading environments from persistence")
-
-            val asJson = service<PersistenceService>().getPendingEnvironment()
-            asJson?.let {
-                val jsonObject: ArrayNode = objectMapper.readTree(it) as ArrayNode
-                jsonObject.forEach { jsonNode ->
-                    val pendingEnv = objectMapper.readValue(jsonNode.toString(), PendingEnvironment::class.java)
-                    pendingEnvironments.add(pendingEnv)
-                }
-            }
-
-            Log.log(logger::info, "loaded environments {}", pendingEnvironments)
-
-        } catch (e: Exception) {
-            Log.warnWithException(logger, e, "Error loading pending environments")
-            service<ErrorReporter>().reportError("AddEnvironmentsService.load", e)
-        }
-    }
 
 
     fun addToCurrentRunConfig(project: Project, environmentId: String): Boolean {

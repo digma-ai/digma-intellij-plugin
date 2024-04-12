@@ -11,7 +11,4 @@ class GradleRunConfigurationInstrumentationHandler : BaseRunConfigurationInstrum
         return gradleInstrumentationService
     }
 
-    override fun getOrder(): Int {
-        return 10
-    }
 }

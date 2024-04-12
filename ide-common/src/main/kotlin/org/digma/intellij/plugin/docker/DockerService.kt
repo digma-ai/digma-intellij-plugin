@@ -42,18 +42,9 @@ class DockerService {
 
     init {
 
-        //todo: fix to delete old compose file, remove after few releases
-        if (downloader.findOldComposeFile() && PersistenceService.getInstance().isLocalEngineInstalled() == null) {
-            PersistenceService.getInstance().setLocalEngineInstalled(true)
-        } else if (PersistenceService.getInstance().isLocalEngineInstalled() == null) {
-            PersistenceService.getInstance().setLocalEngineInstalled(false)
-        }
-
-        downloader.deleteOldFileIfExists()
-
         if (isEngineInstalled()) {
             //this will happen on IDE start,
-            // DockerService is an application service so Downloader will be created once per application
+            // DockerService is an application service so Downloader will be singleton per application
             downloader.downloadComposeFile()
         }
     }

@@ -1,6 +1,6 @@
 package org.digma.intellij.plugin.idea.execution.handlers
 
-import com.intellij.execution.configurations.RunConfigurationBase
+import com.intellij.execution.configurations.RunConfiguration
 import com.intellij.execution.configurations.RunnerSettings
 import com.intellij.execution.configurations.SimpleProgramParameters
 import org.digma.intellij.plugin.buildsystem.BuildSystem
@@ -13,43 +13,35 @@ abstract class BaseRunConfigurationInstrumentationHandler : RunConfigurationInst
     abstract fun getService(): RunConfigurationInstrumentationService?
 
 
-    override fun isApplicableFor(configuration: RunConfigurationBase<*>): Boolean {
+    override fun isApplicableFor(configuration: RunConfiguration): Boolean {
         return getService()?.isApplicableFor(configuration) ?: false
     }
 
-    override fun isApplicableFor(configuration: RunConfigurationBase<*>, params: SimpleProgramParameters): Boolean {
-        return getService()?.isApplicableFor(configuration, params) ?: false
+    override fun updateParameters(configuration: RunConfiguration, params: SimpleProgramParameters, runnerSettings: RunnerSettings?): String? {
+        return getService()?.updateParameters(configuration, params, runnerSettings)
     }
 
-    override fun updateParameters(configuration: RunConfigurationBase<*>, params: SimpleProgramParameters, runnerSettings: RunnerSettings?) {
-        getService()?.updateParameters(configuration, params, runnerSettings)
+    override fun getConfigurationDescription(configuration: RunConfiguration, params: SimpleProgramParameters): String {
+        return getService()?.getConfigurationDescription(configuration, params) ?: ""
     }
 
-    override fun getConfigurationDescription(configuration: RunConfigurationBase<*>): String {
-        return getService()?.getConfigurationDescription(configuration) ?: ""
+    override fun getConfigurationType(configuration: RunConfiguration): RunConfigurationType {
+        return getService()?.getConfigurationType(configuration) ?: RunConfigurationType.Gradle
     }
 
-    override fun getConfigurationType(configuration: RunConfigurationBase<*>, params: SimpleProgramParameters): RunConfigurationType {
-        return getService()?.getConfigurationType(configuration, params) ?: RunConfigurationType.GradleRun
-    }
-
-    override fun shouldCleanConfigurationAfterStart(configuration: RunConfigurationBase<*>): Boolean {
+    override fun shouldCleanConfigurationAfterStart(configuration: RunConfiguration): Boolean {
         return getService()?.shouldCleanConfigurationAfterStart(configuration) ?: false
     }
 
-    override fun cleanConfigurationAfterStart(configuration: RunConfigurationBase<*>) {
+    override fun cleanConfigurationAfterStart(configuration: RunConfiguration) {
         getService()?.cleanConfigurationAfterStart(configuration)
     }
 
-    override fun isHandlingType(configuration: RunConfigurationBase<*>): Boolean {
-        return getService()?.isHandlingType(configuration) ?: false
-    }
-
-    override fun getTaskNames(configuration: RunConfigurationBase<*>): Set<String> {
+    override fun getTaskNames(configuration: RunConfiguration): Set<String> {
         return getService()?.getTaskNames(configuration) ?: setOf()
     }
 
-    override fun getBuildSystem(configuration: RunConfigurationBase<*>): BuildSystem {
+    override fun getBuildSystem(configuration: RunConfiguration): BuildSystem {
         return getService()?.getBuildSystem(configuration) ?: BuildSystem.INTELLIJ
     }
 }

@@ -1,11 +1,11 @@
 package org.digma.intellij.plugin.idea.execution
 
-import com.intellij.execution.configurations.RunConfigurationBase
+import com.intellij.execution.configurations.RunConfiguration
 import com.intellij.execution.configurations.SimpleProgramParameters
 import org.digma.intellij.plugin.vcs.VcsService
 
 open class JavaToolOptionsMerger(
-    protected val configuration: RunConfigurationBase<*>,
+    protected val configuration: RunConfiguration,
     protected val params: SimpleProgramParameters,
     @Suppress("unused")
     protected val parametersExtractor: ParametersExtractor
@@ -25,7 +25,7 @@ open class JavaToolOptionsMerger(
     }
 
 
-    private fun updateOtelResourceAttribute(configuration: RunConfigurationBase<*>, params: SimpleProgramParameters) {
+    private fun updateOtelResourceAttribute(configuration: RunConfiguration, params: SimpleProgramParameters) {
 
         val commitId = VcsService.getInstance(configuration.project).getCommitIdForCurrentProject()
             ?: return
@@ -67,7 +67,7 @@ open class JavaToolOptionsMerger(
         //transform the list to a map.
         //considering only -D and agents as properties, all other options are considered as just an option.
         //handling -XX is complicated because some may be key value and some not,we don't add any -XX so if
-        // use added some they will just be kept as is.
+        // there are any they will just be kept as is.
 
         val myList = myJavaToolOptions.split(" ")
 

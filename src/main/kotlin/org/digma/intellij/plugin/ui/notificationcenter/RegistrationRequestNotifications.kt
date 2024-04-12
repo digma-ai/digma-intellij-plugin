@@ -90,6 +90,7 @@ fun showRequestRegistrationNotification() {
         notification.addAction(RegisterAction(project, notification, notificationName))
 
         notification.whenExpired {
+            ActivityMonitor.getInstance(project).registerNotificationCenterEvent("$notificationName.expired", mapOf())
             Log.log(AppNotificationCenter.logger::debug, "in $notificationName, notification expired")
         }
         notification.setImportant(true)
@@ -123,7 +124,7 @@ class RegisterAction(
         try {
             Log.log(AppNotificationCenter.logger::info, "in RegisterAction, action clicked")
 
-            ActivityMonitor.getInstance(project).registerCustomEvent(
+            ActivityMonitor.getInstance(project).registerUserAction(
                 "RegisterAction link clicked",
                 mapOf(
                     "origin" to notificationName

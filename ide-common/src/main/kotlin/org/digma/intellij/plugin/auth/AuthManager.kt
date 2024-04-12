@@ -58,7 +58,7 @@ class AuthManager {
     }
 
     fun addAuthInfoChangeListener(listener: AuthInfoChangeListener, parentDisposable: Disposable) {
-        listeners.add(listener);
+        listeners.add(listener)
 
         Disposer.register(parentDisposable) { removeAuthInfoChangeListener(listener) }
     }

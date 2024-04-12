@@ -256,15 +256,6 @@ class PersistenceService {
     }
 
 
-    fun getPendingEnvironment(): String? {
-        return state.pendingEnvironment
-    }
-
-    fun setPendingEnvironment(pendingEnvironment: String) {
-        state.pendingEnvironment = pendingEnvironment
-    }
-
-
     fun getSelectedServices(): MutableMap<String, Array<String>> {
         return state.selectedServices
     }
@@ -328,5 +319,20 @@ class PersistenceService {
         return state.loadWarningAppearedTimestamp != null
     }
 
+    fun setFinishDigmathonGameForUser() {
+        state.isFinishDigmathonGameForUser = true
+    }
+
+    fun isFinishDigmathonGameForUser(): Boolean {
+        return state.isFinishDigmathonGameForUser
+    }
+
+    fun setDigmathonInsightsViewed(insights: String) {
+        state.digmathonViewedInsights = insights
+    }
+
+    fun getDigmathonInsightsViewed(): String? {
+        return state.digmathonViewedInsights
+    }
 
 }

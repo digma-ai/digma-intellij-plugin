@@ -27,6 +27,7 @@ import org.digma.intellij.plugin.common.createObjectMapper
 import org.digma.intellij.plugin.common.stopWatchStart
 import org.digma.intellij.plugin.common.stopWatchStop
 import org.digma.intellij.plugin.dashboard.DashboardService
+import org.digma.intellij.plugin.digmathon.DigmathonService
 import org.digma.intellij.plugin.documentation.DocumentationService
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
@@ -98,7 +99,7 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
 
                     JCEFGlobalConstants.GLOBAL_OPEN_TROUBLESHOOTING_GUIDE -> {
                         ActivityMonitor.getInstance(project)
-                            .registerCustomEvent("troubleshooting link clicked", mapOf("origin" to getOriginForTroubleshootingEvent()))
+                            .registerUserAction("troubleshooting link clicked", mapOf("origin" to getOriginForTroubleshootingEvent()))
                         EDT.ensureEDT {
                             ToolWindowShower.getInstance(project).showToolWindow()
                             MainToolWindowCardsController.getInstance(project).showTroubleshooting()
@@ -195,7 +196,6 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
 
                         payload?.let {
                             val skipInstallationStep = it.get("skipInstallationStep").asBoolean()
-                            ActivityMonitor.getInstance(project).registerCustomEvent("show-installation-wizard")
                             EDT.ensureEDT {
                                 MainToolWindowCardsController.getInstance(project).showWizard(skipInstallationStep)
                                 ToolWindowShower.getInstance(project).showToolWindow()
@@ -262,12 +262,19 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                                         stats.unreadInsightsCount
                                     )
                             }
+
+
                         }
                     }
 
                     JCEFGlobalConstants.GLOBAL_CHANGE_ENVIRONMENT -> {
                         changeEnvironment(requestJsonNode)
                     }
+
+                    JCEFGlobalConstants.GLOBAL_FINISH_DIGMATHON_GAME -> {
+                        DigmathonService.getInstance().setFinishDigmathonGameForUser()
+                    }
+
 
                     else -> {
                         val handled = doOnQuery(project, browser, requestJsonNode, request, action)

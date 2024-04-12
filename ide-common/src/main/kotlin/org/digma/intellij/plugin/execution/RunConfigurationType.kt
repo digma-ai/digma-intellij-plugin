@@ -1,18 +1,16 @@
 package org.digma.intellij.plugin.execution
 
+
+/**
+ * this type is only used for logging and reporting. we don't rely on this type for any decision.
+ */
 enum class RunConfigurationType {
-    JavaRun,
+    Java,
     JavaTest,
-    KotlinRun,
-    KotlinTest,
-    GradleRun,
-    GradleTest,
-    MavenRun,
-    MavenTest,
+    Kotlin,
+    Gradle,
+    Maven,
     Jar,
-    TomcatForIdeaUltimate,
-    EeAppSeverAtIdeaUltimate,
-    OpenLiberty,
-    Quarkus,
+    JavaSever,
     Unknown;
 }

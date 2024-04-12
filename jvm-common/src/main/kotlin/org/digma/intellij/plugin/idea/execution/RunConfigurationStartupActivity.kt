@@ -26,9 +26,9 @@ class RunConfigurationStartupActivity : StartupActivity {
 
 
             val details = mapOf(
-                "Supported Run Configs Found" to supported.isNotEmpty(),
-                "supported run configs" to supported.joinToString("; "),
-                "non supported run configs" to nonSupported.joinToString("; ")
+                "supported configurations types found" to supported.isNotEmpty(),
+                "supported run configuration types" to supported.joinToString("; "),
+                "non supported run configuration types" to nonSupported.joinToString("; ")
             )
 
             ActivityMonitor.getInstance(project).reportSupportedRunConfigDetected(details)
@@ -51,8 +51,8 @@ class RunConfigurationStartupActivity : StartupActivity {
 
                 val isTemp = isTempRunConfig(config, tempConfigurations)
 
-                val handler = RunConfigurationHandlersHolder.sortedByOrder().find {
-                    it.isHandlingType(config)
+                val handler = RunConfigurationHandlersHolder.runConfigurationHandlers.find {
+                    it.isApplicableFor(config)
                 }
 
                 val taskNames = handler?.getTaskNames(config) ?: setOf()
@@ -68,9 +68,8 @@ class RunConfigurationStartupActivity : StartupActivity {
     }
 
     private fun isTempRunConfig(config: RunConfiguration, tempConfigurations: List<RunConfiguration>?): Boolean {
-        tempConfigurations?.forEach {
-            return it.name == config.name
-        }
-        return false
+        return tempConfigurations?.any {
+            it.name == config.name
+        } ?: false
     }
 }

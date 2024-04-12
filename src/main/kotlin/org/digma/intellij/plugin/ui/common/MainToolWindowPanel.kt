@@ -55,22 +55,19 @@ fun createMainToolWindowPanel(project: Project, mainContentPanel: JPanel): JPane
     topPanel.layout = BoxLayout(topPanel, BoxLayout.Y_AXIS)
     topPanel.isOpaque = false
     topPanel.border = JBUI.Borders.empty()
-    topPanel.add(updatePanel)
-    topPanel.add(navigationPanel)
-    topPanel.add(loadStatusPanel)
 
     updateIDEPanel?.let {
         topPanel.add(it)
     }
-
-
+    topPanel.add(updatePanel)
+    topPanel.add(loadStatusPanel)
     quarkusConfigureDepsPanel?.let {
         topPanel.add(it)
     }
-
     springBootConfigureDepsPanel?.let {
         topPanel.add(it)
     }
+    topPanel.add(navigationPanel)
 
     result.add(topPanel, BorderLayout.NORTH)
     result.add(mainContentPanel, BorderLayout.CENTER)
@@ -124,7 +121,8 @@ private fun createUpdateIntellijPanel(updatePanel: UpdateVersionPanel, project: 
         updatePanel.tempEnableReset = true
         updatePanel.reset()
 
-        ActivityMonitor.getInstance(project).registerCustomEvent("update IDE button clicked",
+        ActivityMonitor.getInstance(project).registerUserAction(
+            "update IDE button clicked",
             mapOf(
                 "ideVersion" to ApplicationInfo.getInstance().fullVersion
             ))

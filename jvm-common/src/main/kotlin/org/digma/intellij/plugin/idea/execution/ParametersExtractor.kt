@@ -1,12 +1,12 @@
 package org.digma.intellij.plugin.idea.execution
 
 import com.intellij.execution.configurations.ParametersList
-import com.intellij.execution.configurations.RunConfigurationBase
+import com.intellij.execution.configurations.RunConfiguration
 import com.intellij.execution.configurations.SimpleJavaParameters
 import com.intellij.execution.configurations.SimpleProgramParameters
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemRunConfiguration
 
-open class ParametersExtractor(protected val configuration: RunConfigurationBase<*>, protected val params: SimpleProgramParameters) {
+open class ParametersExtractor(protected val configuration: RunConfiguration, protected val params: SimpleProgramParameters) {
 
 
     open fun isOtelServiceNameAlreadyDefined(): Boolean {
@@ -20,7 +20,7 @@ open class ParametersExtractor(protected val configuration: RunConfigurationBase
         )
     }
 
-    open fun extractOtelServiceNameFromExternalSystem(configuration: RunConfigurationBase<*>): String? {
+    open fun extractOtelServiceNameFromExternalSystem(configuration: RunConfiguration): String? {
 
         return if (configuration is ExternalSystemRunConfiguration) {
             configuration.settings.env[OTEL_SERVICE_NAME_ENV_VAR_NAME]
@@ -46,7 +46,7 @@ open class ParametersExtractor(protected val configuration: RunConfigurationBase
     }
 
 
-    open fun hasDigmaEnvironmentIdAttribute(configuration: RunConfigurationBase<*>, params: SimpleProgramParameters): Boolean {
+    open fun hasDigmaEnvironmentIdAttribute(configuration: RunConfiguration, params: SimpleProgramParameters): Boolean {
         if (configuration is ExternalSystemRunConfiguration &&
             configuration.settings.env[OTEL_RESOURCE_ATTRIBUTES]?.contains("$DIGMA_ENVIRONMENT_ID_RESOURCE_ATTRIBUTE=") == true
         ) {

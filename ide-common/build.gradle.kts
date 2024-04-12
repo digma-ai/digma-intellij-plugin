@@ -30,6 +30,8 @@ dependencies {
     api(libs.posthog)
     api(libs.maven.artifact)
     api(libs.glovoapp.versioning)
+    api(libs.byte.buddy)
+
 
     implementation(project(":model"))
     implementation(project(":analytics-provider"))

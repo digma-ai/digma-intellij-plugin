@@ -126,7 +126,7 @@ public class JaegerUIService implements Disposable {
 
         Log.log(logger::debug, project, "calling showInsightsForSpanOrMethodAndNavigateToCode from goToSpan for {}", span);
 
-        ActivityMonitor.getInstance(project).registerSpanLinkClicked(MonitoredPanel.Jaeger);
+        ActivityMonitor.getInstance(project).registerSpanLinkClicked(goToSpanMessage.payload().spanId(), UserActionOrigin.JaegerUI);
 
         CodeNavigator.getInstance(project).maybeNavigateToSpanOrMethod(span.spanCodeObjectId(), span.methodCodeObjectId());
 
@@ -140,7 +140,7 @@ public class JaegerUIService implements Disposable {
 
         var span = goToSpanMessage.payload();
         //if we're here then code location was not found
-        ActivityMonitor.getInstance(project).registerSpanLinkClicked(MonitoredPanel.Jaeger);
+        ActivityMonitor.getInstance(project).registerSpanLinkClicked(goToSpanMessage.payload().spanId(), UserActionOrigin.JaegerUI);
         MainToolWindowCardsController.getInstance(project).closeAllNotificationsIfShowing();
         ScopeManager.getInstance(project).changeScope(new SpanScope(span.spanCodeObjectId()));
     }

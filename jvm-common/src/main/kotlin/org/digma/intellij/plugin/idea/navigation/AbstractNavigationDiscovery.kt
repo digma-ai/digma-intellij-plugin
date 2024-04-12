@@ -29,10 +29,10 @@ import org.digma.intellij.plugin.idea.navigation.model.Origin
 import org.digma.intellij.plugin.idea.psi.isJvmSupportedFile
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
-import org.digma.intellij.plugin.posthog.SessionMetadata
-import org.digma.intellij.plugin.posthog.getPluginLoadedKey
 import org.digma.intellij.plugin.progress.RetryableTask
 import org.digma.intellij.plugin.psi.PsiUtils
+import org.digma.intellij.plugin.session.SessionMetadataProperties
+import org.digma.intellij.plugin.session.getPluginLoadedKey
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
@@ -323,7 +323,7 @@ abstract class AbstractNavigationDiscovery(protected val project: Project) : Dis
         }
 
 
-        val pluginLoadedTime = SessionMetadata.getInstance().getCreated(getPluginLoadedKey(project))
+        val pluginLoadedTime = SessionMetadataProperties.getInstance().getCreated(getPluginLoadedKey(project))
         val duration = pluginLoadedTime?.let {
             Clock.System.now().minus(it)
         } ?: Duration.ZERO

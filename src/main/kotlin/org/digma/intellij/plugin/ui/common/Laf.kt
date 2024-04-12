@@ -277,6 +277,9 @@ object Laf {
                 val DigmaLogo = IconsUtil.loadIcon("/icons/digma.svg")
 
                 @JvmStatic
+                val DigmaLogoPng = IconsUtil.loadIcon("/icons/digma-symbol.svg")
+
+                @JvmStatic
                 val FileDark = IconsUtil.loadIcon("/icons/file-dark.svg")
 
                 @JvmStatic

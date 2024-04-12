@@ -10,8 +10,4 @@ class JavaRunConfigurationInstrumentationHandler : BaseRunConfigurationInstrumen
         return service<JavaRunConfigurationInstrumentationService>()
     }
 
-    override fun getOrder(): Int {
-        return 30
-    }
-
 }

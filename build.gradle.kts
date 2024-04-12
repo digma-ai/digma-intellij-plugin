@@ -70,15 +70,14 @@ dependencies {
         "configuration" to "riderDotNetObjects")))
 }
 
-configurations {
-    runtimeClasspath {
-        //make sure we never package kotlin-stdlib-jdk8 or kotlin-stdlib-jdk7 because its is supplied by the IDE.
-        //see more in
-        //buildSrc/src/main/kotlin/digma-base.gradle.kts
-        //settings.gradle.kts
-        exclude("org.jetbrains.kotlin", "kotlin-stdlib-jdk8")
-        exclude("org.jetbrains.kotlin", "kotlin-stdlib-jdk7")
-    }
+configurations.getByName("runtimeClasspath") {
+    //make sure we never package kotlin-stdlib-jdk8 or kotlin-stdlib-jdk7 because its is supplied by the IDE.
+    //see more in
+    //https://plugins.jetbrains.com/docs/intellij/using-kotlin.html#kotlin-standard-library
+    //settings.gradle.kts
+    exclude("org.jetbrains.kotlin", "kotlin-stdlib")
+    exclude("org.jetbrains.kotlin", "kotlin-stdlib-jdk8")
+    exclude("org.jetbrains.kotlin", "kotlin-stdlib-jdk7")
 }
 
 
@@ -144,7 +143,7 @@ project.afterEvaluate{
 tasks {
 
     prepareSandbox{
-        //copy rider dlls to the plugin sandbox so it is packaged in the zip
+        //copy rider dlls to the plugin sandbox, so it is packaged in the zip
         from(configurations.getByName("riderDotNetObjects")){
             into("${properties("pluginName",project)}/dotnet/")
         }

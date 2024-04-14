@@ -77,7 +77,7 @@ public abstract class InsightsServiceImpl implements Disposable {
     public void openLiveView(@NotNull String codeObjectId) {
         Log.log(logger::debug, project, "openLiveView called {}", codeObjectId);
         project.getService(RecentActivityService.class).startLiveView(codeObjectId);
-        ActivityMonitor.getInstance(project).registerUserAction("live view clicked", Collections.singletonMap("code object id", prefixedCodeObjectId));
+        ActivityMonitor.getInstance(project).registerUserAction("live view clicked", Collections.singletonMap("code object id", codeObjectId));
     }
 
 

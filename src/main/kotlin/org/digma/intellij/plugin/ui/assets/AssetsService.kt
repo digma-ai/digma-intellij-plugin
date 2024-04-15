@@ -47,18 +47,6 @@ class AssetsService(private val project: Project) : Disposable {
     }
 
 
-    fun getServices(): String? {
-        try {
-            Log.log(logger::trace, project, "got get assets request")
-            val services = AnalyticsService.getInstance(project).services
-            Log.log(logger::trace, project, "got services")
-            return services
-        } catch (e: AnalyticsServiceException) {
-            Log.warnWithException(logger, project, e, "Error getting services {}", e.message)
-            return null
-        }
-    }
-
 
     fun getAssetFilters(queryParams: MutableMap<String, Any>): String {
         EDT.assertNonDispatchThread()

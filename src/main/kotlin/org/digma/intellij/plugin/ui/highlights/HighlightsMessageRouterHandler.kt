@@ -36,7 +36,7 @@ class HighlightsMessageRouterHandler(project: Project) : BaseCommonMessageRouter
         val backendQueryParams = getQueryMapFromPayload(requestJsonNode, objectMapper)
         val payload = HighlightsService.getInstance(project).getHighlightsPerformance(backendQueryParams)
         val message = SetHighlightsPerformanceMessage(payload)
-        Log.log(logger::trace, project, "sending MAIN/GET_HIGHLIGHTS_TOP_ISSUES_DATA message")
+        Log.log(logger::trace, project, "sending MAIN/GET_HIGHLIGHTS_PERFORMANCE_DATA message")
         serializeAndExecuteWindowPostMessageJavaScript(browser, message)
     }
 

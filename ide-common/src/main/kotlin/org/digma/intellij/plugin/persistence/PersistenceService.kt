@@ -49,17 +49,6 @@ class PersistenceService {
         state.isLocalEngineInstalled = isInstalled
     }
 
-    fun setSelectedServices(projectName: String, services: Array<String>?) {
-        if (services == null) {
-            if (state.selectedServices.containsKey(projectName)) {
-                state.selectedServices.remove(projectName)
-            }
-        } else {
-            state.selectedServices[projectName] = services
-        }
-    }
-
-
     fun hasEmail(): Boolean {
         return state.userEmail != null || state.userRegistrationEmail != null
     }
@@ -255,14 +244,6 @@ class PersistenceService {
         state.notificationsStartDate = notificationsStartDate
     }
 
-
-    fun getSelectedServices(): MutableMap<String, Array<String>> {
-        return state.selectedServices
-    }
-
-    fun setSelectedServices(selectedServices: MutableMap<String, Array<String>>) {
-        state.selectedServices = selectedServices
-    }
 
     fun updateLastConnectionTimestamp() {
         state.lastConnectionTimestamp = Instant.now()

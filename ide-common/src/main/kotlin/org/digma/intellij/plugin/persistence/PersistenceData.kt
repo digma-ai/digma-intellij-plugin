@@ -41,7 +41,6 @@ internal data class PersistenceData(
     var notificationsStartDate: String? = null,
 
     var pendingEnvironment: String? = null,
-    var selectedServices: MutableMap<String, Array<String>> = mutableMapOf(),
 
     //todo: remove firstTimeAssetsReceived in May 2024
     var firstTimeAssetsReceived: Boolean = false,

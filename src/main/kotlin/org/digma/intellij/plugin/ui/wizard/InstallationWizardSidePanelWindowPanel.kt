@@ -84,7 +84,6 @@ import org.digma.intellij.plugin.ui.wizard.model.JcefDockerIsDockerInstalledRequ
 import org.digma.intellij.plugin.ui.wizard.model.JcefDockerResultPayload
 import org.digma.intellij.plugin.ui.wizard.model.JcefDockerResultRequest
 import org.digma.intellij.plugin.ui.wizard.model.SetObservabilityRequest
-import org.digma.intellij.plugin.wizard.InstallationWizardService
 import java.awt.BorderLayout
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference

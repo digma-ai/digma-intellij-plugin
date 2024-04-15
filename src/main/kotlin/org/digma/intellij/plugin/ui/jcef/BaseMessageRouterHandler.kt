@@ -13,12 +13,10 @@ import org.cef.callback.CefQueryCallback
 import org.cef.handler.CefMessageRouterHandlerAdapter
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.InsightStatsChangedEvent
-import org.digma.intellij.plugin.analytics.RestAnalyticsProvider
 import org.digma.intellij.plugin.analytics.getAllEnvironments
 import org.digma.intellij.plugin.analytics.getEnvironmentNameById
 import org.digma.intellij.plugin.analytics.setCurrentEnvironmentById
 import org.digma.intellij.plugin.auth.AuthManager
-import org.digma.intellij.plugin.auth.AuthManager.Companion.getInstance
 import org.digma.intellij.plugin.auth.LoginResult
 import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
 import org.digma.intellij.plugin.common.Backgroundable
@@ -36,7 +34,6 @@ import org.digma.intellij.plugin.navigation.MainContentViewSwitcher
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.scope.ScopeManager
 import org.digma.intellij.plugin.scope.SpanScope
-import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import org.digma.intellij.plugin.ui.common.updateObservabilityValue
@@ -387,22 +384,10 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
 
     private fun login (requestJsonNode: JsonNode): LoginResult? {
         val payload = getPayloadFromRequest(requestJsonNode)
-        val settingsState: SettingsState = SettingsState.getInstance()
         val result = payload?.let {
             try {
-                val provider = (RestAnalyticsProvider(
-                    settingsState.apiUrl, getInstance().getAuthenticationProviders()
-                ) { logMsg: String? ->
-                    val apiLogger =
-                        Logger.getInstance("api.digma.org")
-                    Log.log({ msg: String? ->
-                        apiLogger.debug(
-                            msg
-                        )
-                    }, "API: {}", logMsg)
-                })
-
-                return@let AuthManager.getInstance().login(provider, it.get("email").asText(), it.get("password").asText())
+                AuthManager.getInstance().logout()
+                AuthManager.getInstance().login(it.get("email").asText(), it.get("password").asText())
             } catch (e: Exception) {
                 return@let LoginResult(false, null, null);
             }

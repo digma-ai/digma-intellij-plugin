@@ -42,6 +42,8 @@ class AuthManager {
     private val loginOrRefreshLock = ReentrantLock()
     private val listeners: MutableList<AuthInfoChangeListener> = ArrayList()
 
+    private var myAnalyticsProvider: RestAnalyticsProvider? = null
+
     companion object {
         @JvmStatic
         fun getInstance(): AuthManager {
@@ -74,6 +76,9 @@ class AuthManager {
 
         Log.log(logger::info, "wrapping analyticsProvider with auth for url={}", analyticsProvider.apiUrl)
 
+        //keep the RestAnalyticsProvider every time withAuth is called so it will always be the correct and latest one
+        myAnalyticsProvider = analyticsProvider
+
         //loginOrRefresh will fail if backend is not up. it should catch all possible exceptions so that a proxy will always be returned.
         loginOrRefresh(analyticsProvider, analyticsProvider.apiUrl)
 
@@ -94,14 +99,27 @@ class AuthManager {
         fireChange()
     }
 
-    fun login(analyticsProvider: RestAnalyticsProvider, userName: String, password: String): LoginResult {
-        val loginResult = loginInternal(analyticsProvider, userName, password);
-        if (loginResult.isSuccess) {
-            fireChange()
-        }
+    fun login(userName: String, password: String): LoginResult {
 
-        return loginResult
+        return try {
+
+            val loginResult = myAnalyticsProvider?.let {
+                loginInternal(it, userName, password);
+            } ?: LoginResult(false, null, "myAnalyticsProvider is null")
+
+            fireChange()
+            loginResult
+
+        } catch (e: AuthenticationException) {
+            //todo: report error with error reporter
+            return LoginResult(false, null, e.detailedMessage);
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportInternalFatalError("AuthManager.login", e)
+            //todo: add a meaningful message
+            LoginResult(false, null, e.toString())
+        }
     }
+
 
     private fun fireChange() {
         val authInfo = AuthInfo(DigmaDefaultAccountHolder.getInstance().account?.userId)
@@ -175,7 +193,6 @@ class AuthManager {
 
             Log.log(logger::info, "loginOrRefresh called, url={}", url)
 
-
             val digmaAccount = DigmaDefaultAccountHolder.getInstance().account
             val about = analyticsProvider.about
 
@@ -185,10 +202,12 @@ class AuthManager {
             }
 
             if (digmaAccount == null && about.isCentralize != true) {
-                silentLogin(analyticsProvider, url)
+                //make sure to fireChange after login
+                login(SILENT_LOGIN_USER, SILENT_LOGIN_PASSWORD)
                 return true
             }
 
+            //todo: digmaAccount can't be null here
             if (digmaAccount == null) {
                 Log.log(logger::info, "Failed to login account is missing")
                 return false;
@@ -205,9 +224,8 @@ class AuthManager {
                     digmaAccount.name,
                     url
                 )
-                logout().also {
-                    return loginOrRefresh(analyticsProvider, url)
-                }
+                logout()
+                login(SILENT_LOGIN_USER, SILENT_LOGIN_PASSWORD)
             }
 
             if (credentials != null && (!credentials.isAccessTokenValid() || forceRefresh)) {
@@ -233,7 +251,7 @@ class AuthManager {
                 }
 
                 if(about.isCentralize == false) {
-                    silentLogin(analyticsProvider, url);
+                    login(SILENT_LOGIN_USER, SILENT_LOGIN_PASSWORD)
                     return true
                 }
 
@@ -264,11 +282,11 @@ class AuthManager {
         }
     }
 
-    private fun silentLogin(analyticsProvider: RestAnalyticsProvider, url: String) {
-        Log.log(logger::info, "loginOrRefresh, account is null,doing silent login url={}", url)
-        login(analyticsProvider, SILENT_LOGIN_USER, SILENT_LOGIN_PASSWORD)
-        Log.log(logger::info, "loginOrRefresh silent login success,  url={}", url)
-    }
+//    private fun silentLogin(analyticsProvider: RestAnalyticsProvider, url: String) {
+//        Log.log(logger::info, "loginOrRefresh, account is null,doing silent login url={}", url)
+//        loginInternal(analyticsProvider, SILENT_LOGIN_USER, SILENT_LOGIN_PASSWORD)
+//        Log.log(logger::info, "loginOrRefresh silent login success,  url={}", url)
+//    }
 
     private fun refreshToken(analyticsProvider: RestAnalyticsProvider, digmaAccount: DigmaAccount, credentials: DigmaCredentials, url: String): Boolean {
 

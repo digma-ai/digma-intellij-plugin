@@ -71,7 +71,6 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         this.apiUrl = baseUrl;
     }
 
-    @Override
     public String getApiUrl() {
         return apiUrl;
     }

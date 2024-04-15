@@ -28,8 +28,6 @@ import java.util.*;
 
 public interface AnalyticsProvider extends Closeable {
 
-    String getApiUrl();
-
     LoginResponse login(LoginRequest loginRequest);
 
     LoginResponse refreshToken(RefreshRequest loginRequest);

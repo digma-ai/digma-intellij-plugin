@@ -335,11 +335,6 @@ class AuthManager {
         }
     }
 
-    private fun clearCredentials (){
-
-    }
-
-
     inner class MyAuthInvocationHandler(private val analyticsProvider: RestAnalyticsProvider, private val url: String) : InvocationHandler {
 
         override fun invoke(proxy: Any, method: Method, args: Array<out Any>?): Any? {

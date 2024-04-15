@@ -94,7 +94,7 @@ class DigmathonService : Disposable {
                 //let the project load and hopefully all jcef apps
                 delay(1.minutes.inWholeMilliseconds)
 
-                while (isActive) {
+                while (isActive && digmathonInfo.get().isActive()) {
                     try {
 
                         if (!isDigmathonActive.get() && digmathonInfo.get().isActive()) {
@@ -114,6 +114,10 @@ class DigmathonService : Disposable {
                         Log.warnWithException(logger, e, "error in digmathon timer {}", e)
                         ErrorReporter.getInstance().reportError("DigmathonService.timer", e)
                     }
+                }
+
+                if (digmathonInfo.get().isEnded()) {
+                    end()
                 }
             }
         }

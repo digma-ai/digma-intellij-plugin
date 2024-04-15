@@ -63,8 +63,8 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
         line2Panel.isOpaque = false
         line2Panel.add(JLabel("Please consider deploying Digma ", SwingConstants.LEFT))
         line2Panel.add(ActionLink("centrally") {
-            ActivityMonitor.getInstance(project).registerUserActionWithOrigin("digma for teams link clicked", UserActionOrigin.LoadStatusPanel)
-            BrowserUtil.browse(Links.DIGMA_FOR_TEAMS_URL, project)
+            ActivityMonitor.getInstance(project).registerUserActionWithOrigin("digma overload warning docs link clicked", UserActionOrigin.LoadStatusPanel)
+            BrowserUtil.browse(Links.DIGMA_OVERLOAD_WARNING_DOCS_URL, project)
         })
 
         linesPanel.add(line1Panel)

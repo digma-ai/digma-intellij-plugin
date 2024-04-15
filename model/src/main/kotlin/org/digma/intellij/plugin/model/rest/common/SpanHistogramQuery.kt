@@ -6,8 +6,7 @@ data class SpanHistogramQuery
 @JsonCreator
 constructor(
     val environment: String,
-    val spanName: String,
-    val instrumentationLibrary: String,
+    val spanCodeObjectId: String,
     val theme: String?,
     val backgroundColor: String?,
 )

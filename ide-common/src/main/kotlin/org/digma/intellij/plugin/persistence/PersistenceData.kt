@@ -91,6 +91,7 @@ internal data class PersistenceData(
     var loadWarningAppearedTimestamp: Instant? = null,
 
     var isFinishDigmathonGameForUser: Boolean = false,
-    var digmathonViewedInsights: String? = null
+    var digmathonViewedInsights: String? = null,
+
 
     )

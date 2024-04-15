@@ -87,7 +87,7 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
 
                     JCEFGlobalConstants.GLOBAL_OPEN_TROUBLESHOOTING_GUIDE -> {
                         ActivityMonitor.getInstance(project)
-                            .registerCustomEvent("troubleshooting link clicked", mapOf("origin" to getOriginForTroubleshootingEvent()))
+                            .registerUserAction("troubleshooting link clicked", mapOf("origin" to getOriginForTroubleshootingEvent()))
                         EDT.ensureEDT {
                             ToolWindowShower.getInstance(project).showToolWindow()
                             MainToolWindowCardsController.getInstance(project).showTroubleshooting()
@@ -155,6 +155,7 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                     }
 
                     JCEFGlobalConstants.GLOBAL_OPEN_DASHBOARD -> {
+                        ActivityMonitor.getInstance(project).registerUserAction("open dashboard clicked")
                         val environment = getEnvironmentFromPayload(requestJsonNode)
                         environment?.let { env ->
                             DashboardService.getInstance(project).openDashboard("Dashboard Panel - ${env.name}")
@@ -183,7 +184,6 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
 
                         payload?.let {
                             val skipInstallationStep = it.get("skipInstallationStep").asBoolean()
-                            ActivityMonitor.getInstance(project).registerCustomEvent("show-installation-wizard")
                             EDT.ensureEDT {
                                 MainToolWindowCardsController.getInstance(project).showWizard(skipInstallationStep)
                                 ToolWindowShower.getInstance(project).showToolWindow()

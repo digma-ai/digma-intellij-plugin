@@ -9,7 +9,7 @@ import com.intellij.util.ui.JBUI.Borders.empty
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.posthog.ActivityMonitor
-import org.digma.intellij.plugin.posthog.MonitoredPanel
+import org.digma.intellij.plugin.posthog.UserActionOrigin
 import org.digma.intellij.plugin.settings.ProjectSettings
 import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
@@ -55,7 +55,7 @@ fun createNoConnectionPanel(project: Project, parentDisposable: Disposable):JPan
     constraints.gridy = 2
     constraints.ipady = 20
     val settingsLink = ActionLink(" settings."){
-        ActivityMonitor.getInstance(project).registerButtonClicked(MonitoredPanel.NoConnection, "settings")
+        ActivityMonitor.getInstance(project).registerUserActionWithOrigin("settings link clicked", UserActionOrigin.NoConnectionPanel)
         ShowSettingsUtil.getInstance().showSettingsDialog(project, ProjectSettings.DISPLAY_NAME)
     }
     settingsLink.horizontalAlignment = SwingConstants.LEADING
@@ -71,13 +71,13 @@ fun createNoConnectionPanel(project: Project, parentDisposable: Disposable):JPan
     val buttonsPanel = JPanel(BorderLayout(20,10))
     buttonsPanel.background = listBackground()
     val refreshLink = ActionLink("Refresh"){
-        ActivityMonitor.getInstance(project).registerButtonClicked(MonitoredPanel.NoConnection, "refresh")
+        ActivityMonitor.getInstance(project).registerUserActionWithOrigin("refresh link clicked", UserActionOrigin.NoConnectionPanel)
         AnalyticsService.getInstance(project).environment.refreshNowOnBackground()
     }
     buttonsPanel.add(refreshLink,BorderLayout.WEST)
 
     val setupLink = ActionLink("Set-up Digma"){
-        ActivityMonitor.getInstance(project).registerButtonClicked(MonitoredPanel.NoConnection, "set-up")
+        ActivityMonitor.getInstance(project).registerUserActionWithOrigin("setup digma button clicked", UserActionOrigin.NoConnectionPanel)
         EDT.ensureEDT{
             MainToolWindowCardsController.getInstance(project).showWizard(false)
             ToolWindowShower.getInstance(project).showToolWindow()

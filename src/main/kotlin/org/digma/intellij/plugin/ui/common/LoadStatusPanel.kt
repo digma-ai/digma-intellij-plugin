@@ -8,7 +8,7 @@ import com.intellij.ui.components.ActionLink
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.loadstatus.LoadStatusService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
-import org.digma.intellij.plugin.posthog.MonitoredPanel
+import org.digma.intellij.plugin.posthog.UserActionOrigin
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import java.awt.BorderLayout
 import java.awt.GridLayout
@@ -63,7 +63,7 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
         line2Panel.isOpaque = false
         line2Panel.add(JLabel("Please consider deploying Digma ", SwingConstants.LEFT))
         line2Panel.add(ActionLink("centrally") {
-            ActivityMonitor.getInstance(project).registerButtonClicked(MonitoredPanel.Notifications, "digma-overload-warning-docs-link")
+            ActivityMonitor.getInstance(project).registerButtonClicked("digma overload warning docs link clicked", UserActionOrigin.LoadStatusPanel)
             BrowserUtil.browse(Links.DIGMA_OVERLOAD_WARNING_DOCS_URL, project)
         })
 

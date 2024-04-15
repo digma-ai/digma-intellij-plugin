@@ -46,6 +46,7 @@ import java.util.function.*;
 public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
     private final Client client;
+    private final String apiUrl;
 
     //this constructor is used only in tests
     RestAnalyticsProvider(String baseUrl) {
@@ -66,6 +67,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
     public RestAnalyticsProvider(String baseUrl, List<AuthenticationProvider> authenticationProviders, Consumer<String> logger) {
         this.client = createClient(baseUrl, authenticationProviders, logger);
+        this.apiUrl = baseUrl;
+    }
+
+    public String getApiUrl() {
+        return apiUrl;
     }
 
     @Override
@@ -268,6 +274,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
+    public String register(Map<String, Object> request) {
+        return execute(() -> client.analyticsProvider.register(request));
+    }
+
+    @Override
     public void deleteEnvironmentV2(String id) {
         execute(() -> client.analyticsProvider.deleteEnvironment(id));
     }
@@ -297,7 +308,6 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     public InsightsStatsResult getInsightsStats(Map<String, Object> queryParams) {
         return execute(() -> client.analyticsProvider.getInsightsStats(queryParams));
     }
-
 
     @Override
     public String getHighlightsPerformance(Map<String, Object> queryParams) {
@@ -394,12 +404,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     private AnalyticsProviderException createUnsuccessfulResponseException(int code, ResponseBody errorBody) throws IOException {
-
+        var errorMessage = errorBody == null ? null : errorBody.string();
         if (code == HTTPConstants.UNAUTHORIZED) {
-            return new AuthenticationException(code, "Unauthorized " + code);
+            var message = errorMessage != null && !errorMessage.isEmpty() ? errorMessage: "Unauthorized " + code;
+            return new AuthenticationException(code, message);
         }
 
-        String message = String.format("Error %d. %s", code, errorBody == null ? null : errorBody.string());
+        String message = String.format("Error %d. %s", code, errorMessage);
         return new AnalyticsProviderException(code, message);
     }
 
@@ -881,14 +892,14 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @POST("/authenticate/login")
+        @POST("/authentication/login")
         Call<LoginResponse> login(@Body LoginRequest loginRequest);
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @POST("/authenticate/refresh-token")
+        @POST("/authentication/refresh-token")
         Call<LoginResponse> refreshToken(@Body RefreshRequest loginRequest);
 
         @Headers({
@@ -900,6 +911,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
         @DELETE("/environments/{envId}")
         Call<Void> deleteEnvironment(@Path("envId") String envId);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/authentication/register")
+        Call<String> register(@Body Map<String, Object> request);
 
     }
 }

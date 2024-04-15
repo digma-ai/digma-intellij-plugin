@@ -106,6 +106,7 @@ public class AnalyticsService implements Disposable {
             // AuthenticationProvider that always takes it from the settings
             if (shouldReplaceClient) {
                 Log.log(LOGGER::debug, "api url changed to {}, calling replace client", myApiUrl);
+                AuthManager.getInstance().logout();
                 replaceClient(myApiUrl);
             }
 
@@ -142,7 +143,7 @@ public class AnalyticsService implements Disposable {
                         message -> {
                             var apiLogger = Logger.getInstance("api.digma.org");
                             Log.log(apiLogger::debug, "API: {}", message);
-                        }), url);
+                        }));
         Log.log(LOGGER::debug, "AuthManager.withAuth successfully wrapped AnalyticsProvider for url {}", url);
         analyticsProviderProxy = newAnalyticsProviderProxy(analyticsProvider);
 
@@ -478,6 +479,9 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.createEnvironments(queryParams));
     }
 
+    public String register(@NotNull Map<String, Object> queryParams) throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.register(queryParams));
+    }
 
     public InsightsStatsResult getInsightsStats(String spanCodeObjectId) throws AnalyticsServiceException {
 

@@ -31,7 +31,6 @@ public interface AnalyticsProvider extends Closeable {
 
     LoginResponse refreshToken(RefreshRequest loginRequest);
 
-
     List<Env> getEnvironments();
 
     void sendDebuggerEvent(DebuggerEventRequest debuggerEventRequest);
@@ -107,6 +106,8 @@ public interface AnalyticsProvider extends Closeable {
     AssetNavigationResponse getAssetNavigation(String env, String spanCodeObjectId);
 
     String createEnvironments(Map<String, Object> request);
+
+    String register(Map<String, Object> request);
 
     void deleteEnvironmentV2(String id);
 

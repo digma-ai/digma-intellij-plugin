@@ -16,6 +16,8 @@ import org.digma.intellij.plugin.analytics.InsightStatsChangedEvent
 import org.digma.intellij.plugin.analytics.getAllEnvironments
 import org.digma.intellij.plugin.analytics.getEnvironmentNameById
 import org.digma.intellij.plugin.analytics.setCurrentEnvironmentById
+import org.digma.intellij.plugin.auth.AuthManager
+import org.digma.intellij.plugin.auth.LoginResult
 import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
@@ -36,10 +38,13 @@ import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import org.digma.intellij.plugin.ui.common.updateObservabilityValue
 import org.digma.intellij.plugin.ui.jcef.model.GetFromPersistenceRequest
+import org.digma.intellij.plugin.ui.jcef.model.LoginResultPayload
 import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest
 import org.digma.intellij.plugin.ui.jcef.model.OpenInInternalBrowserRequest
 import org.digma.intellij.plugin.ui.jcef.model.SaveToPersistenceRequest
 import org.digma.intellij.plugin.ui.jcef.model.SendTrackingEventRequest
+import org.digma.intellij.plugin.ui.jcef.model.SetLoginResultMessage
+import org.digma.intellij.plugin.ui.jcef.model.SetRegistrationMessage
 import org.digma.intellij.plugin.ui.jcef.persistence.JCEFPersistenceService
 import org.digma.intellij.plugin.ui.jcef.state.JCEFStateManager
 
@@ -199,10 +204,33 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                         changeScope(requestJsonNode)
                     }
 
+                    JCEFGlobalConstants.GLOBAL_REGISTRATION -> {
+                        val payload = getPayloadFromRequest(requestJsonNode)
+                        payload?.let {
+                            val requestParams = getMapFromNode(it, objectMapper)
+                            val result = AnalyticsService.getInstance(project).register(requestParams)
+                            val message = SetRegistrationMessage(result)
+                            serializeAndExecuteWindowPostMessageJavaScript(browser, message)
+                            UserRegistrationManager.getInstance(project).register(mapOf("email" to payload.get("email").asText()))
+                        }
+                    }
+
+                    JCEFGlobalConstants.GLOBAL_LOGOUT -> {
+                        AuthManager.getInstance().logout()
+                    }
+
+                    JCEFGlobalConstants.GLOBAL_LOGIN -> {
+                        val result = login(requestJsonNode)
+                        val message = result?.let {
+                            SetLoginResultMessage(LoginResultPayload(result.isSuccess, result.error))
+                        } ?: SetLoginResultMessage(LoginResultPayload(false, null))
+
+                        serializeAndExecuteWindowPostMessageJavaScript(browser, message)
+                    }
+
                     JCEFGlobalConstants.GLOBAL_CHANGE_VIEW -> {
                         changeView(requestJsonNode)
                     }
-
 
                     JCEFGlobalConstants.GLOBAL_UPDATE_STATE -> {
                         updateState(requestJsonNode)
@@ -352,6 +380,19 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
         environment?.let { envId ->
             setCurrentEnvironmentById(project, envId)
         }
+    }
+
+    private fun login (requestJsonNode: JsonNode): LoginResult? {
+        val payload = getPayloadFromRequest(requestJsonNode)
+        val result = payload?.let {
+            try {
+                AuthManager.getInstance().logout()
+                AuthManager.getInstance().login(it.get("email").asText(), it.get("password").asText())
+            } catch (e: Exception) {
+                return@let LoginResult(false, null, null);
+            }
+        }
+        return result;
     }
 }
 

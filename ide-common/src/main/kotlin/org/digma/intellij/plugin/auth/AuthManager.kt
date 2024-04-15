@@ -143,22 +143,22 @@ class AuthManager {
             Log.log(logger::info, "doing login for url={}", analyticsProvider.apiUrl)
             val loginResponse = analyticsProvider.login(LoginRequest(userName, password))
 
-                val digmaAccount = DigmaAccountManager.createAccount(analyticsProvider.apiUrl, loginResponse.userId)
-                val digmaCredentials = DigmaCredentials(
-                    loginResponse.accessToken,
-                    loginResponse.refreshToken,
-                    analyticsProvider.apiUrl,
-                    TokenType.Bearer.name,
-                    loginResponse.expiration.time
-                )
-                runBlocking {
-                    DigmaAccountManager.getInstance().updateAccount(digmaAccount, digmaCredentials)
-                    DigmaDefaultAccountHolder.getInstance().account = digmaAccount
-                }
-                Log.log(logger::info, "login success for url={}", analyticsProvider.apiUrl)
+            val digmaAccount = DigmaAccountManager.createAccount(analyticsProvider.apiUrl, loginResponse.userId)
+            val digmaCredentials = DigmaCredentials(
+                loginResponse.accessToken,
+                loginResponse.refreshToken,
+                analyticsProvider.apiUrl,
+                TokenType.Bearer.name,
+                loginResponse.expiration.time
+            )
+            runBlocking {
+                DigmaAccountManager.getInstance().updateAccount(digmaAccount, digmaCredentials)
+                DigmaDefaultAccountHolder.getInstance().account = digmaAccount
+            }
+            Log.log(logger::info, "login success for url={}", analyticsProvider.apiUrl)
 
             reportPosthogEvent(
-                "login success",  mapOf(
+                "login success", mapOf(
                     "user" to SILENT_LOGIN_USER
                 )
             )
@@ -167,8 +167,7 @@ class AuthManager {
 
         } catch (e: AuthenticationException) {
             return LoginResult(false, null, e.detailedMessage);
-        }
-        catch (e: Throwable) {
+        } catch (e: Throwable) {
             //just for reporting, never swallow the exception
             reportPosthogEvent(
                 "login failed", mapOf(
@@ -197,7 +196,7 @@ class AuthManager {
             val digmaAccount = DigmaDefaultAccountHolder.getInstance().account
             val about = analyticsProvider.about
 
-            if(digmaAccount == null && about.isCentralize == true){
+            if (digmaAccount == null && about.isCentralize == true) {
                 Log.log(logger::info, "loginOrRefresh, account is not logged in for centralized env url={}", url)
                 return false
             }
@@ -226,7 +225,7 @@ class AuthManager {
                     url
                 )
                 logout().also {
-                    if(about.isCentralize != true){
+                    if (about.isCentralize != true) {
                         login(SILENT_LOGIN_USER, SILENT_LOGIN_PASSWORD)
                         return true
                     }
@@ -256,7 +255,7 @@ class AuthManager {
                     return true
                 }
 
-                if(about.isCentralize == false) {
+                if (about.isCentralize == false) {
                     login(SILENT_LOGIN_USER, SILENT_LOGIN_PASSWORD)
                     return true
                 }
@@ -288,7 +287,12 @@ class AuthManager {
         }
     }
 
-    private fun refreshToken(analyticsProvider: RestAnalyticsProvider, digmaAccount: DigmaAccount, credentials: DigmaCredentials, url: String): Boolean {
+    private fun refreshToken(
+        analyticsProvider: RestAnalyticsProvider,
+        digmaAccount: DigmaAccount,
+        credentials: DigmaCredentials,
+        url: String
+    ): Boolean {
 
         try {
             Log.log(logger::info, "refreshing credentials for account {}, url={}", digmaAccount.name, url)

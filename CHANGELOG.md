@@ -1,6 +1,15 @@
 # Changelog
 
-## [2.0.318] - 2024-04-10
+## [2.0.319] - 2024-04-15
+
+- refresh plugins metadata before update Closes #2005 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2054
+- change-custom-event-to-user-action by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2056
+- update-rider-dependency-to-2024.1 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2059
+- check response code in docker compose downloader Closes #2066 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2067
+- small fix digmathon service by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2070
+- Update Digma overload warning link by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2064
+
+## 2.0.318 - 2024-04-10
 
 - updated dates by @doppleware in https://github.com/digma-ai/digma-intellij-plugin/pull/2055
 

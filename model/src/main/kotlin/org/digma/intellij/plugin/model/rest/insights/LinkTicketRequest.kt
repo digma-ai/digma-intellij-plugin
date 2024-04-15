@@ -7,5 +7,5 @@ import java.beans.ConstructorProperties
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class LinkTicketRequest
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-@ConstructorProperties("environment", "codeObjectId", "insightType", "ticketLink")
-constructor(val environment: String, val codeObjectId: String, val insightType: String, var ticketLink: String)
+@ConstructorProperties("environment", "insightId", "ticketLink")
+constructor(val environment: String, val insightId: String, var ticketLink: String)

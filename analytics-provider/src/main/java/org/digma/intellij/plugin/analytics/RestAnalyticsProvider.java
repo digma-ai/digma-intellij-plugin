@@ -16,7 +16,6 @@ import org.digma.intellij.plugin.model.rest.environment.Env;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.event.*;
-import org.digma.intellij.plugin.model.rest.highlights.HighlightsPerformanceResponse;
 import org.digma.intellij.plugin.model.rest.insights.*;
 import org.digma.intellij.plugin.model.rest.livedata.*;
 import org.digma.intellij.plugin.model.rest.login.*;
@@ -95,8 +94,8 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
-    public List<InsightInfo> getInsightsInfo(InsightsRequest insightsRequest) {
-        return execute(() -> client.analyticsProvider.getInsightsInfo(insightsRequest));
+    public List<InsightTypesForJaegerResponse> getInsightsForJaeger(InsightTypesForJaegerRequest request) {
+        return execute(() -> client.analyticsProvider.getInsightsForJaeger(request));
     }
 
     @Override
@@ -311,7 +310,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
-    public List<HighlightsPerformanceResponse> getHighlightsPerformance(Map<String, Object> queryParams) {
+    public String getHighlightsPerformance(Map<String, Object> queryParams) {
         return execute(() -> client.analyticsProvider.getHighlightsPerformance(queryParams));
     }
 
@@ -597,8 +596,8 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @POST("/CodeAnalytics/codeObjects/insights")
-        Call<List<InsightInfo>> getInsightsInfo(@Body InsightsRequest insightsRequest);
+        @POST("/insights/typesForJaeger")
+        Call<List<InsightTypesForJaegerResponse>> getInsightsForJaeger(@Body InsightTypesForJaegerRequest request);
 
 
         @Headers({
@@ -879,7 +878,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Content-Type:application/json"
         })
         @GET("/highlights/performance")
-        Call<List<HighlightsPerformanceResponse>> getHighlightsPerformance(@QueryMap Map<String, Object> fields);
+        Call<String> getHighlightsPerformance(@QueryMap Map<String, Object> fields);
 
         @Headers({
                 "Accept: application/+json",

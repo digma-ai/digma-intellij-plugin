@@ -38,47 +38,46 @@ public abstract class InsightsServiceImpl implements Disposable {
     }
 
 
-    public void openHistogram(@NotNull String instrumentationLibrary, @NotNull String spanName, @NotNull String insightType, @Nullable String displayName) {
+    public void openHistogram(@NotNull String spanCodeObjectId, @NotNull String insightType, @Nullable String displayName) {
 
-        Log.log(logger::debug, project, "openHistogram called {},{}", instrumentationLibrary, spanName);
-
+        Log.log(logger::debug, project, "openHistogram called {}", spanCodeObjectId);
         ActivityMonitor.getInstance(project).registerUserActionWithOrigin("open histogram", UserActionOrigin.Insights, Collections.singletonMap("insight type", insightType));
-        var title  = displayName != null && !displayName.isEmpty()? displayName: spanName;
+        var title  = displayName;
         try {
 
             try {
                 switch (insightType) {
                     case "SpanDurations" -> {
-                        String htmlContent = AnalyticsService.getInstance(project).getHtmlGraphForSpanPercentiles(instrumentationLibrary, spanName, Laf.INSTANCE.getColorHex(Laf.Colors.getPLUGIN_BACKGROUND()));
+                        String htmlContent = AnalyticsService.getInstance(project).getHtmlGraphForSpanPercentiles(spanCodeObjectId, Laf.INSTANCE.getColorHex(Laf.Colors.getPLUGIN_BACKGROUND()));
                         DigmaHTMLEditorProvider.openEditor(project, "Percentiles Graph of Span " + title, htmlContent);
                     }
                     case "SpanScaling" -> {
-                        String htmlContent = AnalyticsService.getInstance(project).getHtmlGraphForSpanScaling(instrumentationLibrary, spanName, Laf.INSTANCE.getColorHex(Laf.Colors.getPLUGIN_BACKGROUND()));
+                        String htmlContent = AnalyticsService.getInstance(project).getHtmlGraphForSpanScaling(spanCodeObjectId, Laf.INSTANCE.getColorHex(Laf.Colors.getPLUGIN_BACKGROUND()));
                         DigmaHTMLEditorProvider.openEditor(project, "Scaling Graph of Span " + title, htmlContent);
                     }
                     default -> {
                         //todo: a fallback when the type is unknown, we should add support for more types if necessary
-                        String htmlContent = AnalyticsService.getInstance(project).getHtmlGraphForSpanScaling(instrumentationLibrary, spanName, Laf.INSTANCE.getColorHex(Laf.Colors.getPLUGIN_BACKGROUND()));
+                        String htmlContent = AnalyticsService.getInstance(project).getHtmlGraphForSpanScaling(spanCodeObjectId, Laf.INSTANCE.getColorHex(Laf.Colors.getPLUGIN_BACKGROUND()));
                         DigmaHTMLEditorProvider.openEditor(project, "Scaling Graph of Span " + title, htmlContent);
                     }
                 }
             } catch (IllegalArgumentException e) {
                 //fallback for span type that is not in the enum
-                String htmlContent = AnalyticsService.getInstance(project).getHtmlGraphForSpanScaling(instrumentationLibrary, spanName, Laf.INSTANCE.getColorHex(Laf.Colors.getPLUGIN_BACKGROUND()));
+                String htmlContent = AnalyticsService.getInstance(project).getHtmlGraphForSpanScaling(spanCodeObjectId, Laf.INSTANCE.getColorHex(Laf.Colors.getPLUGIN_BACKGROUND()));
                 DigmaHTMLEditorProvider.openEditor(project, "Scaling Graph of Span " + title, htmlContent);
             }
 
         } catch (AnalyticsServiceException e) {
-            Log.warnWithException(logger, project, e, "Error in openHistogram for {},{} {}", instrumentationLibrary, title, e.getMessage());
+            Log.warnWithException(logger, project, e, "Error in openHistogram for {},{} {}", spanCodeObjectId, title, e.getMessage());
             ErrorReporter.getInstance().reportError(project, "InsightsServiceImpl.openHistogram", e);
         }
     }
 
 
-    public void openLiveView(@NotNull String prefixedCodeObjectId) {
-        Log.log(logger::debug, project, "openLiveView called {}", prefixedCodeObjectId);
-        project.getService(RecentActivityService.class).startLiveView(prefixedCodeObjectId);
-        ActivityMonitor.getInstance(project).registerUserAction("live view clicked", Collections.singletonMap("code object id", prefixedCodeObjectId));
+    public void openLiveView(@NotNull String codeObjectId) {
+        Log.log(logger::debug, project, "openLiveView called {}", codeObjectId);
+        project.getService(RecentActivityService.class).startLiveView(codeObjectId);
+        ActivityMonitor.getInstance(project).registerUserAction("live view clicked", Collections.singletonMap("code object id", codeObjectId));
     }
 
 

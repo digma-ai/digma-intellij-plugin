@@ -21,8 +21,6 @@ import org.jetbrains.annotations.*;
 
 import java.util.*;
 
-import static org.digma.intellij.plugin.common.CodeObjectsUtil.*;
-
 
 public class JaegerUIService implements Disposable {
 
@@ -146,23 +144,23 @@ public class JaegerUIService implements Disposable {
     }
 
     public Map<String, SpanData> getResolvedSpans(SpansMessage spansMessage) {
-
-        //todo: change get insights with the new service
-
         var allSpans = new HashMap<String, SpanData>();
 
-        var spanIds = spansMessage.payload().spans().stream()
-                .map(Span::spanId).toList();
+        var spanCodeObjectIds = spansMessage.payload().spans().stream()
+                .map(Span::spanCodeObjectId).toList();
         var methodIds = spansMessage.payload().spans().stream()
                 .map(Span::methodId)
                 .filter(Objects::nonNull).toList();
 
-        Map<String, List<Insight>> allInsights = getInsights(spanIds, methodIds);
+        var spanCodeObjectIdsNoPrefix = spansMessage.payload().spans().stream()
+                .map(Span::spanId).toList();
+
+        Map<String, List<Insight>> allInsights = getInsights(spanCodeObjectIds);
 
         for (SupportedLanguages value : SupportedLanguages.values()) {
             var languageService = LanguageService.findLanguageServiceByName(project, value.getLanguageServiceClassName());
             if (languageService != null) {
-                var spanWorkspaceUris = ReadActions.ensureReadAction(() -> languageService.findWorkspaceUrisForSpanIds(spanIds));
+                var spanWorkspaceUris = ReadActions.ensureReadAction(() -> languageService.findWorkspaceUrisForSpanIds(spanCodeObjectIdsNoPrefix));
                 var methodWorkspaceUris = ReadActions.ensureReadAction(() -> languageService.findWorkspaceUrisForMethodCodeObjectIds(methodIds));
                 spansMessage.payload().spans().forEach(span -> {
                     var spanId = span.spanId();
@@ -171,7 +169,7 @@ public class JaegerUIService implements Disposable {
 
                     var spanData = allSpans.computeIfAbsent(span.id(), s -> new SpanData(hasCodeLocation, new ArrayList<>()));
 
-                    addInsightsToSpanData(spanData, spanId, methodId, allInsights);
+                    addInsightsToSpanData(spanData, span.spanCodeObjectId(), methodId, allInsights);
                 });
             }
         }
@@ -217,25 +215,22 @@ public class JaegerUIService implements Disposable {
     }
 
     @NotNull
-    private Map<String, List<Insight>> getInsights(@NotNull List<String> spanIds, @NotNull List<String> methodIds) {
+    private Map<String, List<Insight>> getInsights(@NotNull List<String> spanIds) {
 
         if (spanIds.size() > 500) {
             return Collections.emptyMap();
         }
 
-        var ids = new ArrayList<>(addSpanTypeToIds(spanIds));
-        ids.addAll(addMethodTypeToIds(methodIds));
-
-        var insights = new HashMap<String, List<Insight>>();
+        var insightsMap = new HashMap<String, List<Insight>>();
 
         try {
-            var insightsFromBackend = AnalyticsService.getInstance(project).getInsightsInfo(ids);
-            insightsFromBackend.forEach(codeObjectInsight -> {
-                var id = codeObjectInsight.getCodeObjectId();
-                var objectInsights = insights.computeIfAbsent(id, s -> new ArrayList<>());
-                objectInsights.add(new Insight(codeObjectInsight.getType(), codeObjectInsight.getImportance()));
+            var spanInsights = AnalyticsService.getInstance(project).getInsightsForJaeger(spanIds);
+
+            spanInsights.forEach(o -> {
+                List<Insight> insights = o.getInsights().stream().map(s -> new Insight(s.getType(), s.getImportance())).toList();
+                insightsMap.put(o.getSpanCodeObjectId(), insights);
             });
-            return insights;
+            return insightsMap;
         } catch (AnalyticsServiceException e) {
             Log.debugWithException(logger, e, "Exception in getInsights {}", e.getMessage());
             return Collections.emptyMap();

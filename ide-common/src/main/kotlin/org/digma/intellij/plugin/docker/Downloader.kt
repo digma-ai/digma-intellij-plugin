@@ -8,6 +8,7 @@ import org.digma.intellij.plugin.errorreporting.SEVERITY_PROP_NAME
 import org.digma.intellij.plugin.log.Log
 import java.io.File
 import java.io.FileOutputStream
+import java.net.HttpURLConnection
 import java.net.URL
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
@@ -96,22 +97,34 @@ class Downloader {
 
                 Log.log(logger::info, "downloading {}", url)
 
-                val connection = url.openConnection()
-                connection.connectTimeout = 5000
+                val connection: HttpURLConnection = url.openConnection() as HttpURLConnection
+                connection.connectTimeout = 10000
                 connection.readTimeout = 5000
+                connection.requestMethod = "GET"
+                val responseCode: Int = connection.getResponseCode()
 
-                connection.getInputStream().use {
-                    Files.copy(it, tempFile, StandardCopyOption.REPLACE_EXISTING)
+                if (responseCode != HttpURLConnection.HTTP_OK) {
+                    ErrorReporter.getInstance().reportError(
+                        null, "Downloader.downloadAndCopyFile",
+                        "download from ${url.toString()}",
+                        mapOf(
+                            SEVERITY_PROP_NAME to SEVERITY_HIGH_TRY_FIX,
+                            "responseCode" to responseCode.toString()
+                        )
+                    )
+                } else {
+                    connection.inputStream.use {
+                        Files.copy(it, tempFile, StandardCopyOption.REPLACE_EXISTING)
+                    }
+
+                    Log.log(logger::info, "copying downloaded file {} to {}", tempFile, toFile)
+                    try {
+                        Files.move(tempFile, toFile.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
+                    } catch (e: Exception) {
+                        //ATOMIC_MOVE is not always supported so try again on exception
+                        Files.move(tempFile, toFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
+                    }
                 }
-
-                Log.log(logger::info, "copying downloaded file {} to {}", tempFile, toFile)
-                try {
-                    Files.move(tempFile, toFile.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
-                } catch (e: Exception) {
-                    //ATOMIC_MOVE is not always supported so try again on exception
-                    Files.move(tempFile, toFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
-                }
-
             }, Throwable::class.java, 5000, 3)
 
         } catch (e: Exception) {

@@ -7,5 +7,5 @@ data class SetRegistrationMessage(
     @JsonRawValue val payload: String,
 ) {
     val type = JCEFGlobalConstants.REQUEST_MESSAGE_TYPE
-    val action = "GLOBAL/REGISTRATION_RESULT"
+    val action = "GLOBAL/SET_REGISTRATION_RESULT"
 }

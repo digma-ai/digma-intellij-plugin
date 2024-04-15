@@ -6,7 +6,7 @@ data class SetLoginResultMessage(
     val payload: LoginResultPayload,
 ) {
     val type = JCEFGlobalConstants.REQUEST_MESSAGE_TYPE
-    val action = "GLOBAL/LOGIN_RESULT"
+    val action = "GLOBAL/SET_LOGIN_RESULT"
 }
 
 data class LoginResultPayload(val isSuccess: Boolean, val error: String?)

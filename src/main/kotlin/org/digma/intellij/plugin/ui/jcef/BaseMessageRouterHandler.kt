@@ -387,22 +387,9 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
 
     private fun login (requestJsonNode: JsonNode): LoginResult? {
         val payload = getPayloadFromRequest(requestJsonNode)
-        val settingsState: SettingsState = SettingsState.getInstance()
         val result = payload?.let {
             try {
-                val provider = (RestAnalyticsProvider(
-                    settingsState.apiUrl, getInstance().getAuthenticationProviders()
-                ) { logMsg: String? ->
-                    val apiLogger =
-                        Logger.getInstance("api.digma.org")
-                    Log.log({ msg: String? ->
-                        apiLogger.debug(
-                            msg
-                        )
-                    }, "API: {}", logMsg)
-                })
-
-                return@let AuthManager.getInstance().login(provider, it.get("email").asText(), it.get("password").asText())
+                return@let AuthManager.getInstance().login( it.get("email").asText(), it.get("password").asText())
             } catch (e: Exception) {
                 return@let LoginResult(false, null, null);
             }

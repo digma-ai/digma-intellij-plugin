@@ -17,8 +17,6 @@
     <script>
       @GLOBAL_ENV_VARS@
 
-      window.assetsSelectedServices = ${assetsSelectedServices?json_string};
-      window.assetsSearch = ${assetsSearch};
       window.assetsRefreshInterval;
 
     </script>

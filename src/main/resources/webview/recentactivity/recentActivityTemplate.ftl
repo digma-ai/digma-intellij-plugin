@@ -19,7 +19,6 @@
 
       window.recentActivityExpirationLimit = ${recentActivityExpirationLimit};
       window.recentActivityDocumentationURL = "https://youtu.be/F1Y0kETn-QQ";
-      window.recentActivityIsEnvironmentManagementEnabled = ${recentActivityIsEnvironmentManagementEnabled?string('true', 'false')};
     </script>
     <script src="/index.js"></script>
   </body>

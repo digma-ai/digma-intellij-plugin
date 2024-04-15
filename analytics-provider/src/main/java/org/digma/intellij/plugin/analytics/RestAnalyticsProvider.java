@@ -301,7 +301,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
 
     @Override
-    public List<HighlightsPerformanceResponse> getHighlightsPerformance(Map<String, Object> queryParams) {
+    public String getHighlightsPerformance(Map<String, Object> queryParams) {
         return execute(() -> client.analyticsProvider.getHighlightsPerformance(queryParams));
     }
 
@@ -868,7 +868,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Content-Type:application/json"
         })
         @GET("/highlights/performance")
-        Call<List<HighlightsPerformanceResponse>> getHighlightsPerformance(@QueryMap Map<String, Object> fields);
+        Call<String> getHighlightsPerformance(@QueryMap Map<String, Object> fields);
 
         @Headers({
                 "Accept: application/+json",

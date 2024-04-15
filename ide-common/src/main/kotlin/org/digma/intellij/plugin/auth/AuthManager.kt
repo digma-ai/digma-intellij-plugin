@@ -76,6 +76,7 @@ class AuthManager {
 
         Log.log(logger::info, "wrapping analyticsProvider with auth for url={}", analyticsProvider.apiUrl)
 
+        //keep the RestAnalyticsProvider every time withAuth is called so it will always be the correct and latest one
         myAnalyticsProvider = analyticsProvider
 
         //loginOrRefresh will fail if backend is not up. it should catch all possible exceptions so that a proxy will always be returned.

@@ -132,11 +132,13 @@ class UpdatesService(private val project: Project) : Disposable {
 
     fun evalAndGetState(): UpdateState {
         Log.log(logger::debug, "evalAndGetState called")
-        return UpdateState(
+        val state = UpdateState(
             stateBackendVersion.deploymentType,
             shouldUpdateBackend(),
             shouldUpdatePlugin(),
         )
+        Log.log(logger::debug, "current state is {}", state)
+        return state
     }
 
     private fun shouldUpdateBackend(): Boolean {

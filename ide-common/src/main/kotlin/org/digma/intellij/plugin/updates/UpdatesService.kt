@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 import org.apache.maven.artifact.versioning.ComparableVersion
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.common.EDT
+import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.common.buildVersionRequest
 import org.digma.intellij.plugin.common.getPluginVersion
 import org.digma.intellij.plugin.common.newerThan
@@ -69,7 +70,7 @@ class UpdatesService(private val project: Project) : Disposable {
             } catch (e: CancellationException) {
                 Log.debugWithException(logger, e, "Exception in checkForNewerVersions")
             } catch (e: Throwable) {
-                Log.warnWithException(logger, e, "Exception in checkForNewerVersions {}", e)
+                Log.debugWithException(logger, e, "Exception in checkForNewerVersions {}", ExceptionUtils.getNonEmptyMessage(e))
                 ErrorReporter.getInstance().reportError("UpdatesService.timer", e)
             }
         }

@@ -122,7 +122,7 @@ class InstrumentationRunConfigurationExtension : RunConfigurationExtension() {
             val taskNames = handler.getTaskNames(configuration).toMutableSet()
             taskNames.removeAll { task ->
                 //gradle tasks may start with ':'
-                val toRemoveWithoutColon = if (task.startsWith(":")) task.substring(1) else task
+                val toRemoveWithoutColon = if (task.startsWith(":") && task.length > 1) task.substring(1) else task
                 KNOWN_IRRELEVANT_TASKS.contains(toRemoveWithoutColon) ||
                         KNOWN_IRRELEVANT_TASKS.any { task.endsWith(it) }
             }

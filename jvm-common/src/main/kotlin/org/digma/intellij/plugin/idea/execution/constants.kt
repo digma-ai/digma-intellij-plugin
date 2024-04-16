@@ -130,6 +130,22 @@ val KNOWN_IRRELEVANT_TASKS = setOf(
     "runClientTester",
     "javaToolchains",
     "outgoingVariants",
-    "resolvableConfigurations"
+    "resolvableConfigurations",
+    "spotlessApply",
+    "javaagentClasses",
+    "testFixturesClasses",
+    "app-server:server",
+    "buildAndPushDockerImage",
+    "runClientTester",
+    "sonarqube",
+    "qualityCheck",
+    "integrationTestClasses",
+
+    /*
+     * Intellij plugin project
+     */
+    "buildPlugin",
+    "runIde",
+    "setupDependencies"
 
     )

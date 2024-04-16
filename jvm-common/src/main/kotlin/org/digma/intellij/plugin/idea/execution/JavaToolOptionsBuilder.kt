@@ -63,15 +63,17 @@ open class JavaToolOptionsBuilder(
 
     open fun withCommonResourceAttributes(isTest: Boolean, parametersExtractor: ParametersExtractor): JavaToolOptionsBuilder {
 
-        if (!parametersExtractor.hasDigmaEnvironmentIdAttribute(configuration, params)) {
-            val envAttribute = if (isTest && !isCentralized(configuration.project)) {
+        if (needToAddDigmaEnvironmentAttribute(parametersExtractor)) {
+            val envAttribute = if (isTest) {
                 "$DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE=$LOCAL_TESTS_ENV"
             } else {
                 "$DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE=$LOCAL_ENV"
             }
 
             withOtelResourceAttribute(envAttribute)
+        }
 
+        if (isCentralized(configuration.project)) {
             DigmaDefaultAccountHolder.getInstance().account?.userId?.let {
                 val userIdAttribute = "$DIGMA_USER_ID_RESOURCE_ATTRIBUTE=${it}"
                 withOtelResourceAttribute(userIdAttribute)
@@ -79,6 +81,12 @@ open class JavaToolOptionsBuilder(
         }
 
         return this
+    }
+
+
+    private fun needToAddDigmaEnvironmentAttribute(parametersExtractor: ParametersExtractor): Boolean {
+        return !parametersExtractor.hasDigmaEnvironmentIdAttribute(configuration, params) &&
+                !parametersExtractor.hasDigmaEnvironmentAttribute(configuration, params)
     }
 
 
@@ -142,7 +150,7 @@ open class JavaToolOptionsBuilder(
 
 
     open fun withOtelResourceAttribute(attribute: String): JavaToolOptionsBuilder {
-        //collection otel resource attributes , they are built in build method
+        //collecting otel resource attributes , they are built in the build method
         otelResourceAttributes.add(attribute)
         return this
     }

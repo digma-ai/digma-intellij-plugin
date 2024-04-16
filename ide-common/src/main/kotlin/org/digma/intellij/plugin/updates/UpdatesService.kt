@@ -62,7 +62,7 @@ class UpdatesService(private val project: Project) : Disposable {
                     Log.log(logger::trace, "updating state")
                     checkForNewerVersions()
                     val delaySeconds = getDefaultDelayBetweenUpdatesSeconds()
-                    Log.log(logger::trace, "sleeping for {}", delaySeconds)
+                    Log.log(logger::trace, "sleeping {}", delaySeconds)
                     delay(delaySeconds.inWholeMilliseconds)
                 }
 

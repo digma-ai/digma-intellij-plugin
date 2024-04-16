@@ -59,21 +59,23 @@ class UpdatesService(private val project: Project) : Disposable {
 
         @Suppress("UnstableApiUsage")
         disposingScope().launch {
-            try {
 
-                while (isActive) {
+            while (isActive) {
+
+                try {
+
                     Log.log(logger::trace, "updating state")
                     checkForNewerVersions()
                     val delaySeconds = getDefaultDelayBetweenUpdatesSeconds()
                     Log.log(logger::trace, "sleeping {}", delaySeconds)
                     delay(delaySeconds.inWholeMilliseconds)
-                }
 
-            } catch (e: CancellationException) {
-                Log.debugWithException(logger, e, "Exception in checkForNewerVersions")
-            } catch (e: Throwable) {
-                Log.debugWithException(logger, e, "Exception in checkForNewerVersions {}", ExceptionUtils.getNonEmptyMessage(e))
-                ErrorReporter.getInstance().reportError("UpdatesService.timer", e)
+                } catch (e: CancellationException) {
+                    Log.debugWithException(logger, e, "Exception in checkForNewerVersions")
+                } catch (e: Throwable) {
+                    Log.debugWithException(logger, e, "Exception in checkForNewerVersions {}", ExceptionUtils.getNonEmptyMessage(e))
+                    ErrorReporter.getInstance().reportError("UpdatesService.timer", e)
+                }
             }
         }
 

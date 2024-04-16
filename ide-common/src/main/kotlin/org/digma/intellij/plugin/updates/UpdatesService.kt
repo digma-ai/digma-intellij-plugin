@@ -69,7 +69,7 @@ class UpdatesService(private val project: Project) : Disposable {
             } catch (e: CancellationException) {
                 Log.debugWithException(logger, e, "Exception in checkForNewerVersions")
             } catch (e: Throwable) {
-                Log.warnWithException(logger, e, "Exception in checkForNewerVersions")
+                Log.warnWithException(logger, e, "Exception in checkForNewerVersions {}", e)
                 ErrorReporter.getInstance().reportError("UpdatesService.timer", e)
             }
         }

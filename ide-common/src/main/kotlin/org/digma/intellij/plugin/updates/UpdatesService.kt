@@ -25,9 +25,11 @@ import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
 import org.digma.intellij.plugin.model.rest.version.BackendVersionResponse
 import org.digma.intellij.plugin.model.rest.version.PluginVersionResponse
 import org.digma.intellij.plugin.model.rest.version.VersionResponse
+import org.digma.intellij.plugin.settings.InternalFileSettings
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import java.util.concurrent.TimeUnit
-import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 @Service(Service.Level.PROJECT)
 class UpdatesService(private val project: Project) : Disposable {
@@ -38,6 +40,10 @@ class UpdatesService(private val project: Project) : Disposable {
         @JvmStatic
         fun getInstance(project: Project): UpdatesService {
             return project.service<UpdatesService>()
+        }
+
+        fun getDefaultDelayBetweenUpdatesSeconds(): Duration {
+            return InternalFileSettings.getUpdateServiceMonitorDelaySeconds(300).seconds
         }
     }
 
@@ -56,8 +62,10 @@ class UpdatesService(private val project: Project) : Disposable {
             try {
 
                 while (isActive) {
+                    Log.log(logger::trace, "updating state")
                     checkForNewerVersions()
-                    delay(5.minutes.inWholeMilliseconds)
+                    val delaySeconds = getDefaultDelayBetweenUpdatesSeconds()
+                    delay(delaySeconds.inWholeMilliseconds)
                 }
 
             } catch (e: CancellationException) {

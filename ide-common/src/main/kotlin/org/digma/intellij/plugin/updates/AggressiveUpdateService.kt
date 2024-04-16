@@ -29,6 +29,7 @@ import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
 import org.digma.intellij.plugin.model.rest.version.VersionResponse
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.settings.InternalFileSettings
+import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.updates.AggressiveUpdateService.Companion.getInstance
 import org.digma.intellij.plugin.updates.CurrentUpdateState.OK
 import org.digma.intellij.plugin.updates.CurrentUpdateState.UPDATE_BACKEND
@@ -109,6 +110,16 @@ class AggressiveUpdateService : Disposable {
                         startMonitoring()
                     }
                 })
+
+
+            SettingsState.getInstance().addChangeListener({
+                //update state immediately after settings change. we are interested in api url change but it will
+                // do no harm to call it on any settings change
+                updateState()
+                //and call startMonitoring just in case it is stopped by a previous connectionLost but there was no connection gained
+                startMonitoring()
+            }, this)
+
         } else {
             Log.log(logger::info, "not starting, disabled in internal settings")
         }

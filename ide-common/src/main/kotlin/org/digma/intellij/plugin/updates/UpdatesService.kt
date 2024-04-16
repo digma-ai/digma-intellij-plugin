@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.updates
 
 import com.intellij.collaboration.async.disposingScope
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
@@ -12,6 +13,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.apache.maven.artifact.versioning.ComparableVersion
 import org.digma.intellij.plugin.analytics.AnalyticsService
+import org.digma.intellij.plugin.analytics.BackendConnectionEvent
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.common.buildVersionRequest
@@ -74,6 +76,20 @@ class UpdatesService(private val project: Project) : Disposable {
                 ErrorReporter.getInstance().reportError("UpdatesService.timer", e)
             }
         }
+
+
+        ApplicationManager.getApplication().messageBus.connect(this)
+            .subscribe(BackendConnectionEvent.BACKEND_CONNECTION_STATE_TOPIC, object : BackendConnectionEvent {
+                override fun connectionLost() {
+                }
+
+                override fun connectionGained() {
+                    Log.log(logger::debug, "got connectionGained")
+                    //update state immediately after connectionGained, so it will not wait the delay for checking the versions.
+                    checkForNewerVersions()
+                }
+            })
+
 
         SettingsState.getInstance().addChangeListener({
             @Suppress("UnstableApiUsage")

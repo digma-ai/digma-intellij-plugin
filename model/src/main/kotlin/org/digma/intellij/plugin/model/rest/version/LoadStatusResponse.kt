@@ -11,10 +11,12 @@ data class LoadStatusResponse
 @ConstructorProperties(
     "description",
     "lastUpdated",
-    "occurredRecently"
+    "occurredRecently",
+    "throttlingType"
 )
 constructor(
     val description: String?,
     val lastUpdated: Date,
     val occurredRecently: Boolean,
+    val throttlingType: String?,
 )

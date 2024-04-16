@@ -30,7 +30,7 @@ class LoadStatusService(private val project: Project) : Disposable {
     }
 
     var affectedPanel: DigmaResettablePanel? = null // late init
-    var lastLoadStatus = LoadStatusResponse("", Date(0), false)
+    var lastLoadStatus = LoadStatusResponse("", Date(0), false, "")
 
     init {
         @Suppress("UnstableApiUsage")

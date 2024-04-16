@@ -113,11 +113,15 @@ class AggressiveUpdateService : Disposable {
 
 
             SettingsState.getInstance().addChangeListener({
-                //update state immediately after settings change. we are interested in api url change but it will
-                // do no harm to call it on any settings change
-                updateState()
-                //and call startMonitoring just in case it is stopped by a previous connectionLost but there was no connection gained
-                startMonitoring()
+
+                @Suppress("UnstableApiUsage")
+                disposingScope().launch {
+                    //update state immediately after settings change. we are interested in api url change but it will
+                    // do no harm to call it on any settings change
+                    updateState()
+                    //and call startMonitoring just in case it is stopped by a previous connectionLost but there was no connection gained
+                    startMonitoring()
+                }
             }, this)
 
         } else {

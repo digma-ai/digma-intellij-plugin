@@ -22,6 +22,7 @@ import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
 import org.digma.intellij.plugin.model.rest.version.BackendVersionResponse
 import org.digma.intellij.plugin.model.rest.version.VersionResponse
 import org.digma.intellij.plugin.settings.InternalFileSettings
+import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration
@@ -72,6 +73,16 @@ class UpdatesService(private val project: Project) : Disposable {
                 ErrorReporter.getInstance().reportError("UpdatesService.timer", e)
             }
         }
+
+        SettingsState.getInstance().addChangeListener({
+            @Suppress("UnstableApiUsage")
+            disposingScope().launch {
+                //update state immediately after settings change. we are interested in api url change, but it will
+                // do no harm to call it on any settings change
+                checkForNewerVersions()
+            }
+
+        }, this)
     }
 
     override fun dispose() {

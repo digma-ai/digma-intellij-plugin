@@ -165,6 +165,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
+    public void resetThrottlingStatus() {
+        execute(() -> client.analyticsProvider.resetThrottlingStatus());
+    }
+
+    @Override
     public UnreadNotificationsCountResponse getUnreadNotificationsCount(GetUnreadNotificationsCountRequest getUnreadNotificationsCountRequest) {
         return execute(() -> client.analyticsProvider.getUnreadNotificationsCount(getUnreadNotificationsCountRequest));
     }
@@ -810,6 +815,12 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         @GET("/highlights/topinsights")
         Call<String> getHighlightsTopInsights(@QueryMap Map<String, Object> fields);
 
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/PerformanceMetrics/reset-throttling")
+        Call<ResponseBody> resetThrottlingStatus();
     }
 
 }

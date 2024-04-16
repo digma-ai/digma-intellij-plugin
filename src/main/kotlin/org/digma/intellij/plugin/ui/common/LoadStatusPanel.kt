@@ -6,7 +6,8 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
 import com.intellij.util.ui.JBUI
-import org.apache.commons.lang.StringUtils
+import org.digma.intellij.plugin.analytics.AnalyticsService
+import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.loadstatus.LoadStatusService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.UserActionOrigin
@@ -30,6 +31,12 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
     private val logger: Logger = Logger.getInstance(this::class.java)
 
     private var service = project.service<LoadStatusService>()
+
+    val label = JLabel("Please consider deploying Digma ", SwingConstants.LEFT)
+    var actionLink = ActionLink("centrally") {
+        ActivityMonitor.getInstance(project).registerUserActionWithOrigin("digma overload warning docs link clicked", UserActionOrigin.LoadStatusPanel)
+        BrowserUtil.browse(Links.DIGMA_OVERLOAD_WARNING_DOCS_URL, project)
+    }
 
     init {
         service.affectedPanel = this
@@ -68,17 +75,12 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
         val line2Panel = JPanel()
         line2Panel.layout = BoxLayout(line2Panel, BoxLayout.X_AXIS)
         line2Panel.isOpaque = false
-        line2Panel.add(JLabel("Please consider deploying Digma ", SwingConstants.LEFT))
-        line2Panel.add(ActionLink("centrally") {
-            ActivityMonitor.getInstance(project).registerUserActionWithOrigin("digma overload warning docs link clicked", UserActionOrigin.LoadStatusPanel)
-            BrowserUtil.browse(Links.DIGMA_OVERLOAD_WARNING_DOCS_URL, project)
-        })
+
+        line2Panel.add(label)
+        line2Panel.add(actionLink)
 
         linesPanel.add(line1Panel)
-
-        if(StringUtils.isEmpty(service.lastLoadStatus.throttlingType) || service.lastLoadStatus.throttlingType == "InMemory") {
-            linesPanel.add(line2Panel)
-        }
+        linesPanel.add(line2Panel)
 
         contentPanel.add(infoIconWrapper, BorderLayout.WEST)
         contentPanel.add(linesPanel, BorderLayout.CENTER)
@@ -101,6 +103,14 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
 
         closeButton.addActionListener { e ->
             isVisible = false
+
+            Backgroundable.ensurePooledThread {
+                if (service.lastLoadStatus.throttlingType == "ExtendedObservability")
+                {
+                    val analyticsService = project.service<AnalyticsService>()
+                    analyticsService.resetThrottlingStatus()
+                }
+            }
         }
 
         contentPanel.add(closeButton, BorderLayout.EAST)
@@ -124,6 +134,29 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
             toolTipText = service.lastLoadStatus.description +
                     "<br/>" +
                     "Last occurred at " + service.lastLoadStatus.lastUpdated
+
+            when (service.lastLoadStatus.throttlingType) {
+                "ExtendedObservability" -> {
+                    label.text = "Extended observability is generating too much data"
+                    actionLink.text = ""
+                }
+
+                "InMemory" -> {
+                    label.text = "Please consider deploying Digma "
+                    actionLink.text = "centrally"
+                }
+
+                "Kafka" -> {
+                    label.text = "Please consider upgrading the centralized environment"
+                    actionLink.text = ""
+                }
+
+                else -> {
+                    // backward compatibility when no throttlingType for the old backend
+                    label.text = "Please consider deploying Digma "
+                    actionLink.text = "centrally"
+                }
+            }
         } else {
             isVisible = false
         }

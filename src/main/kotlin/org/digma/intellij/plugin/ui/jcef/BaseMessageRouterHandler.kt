@@ -211,7 +211,10 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                             val result = AnalyticsService.getInstance(project).register(requestParams)
                             val message = SetRegistrationMessage(result)
                             serializeAndExecuteWindowPostMessageJavaScript(browser, message)
-                            UserRegistrationManager.getInstance(project).register(mapOf("email" to payload.get("email").asText()))
+
+                            val userDetails = mapOf("email" to payload.get("email").asText());
+                            ActivityMonitor.getInstance(project).registerCustomEvent("register user", userDetails)
+                            ActivityMonitor.getInstance(project).registerUserAction("user registered", userDetails)
                         }
                     }
 

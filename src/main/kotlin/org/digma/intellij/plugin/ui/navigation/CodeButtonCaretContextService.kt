@@ -55,7 +55,7 @@ class CodeButtonCaretContextService(private val project: Project) : CaretContext
         }
 
 
-        Backgroundable.ensurePooledThread {
+        Backgroundable.ensurePooledThreadWithoutReadAccess {
             Log.log(logger::trace, "Executing contextChanged in background for {}", methodUnderCaret.id)
             val stopWatch = StopWatch.createStarted()
             try {

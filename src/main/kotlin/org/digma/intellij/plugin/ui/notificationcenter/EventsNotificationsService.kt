@@ -207,7 +207,7 @@ class GoToCodeObjectInsightsAction(
         val environmentsSupplier: EnvironmentsSupplier = AnalyticsService.getInstance(project).environment
 
         val runnable = Runnable {
-            Backgroundable.ensurePooledThread {
+            Backgroundable.ensurePooledThreadWithoutReadAccess {
                 ScopeManager.getInstance(project).changeScope(SpanScope(codeObjectId))
             }
         }

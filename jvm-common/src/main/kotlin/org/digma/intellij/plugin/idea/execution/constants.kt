@@ -8,6 +8,7 @@ const val DIGMA_ENVIRONMENT_ID_RESOURCE_ATTRIBUTE = "digma.environment.id"
 const val DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE = "digma.environment"
 const val DIGMA_USER_ID_RESOURCE_ATTRIBUTE = "digma.user.id"
 const val DIGMA_OBSERVABILITY_ENV_VAR_NAME = "DIGMA_OBSERVABILITY"
+const val DIGMA_SCM_COMMIT_ID_RESOURCE_ATTRIBUTE = "scm.commit.id"
 
 const val OTEL_SERVICE_NAME_ENV_VAR_NAME = "OTEL_SERVICE_NAME"
 const val OTEL_SERVICE_NAME_PROP_NAME = "otel.service.name"

@@ -2,9 +2,8 @@ package org.digma.intellij.plugin.idea.execution
 
 import com.intellij.execution.configurations.RunConfiguration
 import com.intellij.execution.configurations.SimpleProgramParameters
-import org.digma.intellij.plugin.vcs.VcsService
 
-open class JavaToolOptionsMerger(
+open class JavaParametersMerger(
     protected val configuration: RunConfiguration,
     protected val params: SimpleProgramParameters,
     @Suppress("unused")
@@ -13,30 +12,32 @@ open class JavaToolOptionsMerger(
 
 
     //default implementation that is probably ok for most configurations
-    open fun mergeJavaToolOptions(instrumentedJavaToolOptions: String) {
-        var javaToolOptions = instrumentedJavaToolOptions
-        val currentJavaToolOptions = params.env[JAVA_TOOL_OPTIONS]
-        if (currentJavaToolOptions != null) {
-            javaToolOptions = smartMergeJavaToolOptions(javaToolOptions, currentJavaToolOptions)
+    open fun mergeJavaToolOptionsAndOtelResourceAttributes(instrumentedJavaToolOptions: String?, otelResourceAttributes: String?) {
+        if (instrumentedJavaToolOptions != null) {
+            var javaToolOptions = instrumentedJavaToolOptions
+            val currentJavaToolOptions = params.env[JAVA_TOOL_OPTIONS]
+            if (currentJavaToolOptions != null) {
+                javaToolOptions = smartMergeJavaToolOptions(javaToolOptions, currentJavaToolOptions)
+            }
+            params.env[JAVA_TOOL_OPTIONS] = javaToolOptions
         }
-        params.env[JAVA_TOOL_OPTIONS] = javaToolOptions
 
-        updateOtelResourceAttribute(configuration, params)
+        updateOtelResourceAttribute(configuration, params, otelResourceAttributes)
     }
 
 
-    private fun updateOtelResourceAttribute(configuration: RunConfiguration, params: SimpleProgramParameters) {
+    private fun updateOtelResourceAttribute(configuration: RunConfiguration, params: SimpleProgramParameters, ourOtelResourceAttributes: String?) {
 
-        val commitId = VcsService.getInstance(configuration.project).getCommitIdForCurrentProject()
-            ?: return
+        if (ourOtelResourceAttributes != null) {
 
-        val otelResourceAttributes = if (params.env.containsKey(OTEL_RESOURCE_ATTRIBUTES)) {
-            params.env[OTEL_RESOURCE_ATTRIBUTES].plus(",")
-        } else {
-            ""
-        }.plus("scm.commit.id=$commitId")
+            val mergedOtelResourceAttributes = if (params.env.containsKey(OTEL_RESOURCE_ATTRIBUTES)) {
+                params.env[OTEL_RESOURCE_ATTRIBUTES].plus(",")
+            } else {
+                ""
+            }.plus(ourOtelResourceAttributes)
 
-        params.env[OTEL_RESOURCE_ATTRIBUTES] = otelResourceAttributes
+            params.env[OTEL_RESOURCE_ATTRIBUTES] = mergedOtelResourceAttributes
+        }
     }
 
 

@@ -3,10 +3,7 @@ package org.digma.intellij.plugin.idea.execution
 import com.intellij.execution.configurations.RunConfiguration
 import com.intellij.execution.configurations.RunnerSettings
 import com.intellij.execution.configurations.SimpleProgramParameters
-import org.digma.intellij.plugin.analytics.LOCAL_ENV
 import org.digma.intellij.plugin.analytics.LOCAL_TESTS_ENV
-import org.digma.intellij.plugin.analytics.isCentralized
-import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
 import org.digma.intellij.plugin.settings.SettingsState
 
 open class JavaToolOptionsBuilder(
@@ -18,8 +15,6 @@ open class JavaToolOptionsBuilder(
     private val otelAgentPathProvider = OtelAgentPathProvider(configuration)
 
     protected val javaToolOptions = StringBuilder(" ")
-
-    private val otelResourceAttributes = mutableListOf<String>()
 
 
     open fun withOtelSdkDisabledEqualsFalse(): JavaToolOptionsBuilder {
@@ -61,33 +56,7 @@ open class JavaToolOptionsBuilder(
         return this
     }
 
-    open fun withCommonResourceAttributes(isTest: Boolean, parametersExtractor: ParametersExtractor): JavaToolOptionsBuilder {
 
-        if (needToAddDigmaEnvironmentAttribute(parametersExtractor)) {
-            val envAttribute = if (isTest) {
-                "$DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE=$LOCAL_TESTS_ENV"
-            } else {
-                "$DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE=$LOCAL_ENV"
-            }
-
-            withOtelResourceAttribute(envAttribute)
-        }
-
-        if (isCentralized(configuration.project)) {
-            DigmaDefaultAccountHolder.getInstance().account?.userId?.let {
-                val userIdAttribute = "$DIGMA_USER_ID_RESOURCE_ATTRIBUTE=${it}"
-                withOtelResourceAttribute(userIdAttribute)
-            }
-        }
-
-        return this
-    }
-
-
-    private fun needToAddDigmaEnvironmentAttribute(parametersExtractor: ParametersExtractor): Boolean {
-        return !parametersExtractor.hasDigmaEnvironmentIdAttribute(configuration, params) &&
-                !parametersExtractor.hasDigmaEnvironmentAttribute(configuration, params)
-    }
 
 
     open fun withSpringBootWithMicrometerTracing(isSpringBootWithMicrometerTracing: Boolean): JavaToolOptionsBuilder {
@@ -148,12 +117,6 @@ open class JavaToolOptionsBuilder(
         return this
     }
 
-
-    open fun withOtelResourceAttribute(attribute: String): JavaToolOptionsBuilder {
-        //collecting otel resource attributes , they are built in the build method
-        otelResourceAttributes.add(attribute)
-        return this
-    }
 
 
     open fun withOtelDebug(): JavaToolOptionsBuilder {
@@ -222,14 +185,6 @@ open class JavaToolOptionsBuilder(
 
 
     open fun build(): String {
-
-        if (otelResourceAttributes.isNotEmpty()) {
-            val resourceAttributes = otelResourceAttributes.joinToString(",")
-            javaToolOptions
-                .append("-Dotel.resource.attributes=\"$resourceAttributes\"")
-                .append(" ")
-        }
-
         return javaToolOptions.toString()
     }
 

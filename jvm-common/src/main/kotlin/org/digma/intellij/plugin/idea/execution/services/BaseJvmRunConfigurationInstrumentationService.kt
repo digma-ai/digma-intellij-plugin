@@ -10,9 +10,10 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.execution.DIGMA_INSTRUMENTATION_ERROR
 import org.digma.intellij.plugin.execution.RunConfigurationInstrumentationService
 import org.digma.intellij.plugin.idea.execution.ConfigurationCleaner
+import org.digma.intellij.plugin.idea.execution.JavaParametersMerger
 import org.digma.intellij.plugin.idea.execution.JavaToolOptionsBuilder
-import org.digma.intellij.plugin.idea.execution.JavaToolOptionsMerger
 import org.digma.intellij.plugin.idea.execution.ModuleResolver
+import org.digma.intellij.plugin.idea.execution.OtelResourceAttributesBuilder
 import org.digma.intellij.plugin.idea.execution.ParametersExtractor
 import org.digma.intellij.plugin.idea.execution.ProjectHeuristics
 import org.digma.intellij.plugin.idea.execution.ServiceNameProvider
@@ -30,6 +31,7 @@ abstract class BaseJvmRunConfigurationInstrumentationService : RunConfigurationI
         val parametersExtractor = getParametersExtractor(configuration, params)
         val serviceNameProvider = getServiceNameProvider(configuration, params)
         val javaToolOptionsBuilder = getJavaToolOptionsBuilder(configuration, params, runnerSettings)
+        val otelResourceAttributesBuilder = getOtelResourceAttributesBuilder(configuration, params, runnerSettings)
 
 
         val instrumentationFlavor: InstrumentationFlavor? =
@@ -66,9 +68,20 @@ abstract class BaseJvmRunConfigurationInstrumentationService : RunConfigurationI
                 " -Ddigma.flavor=${instrumentationFlavor.getPreferredUserFlavor()} ".plus(it)
             }
 
-            javaToolOptions?.takeIf { javaToolOptions.isNotBlank() }?.let {
-                getJavaToolOptionsMerger(configuration, params, parametersExtractor).mergeJavaToolOptions(javaToolOptions)
-            }
+            val otelResourceAttributes = instrumentationFlavor.buildOtelResourceAttributes(
+                this,
+                otelResourceAttributesBuilder,
+                configuration,
+                params,
+                projectHeuristics,
+                moduleResolver,
+                parametersExtractor,
+            )
+
+
+            getJavaParametersMerger(configuration, params, parametersExtractor)
+                .mergeJavaToolOptionsAndOtelResourceAttributes(javaToolOptions, otelResourceAttributes)
+
             return javaToolOptions
 
         } catch (e: Throwable) {
@@ -115,13 +128,21 @@ abstract class BaseJvmRunConfigurationInstrumentationService : RunConfigurationI
         return JavaToolOptionsBuilder(configuration, params, runnerSettings)
     }
 
+    open fun getOtelResourceAttributesBuilder(
+        configuration: RunConfiguration,
+        params: SimpleProgramParameters,
+        runnerSettings: RunnerSettings? = null
+    ): OtelResourceAttributesBuilder {
+        return OtelResourceAttributesBuilder(configuration, params, runnerSettings)
+    }
 
-    open fun getJavaToolOptionsMerger(
+
+    open fun getJavaParametersMerger(
         configuration: RunConfiguration,
         params: SimpleProgramParameters,
         parametersExtractor: ParametersExtractor
-    ): JavaToolOptionsMerger {
-        return JavaToolOptionsMerger(configuration, params, parametersExtractor)
+    ): JavaParametersMerger {
+        return JavaParametersMerger(configuration, params, parametersExtractor)
     }
 
     open fun getConfigurationCleaner(

@@ -210,7 +210,7 @@ class GoToCodeObjectInsightsAction(
         ActivityMonitor.getInstance(project).registerNotificationCenterEvent("$notificationName.clicked", mapOf())
 
         val runnable = Runnable {
-            Backgroundable.ensurePooledThread {
+            Backgroundable.ensurePooledThreadWithoutReadAccess {
                 ScopeManager.getInstance(project).changeScope(SpanScope(codeObjectId))
             }
         }

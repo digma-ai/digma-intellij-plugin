@@ -286,7 +286,7 @@ abstract class AbstractNavigationDiscovery(protected val project: Project) : Dis
             return
         }
 
-        Backgroundable.ensurePooledThread {
+        Backgroundable.ensurePooledThreadWithoutReadAccess {
             if (virtualFile != null) {
                 buildLock.lock()
                 try {
@@ -304,7 +304,7 @@ abstract class AbstractNavigationDiscovery(protected val project: Project) : Dis
             return
         }
 
-        Backgroundable.ensurePooledThread {
+        Backgroundable.ensurePooledThreadWithoutReadAccess {
             buildLock.lock()
             try {
                 removeDiscoveryForPath(path)

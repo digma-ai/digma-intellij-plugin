@@ -51,7 +51,7 @@ class DigmaErrorReportSubmitter : ErrorReportSubmitter() {
         val context = mgr.getDataContext(parentComponent)
         val project: Project = CommonDataKeys.PROJECT.getData(context) ?: findActiveProject() ?: ProjectManager.getInstance().defaultProject
 
-        Backgroundable.ensureBackground(project, "Reporting to Digma") {
+        Backgroundable.ensureBackgroundWithoutReadAccess(project, "Reporting to Digma") {
 
             try {
                 reportToPosthog(project, events, additionalInfo)

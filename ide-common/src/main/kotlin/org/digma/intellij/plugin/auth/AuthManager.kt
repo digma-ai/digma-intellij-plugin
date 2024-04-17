@@ -31,7 +31,7 @@ import java.util.concurrent.locks.ReentrantLock
 
 
 const val SILENT_LOGIN_USER = "admin@digma.ai"
-const val SILENT_LOGIN_PASSWORD = "admin"
+const val SILENT_LOGIN_PASSWORD = "admin!"
 
 data class LoginResult(val isSuccess: Boolean, val userId: String?, val error: String?)
 

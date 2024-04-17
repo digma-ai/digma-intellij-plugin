@@ -143,7 +143,7 @@ class RegisterAction(
 
     private fun openRegistrationDialog(project: Project) {
         //this is called on EDT, start background and release the EDT thread
-        Backgroundable.ensurePooledThread {
+        Backgroundable.ensurePooledThreadWithoutReadAccess {
             project.service<RecentActivityService>().openRegistrationDialog()
         }
     }

@@ -94,7 +94,7 @@ public class Environment {
                 }
             };
 
-            Backgroundable.ensureBackground(project, "Digma: environment changed " + envId, task);
+            Backgroundable.ensureBackgroundWithoutReadAccess(project, "Digma: environment changed " + envId, task);
 
         } catch (Throwable e) {
             ErrorReporter.getInstance().reportError(project, "Environment.setCurrent", e);
@@ -111,7 +111,7 @@ public class Environment {
     void refreshNowOnBackground() {
 
         Log.log(LOGGER::trace, "Refreshing Environments on background thread.");
-        Backgroundable.ensureBackground(project, "Refreshing Environments", () -> {
+        Backgroundable.ensureBackgroundWithoutReadAccess(project, "Refreshing Environments", () -> {
             envChangeLock.lock();
             try {
                 //run both refreshEnvironments and updateCurrentEnv under same lock

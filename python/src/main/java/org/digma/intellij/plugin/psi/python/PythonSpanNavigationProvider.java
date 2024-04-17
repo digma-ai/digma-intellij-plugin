@@ -226,7 +226,7 @@ public class PythonSpanNavigationProvider implements Disposable {
             return;
         }
 
-        Backgroundable.ensurePooledThread(() -> {
+        Backgroundable.ensurePooledThreadWithoutReadAccess(() -> {
             if (virtualFile != null) {
                 buildSpansLock.lock();
                 try {

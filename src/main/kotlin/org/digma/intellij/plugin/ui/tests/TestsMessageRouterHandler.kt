@@ -77,7 +77,7 @@ class TestsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHandl
         val spanCodeObjectId = payloadNode.get("spanCodeObjectId").textValue()
         ActivityMonitor.getInstance(project).registerSpanLinkClicked(spanCodeObjectId, UserActionOrigin.Tests)
 
-        Backgroundable.ensurePooledThread {
+        Backgroundable.ensurePooledThreadWithoutReadAccess {
             setCurrentEnvironmentById(project, environment) {
                 ScopeManager.getInstance(project).changeScope(SpanScope(spanCodeObjectId))
             }

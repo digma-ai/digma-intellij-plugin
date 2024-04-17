@@ -4,12 +4,9 @@ import com.intellij.openapi.project.Project
 
 
 fun isCentralized(project: Project): Boolean {
+    return BackendInfoHolder.getInstance().isCentralized(project)
+}
 
-    return try {
-        val about = AnalyticsService.getInstance(project).about
-        about.isCentralize ?: false
-    } catch (e: AnalyticsServiceException) {
-        false
-    }
-
+fun isCentralized(): Boolean {
+    return BackendInfoHolder.getInstance().isCentralized()
 }

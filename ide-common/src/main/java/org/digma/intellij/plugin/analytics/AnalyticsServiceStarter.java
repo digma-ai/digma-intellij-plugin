@@ -12,6 +12,10 @@ public class AnalyticsServiceStarter implements StartupActivity.DumbAware {
 
     @Override
     public void runActivity(@NotNull Project project) {
-        Backgroundable.ensureBackground(project, "initializing analytics service", () -> AnalyticsService.getInstance(project));
+        Backgroundable.ensureBackground(project, "initializing analytics service", () -> {
+            AnalyticsService.getInstance(project);
+            //make sure BackendInfoHolder is initialized after AnalyticsService
+            BackendInfoHolder.getInstance();
+        });
     }
 }

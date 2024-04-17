@@ -149,6 +149,8 @@ public class AnalyticsService implements Disposable {
 
         environment.refreshNowOnBackground();
 
+        BackendInfoHolder.getInstance().updateInBackground();
+
     }
 
 

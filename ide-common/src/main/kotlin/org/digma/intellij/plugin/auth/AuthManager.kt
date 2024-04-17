@@ -151,6 +151,8 @@ class AuthManager {
             )
         )
         try {
+            accountLock.lock()
+
             Log.log(logger::info, "doing login for url={}", analyticsProvider.apiUrl)
             val loginResponse = analyticsProvider.login(LoginRequest(userName, password))
 
@@ -187,6 +189,10 @@ class AuthManager {
                 )
             )
             throw e
+        } finally {
+            if (accountLock.isHeldByCurrentThread) {
+                accountLock.unlock()
+            }
         }
     }
 

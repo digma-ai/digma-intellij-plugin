@@ -10,7 +10,7 @@ import com.posthog.java.PostHog
 import kotlinx.datetime.toJavaInstant
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.common.ExceptionUtils
-import org.digma.intellij.plugin.common.UserId
+import org.digma.intellij.plugin.common.UniqueGeneratedUserId
 import org.digma.intellij.plugin.common.objectToJson
 import org.digma.intellij.plugin.execution.DIGMA_INSTRUMENTATION_ERROR
 import org.digma.intellij.plugin.model.rest.AboutResult
@@ -53,8 +53,8 @@ class ActivityMonitor(private val project: Project) : Disposable {
 
     private val simpleEventInterceptor = SimpleEventInterceptor(project)
 
-    private val userId: String = UserId.userId
-    private val isDevUser: Boolean = UserId.isDevUser
+    private val userId: String = UniqueGeneratedUserId.userId
+    private val isDevUser: Boolean = UniqueGeneratedUserId.isDevUser
     private var postHog: PostHog? = null
     private val settingsChangeTracker = SettingsChangeTracker()
 
@@ -365,7 +365,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
         details["ide.version"] = ideVersion
         details["ide.build"] = ideBuildNumber
         details["os.type"] = osType
-        details["user.type"] = if (UserId.isDevUser) "internal" else "external"
+        details["user.type"] = if (UniqueGeneratedUserId.isDevUser) "internal" else "external"
         details["error source"] = source
         details["plugin.version"] = pluginVersion
         details["server.version"] = ServerVersionMonitor.getInstance(project).getServerVersion()

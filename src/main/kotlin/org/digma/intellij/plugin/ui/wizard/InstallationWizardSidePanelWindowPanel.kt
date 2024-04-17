@@ -28,7 +28,7 @@ import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.analytics.refreshEnvironmentsNowOnBackground
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
-import org.digma.intellij.plugin.common.UserId
+import org.digma.intellij.plugin.common.UniqueGeneratedUserId
 import org.digma.intellij.plugin.common.createObjectMapper
 import org.digma.intellij.plugin.digmathon.DigmathonActivationEvent
 import org.digma.intellij.plugin.digmathon.DigmathonProductKeyStateChangedEvent
@@ -135,7 +135,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
         IS_WIZARD_SKIP_INSTALLATION_STEP to wizardSkipInstallationStep,
         DIGMATHON_ENABLED to DigmathonService.getInstance().getDigmathonState().isActive(),
         DIGMATHON_PRODUCT_KEY to DigmathonService.getInstance().getProductKey().orEmpty(),
-        USER_ID to UserId.userId,
+        USER_ID to UniqueGeneratedUserId.userId,
         USER_FINISHED_DIGMATHON to DigmathonService.getInstance().isUserFinishedDigmathon
     )
 

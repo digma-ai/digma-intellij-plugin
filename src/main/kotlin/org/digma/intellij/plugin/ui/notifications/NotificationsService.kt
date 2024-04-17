@@ -12,7 +12,7 @@ import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.analytics.NoSelectedEnvironmentException
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
-import org.digma.intellij.plugin.common.UserId
+import org.digma.intellij.plugin.common.UniqueGeneratedUserId
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
@@ -47,7 +47,7 @@ class NotificationsService(val project: Project) : Disposable {
 
         return try {
             val unreadResponse = project.service<AnalyticsService>()
-                .getUnreadNotificationsCount(service<PersistenceService>().getNotificationsStartDate(), UserId.userId)
+                .getUnreadNotificationsCount(service<PersistenceService>().getNotificationsStartDate(), UniqueGeneratedUserId.userId)
             unreadResponse.unreadCount > 0
         } catch (e: NoSelectedEnvironmentException) {
             //just log, it may happen a lot
@@ -69,7 +69,7 @@ class NotificationsService(val project: Project) : Disposable {
 
                 latestNotificationTime?.let {
                     Log.log(logger::trace, project, "marking notifications read with latestNotificationTime {}", it)
-                    project.service<AnalyticsService>().setReadNotificationsTime(it.toString(), UserId.userId)
+                    project.service<AnalyticsService>().setReadNotificationsTime(it.toString(), UniqueGeneratedUserId.userId)
                 }
 
             } catch (e: NoSelectedEnvironmentException) {
@@ -107,7 +107,13 @@ class NotificationsService(val project: Project) : Disposable {
         //exceptions should be handled in place where calling this method, don't return empty string
         try {
             val notifications = project.service<AnalyticsService>()
-                .getNotifications(service<PersistenceService>().getNotificationsStartDate(), UserId.userId, pageNumber, pageSize, isRead)
+                .getNotifications(
+                    service<PersistenceService>().getNotificationsStartDate(),
+                    UniqueGeneratedUserId.userId,
+                    pageNumber,
+                    pageSize,
+                    isRead
+                )
             updateLatestNotificationTime(notifications)
             return notifications
         } catch (e: NoSelectedEnvironmentException) {

@@ -3,7 +3,7 @@ package org.digma.intellij.plugin.common
 import com.intellij.openapi.components.service
 import org.digma.intellij.plugin.persistence.PersistenceService
 
-object UserId {
+object UniqueGeneratedUserId {
 
     val userId: String
     val isDevUser: Boolean

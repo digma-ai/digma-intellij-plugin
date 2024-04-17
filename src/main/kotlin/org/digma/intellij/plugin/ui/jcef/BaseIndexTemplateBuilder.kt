@@ -11,7 +11,7 @@ import freemarker.template.Configuration
 import freemarker.template.Template
 import freemarker.template.TemplateExceptionHandler
 import org.digma.intellij.plugin.analytics.getCurrentEnvironment
-import org.digma.intellij.plugin.common.UserId
+import org.digma.intellij.plugin.common.UniqueGeneratedUserId
 import org.digma.intellij.plugin.digmathon.DigmathonService
 import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
@@ -89,7 +89,7 @@ abstract class BaseIndexTemplateBuilder(resourceFolderName: String, private val 
             data[ENVIRONMENT] = getCurrentEnvironment(project)?.let { it: Env -> serializeObjectToJson(it) } ?: "undefined"
             data[DIGMATHON_ENABLED] = DigmathonService.getInstance().getDigmathonState().isActive()
             data[DIGMATHON_PRODUCT_KEY] = DigmathonService.getInstance().getProductKey().orEmpty()
-            data[USER_ID] = UserId.userId
+            data[USER_ID] = UniqueGeneratedUserId.userId
             data[USER_FINISHED_DIGMATHON] = DigmathonService.getInstance().isUserFinishedDigmathon
 
             addAppSpecificEnvVariable(project, data)

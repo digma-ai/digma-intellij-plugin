@@ -7,8 +7,8 @@ import org.digma.intellij.plugin.buildsystem.BuildSystem
 import org.digma.intellij.plugin.execution.RunConfigurationType
 import org.digma.intellij.plugin.idea.execution.ConfigurationCleaner
 import org.digma.intellij.plugin.idea.execution.ExternalSystemConfigurationCleaner
-import org.digma.intellij.plugin.idea.execution.ExternalSystemJavaToolOptionsMerger
-import org.digma.intellij.plugin.idea.execution.JavaToolOptionsMerger
+import org.digma.intellij.plugin.idea.execution.ExternalSystemJavaParametersMerger
+import org.digma.intellij.plugin.idea.execution.JavaParametersMerger
 import org.digma.intellij.plugin.idea.execution.ModuleResolver
 import org.digma.intellij.plugin.idea.execution.ParametersExtractor
 import org.digma.intellij.plugin.idea.execution.services.BaseJvmRunConfigurationInstrumentationService
@@ -61,12 +61,12 @@ class GradleRunConfigurationService : BaseJvmRunConfigurationInstrumentationServ
     }
 
 
-    override fun getJavaToolOptionsMerger(
+    override fun getJavaParametersMerger(
         configuration: RunConfiguration,
         params: SimpleProgramParameters,
         parametersExtractor: ParametersExtractor
-    ): JavaToolOptionsMerger {
-        return ExternalSystemJavaToolOptionsMerger(configuration, params, parametersExtractor)
+    ): JavaParametersMerger {
+        return ExternalSystemJavaParametersMerger(configuration, params, parametersExtractor)
     }
 
     override fun getConfigurationCleaner(configuration: RunConfiguration): ConfigurationCleaner {

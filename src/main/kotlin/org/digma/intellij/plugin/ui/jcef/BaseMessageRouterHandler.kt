@@ -207,13 +207,14 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                     JCEFGlobalConstants.GLOBAL_REGISTRATION -> {
                         val payload = getPayloadFromRequest(requestJsonNode)
                         payload?.let {
+                            val userDetails = mapOf("email" to payload.get("email").asText());
+                            ActivityMonitor.getInstance(project).registerCustomEvent("register user", userDetails)
+
                             val requestParams = getMapFromNode(it, objectMapper)
                             val result = AnalyticsService.getInstance(project).register(requestParams)
                             val message = SetRegistrationMessage(result)
                             serializeAndExecuteWindowPostMessageJavaScript(browser, message)
 
-                            val userDetails = mapOf("email" to payload.get("email").asText());
-                            ActivityMonitor.getInstance(project).registerCustomEvent("register user", userDetails)
                             ActivityMonitor.getInstance(project).registerUserAction("user registered", userDetails)
                         }
                     }

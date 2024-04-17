@@ -344,6 +344,7 @@ tasks {
             "webview/notifications/notificationstemplate.ftl",
             "webview/navigation/navigationtemplate.ftl",
             "webview/jaegerui/jaegeruitemplate.ftl",
+            "webview/documentation/documentation.ftl",
             "webview/main/maintemplate.ftl"
         )
 

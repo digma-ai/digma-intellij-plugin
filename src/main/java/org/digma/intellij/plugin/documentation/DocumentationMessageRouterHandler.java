@@ -22,6 +22,15 @@ public class DocumentationMessageRouterHandler extends BaseMessageRouterHandler 
 
     @Override
     public boolean doOnQuery(@NotNull Project project, @NotNull CefBrowser browser, @NotNull JsonNode requestJsonNode, @NotNull String rawRequest, @NotNull String action) throws Exception {
+
+        //noinspection SwitchStatementWithTooFewBranches
+        switch (action) {
+            case "DOCUMENTATION/INITIALIZE" -> doCommonInitialize(browser);
+            default -> {
+                return false;
+            }
+        }
+
         return true;
     }
 }

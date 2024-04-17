@@ -2,13 +2,10 @@ package org.digma.intellij.plugin.documentation;
 
 import com.intellij.openapi.fileEditor.*;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.*;
+import com.intellij.openapi.util.UserDataHolderBase;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.ui.jcef.JBCefBrowser;
-import org.cef.CefApp;
-import org.cef.browser.*;
-import org.cef.handler.CefLifeSpanHandlerAdapter;
-import org.digma.intellij.plugin.ui.jcef.JBCefBrowserBuilderCreator;
+import com.intellij.ui.jcef.JBCefApp;
+import org.digma.intellij.plugin.ui.jcef.*;
 import org.jetbrains.annotations.*;
 
 import javax.swing.*;
@@ -16,43 +13,31 @@ import java.beans.PropertyChangeListener;
 
 public class DocumentationFileEditor extends UserDataHolderBase implements FileEditor {
 
-    static final String RESOURCE_FOLDER_NAME = "/webview/documentation";
-    static final String DOMAIN_NAME = "documentation";
-    static final String SCHEMA_NAME = "http";
-
     private final VirtualFile file;
-    private final JBCefBrowser jbCefBrowser;
-    private final CefMessageRouter cefMessageRouter;
 
-    public DocumentationFileEditor(Project project, VirtualFile file) {
+    @Nullable
+    private final JCefComponent jCefComponent;
+
+
+    public DocumentationFileEditor(Project project, DocumentationVirtualFile file) {
         this.file = file;
-        jbCefBrowser = JBCefBrowserBuilderCreator.create()
-                .setUrl("http://" + DOMAIN_NAME + "/index.html")
-                .build();
-
-        var jbCefClient = jbCefBrowser.getJBCefClient();
-        cefMessageRouter = CefMessageRouter.create();
-        cefMessageRouter.addHandler(new DocumentationMessageRouterHandler(project), true);
-        jbCefClient.getCefClient().addMessageRouter(cefMessageRouter);
-
-        var lifeSpanHandler = new CefLifeSpanHandlerAdapter() {
-            @Override
-            public void onAfterCreated(CefBrowser browser) {
-                registerAppSchemeHandler(project, (DocumentationVirtualFile) file);
-            }
-        };
-
-        jbCefBrowser.getJBCefClient().addLifeSpanHandler(lifeSpanHandler, jbCefBrowser.getCefBrowser());
-
-        Disposer.register(this, () -> jbCefBrowser.getJBCefClient().removeLifeSpanHandler(lifeSpanHandler, jbCefBrowser.getCefBrowser()));
-
-
+        jCefComponent = createJcefComponent(project, file);
     }
 
+    @Nullable
+    private JCefComponent createJcefComponent(Project project, DocumentationVirtualFile file) {
 
-    private void registerAppSchemeHandler(Project project, DocumentationVirtualFile file) {
-        CefApp.getInstance().registerSchemeHandlerFactory("http", DOMAIN_NAME,
-                new DocumentationSchemeHandlerFactory(project, file));
+        if (JBCefApp.isSupported()) {
+            return new JCefComponent.JCefComponentBuilder(project, "Documentation", DocumentationService.getInstance(project))
+                    .url(DocumentationConstants.DOCUMENTATION_URL)
+                    .addMessageRouterHandler(new DocumentationMessageRouterHandler(project))
+                    .schemeHandlerFactory(new DocumentationSchemeHandlerFactory(project, file))
+                    .withDownloadAdapter(new DownloadHandlerAdapter())
+                    .build();
+
+        } else {
+            return null;
+        }
     }
 
 
@@ -61,15 +46,23 @@ public class DocumentationFileEditor extends UserDataHolderBase implements FileE
         return file;
     }
 
+    private JComponent getMyComponent() {
+        if (jCefComponent != null) {
+            return jCefComponent.getComponent();
+        } else {
+            return new JLabel("JCEF not supported");
+        }
+    }
+
 
     @Override
     public @NotNull JComponent getComponent() {
-        return jbCefBrowser.getComponent();
+        return getMyComponent();
     }
 
     @Override
     public @Nullable JComponent getPreferredFocusedComponent() {
-        return jbCefBrowser.getComponent();
+        return getMyComponent();
     }
 
     @Override
@@ -104,8 +97,9 @@ public class DocumentationFileEditor extends UserDataHolderBase implements FileE
 
     @Override
     public void dispose() {
-        jbCefBrowser.dispose();
-        cefMessageRouter.dispose();
+        if (jCefComponent != null) {
+            jCefComponent.dispose();
+        }
     }
 
 }

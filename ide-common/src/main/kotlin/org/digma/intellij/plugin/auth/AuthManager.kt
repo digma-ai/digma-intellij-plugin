@@ -39,7 +39,7 @@ data class LoginResult(val isSuccess: Boolean, val userId: String?, val error: S
 class AuthManager {
 
     private val logger: Logger = Logger.getInstance(AuthManager::class.java)
-    private val loginOrRefreshLock = ReentrantLock()
+    private val accountLock = ReentrantLock()
     private val listeners: MutableList<AuthInfoChangeListener> = ArrayList()
     private var analyticsProvider: RestAnalyticsProvider? = null
 
@@ -86,7 +86,10 @@ class AuthManager {
     }
 
     fun logout() {
+
         try {
+            accountLock.lock()
+
             val digmaAccount = DigmaDefaultAccountHolder.getInstance().account
 
             digmaAccount?.let { account ->
@@ -96,6 +99,9 @@ class AuthManager {
                 }
             }
         } finally {
+            if (accountLock.isHeldByCurrentThread) {
+                accountLock.unlock()
+            }
             fireChange()
         }
     }
@@ -103,6 +109,7 @@ class AuthManager {
     fun login(userName: String, password: String): LoginResult {
 
         return try {
+            accountLock.lock()
 
             val loginResult = this.analyticsProvider?.let {
                 loginInternal(it, userName, password);
@@ -118,6 +125,10 @@ class AuthManager {
             ErrorReporter.getInstance().reportInternalFatalError("AuthManager.login", e)
             //todo: add a meaningful message
             LoginResult(false, null, e.toString())
+        } finally {
+            if (accountLock.isHeldByCurrentThread) {
+                accountLock.unlock()
+            }
         }
     }
 
@@ -187,7 +198,7 @@ class AuthManager {
         //loginOrRefresh should never throw exception but return true or false
 
         //it may that that few threads will fail on AuthenticationException so make sure not to login or refresh concurrently
-        loginOrRefreshLock.lock()
+        accountLock.lock()
         return try {
 
             Log.log(logger::info, "loginOrRefresh called, url={}", url)
@@ -281,8 +292,8 @@ class AuthManager {
             ErrorReporter.getInstance().reportInternalFatalError("AuthManager.loginOrRefresh", e)
             false
         } finally {
-            if (loginOrRefreshLock.isHeldByCurrentThread) {
-                loginOrRefreshLock.unlock()
+            if (accountLock.isHeldByCurrentThread) {
+                accountLock.unlock()
             }
         }
     }
@@ -295,6 +306,8 @@ class AuthManager {
     ): Boolean {
 
         try {
+            accountLock.lock()
+
             Log.log(logger::info, "refreshing credentials for account {}, url={}", digmaAccount.name, url)
             val loginResponse = analyticsProvider.refreshToken(RefreshRequest(credentials.accessToken, credentials.refreshToken))
             val digmaCredentials = DigmaCredentials(
@@ -321,6 +334,10 @@ class AuthManager {
             logout()
 
             return false
+        } finally {
+            if (accountLock.isHeldByCurrentThread) {
+                accountLock.unlock()
+            }
         }
     }
 

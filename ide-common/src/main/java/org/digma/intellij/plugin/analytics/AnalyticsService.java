@@ -106,6 +106,7 @@ public class AnalyticsService implements Disposable {
             // AuthenticationProvider that always takes it from the settings
             if (shouldReplaceClient) {
                 Log.log(LOGGER::debug, "api url changed to {}, calling replace client", myApiUrl);
+                AuthManager.getInstance().pauseCurrentProxy();
                 AuthManager.getInstance().logout();
                 replaceClient(myApiUrl);
             }

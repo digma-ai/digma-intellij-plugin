@@ -12,6 +12,6 @@ public class AnalyticsServiceStarter implements StartupActivity.DumbAware {
 
     @Override
     public void runActivity(@NotNull Project project) {
-        Backgroundable.ensureBackground(project, "initializing analytics service", () -> AnalyticsService.getInstance(project));
+        Backgroundable.ensureBackgroundWithoutReadAccess(project, "initializing analytics service", () -> AnalyticsService.getInstance(project));
     }
 }

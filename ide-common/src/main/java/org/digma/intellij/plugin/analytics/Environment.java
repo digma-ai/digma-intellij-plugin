@@ -98,7 +98,7 @@ public class Environment implements EnvironmentsSupplier {
                 }
             };
 
-            Backgroundable.ensureBackground(project, "Digma: environment changed " + newEnv, task);
+            Backgroundable.ensureBackgroundWithoutReadAccess(project, "Digma: environment changed " + newEnv, task);
 
         } catch (Throwable e) {
             ErrorReporter.getInstance().reportError(project, "Environment.setCurrent", e);
@@ -123,7 +123,7 @@ public class Environment implements EnvironmentsSupplier {
     public void refreshNowOnBackground() {
 
         Log.log(LOGGER::trace, "Refreshing Environments on background thread.");
-        Backgroundable.ensureBackground(project, "Refreshing Environments", () -> {
+        Backgroundable.ensureBackgroundWithoutReadAccess(project, "Refreshing Environments", () -> {
             envChangeLock.lock();
             try {
                 //run both refreshEnvironments and updateCurrentEnv under same lock

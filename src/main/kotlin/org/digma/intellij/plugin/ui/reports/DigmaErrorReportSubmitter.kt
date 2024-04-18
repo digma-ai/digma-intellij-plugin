@@ -13,7 +13,7 @@ import com.intellij.openapi.project.ProjectManager
 import com.intellij.util.Consumer
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
-import org.digma.intellij.plugin.common.UserId
+import org.digma.intellij.plugin.common.UniqueGeneratedUserId
 import org.digma.intellij.plugin.common.findActiveProject
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.posthog.ActivityMonitor
@@ -51,7 +51,7 @@ class DigmaErrorReportSubmitter : ErrorReportSubmitter() {
         val context = mgr.getDataContext(parentComponent)
         val project: Project = CommonDataKeys.PROJECT.getData(context) ?: findActiveProject() ?: ProjectManager.getInstance().defaultProject
 
-        Backgroundable.ensureBackground(project, "Reporting to Digma") {
+        Backgroundable.ensureBackgroundWithoutReadAccess(project, "Reporting to Digma") {
 
             try {
                 reportToPosthog(project, events, additionalInfo)
@@ -100,7 +100,7 @@ class DigmaErrorReportSubmitter : ErrorReportSubmitter() {
         details["ide.build"] = ideBuildNumber
         details["plugin.version"] = pluginVersion
         details["os.type"] = osType
-        details["user.type"] = if (UserId.isDevUser) "internal" else "external"
+        details["user.type"] = if (UniqueGeneratedUserId.isDevUser) "internal" else "external"
 
 
         if (event.data is AbstractMessage) {

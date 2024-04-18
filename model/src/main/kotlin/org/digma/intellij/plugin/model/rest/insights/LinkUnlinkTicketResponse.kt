@@ -7,6 +7,6 @@ import java.beans.ConstructorProperties
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class LinkUnlinkTicketResponse
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-@ConstructorProperties("environment", "success", "message", "codeObjectId", "insightType", "ticketLink")
-constructor(val environment: String, val success : Boolean, val message : String?, val codeObjectId: String, val insightType: String, var ticketLink: String?)
+@ConstructorProperties("success", "message", "ticketLink")
+constructor(val success : Boolean, val message : String?, var ticketLink: String?)
 

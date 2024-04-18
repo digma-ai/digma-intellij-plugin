@@ -221,7 +221,7 @@ class CodeLensService(private val project: Project) : Disposable {
                         selectedEditor?.caretModel?.moveToOffset(it.textOffset)
                     }
                 }
-                Backgroundable.ensurePooledThread {
+                Backgroundable.ensurePooledThreadWithoutReadAccess {
                     if (lens.scopeCodeObjectId.startsWith("span:")) {
                         ScopeManager.getInstance(project).changeScope(SpanScope(lens.scopeCodeObjectId))
                     }

@@ -18,10 +18,11 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.PluginId
 import org.digma.intellij.plugin.analytics.AnalyticsService
+import org.digma.intellij.plugin.analytics.AnalyticsServiceException
+import org.digma.intellij.plugin.analytics.getCurrentEnvironmentId
+import org.digma.intellij.plugin.analytics.setCurrentEnvironmentById
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.createObjectMapper
-import org.digma.intellij.plugin.env.Env
-import org.digma.intellij.plugin.env.EnvironmentsSupplier
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.common.SpanInfo
@@ -79,8 +80,12 @@ class EventsNotificationsService(val project: Project) : Disposable {
 
                     updateLastEventTime(events)
 
+                } catch (e: AnalyticsServiceException) {
+                    Log.debugWithException(logger, e, "could not get latest events {}", e)
+                    ErrorReporter.getInstance().reportError(project, "EventsNotificationsService.waitForEvents", e)
                 } catch (e: Exception) {
                     Log.log(logger::trace, "could not get latest events {}", e.message)
+                    Log.warnWithException(logger, e, "could not get latest events {}", e.message)
                     ErrorReporter.getInstance().reportError(project, "EventsNotificationsService.waitForEvents", e)
                 }
             }
@@ -196,7 +201,7 @@ class GoToCodeObjectInsightsAction(
     private val notificationName: String,
     private val codeObjectId: String,
     private val methodId: String?,
-    private val environment: String,
+    private val environmentId: String,
 ) :
     AnAction("Show Insights") {
     override fun actionPerformed(e: AnActionEvent) = try {
@@ -204,17 +209,15 @@ class GoToCodeObjectInsightsAction(
 
         ActivityMonitor.getInstance(project).registerNotificationCenterEvent("$notificationName.clicked", mapOf())
 
-        val environmentsSupplier: EnvironmentsSupplier = AnalyticsService.getInstance(project).environment
-
         val runnable = Runnable {
-            Backgroundable.ensurePooledThread {
+            Backgroundable.ensurePooledThreadWithoutReadAccess {
                 ScopeManager.getInstance(project).changeScope(SpanScope(codeObjectId))
             }
         }
 
-        if (Env.getCurrentEnvName(project) != environment) {
+        if (getCurrentEnvironmentId(project) != environmentId) {
 
-            environmentsSupplier.setCurrent(environment) {
+            setCurrentEnvironmentById(project, environmentId) {
                 runnable.run()
             }
 

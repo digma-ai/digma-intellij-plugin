@@ -18,7 +18,7 @@ fun runInvisibleBackgroundTaskInProgressWithRetry(task: RetryableTask.Invisible)
     if (task.reuseCurrentThread) {
         //even if reuseCurrentThread is true , still make sure it's a background thread. these tasks
         // are not meant to run on EDT.
-        Backgroundable.ensurePooledThread {
+        Backgroundable.ensurePooledThreadWithoutReadAccess {
             invisibleRetryableTask.run()
         }
     } else {

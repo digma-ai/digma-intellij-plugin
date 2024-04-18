@@ -341,12 +341,10 @@ tasks {
 
         val filesToFilter = listOf(
             "webview/recentactivity/recentActivityTemplate.ftl",
-            "webview/tests/testsTemplate.ftl",
             "webview/notifications/notificationstemplate.ftl",
-            "webview/assets/assetstemplate.ftl",
             "webview/navigation/navigationtemplate.ftl",
-            "webview/insights/insightstemplate.ftl",
             "webview/jaegerui/jaegeruitemplate.ftl",
+            "webview/documentation/documentation.ftl",
             "webview/main/maintemplate.ftl"
         )
 

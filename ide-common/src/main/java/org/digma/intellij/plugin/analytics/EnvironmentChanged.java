@@ -1,7 +1,7 @@
 package org.digma.intellij.plugin.analytics;
 
 import com.intellij.util.messages.Topic;
-import org.digma.intellij.plugin.env.Env;
+import org.digma.intellij.plugin.model.rest.environment.Env;
 
 import java.util.List;
 

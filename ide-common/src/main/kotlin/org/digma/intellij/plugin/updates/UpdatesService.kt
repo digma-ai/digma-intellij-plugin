@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.updates
 
 import com.intellij.collaboration.async.disposingScope
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
@@ -11,11 +12,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.apache.maven.artifact.versioning.ComparableVersion
-import org.digma.intellij.plugin.analytics.AnalyticsProviderException
 import org.digma.intellij.plugin.analytics.AnalyticsService
-import org.digma.intellij.plugin.analytics.AnalyticsServiceException
-import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
+import org.digma.intellij.plugin.analytics.BackendConnectionEvent
 import org.digma.intellij.plugin.common.EDT
+import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.common.buildVersionRequest
 import org.digma.intellij.plugin.common.getPluginVersion
 import org.digma.intellij.plugin.common.newerThan
@@ -23,11 +23,13 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
 import org.digma.intellij.plugin.model.rest.version.BackendVersionResponse
-import org.digma.intellij.plugin.model.rest.version.PluginVersionResponse
 import org.digma.intellij.plugin.model.rest.version.VersionResponse
+import org.digma.intellij.plugin.settings.InternalFileSettings
+import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import java.util.concurrent.TimeUnit
-import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 @Service(Service.Level.PROJECT)
 class UpdatesService(private val project: Project) : Disposable {
@@ -38,6 +40,10 @@ class UpdatesService(private val project: Project) : Disposable {
         @JvmStatic
         fun getInstance(project: Project): UpdatesService {
             return project.service<UpdatesService>()
+        }
+
+        fun getDefaultDelayBetweenUpdatesSeconds(): Duration {
+            return InternalFileSettings.getUpdateServiceMonitorDelaySeconds(300).seconds
         }
     }
 
@@ -53,20 +59,55 @@ class UpdatesService(private val project: Project) : Disposable {
 
         @Suppress("UnstableApiUsage")
         disposingScope().launch {
-            try {
 
-                while (isActive) {
+            val delaySeconds = getDefaultDelayBetweenUpdatesSeconds()
+
+            while (isActive) {
+
+                try {
+                    Log.log(logger::trace, "updating state")
                     checkForNewerVersions()
-                    delay(5.minutes.inWholeMilliseconds)
+                    Log.log(logger::trace, "sleeping {}", delaySeconds)
+                    delay(delaySeconds.inWholeMilliseconds)
+                } catch (e: CancellationException) {
+                    Log.debugWithException(logger, e, "Exception in checkForNewerVersions")
+                } catch (e: Throwable) {
+                    Log.debugWithException(logger, e, "Exception in checkForNewerVersions {}", ExceptionUtils.getNonEmptyMessage(e))
+                    ErrorReporter.getInstance().reportError("UpdatesService.timer", e)
+                    try {
+                        Log.log(logger::trace, "sleeping {}", delaySeconds)
+                        delay(delaySeconds.inWholeMilliseconds)
+                    } catch (_: Throwable) {
+                        //ignore
+                    }
                 }
 
-            } catch (e: CancellationException) {
-                Log.debugWithException(logger, e, "Exception in checkForNewerVersions")
-            } catch (e: Throwable) {
-                Log.warnWithException(logger, e, "Exception in checkForNewerVersions")
-                ErrorReporter.getInstance().reportError("UpdatesService.timer", e)
             }
         }
+
+
+        ApplicationManager.getApplication().messageBus.connect(this)
+            .subscribe(BackendConnectionEvent.BACKEND_CONNECTION_STATE_TOPIC, object : BackendConnectionEvent {
+                override fun connectionLost() {
+                }
+
+                override fun connectionGained() {
+                    Log.log(logger::debug, "got connectionGained")
+                    //update state immediately after connectionGained, so it will not wait the delay for checking the versions.
+                    checkForNewerVersions()
+                }
+            })
+
+
+        SettingsState.getInstance().addChangeListener({
+            @Suppress("UnstableApiUsage")
+            disposingScope().launch {
+                //update state immediately after settings change. we are interested in api url change, but it will
+                // do no harm to call it on any settings change
+                checkForNewerVersions()
+            }
+
+        }, this)
     }
 
     override fun dispose() {
@@ -75,40 +116,11 @@ class UpdatesService(private val project: Project) : Disposable {
 
     private fun checkForNewerVersions() {
 
-        Log.log(logger::debug, "checking for new versions")
-
-        val backendConnectionMonitor = BackendConnectionMonitor.getInstance(project)
-        if (backendConnectionMonitor.isConnectionError()) {
-            return
-        }
-
-        val analyticsService = AnalyticsService.getInstance(project)
+        Log.log(logger::trace, "checking for new versions")
 
         var versionsResp: VersionResponse? = null
-        try {
-            versionsResp = analyticsService.getVersions(buildVersionRequest())
-            Log.log(logger::debug, "got version response {}", versionsResp)
-        } catch (ase: AnalyticsServiceException) {
-            var logException = true
-            if (ase.cause is AnalyticsProviderException) {
-                // addressing issue https://github.com/digma-ai/digma-intellij-plugin/issues/606
-                // look if got HTTP Error Code 404 (https://en.wikipedia.org/wiki/HTTP_404), it means that backend is too old
-                val ape = ase.cause as AnalyticsProviderException
-                if (ape.responseCode == 404) {
-                    logException = false
-                    versionsResp = createResponseToInduceBackendUpdate()
-                }
-            }
-
-            if (logException) {
-                Log.log(logger::debug, "AnalyticsServiceException for getVersions: {}", ase.message)
-                versionsResp = null
-            }
-        }
-
-        if (versionsResp == null) {
-            return
-        }
+        versionsResp = AnalyticsService.getInstance(project).getVersions(buildVersionRequest())
+        Log.log(logger::debug, "got version response {}", versionsResp)
 
         if (versionsResp.errors.isNotEmpty()) {
             val currErrors = versionsResp.errors.toList()
@@ -142,24 +154,16 @@ class UpdatesService(private val project: Project) : Disposable {
         }
     }
 
-    private fun createResponseToInduceBackendUpdate(): VersionResponse {
-        val pluginVersionResp = PluginVersionResponse(false, "0.0.1")
-        val backendVersionResp = BackendVersionResponse(
-            true, "0.0.2", "0.0.1",
-            BackendDeploymentType.Unknown // cannot determine the deployment type - it will fallback to DockerExtension - as required
-        )
-        val resp = VersionResponse(pluginVersionResp, backendVersionResp, emptyList())
-        return resp
-    }
-
 
     fun evalAndGetState(): UpdateState {
         Log.log(logger::debug, "evalAndGetState called")
-        return UpdateState(
+        val state = UpdateState(
             stateBackendVersion.deploymentType,
             shouldUpdateBackend(),
             shouldUpdatePlugin(),
         )
+        Log.log(logger::debug, "current state is {}", state)
+        return state
     }
 
     private fun shouldUpdateBackend(): Boolean {

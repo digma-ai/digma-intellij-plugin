@@ -23,14 +23,13 @@ class PersistenceService {
 
     /**
      * Do not use this method to get the current environment.
-     * @see org.digma.intellij.plugin.env.Env.Companion.getCurrentEnvName
      */
-    fun getCurrentEnv(): String? {
-        return state.currentEnv
+    fun getLatestSelectedEnvId(): String? {
+        return state.latestSelectedEnvId
     }
 
-    fun setCurrentEnv(env: String?) {
-        state.currentEnv = env
+    fun setLatestSelectedEnvId(envId: String?) {
+        state.latestSelectedEnvId = envId
     }
 
 
@@ -49,17 +48,6 @@ class PersistenceService {
     fun setLocalEngineInstalled(isInstalled: Boolean) {
         state.isLocalEngineInstalled = isInstalled
     }
-
-    fun setSelectedServices(projectName: String, services: Array<String>?) {
-        if (services == null) {
-            if (state.selectedServices.containsKey(projectName)) {
-                state.selectedServices.remove(projectName)
-            }
-        } else {
-            state.selectedServices[projectName] = services
-        }
-    }
-
 
     fun hasEmail(): Boolean {
         return state.userEmail != null || state.userRegistrationEmail != null
@@ -223,7 +211,6 @@ class PersistenceService {
         state.userRegistrationEmail = userRegistrationEmail
     }
 
-
     fun getUserId(): String? {
         return state.userId
     }
@@ -257,23 +244,6 @@ class PersistenceService {
         state.notificationsStartDate = notificationsStartDate
     }
 
-
-    fun getPendingEnvironment(): String? {
-        return state.pendingEnvironment
-    }
-
-    fun setPendingEnvironment(pendingEnvironment: String) {
-        state.pendingEnvironment = pendingEnvironment
-    }
-
-
-    fun getSelectedServices(): MutableMap<String, Array<String>> {
-        return state.selectedServices
-    }
-
-    fun setSelectedServices(selectedServices: MutableMap<String, Array<String>>) {
-        state.selectedServices = selectedServices
-    }
 
     fun updateLastConnectionTimestamp() {
         state.lastConnectionTimestamp = Instant.now()

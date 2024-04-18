@@ -4,7 +4,7 @@ import com.google.common.hash.Hashing
 import com.intellij.credentialStore.CredentialAttributes
 import com.intellij.credentialStore.generateServiceName
 import com.intellij.ide.passwordSafe.PasswordSafe
-import org.digma.intellij.plugin.common.UserId
+import org.digma.intellij.plugin.common.UniqueGeneratedUserId
 import java.nio.charset.StandardCharsets
 
 
@@ -49,7 +49,7 @@ class DigmathonProductKey {
     private fun createCredentialAttributes(): CredentialAttributes {
         return CredentialAttributes(
             generateServiceName(MY_SERVICE, MY_KEY),
-            UserId.userId,
+            UniqueGeneratedUserId.userId,
             this::class.java
         )
     }

@@ -10,6 +10,7 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.execution.RunConfigurationInstrumentationService
 import org.digma.intellij.plugin.idea.execution.JavaToolOptionsBuilder
 import org.digma.intellij.plugin.idea.execution.ModuleResolver
+import org.digma.intellij.plugin.idea.execution.OtelResourceAttributesBuilder
 import org.digma.intellij.plugin.idea.execution.ParametersExtractor
 import org.digma.intellij.plugin.idea.execution.ProjectHeuristics
 import org.digma.intellij.plugin.idea.execution.ServiceNameProvider
@@ -121,6 +122,30 @@ class QuarkusInstrumentationFlavor : BaseInstrumentationFlavor() {
             null
         }
     }
+
+
+    override fun buildOtelResourceAttributes(
+        instrumentationService: RunConfigurationInstrumentationService,
+        otelResourceAttributesBuilder: OtelResourceAttributesBuilder,
+        configuration: RunConfiguration,
+        params: SimpleProgramParameters,
+        projectHeuristics: ProjectHeuristics,
+        moduleResolver: ModuleResolver,
+        parametersExtractor: ParametersExtractor
+    ): String? {
+
+        return try {
+            otelResourceAttributesBuilder
+                .withUserId()
+                .withScmCommitId()
+                .build()
+
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError("${this::class.java}.buildJavaToolOptions", e)
+            null
+        }
+    }
+
 
     //actually not relevant because this flavor never calls withOtelAgent
     override fun useOtelAgent(): Boolean {

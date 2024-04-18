@@ -28,4 +28,8 @@ public class AnalyticsProviderException extends RuntimeException {
         }
         return super.getMessage();
     }
+
+    public String getDetailedMessage() {
+        return super.getMessage();
+    }
 }

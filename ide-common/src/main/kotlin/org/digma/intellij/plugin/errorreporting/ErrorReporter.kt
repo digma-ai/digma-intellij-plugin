@@ -183,6 +183,10 @@ open class ErrorReporter {
        see usage examples.
        the event will contain the stack trace and exception message.
      */
+    open fun reportAnalyticsServiceError(message: String, methodName: String, exception: Exception, isConnectionException: Boolean) {
+        reportAnalyticsServiceError(findActiveProject(), methodName, message, exception, isConnectionException)
+    }
+
     open fun reportAnalyticsServiceError(
         project: Project?,
         message: String,
@@ -250,6 +254,7 @@ open class ErrorReporter {
     }
 
 
+
     private fun isTooFrequentBackendError(message: String, action: String): Boolean {
         val counter = MyCache.getOrCreate(message, action)
         val occurrences = counter.incrementAndGet()
@@ -305,7 +310,6 @@ open class ErrorReporter {
         return null
 
     }
-
 
 }
 

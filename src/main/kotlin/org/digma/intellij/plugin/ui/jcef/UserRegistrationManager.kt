@@ -19,8 +19,8 @@ class UserRegistrationManager(private val project: Project) {
 
     fun register(registrationMap: Map<String, String>) {
 
-        ActivityMonitor.getInstance(project).registerCustomEvent("register user", registrationMap)
-        ActivityMonitor.getInstance(project).registerUserAction("user registered", registrationMap)
+        ActivityMonitor.getInstance(project).registerCustomEvent("register local user", registrationMap)
+        ActivityMonitor.getInstance(project).registerUserAction("local user registered", registrationMap)
 
         registrationMap["email"]?.let { userEmail ->
             PersistenceService.getInstance().setUserRegistrationEmail(userEmail)

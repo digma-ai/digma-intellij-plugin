@@ -13,7 +13,7 @@ internal data class PersistenceData(
     // is enough. for new users only the timestamp will be used.
 
 
-    var currentEnv: String? = null,
+    var latestSelectedEnvId: String? = null,
     var isWorkspaceOnly: Boolean = false,
     //todo: we want to change the name to isObservabilityEnabled.
     // remove isAutoOtel after some versions, can remove in June 2024 when probably all users updated the plugin
@@ -41,7 +41,6 @@ internal data class PersistenceData(
     var notificationsStartDate: String? = null,
 
     var pendingEnvironment: String? = null,
-    var selectedServices: MutableMap<String, Array<String>> = mutableMapOf(),
 
     //todo: remove firstTimeAssetsReceived in May 2024
     var firstTimeAssetsReceived: Boolean = false,

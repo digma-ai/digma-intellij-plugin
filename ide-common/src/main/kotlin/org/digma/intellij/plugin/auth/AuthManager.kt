@@ -204,7 +204,7 @@ class AuthManager {
             Log.log(
                 logger::warn,
                 "no credentials found for account {} maybe credentials deleted from password safe? deleting account, analytics url {}",
-                digmaAccount.name,
+                digmaAccount,
                 localAnalyticsProvider.apiUrl
             )
             //logout to delete the account
@@ -214,7 +214,7 @@ class AuthManager {
                 Log.log(
                     logger::warn,
                     "no credentials found for account {} and its not centralized,doing silent login, analytics url {}",
-                    digmaAccount.name,
+                    digmaAccount,
                     localAnalyticsProvider.apiUrl
                 )
                 val loginResult = cud.login(localAnalyticsProvider, SILENT_LOGIN_USER, SILENT_LOGIN_PASSWORD)
@@ -223,7 +223,7 @@ class AuthManager {
                 Log.log(
                     logger::warn,
                     "no credentials found for account {} and its centralized,skipping login, analytics url {}",
-                    digmaAccount.name,
+                    digmaAccount,
                     localAnalyticsProvider.apiUrl
                 )
                 return false
@@ -235,7 +235,7 @@ class AuthManager {
             Log.log(
                 logger::trace,
                 "loginOrRefresh, need to refresh credentials for account {} because {},credentials {}, url={}",
-                digmaAccount.name,
+                digmaAccount,
                 because,
                 credentials,
                 localAnalyticsProvider.apiUrl
@@ -245,7 +245,7 @@ class AuthManager {
                 Log.log(
                     logger::trace,
                     "loginOrRefresh, token refreshed",
-                    digmaAccount.name,
+                    digmaAccount,
                     localAnalyticsProvider.apiUrl,
                     credentials
                 )

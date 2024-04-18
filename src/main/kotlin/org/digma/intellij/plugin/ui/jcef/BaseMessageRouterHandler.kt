@@ -81,7 +81,7 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
 
                 //do common messages for all apps, or call doOnQuery
                 when (action) {
-                    JCEFGlobalConstants.GLOBAL_REGISTER -> {
+                    JCEFGlobalConstants.GLOBAL_PERSONALIZE_REGISTRATION -> {
                         val payload = getPayloadFromRequestNonNull(requestJsonNode)
                         val registrationMap: Map<String, String> =
                             payload.fields().asSequence()

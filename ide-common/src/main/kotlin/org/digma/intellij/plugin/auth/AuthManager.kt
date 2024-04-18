@@ -7,7 +7,6 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.util.Disposer
 import kotlinx.coroutines.runBlocking
 import org.digma.intellij.plugin.analytics.AnalyticsProvider
-import org.digma.intellij.plugin.analytics.AnalyticsProviderException
 import org.digma.intellij.plugin.analytics.AuthenticationException
 import org.digma.intellij.plugin.analytics.AuthenticationProvider
 import org.digma.intellij.plugin.analytics.RestAnalyticsProvider
@@ -40,10 +39,13 @@ data class LoginResult(val isSuccess: Boolean, val userId: String?, val error: S
 class AuthManager {
 
     private val logger: Logger = Logger.getInstance(AuthManager::class.java)
-    private val accountLock = ReentrantLock()
+    private val cud = CUD()
+
     private val listeners: MutableList<AuthInfoChangeListener> = ArrayList()
     private var analyticsProvider: RestAnalyticsProvider? = null
-    private val isProxyPause: AtomicBoolean = AtomicBoolean(true)
+
+    private val loginOrRefreshLock = ReentrantLock()
+    private val isProxyPaused: AtomicBoolean = AtomicBoolean(true)
 
     companion object {
         @JvmStatic
@@ -75,7 +77,7 @@ class AuthManager {
     //the analyticsProvider here will usually be a non proxied RestAnalyticsProvider
     fun withAuth(analyticsProvider: RestAnalyticsProvider): AnalyticsProvider {
 
-        Log.log(logger::info, "wrapping analyticsProvider with auth for url={}", analyticsProvider.apiUrl)
+        Log.log(logger::trace, "wrapping analyticsProvider with auth for url={}", analyticsProvider.apiUrl)
 
         //keep the RestAnalyticsProvider every time withAuth is called, so it will always be the correct and latest one
         this.analyticsProvider = analyticsProvider
@@ -86,66 +88,205 @@ class AuthManager {
 
         //always return a proxy. even if login failed. the proxy will try to loginOrRefresh on AuthenticationException
         val proxy = proxy(analyticsProvider)
-        isProxyPause.set(false)
+
+        Log.log(
+            logger::trace, "analyticsProvider wrapped with auth proxy, current account {},analytics url {}",
+            DigmaDefaultAccountHolder.getInstance().account,
+            analyticsProvider.apiUrl
+        )
+
+        Log.log(logger::info, "resuming current proxy, analytics url {}", analyticsProvider?.apiUrl)
+        isProxyPaused.set(false)
         return proxy
     }
 
-    fun logout() {
 
-        Log.log(logger::info, "logout called for url={}", analyticsProvider?.apiUrl)
+    fun login(user: String, password: String): LoginResult {
+        val loginResult = analyticsProvider?.let {
+            cud.login(it, user, password)
+        } ?: LoginResult(false, null, "analyticsProvider is null")
+
+        fireChange()
+        return loginResult
+    }
+
+
+    fun logout() {
+        cud.logoutDefaultAccount()
+        fireChange()
+    }
+
+
+    private fun loginOrRefresh(forceRefresh: Boolean = false): Boolean {
+
+        val localAnalyticsProvider = analyticsProvider ?: return false
+
+        //loginOrRefresh should never throw exception but return true or false
+        //it may that that few threads will fail on AuthenticationException so make sure not to login or refresh concurrently
+        //accountLock.lock()
         try {
-            accountLock.lock()
+
+            loginOrRefreshLock.lock()
+
+            Log.log(logger::trace, "loginOrRefresh called, url={}", localAnalyticsProvider.apiUrl)
 
             val digmaAccount = DigmaDefaultAccountHolder.getInstance().account
+            val isCentralize = localAnalyticsProvider.about.isCentralize ?: false
 
-            digmaAccount?.let { account ->
-                runBlocking {
-                    Log.log(logger::info, "deleting account {}", account)
-                    DigmaAccountManager.getInstance().removeAccount(account)
-                    DigmaDefaultAccountHolder.getInstance().account = null
+            //centralized deployment, don't log in if account is null, user will sign up
+            if (digmaAccount == null && isCentralize) {
+                Log.log(logger::trace, "loginOrRefresh, account is not logged in for centralized env url={}", localAnalyticsProvider.apiUrl)
+                return false
+            }
+
+
+            //if digma account is null do silent log in, it's not centralized,we checked above
+            if (digmaAccount == null) {
+                Log.log(logger::trace, "digma account is null and not centralized,doing silent login for url {}", localAnalyticsProvider.apiUrl)
+                val loginResult = cud.login(localAnalyticsProvider, SILENT_LOGIN_USER, SILENT_LOGIN_PASSWORD)
+                return loginResult.isSuccess
+            }
+
+
+            if (digmaAccount.server.url != localAnalyticsProvider.apiUrl) {
+                Log.log(
+                    logger::trace, "digma account exists,but its url is different then analytics url, deleting account {}, url {}",
+                    digmaAccount,
+                    localAnalyticsProvider.apiUrl
+                )
+                cud.logoutDefaultAccount()
+                if (!isCentralize) {
+                    Log.log(logger::trace, "not centralized,doing silent login for url {}", localAnalyticsProvider.apiUrl)
+                    val loginResult = cud.login(localAnalyticsProvider, SILENT_LOGIN_USER, SILENT_LOGIN_PASSWORD)
+                    return loginResult.isSuccess
+                } else {
+                    Log.log(logger::trace, "default account deleted and is centralized, skipping login for url {}", localAnalyticsProvider.apiUrl)
+                    return false
                 }
             }
+
+            //digma account is not null, either it's loaded from persistence on startup or token expired
+            Log.log(logger::trace, "digma account exists,trying to refresh if necessary, url {}", localAnalyticsProvider.apiUrl)
+            val result = doRefresh(localAnalyticsProvider, digmaAccount, isCentralize, forceRefresh)
+            Log.log(logger::trace, "completed loginOrRefresh for url {}", localAnalyticsProvider.apiUrl)
+            return result
+
         } catch (e: Throwable) {
-            Log.warnWithException(logger, e, "logout failed {}", e)
-            ErrorReporter.getInstance().reportError("AuthManager.logout", e)
+            Log.warnWithException(logger, e, "Exception in loginOrRefresh {}", e)
+            ErrorReporter.getInstance().reportInternalFatalError("AuthManager.loginOrRefresh", e)
+            return false
         } finally {
-            if (accountLock.isHeldByCurrentThread) {
-                accountLock.unlock()
+            if (loginOrRefreshLock.isHeldByCurrentThread) {
+                loginOrRefreshLock.unlock()
             }
             fireChange()
         }
     }
 
-    fun login(userName: String, password: String): LoginResult {
 
-        Log.log(logger::info, "login called for url={}, user:{}, password:{}", analyticsProvider?.apiUrl, userName, password)
+    //this method may throw exceptions, always catch exception when calling it.
+    // it is meant just to make more readable code, but it is part of loginOrRefresh and should not be called
+    // from other code
+    private fun doRefresh(
+        localAnalyticsProvider: RestAnalyticsProvider,
+        digmaAccount: DigmaAccount,
+        isCentralize: Boolean,
+        forceRefresh: Boolean
+    ): Boolean {
 
-        return try {
-            accountLock.lock()
+        val credentials = runBlocking {
+            DigmaAccountManager.getInstance().findCredentials(digmaAccount)
+        }
 
-            val loginResult = this.analyticsProvider?.let {
-                loginInternal(it, userName, password)
-            } ?: LoginResult(false, null, "analyticsProvider is null")
-
-            fireChange()
-            loginResult
-
-        } catch (e: AuthenticationException) {
-            Log.warnWithException(logger, e, "login failed {}", e)
-            ErrorReporter.getInstance().reportError("AuthManager.login", e)
-            return LoginResult(false, null, e.detailedMessage)
-        } catch (e: Throwable) {
-            Log.warnWithException(logger, e, "login failed {}", e)
-            ErrorReporter.getInstance().reportInternalFatalError("AuthManager.login", e)
-            LoginResult(false, null, e.toString())
-        } finally {
-            if (accountLock.isHeldByCurrentThread) {
-                accountLock.unlock()
+        //if digma account is not null and credentials is null then probably something corrupted,
+        // it may be that the credentials deleted from the password safe
+        if (credentials == null) {
+            Log.log(
+                logger::warn,
+                "no credentials found for account {} maybe credentials deleted from password safe? deleting account, analytics url {}",
+                digmaAccount.name,
+                localAnalyticsProvider.apiUrl
+            )
+            //logout to delete the account
+            cud.logoutDefaultAccount()
+            //do silent login if centralized, otherwise skip and user will have to sign up again
+            if (!isCentralize) {
+                Log.log(
+                    logger::warn,
+                    "no credentials found for account {} and its not centralized,doing silent login, analytics url {}",
+                    digmaAccount.name,
+                    localAnalyticsProvider.apiUrl
+                )
+                val loginResult = cud.login(localAnalyticsProvider, SILENT_LOGIN_USER, SILENT_LOGIN_PASSWORD)
+                return loginResult.isSuccess
+            } else {
+                Log.log(
+                    logger::warn,
+                    "no credentials found for account {} and its centralized,skipping login, analytics url {}",
+                    digmaAccount.name,
+                    localAnalyticsProvider.apiUrl
+                )
+                return false
             }
         }
+
+        if (!credentials.isAccessTokenValid() || forceRefresh) {
+            val because = if (!credentials.isAccessTokenValid()) "access token expired" else "called with force refresh"
+            Log.log(
+                logger::trace,
+                "loginOrRefresh, need to refresh credentials for account {} because {},credentials {}, url={}",
+                digmaAccount.name,
+                because,
+                credentials,
+                localAnalyticsProvider.apiUrl
+            )
+
+            if (cud.refreshToken(localAnalyticsProvider, digmaAccount, credentials, localAnalyticsProvider.apiUrl)) {
+                Log.log(
+                    logger::trace,
+                    "loginOrRefresh, token refreshed",
+                    digmaAccount.name,
+                    localAnalyticsProvider.apiUrl,
+                    credentials
+                )
+                return true
+            } else if (!isCentralize) {
+                Log.log(
+                    logger::trace,
+                    "refreshToken failed and its not centralized, doing silent login for url {}", localAnalyticsProvider.apiUrl
+                )
+                cud.logoutDefaultAccount()
+                val loginResult = cud.login(localAnalyticsProvider, SILENT_LOGIN_USER, SILENT_LOGIN_PASSWORD)
+                return loginResult.isSuccess
+            } else {
+                Log.log(
+                    logger::trace,
+                    "refreshToken didn't complete successfully and its centralized, skipping login for url {}",
+                    localAnalyticsProvider.apiUrl
+                )
+                return false
+            }
+        } else {
+            Log.log(
+                logger::trace,
+                "no need to refresh token for account {}, analytics url {}",
+                digmaAccount,
+                localAnalyticsProvider.apiUrl
+            )
+        }
+
+        return true
     }
+
 
     private fun fireChange() {
+
+        Log.log(
+            logger::trace, "firing authInfoChanged, default account {}, analytics url {}",
+            DigmaDefaultAccountHolder.getInstance().account,
+            analyticsProvider?.apiUrl
+        )
+
         val authInfo = AuthInfo(DigmaDefaultAccountHolder.getInstance().account?.userId)
         listeners.forEach {
             try {
@@ -156,225 +297,13 @@ class AuthManager {
         }
     }
 
-    private fun loginInternal(analyticsProvider: RestAnalyticsProvider, userName: String, password: String): LoginResult {
 
-        reportPosthogEvent(
-            "login", mapOf(
-                "user" to userName
-            )
-        )
-        try {
-            accountLock.lock()
-
-            Log.log(logger::info, "doing login for url={}, user:{}, password:{}", analyticsProvider.apiUrl, userName, password)
-            val loginResponse = analyticsProvider.login(LoginRequest(userName, password))
-
-            val digmaAccount = DigmaAccountManager.createAccount(analyticsProvider.apiUrl, loginResponse.userId)
-            val digmaCredentials = DigmaCredentials(
-                loginResponse.accessToken,
-                loginResponse.refreshToken,
-                analyticsProvider.apiUrl,
-                TokenType.Bearer.name,
-                loginResponse.expiration.time
-            )
-            runBlocking {
-                DigmaAccountManager.getInstance().updateAccount(digmaAccount, digmaCredentials)
-                DigmaDefaultAccountHolder.getInstance().account = digmaAccount
-            }
-            Log.log(logger::info, "login success for url={}, user:{}, password:{}", analyticsProvider.apiUrl, userName, password)
-
-            reportPosthogEvent(
-                "login success", mapOf(
-                    "user" to SILENT_LOGIN_USER
-                )
-            )
-
-            return LoginResult(true, loginResponse.userId, null)
-
-        } catch (e: AuthenticationException) {
-            Log.warnWithException(logger, e, "loginInternal failed {}", e)
-            ErrorReporter.getInstance().reportError("AuthManager.loginInternal", e)
-            return LoginResult(false, null, e.detailedMessage)
-        } catch (e: Throwable) {
-            Log.warnWithException(logger, e, "loginInternal failed {}", e)
-            ErrorReporter.getInstance().reportError("AuthManager.loginInternal", e)
-            //just for reporting, never swallow the exception
-            reportPosthogEvent(
-                "login failed", mapOf(
-                    "user" to SILENT_LOGIN_USER,
-                    "error" to e.message.toString()
-                )
-            )
-            throw e
-        } finally {
-            if (accountLock.isHeldByCurrentThread) {
-                accountLock.unlock()
-            }
-        }
+    fun pauseCurrentProxy() {
+        Log.log(logger::info, "pausing current proxy, analytics url {}", analyticsProvider?.apiUrl)
+        analyticsProvider = null
+        isProxyPaused.set(true)
     }
 
-
-    private fun loginOrRefresh(forceRefresh: Boolean = false): Boolean {
-
-
-        val localAnalyticsProvider = analyticsProvider ?: return false
-
-
-        //loginOrRefresh should never throw exception but return true or false
-
-        //it may that that few threads will fail on AuthenticationException so make sure not to login or refresh concurrently
-        accountLock.lock()
-        return try {
-
-            Log.log(logger::trace, "loginOrRefresh called, url={}", localAnalyticsProvider.apiUrl)
-
-            val digmaAccount = DigmaDefaultAccountHolder.getInstance().account
-            val about = localAnalyticsProvider.about
-
-            if (digmaAccount == null && about.isCentralize == true) {
-                Log.log(logger::info, "loginOrRefresh, account is not logged in for centralized env url={}", localAnalyticsProvider.apiUrl)
-                return false
-            }
-
-            if (digmaAccount == null && about.isCentralize != true) {
-                //make sure to fireChange after login
-                login(SILENT_LOGIN_USER, SILENT_LOGIN_PASSWORD)
-                return true
-            }
-
-            //todo: digmaAccount can't be null here
-            if (digmaAccount == null) {
-                Log.log(logger::info, "Failed to login account is missing")
-                return false
-            }
-
-            val credentials = runBlocking {
-                DigmaAccountManager.getInstance().findCredentials(digmaAccount)
-            }
-
-            if (credentials == null) {
-                Log.log(
-                    logger::warn,
-                    "loginOrRefresh, no credentials found for account {} maybe credentials deleted from password safe? doing new login, url={}",
-                    digmaAccount.name,
-                    localAnalyticsProvider.apiUrl
-                )
-                logout().also {
-                    if (about.isCentralize != true) {
-                        login(SILENT_LOGIN_USER, SILENT_LOGIN_PASSWORD)
-                        return true
-                    }
-                    return false
-                }
-            }
-
-            if (credentials != null && (!credentials.isAccessTokenValid() || forceRefresh)) {
-                val because = if (!credentials.isAccessTokenValid()) "access token expired" else "called with force refresh"
-                Log.log(
-                    logger::trace,
-                    "loginOrRefresh, need to refresh credentials for account {} because {},credentials {}, url={}",
-                    digmaAccount.name,
-                    because,
-                    credentials,
-                    localAnalyticsProvider.apiUrl
-                )
-
-                if (refreshToken(localAnalyticsProvider, digmaAccount, credentials, localAnalyticsProvider.apiUrl)) {
-                    Log.log(
-                        logger::trace,
-                        "loginOrRefresh, token refreshed",
-                        digmaAccount.name,
-                        localAnalyticsProvider.apiUrl,
-                        credentials
-                    )
-                    return true
-                }
-
-                if (about.isCentralize == false) {
-                    login(SILENT_LOGIN_USER, SILENT_LOGIN_PASSWORD)
-                    return true
-                }
-
-                return false
-            }
-
-            Log.log(
-                logger::trace,
-                "loginOrRefresh,success {} with valid credentials {}, url={}",
-                digmaAccount.name,
-                localAnalyticsProvider.apiUrl,
-                credentials
-            )
-            return true
-        } catch (e: AuthenticationException) {
-            Log.warnWithException(logger, e, "AuthenticationException in loginOrRefresh {}", e)
-            //should never get AuthenticationException because all the apis used here are not protected
-            //so report it as reportInternalFatalError
-            ErrorReporter.getInstance().reportInternalFatalError("AuthManager.loginOrRefresh", e)
-            false
-        } catch (e: AnalyticsProviderException) {
-            Log.warnWithException(logger, e, "AnalyticsProviderException in loginOrRefresh {}", e)
-            val isConnectionException = ExceptionUtils.isAnyConnectionException(e)
-            ErrorReporter.getInstance().reportAnalyticsServiceError("AuthManager.loginOrRefresh", "loginOrRefresh", e, isConnectionException)
-            false
-        } catch (e: Throwable) {
-            Log.warnWithException(logger, e, "Exception in loginOrRefresh {}", e)
-            ErrorReporter.getInstance().reportInternalFatalError("AuthManager.loginOrRefresh", e)
-            false
-        } finally {
-            if (accountLock.isHeldByCurrentThread) {
-                accountLock.unlock()
-            }
-        }
-    }
-
-    private fun refreshToken(
-        analyticsProvider: RestAnalyticsProvider,
-        digmaAccount: DigmaAccount,
-        credentials: DigmaCredentials,
-        url: String
-    ): Boolean {
-
-        Log.log(logger::trace, "refreshToken called for account {}, url={}", digmaAccount, url)
-
-        try {
-            accountLock.lock()
-
-            Log.log(logger::trace, "refreshing credentials for account {}, url={}", digmaAccount.name, url)
-            val loginResponse = analyticsProvider.refreshToken(RefreshRequest(credentials.accessToken, credentials.refreshToken))
-            val digmaCredentials = DigmaCredentials(
-                loginResponse.accessToken,
-                loginResponse.refreshToken,
-                url,
-                TokenType.Bearer.name,
-                loginResponse.expiration.time
-            )
-            runBlocking {
-                DigmaAccountManager.getInstance().updateAccount(digmaAccount, digmaCredentials)
-                DigmaDefaultAccountHolder.getInstance().account = digmaAccount
-            }
-            Log.log(logger::trace, "refresh token success for url={}", url)
-            return true
-        } catch (e: AuthenticationException) {
-            Log.warnWithException(logger, e, "AuthenticationException in refresh for url $url")
-            ErrorReporter.getInstance().reportInternalFatalError("AuthManager.refresh", e)
-
-            //usually refresh should not fail on AuthenticationException.
-            //but,if refresh fails on AuthenticationException there is probably some corruption with the refresh token
-            // or some other server issue that caused it. in that case delete the account and login again hopefully it will succeed.
-            Log.log(
-                logger::info, "refresh token failed with AuthenticationException, " +
-                        "logging out account:{}, url:{}", digmaAccount, url
-            )
-            logout()
-
-            return false
-        } finally {
-            if (accountLock.isHeldByCurrentThread) {
-                accountLock.unlock()
-            }
-        }
-    }
 
     private fun proxy(analyticsProvider: RestAnalyticsProvider): AnalyticsProvider {
         return Proxy.newProxyInstance(
@@ -391,12 +320,141 @@ class AuthManager {
         }
     }
 
-    fun pauseCurrentProxy() {
-        analyticsProvider = null
-        isProxyPause.set(true)
+
+    //like sql CRUD: create,read,update,delete, we don't have read so CUD
+    //basic building blocks for AuthManager: login, logout and refresh
+    private inner class CUD {
+
+        private val accountLock = ReentrantLock()
+
+
+        fun login(analyticsProvider: RestAnalyticsProvider, userName: String, password: String): LoginResult {
+
+            Log.log(logger::trace, "login called for url {}, user:{}", analyticsProvider.apiUrl, userName)
+
+            return try {
+                accountLock.lock()
+
+                reportPosthogEvent("login", mapOf("user" to userName))
+
+                Log.log(logger::trace, "doing login for url {}, user:{}", analyticsProvider.apiUrl, userName)
+                val loginResponse = analyticsProvider.login(LoginRequest(userName, password))
+
+                val digmaAccount = DigmaAccountManager.createAccount(analyticsProvider.apiUrl, loginResponse.userId)
+                val digmaCredentials = DigmaCredentials(
+                    loginResponse.accessToken,
+                    loginResponse.refreshToken,
+                    analyticsProvider.apiUrl,
+                    TokenType.Bearer.name,
+                    loginResponse.expiration.time
+                )
+                runBlocking {
+                    DigmaAccountManager.getInstance().updateAccount(digmaAccount, digmaCredentials)
+                    DigmaDefaultAccountHolder.getInstance().account = digmaAccount
+                }
+                Log.log(logger::trace, "login success for url={}, user:{}, created account {}", analyticsProvider.apiUrl, userName, digmaAccount)
+
+                reportPosthogEvent("login success", mapOf("user" to SILENT_LOGIN_USER))
+
+                LoginResult(true, loginResponse.userId, null)
+
+            } catch (e: Throwable) {
+                Log.debugWithException(logger, e, "login failed {}", e)
+                ErrorReporter.getInstance().reportInternalFatalError("AuthManager.login", e)
+                val errorMessage = ExceptionUtils.getNonEmptyMessage(e)
+                reportPosthogEvent("login failed", mapOf("user" to SILENT_LOGIN_USER, "error" to errorMessage.toString()))
+                LoginResult(false, null, e.toString())
+            } finally {
+                if (accountLock.isHeldByCurrentThread) {
+                    accountLock.unlock()
+                }
+            }
+        }
+
+
+        fun logoutDefaultAccount(): Boolean {
+
+            return try {
+
+                Log.log(logger::trace, "logout called , analytics url {}", analyticsProvider?.apiUrl)
+
+                accountLock.lock()
+
+                val digmaAccount = DigmaDefaultAccountHolder.getInstance().account
+
+                Log.log(logger::trace, "logout: found account {}", digmaAccount)
+
+                digmaAccount?.let { account ->
+                    runBlocking {
+                        Log.log(logger::trace, "logout: deleting account {}", account)
+                        DigmaAccountManager.getInstance().removeAccount(account)
+                        DigmaDefaultAccountHolder.getInstance().account = null
+                    }
+                }
+
+                digmaAccount?.let {
+                    Log.log(logger::trace, "logout: account deleted {} , analytics url {}", digmaAccount, analyticsProvider?.apiUrl)
+                }
+
+                true
+            } catch (e: Throwable) {
+                Log.debugWithException(logger, e, "logout failed, analytics url {}, {}", analyticsProvider?.apiUrl, e)
+                ErrorReporter.getInstance().reportError("AuthManager.logout", e)
+                false
+            } finally {
+                if (accountLock.isHeldByCurrentThread) {
+                    accountLock.unlock()
+                }
+            }
+        }
+
+
+        fun refreshToken(
+            analyticsProvider: RestAnalyticsProvider,
+            digmaAccount: DigmaAccount,
+            credentials: DigmaCredentials,
+            url: String
+        ): Boolean {
+
+            Log.log(logger::trace, "refreshToken called for account {}, analytics url {}", digmaAccount, url)
+
+            return try {
+                accountLock.lock()
+
+                Log.log(logger::trace, "refreshing credentials for account {}, analytics url {}", digmaAccount, url)
+                val loginResponse = analyticsProvider.refreshToken(RefreshRequest(credentials.accessToken, credentials.refreshToken))
+                val digmaCredentials = DigmaCredentials(
+                    loginResponse.accessToken,
+                    loginResponse.refreshToken,
+                    url,
+                    TokenType.Bearer.name,
+                    loginResponse.expiration.time
+                )
+                runBlocking {
+                    DigmaAccountManager.getInstance().updateAccount(digmaAccount, digmaCredentials)
+                    DigmaDefaultAccountHolder.getInstance().account = digmaAccount
+                }
+                Log.log(logger::trace, "refresh token success for account {}, analytics url {}", digmaAccount, url)
+
+                true
+
+            } catch (e: AuthenticationException) {
+                Log.debugWithException(logger, e, "AuthenticationException in refresh for account {}, analytics url {},{}", digmaAccount, url, e)
+                ErrorReporter.getInstance().reportInternalFatalError("AuthManager.refresh", e)
+
+                false
+            } finally {
+                if (accountLock.isHeldByCurrentThread) {
+                    accountLock.unlock()
+                }
+            }
+        }
+
+
     }
 
-    inner class MyAuthInvocationHandler(private val analyticsProvider: RestAnalyticsProvider) : InvocationHandler {
+
+    private inner class MyAuthInvocationHandler(private val analyticsProvider: RestAnalyticsProvider) : InvocationHandler {
 
         override fun invoke(proxy: Any, method: Method, args: Array<out Any>?): Any? {
             return try {
@@ -408,9 +466,9 @@ class AuthManager {
 
             } catch (e: InvocationTargetException) {
 
-                Log.warnWithException(logger, e, "Exception in proxy")
-                if (isProxyPause.get()) {
-                    Log.log(logger::info, "got Exception in proxy but proxy is paused, rethrowing")
+                Log.debugWithException(logger, e, "Exception in proxy {}", ExceptionUtils.getNonEmptyMessage(e))
+                if (isProxyPaused.get()) {
+                    Log.log(logger::trace, "got Exception in proxy but proxy is paused, rethrowing")
                     throw e
                 }
 
@@ -419,19 +477,28 @@ class AuthManager {
                 val authenticationException = ExceptionUtils.find(e, AuthenticationException::class.java)
                     ?: throw e
 
-                Log.log(logger::info, "got AuthenticationException, calling loginOrRefresh")
+                Log.log(logger::trace, "got AuthenticationException, calling loginOrRefresh")
                 //if loginOrRefresh fails here there is no point in calling the method again.
                 // it will probably fail again and will cause an endless loop.
                 //just wait for the next invocation to try login or refresh again.
                 if (loginOrRefresh(true)) {
-                    Log.log(logger::info, "loginOrRefresh success after AuthenticationException")
+                    Log.log(
+                        logger::trace, "loginOrRefresh success after AuthenticationException, current account {},analytics url {}",
+                        DigmaDefaultAccountHolder.getInstance().account,
+                        analyticsProvider.apiUrl
+                    )
+
                     if (args == null) {
                         method.invoke(analyticsProvider)
                     } else {
                         method.invoke(analyticsProvider, *args)
                     }
                 } else {
-                    Log.log(logger::info, "loginOrRefresh failed after AuthenticationException, rethrowing exception {}", e)
+                    Log.log(
+                        logger::trace,
+                        "loginOrRefresh failed after AuthenticationException, rethrowing exception {}",
+                        ExceptionUtils.getNonEmptyMessage(e)
+                    )
                     //must return a value ot throw the exception
                     throw e
                 }

@@ -8,7 +8,6 @@ import org.jetbrains.annotations.*;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
 import java.net.*;
 import java.util.Objects;
 
@@ -145,7 +144,7 @@ public class SettingsComponent {
         var resetButton = new JButton("Reset to defaults");
         resetButton.addActionListener(e -> resetToDefaults());
 
-        var builder = FormBuilder.createFormBuilder()
+        myMainPanel = FormBuilder.createFormBuilder()
                 .addLabeledComponent(myUrlLabel, myApiUrlText, 1, false)
                 .addLabeledComponent(new JBLabel("Api token:"), myApiToken, 1, false)
                 .addLabeledComponent(myRefreshLabel, myRefreshDelay, 1, false)
@@ -157,29 +156,9 @@ public class SettingsComponent {
                 .addLabeledComponent(myRuntimeObservabilityBackendUrlLabel, myRuntimeObservabilityBackendUrlText, 1, false)
                 .addComponentToRightColumn(feedbackForRuntimeObservabilityBackendUrl, 1)
                 .addLabeledComponent("Extended Observability (beta)", extendedObservabilityTextBox, 1, false)
-                .addComponent(resetButton);
-        //.addComponentFillVertically(new JPanel(), 0)
-
-        if ("digma".equals(System.getenv("devenv"))) {
-            builder.addComponent(getSwitchToCentralizedButton());
-
-        }
-
-        builder.addComponentFillVertically(new JPanel(), 0);
-        myMainPanel = builder.getPanel();
-    }
-
-    private JComponent getSwitchToCentralizedButton() {
-        var switchButton = new JButton("Switch To Centralized");
-        switchButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                myApiUrlText.setText("https://k8s-test-testanal-8fb5588e77-656549b60155bd92.elb.eu-west-1.amazonaws.com:5051");
-                myJaegerQueryUrlText.setText("http://k8s-test-testembe-bc3a31f355-363f3f02cca5c825.elb.eu-west-1.amazonaws.com:17686");
-                myRuntimeObservabilityBackendUrlText.setText("http://k8s-test-testcoll-9cc2840664-5a79b938206dc6d6.elb.eu-west-1.amazonaws.com:5050");
-            }
-        });
-        return switchButton;
+                .addComponent(resetButton)
+                .addComponentFillVertically(new JPanel(), 0)
+                .getPanel();
     }
 
 

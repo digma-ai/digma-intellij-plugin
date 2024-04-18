@@ -14,7 +14,7 @@ import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import kotlin.io.path.deleteIfExists
 
-private const val COMPOSE_FILE_URL = "https://get.digma.ai/"
+private const val COMPOSE_FILE_URL = "https://raw.githubusercontent.com/digma-ai/digma/bc/docker/docker-compose.yml"
 private const val COMPOSE_FILE_NAME = "docker-compose.yml"
 const val COMPOSE_FILE_DIR = "digma-docker"
 private const val RESOURCE_LOCATION = "docker-compose"

@@ -320,6 +320,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
+    public void resetThrottlingStatus() {
+        execute(() -> client.analyticsProvider.resetThrottlingStatus());
+    }
+
+    @Override
     public HttpResponse lowLevelCall(HttpRequest request) {
 
         okhttp3.Response okHttp3Response;
@@ -919,5 +924,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         @POST("/authentication/register")
         Call<String> register(@Body Map<String, Object> request);
 
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/PerformanceMetrics/reset-throttling")
+        Call<ResponseBody> resetThrottlingStatus();
     }
 }

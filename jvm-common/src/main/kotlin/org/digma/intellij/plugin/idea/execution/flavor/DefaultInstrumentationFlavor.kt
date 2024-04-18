@@ -70,8 +70,8 @@ open class DefaultInstrumentationFlavor : BaseInstrumentationFlavor() {
         return Int.MAX_VALUE - 1
     }
 
-    override fun getPreferredUserFlavor(): Flavor {
-        return Flavor.Default
+    override fun getFlavor(): InstrumentationFlavorType {
+        return InstrumentationFlavorType.Default
     }
 
 
@@ -139,7 +139,7 @@ open class DefaultInstrumentationFlavor : BaseInstrumentationFlavor() {
         projectHeuristics: ProjectHeuristics,
         moduleResolver: ModuleResolver,
         parametersExtractor: ParametersExtractor
-    ): String? {
+    ): Map<String, String> {
 
         return try {
             val isTest = isTest(instrumentationService, configuration, params)
@@ -150,7 +150,7 @@ open class DefaultInstrumentationFlavor : BaseInstrumentationFlavor() {
 
         } catch (e: Throwable) {
             ErrorReporter.getInstance().reportError("${this::class.java}.buildJavaToolOptions", e)
-            null
+            mapOf()
         }
     }
 

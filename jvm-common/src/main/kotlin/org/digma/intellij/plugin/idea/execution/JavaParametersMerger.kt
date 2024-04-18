@@ -2,6 +2,12 @@ package org.digma.intellij.plugin.idea.execution
 
 import com.intellij.execution.configurations.RunConfiguration
 import com.intellij.execution.configurations.SimpleProgramParameters
+import org.digma.intellij.plugin.idea.execution.flavor.InstrumentationFlavorType
+
+//JavaParametersMerger and its derivatives are aware of the instrumentation flavor,
+// usually will treat resource attributes differently for each flavor.
+//ConfigurationCleaner and its derivatives always do the opposite to clean without knowledge of
+// the flavor relying on conventions and known properties and environment variables names.
 
 open class JavaParametersMerger(
     protected val configuration: RunConfiguration,
@@ -12,8 +18,12 @@ open class JavaParametersMerger(
 
 
     //default implementation that is probably ok for most configurations
-    open fun mergeJavaToolOptionsAndOtelResourceAttributes(instrumentedJavaToolOptions: String?, otelResourceAttributes: String?) {
-        if (instrumentedJavaToolOptions != null) {
+    open fun mergeJavaToolOptionsAndOtelResourceAttributes(
+        instrumentationFlavorType: InstrumentationFlavorType,
+        instrumentedJavaToolOptions: String?,
+        otelResourceAttributes: Map<String, String>
+    ) {
+        if (!instrumentedJavaToolOptions.isNullOrBlank()) {
             var javaToolOptions = instrumentedJavaToolOptions
             val currentJavaToolOptions = params.env[JAVA_TOOL_OPTIONS]
             if (currentJavaToolOptions != null) {
@@ -22,22 +32,63 @@ open class JavaParametersMerger(
             params.env[JAVA_TOOL_OPTIONS] = javaToolOptions
         }
 
-        updateOtelResourceAttribute(configuration, params, otelResourceAttributes)
+        updateResourceAttribute(configuration, params, instrumentationFlavorType, otelResourceAttributes)
     }
 
 
-    private fun updateOtelResourceAttribute(configuration: RunConfiguration, params: SimpleProgramParameters, ourOtelResourceAttributes: String?) {
+    private fun updateResourceAttribute(
+        configuration: RunConfiguration,
+        params: SimpleProgramParameters,
+        instrumentationFlavorType: InstrumentationFlavorType,
+        ourOtelResourceAttributes: Map<String, String>
+    ) {
 
-        if (ourOtelResourceAttributes != null) {
-
-            val mergedOtelResourceAttributes = if (params.env.containsKey(OTEL_RESOURCE_ATTRIBUTES)) {
-                params.env[OTEL_RESOURCE_ATTRIBUTES].plus(",")
-            } else {
-                ""
-            }.plus(ourOtelResourceAttributes)
-
-            params.env[OTEL_RESOURCE_ATTRIBUTES] = mergedOtelResourceAttributes
+        if (ourOtelResourceAttributes.isEmpty()) {
+            return
         }
+
+        when (instrumentationFlavorType) {
+            InstrumentationFlavorType.Default,
+            InstrumentationFlavorType.JavaServer,
+            InstrumentationFlavorType.Micronaut,
+            InstrumentationFlavorType.OpenLiberty,
+            InstrumentationFlavorType.Quarkus -> updateOtelResourceAttribute(configuration, params, ourOtelResourceAttributes)
+
+            InstrumentationFlavorType.SpringBootMicrometer -> updateSpringBootMicrometerResourceAttribute(
+                configuration,
+                params,
+                ourOtelResourceAttributes
+            )
+        }
+    }
+
+
+    private fun updateOtelResourceAttribute(
+        configuration: RunConfiguration,
+        params: SimpleProgramParameters,
+        ourOtelResourceAttributes: Map<String, String>
+    ) {
+
+        val ourOtelResourceAttributesStr = mapToFlatString(ourOtelResourceAttributes)
+
+        val mergedOtelResourceAttributes = if (params.env.containsKey(OTEL_RESOURCE_ATTRIBUTES)) {
+            params.env[OTEL_RESOURCE_ATTRIBUTES].plus(",")
+        } else {
+            ""
+        }.plus(ourOtelResourceAttributesStr)
+
+        params.env[OTEL_RESOURCE_ATTRIBUTES] = mergedOtelResourceAttributes
+    }
+
+    private fun updateSpringBootMicrometerResourceAttribute(
+        configuration: RunConfiguration,
+        params: SimpleProgramParameters,
+        ourOtelResourceAttributes: Map<String, String>
+    ) {
+        //need to replace the map because its immutable
+        val newEnv = params.env.toMutableMap()
+        newEnv.putAll(ourOtelResourceAttributes)
+        params.env = newEnv
     }
 
 

@@ -23,3 +23,9 @@ fun getModuleMetadata(module: Module?): ModuleMetadata? {
     val moduleExt = modulesDepsService.getModuleExt(module.name) ?: return null
     return moduleExt.metadata
 }
+
+
+fun mapToFlatString(attributes: Map<String, String>): String {
+    return attributes.entries.joinToString(",")
+}
+

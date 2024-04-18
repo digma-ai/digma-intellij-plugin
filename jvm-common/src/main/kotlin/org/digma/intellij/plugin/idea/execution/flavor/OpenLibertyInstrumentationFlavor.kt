@@ -48,8 +48,8 @@ class OpenLibertyInstrumentationFlavor : BaseInstrumentationFlavor() {
         return 1
     }
 
-    override fun getPreferredUserFlavor(): Flavor {
-        return Flavor.OpenLiberty
+    override fun getFlavor(): InstrumentationFlavorType {
+        return InstrumentationFlavorType.OpenLiberty
     }
 
 
@@ -88,7 +88,7 @@ class OpenLibertyInstrumentationFlavor : BaseInstrumentationFlavor() {
 
             javaToolOptionsBuilder
                 .withOtelSdkDisabledEqualsFalse()
-                .withOtelExporterEndpoint()
+                .withOtelExporterOtlpEndpoint()
                 .withMockitoSupport(isTest)
                 .withServiceName(moduleResolver, parametersExtractor, serviceNameProvider)
                 .withExtendedObservability()
@@ -110,7 +110,7 @@ class OpenLibertyInstrumentationFlavor : BaseInstrumentationFlavor() {
         projectHeuristics: ProjectHeuristics,
         moduleResolver: ModuleResolver,
         parametersExtractor: ParametersExtractor
-    ): String? {
+    ): Map<String, String> {
 
         return try {
             val isTest = isTest(instrumentationService, configuration, params)
@@ -121,7 +121,7 @@ class OpenLibertyInstrumentationFlavor : BaseInstrumentationFlavor() {
 
         } catch (e: Throwable) {
             ErrorReporter.getInstance().reportError("${this::class.java}.buildJavaToolOptions", e)
-            null
+            mapOf()
         }
     }
 

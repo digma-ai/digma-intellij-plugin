@@ -15,19 +15,17 @@ open class OtelResourceAttributesBuilder(
     private val runnerSettings: RunnerSettings?
 ) {
 
-    private val otelResourceAttributes = mutableListOf<String>()
+    private val otelResourceAttributes = mutableMapOf<String, String>()
 
 
     open fun withCommonResourceAttributes(isTest: Boolean, parametersExtractor: ParametersExtractor): OtelResourceAttributesBuilder {
 
         if (needToAddDigmaEnvironmentAttribute(parametersExtractor)) {
-            val envAttribute = if (isTest) {
-                "$DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE=$LOCAL_TESTS_ENV"
+            if (isTest) {
+                withOtelResourceAttribute(DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE, LOCAL_TESTS_ENV)
             } else {
-                "$DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE=$LOCAL_ENV"
+                withOtelResourceAttribute(DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE, LOCAL_ENV)
             }
-
-            withOtelResourceAttribute(envAttribute)
         }
 
         if (!parametersExtractor.hasDigmaEnvironmentIdAttribute(configuration, params) &&
@@ -44,8 +42,7 @@ open class OtelResourceAttributesBuilder(
 
     open fun withUserId(): OtelResourceAttributesBuilder {
         DigmaDefaultAccountHolder.getInstance().account?.userId?.let {
-            val userIdAttribute = "$DIGMA_USER_ID_RESOURCE_ATTRIBUTE=${it}"
-            withOtelResourceAttribute(userIdAttribute)
+            withOtelResourceAttribute(DIGMA_USER_ID_RESOURCE_ATTRIBUTE, it)
         }
         return this
     }
@@ -55,7 +52,7 @@ open class OtelResourceAttributesBuilder(
         val commitId = VcsService.getInstance(configuration.project).getCommitIdForCurrentProject()
             ?: return this
 
-        withOtelResourceAttribute("$DIGMA_SCM_COMMIT_ID_RESOURCE_ATTRIBUTE=$commitId")
+        withOtelResourceAttribute(DIGMA_SCM_COMMIT_ID_RESOURCE_ATTRIBUTE, commitId)
 
         return this
     }
@@ -67,15 +64,15 @@ open class OtelResourceAttributesBuilder(
     }
 
 
-    open fun withOtelResourceAttribute(attribute: String): OtelResourceAttributesBuilder {
+    open fun withOtelResourceAttribute(key: String, value: String): OtelResourceAttributesBuilder {
         //collecting otel resource attributes , they are built in the build method
-        otelResourceAttributes.add(attribute)
+        otelResourceAttributes[key] = value
         return this
     }
 
 
-    open fun build(): String {
-        return otelResourceAttributes.joinToString(",")
+    open fun build(): Map<String, String> {
+        return otelResourceAttributes
     }
 
 

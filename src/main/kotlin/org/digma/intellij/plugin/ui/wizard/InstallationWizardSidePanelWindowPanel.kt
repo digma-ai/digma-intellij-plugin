@@ -23,12 +23,12 @@ import org.cef.browser.CefMessageRouter
 import org.cef.callback.CefQueryCallback
 import org.cef.handler.CefLifeSpanHandlerAdapter
 import org.cef.handler.CefMessageRouterHandlerAdapter
-import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
+import org.digma.intellij.plugin.analytics.refreshEnvironmentsNowOnBackground
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
-import org.digma.intellij.plugin.common.UserId
+import org.digma.intellij.plugin.common.UniqueGeneratedUserId
 import org.digma.intellij.plugin.common.createObjectMapper
 import org.digma.intellij.plugin.digmathon.DigmathonActivationEvent
 import org.digma.intellij.plugin.digmathon.DigmathonProductKeyStateChangedEvent
@@ -84,7 +84,6 @@ import org.digma.intellij.plugin.ui.wizard.model.JcefDockerIsDockerInstalledRequ
 import org.digma.intellij.plugin.ui.wizard.model.JcefDockerResultPayload
 import org.digma.intellij.plugin.ui.wizard.model.JcefDockerResultRequest
 import org.digma.intellij.plugin.ui.wizard.model.SetObservabilityRequest
-import org.digma.intellij.plugin.wizard.InstallationWizardService
 import java.awt.BorderLayout
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
@@ -136,7 +135,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
         IS_WIZARD_SKIP_INSTALLATION_STEP to wizardSkipInstallationStep,
         DIGMATHON_ENABLED to DigmathonService.getInstance().getDigmathonState().isActive(),
         DIGMATHON_PRODUCT_KEY to DigmathonService.getInstance().getProductKey().orEmpty(),
-        USER_ID to UserId.userId,
+        USER_ID to UniqueGeneratedUserId.userId,
         USER_FINISHED_DIGMATHON to DigmathonService.getInstance().isUserFinishedDigmathon
     )
 
@@ -243,7 +242,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                     if (BackendConnectionMonitor.getInstance(project).isConnectionOk()) {
                         ConnectionCheckMessagePayload(ConnectionCheckResult.SUCCESS.value)
                     } else {
-                        AnalyticsService.getInstance(project).environment.refreshNowOnBackground()
+                        refreshEnvironmentsNowOnBackground(project)
                         ConnectionCheckMessagePayload(ConnectionCheckResult.FAILURE.value)
                     }
                 val message = ConnectionCheckMessageRequest(connectionCheckMessagePayload)
@@ -272,7 +271,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                             var i = 0
                             while (!BackendConnectionMonitor.getInstance(project).isConnectionOk() && i < 24) {
                                 Log.log(logger::warn, "waiting for connection")
-                                AnalyticsService.getInstance(project).environment.refreshNowOnBackground()
+                                refreshEnvironmentsNowOnBackground(project)
                                 delay(5000)
                                 i++
                             }
@@ -396,7 +395,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                             var i = 0
                             while (!BackendConnectionMonitor.getInstance(project).isConnectionOk() && i < 24) {
                                 Log.log(logger::warn, "waiting for connection")
-                                AnalyticsService.getInstance(project).environment.refreshNowOnBackground()
+                                refreshEnvironmentsNowOnBackground(project)
                                 delay(5000)
                                 i++
                             }

@@ -8,6 +8,7 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.execution.RunConfigurationInstrumentationService
 import org.digma.intellij.plugin.idea.execution.JavaToolOptionsBuilder
 import org.digma.intellij.plugin.idea.execution.ModuleResolver
+import org.digma.intellij.plugin.idea.execution.OtelResourceAttributesBuilder
 import org.digma.intellij.plugin.idea.execution.ParametersExtractor
 import org.digma.intellij.plugin.idea.execution.ProjectHeuristics
 import org.digma.intellij.plugin.idea.execution.ServiceNameProvider
@@ -88,7 +89,6 @@ class OpenLibertyInstrumentationFlavor : BaseInstrumentationFlavor() {
             javaToolOptionsBuilder
                 .withOtelSdkDisabledEqualsFalse()
                 .withOtelExporterEndpoint()
-                .withTest(isTest, parametersExtractor)
                 .withMockitoSupport(isTest)
                 .withServiceName(moduleResolver, parametersExtractor, serviceNameProvider)
                 .withExtendedObservability()
@@ -100,6 +100,31 @@ class OpenLibertyInstrumentationFlavor : BaseInstrumentationFlavor() {
             null
         }
     }
+
+
+    override fun buildOtelResourceAttributes(
+        instrumentationService: RunConfigurationInstrumentationService,
+        otelResourceAttributesBuilder: OtelResourceAttributesBuilder,
+        configuration: RunConfiguration,
+        params: SimpleProgramParameters,
+        projectHeuristics: ProjectHeuristics,
+        moduleResolver: ModuleResolver,
+        parametersExtractor: ParametersExtractor
+    ): String? {
+
+        return try {
+            val isTest = isTest(instrumentationService, configuration, params)
+
+            otelResourceAttributesBuilder
+                .withCommonResourceAttributes(isTest, parametersExtractor)
+                .build()
+
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError("${this::class.java}.buildJavaToolOptions", e)
+            null
+        }
+    }
+
 
     override fun isTest(
         instrumentationService: RunConfigurationInstrumentationService,

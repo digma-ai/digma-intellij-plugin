@@ -6,6 +6,7 @@ import com.intellij.execution.configurations.SimpleProgramParameters
 import org.digma.intellij.plugin.execution.RunConfigurationInstrumentationService
 import org.digma.intellij.plugin.idea.execution.JavaToolOptionsBuilder
 import org.digma.intellij.plugin.idea.execution.ModuleResolver
+import org.digma.intellij.plugin.idea.execution.OtelResourceAttributesBuilder
 import org.digma.intellij.plugin.idea.execution.ParametersExtractor
 import org.digma.intellij.plugin.idea.execution.ProjectHeuristics
 import org.digma.intellij.plugin.idea.execution.ServiceNameProvider
@@ -116,6 +117,17 @@ interface InstrumentationFlavor {
         moduleResolver: ModuleResolver,
         parametersExtractor: ParametersExtractor,
         serviceNameProvider: ServiceNameProvider
+    ): String?
+
+
+    fun buildOtelResourceAttributes(
+        instrumentationService: RunConfigurationInstrumentationService,
+        otelResourceAttributesBuilder: OtelResourceAttributesBuilder,
+        configuration: RunConfiguration,
+        params: SimpleProgramParameters,
+        projectHeuristics: ProjectHeuristics,
+        moduleResolver: ModuleResolver,
+        parametersExtractor: ParametersExtractor
     ): String?
 
 

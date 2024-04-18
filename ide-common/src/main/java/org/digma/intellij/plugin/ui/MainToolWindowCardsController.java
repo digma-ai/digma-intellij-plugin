@@ -18,6 +18,7 @@ import java.awt.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.*;
 
+import static org.digma.intellij.plugin.analytics.EnvUtilsKt.refreshEnvironmentsNowOnBackground;
 import static org.digma.intellij.plugin.persistence.PersistenceUtilsKt.updateInstallationWizardFlag;
 
 /**
@@ -31,7 +32,6 @@ public class MainToolWindowCardsController implements Disposable {
 
 
     private static final Logger LOGGER = Logger.getInstance(MainToolWindowCardsController.class);
-
 
 
     public enum MainWindowCard {
@@ -192,7 +192,7 @@ public class MainToolWindowCardsController implements Disposable {
             wizard.wizardPanel = null;
 
             //refresh after wizard finished will refresh environments and insights view
-            AnalyticsService.getInstance(project).getEnvironment().refreshNowOnBackground();
+            refreshEnvironmentsNowOnBackground(project);
 
         } else {
             Log.log(LOGGER::debug, project, "wizardFinished was called but wizard is not on.");
@@ -242,7 +242,7 @@ public class MainToolWindowCardsController implements Disposable {
             troubleshooting.troubleshootingPanel = null;
 
             //refresh after troubleshooting finished will refresh environments and insights view
-            AnalyticsService.getInstance(project).getEnvironment().refreshNowOnBackground();
+            refreshEnvironmentsNowOnBackground(project);
 
         } else {
             Log.log(LOGGER::debug, project, "troubleshootingFinished was called but troubleshooting is not on.");

@@ -12,12 +12,14 @@ import java.util.Map;
 public class DocumentationVirtualFile extends LightVirtualFile implements DigmaVirtualFileMarker {
 
     public static final Key<String> DOCUMENTATION_EDITOR_KEY = Key.create("Digma.DOCUMENTATION_EDITOR_KEY");
+
     private static final Map<String, String> titles = Map.of(
             "run-digma-with-terminal", "Digma in the Terminal",
             "run-digma-with-docker", "Digma with Docker",
             "run-digma-with-gradle-tasks", "Digma using gradle",
             "environment-types", "Insights Overview"
     );
+
     private String documentationPage;
 
     private static String getTitle(String documentationPage)
@@ -27,8 +29,10 @@ public class DocumentationVirtualFile extends LightVirtualFile implements DigmaV
         }
         return documentationPage;
     }
+
     public DocumentationVirtualFile(String documentationPage) {
         super(getTitle(documentationPage));
+        this.documentationPage = documentationPage;
         setFileType(DocumentationFileType.INSTANCE);
         setWritable(false);
         putUserData(FileEditorManagerImpl.FORBID_PREVIEW_TAB, true);
@@ -40,9 +44,7 @@ public class DocumentationVirtualFile extends LightVirtualFile implements DigmaV
 
     @NotNull
     public static VirtualFile createVirtualFile(@NotNull String documentationPage) {
-        //todo: other title
         var file = new DocumentationVirtualFile(documentationPage);
-        file.setDocumentationPage(documentationPage);
         DOCUMENTATION_EDITOR_KEY.set(file, DocumentationFileEditorProvider.DOCUMENTATION_EDITOR_TYPE);
         return file;
     }

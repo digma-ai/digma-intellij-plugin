@@ -11,6 +11,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
+import org.digma.intellij.plugin.analytics.refreshEnvironmentsNowOnBackground
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
@@ -23,12 +24,16 @@ import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.ui.common.openJaegerFromRecentActivity
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
 import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
+import org.digma.intellij.plugin.ui.recentactivity.model.AddToConfigData
+import org.digma.intellij.plugin.ui.recentactivity.model.AdditionToConfigResult
 import org.digma.intellij.plugin.ui.recentactivity.model.CloseLiveViewMessage
 import org.digma.intellij.plugin.ui.recentactivity.model.DigmathonProgressDataPayload
 import org.digma.intellij.plugin.ui.recentactivity.model.OpenRegistrationDialogMessage
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityEntrySpanForTracePayload
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityEntrySpanPayload
+import org.digma.intellij.plugin.ui.recentactivity.model.SetAddToConfigResult
 import org.digma.intellij.plugin.ui.recentactivity.model.SetDigmathonProgressData
+import org.digma.intellij.plugin.ui.recentactivity.model.SetEnvironmentCreatedMessage
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.atomic.AtomicBoolean
@@ -62,17 +67,17 @@ class RecentActivityService(val project: Project) : Disposable {
     }
 
 
-    fun getRecentActivities(environments: List<String>): RecentActivityResult? {
+    fun getRecentActivities(environmentsIds: List<String>): RecentActivityResult? {
 
         return try {
 
-            Log.log(logger::trace, project, "getRecentActivities called with envs: {}", environments)
+            Log.log(logger::trace, project, "getRecentActivities called with envs: {}", environmentsIds)
 
-            val recentActivityData = project.service<AnalyticsService>().getRecentActivity(environments)
+            val recentActivityData = AnalyticsService.getInstance(project).getRecentActivity(environmentsIds)
 
             if (recentActivityData.entries.isNotEmpty() && !service<PersistenceService>().isFirstTimeRecentActivityReceived()) {
                 service<PersistenceService>().setFirstTimeRecentActivityReceived()
-                project.service<ActivityMonitor>().registerFirstTimeRecentActivityReceived()
+                ActivityMonitor.getInstance(project).registerFirstTimeRecentActivityReceived()
             }
 
             Log.log(logger::trace, project, "got recent activity {}", recentActivityData)
@@ -80,7 +85,7 @@ class RecentActivityService(val project: Project) : Disposable {
             recentActivityData
 
         } catch (e: AnalyticsServiceException) {
-            Log.warnWithException(logger, project, e, "AnalyticsServiceException for getRecentActivity: {}", e.meaningfulMessage)
+            Log.debugWithException(logger, project, e, "AnalyticsServiceException for getRecentActivity: {}", e.meaningfulMessage)
             ErrorReporter.getInstance().reportError(project, "RecentActivityService.getRecentActivities", e)
             null
         }
@@ -109,7 +114,7 @@ class RecentActivityService(val project: Project) : Disposable {
         if (payload != null) {
             openJaegerFromRecentActivity(project, payload.traceId, payload.span.scopeId, payload.span.spanCodeObjectId)
         } else {
-            Log.log({ message: String? -> logger.debug(message) }, "processRecentActivityGoToTraceRequest payload is empty")
+            Log.log(logger::debug, "processRecentActivityGoToTraceRequest payload is empty")
         }
     }
 
@@ -142,12 +147,50 @@ class RecentActivityService(val project: Project) : Disposable {
             } else {
                 Log.log(logger::trace, project, "deleteEnvironment {} faled", environment)
             }
-            AnalyticsService.getInstance(project).environment.refreshNowOnBackground()
+            refreshEnvironmentsNowOnBackground(project)
 
         } catch (e: Exception) {
-            Log.warnWithException(logger, project, e, "error deleting environment")
+            Log.debugWithException(logger, project, e, "error deleting environment")
             ErrorReporter.getInstance().reportError(project, "RecentActivityService.deleteEnvironment", e)
         }
+    }
+
+    fun createEnvironment(request: MutableMap<String, Any>) {
+        val response = try {
+            val result = project.service<AnalyticsService>().createEnvironment(request);
+            result
+        } catch (e: AnalyticsServiceException) {
+            Log.warnWithException(logger, project, e, "Error creation {}", e.message)
+            ErrorReporter.getInstance().reportError(project, "RecentActivityService.createEnvironment", e)
+            ""
+        }
+        refreshEnvironmentsNowOnBackground(project)
+        val msg = SetEnvironmentCreatedMessage(response)
+        jCefComponent?.let {
+            serializeAndExecuteWindowPostMessageJavaScript(it.jbCefBrowser.cefBrowser, msg)
+        }
+    }
+
+    fun deleteEnvironmentV2(id: String) {
+        try {
+            project.service<AnalyticsService>().deleteEnvironmentV2(id);
+            refreshEnvironmentsNowOnBackground(project)
+        } catch (e: AnalyticsServiceException) {
+            Log.warnWithException(logger, project, e, "Error delete {}", e.message)
+            ErrorReporter.getInstance().reportError(project, "RecentActivityService.deleteEnvironmentV2", e)
+        }
+    }
+
+    fun addVarRunToConfig(environment: String){
+        val result =  service<AddEnvironmentsService>().addToCurrentRunConfig(project, environment)
+
+        val msg = SetAddToConfigResult(
+            AddToConfigData(environment, if(result) AdditionToConfigResult.success else AdditionToConfigResult.failure))
+        jCefComponent?.let {
+            serializeAndExecuteWindowPostMessageJavaScript(it.jbCefBrowser.cefBrowser, msg)
+        }
+
+        project.service<RecentActivityUpdater>().updateLatestActivities()
     }
 
     fun openRegistrationDialog() {

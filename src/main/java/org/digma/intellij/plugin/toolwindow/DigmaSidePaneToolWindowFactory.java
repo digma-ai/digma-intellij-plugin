@@ -117,7 +117,7 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
         cardsPanel.setBorder(JBUI.Borders.empty());
 
         var noConnectionPanel = NoConnectionPanelKt.createNoConnectionPanel(project,parentDisposable);
-        var updateBackendPanel = AggressiveUpdatePanelKt.createAggressiveUpdatePanel(project, parentDisposable, "main");
+        var aggressiveUpdatePanel = AggressiveUpdatePanelKt.createAggressiveUpdatePanel(project, parentDisposable, "main");
 
 
         cardsPanel.add(mainPanel, MainToolWindowCardsController.MainWindowCard.MAIN.name());
@@ -126,8 +126,8 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
         cardsPanel.add(noConnectionPanel, MainToolWindowCardsController.MainWindowCard.NO_CONNECTION.name());
         cardLayout.addLayoutComponent(noConnectionPanel, MainToolWindowCardsController.MainWindowCard.NO_CONNECTION.name());
 
-        cardsPanel.add(updateBackendPanel, MainToolWindowCardsController.MainWindowCard.UPDATE_MODE.name());
-        cardLayout.addLayoutComponent(updateBackendPanel, MainToolWindowCardsController.MainWindowCard.UPDATE_MODE.name());
+        cardsPanel.add(aggressiveUpdatePanel, MainToolWindowCardsController.MainWindowCard.UPDATE_MODE.name());
+        cardLayout.addLayoutComponent(aggressiveUpdatePanel, MainToolWindowCardsController.MainWindowCard.UPDATE_MODE.name());
 
         //start at MAIN
         cardLayout.show(cardsPanel, MainToolWindowCardsController.MainWindowCard.MAIN.name());

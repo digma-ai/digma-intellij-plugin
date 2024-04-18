@@ -11,10 +11,10 @@ import com.intellij.psi.*;
 import kotlin.Pair;
 import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.document.DocumentInfoService;
-import org.digma.intellij.plugin.env.Env;
 import org.digma.intellij.plugin.instrumentation.*;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.*;
+import org.digma.intellij.plugin.model.rest.environment.Env;
 import org.jetbrains.annotations.*;
 
 import java.util.*;

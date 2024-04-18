@@ -4,10 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
-import org.digma.intellij.plugin.analytics.AnalyticsService
+import org.digma.intellij.plugin.analytics.setCurrentEnvironmentById
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.CodeObjectsUtil
-import org.digma.intellij.plugin.env.EnvironmentsSupplier
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.tests.FilterForLatestTests
 import org.digma.intellij.plugin.posthog.ActivityMonitor
@@ -79,8 +78,7 @@ class TestsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHandl
         ActivityMonitor.getInstance(project).registerSpanLinkClicked(spanCodeObjectId, UserActionOrigin.Tests)
 
         Backgroundable.ensurePooledThreadWithoutReadAccess {
-            val environmentsSupplier: EnvironmentsSupplier = AnalyticsService.getInstance(project).environment
-            environmentsSupplier.setCurrent(environment) {
+            setCurrentEnvironmentById(project, environment) {
                 ScopeManager.getInstance(project).changeScope(SpanScope(spanCodeObjectId))
             }
         }

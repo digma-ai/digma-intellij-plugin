@@ -4,8 +4,11 @@ const val JAVA_TOOL_OPTIONS = "JAVA_TOOL_OPTIONS"
 const val ORG_JAVA_TOOL_OPTIONS = "ORG_JAVA_TOOL_OPTIONS"
 const val OTEL_RESOURCE_ATTRIBUTES = "OTEL_RESOURCE_ATTRIBUTES"
 const val ORG_OTEL_RESOURCE_ATTRIBUTES = "ORG_OTEL_RESOURCE_ATTRIBUTES"
+const val DIGMA_ENVIRONMENT_ID_RESOURCE_ATTRIBUTE = "digma.environment.id"
 const val DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE = "digma.environment"
+const val DIGMA_USER_ID_RESOURCE_ATTRIBUTE = "digma.user.id"
 const val DIGMA_OBSERVABILITY_ENV_VAR_NAME = "DIGMA_OBSERVABILITY"
+const val DIGMA_SCM_COMMIT_ID_RESOURCE_ATTRIBUTE = "scm.commit.id"
 
 const val OTEL_SERVICE_NAME_ENV_VAR_NAME = "OTEL_SERVICE_NAME"
 const val OTEL_SERVICE_NAME_PROP_NAME = "otel.service.name"
@@ -128,6 +131,22 @@ val KNOWN_IRRELEVANT_TASKS = setOf(
     "runClientTester",
     "javaToolchains",
     "outgoingVariants",
-    "resolvableConfigurations"
+    "resolvableConfigurations",
+    "spotlessApply",
+    "javaagentClasses",
+    "testFixturesClasses",
+    "app-server:server",
+    "buildAndPushDockerImage",
+    "runClientTester",
+    "sonarqube",
+    "qualityCheck",
+    "integrationTestClasses",
+
+    /*
+     * Intellij plugin project
+     */
+    "buildPlugin",
+    "runIde",
+    "setupDependencies"
 
     )

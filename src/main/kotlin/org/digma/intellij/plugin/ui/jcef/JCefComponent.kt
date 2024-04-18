@@ -19,14 +19,17 @@ import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
 import org.digma.intellij.plugin.analytics.EnvironmentChanged
 import org.digma.intellij.plugin.analytics.InsightStatsChangedEvent
+import org.digma.intellij.plugin.analytics.getAllEnvironments
+import org.digma.intellij.plugin.auth.AuthManager
+import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.digmathon.DigmathonActivationEvent
 import org.digma.intellij.plugin.digmathon.DigmathonProductKeyStateChangedEvent
 import org.digma.intellij.plugin.digmathon.UserFinishedDigmathonEvent
 import org.digma.intellij.plugin.docker.DockerService
-import org.digma.intellij.plugin.env.Env
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
+import org.digma.intellij.plugin.model.rest.environment.Env
 import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
 import org.digma.intellij.plugin.observability.ObservabilityChanged
 import org.digma.intellij.plugin.scope.ScopeChangedEvent
@@ -54,6 +57,7 @@ private constructor(
     private val settingsChangeListener: SettingsChangeListener
     private val analyticsServiceConnectionEventMessageBusConnection: MessageBusConnection
     private val settingsListenerParentDisposable = Disposer.newDisposable()
+    private val authInfoChangeListenerParentDisposable = Disposer.newDisposable()
     private val connectionEventAlarmParentDisposable = Disposer.newDisposable()
     private val userRegistrationParentDisposable = Disposer.newDisposable()
     private val environmentChangeParentDisposable = Disposer.newDisposable()
@@ -103,6 +107,13 @@ private constructor(
         }
 
         ApplicationUISettingsChangeNotifier.getInstance(project).addSettingsChangeListener(settingsChangeListener)
+        AuthManager.getInstance().addAuthInfoChangeListener({ authInfo ->
+            try {
+                sendUserInfoMessage(jbCefBrowser.cefBrowser, authInfo.userId)
+            } catch (e: Throwable) {
+                ErrorReporter.getInstance().reportError("JCefComponent.userChanged", e)
+            }
+        }, authInfoChangeListenerParentDisposable)
 
         analyticsServiceConnectionEventMessageBusConnection = project.messageBus.connect()
         analyticsServiceConnectionEventMessageBusConnection.subscribe(
@@ -150,6 +161,7 @@ private constructor(
                     sendBackendAboutInfo(jbCefBrowser.cefBrowser, project)
                     val status = service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionLost()
                     updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
+                    sendUserInfoMessage(jbCefBrowser.cefBrowser, DigmaDefaultAccountHolder.getInstance().account?.userId)
                 } catch (e: Throwable) {
                     ErrorReporter.getInstance().reportError("JCefComponent.settingsChanged", e)
                 }
@@ -183,7 +195,7 @@ private constructor(
                     try {
                         sendEnvironmentsList(
                             jbCefBrowser.cefBrowser,
-                            AnalyticsService.getInstance(project).environment.getEnvironments()
+                            getAllEnvironments(project)
                         )
                     } catch (e: Throwable) {
                         ErrorReporter.getInstance().reportError("JCefComponent.environmentsListChanged", e)
@@ -253,9 +265,7 @@ private constructor(
                 }
             }
         )
-
     }
-
 
     override fun dispose() {
         try {
@@ -271,6 +281,7 @@ private constructor(
             Disposer.dispose(scopeChangeParentDisposable)
             Disposer.dispose(stateChangeParentDisposable)
             Disposer.dispose(insightStatsChangeParentDisposable)
+            Disposer.dispose(authInfoChangeListenerParentDisposable)
             jbCefBrowser.jbCefClient.removeLifeSpanHandler(lifeSpanHandler, jbCefBrowser.cefBrowser)
             jbCefBrowser.dispose()
             cefMessageRouter.dispose()

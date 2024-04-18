@@ -29,7 +29,7 @@ public class Backgroundable {
             new Task.Backgroundable(project, name) {
                 @Override
                 public void run(@NotNull ProgressIndicator indicator) {
-                    runWithErrorReporting(project,name,task);
+                    runWithErrorReporting(project, name, task);
                 }
             }.queue();
         } else {
@@ -65,14 +65,14 @@ public class Backgroundable {
         new Task.Backgroundable(project, name) {
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
-                runWithErrorReporting(project,name,task);
+                runWithErrorReporting(project, name, task);
             }
         }.queue();
 
     }
 
     //it's better to use ensurePooledThreadWithoutReadAccess
-    public static void ensurePooledThread(@NotNull Runnable action){
+    public static void ensurePooledThread(@NotNull Runnable action) {
         if (EDT.isEdt()) {
             executeOnPooledThread(action);
         } else {
@@ -118,10 +118,10 @@ public class Backgroundable {
 
 
     private static void runWithErrorReporting(Project project, String name, Runnable task) {
-        try{
+        try {
             task.run();
         } catch (Throwable e) {
-            Log.warnWithException(LOGGER, e, "Exception in task {}",name);
+            Log.warnWithException(LOGGER, e, "Exception in task {}", name);
             ErrorReporter.getInstance().reportError(project, "Backgroundable.runWithErrorReporting(Project,Runnable)" + name, e);
         }
     }

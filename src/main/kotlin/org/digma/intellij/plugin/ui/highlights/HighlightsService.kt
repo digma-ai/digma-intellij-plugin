@@ -9,7 +9,6 @@ import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.insights.InsightsServiceImpl
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.model.rest.highlights.HighlightsPerformanceResponse
 
 
 @Service(Service.Level.PROJECT)
@@ -24,12 +23,12 @@ class HighlightsService(val project: Project) : InsightsServiceImpl(project) {
         }
     }
 
-    fun getHighlightsPerformance(queryParams: MutableMap<String, Any>): List<HighlightsPerformanceResponse>? {
+    fun getHighlightsPerformance(queryParams: MutableMap<String, Any>): String? {
         EDT.assertNonDispatchThread()
 
         return try {
-            val highlightsPerformance = AnalyticsService.getInstance(project).getHighlightsPerformance(queryParams)
-            highlightsPerformance
+            val result = AnalyticsService.getInstance(project).getHighlightsPerformance(queryParams)
+            result
         } catch (e: AnalyticsServiceException) {
             Log.warnWithException(logger, project, e, "Error loading highlights performance {}", e.message)
             null

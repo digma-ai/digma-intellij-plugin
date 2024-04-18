@@ -13,6 +13,12 @@ import org.cef.callback.CefQueryCallback
 import org.cef.handler.CefMessageRouterHandlerAdapter
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.InsightStatsChangedEvent
+import org.digma.intellij.plugin.analytics.getAllEnvironments
+import org.digma.intellij.plugin.analytics.getEnvironmentNameById
+import org.digma.intellij.plugin.analytics.setCurrentEnvironmentById
+import org.digma.intellij.plugin.auth.AuthManager
+import org.digma.intellij.plugin.auth.LoginResult
+import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.createObjectMapper
@@ -32,10 +38,13 @@ import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import org.digma.intellij.plugin.ui.common.updateObservabilityValue
 import org.digma.intellij.plugin.ui.jcef.model.GetFromPersistenceRequest
+import org.digma.intellij.plugin.ui.jcef.model.LoginResultPayload
 import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest
 import org.digma.intellij.plugin.ui.jcef.model.OpenInInternalBrowserRequest
 import org.digma.intellij.plugin.ui.jcef.model.SaveToPersistenceRequest
 import org.digma.intellij.plugin.ui.jcef.model.SendTrackingEventRequest
+import org.digma.intellij.plugin.ui.jcef.model.SetLoginResultMessage
+import org.digma.intellij.plugin.ui.jcef.model.SetRegistrationMessage
 import org.digma.intellij.plugin.ui.jcef.persistence.JCEFPersistenceService
 import org.digma.intellij.plugin.ui.jcef.state.JCEFStateManager
 
@@ -155,10 +164,10 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                     }
 
                     JCEFGlobalConstants.GLOBAL_OPEN_DASHBOARD -> {
-                        ActivityMonitor.getInstance(project).registerUserAction("open dashboard clicked")
-                        val environment = getEnvironmentFromPayload(requestJsonNode)
-                        environment?.let { env ->
-                            DashboardService.getInstance(project).openDashboard("Dashboard Panel - ${env.name}")
+                        val envId = getEnvironmentIdFromPayload(requestJsonNode)
+                        envId?.let { env ->
+                            val envName = getEnvironmentNameById(project, env)
+                            DashboardService.getInstance(project).openDashboard("Dashboard Panel - $envName")
                         }
                     }
 
@@ -195,10 +204,37 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                         changeScope(requestJsonNode)
                     }
 
+                    JCEFGlobalConstants.GLOBAL_REGISTRATION -> {
+                        val payload = getPayloadFromRequest(requestJsonNode)
+                        payload?.let {
+                            val userDetails = mapOf("email" to payload.get("email").asText());
+                            ActivityMonitor.getInstance(project).registerCustomEvent("register user", userDetails)
+
+                            val requestParams = getMapFromNode(it, objectMapper)
+                            val result = AnalyticsService.getInstance(project).register(requestParams)
+                            val message = SetRegistrationMessage(result)
+                            serializeAndExecuteWindowPostMessageJavaScript(browser, message)
+
+                            ActivityMonitor.getInstance(project).registerUserAction("user registered", userDetails)
+                        }
+                    }
+
+                    JCEFGlobalConstants.GLOBAL_LOGOUT -> {
+                        AuthManager.getInstance().logout()
+                    }
+
+                    JCEFGlobalConstants.GLOBAL_LOGIN -> {
+                        val result = login(requestJsonNode)
+                        val message = result?.let {
+                            SetLoginResultMessage(LoginResultPayload(result.isSuccess, result.error))
+                        } ?: SetLoginResultMessage(LoginResultPayload(false, null))
+
+                        serializeAndExecuteWindowPostMessageJavaScript(browser, message)
+                    }
+
                     JCEFGlobalConstants.GLOBAL_CHANGE_VIEW -> {
                         changeView(requestJsonNode)
                     }
-
 
                     JCEFGlobalConstants.GLOBAL_UPDATE_STATE -> {
                         updateState(requestJsonNode)
@@ -211,16 +247,21 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                     JCEFGlobalConstants.GLOBAL_GET_INSIGHT_STATS -> {
                         val payload = getPayloadFromRequest(requestJsonNode)
                         payload?.let {
-                            val scopeNode = payload.get("scope");
-                            if (scopeNode is NullNode){
-                                val stats = AnalyticsService.getInstance(project).getInsightsStats(null);
+                            val scopeNode = payload.get("scope")
+                            if (scopeNode is NullNode) {
+                                val stats = AnalyticsService.getInstance(project).getInsightsStats(null)
                                 project.messageBus.syncPublisher(InsightStatsChangedEvent.INSIGHT_STATS_CHANGED_TOPIC)
                                     .insightStatsChanged(null, stats.analyticsInsightsCount, stats.issuesInsightsCount, stats.unreadInsightsCount)
                             } else {
                                 val spanCodeObjectId = scopeNode.get("span").get("spanCodeObjectId").asText()
-                                val stats = AnalyticsService.getInstance(project).getInsightsStats(spanCodeObjectId);
+                                val stats = AnalyticsService.getInstance(project).getInsightsStats(spanCodeObjectId)
                                 project.messageBus.syncPublisher(InsightStatsChangedEvent.INSIGHT_STATS_CHANGED_TOPIC)
-                                    .insightStatsChanged(scopeNode, stats.analyticsInsightsCount, stats.issuesInsightsCount, stats.unreadInsightsCount)
+                                    .insightStatsChanged(
+                                        scopeNode,
+                                        stats.analyticsInsightsCount,
+                                        stats.issuesInsightsCount,
+                                        stats.unreadInsightsCount
+                                    )
                             }
 
 
@@ -305,7 +346,9 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
 
         updateDigmaEngineStatus(project, browser)
 
-        sendEnvironmentsList(browser, AnalyticsService.getInstance(project).environment.getEnvironments())
+        sendEnvironmentsList(browser, getAllEnvironments(project))
+
+        sendUserInfoMessage(browser, DigmaDefaultAccountHolder.getInstance().account?.userId)
 
         sendScopeChangedMessage(
             browser,
@@ -337,10 +380,23 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
     }
 
     private fun changeEnvironment(requestJsonNode: JsonNode) {
-        val environment = getEnvironmentFromPayload(requestJsonNode)
-        environment?.let { env ->
-            AnalyticsService.getInstance(project).environment.setCurrent(env)
+        val environment = getEnvironmentIdFromPayload(requestJsonNode)
+        environment?.let { envId ->
+            setCurrentEnvironmentById(project, envId)
         }
+    }
+
+    private fun login (requestJsonNode: JsonNode): LoginResult? {
+        val payload = getPayloadFromRequest(requestJsonNode)
+        val result = payload?.let {
+            try {
+                AuthManager.getInstance().logout()
+                AuthManager.getInstance().login(it.get("email").asText(), it.get("password").asText())
+            } catch (e: Exception) {
+                return@let LoginResult(false, null, null);
+            }
+        }
+        return result;
     }
 }
 

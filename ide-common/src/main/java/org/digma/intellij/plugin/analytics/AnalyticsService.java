@@ -107,7 +107,7 @@ public class AnalyticsService implements Disposable {
             if (shouldReplaceClient) {
                 Log.log(LOGGER::debug, "api url changed to {}, calling replace client", myApiUrl);
                 AuthManager.getInstance().logout();
-                AuthManager.getInstance().pause();
+                AuthManager.getInstance().pauseBeforeClientChange();
                 replaceClient(myApiUrl);
             }
 

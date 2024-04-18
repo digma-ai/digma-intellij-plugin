@@ -302,7 +302,9 @@ class AuthManager {
     }
 
 
-    fun pause() {
+    //pause the AuthManager before replacing the analytics provider.
+    //can be resumed only from this class after a new client is set
+    fun pauseBeforeClientChange() {
         Log.log(logger::info, "pausing current proxy, analytics url {}", analyticsProvider?.apiUrl)
         analyticsProvider = null
         isPaused.set(true)

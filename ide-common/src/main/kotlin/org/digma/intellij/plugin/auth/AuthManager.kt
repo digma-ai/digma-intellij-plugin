@@ -45,7 +45,7 @@ class AuthManager {
     private var analyticsProvider: RestAnalyticsProvider? = null
 
     private val loginOrRefreshLock = ReentrantLock()
-    private val isProxyPaused: AtomicBoolean = AtomicBoolean(true)
+    private val isPaused: AtomicBoolean = AtomicBoolean(true)
 
     companion object {
         @JvmStatic
@@ -96,7 +96,7 @@ class AuthManager {
         )
 
         Log.log(logger::info, "resuming current proxy, analytics url {}", analyticsProvider?.apiUrl)
-        isProxyPaused.set(false)
+        isPaused.set(false)
         return proxy
     }
 
@@ -281,6 +281,10 @@ class AuthManager {
 
     private fun fireChange() {
 
+        if (isPaused.get()) {
+            return
+        }
+
         Log.log(
             logger::trace, "firing authInfoChanged, default account {}, analytics url {}",
             DigmaDefaultAccountHolder.getInstance().account,
@@ -298,10 +302,10 @@ class AuthManager {
     }
 
 
-    fun pauseCurrentProxy() {
+    fun pause() {
         Log.log(logger::info, "pausing current proxy, analytics url {}", analyticsProvider?.apiUrl)
         analyticsProvider = null
-        isProxyPaused.set(true)
+        isPaused.set(true)
     }
 
 
@@ -467,7 +471,7 @@ class AuthManager {
             } catch (e: InvocationTargetException) {
 
                 Log.debugWithException(logger, e, "Exception in proxy {}", ExceptionUtils.getNonEmptyMessage(e))
-                if (isProxyPaused.get()) {
+                if (isPaused.get()) {
                     Log.log(logger::trace, "got Exception in proxy but proxy is paused, rethrowing")
                     throw e
                 }

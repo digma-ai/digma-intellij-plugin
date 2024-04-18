@@ -46,8 +46,8 @@ class MicronautInstrumentationFlavor : BaseInstrumentationFlavor() {
         return 1
     }
 
-    override fun getPreferredUserFlavor(): Flavor {
-        return Flavor.Micronaut
+    override fun getFlavor(): InstrumentationFlavorType {
+        return InstrumentationFlavorType.Micronaut
     }
 
 
@@ -131,7 +131,7 @@ class MicronautInstrumentationFlavor : BaseInstrumentationFlavor() {
         projectHeuristics: ProjectHeuristics,
         moduleResolver: ModuleResolver,
         parametersExtractor: ParametersExtractor
-    ): String? {
+    ): Map<String, String> {
 
         return try {
             val isTest = isTest(instrumentationService, configuration, params)
@@ -142,7 +142,7 @@ class MicronautInstrumentationFlavor : BaseInstrumentationFlavor() {
 
         } catch (e: Throwable) {
             ErrorReporter.getInstance().reportError("${this::class.java}.buildJavaToolOptions", e)
-            null
+            mapOf()
         }
     }
 

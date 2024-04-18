@@ -14,7 +14,7 @@ import org.digma.intellij.plugin.idea.execution.ServiceNameProvider
 
 const val INSTRUMENTATION_FLAVOR_ENV_NAME = "INSTRUMENTATION_FLAVOR"
 
-enum class Flavor { Default, Micronaut, Quarkus, SpringBootMicrometer, OpenLiberty, JavaServer }
+enum class InstrumentationFlavorType { Default, Micronaut, Quarkus, SpringBootMicrometer, OpenLiberty, JavaServer }
 
 
 interface InstrumentationFlavor {
@@ -63,11 +63,11 @@ interface InstrumentationFlavor {
         }
 
 
-        private fun getFlavorInEnv(parametersExtractor: ParametersExtractor): Flavor? {
+        private fun getFlavorInEnv(parametersExtractor: ParametersExtractor): InstrumentationFlavorType? {
             return try {
                 val flavorValueInEnv = parametersExtractor.extractEnvValue(INSTRUMENTATION_FLAVOR_ENV_NAME)
                 flavorValueInEnv?.let {
-                    Flavor.valueOf(it)
+                    InstrumentationFlavorType.valueOf(it)
                 }
             } catch (e: IllegalArgumentException) {
                 null
@@ -88,11 +88,11 @@ interface InstrumentationFlavor {
      */
     fun getOrder(): Int
 
-    fun getPreferredUserFlavor(): Flavor
+    fun getFlavor(): InstrumentationFlavorType
 
     fun accept(
         //this is flavor configured by the user in env variable
-        userFlavor: Flavor?,
+        userInstrumentationFlavorType: InstrumentationFlavorType?,
         instrumentationService: RunConfigurationInstrumentationService,
         configuration: RunConfiguration,
         params: SimpleProgramParameters,
@@ -128,7 +128,7 @@ interface InstrumentationFlavor {
         projectHeuristics: ProjectHeuristics,
         moduleResolver: ModuleResolver,
         parametersExtractor: ParametersExtractor
-    ): String?
+    ): Map<String, String>
 
 
 }

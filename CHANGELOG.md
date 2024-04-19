@@ -1,6 +1,24 @@
 # Changelog
 
-## [2.0.318] - 2024-04-10
+## [2.0.320] - 2024-04-18
+
+- Fix env refresh by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2022
+- Support digma auth header by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2028
+- Feature/new environment api user id in account by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2030
+- Send user info to UI by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2039
+- Contracts refactoring 1 by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/2061
+- Feature/sign in suggestion by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2071
+- Feature/sign in by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2065
+- refactor documentation app for common jcef infrastructure by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2082
+- ensue no read access in Backgroundable Closes #2084 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2086
+- Feature/new environment api by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2032
+- Rollback tmp changes by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/2089
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2090
+- fix spring boot micrometer Closes #2076 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2093
+- Update Recent Activity UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2092
+- better pause AuthManager by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2095
+
+## 2.0.318 - 2024-04-10
 
 - updated dates by @doppleware in https://github.com/digma-ai/digma-intellij-plugin/pull/2055
 

@@ -12,6 +12,7 @@ import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.execution.DIGMA_ENVIRONMENT_ID_RESOURCE_ATTRIBUTE
 import org.digma.intellij.plugin.idea.execution.OTEL_RESOURCE_ATTRIBUTES
+import org.digma.intellij.plugin.idea.execution.flavor.SpringBootMicrometerInstrumentationFlavor
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
 import org.digma.intellij.plugin.log.Log
 
@@ -66,7 +67,7 @@ class AddEnvironmentsService {
         //nested local function
         fun addEnvironmentToOtelResourceAttributes(envVars: MutableMap<String, String>) {
             if (isSpringBootWithMicroMeter(project, config)) {
-                envVars["MANAGEMENT_OPENTELEMETRY_RESOURCE-ATTRIBUTES_digma_environment"] = environmentId
+                envVars[SpringBootMicrometerInstrumentationFlavor.getEnvironmentIdAttributeKey()] = environmentId
             } else {
                 //maybe OTEL_RESOURCE_ATTRIBUTES  already exists and has values other than digma.environment,
                 // so preserve them
@@ -88,10 +89,6 @@ class AddEnvironmentsService {
                             }
                             left to right
                         }.toMutableMap()
-//                    existingValue.split(",").associate {
-//                        val (left, right) = it.split("=")
-//                        left to right
-//                    }.toMutableMap()
                     } catch (e: Throwable) {
                         mutableMapOf()
                     }

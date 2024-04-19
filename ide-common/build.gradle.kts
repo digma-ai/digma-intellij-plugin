@@ -42,7 +42,7 @@ tasks{
     val downloadComposeFile = register("downloadComposeFile", Download::class.java){
         src(
             listOf(
-                "https://raw.githubusercontent.com/digma-ai/digma/bc/docker/docker-compose.yml")
+                "https://get.digma.ai/")
         )
 
         val dir = File(project.sourceSets.main.get().output.resourcesDir,"docker-compose")

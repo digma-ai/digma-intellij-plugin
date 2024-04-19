@@ -24,19 +24,20 @@ open class JavaToolOptionsBuilder(
         return this
     }
 
-    open fun withOtelExporterEndpoint(): JavaToolOptionsBuilder {
+    open fun withOtelExporterOtlpEndpoint(): JavaToolOptionsBuilder {
         javaToolOptions
             .append("-Dotel.exporter.otlp.endpoint=${getExporterUrl()}")
             .append(" ")
         return this
     }
 
-    open fun withOtelTracesExporterEndpoint(): JavaToolOptionsBuilder {
+    open fun withOtelTracesExporterOtlpEndpoint(): JavaToolOptionsBuilder {
         javaToolOptions
             .append("-Dotel.exporter.otlp.traces.endpoint=${getExporterUrl()}")
             .append(" ")
         return this
     }
+
 
     open fun withOtelAgent(useAgent: Boolean): JavaToolOptionsBuilder {
 
@@ -50,26 +51,38 @@ open class JavaToolOptionsBuilder(
                 .append("-Dotel.javaagent.extensions=${otelAgentPathProvider.digmaExtensionPath}")
                 .append(" ")
 
-            withOtelTracesExporterEndpoint()
+            withOtelTracesExporterOtlpEndpoint()
         }
 
         return this
     }
 
 
-
-
-    open fun withSpringBootWithMicrometerTracing(isSpringBootWithMicrometerTracing: Boolean): JavaToolOptionsBuilder {
+    open fun withCommonSpringBootWithMicrometerTracing(isSpringBootWithMicrometerTracing: Boolean): JavaToolOptionsBuilder {
         if (isSpringBootWithMicrometerTracing) {
-            javaToolOptions
-                .append("-Dmanagement.otlp.tracing.endpoint=${getExporterUrl()}")
-                .append(" ")
-                .append("-Dmanagement.tracing.sampling.probability=1.0")
-                .append(" ")
+            withManagementOtlpTracesEndpoint()
+            withManagementTracingSamplingProbability()
         }
 
         return this
     }
+
+    //needed for spring boot with micrometer
+    open fun withManagementOtlpTracesEndpoint(): JavaToolOptionsBuilder {
+        javaToolOptions
+            .append("-Dmanagement.otlp.tracing.endpoint=${getExporterUrl()}")
+            .append(" ")
+        return this
+    }
+
+    //needed for spring boot with micrometer
+    open fun withManagementTracingSamplingProbability(): JavaToolOptionsBuilder {
+        javaToolOptions
+            .append("-Dmanagement.tracing.sampling.probability=1.0")
+            .append(" ")
+        return this
+    }
+
 
     open fun withMicronautTracing(isMicronautTracing: Boolean): JavaToolOptionsBuilder {
         if (isMicronautTracing) {
@@ -85,7 +98,7 @@ open class JavaToolOptionsBuilder(
                 .append("-Dotel.exporter.experimental.exporter.otlp.retry.enabled=true")
                 .append(" ")
 
-            withOtelExporterEndpoint()
+            withOtelExporterOtlpEndpoint()
         }
 
         return this
@@ -118,7 +131,6 @@ open class JavaToolOptionsBuilder(
     }
 
 
-
     open fun withOtelDebug(): JavaToolOptionsBuilder {
         if (java.lang.Boolean.getBoolean("digma.otel.debug")) {
             javaToolOptions
@@ -138,9 +150,66 @@ open class JavaToolOptionsBuilder(
         return this
     }
 
+    //not every flavor needs that, the default flavor does,other flavors need only a subset
     open fun withCommonProperties(): JavaToolOptionsBuilder {
+
+        withOtelTracesExporterOtlp()
+        withOtelExporterOtlpProtocolGrpc()
+        withOtelMetricsExporterNone()
+        withOtelLogsExporterNone()
+        withOtelExperimentalControllerTelemetryEnabled()
+        withOtelExperimentalViewTelemetryEnabled()
+        withOtelExperimentalSpanSuppressionStrategyNone()
+
+        return this
+    }
+
+
+    open fun withOtelTracesExporterOtlp(): JavaToolOptionsBuilder {
         javaToolOptions
-            .append(getCommonOtelSystemProperties())
+            .append("-Dotel.traces.exporter=otlp")
+            .append(" ")
+        return this
+    }
+
+    open fun withOtelExporterOtlpProtocolGrpc(): JavaToolOptionsBuilder {
+        javaToolOptions
+            .append("-Dotel.exporter.otlp.protocol=grpc")
+            .append(" ")
+        return this
+    }
+
+    open fun withOtelMetricsExporterNone(): JavaToolOptionsBuilder {
+        javaToolOptions
+            .append("-Dotel.metrics.exporter=none")
+            .append(" ")
+        return this
+    }
+
+    open fun withOtelLogsExporterNone(): JavaToolOptionsBuilder {
+        javaToolOptions
+            .append("-Dotel.logs.exporter=none")
+            .append(" ")
+        return this
+    }
+
+    open fun withOtelExperimentalControllerTelemetryEnabled(): JavaToolOptionsBuilder {
+        javaToolOptions
+            .append("-Dotel.instrumentation.common.experimental.controller.telemetry.enabled=true")
+            .append(" ")
+        return this
+    }
+
+    open fun withOtelExperimentalViewTelemetryEnabled(): JavaToolOptionsBuilder {
+        javaToolOptions
+            .append("-Dotel.instrumentation.common.experimental.view.telemetry.enabled=true")
+            .append(" ")
+        return this
+    }
+
+    open fun withOtelExperimentalSpanSuppressionStrategyNone(): JavaToolOptionsBuilder {
+        javaToolOptions
+            .append("-Dotel.instrumentation.experimental.span-suppression-strategy=none")
             .append(" ")
         return this
     }
@@ -192,22 +261,6 @@ open class JavaToolOptionsBuilder(
     open fun getExporterUrl(): String {
         return SettingsState.getInstance().runtimeObservabilityBackendUrl
     }
-
-
-    open fun getCommonOtelSystemProperties(): String {
-
-        return listOf(
-            "-Dotel.traces.exporter=otlp",
-            "-Dotel.exporter.otlp.protocol=grpc",
-            "-Dotel.metrics.exporter=none",
-            "-Dotel.logs.exporter=none",
-            "-Dotel.instrumentation.common.experimental.controller.telemetry.enabled=true",
-            "-Dotel.instrumentation.common.experimental.view.telemetry.enabled=true",
-            "-Dotel.instrumentation.experimental.span-suppression-strategy=none"
-        ).joinToString(separator = " ")
-
-    }
-
 
 }
 

@@ -7,6 +7,7 @@ import com.intellij.openapi.module.Module
 import org.digma.intellij.plugin.analytics.LOCAL_ENV
 import org.digma.intellij.plugin.analytics.LOCAL_TESTS_ENV
 import org.digma.intellij.plugin.analytics.isCentralized
+import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.execution.RunConfigurationInstrumentationService
 import org.digma.intellij.plugin.idea.execution.JavaToolOptionsBuilder
@@ -17,22 +18,30 @@ import org.digma.intellij.plugin.idea.execution.ProjectHeuristics
 import org.digma.intellij.plugin.idea.execution.ServiceNameProvider
 import org.digma.intellij.plugin.idea.execution.getModuleMetadata
 import org.digma.intellij.plugin.idea.execution.isMicrometerTracingInSettings
+import org.digma.intellij.plugin.vcs.VcsService
 
-
-private const val ENVIRONMENT_RESOURCE_ATTRIBUTE = "MANAGEMENT_OPENTELEMETRY_RESOURCE-ATTRIBUTES_digma_environment"
-private const val ENVIRONMENT_ID_RESOURCE_ATTRIBUTE = "MANAGEMENT_OPENTELEMETRY_RESOURCE-ATTRIBUTES_digma_environment_id"
-
+private const val ATTRIBUTES_PREFIX = "MANAGEMENT_OPENTELEMETRY_RESOURCE-ATTRIBUTES"
+private const val ENVIRONMENT_RESOURCE_ATTRIBUTE = "${ATTRIBUTES_PREFIX}_digma_environment"
+private const val ENVIRONMENT_ID_RESOURCE_ATTRIBUTE = "${ATTRIBUTES_PREFIX}_digma_environment_id"
+private const val USER_ID_RESOURCE_ATTRIBUTE = "${ATTRIBUTES_PREFIX}_digma_user_id"
+private const val SCM_COMMIT_ID_RESOURCE_ATTRIBUTE = "${ATTRIBUTES_PREFIX}_scm_commit_id"
 
 //SpringBootMicrometerInstrumentationFlavor supports the same gradle/maven tasks as DefaultInstrumentationFlavor.
 class SpringBootMicrometerInstrumentationFlavor : DefaultInstrumentationFlavor() {
+
+    companion object {
+        fun getEnvironmentIdAttributeKey(): String {
+            return ENVIRONMENT_ID_RESOURCE_ATTRIBUTE
+        }
+    }
 
 
     override fun getOrder(): Int {
         return 1
     }
 
-    override fun getPreferredUserFlavor(): Flavor {
-        return Flavor.SpringBootMicrometer
+    override fun getFlavor(): InstrumentationFlavorType {
+        return InstrumentationFlavorType.SpringBootMicrometer
     }
 
 
@@ -88,12 +97,13 @@ class SpringBootMicrometerInstrumentationFlavor : DefaultInstrumentationFlavor()
             val isTest = isTest(instrumentationService, configuration, params)
 
             javaToolOptionsBuilder
-                .withSpringBootWithMicrometerTracing(true)
-                .withMockitoSupport(isTest)
+                .withCommonSpringBootWithMicrometerTracing(true)
+                .withOtelTracesExporterOtlp()
+                .withOtelMetricsExporterNone()
+                .withOtelExperimentalSpanSuppressionStrategyNone()
                 .withServiceName(moduleResolver, parametersExtractor, serviceNameProvider)
+                .withMockitoSupport(isTest)
                 .withExtendedObservability()
-                .withOtelDebug()
-                .withCommonProperties()
                 .build()
 
         } catch (e: Throwable) {
@@ -111,34 +121,38 @@ class SpringBootMicrometerInstrumentationFlavor : DefaultInstrumentationFlavor()
         projectHeuristics: ProjectHeuristics,
         moduleResolver: ModuleResolver,
         parametersExtractor: ParametersExtractor
-    ): String? {
+    ): Map<String, String> {
 
         return try {
             val isTest = isTest(instrumentationService, configuration, params)
 
             if (needToAddDigmaEnvironmentAttribute(parametersExtractor)) {
-                val envAttribute = if (isTest) {
-                    "$ENVIRONMENT_RESOURCE_ATTRIBUTE=$LOCAL_TESTS_ENV"
+                if (isTest) {
+                    otelResourceAttributesBuilder.withOtelResourceAttribute(ENVIRONMENT_RESOURCE_ATTRIBUTE, LOCAL_TESTS_ENV)
                 } else {
-                    "$ENVIRONMENT_RESOURCE_ATTRIBUTE=$LOCAL_ENV"
+                    otelResourceAttributesBuilder.withOtelResourceAttribute(ENVIRONMENT_RESOURCE_ATTRIBUTE, LOCAL_ENV)
                 }
 
-                otelResourceAttributesBuilder.withOtelResourceAttribute(envAttribute)
             }
 
             if (!hasEnvironmentIdAttribute(parametersExtractor) &&
                 isCentralized(configuration.project)
             ) {
-                otelResourceAttributesBuilder.withUserId()
+                DigmaDefaultAccountHolder.getInstance().account?.userId?.let {
+                    otelResourceAttributesBuilder.withOtelResourceAttribute(USER_ID_RESOURCE_ATTRIBUTE, it)
+                }
+            }
+
+            VcsService.getInstance(configuration.project).getCommitIdForCurrentProject()?.let {
+                otelResourceAttributesBuilder.withOtelResourceAttribute(SCM_COMMIT_ID_RESOURCE_ATTRIBUTE, it)
             }
 
             otelResourceAttributesBuilder
-                .withScmCommitId()
                 .build()
 
         } catch (e: Throwable) {
             ErrorReporter.getInstance().reportError("${this::class.java}.buildJavaToolOptions", e)
-            null
+            mapOf()
         }
     }
 

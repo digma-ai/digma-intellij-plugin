@@ -105,6 +105,7 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
             isVisible = false
 
             Backgroundable.ensurePooledThread {
+                ActivityMonitor.getInstance(project).registerCloseThrottlingMessage(service.lastLoadStatus.throttlingType.toString())
                 if (service.lastLoadStatus.throttlingType == "ExtendedObservability")
                 {
                     val analyticsService = project.service<AnalyticsService>()

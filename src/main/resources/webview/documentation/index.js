@@ -173,6 +173,8 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  flex-grow: 1;
+  justify-content: space-between;
 `},83537:function(e,t,n){"use strict";var r=this&&this.__createBinding||(Object.create?function(e,t,n,r){void 0===r&&(r=n);var a=Object.getOwnPropertyDescriptor(t,n);a&&!("get"in a?!t.__esModule:a.writable||a.configurable)||(a={enumerable:!0,get:function(){return t[n]}}),Object.defineProperty(e,r,a)}:function(e,t,n,r){void 0===r&&(r=n),e[r]=t[n]}),a=this&&this.__setModuleDefault||(Object.create?function(e,t){Object.defineProperty(e,"default",{enumerable:!0,value:t})}:function(e,t){e.default=t}),o=this&&this.__importStar||function(e){if(e&&e.__esModule)return e;var t={};if(null!=e)for(var n in e)"default"!==n&&Object.prototype.hasOwnProperty.call(e,n)&&r(t,e,n);return a(t,e),t};Object.defineProperty(t,"__esModule",{value:!0}),t.Page=void 0;const i=n(85893),s=o(n(13411));t.Page=e=>(0,i.jsxs)(s.Container,{children:[(0,i.jsxs)(s.Header,{children:[(0,i.jsx)(s.Title,{children:e.title}),e.description]}),e.sections&&e.sections.map(((e,t)=>(0,i.jsxs)(s.Section,{children:[(0,i.jsxs)(s.SectionHeader,{children:[Number.isInteger(e.number)&&(0,i.jsx)(s.SectionNumber,{children:e.number}),(0,i.jsxs)(s.SectionTitleContainer,{children:[(0,i.jsx)(s.SectionTitle,{children:e.title}),e.description]})]}),e.content]},t)))]})},13411:function(e,t,n){"use strict";var r=this&&this.__importDefault||function(e){return e&&e.__esModule?e:{default:e}};Object.defineProperty(t,"__esModule",{value:!0}),t.SectionTitle=t.SectionTitleContainer=t.SectionNumber=t.SectionHeader=t.Section=t.ContentContainer=t.Title=t.Header=t.Container=void 0;const a=r(n(70394));t.Container=a.default.div`
   min-height: 100vh;
   display: flex;

@@ -27,7 +27,7 @@ abstract class BaseInstrumentationFlavor : InstrumentationFlavor {
 
 
     final override fun accept(
-        userFlavor: Flavor?,
+        userInstrumentationFlavorType: InstrumentationFlavorType?,
         instrumentationService: RunConfigurationInstrumentationService,
         configuration: RunConfiguration,
         params: SimpleProgramParameters,
@@ -38,8 +38,8 @@ abstract class BaseInstrumentationFlavor : InstrumentationFlavor {
     ): Boolean {
 
         //if user configured flavor, it wins, there is nothing more to check
-        if (userFlavor != null) {
-            return userFlavor == getPreferredUserFlavor()
+        if (userInstrumentationFlavorType != null) {
+            return userInstrumentationFlavorType == getFlavor()
         }
 
         return accept(instrumentationService, configuration, params, runnerSettings, projectHeuristics, moduleResolver, parametersExtractor)

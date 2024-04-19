@@ -65,7 +65,7 @@ abstract class BaseJvmRunConfigurationInstrumentationService : RunConfigurationI
 
             javaToolOptions = javaToolOptions?.let {
                 //easier for us to see which flavor
-                " -Ddigma.flavor=${instrumentationFlavor.getPreferredUserFlavor()} ".plus(it)
+                " -Ddigma.flavor=${instrumentationFlavor.getFlavor()} ".plus(it)
             }
 
             val otelResourceAttributes = instrumentationFlavor.buildOtelResourceAttributes(
@@ -80,7 +80,7 @@ abstract class BaseJvmRunConfigurationInstrumentationService : RunConfigurationI
 
 
             getJavaParametersMerger(configuration, params, parametersExtractor)
-                .mergeJavaToolOptionsAndOtelResourceAttributes(javaToolOptions, otelResourceAttributes)
+                .mergeJavaToolOptionsAndOtelResourceAttributes(instrumentationFlavor.getFlavor(), javaToolOptions, otelResourceAttributes)
 
             return javaToolOptions
 

@@ -50,8 +50,8 @@ class QuarkusInstrumentationFlavor : BaseInstrumentationFlavor() {
         return 1
     }
 
-    override fun getPreferredUserFlavor(): Flavor {
-        return Flavor.Quarkus
+    override fun getFlavor(): InstrumentationFlavorType {
+        return InstrumentationFlavorType.Quarkus
     }
 
 
@@ -132,7 +132,7 @@ class QuarkusInstrumentationFlavor : BaseInstrumentationFlavor() {
         projectHeuristics: ProjectHeuristics,
         moduleResolver: ModuleResolver,
         parametersExtractor: ParametersExtractor
-    ): String? {
+    ): Map<String, String> {
 
         return try {
             otelResourceAttributesBuilder
@@ -142,7 +142,7 @@ class QuarkusInstrumentationFlavor : BaseInstrumentationFlavor() {
 
         } catch (e: Throwable) {
             ErrorReporter.getInstance().reportError("${this::class.java}.buildJavaToolOptions", e)
-            null
+            mapOf()
         }
     }
 

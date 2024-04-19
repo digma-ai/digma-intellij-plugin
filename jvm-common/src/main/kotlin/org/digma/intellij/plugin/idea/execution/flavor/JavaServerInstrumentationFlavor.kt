@@ -17,8 +17,8 @@ class JavaServerInstrumentationFlavor : DefaultInstrumentationFlavor() {
         return 10
     }
 
-    override fun getPreferredUserFlavor(): Flavor {
-        return Flavor.JavaServer
+    override fun getFlavor(): InstrumentationFlavorType {
+        return InstrumentationFlavorType.JavaServer
     }
 
     override fun accept(

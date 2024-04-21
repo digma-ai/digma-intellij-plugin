@@ -450,6 +450,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
                 "trace.depth.avg" to uss.traceDepthAvg,
                 "unique.spans.count" to uss.uniqueSpansCount,
                 "environments.count" to uss.environmentsCount,
+                "groupedByClassification" to uss.classificationAggregationString
             )
         )
     }

@@ -34,5 +34,8 @@ constructor(
     @JsonProperty("hasDistributedCalls")
     val hasDistributedCalls: Boolean = false
 
+    @JsonProperty("classificationAggregationString")
+    val classificationAggregationString: String= ""
+
     fun hasDbSpans() = uniqueDatabaseSpansCount > 0
 }

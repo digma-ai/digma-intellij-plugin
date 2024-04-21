@@ -116,12 +116,22 @@ class AggressiveUpdateService : Disposable {
 
                 @Suppress("UnstableApiUsage")
                 disposingScope().launch {
-                    //update state immediately after settings change. we are interested in api url change but it will
-                    // do no harm to call it on any settings change
-                    updateState()
+                    try {
+                        //update state immediately after settings change. we are interested in api url change, but it will
+                        // do no harm to call it on any settings change
+                        updateState()
+                    } catch (c: CancellationException) {
+                        Log.debugWithException(logger, c, "settings change canceled {}", c)
+                    } catch (e: Throwable) {
+                        val message = ExceptionUtils.getNonEmptyMessage(e)
+                        Log.debugWithException(logger, e, "error in settings changed {}", message)
+                        errorReporter.reportError("${this::class.simpleName}.settingsChange", e)
+                    }
+
                     //and call startMonitoring just in case it is stopped by a previous connectionLost but there was no connection gained
                     startMonitoring()
                 }
+
             }, this)
 
         } else {

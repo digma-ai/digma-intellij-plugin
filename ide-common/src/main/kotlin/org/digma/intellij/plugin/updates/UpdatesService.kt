@@ -93,8 +93,16 @@ class UpdatesService(private val project: Project) : Disposable {
 
                 override fun connectionGained() {
                     Log.log(logger::debug, "got connectionGained")
-                    //update state immediately after connectionGained, so it will not wait the delay for checking the versions.
-                    checkForNewerVersions()
+
+                    try {
+                        //update state immediately after connectionGained, so it will not wait the delay for checking the versions.
+                        checkForNewerVersions()
+                    } catch (e: CancellationException) {
+                        Log.debugWithException(logger, e, "Exception in checkForNewerVersions")
+                    } catch (e: Throwable) {
+                        Log.debugWithException(logger, e, "Exception in checkForNewerVersions {}", ExceptionUtils.getNonEmptyMessage(e))
+                        ErrorReporter.getInstance().reportError("UpdatesService.connectionGained", e)
+                    }
                 }
             })
 
@@ -102,9 +110,16 @@ class UpdatesService(private val project: Project) : Disposable {
         SettingsState.getInstance().addChangeListener({
             @Suppress("UnstableApiUsage")
             disposingScope().launch {
-                //update state immediately after settings change. we are interested in api url change, but it will
-                // do no harm to call it on any settings change
-                checkForNewerVersions()
+                try {
+                    //update state immediately after settings change. we are interested in api url change, but it will
+                    // do no harm to call it on any settings change
+                    checkForNewerVersions()
+                } catch (e: CancellationException) {
+                    Log.debugWithException(logger, e, "Exception in checkForNewerVersions")
+                } catch (e: Throwable) {
+                    Log.debugWithException(logger, e, "Exception in checkForNewerVersions {}", ExceptionUtils.getNonEmptyMessage(e))
+                    ErrorReporter.getInstance().reportError("UpdatesService.settingsChanged", e)
+                }
             }
 
         }, this)
@@ -114,6 +129,7 @@ class UpdatesService(private val project: Project) : Disposable {
         //nothing to do , used as parent disposable
     }
 
+    //this method may throw exception, always catch and report
     private fun checkForNewerVersions() {
 
         Log.log(logger::trace, "checking for new versions")

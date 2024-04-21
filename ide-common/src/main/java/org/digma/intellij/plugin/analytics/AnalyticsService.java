@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.analytics;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.openapi.Disposable;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.*;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.JBColor;
@@ -151,6 +152,8 @@ public class AnalyticsService implements Disposable {
         environment.refreshNowOnBackground();
 
         BackendInfoHolder.getInstance().updateInBackground();
+
+        ApplicationManager.getApplication().getMessageBus().syncPublisher(ApiClientChangedEvent.getAPI_CLIENT_CHANGED_TOPIC()).apiClientChanged(url);
 
     }
 

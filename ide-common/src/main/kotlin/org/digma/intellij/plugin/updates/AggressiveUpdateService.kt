@@ -16,6 +16,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.apache.maven.artifact.versioning.ComparableVersion
 import org.digma.intellij.plugin.analytics.AnalyticsService
+import org.digma.intellij.plugin.analytics.ApiClientChangedEvent
 import org.digma.intellij.plugin.analytics.BackendConnectionEvent
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.common.buildVersionRequest
@@ -29,7 +30,6 @@ import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
 import org.digma.intellij.plugin.model.rest.version.VersionResponse
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.settings.InternalFileSettings
-import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.updates.AggressiveUpdateService.Companion.getInstance
 import org.digma.intellij.plugin.updates.CurrentUpdateState.OK
 import org.digma.intellij.plugin.updates.CurrentUpdateState.UPDATE_BACKEND
@@ -112,27 +112,29 @@ class AggressiveUpdateService : Disposable {
                 })
 
 
-            SettingsState.getInstance().addChangeListener({
+            ApplicationManager.getApplication().messageBus.connect(this).subscribe(ApiClientChangedEvent.API_CLIENT_CHANGED_TOPIC, object :
+                ApiClientChangedEvent {
+                override fun apiClientChanged(newUrl: String) {
+                    @Suppress("UnstableApiUsage")
+                    disposingScope().launch {
+                        try {
+                            //update state immediately after settings change. we are interested in api url change, but it will
+                            // do no harm to call it on any settings change
+                            updateState()
+                        } catch (c: CancellationException) {
+                            Log.debugWithException(logger, c, "settings change canceled {}", c)
+                        } catch (e: Throwable) {
+                            val message = ExceptionUtils.getNonEmptyMessage(e)
+                            Log.debugWithException(logger, e, "error in settings changed {}", message)
+                            errorReporter.reportError("${this::class.simpleName}.settingsChange", e)
+                        }
 
-                @Suppress("UnstableApiUsage")
-                disposingScope().launch {
-                    try {
-                        //update state immediately after settings change. we are interested in api url change, but it will
-                        // do no harm to call it on any settings change
-                        updateState()
-                    } catch (c: CancellationException) {
-                        Log.debugWithException(logger, c, "settings change canceled {}", c)
-                    } catch (e: Throwable) {
-                        val message = ExceptionUtils.getNonEmptyMessage(e)
-                        Log.debugWithException(logger, e, "error in settings changed {}", message)
-                        errorReporter.reportError("${this::class.simpleName}.settingsChange", e)
+                        //and call startMonitoring just in case it is stopped by a previous connectionLost but there was no connection gained
+                        startMonitoring()
                     }
-
-                    //and call startMonitoring just in case it is stopped by a previous connectionLost but there was no connection gained
-                    startMonitoring()
                 }
 
-            }, this)
+            })
 
         } else {
             Log.log(logger::info, "not starting, disabled in internal settings")

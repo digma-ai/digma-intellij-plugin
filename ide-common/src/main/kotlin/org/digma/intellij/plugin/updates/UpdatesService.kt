@@ -13,6 +13,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.apache.maven.artifact.versioning.ComparableVersion
 import org.digma.intellij.plugin.analytics.AnalyticsService
+import org.digma.intellij.plugin.analytics.ApiClientChangedEvent
 import org.digma.intellij.plugin.analytics.BackendConnectionEvent
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.ExceptionUtils
@@ -25,7 +26,6 @@ import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
 import org.digma.intellij.plugin.model.rest.version.BackendVersionResponse
 import org.digma.intellij.plugin.model.rest.version.VersionResponse
 import org.digma.intellij.plugin.settings.InternalFileSettings
-import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration
@@ -93,27 +93,47 @@ class UpdatesService(private val project: Project) : Disposable {
 
                 override fun connectionGained() {
                     Log.log(logger::debug, "got connectionGained")
-                    //update state immediately after connectionGained, so it will not wait the delay for checking the versions.
-                    checkForNewerVersions()
+
+                    try {
+                        //update state immediately after connectionGained, so it will not wait the delay for checking the versions.
+                        checkForNewerVersions()
+                    } catch (e: CancellationException) {
+                        Log.debugWithException(logger, e, "Exception in checkForNewerVersions")
+                    } catch (e: Throwable) {
+                        Log.debugWithException(logger, e, "Exception in checkForNewerVersions {}", ExceptionUtils.getNonEmptyMessage(e))
+                        ErrorReporter.getInstance().reportError("UpdatesService.connectionGained", e)
+                    }
                 }
             })
 
 
-        SettingsState.getInstance().addChangeListener({
-            @Suppress("UnstableApiUsage")
-            disposingScope().launch {
-                //update state immediately after settings change. we are interested in api url change, but it will
-                // do no harm to call it on any settings change
-                checkForNewerVersions()
+
+        ApplicationManager.getApplication().messageBus.connect(this)
+            .subscribe(ApiClientChangedEvent.API_CLIENT_CHANGED_TOPIC, object : ApiClientChangedEvent {
+                override fun apiClientChanged(newUrl: String) {
+                    @Suppress("UnstableApiUsage")
+                    disposingScope().launch {
+                        try {
+                            //update state immediately after settings change. we are interested in api url change, but it will
+                            // do no harm to call it on any settings change
+                            checkForNewerVersions()
+                        } catch (e: CancellationException) {
+                            Log.debugWithException(logger, e, "Exception in checkForNewerVersions")
+                        } catch (e: Throwable) {
+                            Log.debugWithException(logger, e, "Exception in checkForNewerVersions {}", ExceptionUtils.getNonEmptyMessage(e))
+                            ErrorReporter.getInstance().reportError("UpdatesService.settingsChanged", e)
+                        }
+                }
             }
 
-        }, this)
+            })
     }
 
     override fun dispose() {
         //nothing to do , used as parent disposable
     }
 
+    //this method may throw exception, always catch and report
     private fun checkForNewerVersions() {
 
         Log.log(logger::trace, "checking for new versions")

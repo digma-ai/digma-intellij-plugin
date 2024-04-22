@@ -1,6 +1,13 @@
 # Changelog
 
-## [2.0.320] - 2024-04-18
+## [2.0.321] - 2024-04-22
+
+- unify action names by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2094
+- catch exceptions in settings changed Closes #2100 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2102
+- add groupedByClassification to user-stats posthog by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/2103
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2104
+
+## 2.0.320 - 2024-04-18
 
 - Fix env refresh by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2022
 - Support digma auth header by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2028

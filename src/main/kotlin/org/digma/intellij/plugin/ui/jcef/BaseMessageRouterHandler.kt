@@ -309,7 +309,7 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
         payload?.let {
             val viewId = payload.get("view")?.asText()
             viewId?.let { vuid ->
-                MainContentViewSwitcher.getInstance(project).showViewById(vuid, true)
+                MainContentViewSwitcher.getInstance(project).showViewById(vuid, payload.get("isUserAction")?.asBoolean() ?: true)
             }
         }
     }

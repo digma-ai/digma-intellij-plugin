@@ -5,6 +5,7 @@ import com.google.common.base.Objects
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
+import org.digma.intellij.plugin.navigation.View.Companion.Assets
 import org.digma.intellij.plugin.navigation.View.Companion.getSelected
 import org.digma.intellij.plugin.navigation.View.Companion.hideErrorDetails
 import org.digma.intellij.plugin.navigation.View.Companion.hideErrors
@@ -70,12 +71,14 @@ class MainContentViewSwitcher(val project: Project) {
     }
 
     private fun showView(view: View, fireEvent: Boolean, isTriggeredByJcef: Boolean) {
-
         if (view == View.ErrorDetails) {
             hideErrors()
         } else {
             project.service<ErrorsViewOrchestrator>().closeErrorDetails()
             hideErrorDetails()
+        }
+        if (view != View.Assets) {
+            View.Assets.path = null;
         }
 
         if (view == View.Insights && getSelected() != View.Insights) {
@@ -109,6 +112,16 @@ class MainContentViewSwitcher(val project: Project) {
     }
 
     fun showViewById(viewId: String, isTriggeredByJcef: Boolean = false) {
+        val segments = viewId.split("/")
+        if (segments[1] == "assets") {
+            if (segments.count() > 2) {
+                Assets.path = viewId.removePrefix("/assets/");
+            } else {
+                Assets.path = null
+            }
+            showView(Assets, isTriggeredByJcef = isTriggeredByJcef)
+        }
+
         View.findById(viewId)?.let { view ->
             showView(view, isTriggeredByJcef = isTriggeredByJcef)
         }
@@ -135,6 +148,7 @@ private constructor(
     @get:JsonProperty("isHidden")
     @param:JsonProperty("isHidden")
     var isHidden: Boolean = false,
+    var path: String? = null,
 ) {
 
     override fun equals(other: Any?): Boolean {
@@ -147,13 +161,13 @@ private constructor(
 
     companion object {
 
-        val Highlights = View(title = "", id = "highlights", cardName = "highlights")
-        val Insights = View(title = "Issues", id = "insights", cardName = "insights", isSelected = true)
-        val Assets = View("Assets", "assets", "assets")
-        val Errors = View("Errors", "errors", "errors")
-        val ErrorDetails = View(title = "Error Details", id = "errorsDetails", cardName = "errors", isHidden = true)
-        val Tests = View("Tests", "tests", "tests")
-        val Analytics = View("Analytics", "analytics", "analytics")
+        val Highlights = View(title = "", id = "/highlights", cardName = "highlights")
+        val Insights = View(title = "Issues", id = "/insights", cardName = "insights", isSelected = true)
+        val Assets = View("Assets", "/assets", "assets")
+        val Errors = View("Errors", "/errors", "errors")
+        val ErrorDetails = View(title = "Error Details", id = "/errors/details", cardName = "errors", isHidden = true)
+        val Tests = View("Tests", "/tests", "tests")
+        val Analytics = View("Analytics", "/analytics", "analytics")
 
 
         val views = listOf(Highlights, Insights, Assets, Analytics, Errors, ErrorDetails, Tests)

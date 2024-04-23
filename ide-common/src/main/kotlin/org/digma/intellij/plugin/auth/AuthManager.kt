@@ -360,11 +360,15 @@ class AuthManager {
                 }
                 Log.log(logger::trace, "login success for url={}, user:{}, created account {}", analyticsProvider.apiUrl, userName, digmaAccount)
 
-                reportPosthogEvent("login success", mapOf("user" to SILENT_LOGIN_USER))
+                reportPosthogEvent("login success", mapOf("user" to userName))
 
                 LoginResult(true, loginResponse.userId, null)
 
             } catch (e: Throwable) {
+                if (e is AuthenticationException && userName != SILENT_LOGIN_USER) {
+                    return LoginResult(false, null, e.detailedMessage)
+                }
+
                 Log.debugWithException(logger, e, "login failed {}", e)
                 ErrorReporter.getInstance().reportInternalFatalError("AuthManager.login", e)
                 val errorMessage = ExceptionUtils.getNonEmptyMessage(e)

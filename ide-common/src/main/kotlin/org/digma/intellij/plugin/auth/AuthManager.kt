@@ -365,7 +365,7 @@ class AuthManager {
                 LoginResult(true, loginResponse.userId, null)
 
             } catch (e: Throwable) {
-                if (e is AuthenticationException && userName != SILENT_LOGIN_USER) {
+                if (e is AuthenticationException && analyticsProvider.about.isCentralize == true) {
                     return LoginResult(false, null, e.detailedMessage)
                 }
 

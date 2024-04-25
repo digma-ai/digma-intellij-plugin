@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.auth
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import kotlinx.datetime.Clock
 import org.digma.intellij.plugin.auth.credentials.DigmaCredentials
 import java.util.Date
 import kotlin.test.Test
@@ -18,7 +19,8 @@ class CredentialsTests {
             "myrefreshtoken",
             "http://localhost5051",
             TokenType.Bearer.name,
-            Date().time + 10000
+            Date().time + 10000,
+            Clock.System.now().toEpochMilliseconds()
         )
 
         val asJson = objectManager.writeValueAsString(digmaCredentials)

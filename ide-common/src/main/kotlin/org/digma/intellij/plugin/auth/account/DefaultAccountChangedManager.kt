@@ -24,11 +24,11 @@ class DefaultAccountChangedManager : Disposable {
     var changingDefaultAccount = AtomicBooleanProperty(false)
 
     fun defaultAccountChanged() {
-        Log.log(logger::info, "got defaultAccountChanged")
+        Log.log(logger::trace, "got defaultAccountChanged")
         myAccountChangedAlarm.cancelAllRequests()
         myAccountChangedAlarm.addRequest({
 
-            Log.log(logger::info, "firing defaultAccountChanged event")
+            Log.log(logger::trace, "firing defaultAccountChanged event")
             ApplicationManager.getApplication().messageBus.syncPublisher(DefaultAccountChanged.DEFAULT_ACCOUNT_CHANGED_TOPIC).defaultAccountChanged()
 
             try {
@@ -43,7 +43,7 @@ class DefaultAccountChangedManager : Disposable {
     }
 
     override fun dispose() {
-        Log.log(logger::info, "disposing")
+        Log.log(logger::trace, "disposing")
         myAccountChangedAlarm.dispose()
     }
 }

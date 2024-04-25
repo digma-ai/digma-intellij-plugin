@@ -46,7 +46,7 @@ class DigmaDefaultAccountHolder :
 
     override var account: DigmaAccount? = null
         set(value) {
-            Log.log(logger::info, "setAccount called with {}", value)
+            Log.log(logger::trace, "setAccount called with {}", value)
 
             val oldAccount = this.account
 
@@ -66,12 +66,12 @@ class DigmaDefaultAccountHolder :
 
 
     private fun notifyDefaultAccountChanged() {
-        Log.log(logger::info, "notifying DefaultAccountChanged")
+        Log.log(logger::trace, "notifying DefaultAccountChanged")
         service<DefaultAccountChangedManager>().defaultAccountChanged()
     }
 
     private fun notifyDefaultAccountMissing() {
-        Log.log(logger::info, "notifyDefaultAccountMissing called")
+        Log.log(logger::trace, "notifyDefaultAccountMissing called")
 
         //don't show a notification but maybe need to show for centralized backend
 //        NotificationUtil.showBalloonWarning(
@@ -82,12 +82,12 @@ class DigmaDefaultAccountHolder :
 
     override fun getState(): AccountState {
         val state = AccountState().apply { defaultAccountId = account?.id }
-        Log.log(logger::info, "getState called {}", state)
+        Log.log(logger::trace, "getState called {}", state)
         return state
     }
 
     override fun loadState(state: AccountState) {
-        Log.log(logger::info, "loadState called {}", state)
+        Log.log(logger::trace, "loadState called {}", state)
         fireNotification = false
         try {
             account = state.defaultAccountId?.let { id ->
@@ -103,12 +103,12 @@ class DigmaDefaultAccountHolder :
 
 
     override fun noStateLoaded() {
-        Log.log(logger::info, "noStateLoaded called")
+        Log.log(logger::trace, "noStateLoaded called")
         super.noStateLoaded()
     }
 
     override fun initializeComponent() {
-        Log.log(logger::info, "initializeComponent called")
+        Log.log(logger::trace, "initializeComponent called")
         super.initializeComponent()
     }
 

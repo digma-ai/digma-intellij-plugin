@@ -28,7 +28,7 @@ internal class DigmaPersistentAccounts
 
     override var accounts: Set<DigmaAccount> = setOf()
         set(value) {
-            Log.log(logger::info, "new accounts list set {}", value)
+            Log.log(logger::trace, "new accounts list set {}", value)
             field = value
         }
 
@@ -37,7 +37,7 @@ internal class DigmaPersistentAccounts
     }
 
     override fun loadState(state: Array<DigmaAccount>) {
-        Log.log(logger::info, "loading state {}", state)
+        Log.log(logger::trace, "loading state {}", state)
         if (state.size.isZero()) {
             accounts = setOf()
         }
@@ -46,12 +46,12 @@ internal class DigmaPersistentAccounts
 
 
     override fun noStateLoaded() {
-        Log.log(logger::info, "noStateLoaded called")
+        Log.log(logger::trace, "noStateLoaded called")
         super.noStateLoaded()
     }
 
     override fun initializeComponent() {
-        Log.log(logger::info, "initializeComponent called")
+        Log.log(logger::trace, "initializeComponent called")
         super.initializeComponent()
     }
 

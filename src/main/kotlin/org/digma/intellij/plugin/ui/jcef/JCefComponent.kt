@@ -256,9 +256,22 @@ private constructor(
 
         project.messageBus.connect(insightStatsChangeParentDisposable).subscribe(
             InsightStatsChangedEvent.INSIGHT_STATS_CHANGED_TOPIC, object : InsightStatsChangedEvent {
-                override fun insightStatsChanged(scope: JsonNode?, analyticsInsightsCount: Int, issuesInsightsCount: Int, unreadInsightsCount: Int) {
+                override fun insightStatsChanged(
+                    scope: JsonNode?,
+                    analyticsInsightsCount: Int,
+                    issuesInsightsCount: Int,
+                    unreadInsightsCount: Int,
+                    criticalInsightsCount: Int
+                ) {
                     try {
-                        sendSetInsightStatsMessage(jbCefBrowser.cefBrowser, scope, analyticsInsightsCount, issuesInsightsCount, unreadInsightsCount)
+                        sendSetInsightStatsMessage(
+                            jbCefBrowser.cefBrowser,
+                            scope,
+                            analyticsInsightsCount,
+                            issuesInsightsCount,
+                            unreadInsightsCount,
+                            criticalInsightsCount
+                        )
                     } catch (e: Throwable) {
                         ErrorReporter.getInstance().reportError("JCefComponent.insightStatsChanged", e)
                     }

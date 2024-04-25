@@ -231,9 +231,19 @@ fun sendSetInsightStatsMessage(
     scope: JsonNode?,
     analyticsInsightsCount: Number,
     issuesInsightsCount: Number,
-    unreadInsightsCount: Number
+    unreadInsightsCount: Number,
+    criticalInsightsCount: Number
 ) {
     serializeAndExecuteWindowPostMessageJavaScript(
-        cefBrowser, SetInsightStatsMessage(SetInsightStatsMessagePayload(scope, analyticsInsightsCount, issuesInsightsCount, unreadInsightsCount))
+        cefBrowser,
+        SetInsightStatsMessage(
+            SetInsightStatsMessagePayload(
+                scope,
+                analyticsInsightsCount,
+                issuesInsightsCount,
+                unreadInsightsCount,
+                criticalInsightsCount
+            )
+        )
     )
 }

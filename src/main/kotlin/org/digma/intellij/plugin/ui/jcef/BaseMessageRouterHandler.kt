@@ -251,7 +251,13 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                             if (scopeNode is NullNode) {
                                 val stats = AnalyticsService.getInstance(project).getInsightsStats(null)
                                 project.messageBus.syncPublisher(InsightStatsChangedEvent.INSIGHT_STATS_CHANGED_TOPIC)
-                                    .insightStatsChanged(null, stats.analyticsInsightsCount, stats.issuesInsightsCount, stats.unreadInsightsCount)
+                                    .insightStatsChanged(
+                                        null,
+                                        stats.analyticsInsightsCount,
+                                        stats.issuesInsightsCount,
+                                        stats.unreadInsightsCount,
+                                        stats.criticalInsightsCount
+                                    )
                             } else {
                                 val spanCodeObjectId = scopeNode.get("span").get("spanCodeObjectId").asText()
                                 val stats = AnalyticsService.getInstance(project).getInsightsStats(spanCodeObjectId)
@@ -260,7 +266,8 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                                         scopeNode,
                                         stats.analyticsInsightsCount,
                                         stats.issuesInsightsCount,
-                                        stats.unreadInsightsCount
+                                        stats.unreadInsightsCount,
+                                        stats.criticalInsightsCount
                                     )
                             }
 

@@ -13,5 +13,6 @@ data class SetInsightStatsMessagePayload(
     val scope: JsonNode?,
     val analyticsInsightsCount: Number,
     val issuesInsightsCount: Number,
-    val unreadInsightsCount: Number
+    val unreadInsightsCount: Number,
+    val criticalInsightsCount: Number,
 )

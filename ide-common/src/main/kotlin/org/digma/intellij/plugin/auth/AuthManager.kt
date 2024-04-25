@@ -199,7 +199,11 @@ class AuthManager : Disposable {
                 )
                 cud.logoutDefaultAccount()
                 if (!isCentralize) {
-                    Log.log(logger::trace, "not centralized,doing silent login for url {}", localAnalyticsProvider.apiUrl)
+                    Log.log(
+                        logger::trace,
+                        "default account deleted and is not centralized,doing silent login for url {}",
+                        localAnalyticsProvider.apiUrl
+                    )
                     val loginResult = cud.login(localAnalyticsProvider, SILENT_LOGIN_USER, SILENT_LOGIN_PASSWORD)
                     return loginResult.isSuccess
                 } else {
@@ -215,10 +219,18 @@ class AuthManager : Disposable {
             return result
 
         } catch (e: Throwable) {
-            Log.warnWithException(logger, e, "Exception in loginOrRefresh {}", e)
+
+            //usually AuthenticationException will be caught in login or in refreshToken but check it just in case
+            if (e is AuthenticationException) {
+                Log.warnWithException(logger, e, "AuthenticationException in loginOrRefresh url {}", localAnalyticsProvider.apiUrl)
+                //if there was an AuthenticationException then delete the account so either UI will direct user to login again or we do silent login
+                cud.logoutDefaultAccount()
+            } else {
+                Log.warnWithException(logger, e, "Exception in loginOrRefresh url {}", localAnalyticsProvider.apiUrl)
+            }
+
             ErrorReporter.getInstance().reportInternalFatalError("AuthManager.loginOrRefresh", e)
-            //if something failed here delete the current account so the UI will direct user to login
-            cud.logoutDefaultAccount()
+
             return false
         } finally {
 
@@ -292,13 +304,17 @@ class AuthManager : Disposable {
             if (cud.refreshToken(localAnalyticsProvider, digmaAccount, credentials, localAnalyticsProvider.apiUrl)) {
                 Log.log(
                     logger::trace,
-                    "loginOrRefresh, token refreshed",
+                    "loginOrRefresh, token refreshed successfully",
                     digmaAccount,
                     localAnalyticsProvider.apiUrl,
                     credentials
                 )
                 return true
             } else if (!isCentralize) {
+
+                //if refresh token failed , could be authentication error or any other error, and it's not centralized, then
+                //delete the account and do silent login
+
                 Log.log(
                     logger::trace,
                     "refreshToken failed and its not centralized, doing silent login for url {}", localAnalyticsProvider.apiUrl
@@ -307,13 +323,15 @@ class AuthManager : Disposable {
                 val loginResult = cud.login(localAnalyticsProvider, SILENT_LOGIN_USER, SILENT_LOGIN_PASSWORD)
                 return loginResult.isSuccess
             } else {
+
+                //if refresh token failed and its centralized, do nothing. if the failure was authentication error
+                //then refreshToken deleted the account and user should be directed to log in again
+
                 Log.log(
                     logger::trace,
                     "refreshToken didn't complete successfully and its centralized, skipping login for url {}",
                     localAnalyticsProvider.apiUrl
                 )
-                //if refresh token failed remove ethe account. on centralized user will be directed to log in again.
-                cud.logoutDefaultAccount()
                 return false
             }
         } else {
@@ -353,7 +371,7 @@ class AuthManager : Disposable {
                 try {
                     it.authInfoChanged(authInfo)
                 } catch (e: Throwable) {
-                    ErrorReporter.getInstance().reportInternalFatalError("Failed notify auth info change", e)
+                    ErrorReporter.getInstance().reportInternalFatalError("AuthManager.fireChange", e)
                 }
             }
         }, 1000)
@@ -423,15 +441,21 @@ class AuthManager : Disposable {
                 LoginResult(true, loginResponse.userId, null)
 
             } catch (e: Throwable) {
-                if (e is AuthenticationException && analyticsProvider.about.isCentralize == true) {
-                    return LoginResult(false, null, e.detailedMessage)
-                }
 
                 Log.warnWithException(logger, e, "login failed {}", e)
                 ErrorReporter.getInstance().reportInternalFatalError("AuthManager.login", e)
                 val errorMessage = ExceptionUtils.getNonEmptyMessage(e)
-                reportPosthogEvent("login failed", mapOf("user" to SILENT_LOGIN_USER, "error" to errorMessage.toString()))
-                LoginResult(false, null, e.toString())
+                reportPosthogEvent("login failed", mapOf("user" to userName, "error" to errorMessage.toString()))
+
+                //if login failed with AuthenticationException delete the account if exists. user will be directed to log in again, or we do silent login
+
+                if (e is AuthenticationException) {
+                    logoutDefaultAccount()
+                    LoginResult(false, null, e.detailedMessage)
+                } else {
+                    LoginResult(false, null, e.toString())
+                }
+
             } finally {
                 if (accountLock.isHeldByCurrentThread) {
                     accountLock.unlock()
@@ -510,15 +534,17 @@ class AuthManager : Disposable {
 
             } catch (e: Throwable) {
 
-                if (e is AuthenticationException) {
-                    Log.warnWithException(logger, e, "AuthenticationException in refresh for account {}, analytics url {},{}", digmaAccount, url, e)
-                    //if refresh token failed then logout current account,the UI should direct user to login again
-                    logoutDefaultAccount()
-                } else {
-                    Log.warnWithException(logger, e, "Exception in refresh for account {}, analytics url {},{}", digmaAccount, url, e)
-                }
+                Log.warnWithException(logger, e, "refresh failed  for account {}, {}", digmaAccount, e)
+                ErrorReporter.getInstance().reportInternalFatalError("AuthManager.refreshToken", e)
+                val errorMessage = ExceptionUtils.getNonEmptyMessage(e)
+                reportPosthogEvent("refresh failed", mapOf("error" to errorMessage.toString()))
 
-                ErrorReporter.getInstance().reportInternalFatalError("AuthManager.refresh", e)
+
+                //if refresh token failed with AuthenticationException delete the account. it may be corrupted refresh token or some other
+                // issue. in any case delete the account so user will be directed to log in again, or we do silent login
+                if (e is AuthenticationException) {
+                    logoutDefaultAccount()
+                }
 
                 false
             } finally {
@@ -527,8 +553,6 @@ class AuthManager : Disposable {
                 }
             }
         }
-
-
     }
 
 

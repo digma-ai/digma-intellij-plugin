@@ -23,6 +23,18 @@ class HighlightsService(val project: Project) : InsightsServiceImpl(project) {
         }
     }
 
+    fun getHighlightsImpact(queryParams: MutableMap<String, Any>): String? {
+        EDT.assertNonDispatchThread()
+
+        return try {
+            val result = AnalyticsService.getInstance(project).getHighlightsImpact(queryParams)
+            result
+        } catch (e: AnalyticsServiceException) {
+            Log.warnWithException(logger, project, e, "Error loading highlights impact {}", e.message)
+            null
+        }
+    }
+
     fun getHighlightsPerformance(queryParams: MutableMap<String, Any>): String? {
         EDT.assertNonDispatchThread()
 

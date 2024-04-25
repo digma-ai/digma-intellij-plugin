@@ -409,6 +409,10 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.getPerformanceMetrics());
     }
 
+    public String getHighlightsImpact(@NotNull Map<String, Object> queryParams) throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.getHighlightsImpact(queryParams));
+    }
+
     public String getHighlightsPerformance(@NotNull Map<String, Object> queryParams) throws AnalyticsServiceException {
         return executeCatching(() -> analyticsProviderProxy.getHighlightsPerformance(queryParams));
     }

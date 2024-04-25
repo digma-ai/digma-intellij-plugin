@@ -320,6 +320,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
+    public String getHighlightsImpact(Map<String, Object> queryParams) {
+        return execute(() -> client.analyticsProvider.getHighlightsImpact(queryParams));
+    }
+
+    @Override
     public HttpResponse lowLevelCall(HttpRequest request) {
 
         okhttp3.Response okHttp3Response;
@@ -887,6 +892,12 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         @GET("/highlights/topinsights")
         Call<String> getHighlightsTopInsights(@QueryMap Map<String, Object> fields);
 
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @GET("/highlights/impact")
+        Call<String> getHighlightsImpact(@QueryMap Map<String, Object> fields);
 
         @Headers({
                 "Accept: application/+json",

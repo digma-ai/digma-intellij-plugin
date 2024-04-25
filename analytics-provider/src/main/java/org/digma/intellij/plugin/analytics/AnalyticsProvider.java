@@ -125,4 +125,6 @@ public interface AnalyticsProvider extends Closeable {
     String getHighlightsPerformance(Map<String, Object> queryParams);
 
     String getHighlightsTopInsights(Map<String, Object> queryParams);
+
+    String getHighlightsImpact(Map<String, Object> queryParams);
 }

@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.322] - 2024-04-24
+## [2.0.323] - 2024-04-25
+
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2113
+
+## 2.0.322 - 2024-04-24
 
 - Feature/asset naviagation by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2105
 - Fixed error message for login by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2109

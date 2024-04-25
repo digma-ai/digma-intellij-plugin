@@ -9,6 +9,7 @@ import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.insights.InsightsServiceImpl
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.model.rest.highlights.HighlightsRequest
 
 
 @Service(Service.Level.PROJECT)
@@ -23,11 +24,11 @@ class HighlightsService(val project: Project) : InsightsServiceImpl(project) {
         }
     }
 
-    fun getHighlightsImpact(queryParams: MutableMap<String, Any>): String? {
+    fun getHighlightsImpact(request: HighlightsRequest): String? {
         EDT.assertNonDispatchThread()
 
         return try {
-            val result = AnalyticsService.getInstance(project).getHighlightsImpact(queryParams)
+            val result = AnalyticsService.getInstance(project).getHighlightsImpact(request)
             result
         } catch (e: AnalyticsServiceException) {
             Log.warnWithException(logger, project, e, "Error loading highlights impact {}", e.message)
@@ -35,11 +36,11 @@ class HighlightsService(val project: Project) : InsightsServiceImpl(project) {
         }
     }
 
-    fun getHighlightsPerformance(queryParams: MutableMap<String, Any>): String? {
+    fun getHighlightsPerformance(request: HighlightsRequest): String? {
         EDT.assertNonDispatchThread()
 
         return try {
-            val result = AnalyticsService.getInstance(project).getHighlightsPerformance(queryParams)
+            val result = AnalyticsService.getInstance(project).getHighlightsPerformance(request)
             result
         } catch (e: AnalyticsServiceException) {
             Log.warnWithException(logger, project, e, "Error loading highlights performance {}", e.message)
@@ -47,15 +48,15 @@ class HighlightsService(val project: Project) : InsightsServiceImpl(project) {
         }
     }
 
-    fun getHighlightsTopInsights(queryParams: MutableMap<String, Any>): String {
+    fun getHighlightsTopInsights(request: HighlightsRequest): String? {
         EDT.assertNonDispatchThread()
 
         return try {
-            val highlightsPerformance = AnalyticsService.getInstance(project).getHighlightsTopInsights(queryParams)
+            val highlightsPerformance = AnalyticsService.getInstance(project).getHighlightsTopInsights(request)
             highlightsPerformance
         } catch (e: AnalyticsServiceException) {
             Log.warnWithException(logger, project, e, "Error loading highlights top insights {}", e.message)
-            return "{}"
+            null
         }
     }
 }

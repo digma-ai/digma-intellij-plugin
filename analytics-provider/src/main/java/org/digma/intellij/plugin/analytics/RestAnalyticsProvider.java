@@ -16,6 +16,7 @@ import org.digma.intellij.plugin.model.rest.environment.Env;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.event.*;
+import org.digma.intellij.plugin.model.rest.highlights.HighlightsRequest;
 import org.digma.intellij.plugin.model.rest.insights.*;
 import org.digma.intellij.plugin.model.rest.livedata.*;
 import org.digma.intellij.plugin.model.rest.login.*;
@@ -310,18 +311,18 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
-    public String getHighlightsPerformance(Map<String, Object> queryParams) {
-        return execute(() -> client.analyticsProvider.getHighlightsPerformance(queryParams));
+    public String getHighlightsPerformance(HighlightsRequest request) {
+        return execute(() -> client.analyticsProvider.getHighlightsPerformance(request));
     }
 
     @Override
-    public String getHighlightsTopInsights(Map<String, Object> queryParams) {
-        return execute(() -> client.analyticsProvider.getHighlightsTopInsights(queryParams));
+    public String getHighlightsTopInsights(HighlightsRequest request) {
+        return execute(() -> client.analyticsProvider.getHighlightsTopInsights(request));
     }
 
     @Override
-    public String getHighlightsImpact(Map<String, Object> queryParams) {
-        return execute(() -> client.analyticsProvider.getHighlightsImpact(queryParams));
+    public String getHighlightsImpact(HighlightsRequest request) {
+        return execute(() -> client.analyticsProvider.getHighlightsImpact(request));
     }
 
     @Override
@@ -882,22 +883,22 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @GET("/highlights/performance")
-        Call<String> getHighlightsPerformance(@QueryMap Map<String, Object> fields);
+        @POST("/highlights/performance")
+        Call<String> getHighlightsPerformance(@Body HighlightsRequest request);
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @GET("/highlights/topinsights")
-        Call<String> getHighlightsTopInsights(@QueryMap Map<String, Object> fields);
+        @POST("/highlights/topinsights")
+        Call<String> getHighlightsTopInsights(@Body HighlightsRequest request);
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @GET("/highlights/impact")
-        Call<String> getHighlightsImpact(@QueryMap Map<String, Object> fields);
+        @POST("/highlights/impact")
+        Call<String> getHighlightsImpact(@Body HighlightsRequest request);
 
         @Headers({
                 "Accept: application/+json",

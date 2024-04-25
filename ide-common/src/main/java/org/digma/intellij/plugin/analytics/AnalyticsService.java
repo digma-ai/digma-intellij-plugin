@@ -23,6 +23,7 @@ import org.digma.intellij.plugin.model.rest.environment.Env;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.event.*;
+import org.digma.intellij.plugin.model.rest.highlights.HighlightsRequest;
 import org.digma.intellij.plugin.model.rest.insights.*;
 import org.digma.intellij.plugin.model.rest.livedata.*;
 import org.digma.intellij.plugin.model.rest.lowlevel.*;
@@ -409,16 +410,16 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.getPerformanceMetrics());
     }
 
-    public String getHighlightsImpact(@NotNull Map<String, Object> queryParams) throws AnalyticsServiceException {
-        return executeCatching(() -> analyticsProviderProxy.getHighlightsImpact(queryParams));
+    public String getHighlightsImpact(HighlightsRequest request) throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.getHighlightsImpact(request));
     }
 
-    public String getHighlightsPerformance(@NotNull Map<String, Object> queryParams) throws AnalyticsServiceException {
-        return executeCatching(() -> analyticsProviderProxy.getHighlightsPerformance(queryParams));
+    public String getHighlightsPerformance(HighlightsRequest request) throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.getHighlightsPerformance(request));
     }
 
-    public String getHighlightsTopInsights(@NotNull Map<String, Object> queryParams) throws AnalyticsServiceException {
-        return executeCatching(() -> analyticsProviderProxy.getHighlightsTopInsights(queryParams));
+    public String getHighlightsTopInsights(HighlightsRequest request) throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.getHighlightsTopInsights(request));
     }
 
     public Optional<LoadStatusResponse> getLoadStatus() throws AnalyticsServiceException {

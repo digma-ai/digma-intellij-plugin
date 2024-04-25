@@ -34,7 +34,7 @@ class AllNotificationsPanel(private val project: Project) : DisposablePanel() {
         return if (JBCefApp.isSupported()) {
             JCefComponentBuilder(project, "AllNotifications", project.service<NotificationsService>())
                 .url(NOTIFICATIONS_URL)
-                .addMessageRouterHandler(AllNotificationsMessageRouterHandler(project))
+                .addMessageRouterHandler(AllNotificationsMessageRouterHandler(project, project.service<NotificationsService>()))
                 .schemeHandlerFactory(NotificationsSchemeHandlerFactory(project, NotificationViewMode.full))
                 .build()
 

@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.jaegerui;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import org.cef.browser.CefBrowser;
@@ -19,14 +20,14 @@ public class JaegerUIMessageRouterHandler extends BaseMessageRouterHandler {
     private final Logger logger = Logger.getInstance(JaegerUIMessageRouterHandler.class);
 
 
-    public JaegerUIMessageRouterHandler(Project project) {
-        super(project);
+    public JaegerUIMessageRouterHandler(Project project, Disposable parentDisposable) {
+        super(project, parentDisposable);
     }
 
 
     @NotNull
     @Override
-    public String getOriginForTroubleshootingEvent() {
+    public String getName() {
         return "jaegerui";
     }
 

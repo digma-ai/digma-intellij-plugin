@@ -32,7 +32,7 @@ public class DashboardFileEditor extends UserDataHolderBase implements FileEdito
 
         var jbCefClient = jbCefBrowser.getJBCefClient();
         cefMessageRouter = CefMessageRouter.create();
-        cefMessageRouter.addHandler(new DashboardMessageRouterHandler(project), true);
+        cefMessageRouter.addHandler(new DashboardMessageRouterHandler(project, this), true);
         jbCefClient.getCefClient().addMessageRouter(cefMessageRouter);
 
         var lifeSpanHandler = new CefLifeSpanHandlerAdapter() {

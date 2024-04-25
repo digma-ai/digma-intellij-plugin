@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.IntNode
 import com.fasterxml.jackson.databind.node.ObjectNode
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
@@ -23,7 +24,8 @@ import org.digma.intellij.plugin.ui.jcef.model.Payload
 import org.digma.intellij.plugin.ui.notifications.model.SetNotificationsMessage
 
 
-abstract class NotificationsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(project) {
+abstract class NotificationsMessageRouterHandler(project: Project, parentDisposable: Disposable) :
+    BaseMessageRouterHandler(project, parentDisposable) {
 
     abstract fun doClose()
 
@@ -139,8 +141,8 @@ abstract class NotificationsMessageRouterHandler(project: Project) : BaseMessage
 }
 
 
-class TopNotificationsMessageRouterHandler(project: Project, private val topNotificationsPanel: TopNotificationsPanel) :
-    NotificationsMessageRouterHandler(project) {
+class TopNotificationsMessageRouterHandler(project: Project, parentDisposable: Disposable, private val topNotificationsPanel: TopNotificationsPanel) :
+    NotificationsMessageRouterHandler(project, parentDisposable) {
 
 
     override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
@@ -171,7 +173,7 @@ class TopNotificationsMessageRouterHandler(project: Project, private val topNoti
     }
 
 
-    override fun getOriginForTroubleshootingEvent(): String {
+    override fun getName(): String {
         return "top notifications"
     }
 
@@ -189,10 +191,10 @@ class TopNotificationsMessageRouterHandler(project: Project, private val topNoti
 }
 
 
-class AllNotificationsMessageRouterHandler(project: Project) :
-    NotificationsMessageRouterHandler(project) {
+class AllNotificationsMessageRouterHandler(project: Project, parentDisposable: Disposable) :
+    NotificationsMessageRouterHandler(project, parentDisposable) {
 
-    override fun getOriginForTroubleshootingEvent(): String {
+    override fun getName(): String {
         return "all notifications"
     }
 

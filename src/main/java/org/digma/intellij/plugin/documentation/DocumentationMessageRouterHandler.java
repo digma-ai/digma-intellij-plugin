@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.documentation;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.intellij.openapi.Disposable;
 import com.intellij.openapi.project.Project;
 import org.cef.browser.CefBrowser;
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler;
@@ -9,14 +10,14 @@ import org.jetbrains.annotations.NotNull;
 public class DocumentationMessageRouterHandler extends BaseMessageRouterHandler {
 
 
-    public DocumentationMessageRouterHandler(Project project) {
-        super(project);
+    public DocumentationMessageRouterHandler(Project project, Disposable parentDisposable) {
+        super(project, parentDisposable);
     }
 
 
     @NotNull
     @Override
-    public String getOriginForTroubleshootingEvent() {
+    public String getName() {
         return "documentation";
     }
 

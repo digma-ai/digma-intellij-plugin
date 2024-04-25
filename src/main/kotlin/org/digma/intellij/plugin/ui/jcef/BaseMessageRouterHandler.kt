@@ -3,10 +3,16 @@ package org.digma.intellij.plugin.ui.jcef
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.NullNode
+import com.intellij.collaboration.async.disposingScope
 import com.intellij.ide.BrowserUtil
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.fileEditor.impl.HTMLEditorProvider
 import com.intellij.openapi.project.Project
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.asContextElement
+import kotlinx.coroutines.launch
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
 import org.cef.callback.CefQueryCallback
@@ -14,12 +20,11 @@ import org.cef.handler.CefMessageRouterHandlerAdapter
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.InsightStatsChangedEvent
 import org.digma.intellij.plugin.analytics.getAllEnvironments
-import org.digma.intellij.plugin.analytics.getEnvironmentById
+import org.digma.intellij.plugin.analytics.getEnvironmentNameById
 import org.digma.intellij.plugin.analytics.setCurrentEnvironmentById
 import org.digma.intellij.plugin.auth.AuthManager
 import org.digma.intellij.plugin.auth.LoginResult
 import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
-import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.createObjectMapper
 import org.digma.intellij.plugin.common.stopWatchStart
@@ -52,11 +57,32 @@ import org.digma.intellij.plugin.ui.jcef.state.JCEFStateManager
  * BaseMessageRouterHandler is a CommonMessageRouterHandler and also implements CefMessageRouterHandler.
  * it is meant to be used as base class for CefMessageRouterHandlers and has implementation for common messages.
  */
-abstract class BaseMessageRouterHandler(protected val project: Project) : CommonMessageRouterHandler, CefMessageRouterHandlerAdapter() {
+abstract class BaseMessageRouterHandler(protected val project: Project, private val parentDisposable: Disposable) : CommonMessageRouterHandler,
+    CefMessageRouterHandlerAdapter() {
 
     protected val logger = Logger.getInstance(this::class.java)
 
     override val objectMapper: ObjectMapper = createObjectMapper()
+
+    companion object {
+        @JvmStatic
+        private val JOB_THREAD_LOCAL = ThreadLocal<Job?>()
+
+        @JvmStatic
+        fun isCurrentJobCanceled(): Boolean {
+            val job = JOB_THREAD_LOCAL.get()
+            return job?.isCancelled ?: false
+        }
+
+    }
+
+
+    /**
+     * the name of this handler. usually the name of the jcef app.
+     * usually used for logging and reporting purposes.
+     */
+    abstract fun getName(): String
+
 
     override fun onQuery(
         browser: CefBrowser,
@@ -64,104 +90,164 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
         queryId: Long,
         request: String,
         persistent: Boolean,
-        callback: CefQueryCallback,
+        callback: CefQueryCallback
+    ): Boolean {
+
+        val requestJsonNode = getRequestJsonNode(request)
+        val action: String? = requestJsonNode?.let { getAction(it) }
+
+        if (requestJsonNode == null || action == null) {
+            //todo: maybe call callback.failure
+            callback.success("")
+            return false
+        }
+
+
+        val myJob = Job()
+
+        val job =
+            parentDisposable.disposingScope(CoroutineName("${getName()}-$action") + myJob + JOB_THREAD_LOCAL.asContextElement(value = myJob)).launch {
+            try {
+                val stopWatch = stopWatchStart()
+
+
+                val handled = onQueryImpl(browser, request, requestJsonNode, action)
+
+                stopWatchStop(stopWatch) { time: Long ->
+                    Log.log(logger::trace, "action {} took {}", action, time)
+                }
+
+            } catch (e: Throwable) {
+                Log.debugWithException(logger, e, "Exception in onQuery {}", request)
+                ErrorReporter.getInstance().reportError(project, "BaseMessageRouterHandler.job", e)
+            }
+            }
+
+
+        //return success regardless of the background thread
+        callback.success("")
+        return true
+
+    }
+
+
+    private fun getAction(requestJsonNode: JsonNode): String? {
+        return try {
+            requestJsonNode["action"].asText()
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError(project, "BaseMessageRouterHandler.getAction", e)
+            null
+        }
+    }
+
+
+    private fun getRequestJsonNode(request: String): JsonNode? {
+        return try {
+            objectMapper.readTree(request)
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError(project, "BaseMessageRouterHandler.getRequestJsonNode", e)
+            null
+        }
+    }
+
+
+    private fun onQueryImpl(
+        browser: CefBrowser,
+        request: String,
+        requestJsonNode: JsonNode,
+        action: String,
     ): Boolean {
 
         Log.log(logger::trace, "got onQuery event {}", request)
 
-        Backgroundable.executeOnPooledThread {
 
-            try {
-                val stopWatch = stopWatchStart()
+        try {
 
-                val requestJsonNode = objectMapper.readTree(request)
-                val action: String = requestJsonNode["action"].asText()
+            Log.log(logger::trace, "executing action {}", action)
 
-                Log.log(logger::trace, "executing action {}", action)
+            //do common messages for all apps, or call doOnQuery
+            when (action) {
+                JCEFGlobalConstants.GLOBAL_PERSONALIZE_REGISTER -> {
+                    val payload = getPayloadFromRequestNonNull(requestJsonNode)
+                    val registrationMap: Map<String, String> =
+                        payload.fields().asSequence()
+                            .associate { mutableEntry: MutableMap.MutableEntry<String, JsonNode> ->
+                                Pair(
+                                    mutableEntry.key,
+                                    mutableEntry.value.asText()
+                                )
+                            }
+                    UserRegistrationManager.getInstance(project).register(registrationMap)
+                }
 
-                //do common messages for all apps, or call doOnQuery
-                when (action) {
-                    JCEFGlobalConstants.GLOBAL_PERSONALIZE_REGISTER -> {
-                        val payload = getPayloadFromRequestNonNull(requestJsonNode)
-                        val registrationMap: Map<String, String> =
-                            payload.fields().asSequence()
-                                .associate { mutableEntry: MutableMap.MutableEntry<String, JsonNode> ->
-                                    Pair(
-                                        mutableEntry.key,
-                                        mutableEntry.value.asText()
-                                    )
-                                }
-                        UserRegistrationManager.getInstance(project).register(registrationMap)
+                JCEFGlobalConstants.GLOBAL_OPEN_TROUBLESHOOTING_GUIDE -> {
+                    ActivityMonitor.getInstance(project)
+                        .registerUserAction("troubleshooting link clicked", mapOf("origin" to getName()))
+                    EDT.ensureEDT {
+                        ToolWindowShower.getInstance(project).showToolWindow()
+                        MainToolWindowCardsController.getInstance(project).showTroubleshooting()
                     }
+                }
 
-                    JCEFGlobalConstants.GLOBAL_OPEN_TROUBLESHOOTING_GUIDE -> {
-                        ActivityMonitor.getInstance(project)
-                            .registerUserAction("troubleshooting link clicked", mapOf("origin" to getOriginForTroubleshootingEvent()))
-                        EDT.ensureEDT {
-                            ToolWindowShower.getInstance(project).showToolWindow()
-                            MainToolWindowCardsController.getInstance(project).showTroubleshooting()
+                JCEFGlobalConstants.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER -> {
+                    val openBrowserRequest = jsonToObject(request, OpenInDefaultBrowserRequest::class.java)
+                    openBrowserRequest.let {
+                        it.payload.url.let { url ->
+                            BrowserUtil.browse(url)
                         }
                     }
+                }
 
-                    JCEFGlobalConstants.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER -> {
-                        val openBrowserRequest = jsonToObject(request, OpenInDefaultBrowserRequest::class.java)
-                        openBrowserRequest.let {
-                            it.payload.url.let { url ->
-                                BrowserUtil.browse(url)
+                JCEFGlobalConstants.GLOBAL_OPEN_URL_IN_EDITOR_TAB -> {
+                    val openInInternalBrowserRequest = jsonToObject(request, OpenInInternalBrowserRequest::class.java)
+                    EDT.ensureEDT {
+                        HTMLEditorProvider.openEditor(
+                            project,
+                            openInInternalBrowserRequest.payload.title,
+                            openInInternalBrowserRequest.payload.url,
+                            "<!DOCTYPE html>\n" +
+                                    "<html lang=\"en\">\n" +
+                                    "  <head>\n" +
+                                    "    <meta charset=\"UTF-8\" />\n" +
+                                    "    <style>\n" +
+                                    "      body {\n" +
+                                    "        display: flex;\n" +
+                                    "        justify-content: center;\n" +
+                                    "        padding-top: 100px;\n" +
+                                    "        text-align: center;\n" +
+                                    "      }\n" +
+                                    "    </style>\n" +
+                                    "  </head>\n" +
+                                    "  <body>\n" +
+                                    "    <h1>Timeout loading page<h1>\n" +
+                                    "  </body>\n" +
+                                    "</html>"
+                        )
+                    }
+                }
+
+                JCEFGlobalConstants.GLOBAL_SEND_TRACKING_EVENT -> {
+                    val trackingRequest = jsonToObject(request, SendTrackingEventRequest::class.java)
+                    trackingRequest.let {
+                        it.payload?.let { pl ->
+                            if (pl.data == null) {
+                                ActivityMonitor.getInstance(project).registerCustomEvent(pl.eventName)
+                            } else {
+                                ActivityMonitor.getInstance(project).registerCustomEvent(pl.eventName, pl.data)
                             }
                         }
                     }
+                }
 
-                    JCEFGlobalConstants.GLOBAL_OPEN_URL_IN_EDITOR_TAB -> {
-                        val openInInternalBrowserRequest = jsonToObject(request, OpenInInternalBrowserRequest::class.java)
-                        EDT.ensureEDT {
-                            HTMLEditorProvider.openEditor(
-                                project,
-                                openInInternalBrowserRequest.payload.title,
-                                openInInternalBrowserRequest.payload.url,
-                                "<!DOCTYPE html>\n" +
-                                        "<html lang=\"en\">\n" +
-                                        "  <head>\n" +
-                                        "    <meta charset=\"UTF-8\" />\n" +
-                                        "    <style>\n" +
-                                        "      body {\n" +
-                                        "        display: flex;\n" +
-                                        "        justify-content: center;\n" +
-                                        "        padding-top: 100px;\n" +
-                                        "        text-align: center;\n" +
-                                        "      }\n" +
-                                        "    </style>\n" +
-                                        "  </head>\n" +
-                                        "  <body>\n" +
-                                        "    <h1>Timeout loading page<h1>\n" +
-                                        "  </body>\n" +
-                                        "</html>"
-                            )
-                        }
-                    }
+                JCEFGlobalConstants.GLOBAL_SAVE_TO_PERSISTENCE -> {
+                    val saveToPersistenceRequest = jsonToObject(request, SaveToPersistenceRequest::class.java)
+                    JCEFPersistenceService.getInstance(project).saveToPersistence(saveToPersistenceRequest)
+                }
 
-                    JCEFGlobalConstants.GLOBAL_SEND_TRACKING_EVENT -> {
-                        val trackingRequest = jsonToObject(request, SendTrackingEventRequest::class.java)
-                        trackingRequest.let {
-                            it.payload?.let { pl ->
-                                if (pl.data == null) {
-                                    ActivityMonitor.getInstance(project).registerCustomEvent(pl.eventName)
-                                } else {
-                                    ActivityMonitor.getInstance(project).registerCustomEvent(pl.eventName, pl.data)
-                                }
-                            }
-                        }
-                    }
-
-                    JCEFGlobalConstants.GLOBAL_SAVE_TO_PERSISTENCE -> {
-                        val saveToPersistenceRequest = jsonToObject(request, SaveToPersistenceRequest::class.java)
-                        JCEFPersistenceService.getInstance(project).saveToPersistence(saveToPersistenceRequest)
-                    }
-
-                    JCEFGlobalConstants.GLOBAL_GET_FROM_PERSISTENCE -> {
-                        val getFromPersistenceRequest = jsonToObject(request, GetFromPersistenceRequest::class.java)
-                        JCEFPersistenceService.getInstance(project).getFromPersistence(browser, getFromPersistenceRequest)
-                    }
+                JCEFGlobalConstants.GLOBAL_GET_FROM_PERSISTENCE -> {
+                    val getFromPersistenceRequest = jsonToObject(request, GetFromPersistenceRequest::class.java)
+                    JCEFPersistenceService.getInstance(project).getFromPersistence(browser, getFromPersistenceRequest)
+                }
 
                     JCEFGlobalConstants.GLOBAL_OPEN_DASHBOARD -> {
                         val envId = getEnvironmentIdFromPayload(requestJsonNode)
@@ -172,78 +258,78 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                         }
                     }
 
-                    JCEFGlobalConstants.GLOBAL_OPEN_DOCUMENTATION -> {
-                        val payload = getPayloadFromRequest(requestJsonNode)
-                        payload?.takeIf { payload.get("page") != null }?.let { pl ->
-                            val page = pl.get("page").asText()
-                            DocumentationService.getInstance(project).openDocumentation(page)
+                JCEFGlobalConstants.GLOBAL_OPEN_DOCUMENTATION -> {
+                    val payload = getPayloadFromRequest(requestJsonNode)
+                    payload?.takeIf { payload.get("page") != null }?.let { pl ->
+                        val page = pl.get("page").asText()
+                        DocumentationService.getInstance(project).openDocumentation(page)
+                    }
+                }
+
+                JCEFGlobalConstants.GLOBAL_SET_OBSERVABILITY -> {
+                    val payload = getPayloadFromRequest(requestJsonNode)
+                    payload?.let {
+                        val isEnabledObservability = it.get("isObservabilityEnabled").asBoolean()
+                        Log.log(logger::trace, "updateSetObservability(Boolean) called")
+                        updateObservabilityValue(project, isEnabledObservability)
+                    }
+                }
+
+                JCEFGlobalConstants.GLOBAL_OPEN_INSTALLATION_WIZARD -> {
+                    val payload = getPayloadFromRequest(requestJsonNode)
+
+                    payload?.let {
+                        val skipInstallationStep = it.get("skipInstallationStep").asBoolean()
+                        EDT.ensureEDT {
+                            MainToolWindowCardsController.getInstance(project).showWizard(skipInstallationStep)
+                            ToolWindowShower.getInstance(project).showToolWindow()
                         }
                     }
+                }
 
-                    JCEFGlobalConstants.GLOBAL_SET_OBSERVABILITY -> {
-                        val payload = getPayloadFromRequest(requestJsonNode)
-                        payload?.let {
-                            val isEnabledObservability = it.get("isObservabilityEnabled").asBoolean()
-                            Log.log(logger::trace, "updateSetObservability(Boolean) called")
-                            updateObservabilityValue(project, isEnabledObservability)
-                        }
-                    }
+                JCEFGlobalConstants.GLOBAL_CHANGE_SCOPE -> {
+                    changeScope(requestJsonNode)
+                }
 
-                    JCEFGlobalConstants.GLOBAL_OPEN_INSTALLATION_WIZARD -> {
-                        val payload = getPayloadFromRequest(requestJsonNode)
+                JCEFGlobalConstants.GLOBAL_REGISTER -> {
+                    val payload = getPayloadFromRequest(requestJsonNode)
+                    payload?.let {
+                        val userDetails = mapOf("email" to payload.get("email").asText())
+                        ActivityMonitor.getInstance(project).registerCustomEvent("register user", userDetails)
 
-                        payload?.let {
-                            val skipInstallationStep = it.get("skipInstallationStep").asBoolean()
-                            EDT.ensureEDT {
-                                MainToolWindowCardsController.getInstance(project).showWizard(skipInstallationStep)
-                                ToolWindowShower.getInstance(project).showToolWindow()
-                            }
-                        }
-                    }
-
-                    JCEFGlobalConstants.GLOBAL_CHANGE_SCOPE -> {
-                        changeScope(requestJsonNode)
-                    }
-
-                    JCEFGlobalConstants.GLOBAL_REGISTER -> {
-                        val payload = getPayloadFromRequest(requestJsonNode)
-                        payload?.let {
-                            val userDetails = mapOf("email" to payload.get("email").asText());
-                            ActivityMonitor.getInstance(project).registerCustomEvent("register user", userDetails)
-
-                            val requestParams = getMapFromNode(it, objectMapper)
-                            val result = AnalyticsService.getInstance(project).register(requestParams)
-                            val message = SetRegistrationMessage(result)
-                            serializeAndExecuteWindowPostMessageJavaScript(browser, message)
-
-                            ActivityMonitor.getInstance(project).registerUserAction("user registered", userDetails)
-                        }
-                    }
-
-                    JCEFGlobalConstants.GLOBAL_LOGOUT -> {
-                        AuthManager.getInstance().logout()
-                    }
-
-                    JCEFGlobalConstants.GLOBAL_LOGIN -> {
-                        val result = login(requestJsonNode)
-                        val message = result?.let {
-                            SetLoginResultMessage(LoginResultPayload(result.isSuccess, result.error))
-                        } ?: SetLoginResultMessage(LoginResultPayload(false, null))
-
+                        val requestParams = getMapFromNode(it, objectMapper)
+                        val result = AnalyticsService.getInstance(project).register(requestParams)
+                        val message = SetRegistrationMessage(result)
                         serializeAndExecuteWindowPostMessageJavaScript(browser, message)
-                    }
 
-                    JCEFGlobalConstants.GLOBAL_CHANGE_VIEW -> {
-                        changeView(requestJsonNode)
+                        ActivityMonitor.getInstance(project).registerUserAction("user registered", userDetails)
                     }
+                }
 
-                    JCEFGlobalConstants.GLOBAL_UPDATE_STATE -> {
-                        updateState(requestJsonNode)
-                    }
+                JCEFGlobalConstants.GLOBAL_LOGOUT -> {
+                    AuthManager.getInstance().logout()
+                }
 
-                    JCEFGlobalConstants.GLOBAL_GET_STATE -> {
-                        getState(browser)
-                    }
+                JCEFGlobalConstants.GLOBAL_LOGIN -> {
+                    val result = login(requestJsonNode)
+                    val message = result?.let {
+                        SetLoginResultMessage(LoginResultPayload(result.isSuccess, result.error))
+                    } ?: SetLoginResultMessage(LoginResultPayload(false, null))
+
+                    serializeAndExecuteWindowPostMessageJavaScript(browser, message)
+                }
+
+                JCEFGlobalConstants.GLOBAL_CHANGE_VIEW -> {
+                    changeView(requestJsonNode)
+                }
+
+                JCEFGlobalConstants.GLOBAL_UPDATE_STATE -> {
+                    updateState(requestJsonNode)
+                }
+
+                JCEFGlobalConstants.GLOBAL_GET_STATE -> {
+                    getState(browser)
+                }
 
                     JCEFGlobalConstants.GLOBAL_GET_INSIGHT_STATS -> {
                         val payload = getPayloadFromRequest(requestJsonNode)
@@ -276,39 +362,32 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                         }
                     }
 
-                    JCEFGlobalConstants.GLOBAL_CHANGE_ENVIRONMENT -> {
-                        changeEnvironment(requestJsonNode)
-                    }
+                JCEFGlobalConstants.GLOBAL_CHANGE_ENVIRONMENT -> {
+                    changeEnvironment(requestJsonNode)
+                }
 
-                    JCEFGlobalConstants.GLOBAL_FINISH_DIGMATHON_GAME -> {
-                        DigmathonService.getInstance().setFinishDigmathonGameForUser()
-                    }
-
-
-                    else -> {
-                        val handled = doOnQuery(project, browser, requestJsonNode, request, action)
-                        if (!handled) {
-                            //will be caught bellow and reported by ErrorReporter
-                            throw UnknownActionException("got unknown action $action")
-                        }
-                    }
-
+                JCEFGlobalConstants.GLOBAL_FINISH_DIGMATHON_GAME -> {
+                    DigmathonService.getInstance().setFinishDigmathonGameForUser()
                 }
 
 
-                stopWatchStop(stopWatch) { time: Long ->
-                    Log.log(logger::trace, "action {} took {}", action, time)
+                else -> {
+                    val handled = doOnQuery(project, browser, requestJsonNode, request, action)
+                    if (!handled) {
+                        //will be caught bellow and reported by ErrorReporter
+                        throw UnknownActionException("got unknown action $action")
+                    }
                 }
 
-            } catch (e: Throwable) {
-                Log.debugWithException(logger, e, "Exception in onQuery {}", request)
-                ErrorReporter.getInstance().reportError(project, "BaseMessageRouterHandler.onQuery", e)
             }
+
+
+        } catch (e: Throwable) {
+            Log.debugWithException(logger, e, "Exception in onQueryImpl {}", request)
+            ErrorReporter.getInstance().reportError(project, "BaseMessageRouterHandler.onQueryImpl", e)
+            return false
         }
 
-
-        //return success regardless of the background thread
-        callback.success("")
         return true
     }
 
@@ -334,7 +413,7 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
         }
     }
 
-    abstract fun getOriginForTroubleshootingEvent(): String
+
 
 
     override fun onQueryCanceled(browser: CefBrowser?, frame: CefFrame?, queryId: Long) {
@@ -387,6 +466,7 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
         }
     }
 
+
     private fun changeEnvironment(requestJsonNode: JsonNode) {
         val environment = getEnvironmentIdFromPayload(requestJsonNode)
         environment?.let { envId ->
@@ -394,17 +474,17 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
         }
     }
 
-    private fun login (requestJsonNode: JsonNode): LoginResult? {
+    private fun login(requestJsonNode: JsonNode): LoginResult? {
         val payload = getPayloadFromRequest(requestJsonNode)
         val result = payload?.let {
             try {
                 AuthManager.getInstance().logout()
                 AuthManager.getInstance().login(it.get("email").asText(), it.get("password").asText())
             } catch (e: Exception) {
-                return@let LoginResult(false, null, null);
+                return@let LoginResult(false, null, null)
             }
         }
-        return result;
+        return result
     }
 }
 

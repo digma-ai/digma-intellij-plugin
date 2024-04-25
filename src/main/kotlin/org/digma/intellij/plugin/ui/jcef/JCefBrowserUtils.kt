@@ -26,6 +26,12 @@ fun serializeAndExecuteWindowPostMessageJavaScript(browser: CefBrowser, message:
 
 fun executeWindowPostMessageJavaScript(browser: CefBrowser, message: String, project: Project? = null) {
 
+    if (BaseMessageRouterHandler.isCurrentJobCanceled()) {
+        return
+    }
+
+
+
     Log.log(logger::trace, "sending message to jcef app {}, message {}, project {}", browser.url, message, project?.name)
 
     browser.executeJavaScript(

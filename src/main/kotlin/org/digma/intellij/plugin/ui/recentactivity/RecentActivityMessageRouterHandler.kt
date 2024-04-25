@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.ui.recentactivity
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
@@ -16,10 +17,10 @@ import org.digma.intellij.plugin.ui.recentactivity.model.CloseLiveViewMessage
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityGoToSpanRequest
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityGoToTraceRequest
 
-class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHandler(project) {
+class RecentActivityMessageRouterHandler(project: Project, parentDisposable: Disposable) : BaseMessageRouterHandler(project, parentDisposable) {
 
 
-    override fun getOriginForTroubleshootingEvent(): String {
+    override fun getName(): String {
         return "recent activity"
     }
 

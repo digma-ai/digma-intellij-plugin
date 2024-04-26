@@ -141,7 +141,7 @@ abstract class BaseMessageRouterHandler(protected val project: Project, private 
         runningJobs[action]?.cancel(CancellationException("A new job arrived"))
 
         val executor = actionExecutors.computeIfAbsent(action) {
-            newExecutor(3, it)
+            newExecutor(10, it)
         }
 
         val exceptionHandler = CoroutineExceptionHandler { ctx, exception ->

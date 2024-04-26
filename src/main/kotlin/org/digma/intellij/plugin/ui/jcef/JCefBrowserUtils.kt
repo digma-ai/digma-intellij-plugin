@@ -26,6 +26,9 @@ fun serializeAndExecuteWindowPostMessageJavaScript(browser: CefBrowser, message:
 
 fun executeWindowPostMessageJavaScript(browser: CefBrowser, message: String, project: Project? = null) {
 
+    //if this code runs under a coroutine started in BaseMessageRouterHandler.onQuery and the job was
+    // canceled then don't send the result to jcef.
+    //this also includes message bus events that are fired from the various CefMessageRouterHandler.
     if (BaseMessageRouterHandler.isCurrentJobCanceled()) {
         return
     }

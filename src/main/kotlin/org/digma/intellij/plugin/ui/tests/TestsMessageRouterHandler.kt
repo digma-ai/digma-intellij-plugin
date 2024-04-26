@@ -7,7 +7,6 @@ import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.analytics.setCurrentEnvironmentById
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.CodeObjectsUtil
-import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.tests.FilterForLatestTests
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.UserActionOrigin
@@ -21,8 +20,6 @@ import java.util.Collections
 class TestsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHandler(project) {
 
     override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
-
-        Log.log(logger::trace, project, "got action '$action' with message $requestJsonNode")
 
         when (action) {
             "TESTS/SPAN_GET_LATEST_DATA" -> handleQuerySpanGetLatestData(project, requestJsonNode)

@@ -42,3 +42,13 @@ class PoolThread(
         isDaemon = true
     }
 }
+
+fun newSingleThreadExecutor(name: String): JCefMessageHandlerExecutor {
+    return JCefMessageHandlerExecutor(1, name)
+}
+
+fun newExecutor(nThreads: Int, name: String): JCefMessageHandlerExecutor {
+    return JCefMessageHandlerExecutor(nThreads, name)
+}
+
+

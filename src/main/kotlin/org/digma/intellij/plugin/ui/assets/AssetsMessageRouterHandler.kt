@@ -17,8 +17,6 @@ class AssetsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHand
 
     override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
 
-        Log.log(logger::trace, project, "got action '$action' with message $requestJsonNode")
-
         when (action) {
 
             "ASSETS/GET_CATEGORIES_DATA" -> pushAssetCategories(browser, requestJsonNode)

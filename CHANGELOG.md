@@ -1,6 +1,16 @@
 # Changelog
 
-## [2.0.321] - 2024-04-22
+## [2.0.323] - 2024-04-25
+
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2113
+
+## 2.0.322 - 2024-04-24
+
+- Feature/asset naviagation by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2105
+- Fixed error message for login by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2109
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2112
+
+## 2.0.321 - 2024-04-22
 
 - unify action names by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2094
 - catch exceptions in settings changed Closes #2100 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2102

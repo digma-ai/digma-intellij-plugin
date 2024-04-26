@@ -9,6 +9,8 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.fileEditor.impl.HTMLEditorProvider
 import com.intellij.openapi.project.Project
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.asContextElement
@@ -64,14 +66,28 @@ abstract class BaseMessageRouterHandler(protected val project: Project, private 
 
     override val objectMapper: ObjectMapper = createObjectMapper()
 
+    private val runningJobs = mutableMapOf<String, Job>()
+    private val actionExecutors = mutableMapOf<String, JCefMessageHandlerExecutor>()
+
     companion object {
         @JvmStatic
         private val JOB_THREAD_LOCAL = ThreadLocal<Job?>()
 
         @JvmStatic
         fun isCurrentJobCanceled(): Boolean {
+
+            Log.log(logger::trace, "checking if current job canceled for thread {}", Thread.currentThread().name)
+
             val job = JOB_THREAD_LOCAL.get()
-            return job?.isCancelled ?: false
+            val isCanceled = job?.isCancelled ?: false
+
+            if (job == null) {
+                Log.log(logger::trace, "no job found for thread {}", Thread.currentThread().name)
+            } else {
+                Log.log(logger::trace, "found job for thread {} and isCanceled={}", Thread.currentThread().name, isCanceled)
+            }
+
+            return isCanceled
         }
 
     }
@@ -102,26 +118,93 @@ abstract class BaseMessageRouterHandler(protected val project: Project, private 
             return false
         }
 
+        Log.log(logger::trace, "got query {}", action)
 
+        //todo: probably not all actions should be canceled, there are actions that is ok to run concurrently without
+        // canceling the previous job. need to decide if cancellation is inclusive or exclusive.
+
+        //cancel previous job if exists.
+        //cancellation is cooperative, it does not kill the thread and does not force quiting whatever
+        // the coroutine is doing. only suspending functions check for cancellation.
+        //currently none of our code checks for cancellation. so if a job is executing for long time
+        // it will not stop its work.
+        //there is a check for cancellation only in
+        //org.digma.intellij.plugin.ui.jcef.JCefBrowserUtilsKt.executeWindowPostMessageJavaScript
+        //so only code that eventually calls this method will cooperate in cancellation.
+        //this is probably the most important thing, don't send a result to the jcef app if the job was canceled.
+        if (runningJobs.containsKey(action)) {
+            //checking runningJobs.containsKey only to log that we are going to cancel a job,
+            //although it may be already completed by the time cancel is invoked, but it's an indication
+            //of concurrent jobs for the same action
+            Log.log(logger::trace, "canceling previous running job for action {}", action)
+        }
+        runningJobs[action]?.cancel(CancellationException("A new job arrived"))
+
+        val executor = actionExecutors.computeIfAbsent(action) {
+            newExecutor(3, it)
+        }
+
+        val exceptionHandler = CoroutineExceptionHandler { ctx, exception ->
+            val name = ctx[CoroutineName]
+            Log.warnWithException(logger, project, exception, "job {} had error {}", name?.name, exception)
+        }
+
+        //myJob will become the parent of the coroutine job. canceling myJob will cancel the job.
         val myJob = Job()
+        runningJobs[action] = myJob
 
-        val job =
-            parentDisposable.disposingScope(CoroutineName("${getName()}-$action") + myJob + JOB_THREAD_LOCAL.asContextElement(value = myJob)).launch {
-            try {
-                val stopWatch = stopWatchStart()
+        @Suppress("UnstableApiUsage") val job =
+            parentDisposable.disposingScope(
+                CoroutineName("${getName()}-$action") +
+                        executor +
+                        exceptionHandler +
+                        myJob +
+                        JOB_THREAD_LOCAL.asContextElement(value = myJob)
+            ).launch {
 
+                val jobName = this.coroutineContext[CoroutineName]?.name
 
-                val handled = onQueryImpl(browser, request, requestJsonNode, action)
+                try {
 
-                stopWatchStop(stopWatch) { time: Long ->
-                    Log.log(logger::trace, "action {} took {}", action, time)
+                    Log.log(logger::trace, "starting job {} for action {} on thread {}", jobName, action, Thread.currentThread().name)
+
+                    val stopWatch = stopWatchStart()
+
+                    val handled = onQueryImpl(browser, request, requestJsonNode, action)
+                    if (!handled) {
+                        Log.log(logger::trace, "action {} was not handled", action)
+                    }
+
+                    stopWatchStop(stopWatch) { time: Long ->
+                        Log.log(logger::trace, "action {} took {}", action, time)
+                    }
+
+                    Log.log(logger::trace, "job {} for action {} completed", jobName, action)
+
+                } catch (e: Throwable) {
+                    Log.log(logger::trace, "Exception in job {} for action {}", jobName, action)
+                    ErrorReporter.getInstance().reportError(project, "BaseMessageRouterHandler.job", e)
+                }
+            }
+
+        job.invokeOnCompletion {
+
+            when (it) {
+                null -> {
+                    Log.log(logger::trace, "job for action {} completed, removing", action)
                 }
 
-            } catch (e: Throwable) {
-                Log.debugWithException(logger, e, "Exception in onQuery {}", request)
-                ErrorReporter.getInstance().reportError(project, "BaseMessageRouterHandler.job", e)
+                is CancellationException -> {
+                    Log.log(logger::trace, "job for action {} was canceled, removing", action)
+                }
+
+                else -> {
+                    Log.log(logger::trace, "job for action {} completed with error {}, removing", action, it)
+                }
             }
-            }
+
+            runningJobs.remove(action)
+        }
 
 
         //return success regardless of the background thread
@@ -412,8 +495,6 @@ abstract class BaseMessageRouterHandler(protected val project: Project, private 
             JCEFStateManager.getInstance(project).updateState(it)
         }
     }
-
-
 
 
     override fun onQueryCanceled(browser: CefBrowser?, frame: CefFrame?, queryId: Long) {

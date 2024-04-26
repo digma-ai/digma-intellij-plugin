@@ -43,7 +43,7 @@ class DigmaAccountManager
 
         private val logger: Logger = Logger.getInstance(this::class.java)
         fun createAccount(url: String, userId: String): DigmaAccount {
-            Log.log(logger::info, "creating new DigmaAccount for {}", url)
+            Log.log(logger::trace, "creating new DigmaAccount for {}", url)
             val name = Urls.newFromEncoded(url).authority.toString()
             return DigmaAccount(Account.generateId(), name, MyServerPath(url), userId)
         }
@@ -70,27 +70,27 @@ class DigmaAccountManager
     }
 
     override fun getCredentialsFlow(account: DigmaAccount): Flow<DigmaCredentials?> {
-        Log.log(logger::debug, "getCredentialsFlow called for account {}", account)
+        Log.log(logger::trace, "getCredentialsFlow called for account {}", account)
         return super.getCredentialsFlow(account)
     }
 
     override suspend fun getCredentialsState(scope: CoroutineScope, account: DigmaAccount): StateFlow<DigmaCredentials?> {
-        Log.log(logger::debug, "getCredentialsState called for account {}", account)
+        Log.log(logger::trace, "getCredentialsState called for account {}", account)
         return super.getCredentialsState(scope, account)
     }
 
     override suspend fun removeAccount(account: DigmaAccount) {
-        Log.log(logger::info, "removeAccount called for account {}", account)
+        Log.log(logger::trace, "removeAccount called for account {}", account)
         super.removeAccount(account)
     }
 
     override suspend fun updateAccount(account: DigmaAccount, credentials: DigmaCredentials) {
-        Log.log(logger::info, "updateAccount called for account {},{}", account, credentials)
+        Log.log(logger::trace, "updateAccount called for account {},{}", account, credentials)
         super.updateAccount(account, credentials)
     }
 
     override suspend fun updateAccounts(accountsWithCredentials: Map<DigmaAccount, DigmaCredentials?>) {
-        Log.log(logger::info, "updateAccounts called for account {}", accountsWithCredentials)
+        Log.log(logger::trace, "updateAccounts called for account {}", accountsWithCredentials)
         super.updateAccounts(accountsWithCredentials)
     }
 }

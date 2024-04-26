@@ -1,11 +1,9 @@
 package org.digma.intellij.plugin.auth
 
-import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
 import org.digma.intellij.plugin.analytics.RestAnalyticsProvider
 import org.digma.intellij.plugin.auth.account.DigmaAccount
 import org.digma.intellij.plugin.auth.account.DigmaAccountManager
-import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
 import org.digma.intellij.plugin.auth.credentials.DigmaCredentials
 import org.digma.intellij.plugin.model.rest.login.LoginRequest
 import org.digma.intellij.plugin.model.rest.login.RefreshRequest
@@ -28,10 +26,8 @@ class AuthManagerApiClient(private val analyticsProvider: RestAnalyticsProvider)
             loginResponse.expiration.time,
             Clock.System.now().toEpochMilliseconds()
         )
-        runBlocking {
-            DigmaAccountManager.getInstance().updateAccount(digmaAccount, digmaCredentials)
-            DigmaDefaultAccountHolder.getInstance().account = digmaAccount
-        }
+
+        updateAccount(digmaAccount, digmaCredentials)
 
         return LoginResult(true, loginResponse.userId, null)
     }
@@ -53,10 +49,8 @@ class AuthManagerApiClient(private val analyticsProvider: RestAnalyticsProvider)
             loginResponse.expiration.time,
             Clock.System.now().toEpochMilliseconds()
         )
-        runBlocking {
-            DigmaAccountManager.getInstance().updateAccount(digmaAccount, digmaCredentials)
-            DigmaDefaultAccountHolder.getInstance().account = digmaAccount
-        }
+
+        updateAccount(digmaAccount, digmaCredentials)
 
         return true
 

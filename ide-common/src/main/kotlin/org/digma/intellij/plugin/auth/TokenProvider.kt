@@ -43,7 +43,7 @@ class DefaultAccountTokenProvider : TokenProvider {
             }
         } catch (e: Throwable) {
             Log.warnWithException(logger, e, "Unable to provide token")
-            ErrorReporter.getInstance().reportInternalFatalError("DefaultAccountTokenProvider.provideToken", e)
+            ErrorReporter.getInstance().reportError("DefaultAccountTokenProvider.provideToken", e)
             null
         }
     }

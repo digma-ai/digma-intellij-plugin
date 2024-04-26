@@ -49,6 +49,9 @@ abstract class AbstractLoginHandler(protected val analyticsProvider: RestAnalyti
 
         } catch (e: Throwable) {
 
+            Log.warnWithException(logger, e, "Exception in login {}, url {}", e, analyticsProvider.apiUrl)
+            ErrorReporter.getInstance().reportError("AuthManager.login", e)
+
             if (e is AuthenticationException) {
                 Log.warnWithException(logger, e, "Exception in login, url {}", analyticsProvider.apiUrl)
                 ErrorReporter.getInstance().reportError("AuthManager.login", e)
@@ -58,11 +61,6 @@ abstract class AbstractLoginHandler(protected val analyticsProvider: RestAnalyti
                 LoginResult(false, null, e.detailedMessage)
             }
 
-            //don't report connection errors, there is no point, backend may be down and that happens a lot
-            if (!ExceptionUtils.isAnyConnectionException(e)) {
-                Log.warnWithException(logger, e, "Exception in login, url {}", analyticsProvider.apiUrl)
-                ErrorReporter.getInstance().reportError("AuthManager.login", e)
-            }
 
             LoginResult(false, null, ExceptionUtils.getNonEmptyMessage(e))
 

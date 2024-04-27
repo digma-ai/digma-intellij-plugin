@@ -113,18 +113,15 @@ class LocalLoginHandler(analyticsProvider: RestAnalyticsProvider) : AbstractLogi
             }
         } catch (e: Throwable) {
 
+            Log.warnWithException(logger, e, "Exception in loginOrRefresh {}, url {}", e, analyticsProvider.apiUrl)
+            ErrorReporter.getInstance().reportError("AuthManager.loginOrRefresh", e)
+
             //if got AuthenticationException here is may be from refresh or login, in both cases delete the current account,
             //and we'll do silent login on the next loginOrRefresh
             if (e is AuthenticationException) {
                 val errorMessage = ExceptionUtils.getNonEmptyMessage(e)
                 reportPosthogEvent("loginOrRefresh failed", mapOf("error" to errorMessage.toString()))
                 logout()
-            }
-
-            //don't report connection errors, there is no point, backend may be down and that happens a lot
-            if (!ExceptionUtils.isAnyConnectionException(e)) {
-                Log.warnWithException(logger, e, "Exception in loginOrRefresh, url {}", analyticsProvider.apiUrl)
-                ErrorReporter.getInstance().reportError("AuthManager.loginOrRefresh", e)
             }
 
             false

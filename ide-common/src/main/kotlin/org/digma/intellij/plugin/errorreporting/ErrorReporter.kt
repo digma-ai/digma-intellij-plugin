@@ -1,9 +1,7 @@
 package org.digma.intellij.plugin.errorreporting
 
-import com.github.benmanes.caffeine.cache.Caffeine
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.diagnostic.UntraceableException
 import com.intellij.openapi.project.Project
 import net.bytebuddy.ByteBuddy
 import net.bytebuddy.description.method.MethodDescription
@@ -16,9 +14,8 @@ import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.common.findActiveProject
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
-import java.lang.reflect.Field
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.toJavaDuration
 
 
 const val SEVERITY_PROP_NAME = "severity"
@@ -31,6 +28,7 @@ open class ErrorReporter {
 
     private val logger: Logger = Logger.getInstance(this::class.java)
 
+    private val frequentErrorDetector = FrequentErrorDetector(60.minutes.toJavaDuration())
 
     //must be public class
     class MyPauseInterceptor {
@@ -120,7 +118,7 @@ open class ErrorReporter {
     open fun reportError(project: Project?, message: String, action: String, details: Map<String, String>) {
 
 
-        if (isTooFrequentError(message, action)) {
+        if (frequentErrorDetector.isTooFrequentError(message, action)) {
             return
         }
 
@@ -147,11 +145,11 @@ open class ErrorReporter {
             //many times the exception is no-connection exception, and that may happen too many times.
             // when there is no connection all timers will get an AnalyticsService exception every 10 seconds, it's useless
             //to report that. AnalyticsService exceptions are reported separately and will include no-connection exceptions.
-            if (ExceptionUtils.isConnectionException(throwable) || throwable is NoSelectedEnvironmentException) {
+            if (ExceptionUtils.isAnyConnectionException(throwable) || throwable is NoSelectedEnvironmentException) {
                 return
             }
 
-            if (isTooFrequentException(message, throwable)) {
+            if (frequentErrorDetector.isTooFrequentException(message, throwable)) {
                 return
             }
 
@@ -196,7 +194,7 @@ open class ErrorReporter {
     ) {
 
         try {
-            if (isTooFrequentException(message, exception)) {
+            if (frequentErrorDetector.isTooFrequentException(message, exception)) {
                 return
             }
 
@@ -219,7 +217,7 @@ open class ErrorReporter {
     }
 
     open fun reportBackendError(project: Project?, message: String, action: String) {
-        if (isTooFrequentBackendError(message, action)) {
+        if (frequentErrorDetector.isTooFrequentError(message, action)) {
             return
         }
 
@@ -238,14 +236,14 @@ open class ErrorReporter {
         reportInternalFatalError(projectToUse, source, exception, details)
     }
 
-    //this error should be reported only when its a fatal error that we must fix quickly.
+    //this error should be reported only when it's a fatal error that we must fix quickly.
     //don't use it for all errors.
     //currently will be reported from EDT.assertNonDispatchThread and ReadActions.assertNotInReadAccess
     // which usually should be caught in development but if not, are very urgent to fix.
-    // if the error is not a result of an exception create a new RuntimeException and send it so we have the stack trace.
+    // if the error is not a result of an exception create a new RuntimeException and send it, so we have the stack trace.
     open fun reportInternalFatalError(project: Project, source: String, exception: Throwable, details: Map<String, String> = mapOf()) {
 
-        if (isTooFrequentException(source, exception)) {
+        if (frequentErrorDetector.isTooFrequentException(source, exception)) {
             return
         }
 
@@ -253,82 +251,4 @@ open class ErrorReporter {
 
     }
 
-
-
-    private fun isTooFrequentBackendError(message: String, action: String): Boolean {
-        val counter = MyCache.getOrCreate(message, action)
-        val occurrences = counter.incrementAndGet()
-        return occurrences > 1
-    }
-
-    private fun isTooFrequentError(message: String, action: String): Boolean {
-        val counter = MyCache.getOrCreate(message, action)
-        val occurrences = counter.incrementAndGet()
-        return occurrences > 1
-    }
-
-
-    private fun isTooFrequentException(message: String, t: Throwable): Boolean {
-        val hash = computeAccurateTraceHashCode(t)
-        val counter = MyCache.getOrCreate(hash, t, message)
-        val occurrences = counter.incrementAndGet()
-        return occurrences > 1
-    }
-
-
-    private fun computeAccurateTraceHashCode(throwable: Throwable): Int {
-        val backtrace = getBacktrace(throwable)
-        if (backtrace == null) {
-            val trace = if (throwable is UntraceableException) null else throwable.stackTrace
-            return trace.contentHashCode()
-        }
-        return backtrace.contentDeepHashCode()
-    }
-
-
-    private fun getBacktrace(throwable: Throwable): Array<Any>? {
-
-        val backtrace = try {
-
-            val backtraceField: Field? = com.intellij.util.ReflectionUtil.getDeclaredField(Throwable::class.java, "backtrace")
-            if (backtraceField != null) {
-                backtraceField.isAccessible = true
-                backtraceField.get(throwable)
-            } else {
-                null
-            }
-
-        } catch (e: Throwable) {
-            null
-        }
-
-        if (backtrace != null && backtrace is Array<*> && backtrace.isArrayOf<Any>()) {
-            @Suppress("UNCHECKED_CAST")
-            return backtrace as Array<Any>
-        }
-
-        return null
-
-    }
-
-}
-
-
-private object MyCache {
-    private val cache = Caffeine.newBuilder()
-        .maximumSize(1000)
-        //expireAfterAccess means we don't send the error as long as it keeps occurring until it is quite for this time,
-        //if it reappears send it again
-//        .expireAfterAccess(10, TimeUnit.MINUTES)
-        //expireAfterWrite mean the error will be sent in fixed intervals.
-        .expireAfterWrite(24, TimeUnit.HOURS)
-        .build<String, AtomicInteger>()
-
-    fun getOrCreate(hash: Int, t: Throwable, message: String): AtomicInteger {
-        return cache.get("$hash:$t:$message") { AtomicInteger() }
-    }
-
-    fun getOrCreate(message: String, action: String): AtomicInteger {
-        return cache.get("$message:$action") { AtomicInteger() }
-    }
 }

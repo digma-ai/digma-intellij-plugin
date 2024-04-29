@@ -208,7 +208,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
     @Override
     public AboutResult getAbout() {
-        return execute(client.analyticsProvider::getAbout);
+        return execute(() -> client.analyticsProvider.getAbout());
     }
 
     @Override
@@ -311,18 +311,28 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
-    public String getHighlightsPerformance(HighlightsRequest request) {
-        return execute(() -> client.analyticsProvider.getHighlightsPerformance(request));
+    public String getHighlightsPerformance(Map<String, Object> queryParams) {
+        return execute(() -> client.analyticsProvider.getHighlightsPerformance(queryParams));
     }
 
     @Override
-    public String getHighlightsTopInsights(HighlightsRequest request) {
-        return execute(() -> client.analyticsProvider.getHighlightsTopInsights(request));
+    public String getHighlightsTopInsights(Map<String, Object> queryParams) {
+        return execute(() -> client.analyticsProvider.getHighlightsTopInsights(queryParams));
     }
 
     @Override
     public String getHighlightsImpact(HighlightsRequest request) {
         return execute(() -> client.analyticsProvider.getHighlightsImpact(request));
+    }
+
+    @Override
+    public String getHighlightsPerformanceV2(HighlightsRequest request) {
+        return execute(() -> client.analyticsProvider.getHighlightsPerformanceV2(request));
+    }
+
+    @Override
+    public String getHighlightsTopInsightsV2(HighlightsRequest request) {
+        return execute(() -> client.analyticsProvider.getHighlightsTopInsightsV2(request));
     }
 
     @Override
@@ -878,20 +888,33 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         @GET("/insights/statistics")
         Call<InsightsStatsResult> getInsightsStats(@QueryMap Map<String, Object> fields);
 
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @GET("/highlights/performance")
+        Call<String> getHighlightsPerformance(@QueryMap Map<String, Object> fields);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @GET("/highlights/topinsights")
+        Call<String> getHighlightsTopInsights(@QueryMap Map<String, Object> fields);
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
         @POST("/highlights/performance")
-        Call<String> getHighlightsPerformance(@Body HighlightsRequest request);
+        Call<String> getHighlightsPerformanceV2(@Body HighlightsRequest request);
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
         @POST("/highlights/topinsights")
-        Call<String> getHighlightsTopInsights(@Body HighlightsRequest request);
+        Call<String> getHighlightsTopInsightsV2(@Body HighlightsRequest request);
 
         @Headers({
                 "Accept: application/+json",

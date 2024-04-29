@@ -36,11 +36,11 @@ class HighlightsService(val project: Project) : InsightsServiceImpl(project) {
         }
     }
 
-    fun getHighlightsPerformance(request: HighlightsRequest): String? {
+    fun getHighlightsPerformance(queryParams: MutableMap<String, Any>): String? {
         EDT.assertNonDispatchThread()
 
         return try {
-            val result = AnalyticsService.getInstance(project).getHighlightsPerformance(request)
+            val result = AnalyticsService.getInstance(project).getHighlightsPerformance(queryParams)
             result
         } catch (e: AnalyticsServiceException) {
             Log.warnWithException(logger, project, e, "Error loading highlights performance {}", e.message)
@@ -48,11 +48,35 @@ class HighlightsService(val project: Project) : InsightsServiceImpl(project) {
         }
     }
 
-    fun getHighlightsTopInsights(request: HighlightsRequest): String? {
+    fun getHighlightsTopInsights(queryParams: MutableMap<String, Any>): String {
         EDT.assertNonDispatchThread()
 
         return try {
-            val highlightsPerformance = AnalyticsService.getInstance(project).getHighlightsTopInsights(request)
+            val highlightsPerformance = AnalyticsService.getInstance(project).getHighlightsTopInsights(queryParams)
+            highlightsPerformance
+        } catch (e: AnalyticsServiceException) {
+            Log.warnWithException(logger, project, e, "Error loading highlights top insights {}", e.message)
+            return "{}"
+        }
+    }
+
+    fun getHighlightsPerformanceV2(request: HighlightsRequest): String? {
+        EDT.assertNonDispatchThread()
+
+        return try {
+            val result = AnalyticsService.getInstance(project).getHighlightsPerformanceV2(request)
+            result
+        } catch (e: AnalyticsServiceException) {
+            Log.warnWithException(logger, project, e, "Error loading highlights performance {}", e.message)
+            null
+        }
+    }
+
+    fun getHighlightsTopInsightsV2(request: HighlightsRequest): String? {
+        EDT.assertNonDispatchThread()
+
+        return try {
+            val highlightsPerformance = AnalyticsService.getInstance(project).getHighlightsTopInsightsV2(request)
             highlightsPerformance
         } catch (e: AnalyticsServiceException) {
             Log.warnWithException(logger, project, e, "Error loading highlights top insights {}", e.message)

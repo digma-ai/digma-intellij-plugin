@@ -410,16 +410,24 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.getPerformanceMetrics());
     }
 
+    public String getHighlightsPerformance(@NotNull Map<String, Object> queryParams) throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.getHighlightsPerformance(queryParams));
+    }
+
+    public String getHighlightsTopInsights(@NotNull Map<String, Object> queryParams) throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.getHighlightsTopInsights(queryParams));
+    }
+
+    public String getHighlightsPerformanceV2(HighlightsRequest request) throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.getHighlightsPerformanceV2(request));
+    }
+
+    public String getHighlightsTopInsightsV2(HighlightsRequest request) throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.getHighlightsTopInsightsV2(request));
+    }
+
     public String getHighlightsImpact(HighlightsRequest request) throws AnalyticsServiceException {
         return executeCatching(() -> analyticsProviderProxy.getHighlightsImpact(request));
-    }
-
-    public String getHighlightsPerformance(HighlightsRequest request) throws AnalyticsServiceException {
-        return executeCatching(() -> analyticsProviderProxy.getHighlightsPerformance(request));
-    }
-
-    public String getHighlightsTopInsights(HighlightsRequest request) throws AnalyticsServiceException {
-        return executeCatching(() -> analyticsProviderProxy.getHighlightsTopInsights(request));
     }
 
     public Optional<LoadStatusResponse> getLoadStatus() throws AnalyticsServiceException {

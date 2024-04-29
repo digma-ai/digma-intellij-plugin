@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
+import org.digma.intellij.plugin.analytics.getVersion
+import org.digma.intellij.plugin.analytics.isCentralized
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.highlights.HighlightsRequest
 import org.digma.intellij.plugin.ui.common.updateObservabilityValue
@@ -20,13 +22,28 @@ class HighlightsMessageRouterHandler(project: Project) : BaseCommonMessageRouter
 
     override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
 
-        when (action) {
-            "MAIN/GET_HIGHLIGHTS_PERFORMANCE_DATA" -> getHighlightsPerformance(browser, requestJsonNode)
-            "MAIN/GET_HIGHLIGHTS_TOP_ISSUES_DATA" -> getHighlightsTopInsights(browser, requestJsonNode)
-            "MAIN/GET_HIGHLIGHTS_IMPACT_DATA" -> getHighlightsImpact(browser, requestJsonNode)
+        var version = getVersion();
+        if (isCentralized() && (version == "unknown" || version > "0.3.7"))
+        {
+            when (action) {
+                "MAIN/GET_HIGHLIGHTS_PERFORMANCE_DATA" -> getHighlightsPerformanceV2(browser, requestJsonNode)
+                "MAIN/GET_HIGHLIGHTS_TOP_ISSUES_DATA" -> getHighlightsTopInsightsV2(browser, requestJsonNode)
+                "MAIN/GET_HIGHLIGHTS_IMPACT_DATA" -> getHighlightsImpact(browser, requestJsonNode)
 
-            else -> {
-                return false
+                else -> {
+                    return false
+                }
+            }
+        }
+        else {
+            when (action) {
+                "MAIN/GET_HIGHLIGHTS_PERFORMANCE_DATA" -> getHighlightsPerformance(browser, requestJsonNode)
+                "MAIN/GET_HIGHLIGHTS_TOP_ISSUES_DATA" -> getHighlightsTopInsights(browser, requestJsonNode)
+                "MAIN/GET_HIGHLIGHTS_IMPACT_DATA" -> getHighlightsImpact(browser, requestJsonNode)
+
+                else -> {
+                    return false
+                }
             }
         }
 
@@ -39,11 +56,34 @@ class HighlightsMessageRouterHandler(project: Project) : BaseCommonMessageRouter
 
         Log.log(logger::trace, project, "getHighlightsPerformance called")
 
+        val backendQueryParams = getQueryMapFromPayload(requestJsonNode, objectMapper)
+        val payload = HighlightsService.getInstance(project).getHighlightsPerformance(backendQueryParams)
+        val message = SetHighlightsPerformanceMessage(payload)
+        Log.log(logger::trace, project, "sending MAIN/GET_HIGHLIGHTS_PERFORMANCE_DATA message")
+        serializeAndExecuteWindowPostMessageJavaScript(browser, message)
+    }
+
+    private fun getHighlightsTopInsights(browser: CefBrowser, requestJsonNode: JsonNode) {
+        Log.log(logger::trace, project, "getHighlightsTopInsights called")
+
+        val backendQueryParams = getQueryMapFromPayload(requestJsonNode, objectMapper)
+        val payload = HighlightsService.getInstance(project).getHighlightsTopInsights(backendQueryParams)
+        val message = SetHighlightsTopInsightsMessage(payload)
+        Log.log(logger::trace, project, "sending MAIN/GET_HIGHLIGHTS_TOP_ISSUES_DATA message")
+        serializeAndExecuteWindowPostMessageJavaScript(browser, message)
+    }
+
+    @Synchronized
+    @Throws(JsonProcessingException::class)
+    private fun getHighlightsPerformanceV2(browser: CefBrowser, requestJsonNode: JsonNode) {
+
+        Log.log(logger::trace, project, "getHighlightsPerformance called")
+
         val payloadQuery = getPayloadQuery(requestJsonNode)
         if (payloadQuery is ObjectNode) {
 
             var request = createHighlightsRequest(payloadQuery, "scopedSpanCodeObjectId");
-            val payload = HighlightsService.getInstance(project).getHighlightsPerformance(request)
+            val payload = HighlightsService.getInstance(project).getHighlightsPerformanceV2(request)
 
             val message = SetHighlightsPerformanceMessage(payload)
             Log.log(logger::trace, project, "sending MAIN/GET_HIGHLIGHTS_PERFORMANCE_DATA message")
@@ -69,14 +109,14 @@ class HighlightsMessageRouterHandler(project: Project) : BaseCommonMessageRouter
         }
     }
 
-    private fun getHighlightsTopInsights(browser: CefBrowser, requestJsonNode: JsonNode) {
+    private fun getHighlightsTopInsightsV2(browser: CefBrowser, requestJsonNode: JsonNode) {
         Log.log(logger::trace, project, "getHighlightsTopInsights called")
 
         val payloadQuery = getPayloadQuery(requestJsonNode)
         if (payloadQuery is ObjectNode) {
 
             var request = createHighlightsRequest(payloadQuery, "scopedCodeObjectId");
-            val payload = HighlightsService.getInstance(project).getHighlightsTopInsights(request)
+            val payload = HighlightsService.getInstance(project).getHighlightsTopInsightsV2(request)
 
             val message = SetHighlightsTopInsightsMessage(payload)
             Log.log(logger::trace, project, "sending MAIN/GET_HIGHLIGHTS_TOP_ISSUES_DATA message")

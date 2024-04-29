@@ -495,7 +495,6 @@ public class AnalyticsService implements Disposable {
             var env = getCurrentEnvironmentId();
             var envId = getCurrentEnvironmentId();
             var params = new HashMap<String, Object>();
-            params.put("Environment", env);
             params.put("Environment", envId);
 
             if (spanCodeObjectId != null) {

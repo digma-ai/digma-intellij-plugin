@@ -23,6 +23,7 @@ import org.digma.intellij.plugin.model.rest.environment.Env;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.event.*;
+import org.digma.intellij.plugin.model.rest.highlights.HighlightsRequest;
 import org.digma.intellij.plugin.model.rest.insights.*;
 import org.digma.intellij.plugin.model.rest.livedata.*;
 import org.digma.intellij.plugin.model.rest.lowlevel.*;
@@ -415,6 +416,18 @@ public class AnalyticsService implements Disposable {
 
     public String getHighlightsTopInsights(@NotNull Map<String, Object> queryParams) throws AnalyticsServiceException {
         return executeCatching(() -> analyticsProviderProxy.getHighlightsTopInsights(queryParams));
+    }
+
+    public String getHighlightsPerformanceV2(HighlightsRequest request) throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.getHighlightsPerformanceV2(request));
+    }
+
+    public String getHighlightsTopInsightsV2(HighlightsRequest request) throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.getHighlightsTopInsightsV2(request));
+    }
+
+    public String getHighlightsImpact(HighlightsRequest request) throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.getHighlightsImpact(request));
     }
 
     public Optional<LoadStatusResponse> getLoadStatus() throws AnalyticsServiceException {

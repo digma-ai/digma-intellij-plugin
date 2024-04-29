@@ -11,6 +11,7 @@ import org.digma.intellij.plugin.model.rest.environment.Env;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.event.*;
+import org.digma.intellij.plugin.model.rest.highlights.HighlightsRequest;
 import org.digma.intellij.plugin.model.rest.insights.*;
 import org.digma.intellij.plugin.model.rest.livedata.*;
 import org.digma.intellij.plugin.model.rest.login.*;
@@ -125,4 +126,10 @@ public interface AnalyticsProvider extends Closeable {
     String getHighlightsPerformance(Map<String, Object> queryParams);
 
     String getHighlightsTopInsights(Map<String, Object> queryParams);
+
+    String getHighlightsPerformanceV2(HighlightsRequest request);
+
+    String getHighlightsTopInsightsV2(HighlightsRequest request);
+
+    String getHighlightsImpact(HighlightsRequest request);
 }

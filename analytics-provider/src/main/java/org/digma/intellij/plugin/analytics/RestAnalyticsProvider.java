@@ -16,6 +16,7 @@ import org.digma.intellij.plugin.model.rest.environment.Env;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.event.*;
+import org.digma.intellij.plugin.model.rest.highlights.HighlightsRequest;
 import org.digma.intellij.plugin.model.rest.insights.*;
 import org.digma.intellij.plugin.model.rest.livedata.*;
 import org.digma.intellij.plugin.model.rest.login.*;
@@ -207,7 +208,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
     @Override
     public AboutResult getAbout() {
-        return execute(client.analyticsProvider::getAbout);
+        return execute(() -> client.analyticsProvider.getAbout());
     }
 
     @Override
@@ -317,6 +318,21 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     @Override
     public String getHighlightsTopInsights(Map<String, Object> queryParams) {
         return execute(() -> client.analyticsProvider.getHighlightsTopInsights(queryParams));
+    }
+
+    @Override
+    public String getHighlightsImpact(HighlightsRequest request) {
+        return execute(() -> client.analyticsProvider.getHighlightsImpact(request));
+    }
+
+    @Override
+    public String getHighlightsPerformanceV2(HighlightsRequest request) {
+        return execute(() -> client.analyticsProvider.getHighlightsPerformanceV2(request));
+    }
+
+    @Override
+    public String getHighlightsTopInsightsV2(HighlightsRequest request) {
+        return execute(() -> client.analyticsProvider.getHighlightsTopInsightsV2(request));
     }
 
     @Override
@@ -872,7 +888,6 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         @GET("/insights/statistics")
         Call<InsightsStatsResult> getInsightsStats(@QueryMap Map<String, Object> fields);
 
-
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
@@ -887,6 +902,26 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         @GET("/highlights/topinsights")
         Call<String> getHighlightsTopInsights(@QueryMap Map<String, Object> fields);
 
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/highlights/performance")
+        Call<String> getHighlightsPerformanceV2(@Body HighlightsRequest request);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/highlights/topinsights")
+        Call<String> getHighlightsTopInsightsV2(@Body HighlightsRequest request);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/highlights/impact")
+        Call<String> getHighlightsImpact(@Body HighlightsRequest request);
 
         @Headers({
                 "Accept: application/+json",

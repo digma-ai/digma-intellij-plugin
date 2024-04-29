@@ -23,7 +23,7 @@ class HighlightsMessageRouterHandler(project: Project) : BaseCommonMessageRouter
     override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
 
         var version = getVersion();
-        if (isCentralized() && (version == "unknown" || version > "0.3.7"))
+        if (isCentralized() && (version == "unknown" || version >= "0.3.7"))
         {
             when (action) {
                 "MAIN/GET_HIGHLIGHTS_PERFORMANCE_DATA" -> getHighlightsPerformanceV2(browser, requestJsonNode)
@@ -39,7 +39,6 @@ class HighlightsMessageRouterHandler(project: Project) : BaseCommonMessageRouter
             when (action) {
                 "MAIN/GET_HIGHLIGHTS_PERFORMANCE_DATA" -> getHighlightsPerformance(browser, requestJsonNode)
                 "MAIN/GET_HIGHLIGHTS_TOP_ISSUES_DATA" -> getHighlightsTopInsights(browser, requestJsonNode)
-                "MAIN/GET_HIGHLIGHTS_IMPACT_DATA" -> getHighlightsImpact(browser, requestJsonNode)
 
                 else -> {
                     return false

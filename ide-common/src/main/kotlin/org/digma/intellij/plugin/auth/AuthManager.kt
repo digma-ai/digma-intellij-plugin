@@ -202,7 +202,8 @@ class AuthManager : Disposable {
 
             } catch (e: InvocationTargetException) {
 
-                Log.debugWithException(logger, e, "Exception in auth proxy {}", ExceptionUtils.getNonEmptyMessage(e))
+                Log.warnWithException(logger, e, "Exception in auth proxy {}", ExceptionUtils.getNonEmptyMessage(e))
+
                 if (isPaused.get()) {
                     Log.log(logger::trace, "got Exception in auth proxy but proxy is paused, rethrowing")
                     throw e

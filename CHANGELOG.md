@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.323] - 2024-04-25
+## [2.0.324] - 2024-04-26
+
+- improve AuthManager by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2115
+
+## 2.0.323 - 2024-04-25
 
 - Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2113
 

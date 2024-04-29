@@ -251,7 +251,14 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                             if (scopeNode is NullNode) {
                                 val stats = AnalyticsService.getInstance(project).getInsightsStats(null)
                                 project.messageBus.syncPublisher(InsightStatsChangedEvent.INSIGHT_STATS_CHANGED_TOPIC)
-                                    .insightStatsChanged(null, stats.analyticsInsightsCount, stats.issuesInsightsCount, stats.unreadInsightsCount)
+                                    .insightStatsChanged(
+                                        null,
+                                        stats.analyticsInsightsCount,
+                                        stats.totalQueryResultCount,
+                                        stats.unreadInsightsCount,
+                                        stats.criticalInsightsCount,
+                                        stats.allIssuesCount
+                                    )
                             } else {
                                 val spanCodeObjectId = scopeNode.get("span").get("spanCodeObjectId").asText()
                                 val stats = AnalyticsService.getInstance(project).getInsightsStats(spanCodeObjectId)
@@ -259,12 +266,12 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                                     .insightStatsChanged(
                                         scopeNode,
                                         stats.analyticsInsightsCount,
-                                        stats.issuesInsightsCount,
-                                        stats.unreadInsightsCount
+                                        stats.totalQueryResultCount,
+                                        stats.unreadInsightsCount,
+                                        stats.criticalInsightsCount,
+                                        stats.allIssuesCount
                                     )
                             }
-
-
                         }
                     }
 
@@ -356,7 +363,7 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
             CodeLocation(listOf(), listOf()),
             false,
             insightsStats?.analyticsInsightsCount ?: 0,
-            insightsStats?.issuesInsightsCount ?: 0,
+            insightsStats?.totalQueryResultCount ?: 0,
             insightsStats?.unreadInsightsCount ?: 0
         )
     }

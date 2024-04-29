@@ -5,7 +5,6 @@ import kotlinx.coroutines.runBlocking
 import org.digma.intellij.plugin.analytics.RestAnalyticsProvider
 import org.digma.intellij.plugin.auth.account.DigmaAccountManager
 import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
-import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 
@@ -30,13 +29,10 @@ interface LoginHandler {
 
             } catch (e: Throwable) {
 
-                //don't report connection errors, there is no point, backend may be down and that happens a lot
-                if (!ExceptionUtils.isAnyConnectionException(e)) {
-                    Log.warnWithException(logger, e, "Exception in createLoginHandler, url {}", analyticsProvider?.apiUrl)
-                    ErrorReporter.getInstance().reportError("AuthManager.createLoginHandler", e)
-                }
+                Log.warnWithException(logger, e, "Exception in createLoginHandler {}, url {}", e, analyticsProvider?.apiUrl)
+                ErrorReporter.getInstance().reportError("AuthManager.createLoginHandler", e)
 
-                Log.log(logger::trace, "Exception in createLoginHandler , returning NoOpLoginHandler", analyticsProvider?.apiUrl)
+                Log.log(logger::trace, "Got exception in createLoginHandler , returning NoOpLoginHandler", analyticsProvider?.apiUrl)
                 NoOpLoginHandler("error in createLoginHandler $e")
             }
         }
@@ -75,7 +71,7 @@ interface LoginHandler {
             digmaAccount != null
 
         } catch (e: Throwable) {
-            Log.warnWithException(logger, e, "Exception in logout")
+            Log.warnWithException(logger, e, "Exception in logout {}", e)
             ErrorReporter.getInstance().reportError("AuthManager.logout", e)
             false
         }

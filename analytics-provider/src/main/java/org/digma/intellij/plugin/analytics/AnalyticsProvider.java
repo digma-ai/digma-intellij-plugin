@@ -124,9 +124,11 @@ public interface AnalyticsProvider extends Closeable {
     HttpResponse lowLevelCall(HttpRequest request);
 
     String getHighlightsPerformance(Map<String, Object> queryParams);
+
     String getHighlightsTopInsights(Map<String, Object> queryParams);
 
     String getHighlightsPerformanceV2(HighlightsRequest request);
+
     String getHighlightsTopInsightsV2(HighlightsRequest request);
 
     String getHighlightsImpact(HighlightsRequest request);

@@ -23,7 +23,7 @@ class HighlightsMessageRouterHandler(project: Project) : BaseCommonMessageRouter
     override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
 
         var version = getVersion();
-        if (isCentralized() && (version == "unknown" || version >= "0.3.7"))
+        if (version == "unknown" || version >= "0.3.7")
         {
             when (action) {
                 "MAIN/GET_HIGHLIGHTS_PERFORMANCE_DATA" -> getHighlightsPerformanceV2(browser, requestJsonNode)
@@ -58,7 +58,7 @@ class HighlightsMessageRouterHandler(project: Project) : BaseCommonMessageRouter
         val backendQueryParams = getQueryMapFromPayload(requestJsonNode, objectMapper)
         val payload = HighlightsService.getInstance(project).getHighlightsPerformance(backendQueryParams)
         val message = SetHighlightsPerformanceMessage(payload)
-        Log.log(logger::trace, project, "sending MAIN/GET_HIGHLIGHTS_PERFORMANCE_DATA message")
+        Log.log(logger::trace, project, "sending MAIN/SET_HIGHLIGHTS_PERFORMANCE_DATA message")
         serializeAndExecuteWindowPostMessageJavaScript(browser, message)
     }
 
@@ -68,7 +68,7 @@ class HighlightsMessageRouterHandler(project: Project) : BaseCommonMessageRouter
         val backendQueryParams = getQueryMapFromPayload(requestJsonNode, objectMapper)
         val payload = HighlightsService.getInstance(project).getHighlightsTopInsights(backendQueryParams)
         val message = SetHighlightsTopInsightsMessage(payload)
-        Log.log(logger::trace, project, "sending MAIN/GET_HIGHLIGHTS_TOP_ISSUES_DATA message")
+        Log.log(logger::trace, project, "sending MAIN/SET_HIGHLIGHTS_TOP_ISSUES_DATA message")
         serializeAndExecuteWindowPostMessageJavaScript(browser, message)
     }
 
@@ -85,7 +85,7 @@ class HighlightsMessageRouterHandler(project: Project) : BaseCommonMessageRouter
             val payload = HighlightsService.getInstance(project).getHighlightsPerformanceV2(request)
 
             val message = SetHighlightsPerformanceMessage(payload)
-            Log.log(logger::trace, project, "sending MAIN/GET_HIGHLIGHTS_PERFORMANCE_DATA message")
+            Log.log(logger::trace, project, "sending MAIN/SET_HIGHLIGHTS_PERFORMANCE_DATA message")
             serializeAndExecuteWindowPostMessageJavaScript(browser, message)
         }
     }
@@ -103,7 +103,7 @@ class HighlightsMessageRouterHandler(project: Project) : BaseCommonMessageRouter
             val payload = HighlightsService.getInstance(project).getHighlightsImpact(request)
 
             val message = SetHighlightsImpactMessage(payload)
-            Log.log(logger::trace, project, "sending MAIN/GET_HIGHLIGHTS_IMPACT_DATA message")
+            Log.log(logger::trace, project, "sending MAIN/SET_HIGHLIGHTS_IMPACT_DATA message")
             serializeAndExecuteWindowPostMessageJavaScript(browser, message)
         }
     }
@@ -118,7 +118,7 @@ class HighlightsMessageRouterHandler(project: Project) : BaseCommonMessageRouter
             val payload = HighlightsService.getInstance(project).getHighlightsTopInsightsV2(request)
 
             val message = SetHighlightsTopInsightsMessage(payload)
-            Log.log(logger::trace, project, "sending MAIN/GET_HIGHLIGHTS_TOP_ISSUES_DATA message")
+            Log.log(logger::trace, project, "sending MAIN/SET_HIGHLIGHTS_TOP_ISSUES_DATA message")
             serializeAndExecuteWindowPostMessageJavaScript(browser, message)
         }
     }

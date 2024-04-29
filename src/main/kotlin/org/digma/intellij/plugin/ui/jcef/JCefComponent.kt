@@ -261,7 +261,8 @@ private constructor(
                     analyticsInsightsCount: Int,
                     issuesInsightsCount: Int,
                     unreadInsightsCount: Int,
-                    criticalInsightsCount: Int
+                    criticalInsightsCount: Int,
+                    allIssuesCount: Int
                 ) {
                     try {
                         sendSetInsightStatsMessage(
@@ -270,7 +271,8 @@ private constructor(
                             analyticsInsightsCount,
                             issuesInsightsCount,
                             unreadInsightsCount,
-                            criticalInsightsCount
+                            criticalInsightsCount,
+                            allIssuesCount
                         )
                     } catch (e: Throwable) {
                         ErrorReporter.getInstance().reportError("JCefComponent.insightStatsChanged", e)

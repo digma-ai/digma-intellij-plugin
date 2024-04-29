@@ -18,6 +18,7 @@ interface InsightStatsChangedEvent {
         analyticsInsightsCount: Int,
         issuesInsightsCount: Int,
         unreadInsightsCount: Int,
-        criticalInsightsCount: Int
+        criticalInsightsCount: Int,
+        allIssuesCount: Int
     )
 }

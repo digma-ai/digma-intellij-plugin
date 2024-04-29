@@ -7,11 +7,19 @@ import java.beans.ConstructorProperties
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class InsightsStatsResult
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-@ConstructorProperties("dismissedCount", "issuesInsightsCount", "analyticsInsightsCount", "unreadInsightsCount", "criticalInsightsCount")
+@ConstructorProperties(
+    "dismissedCount",
+    "issuesInsightsCount",
+    "analyticsInsightsCount",
+    "unreadInsightsCount",
+    "criticalInsightsCount",
+    "allIssuesCount"
+)
 constructor(
     val dismissedCount: Number,
     val issuesInsightsCount: Int,
     val analyticsInsightsCount: Int,
     val unreadInsightsCount: Int,
-    val criticalInsightsCount: Int
+    val criticalInsightsCount: Int,
+    val allIssuesCount: Int
 )

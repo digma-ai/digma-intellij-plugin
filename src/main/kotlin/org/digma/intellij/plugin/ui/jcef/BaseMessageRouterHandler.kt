@@ -256,7 +256,8 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                                         stats.analyticsInsightsCount,
                                         stats.issuesInsightsCount,
                                         stats.unreadInsightsCount,
-                                        stats.criticalInsightsCount
+                                        stats.criticalInsightsCount,
+                                        stats.allIssuesCount
                                     )
                             } else {
                                 val spanCodeObjectId = scopeNode.get("span").get("spanCodeObjectId").asText()
@@ -267,11 +268,10 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                                         stats.analyticsInsightsCount,
                                         stats.issuesInsightsCount,
                                         stats.unreadInsightsCount,
-                                        stats.criticalInsightsCount
+                                        stats.criticalInsightsCount,
+                                        stats.allIssuesCount
                                     )
                             }
-
-
                         }
                     }
 

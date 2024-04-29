@@ -232,7 +232,8 @@ fun sendSetInsightStatsMessage(
     analyticsInsightsCount: Number,
     issuesInsightsCount: Number,
     unreadInsightsCount: Number,
-    criticalInsightsCount: Number
+    criticalInsightsCount: Number,
+    allIssuesCount: Number
 ) {
     serializeAndExecuteWindowPostMessageJavaScript(
         cefBrowser,
@@ -242,7 +243,8 @@ fun sendSetInsightStatsMessage(
                 analyticsInsightsCount,
                 issuesInsightsCount,
                 unreadInsightsCount,
-                criticalInsightsCount
+                criticalInsightsCount,
+                allIssuesCount
             )
         )
     )

@@ -15,4 +15,5 @@ data class SetInsightStatsMessagePayload(
     val issuesInsightsCount: Number,
     val unreadInsightsCount: Number,
     val criticalInsightsCount: Number,
+    val allIssuesCount: Number
 )

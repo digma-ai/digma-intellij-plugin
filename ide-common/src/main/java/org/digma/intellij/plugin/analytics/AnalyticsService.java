@@ -508,7 +508,7 @@ public class AnalyticsService implements Disposable {
         } catch (Exception e) {
             Log.debugWithException(LOGGER, project, e, "error calling  insights stats", e.getMessage());
         }
-        return new InsightsStatsResult(0, 0, 0, 0, 0);
+        return new InsightsStatsResult(0, 0, 0, 0, 0, 0);
     }
 
     public HttpResponse lowLevelCall(HttpRequest request) throws AnalyticsServiceException {

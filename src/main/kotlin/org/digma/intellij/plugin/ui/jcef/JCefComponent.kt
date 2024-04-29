@@ -232,7 +232,7 @@ private constructor(
                             codeLocation,
                             hasErrors,
                             insightsStats?.analyticsInsightsCount ?: 0,
-                            insightsStats?.issuesInsightsCount ?: 0,
+                            insightsStats?.totalQueryResultCount ?: 0,
                             insightsStats?.unreadInsightsCount ?: 0
                         )
                     } catch (e: Throwable) {
@@ -259,7 +259,7 @@ private constructor(
                 override fun insightStatsChanged(
                     scope: JsonNode?,
                     analyticsInsightsCount: Int,
-                    issuesInsightsCount: Int,
+                    totalQueryResultCount: Int,
                     unreadInsightsCount: Int,
                     criticalInsightsCount: Int,
                     allIssuesCount: Int
@@ -269,7 +269,7 @@ private constructor(
                             jbCefBrowser.cefBrowser,
                             scope,
                             analyticsInsightsCount,
-                            issuesInsightsCount,
+                            totalQueryResultCount,
                             unreadInsightsCount,
                             criticalInsightsCount,
                             allIssuesCount

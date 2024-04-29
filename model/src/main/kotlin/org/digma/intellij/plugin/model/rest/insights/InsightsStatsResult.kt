@@ -9,7 +9,7 @@ data class InsightsStatsResult
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 @ConstructorProperties(
     "dismissedCount",
-    "issuesInsightsCount",
+    "totalQueryResultCount",
     "analyticsInsightsCount",
     "unreadInsightsCount",
     "criticalInsightsCount",
@@ -17,7 +17,7 @@ data class InsightsStatsResult
 )
 constructor(
     val dismissedCount: Number,
-    val issuesInsightsCount: Int,
+    val totalQueryResultCount: Int,
     val analyticsInsightsCount: Int,
     val unreadInsightsCount: Int,
     val criticalInsightsCount: Int,

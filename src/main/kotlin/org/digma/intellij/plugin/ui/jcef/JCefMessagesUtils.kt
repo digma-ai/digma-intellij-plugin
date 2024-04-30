@@ -198,12 +198,12 @@ fun sendScopeChangedMessage(
     codeLocation: CodeLocation,
     hasErrors: Boolean,
     analyticsInsightsCount: Number,
-    totalQueryResultCount: Number,
+    issuesInsightsCount: Number,
     unreadInsightsCount: Number
 ) {
     serializeAndExecuteWindowPostMessageJavaScript(
         cefBrowser,
-        SetScopeMessage(SetScopeMessagePayload(scope, codeLocation, hasErrors, analyticsInsightsCount, totalQueryResultCount, unreadInsightsCount))
+        SetScopeMessage(SetScopeMessagePayload(scope, codeLocation, hasErrors, analyticsInsightsCount, issuesInsightsCount, unreadInsightsCount))
     )
 }
 
@@ -231,7 +231,7 @@ fun sendSetInsightStatsMessage(
     cefBrowser: CefBrowser,
     scope: JsonNode?,
     analyticsInsightsCount: Number,
-    totalQueryResultCount: Number,
+    issuesInsightsCount: Number,
     unreadInsightsCount: Number,
     criticalInsightsCount: Number,
     allIssuesCount: Number
@@ -242,7 +242,7 @@ fun sendSetInsightStatsMessage(
             SetInsightStatsMessagePayload(
                 scope,
                 analyticsInsightsCount,
-                totalQueryResultCount,
+                issuesInsightsCount,
                 unreadInsightsCount,
                 criticalInsightsCount,
                 allIssuesCount

@@ -15,7 +15,7 @@ data class SetScopeMessagePayload(
     val code: CodeLocation,
     val hasErrors: Boolean,
     val analyticsInsightsCount: Number,
-    val totalQueryResultCount: Number,
+    val issuesInsightsCount: Number,
     val unreadInsightsCount: Number
 )
 

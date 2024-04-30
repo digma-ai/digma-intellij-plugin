@@ -254,7 +254,7 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                                     .insightStatsChanged(
                                         null,
                                         stats.analyticsInsightsCount,
-                                        stats.totalQueryResultCount,
+                                        stats.issuesInsightsCount,
                                         stats.unreadInsightsCount,
                                         stats.criticalInsightsCount,
                                         stats.allIssuesCount
@@ -266,7 +266,7 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                                     .insightStatsChanged(
                                         scopeNode,
                                         stats.analyticsInsightsCount,
-                                        stats.totalQueryResultCount,
+                                        stats.issuesInsightsCount,
                                         stats.unreadInsightsCount,
                                         stats.criticalInsightsCount,
                                         stats.allIssuesCount
@@ -363,7 +363,7 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
             CodeLocation(listOf(), listOf()),
             false,
             insightsStats?.analyticsInsightsCount ?: 0,
-            insightsStats?.totalQueryResultCount ?: 0,
+            insightsStats?.issuesInsightsCount ?: 0,
             insightsStats?.unreadInsightsCount ?: 0
         )
     }

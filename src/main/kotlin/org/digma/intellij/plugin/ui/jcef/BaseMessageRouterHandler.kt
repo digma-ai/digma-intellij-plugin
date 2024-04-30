@@ -355,7 +355,7 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
 
         sendEnvironmentsList(browser, getAllEnvironments(project))
 
-        sendUserInfoMessage(browser, DigmaDefaultAccountHolder.getInstance().account?.userId)
+        sendUserInfoMessage(browser, DigmaDefaultAccountHolder.getInstance().account?.userId, project)
 
         sendScopeChangedMessage(
             browser,

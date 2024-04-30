@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.ui.jcef.JBCefBrowser
@@ -17,6 +18,7 @@ import org.cef.handler.CefDownloadHandler
 import org.cef.handler.CefLifeSpanHandlerAdapter
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
+import org.digma.intellij.plugin.analytics.ApiClientChangedEvent
 import org.digma.intellij.plugin.analytics.EnvironmentChanged
 import org.digma.intellij.plugin.analytics.InsightStatsChangedEvent
 import org.digma.intellij.plugin.analytics.getAllEnvironments
@@ -29,6 +31,7 @@ import org.digma.intellij.plugin.digmathon.UserFinishedDigmathonEvent
 import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
+import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.environment.Env
 import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
 import org.digma.intellij.plugin.observability.ObservabilityChanged
@@ -53,6 +56,7 @@ private constructor(
     private val lifeSpanHandler: CefLifeSpanHandlerAdapter,
 ) : Disposable {
 
+    private val logger: Logger = Logger.getInstance(JCefComponent::class.java)
 
     private val settingsChangeListener: SettingsChangeListener
     private val analyticsServiceConnectionEventMessageBusConnection: MessageBusConnection
@@ -68,10 +72,34 @@ private constructor(
     private val digmathonActivatedParentDisposable = Disposer.newDisposable()
     private val productKeyAddedParentDisposable = Disposer.newDisposable()
     private val userFinishedDigmathonParentDisposable = Disposer.newDisposable()
+    private val apiClientChangedParentDisposable = Disposer.newDisposable()
 
 
     init {
         val connectionEventAlarm = AlarmFactory.getInstance().create(Alarm.ThreadToUse.POOLED_THREAD, connectionEventAlarmParentDisposable)
+
+
+        ApplicationManager.getApplication().messageBus.connect(apiClientChangedParentDisposable)
+            .subscribe(ApiClientChangedEvent.API_CLIENT_CHANGED_TOPIC,
+                ApiClientChangedEvent {
+
+                    //there are multiple events fired when changing api url , or when changing login info, some run in background threads,
+                    // for example every time user id changes the UI calls the INITIALIZE message to reset the view, settingChanged event is fired,
+                    // authInfoChanged is fired. all these may run in background threads. in some cases there is a race condition and th UI
+                    // will not receive the correct backend info if the message was sent before the api client was changed. this may case issues
+                    // and may cause the UI not to show login screen when necessary.
+                    //ApiClientChangedEvent is certain to be fired after the api client was changed and surely must set the correct info to the UI.
+                    Backgroundable.executeOnPooledThread {
+                        try {
+                            sendUserInfoMessage(jbCefBrowser.cefBrowser, DigmaDefaultAccountHolder.getInstance().account?.userId, project)
+                            val status = service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionLost()
+                            updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
+                            sendBackendAboutInfo(jbCefBrowser.cefBrowser, project)
+                        } catch (e: Throwable) {
+                            ErrorReporter.getInstance().reportError("JCefComponent.apiClientChanged", e)
+                        }
+                    }
+                })
 
 
         ApplicationManager.getApplication().messageBus.connect(userFinishedDigmathonParentDisposable)
@@ -109,7 +137,10 @@ private constructor(
         ApplicationUISettingsChangeNotifier.getInstance(project).addSettingsChangeListener(settingsChangeListener)
         AuthManager.getInstance().addAuthInfoChangeListener({ authInfo ->
             try {
-                sendUserInfoMessage(jbCefBrowser.cefBrowser, authInfo.userId)
+                if (logger.isTraceEnabled) {
+                    Log.log(logger::trace, "got authInfoChanged for app {}, project {}, user id {}", name, project.name, authInfo.userId)
+                }
+                sendUserInfoMessage(jbCefBrowser.cefBrowser, authInfo.userId, project)
             } catch (e: Throwable) {
                 ErrorReporter.getInstance().reportError("JCefComponent.userChanged", e)
             }
@@ -161,7 +192,6 @@ private constructor(
                     sendBackendAboutInfo(jbCefBrowser.cefBrowser, project)
                     val status = service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionLost()
                     updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
-                    sendUserInfoMessage(jbCefBrowser.cefBrowser, DigmaDefaultAccountHolder.getInstance().account?.userId)
                 } catch (e: Throwable) {
                     ErrorReporter.getInstance().reportError("JCefComponent.settingsChanged", e)
                 }
@@ -284,6 +314,7 @@ private constructor(
 
     override fun dispose() {
         try {
+            Disposer.dispose(apiClientChangedParentDisposable)
             Disposer.dispose(userFinishedDigmathonParentDisposable)
             Disposer.dispose(productKeyAddedParentDisposable)
             Disposer.dispose(digmathonActivatedParentDisposable)

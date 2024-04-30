@@ -16,23 +16,21 @@ interface LoginHandler {
 
         private val logger: Logger = Logger.getInstance(LoginHandler::class.java)
 
-        fun createLoginHandler(analyticsProvider: RestAnalyticsProvider?): LoginHandler {
+        fun createLoginHandler(analyticsProvider: RestAnalyticsProvider): LoginHandler {
 
             return try {
 
-                analyticsProvider?.let {
-                    when (it.about.isCentralize) {
-                        true -> CentralizedLoginHandler(it)
-                        false, null -> LocalLoginHandler(it)
-                    }
-                } ?: NoOpLoginHandler("analytics provider is null")
+                when (analyticsProvider.about.isCentralize) {
+                    true -> CentralizedLoginHandler(analyticsProvider)
+                    false, null -> LocalLoginHandler(analyticsProvider)
+                }
 
             } catch (e: Throwable) {
 
-                Log.warnWithException(logger, e, "Exception in createLoginHandler {}, url {}", e, analyticsProvider?.apiUrl)
+                Log.warnWithException(logger, e, "Exception in createLoginHandler {}, url {}", e, analyticsProvider.apiUrl)
                 ErrorReporter.getInstance().reportError("AuthManager.createLoginHandler", e)
 
-                Log.log(logger::trace, "Got exception in createLoginHandler , returning NoOpLoginHandler", analyticsProvider?.apiUrl)
+                Log.log(logger::trace, "Got exception in createLoginHandler , returning NoOpLoginHandler", analyticsProvider.apiUrl)
                 NoOpLoginHandler("error in createLoginHandler $e")
             }
         }

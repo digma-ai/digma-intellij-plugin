@@ -105,7 +105,6 @@ fun sendUserFinishedDigmathon(cefBrowser: CefBrowser) {
 }
 
 
-
 fun updateDigmaEngineStatus(project: Project, cefBrowser: CefBrowser) {
     try {
         val status = service<DockerService>().getActualRunningEngine(project)
@@ -122,7 +121,7 @@ fun updateDigmaEngineStatus(cefBrowser: CefBrowser, status: DigmaInstallationSta
 fun sendBackendAboutInfo(cefBrowser: CefBrowser, project: Project) {
     val about = AnalyticsService.getInstance(project).about
     val message = BackendInfoMessage(about)
-    serializeAndExecuteWindowPostMessageJavaScript(cefBrowser, message)
+    serializeAndExecuteWindowPostMessageJavaScript(cefBrowser, message, project)
 }
 
 
@@ -161,9 +160,9 @@ fun sendUserEmail(cefBrowser: CefBrowser, email: String) {
     serializeAndExecuteWindowPostMessageJavaScript(cefBrowser, setUserEmailMessage)
 }
 
-fun sendUserInfoMessage(cefBrowser: CefBrowser, userId: String?) {
+fun sendUserInfoMessage(cefBrowser: CefBrowser, userId: String?, project: Project) {
     val setUserEmailMessage = SetUserInfoMessage(UserInfoPayload(userId))
-    serializeAndExecuteWindowPostMessageJavaScript(cefBrowser, setUserEmailMessage)
+    serializeAndExecuteWindowPostMessageJavaScript(cefBrowser, setUserEmailMessage, project)
 }
 
 fun sendEnvironmentsList(cefBrowser: CefBrowser, environments: List<Env>) {

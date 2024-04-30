@@ -15,6 +15,7 @@ public class Log {
 
     public static final String DIGMA = "Digma: ";
     public static final String DIGMA_PROJECT = "Digma: Project:";
+    public static final String API_LOGGER_NAME = "api.digma.org";
 
 
     private static final FrequentErrorDetector FREQUENT_ERROR_DETECTOR = new FrequentErrorDetector(Duration.ofMinutes(10));

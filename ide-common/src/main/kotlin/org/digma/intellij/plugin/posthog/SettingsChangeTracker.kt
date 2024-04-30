@@ -5,7 +5,7 @@ import org.digma.intellij.plugin.settings.SettingsState
 
 class SettingsChangeTracker {
 
-    private val myTrackedSettings = mutableMapOf<String,String>()
+    private val myTrackedSettings = mutableMapOf<String, String>()
 
     init {
         updateTrackedSettings()
@@ -29,13 +29,13 @@ class SettingsChangeTracker {
         )
     }
 
-    private fun getDiff(oldSettings: MutableMap<String, String>, myTrackedSettings: MutableMap<String, String>): Map<String,String> {
+    private fun getDiff(oldSettings: MutableMap<String, String>, myTrackedSettings: MutableMap<String, String>): Map<String, String> {
 
-        val diffMap = mutableMapOf<String,String>()
-        oldSettings.forEach{
+        val diffMap = mutableMapOf<String, String>()
+        oldSettings.forEach {
             val key = it.key
             val value = it.value
-            if (value != myTrackedSettings[key]){
+            if (value != myTrackedSettings[key]) {
                 diffMap[key] = "[new value ${myTrackedSettings[key]}] [old value $value]"
             }
         }
@@ -43,17 +43,41 @@ class SettingsChangeTracker {
     }
 
 
-    private fun updateTrackedSettings(){
-        myTrackedSettings["apiUrl"] = SettingsState.getInstance().apiUrl
-        myTrackedSettings["jaegerQueryUrl"] = SettingsState.getInstance().jaegerQueryUrl
-        myTrackedSettings["jaegerUrl"] = SettingsState.getInstance().jaegerUrl.toString()
+    private fun updateTrackedSettings() {
+        myTrackedSettings["apiUrl"] = SettingsState.getInstance().apiUrl.let {
+            if (it.contains("localhost") || it.contains("127.0.0.1"))
+                "localhost"
+            else
+                "non-localhost"
+        }
+
+
+        myTrackedSettings["jaegerQueryUrl"] = SettingsState.getInstance().jaegerQueryUrl.let {
+            if (it.contains("localhost") || it.contains("127.0.0.1"))
+                "localhost"
+            else
+                "non-localhost"
+        }
+
+        myTrackedSettings["runtimeObservabilityBackendUrl"] = SettingsState.getInstance().runtimeObservabilityBackendUrl.let {
+            if (it.contains("localhost") || it.contains("127.0.0.1"))
+                "localhost"
+            else
+                "non-localhost"
+        }
+
+        myTrackedSettings["jaegerUrl"] = SettingsState.getInstance().jaegerUrl?.takeIf { it.isNotBlank() }?.let {
+            if (it.contains("localhost") || it.contains("127.0.0.1"))
+                "localhost"
+            else
+                "non-localhost"
+        } ?: ""
+
         myTrackedSettings["jaegerLinkMode"] = SettingsState.getInstance().jaegerLinkMode.name
         myTrackedSettings["refreshDelay"] = SettingsState.getInstance().refreshDelay.toString()
         myTrackedSettings["springBootObservabilityMode"] = SettingsState.getInstance().springBootObservabilityMode.name
-        myTrackedSettings["runtimeObservabilityBackendUrl"] = SettingsState.getInstance().runtimeObservabilityBackendUrl
         myTrackedSettings["extendedObservability"] = SettingsState.getInstance().extendedObservability.toString()
     }
-
 
 
 }

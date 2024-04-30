@@ -27,6 +27,7 @@ public class SettingsComponent {
     private final ComboBox<LinkMode> myJaegerLinkModeComboBox = new ComboBox<>(new EnumComboBoxModel<>(LinkMode.class));
     private final JBLabel myEmbeddedJaegerMessage = new JBLabel("<html><body><span style=\"color:\"" + JBColor.BLUE + "\"\"><b>Jaeger embedded is only supported for deployment on a local environment.</b></span></body>");
     private final ComboBox<SpringBootObservabilityMode> mySpringBootObservabilityModeComboBox = new ComboBox<>(new EnumComboBoxModel<>(SpringBootObservabilityMode.class));
+    private final JBLabel myRuntimeObservabilityBackendUrlLabel = new JBLabel("Runtime observability backend URL:");
     private final JBTextField myRuntimeObservabilityBackendUrlText = new JBTextField();
     private final JBTextField extendedObservabilityTextBox = new JBTextField();
 
@@ -107,6 +108,23 @@ public class SettingsComponent {
         });
 
 
+        myRuntimeObservabilityBackendUrlLabel.setToolTipText("Where should observability data be sent from the IDE? This would be the Digma collector URL typically listening to port 5050");
+
+        myRuntimeObservabilityBackendUrlText.setInputVerifier(new InputVerifier() {
+            @Override
+            public boolean verify(JComponent input) {
+                try {
+                    new URL(myRuntimeObservabilityBackendUrlText.getText().trim());
+                    myRuntimeObservabilityBackendUrlLabel.setForeground(defaultLabelForeground);
+                    return true;
+                } catch (MalformedURLException e) {
+                    myRuntimeObservabilityBackendUrlLabel.setForeground(JBColor.RED);
+                    return false;
+                }
+            }
+        });
+
+
         myEmbeddedJaegerMessage.setForeground(JBColor.BLUE);
 
         var myJaegerLinkModeLabel = new JBLabel("Jaeger link mode: ");
@@ -124,23 +142,6 @@ public class SettingsComponent {
                 + "Micrometer will use Micrometer tracing, including the annotation of 'Observed' "
         );
 
-        var myRuntimeObservabilityBackendUrlLabel = new JBLabel("Runtime observability backend URL:");
-        myRuntimeObservabilityBackendUrlLabel.setToolTipText("Where should observability data be sent from the IDE? This would be the Digma collector URL typically listening to port 5050");
-        JBLabel feedbackForRuntimeObservabilityBackendUrl = buildFeedbackNotValidUrl();
-        myRuntimeObservabilityBackendUrlText.setInputVerifier(new InputVerifier() {
-            @Override
-            public boolean verify(JComponent input) {
-                try {
-                    new URL(myRuntimeObservabilityBackendUrlText.getText().trim());
-                    feedbackForRuntimeObservabilityBackendUrl.setVisible(false);
-                    return true;
-                } catch (MalformedURLException e) {
-                    feedbackForRuntimeObservabilityBackendUrl.setVisible(true);
-                    return false;
-                }
-            }
-        });
-
         var resetButton = new JButton("Reset to defaults");
         resetButton.addActionListener(e -> resetToDefaults());
 
@@ -154,7 +155,6 @@ public class SettingsComponent {
                 .addLabeledComponent(myJaegerQueryUrlLabel, myJaegerQueryUrlText, 1, false)
                 .addLabeledComponent(mySpringBootObservabilityModeLabel, mySpringBootObservabilityModeComboBox, 1, false)
                 .addLabeledComponent(myRuntimeObservabilityBackendUrlLabel, myRuntimeObservabilityBackendUrlText, 1, false)
-                .addComponentToRightColumn(feedbackForRuntimeObservabilityBackendUrl, 1)
                 .addLabeledComponent("Extended Observability (beta)", extendedObservabilityTextBox, 1, false)
                 .addComponent(resetButton)
                 .addComponentFillVertically(new JPanel(), 0)
@@ -185,19 +185,7 @@ public class SettingsComponent {
         }
     }
 
-    @NotNull
-    private static JBLabel buildFeedbackLabel(String text, String toolTip) {
-        var feedbackLabel = new JBLabel(text);
-        feedbackLabel.setToolTipText(toolTip);
-        feedbackLabel.setForeground(JBColor.RED);
-        feedbackLabel.setVisible(false);
-        return feedbackLabel;
-    }
 
-    @NotNull
-    private static JBLabel buildFeedbackNotValidUrl() {
-        return buildFeedbackLabel("Not a valid URL", "try to use value like http://somehost:8765");
-    }
 
     public JPanel getPanel() {
         return myMainPanel;

@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.326] - 2024-04-30
+## [2.0.327] - 2024-04-30
+
+- auth manager analytics provider Closes #2124 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2125
+
+## 2.0.326 - 2024-04-30
 
 - Rollback by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2126
 

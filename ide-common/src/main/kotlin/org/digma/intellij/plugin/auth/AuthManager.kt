@@ -14,6 +14,8 @@ import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.log.Log.API_LOGGER_NAME
+import org.digma.intellij.plugin.settings.SettingsState
 import java.io.Closeable
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.InvocationTargetException
@@ -28,7 +30,7 @@ class AuthManager : Disposable {
     private val logger: Logger = Logger.getInstance(AuthManager::class.java)
 
     private val listeners: MutableList<AuthInfoChangeListener> = ArrayList()
-    private var analyticsProvider: RestAnalyticsProvider? = null
+    private var myAnalyticsProvider: RestAnalyticsProvider = createMyAnalyticsProvider(SettingsState.getInstance().apiUrl)
 
     private val isPaused: AtomicBoolean = AtomicBoolean(true)
 
@@ -39,7 +41,24 @@ class AuthManager : Disposable {
         fun getInstance(): AuthManager {
             return service<AuthManager>()
         }
+
+        private fun createMyAnalyticsProvider(url: String): RestAnalyticsProvider {
+            return RestAnalyticsProvider(url, listOf(DigmaAccessTokenAuthenticationProvider(SettingsTokenProvider())))
+            { message: String? ->
+                val apiLogger = Logger.getInstance(API_LOGGER_NAME)
+                Log.log(apiLogger::debug, "API:AuthManager: {}", message)
+            }
+        }
+
     }
+
+    @Synchronized
+    fun replaceClient(url: String) {
+        Log.log(logger::info, "replacing myAnalyticsProvider to url {}", url)
+        this.myAnalyticsProvider = createMyAnalyticsProvider(url)
+    }
+
+
 
     override fun dispose() {
         //nothing to do, used as parent disposable
@@ -73,15 +92,10 @@ class AuthManager : Disposable {
 
         Log.log(logger::info, "wrapping analyticsProvider with auth for url {}", analyticsProvider.apiUrl)
 
-        //keep the RestAnalyticsProvider every time withAuth is called, so it will always be the correct and latest one
-        Log.log(logger::info, "setting new analyticsProvider url {}", analyticsProvider.apiUrl)
-        this.analyticsProvider = analyticsProvider
-
         val loginHandler = LoginHandler.createLoginHandler(analyticsProvider)
 
-
         if (!loginHandler.loginOrRefresh()) {
-            Log.log(logger::warn, "loginOrRefresh failed for url {}", this.analyticsProvider?.apiUrl)
+            Log.log(logger::warn, "loginOrRefresh failed for url {}", this.myAnalyticsProvider.apiUrl)
         }
 
         //always return a proxy. even if login failed. the proxy will try to loginOrRefresh on AuthenticationException
@@ -93,7 +107,7 @@ class AuthManager : Disposable {
             analyticsProvider.apiUrl
         )
 
-        Log.log(logger::info, "resuming current proxy, analytics url {}", this.analyticsProvider?.apiUrl)
+        Log.log(logger::info, "resuming current proxy, analytics url {}", this.myAnalyticsProvider.apiUrl)
         isPaused.set(false)
 
         fireChange()
@@ -105,9 +119,9 @@ class AuthManager : Disposable {
     @Synchronized
     fun login(user: String, password: String): LoginResult {
 
-        Log.log(logger::info, "login called, analytics url {}", analyticsProvider?.apiUrl)
+        Log.log(logger::info, "login called, analytics url {}", myAnalyticsProvider.apiUrl)
 
-        val loginHandler = LoginHandler.createLoginHandler(analyticsProvider)
+        val loginHandler = LoginHandler.createLoginHandler(myAnalyticsProvider)
         val loginResult = loginHandler.login(user, password)
 
         Log.log(logger::info, "login result {}", loginResult)
@@ -120,9 +134,9 @@ class AuthManager : Disposable {
     @Synchronized
     fun logout() {
 
-        Log.log(logger::info, "logout called, analytics url {}", analyticsProvider?.apiUrl)
+        Log.log(logger::info, "logout called, analytics url {}", myAnalyticsProvider.apiUrl)
 
-        val loginHandler = LoginHandler.createLoginHandler(analyticsProvider)
+        val loginHandler = LoginHandler.createLoginHandler(myAnalyticsProvider)
         loginHandler.logout()
 
         fireChange()
@@ -132,9 +146,9 @@ class AuthManager : Disposable {
     @Synchronized
     private fun onAuthenticationException() {
 
-        Log.log(logger::trace, "onAuthenticationException called, analytics url {}", analyticsProvider?.apiUrl)
+        Log.log(logger::trace, "onAuthenticationException called, analytics url {}", myAnalyticsProvider.apiUrl)
 
-        val loginHandler = LoginHandler.createLoginHandler(analyticsProvider)
+        val loginHandler = LoginHandler.createLoginHandler(myAnalyticsProvider)
         loginHandler.loginOrRefresh(true)
 
         fireChange()
@@ -157,12 +171,18 @@ class AuthManager : Disposable {
             Log.log(
                 logger::trace, "firing authInfoChanged, default account {}, analytics url {}",
                 DigmaDefaultAccountHolder.getInstance().account,
-                analyticsProvider?.apiUrl
+                myAnalyticsProvider.apiUrl
             )
 
             val authInfo = AuthInfo(DigmaDefaultAccountHolder.getInstance().account?.userId)
             listeners.forEach {
                 try {
+                    Log.log(
+                        logger::trace, "firing authInfoChanged to listener {}, default account {}, analytics url {}",
+                        it,
+                        DigmaDefaultAccountHolder.getInstance().account,
+                        myAnalyticsProvider.apiUrl
+                    )
                     it.authInfoChanged(authInfo)
                 } catch (e: Throwable) {
                     ErrorReporter.getInstance().reportError("AuthManager.fireChange", e)
@@ -175,8 +195,7 @@ class AuthManager : Disposable {
     //pause the AuthManager before replacing the analytics provider.
     //can be resumed only from this class after a new client is set
     fun pauseBeforeClientChange() {
-        Log.log(logger::info, "pausing current proxy, analytics url {}", analyticsProvider?.apiUrl)
-        analyticsProvider = null
+        Log.log(logger::info, "pausing current proxy, analytics url {}", myAnalyticsProvider.apiUrl)
         isPaused.set(true)
     }
 

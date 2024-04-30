@@ -208,7 +208,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
     @Override
     public AboutResult getAbout() {
-        return execute(() -> client.analyticsProvider.getAbout());
+        return execute(client.analyticsProvider::getAbout);
     }
 
     @Override

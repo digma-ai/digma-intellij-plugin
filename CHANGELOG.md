@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.325] - 2024-04-29
+## [2.0.326] - 2024-04-30
+
+- Rollback by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2126
+
+## 2.0.325 - 2024-04-29
 
 - reorder log messages in auth package by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2120
 - Feature/statistics by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2121

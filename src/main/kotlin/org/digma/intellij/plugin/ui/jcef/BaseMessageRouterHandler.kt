@@ -123,6 +123,14 @@ abstract class BaseMessageRouterHandler(protected val project: Project, private 
         //todo: probably not all actions should be canceled, there are actions that is ok to run concurrently without
         // canceling the previous job. need to decide if cancellation is inclusive or exclusive.
 
+
+        //todo: can be implemented with flows,
+        // see https://kotlinlang.org/docs/flow.html#buffering
+        // with conflate or collectLatest
+
+
+
+
         //cancel previous job if exists.
         //cancellation is cooperative, it does not kill the thread and does not force quiting whatever
         // the coroutine is doing. only suspending functions check for cancellation.

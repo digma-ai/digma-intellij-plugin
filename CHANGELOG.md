@@ -1,6 +1,13 @@
 # Changelog
 
-## [2.0.327] - 2024-04-30
+## [2.0.328] - 2024-05-01
+
+- remove some info from settings events Closes #2013 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2127
+- update build profiles by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2131
+- Fix insights stats on analytics by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2132
+- Fix dashboards by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2133
+
+## 2.0.327 - 2024-04-30
 
 - auth manager analytics provider Closes #2124 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2125
 

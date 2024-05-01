@@ -90,9 +90,19 @@ public class ProjectSettings implements Configurable {
         SettingsState settings = SettingsState.getInstance();
         try {
             Objects.requireNonNull(mySettingsComponent.getApiUrlText(), "api url can not be null");
+            Objects.requireNonNull(mySettingsComponent.getRuntimeObservabilityBackendUrl(), "Runtime observability url can not be null");
         } catch (Exception e) {
             throw new ConfigurationException(e.getMessage(), e, e.getClass().getSimpleName());
         }
+
+        if (mySettingsComponent.getApiUrlText().isBlank()) {
+            throw new ConfigurationException("Api url can not be empty");
+        }
+
+        if (mySettingsComponent.getRuntimeObservabilityBackendUrl().isBlank()) {
+            throw new ConfigurationException("Runtime observability url can not be empty");
+        }
+
 
         if (!CommonUtils.isWelFormedUrl(mySettingsComponent.getApiUrlText())) {
             throw new ConfigurationException("Api url is not a well formed url");
@@ -102,11 +112,16 @@ public class ProjectSettings implements Configurable {
             throw new ConfigurationException("Api url schema must be https");
         }
 
+        if (!CommonUtils.isWelFormedUrl(mySettingsComponent.getRuntimeObservabilityBackendUrl())) {
+            throw new ConfigurationException("Runtime observability is not a well formed url");
+        }
+
         if (mySettingsComponent.getJaegerUrl() != null &&
                 !mySettingsComponent.getJaegerUrl().isBlank() &&
                 !CommonUtils.isWelFormedUrl(mySettingsComponent.getJaegerUrl())) {
             throw new ConfigurationException("Jaeger url is not a well formed url");
         }
+
 
         if (mySettingsComponent.getJaegerLinkMode() == LinkMode.Embedded) {
             if (!CommonUtils.isWelFormedUrl(mySettingsComponent.getJaegerQueryUrl())) {

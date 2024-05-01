@@ -63,7 +63,7 @@ public final class DashboardService {
             var file = editor.getFile();
             if (file != null && DashboardVirtualFile.isDashboardVirtualFile(file)) {
                 DashboardVirtualFile openFile = (DashboardVirtualFile) file;
-                if (Objects.equals(openFile.getDashboardEnvId(), dashboardName)) {
+                if (Objects.equals(openFile.getDashboardName(), dashboardName)) {
                     EDT.ensureEDT(() -> FileEditorManager.getInstance(project).openFile(file, true, true));
                     return true;
                 }

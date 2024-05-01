@@ -14,7 +14,7 @@ import org.cef.handler.CefMessageRouterHandlerAdapter
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.InsightStatsChangedEvent
 import org.digma.intellij.plugin.analytics.getAllEnvironments
-import org.digma.intellij.plugin.analytics.getEnvironmentNameById
+import org.digma.intellij.plugin.analytics.getEnvironmentById
 import org.digma.intellij.plugin.analytics.setCurrentEnvironmentById
 import org.digma.intellij.plugin.auth.AuthManager
 import org.digma.intellij.plugin.auth.LoginResult
@@ -166,8 +166,9 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                     JCEFGlobalConstants.GLOBAL_OPEN_DASHBOARD -> {
                         val envId = getEnvironmentIdFromPayload(requestJsonNode)
                         envId?.let { env ->
-                            val envName = getEnvironmentNameById(project, env)
-                            DashboardService.getInstance(project).openDashboard("Dashboard Panel - $envName")
+                            getEnvironmentById(project, env)?.let {
+                                DashboardService.getInstance(project).openDashboard("Dashboard Panel - ${it.name} - ${it.type}")
+                            }
                         }
                     }
 

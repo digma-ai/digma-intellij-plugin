@@ -15,7 +15,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 
-import static org.digma.intellij.plugin.analytics.EnvUtilsKt.getCurrentEnvironmentName;
+import static org.digma.intellij.plugin.analytics.EnvUtilsKt.getCurrentEnvironmentId;
 
 public class DashboardIndexTemplateBuilder {
     private final Logger logger = Logger.getInstance(DashboardIndexTemplateBuilder.class);
@@ -61,7 +61,7 @@ public class DashboardIndexTemplateBuilder {
             data.put(DIGMA_API_URL, SettingsState.getInstance().apiUrl);
 
             data.put(DASHBOARD_REFRESH_INTERVAL, 10*1000);
-            data.put(DASHBOARD_ENVIRONMENT, getCurrentEnvironmentName(project));
+            data.put(DASHBOARD_ENVIRONMENT, getCurrentEnvironmentId(project));
 
             Template template = freemarketConfiguration.getTemplate(INDEX_TEMPLATE_NAME);
             StringWriter stringWriter = new StringWriter();

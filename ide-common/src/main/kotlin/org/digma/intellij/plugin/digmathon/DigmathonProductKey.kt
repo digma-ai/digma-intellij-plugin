@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets
 
 
 private const val MY_SERVICE = "org.digma.digmathon.productKey"
-private const val MY_KEY = "product-key-2024.4"
+private const val MY_KEY = "product-key-2024.5"
 
 class DigmathonProductKey {
 

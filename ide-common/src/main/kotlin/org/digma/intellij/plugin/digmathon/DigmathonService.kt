@@ -218,7 +218,6 @@ class DigmathonService : Disposable {
                 this.viewedInsights.computeIfAbsent(it) { Instant.now() }
             }
             flushInsightsViewedToPersistence()
-            PersistenceService.getInstance().setDigmathonInsightsViewedLastUpdated(Instant.now())
         }
     }
 

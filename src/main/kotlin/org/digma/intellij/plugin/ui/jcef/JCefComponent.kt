@@ -109,13 +109,13 @@ private constructor(
                     sendUserFinishedDigmathon(jbCefBrowser.cefBrowser)
                 })
 
-        ApplicationManager.getApplication().messageBus.connect(digmathonActivatedParentDisposable)
+        ApplicationManager.getApplication().messageBus.connect(productKeyAddedParentDisposable)
             .subscribe(DigmathonProductKeyStateChangedEvent.PRODUCT_KEY_STATE_CHANGED_TOPIC,
                 DigmathonProductKeyStateChangedEvent { productKey ->
                     sendDigmathonProductKey(productKey, jbCefBrowser.cefBrowser)
                 })
 
-        ApplicationManager.getApplication().messageBus.connect(productKeyAddedParentDisposable)
+        ApplicationManager.getApplication().messageBus.connect(digmathonActivatedParentDisposable)
             .subscribe(DigmathonActivationEvent.DIGMATHON_ACTIVATION_TOPIC,
                 DigmathonActivationEvent { isActive -> sendDigmathonState(isActive, jbCefBrowser.cefBrowser) })
 

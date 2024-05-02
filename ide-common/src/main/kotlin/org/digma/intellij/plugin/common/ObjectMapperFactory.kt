@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.common
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.util.StdDateFormat
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 
 
 /**
@@ -10,11 +11,30 @@ import com.fasterxml.jackson.databind.util.StdDateFormat
  * makes sure all will use the same configuration.
  */
 fun createObjectMapper(): ObjectMapper {
+    //Note that it is risky to change configuration or install modules.
+    // because there are components that already use this object mapper as is
+    // and changes to configuration may cause issues. its probably mainly dates that were
+    // serialized to persistence.
+    //but, probably installing the JavaTimeModule should be OK because it's backwards compatible.
+    //users of this factory may change configuration on the instance they create.
     val objectMapper = ObjectMapper()
     objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
     objectMapper.setDateFormat(StdDateFormat())
     return objectMapper
 }
+
+
+fun createObjectMapperWithJavaTimeModule(): ObjectMapper {
+    //install the JavaTimeModule for better serialization of dates
+    val objectMapper = ObjectMapper()
+    objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+    objectMapper.registerModules(JavaTimeModule())
+    objectMapper.setDateFormat(StdDateFormat())
+    return objectMapper
+}
+
+
+
 
 /**
  * ObjectMapper is fully thread safe and does not need to be created many times.

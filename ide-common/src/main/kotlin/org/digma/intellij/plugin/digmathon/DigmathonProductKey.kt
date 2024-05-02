@@ -9,6 +9,8 @@ import java.nio.charset.StandardCharsets
 
 
 private const val MY_SERVICE = "org.digma.digmathon.productKey"
+
+//change MY_KEY for every new dismathon
 private const val MY_KEY = "product-key-2024.5"
 
 class DigmathonProductKey {

@@ -503,7 +503,7 @@
   display: flex;
   align-items: center;
 
-  ${({$transitionClassName:e,$transitionDuration:t})=>`\n    &.${e}-enter {\n      opacity: 0;\n      transform: translateX(100%);\n    }\n    &.${e}-enter-active {\n      opacity: 1;\n      transform: translateX(0);\n      transition: all ${t}ms;\n    }\n    &.${e}-exit {\n      opacity: 1;\n      transform: translateX(0);\n    }\n    &.${e}-exit-active {\n      opacity: 0;\n      transform: translateX(100%);\n      transition: all ${t}ms;\n    }`}
+  ${({$transitionClassName:e,$transitionDuration:t})=>`\n    &.${e}-enter {\n      opacity: 0;\n      transform: translateX(100px);\n    }\n    &.${e}-enter-active {\n      opacity: 1;\n      transform: translateX(0);\n      transition: all ${t}ms;\n    }\n    &.${e}-exit {\n      opacity: 1;\n      transform: translateX(0);\n    }\n    &.${e}-exit-active {\n      opacity: 0;\n      transform: translateX(100px);\n      transition: all ${t}ms;\n    }`}
 `,t.ButtonsContainer=i.default.div`
   display: flex;
   gap: 8px;
@@ -527,7 +527,7 @@
     background: linear-gradient(
       100deg,
       rgb(255 255 255 / 0%) 30%,
-      rgb(255 255 255 / 50%),
+      rgb(255 255 255 / 35%),
       rgb(255 255 255 / 0%) 70%
     );
 

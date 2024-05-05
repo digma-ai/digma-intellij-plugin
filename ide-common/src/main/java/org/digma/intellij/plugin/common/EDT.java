@@ -36,7 +36,7 @@ public class EDT {
         }
         //log an error here, intellij will pop up an error message. usually we don't want an error message
         // but this should be caught in development time.
-        Log.log(LOGGER::error,message);
+        LOGGER.error(message);
     }
 
 

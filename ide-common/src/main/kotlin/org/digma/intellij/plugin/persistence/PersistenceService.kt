@@ -23,6 +23,7 @@ class PersistenceService {
 
     /**
      * Do not use this method to get the current environment.
+     * It is used only for restoring the current env after restart or after connection lost/gained
      */
     fun getLatestSelectedEnvId(): String? {
         return state.latestSelectedEnvId

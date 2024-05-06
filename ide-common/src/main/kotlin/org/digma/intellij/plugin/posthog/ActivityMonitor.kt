@@ -515,6 +515,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
         runConfigTypeName: String,
         description: String,
         javaToolOptions: String,
+        resourceAttributes: String,
         observabilityEnabled: Boolean,
         connectedToBackend: Boolean
     ) {
@@ -534,6 +535,8 @@ class ActivityMonitor(private val project: Project) : Disposable {
         } else {
             details["java tool options"] = javaToolOptions
         }
+
+        details["otel resource attributes"] = resourceAttributes
 
         capture(
             "instrumented run configuration",

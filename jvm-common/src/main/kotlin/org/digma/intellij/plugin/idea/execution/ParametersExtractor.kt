@@ -20,7 +20,7 @@ open class ParametersExtractor(protected val configuration: RunConfiguration, pr
         )
     }
 
-    open fun extractOtelServiceNameFromExternalSystem(configuration: RunConfiguration): String? {
+    private fun extractOtelServiceNameFromExternalSystem(configuration: RunConfiguration): String? {
 
         return if (configuration is ExternalSystemRunConfiguration) {
             configuration.settings.env[OTEL_SERVICE_NAME_ENV_VAR_NAME]
@@ -34,19 +34,19 @@ open class ParametersExtractor(protected val configuration: RunConfiguration, pr
         }
     }
 
-    open fun extractOtelServiceNameFromVmOptions(params: SimpleProgramParameters): String? {
+    private fun extractOtelServiceNameFromVmOptions(params: SimpleProgramParameters): String? {
         if (params is SimpleJavaParameters) {
             return params.vmParametersList?.getPropertyValue(OTEL_SERVICE_NAME_PROP_NAME)
         }
         return null
     }
 
-    open fun extractOtelServiceNameFromParamsEnv(params: SimpleProgramParameters): String? {
+    private fun extractOtelServiceNameFromParamsEnv(params: SimpleProgramParameters): String? {
         return params.env[OTEL_SERVICE_NAME_ENV_VAR_NAME]
     }
 
 
-    open fun hasDigmaEnvironmentIdAttribute(configuration: RunConfiguration, params: SimpleProgramParameters): Boolean {
+    open fun hasDigmaEnvironmentIdAttribute(): Boolean {
         if (configuration is ExternalSystemRunConfiguration &&
             configuration.settings.env[OTEL_RESOURCE_ATTRIBUTES]?.contains("$DIGMA_ENVIRONMENT_ID_RESOURCE_ATTRIBUTE=") == true
         ) {
@@ -56,7 +56,7 @@ open class ParametersExtractor(protected val configuration: RunConfiguration, pr
         return params.env[OTEL_RESOURCE_ATTRIBUTES]?.contains("$DIGMA_ENVIRONMENT_ID_RESOURCE_ATTRIBUTE=") ?: false
     }
 
-    open fun hasDigmaEnvironmentAttribute(configuration: RunConfiguration, params: SimpleProgramParameters): Boolean {
+    open fun hasDigmaEnvironmentAttribute(): Boolean {
         if (configuration is ExternalSystemRunConfiguration &&
             configuration.settings.env[OTEL_RESOURCE_ATTRIBUTES]?.contains("$DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE=") == true
         ) {

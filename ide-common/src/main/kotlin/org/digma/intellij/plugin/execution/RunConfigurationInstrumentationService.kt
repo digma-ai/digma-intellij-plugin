@@ -16,11 +16,11 @@ interface RunConfigurationInstrumentationService {
 
     /**
      * updates the configuration with instrumentation parameters.
-     * returns the java tool options for reporting, or null if not handled.
+     * returns the java tool options and otel resource attributes for reporting, or null if not handled.
      * the configuration may not be updated because we don't support everything. the service may decide not to instrument.
-     * may return a string starting with DIGMA_INSTRUMENTATION_ERROR for reporting in case of error.
+     * may return in place of java tool options a string starting with DIGMA_INSTRUMENTATION_ERROR for reporting in case of error.
      */
-    fun updateParameters(configuration: RunConfiguration, params: SimpleProgramParameters, runnerSettings: RunnerSettings?): String?
+    fun updateParameters(configuration: RunConfiguration, params: SimpleProgramParameters, runnerSettings: RunnerSettings?): Pair<String, String>?
 
     /**
      * returns a description for logging

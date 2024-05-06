@@ -28,7 +28,7 @@ open class OtelResourceAttributesBuilder(
             }
         }
 
-        if (!parametersExtractor.hasDigmaEnvironmentIdAttribute(configuration, params) &&
+        if (!parametersExtractor.hasDigmaEnvironmentIdAttribute() &&
             isCentralized(configuration.project)
         ) {
             withUserId()
@@ -59,8 +59,8 @@ open class OtelResourceAttributesBuilder(
 
 
     private fun needToAddDigmaEnvironmentAttribute(parametersExtractor: ParametersExtractor): Boolean {
-        return !parametersExtractor.hasDigmaEnvironmentIdAttribute(configuration, params) &&
-                !parametersExtractor.hasDigmaEnvironmentAttribute(configuration, params)
+        return !parametersExtractor.hasDigmaEnvironmentIdAttribute() &&
+                !parametersExtractor.hasDigmaEnvironmentAttribute()
     }
 
 

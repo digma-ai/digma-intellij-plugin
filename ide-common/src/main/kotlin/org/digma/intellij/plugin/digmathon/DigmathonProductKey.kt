@@ -9,11 +9,13 @@ import java.nio.charset.StandardCharsets
 
 
 private const val MY_SERVICE = "org.digma.digmathon.productKey"
-private const val MY_KEY = "product-key-2024.4"
+
+//change MY_KEY for every new dismathon
+private const val MY_KEY = "product-key-2024.5"
 
 class DigmathonProductKey {
 
-    private val myHash = "b9fe040958b98f68533511125bc104435bfefd4293b328060992767d51333321"
+    private val myHash = "89e0f23f9a0a670b2bb7393a1280aa59eaf7c59c22b77d869b5c9c7af021785f"
 
     @Throws(InvalidProductKeyException::class)
     fun validateAndSave(productKey: String) {

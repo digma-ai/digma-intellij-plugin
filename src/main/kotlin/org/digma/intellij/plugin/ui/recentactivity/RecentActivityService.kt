@@ -23,16 +23,17 @@ import org.digma.intellij.plugin.scope.ScopeManager
 import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.ui.common.openJaegerFromRecentActivity
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
+import org.digma.intellij.plugin.ui.jcef.model.DigmathonProgressDataPayload
+import org.digma.intellij.plugin.ui.jcef.model.SetDigmathonProgressData
+import org.digma.intellij.plugin.ui.jcef.model.ViewedInsight
 import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
 import org.digma.intellij.plugin.ui.recentactivity.model.AddToConfigData
 import org.digma.intellij.plugin.ui.recentactivity.model.AdditionToConfigResult
 import org.digma.intellij.plugin.ui.recentactivity.model.CloseLiveViewMessage
-import org.digma.intellij.plugin.ui.recentactivity.model.DigmathonProgressDataPayload
 import org.digma.intellij.plugin.ui.recentactivity.model.OpenRegistrationDialogMessage
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityEntrySpanForTracePayload
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityEntrySpanPayload
 import org.digma.intellij.plugin.ui.recentactivity.model.SetAddToConfigResult
-import org.digma.intellij.plugin.ui.recentactivity.model.SetDigmathonProgressData
 import org.digma.intellij.plugin.ui.recentactivity.model.SetEnvironmentCreatedMessage
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -90,7 +91,6 @@ class RecentActivityService(val project: Project) : Disposable {
             null
         }
     }
-
 
 
     fun processRecentActivityGoToSpanRequest(payload: RecentActivityEntrySpanPayload?) {
@@ -157,7 +157,7 @@ class RecentActivityService(val project: Project) : Disposable {
 
     fun createEnvironment(request: MutableMap<String, Any>) {
         val response = try {
-            val result = project.service<AnalyticsService>().createEnvironment(request);
+            val result = AnalyticsService.getInstance(project).createEnvironment(request)
             result
         } catch (e: AnalyticsServiceException) {
             Log.warnWithException(logger, project, e, "Error creation {}", e.message)
@@ -173,7 +173,7 @@ class RecentActivityService(val project: Project) : Disposable {
 
     fun deleteEnvironmentV2(id: String) {
         try {
-            project.service<AnalyticsService>().deleteEnvironmentV2(id);
+            AnalyticsService.getInstance(project).deleteEnvironmentV2(id)
             refreshEnvironmentsNowOnBackground(project)
         } catch (e: AnalyticsServiceException) {
             Log.warnWithException(logger, project, e, "Error delete {}", e.message)
@@ -181,11 +181,12 @@ class RecentActivityService(val project: Project) : Disposable {
         }
     }
 
-    fun addVarRunToConfig(environment: String){
-        val result =  service<AddEnvironmentsService>().addToCurrentRunConfig(project, environment)
+    fun addVarRunToConfig(environment: String) {
+        val result = service<AddEnvironmentsService>().addToCurrentRunConfig(project, environment)
 
         val msg = SetAddToConfigResult(
-            AddToConfigData(environment, if(result) AdditionToConfigResult.success else AdditionToConfigResult.failure))
+            AddToConfigData(environment, if (result) AdditionToConfigResult.success else AdditionToConfigResult.failure)
+        )
         jCefComponent?.let {
             serializeAndExecuteWindowPostMessageJavaScript(it.jbCefBrowser.cefBrowser, msg)
         }
@@ -221,12 +222,16 @@ class RecentActivityService(val project: Project) : Disposable {
     }
 
 
-    fun setDigmathonProgressData(insightsTypes: Set<String>) {
+    fun setDigmathonProgressData(insightsTypes: Map<String, Instant>, insightsViewedLastUpdated: Instant?) {
+
+        val viewedInsights = insightsTypes.map {
+            ViewedInsight(it.key, it.value.toString())
+        }
 
         jCefComponent?.jbCefBrowser?.cefBrowser?.let {
             serializeAndExecuteWindowPostMessageJavaScript(
                 it,
-                SetDigmathonProgressData(DigmathonProgressDataPayload(insightsTypes))
+                SetDigmathonProgressData(DigmathonProgressDataPayload(viewedInsights, insightsViewedLastUpdated?.toString()))
             )
         }
     }

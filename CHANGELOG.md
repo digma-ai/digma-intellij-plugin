@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.329] - 2024-05-05
+## [2.0.330] - 2024-05-06
+
+- Update Digmathon by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2134
+
+## 2.0.329 - 2024-05-05
 
 - prevent posthog errors when can't connect Closes #2041 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2137
 - don't log NoSelectedEnvironmentException in warn level Closes #2136 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2138

@@ -22,7 +22,7 @@ import org.cef.handler.CefMessageRouterHandlerAdapter
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.InsightStatsChangedEvent
 import org.digma.intellij.plugin.analytics.getAllEnvironments
-import org.digma.intellij.plugin.analytics.getEnvironmentNameById
+import org.digma.intellij.plugin.analytics.getEnvironmentById
 import org.digma.intellij.plugin.analytics.setCurrentEnvironmentById
 import org.digma.intellij.plugin.auth.AuthManager
 import org.digma.intellij.plugin.auth.LoginResult
@@ -127,8 +127,6 @@ abstract class BaseMessageRouterHandler(protected val project: Project, private 
         //todo: can be implemented with flows,
         // see https://kotlinlang.org/docs/flow.html#buffering
         // with conflate or collectLatest
-
-
 
 
         //cancel previous job if exists.
@@ -340,14 +338,14 @@ abstract class BaseMessageRouterHandler(protected val project: Project, private 
                     JCEFPersistenceService.getInstance(project).getFromPersistence(browser, getFromPersistenceRequest)
                 }
 
-                    JCEFGlobalConstants.GLOBAL_OPEN_DASHBOARD -> {
-                        val envId = getEnvironmentIdFromPayload(requestJsonNode)
-                        envId?.let { env ->
-                            getEnvironmentById(project, env)?.let {
-                                DashboardService.getInstance(project).openDashboard("Dashboard Panel - ${it.name} - ${it.type}")
-                            }
+                JCEFGlobalConstants.GLOBAL_OPEN_DASHBOARD -> {
+                    val envId = getEnvironmentIdFromPayload(requestJsonNode)
+                    envId?.let { env ->
+                        getEnvironmentById(project, env)?.let {
+                            DashboardService.getInstance(project).openDashboard("Dashboard Panel - ${it.name} - ${it.type}")
                         }
                     }
+                }
 
                 JCEFGlobalConstants.GLOBAL_OPEN_DOCUMENTATION -> {
                     val payload = getPayloadFromRequest(requestJsonNode)
@@ -422,36 +420,36 @@ abstract class BaseMessageRouterHandler(protected val project: Project, private 
                     getState(browser)
                 }
 
-                    JCEFGlobalConstants.GLOBAL_GET_INSIGHT_STATS -> {
-                        val payload = getPayloadFromRequest(requestJsonNode)
-                        payload?.let {
-                            val scopeNode = payload.get("scope")
-                            if (scopeNode is NullNode) {
-                                val stats = AnalyticsService.getInstance(project).getInsightsStats(null)
-                                project.messageBus.syncPublisher(InsightStatsChangedEvent.INSIGHT_STATS_CHANGED_TOPIC)
-                                    .insightStatsChanged(
-                                        null,
-                                        stats.analyticsInsightsCount,
-                                        stats.issuesInsightsCount,
-                                        stats.unreadInsightsCount,
-                                        stats.criticalInsightsCount,
-                                        stats.allIssuesCount
-                                    )
-                            } else {
-                                val spanCodeObjectId = scopeNode.get("span").get("spanCodeObjectId").asText()
-                                val stats = AnalyticsService.getInstance(project).getInsightsStats(spanCodeObjectId)
-                                project.messageBus.syncPublisher(InsightStatsChangedEvent.INSIGHT_STATS_CHANGED_TOPIC)
-                                    .insightStatsChanged(
-                                        scopeNode,
-                                        stats.analyticsInsightsCount,
-                                        stats.issuesInsightsCount,
-                                        stats.unreadInsightsCount,
-                                        stats.criticalInsightsCount,
-                                        stats.allIssuesCount
-                                    )
-                            }
+                JCEFGlobalConstants.GLOBAL_GET_INSIGHT_STATS -> {
+                    val payload = getPayloadFromRequest(requestJsonNode)
+                    payload?.let {
+                        val scopeNode = payload.get("scope")
+                        if (scopeNode is NullNode) {
+                            val stats = AnalyticsService.getInstance(project).getInsightsStats(null)
+                            project.messageBus.syncPublisher(InsightStatsChangedEvent.INSIGHT_STATS_CHANGED_TOPIC)
+                                .insightStatsChanged(
+                                    null,
+                                    stats.analyticsInsightsCount,
+                                    stats.issuesInsightsCount,
+                                    stats.unreadInsightsCount,
+                                    stats.criticalInsightsCount,
+                                    stats.allIssuesCount
+                                )
+                        } else {
+                            val spanCodeObjectId = scopeNode.get("span").get("spanCodeObjectId").asText()
+                            val stats = AnalyticsService.getInstance(project).getInsightsStats(spanCodeObjectId)
+                            project.messageBus.syncPublisher(InsightStatsChangedEvent.INSIGHT_STATS_CHANGED_TOPIC)
+                                .insightStatsChanged(
+                                    scopeNode,
+                                    stats.analyticsInsightsCount,
+                                    stats.issuesInsightsCount,
+                                    stats.unreadInsightsCount,
+                                    stats.criticalInsightsCount,
+                                    stats.allIssuesCount
+                                )
                         }
                     }
+                }
 
                 JCEFGlobalConstants.GLOBAL_CHANGE_ENVIRONMENT -> {
                     changeEnvironment(requestJsonNode)

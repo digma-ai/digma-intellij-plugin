@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.330] - 2024-05-06
+## [2.0.331] - 2024-05-09
+
+- clear current env when deleting last env Closes #2139 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2140
+- put jars urls in properties file by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2147
+
+## 2.0.330 - 2024-05-06
 
 - Update Digmathon by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2134
 

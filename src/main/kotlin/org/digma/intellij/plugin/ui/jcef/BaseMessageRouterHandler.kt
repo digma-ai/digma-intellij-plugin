@@ -144,7 +144,7 @@ abstract class BaseMessageRouterHandler(protected val project: Project, private 
             //of concurrent jobs for the same action
             Log.log(logger::trace, "canceling previous running job for action {}", action)
         }
-        runningJobs[action]?.cancel(CancellationException("A new job arrived"))
+//        runningJobs[action]?.cancel(CancellationException("A new job arrived"))
 
         val executor = actionExecutors.computeIfAbsent(action) {
             newExecutor(10, it)

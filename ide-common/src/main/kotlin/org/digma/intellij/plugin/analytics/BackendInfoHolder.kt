@@ -1,11 +1,13 @@
 package org.digma.intellij.plugin.analytics
 
+import com.intellij.collaboration.async.disposingScope
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.common.findActiveProject
@@ -51,6 +53,12 @@ class BackendInfoHolder : Disposable {
                     updateInBackground()
                 }
             })
+
+        ApplicationManager.getApplication().messageBus.connect(this)
+            .subscribe(ApiClientChangedEvent.API_CLIENT_CHANGED_TOPIC, ApiClientChangedEvent {
+                Log.log(logger::debug, "got apiClientChanged")
+                updateInBackground()
+            })
     }
 
 
@@ -60,12 +68,14 @@ class BackendInfoHolder : Disposable {
 
     //updateInBackground is also called every time the analytics client is replaced
     fun updateInBackground() {
-        Backgroundable.ensurePooledThreadWithoutReadAccess {
+        @Suppress("UnstableApiUsage")
+        disposingScope().launch {
             findActiveProject()?.let {
                 aboutRef.set(AnalyticsService.getInstance(it).about)
             }
         }
     }
+
 
     fun isCentralized(): Boolean {
         return aboutRef.get()?.let {

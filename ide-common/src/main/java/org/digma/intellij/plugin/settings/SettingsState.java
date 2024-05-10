@@ -51,6 +51,8 @@ public class SettingsState implements PersistentStateComponent<SettingsState>, D
     public String posthogToken;
     @Nullable
     public String extendedObservability;
+    @Nullable
+    public String extendedObservabilityExcludes;
 
 
     private final List<SettingsChangeListener> listeners = new ArrayList<>();

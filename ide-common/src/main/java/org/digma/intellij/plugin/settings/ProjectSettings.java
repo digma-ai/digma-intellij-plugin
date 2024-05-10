@@ -46,7 +46,8 @@ public class ProjectSettings implements Configurable {
                 isJaegerLinkModeChanged(settings) ||
                 isSpringBootObservabilityModeChanged(settings) ||
                 isRuntimeObservabilityBackendUrlChanged(settings) ||
-                isExtendedObservabilityChanged(settings);
+                isExtendedObservabilityChanged(settings) ||
+                isExtendedObservabilityExcludeChanged(settings);
     }
 
     private boolean isRefreshDelayChanged(SettingsState settings) {
@@ -83,6 +84,10 @@ public class ProjectSettings implements Configurable {
 
     private boolean isExtendedObservabilityChanged(SettingsState settings) {
         return !Objects.equals(settings.extendedObservability, mySettingsComponent.getExtendedObservability());
+    }
+
+    private boolean isExtendedObservabilityExcludeChanged(SettingsState settings) {
+        return !Objects.equals(settings.extendedObservabilityExcludes, mySettingsComponent.getExtendedObservabilityExclude());
     }
 
     @Override
@@ -149,6 +154,7 @@ public class ProjectSettings implements Configurable {
         settings.springBootObservabilityMode = mySettingsComponent.getSpringBootObservabilityMode();
         settings.runtimeObservabilityBackendUrl = mySettingsComponent.getRuntimeObservabilityBackendUrl();
         settings.extendedObservability = mySettingsComponent.getExtendedObservability();
+        settings.extendedObservabilityExcludes = mySettingsComponent.getExtendedObservabilityExclude();
         settings.fireChanged();
     }
 
@@ -164,6 +170,7 @@ public class ProjectSettings implements Configurable {
         mySettingsComponent.setSpringBootObservabilityMode(settings.springBootObservabilityMode);
         mySettingsComponent.setRuntimeObservabilityBackendUrl(settings.runtimeObservabilityBackendUrl);
         mySettingsComponent.setExtendedObservability(settings.extendedObservability);
+        mySettingsComponent.setExtendedObservabilityExclude(settings.extendedObservabilityExcludes);
     }
 
 

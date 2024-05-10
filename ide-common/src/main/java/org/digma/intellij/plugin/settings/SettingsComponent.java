@@ -30,8 +30,13 @@ public class SettingsComponent {
     private final JBLabel myRuntimeObservabilityBackendUrlLabel = new JBLabel("Runtime observability backend URL:");
     private final JBTextField myRuntimeObservabilityBackendUrlText = new JBTextField();
     private final JBTextField extendedObservabilityTextBox = new JBTextField();
+    private final JBTextField extendedObservabilityExcludeTextBox = new JBTextField();
 
     public SettingsComponent() {
+
+        extendedObservabilityTextBox.setToolTipText("packages names in format 'my.pkg1;my.pkg2");
+        extendedObservabilityExcludeTextBox.setToolTipText("class/method names to exclude in format 'MyClass;MyOtherClass.myOtherMethod;*get");
+
 
         var defaultLabelForeground = JBColor.foreground();
 
@@ -156,6 +161,7 @@ public class SettingsComponent {
                 .addLabeledComponent(mySpringBootObservabilityModeLabel, mySpringBootObservabilityModeComboBox, 1, false)
                 .addLabeledComponent(myRuntimeObservabilityBackendUrlLabel, myRuntimeObservabilityBackendUrlText, 1, false)
                 .addLabeledComponent("Extended Observability (beta)", extendedObservabilityTextBox, 1, false)
+                .addLabeledComponent("Extended Observability Exclude (beta)", extendedObservabilityExcludeTextBox, 1, false)
                 .addComponent(resetButton)
                 .addComponentFillVertically(new JPanel(), 0)
                 .getPanel();
@@ -278,6 +284,16 @@ public class SettingsComponent {
         return extendedObservabilityTextBox.getText();
     }
 
+    public void setExtendedObservabilityExclude(@Nullable String extendedObservabilityExclude) {
+        extendedObservabilityExcludeTextBox.setText(extendedObservabilityExclude);
+    }
+
+    @Nullable
+    public String getExtendedObservabilityExclude() {
+        return extendedObservabilityExcludeTextBox.getText();
+    }
+
+
     private void resetToDefaults() {
         this.setApiUrlText(SettingsState.DEFAULT_API_URL);
         this.setApiToken(null);
@@ -289,5 +305,6 @@ public class SettingsComponent {
         this.setSpringBootObservabilityMode(SettingsState.DEFAULT_SPRING_BOOT_OBSERVABILITY_MODE);
         this.setRuntimeObservabilityBackendUrl(SettingsState.DEFAULT_RUNTIME_OBSERVABILITY_BACKEND_URL);
         this.setExtendedObservability(null);
+        this.setExtendedObservabilityExclude(null);
     }
 }

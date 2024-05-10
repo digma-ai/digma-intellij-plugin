@@ -17,9 +17,27 @@ private const val RESOURCE_LOCATION = "otelJars"
 
 private const val OTEL_AGENT_JAR_PROP_NAME = "otel-agent"
 private const val DIGMA_EXTENSION_JAR_PROP_NAME = "digma-extension"
+private const val DIGMA_AGENT_JAR_PROP_NAME = "digma-agent"
 private const val OTEL_AGENT_JAR_NAME = "opentelemetry-javaagent.jar"
 private const val DIGMA_AGENT_EXTENSION_JAR_NAME = "digma-otel-agent-extension.jar"
+private const val DIGMA_AGENT_JAR_NAME = "digma-agent.jar"
 
+
+/**
+ * Downloads and provides the instrumentation jars.
+ *
+ * jars urls and path may be overridden for development to another download url or a local path,
+ * for example when developing the digma-agent or otel extension.
+ * system properties can be injected in runIde task or in idea custom properties.
+ *
+ * to override the download url see the method tryDownloadLatest, it will try to get the url from system
+ * property if exists. this is useful for example for downloading a different version of some of the jars.
+ *
+ * to override the final path see org.digma.intellij.plugin.idea.execution.OtelAgentPathProvider, it will
+ * first check if system property exists and use it instead of the default. this is useful when developing
+ * the digma agent or otel extension and you want to use the local build jar.
+ *
+ */
 
 //Do not change to light service because it will always register.
 // we want it to register only in Idea.
@@ -63,15 +81,28 @@ class OTELJarProvider {
 
     fun getDigmaAgentExtensionJarPath(): String? {
         ensureFilesExist()
-        val digmaJar = getDigmaAgentExtensionJar()
-        if (digmaJar.exists()) {
-            return digmaJar.absolutePath
+        val digmaExtensionJar = getDigmaAgentExtensionJar()
+        if (digmaExtensionJar.exists()) {
+            return digmaExtensionJar.absolutePath
         }
         return null
     }
 
     private fun getDigmaAgentExtensionJar(): File {
         return File(downloadDir, DIGMA_AGENT_EXTENSION_JAR_NAME)
+    }
+
+    fun getDigmaAgentJarPath(): String? {
+        ensureFilesExist()
+        val digmaAgentJar = getDigmaAgentJar()
+        if (digmaAgentJar.exists()) {
+            return digmaAgentJar.absolutePath
+        }
+        return null
+    }
+
+    private fun getDigmaAgentJar(): File {
+        return File(downloadDir, DIGMA_AGENT_JAR_NAME)
     }
 
 
@@ -89,8 +120,9 @@ class OTELJarProvider {
 
     private fun filesExist(): Boolean {
         val otelJar = getOtelAgentJar()
-        val digmaJar = getDigmaAgentExtensionJar()
-        return otelJar.exists() && digmaJar.exists()
+        val digmaExtensionJar = getDigmaAgentExtensionJar()
+        val digmaAgentJar = getDigmaAgentJar()
+        return otelJar.exists() && digmaExtensionJar.exists() && digmaAgentJar.exists()
     }
 
 
@@ -109,6 +141,7 @@ class OTELJarProvider {
                 if (downloadDir.exists()) {
                     copyFileFromResource(OTEL_AGENT_JAR_NAME)
                     copyFileFromResource(DIGMA_AGENT_EXTENSION_JAR_NAME)
+                    copyFileFromResource(DIGMA_AGENT_JAR_NAME)
                     Log.log(logger::info, "otel agent jars unpacked to {}", downloadDir)
                 }
             } catch (e: Exception) {
@@ -143,9 +176,11 @@ class OTELJarProvider {
             try {
                 val otelUrl = System.getProperty("org.digma.otel.agentUrl", jarsUrls.getProperty(OTEL_AGENT_JAR_PROP_NAME))
                 val extensionUrl = System.getProperty("org.digma.otel.extensionUrl", jarsUrls.getProperty(DIGMA_EXTENSION_JAR_PROP_NAME))
+                val digmaAgentUrl = System.getProperty("org.digma.otel.digmaAgentUrl", jarsUrls.getProperty(DIGMA_AGENT_JAR_PROP_NAME))
 
                 downloadAndCopyJar(URL(otelUrl), getOtelAgentJar())
                 downloadAndCopyJar(URL(extensionUrl), getDigmaAgentExtensionJar())
+                downloadAndCopyJar(URL(digmaAgentUrl), getDigmaAgentJar())
             } catch (e: Exception) {
                 Log.warnWithException(logger, e, "could not download latest otel jars")
             }

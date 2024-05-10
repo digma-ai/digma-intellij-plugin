@@ -77,6 +77,7 @@ class SettingsChangeTracker {
         myTrackedSettings["refreshDelay"] = SettingsState.getInstance().refreshDelay.toString()
         myTrackedSettings["springBootObservabilityMode"] = SettingsState.getInstance().springBootObservabilityMode.name
         myTrackedSettings["extendedObservability"] = SettingsState.getInstance().extendedObservability.toString()
+        myTrackedSettings["extendedObservabilityExcludes"] = SettingsState.getInstance().extendedObservabilityExcludes.toString()
     }
 
 

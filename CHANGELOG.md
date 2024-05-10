@@ -1,6 +1,12 @@
 # Changelog
 
-## [2.0.331] - 2024-05-09
+## [2.0.332] - 2024-05-10
+
+- Added scaling highlights by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2135
+- Update UI by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2149
+- fix-CycleInitializationException by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2150
+
+## 2.0.331 - 2024-05-09
 
 - clear current env when deleting last env Closes #2139 by @shalom938
   in https://github.com/digma-ai/digma-intellij-plugin/pull/2140

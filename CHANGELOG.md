@@ -1,6 +1,23 @@
 # Changelog
 
-## [2.0.328] - 2024-05-01
+## [2.0.331] - 2024-05-09
+
+- clear current env when deleting last env Closes #2139 by @shalom938
+  in https://github.com/digma-ai/digma-intellij-plugin/pull/2140
+- put jars urls in properties file by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2147
+
+## 2.0.330 - 2024-05-06
+
+- Update Digmathon by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2134
+
+## 2.0.329 - 2024-05-05
+
+- prevent posthog errors when can't connect Closes #2041 by @shalom938
+  in https://github.com/digma-ai/digma-intellij-plugin/pull/2137
+- don't log NoSelectedEnvironmentException in warn level Closes #2136 by @shalom938
+  in https://github.com/digma-ai/digma-intellij-plugin/pull/2138
+
+## 2.0.328 - 2024-05-01
 
 - remove some info from settings events Closes #2013 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2127
 - update build profiles by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2131

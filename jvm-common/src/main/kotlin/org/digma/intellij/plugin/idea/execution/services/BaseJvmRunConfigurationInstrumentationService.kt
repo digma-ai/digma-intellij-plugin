@@ -13,6 +13,7 @@ import org.digma.intellij.plugin.idea.execution.ConfigurationCleaner
 import org.digma.intellij.plugin.idea.execution.JavaParametersMerger
 import org.digma.intellij.plugin.idea.execution.JavaToolOptionsBuilder
 import org.digma.intellij.plugin.idea.execution.ModuleResolver
+import org.digma.intellij.plugin.idea.execution.OTEL_RESOURCE_ATTRIBUTES
 import org.digma.intellij.plugin.idea.execution.OtelResourceAttributesBuilder
 import org.digma.intellij.plugin.idea.execution.ParametersExtractor
 import org.digma.intellij.plugin.idea.execution.ProjectHeuristics
@@ -24,7 +25,11 @@ import org.digma.intellij.plugin.idea.execution.flavor.InstrumentationFlavor
  */
 abstract class BaseJvmRunConfigurationInstrumentationService : RunConfigurationInstrumentationService {
 
-    override fun updateParameters(configuration: RunConfiguration, params: SimpleProgramParameters, runnerSettings: RunnerSettings?): String? {
+    override fun updateParameters(
+        configuration: RunConfiguration,
+        params: SimpleProgramParameters,
+        runnerSettings: RunnerSettings?
+    ): Pair<String, String>? {
 
         val projectHeuristics = getProjectHeuristics(configuration.project)
         val moduleResolver = getModuleResolver(configuration, params)
@@ -82,11 +87,14 @@ abstract class BaseJvmRunConfigurationInstrumentationService : RunConfigurationI
             getJavaParametersMerger(configuration, params, parametersExtractor)
                 .mergeJavaToolOptionsAndOtelResourceAttributes(instrumentationFlavor.getFlavor(), javaToolOptions, otelResourceAttributes)
 
-            return javaToolOptions
+
+            //we need this return value only for reporting what was added to the configuration
+            val otelResourceAttributesEnv = parametersExtractor.extractEnvValue(OTEL_RESOURCE_ATTRIBUTES)
+            return Pair(javaToolOptions.toString(), otelResourceAttributesEnv.toString())
 
         } catch (e: Throwable) {
             ErrorReporter.getInstance().reportError("${this::class.java}.updateParameters", e)
-            "$DIGMA_INSTRUMENTATION_ERROR $e"
+            Pair("$DIGMA_INSTRUMENTATION_ERROR $e", "")
         }
 
     }

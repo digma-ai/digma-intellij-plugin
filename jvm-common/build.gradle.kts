@@ -3,6 +3,7 @@ import common.logBuildProfile
 import common.platformVersion
 import common.shouldDownloadSources
 import de.undercouch.gradle.tasks.download.Download
+import java.util.Properties
 
 plugins {
     id("plugin-library")
@@ -31,16 +32,21 @@ intellij {
 tasks {
 
     val downloadOtelJars = register("downloadOtelJars", Download::class.java) {
+
+        val properties = Properties()
+        properties.load(layout.projectDirectory.file("src/main/resources/jars-urls.properties").asFile.inputStream())
+
         src(
             listOf(
-//              "https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar",
-                "https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v2.1.0/opentelemetry-javaagent.jar",
-                "https://github.com/digma-ai/otel-java-instrumentation/releases/latest/download/digma-otel-agent-extension.jar"
+                properties.getProperty("otel-agent"),
+                properties.getProperty("digma-extension")
             )
         )
 
+        logger.lifecycle("copying jars $properties")
+
         dest(File(project.sourceSets.main.get().output.resourcesDir, "otelJars"))
-        overwrite(false)
+        overwrite(true)
     }
 
     processResources {

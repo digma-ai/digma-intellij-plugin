@@ -67,7 +67,7 @@ public class Environment {
         try {
             Log.log(LOGGER::debug, "Setting current environment by id , old={},new={}", current, envId);
 
-            if (StringUtils.isEmpty(envId)) {
+            if (StringUtils.isEmpty(envId) || StringUtils.isBlank(envId)) {
                 Log.log(LOGGER::debug, "setCurrent was called with an empty environment {}", envId);
                 return;
             }
@@ -174,12 +174,18 @@ public class Environment {
         var oldEnv = current;
 
         var optionalEnv = find(preferred);
-        if (optionalEnv.isPresent()) {
-            current = optionalEnv.get();
-        } else if (current == null) {
-            current = environments.isEmpty() ? null : environments.get(0);
-        }
+        current = optionalEnv.orElseGet(() -> environments.isEmpty() ? null : environments.get(0));
 
+        //latestKnownEnvId is updated only if current is not null.
+        //current will be null on connection lost, or when the last env was deleted. actually when the
+        // environments list is empty, this code can't distinguish between these two cases.
+        // so if current is null we keep latestKnownEnvId with its current value. if connection was
+        // lost and gained it will help restore the current env. if the environments list was empty
+        // because the last env was deleted then it will keep a value of the latest that actually
+        // does not exist, but it will change on the first new environment.
+        //the persistence is changed to null if current is null. on connection lost it will be set
+        // back with value after connection gained. and if the last env was deleted it will be set
+        // back with value when a new environment is added.
         if (current != null) {
             latestKnownEnvId = current.getId();
             PersistenceService.getInstance().setLatestSelectedEnvId(latestKnownEnvId);

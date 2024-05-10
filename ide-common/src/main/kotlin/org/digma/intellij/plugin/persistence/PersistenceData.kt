@@ -91,6 +91,8 @@ internal data class PersistenceData(
 
     var isFinishDigmathonGameForUser: Boolean = false,
     var digmathonViewedInsights: String? = null,
+    @OptionTag(converter = InstantConverter::class)
+    var digmathonViewedInsightsLastUpdated: Instant? = null,
+    var digmathonStartedForUser: Boolean = false
 
-
-    )
+)

@@ -18,9 +18,9 @@ interface RunConfigurationInstrumentationHandler {
 
     /**
      * updates the configuration with instrumentation parameters.
-     * returns the java tool options for reporting, or null, or error message.
+     * returns the java tool options  and otel resource attributes for reporting, or null.
      */
-    fun updateParameters(configuration: RunConfiguration, params: SimpleProgramParameters, runnerSettings: RunnerSettings?): String?
+    fun updateParameters(configuration: RunConfiguration, params: SimpleProgramParameters, runnerSettings: RunnerSettings?): Pair<String, String>?
 
     /**
      * returns a description for logging

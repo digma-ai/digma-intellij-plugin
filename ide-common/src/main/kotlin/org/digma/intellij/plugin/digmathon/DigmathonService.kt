@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.digmathon
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.intellij.collaboration.async.disposingScope
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
@@ -12,17 +13,18 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.common.allowSlowOperation
+import org.digma.intellij.plugin.common.createObjectMapperWithJavaTimeModule
 import org.digma.intellij.plugin.common.findActiveProject
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.notifications.NotificationUtil
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
-import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 import java.util.function.Supplier
 import kotlin.time.Duration.Companion.minutes
@@ -31,25 +33,24 @@ import kotlin.time.Duration.Companion.minutes
 @Service(Service.Level.APP)
 class DigmathonService : Disposable {
 
-
     private val logger = Logger.getInstance(this::class.java)
 
     private val digmathonInfo = AtomicReference(
         DigmathonInfo(
-            LocalDate.of(2024, 4, 5).atStartOfDay().atZone(ZoneId.systemDefault()),
-            LocalDate.of(2024, 4, 17).atStartOfDay().atZone(ZoneId.systemDefault())
+            LocalDate.of(2024, 5, 1).atStartOfDay().atZone(ZoneId.systemDefault()),
+            LocalDate.of(2024, 5, 14).atStartOfDay().atZone(ZoneId.systemDefault())
         )
     )
 
-    private val isDigmathonActive = AtomicBoolean(digmathonInfo.get().isActive())
-
-    val viewedInsights = PersistenceService.getInstance().getDigmathonInsightsViewed()
-        ?.split(",")?.toMutableSet() ?: mutableSetOf()
+    val viewedInsights: MutableMap<String, Instant> = readInsightsViewedFromPersistence()
 
     var isUserFinishedDigmathon = PersistenceService.getInstance().isFinishDigmathonGameForUser()
 
 
     companion object {
+
+        private val objectMapper = createObjectMapperWithJavaTimeModule()
+
         @JvmStatic
         fun getInstance(): DigmathonService {
             return service<DigmathonService>()
@@ -64,27 +65,7 @@ class DigmathonService : Disposable {
 
     init {
 
-        //for development,simulate a 5 minutes event that starts 2 minutes after IDE start and lasts for 5 minutes
-//        val simulateStart = System.getProperty("org.digma.digmathon.simulate.startAfterMinutes")
-//        val simulatePeriod = System.getProperty("org.digma.digmathon.simulate.periodMinutes")
-//
-//        if (simulateStart != null) {
-//            val startAfter = simulateStart.toLong()
-//            val endAfter = (simulatePeriod.toLongOrNull() ?: 10) + startAfter
-//
-//            digmathonInfo.set(
-//                DigmathonInfo(
-//                    LocalDateTime.now().plusMinutes(startAfter).atZone(ZoneId.systemDefault()),
-//                    LocalDateTime.now().plusMinutes(endAfter).atZone(ZoneId.systemDefault())
-//                )
-//            )
-//            DigmathonProductKey().clear()
-//            isDigmathonActive.set(digmathonInfo.get().isActive())
-//            isUserFinishedDigmathon = false
-//        }
-
-
-        if (isDigmathonActive.get() && digmathonInfo.get().isEnded()) {
+        if (isDigmathonStartedForUser() && digmathonInfo.get().isEnded()) {
             end()
         } else {
 
@@ -97,11 +78,11 @@ class DigmathonService : Disposable {
                 while (isActive && digmathonInfo.get().isActive()) {
                     try {
 
-                        if (!isDigmathonActive.get() && digmathonInfo.get().isActive()) {
+                        if (!isDigmathonStartedForUser() && digmathonInfo.get().isActive()) {
                             start()
                         }
 
-                        if (isDigmathonActive.get() && digmathonInfo.get().isEnded()) {
+                        if (isDigmathonStartedForUser() && digmathonInfo.get().isEnded()) {
                             end()
                             cancel("digmathon ended")
                         }
@@ -116,7 +97,8 @@ class DigmathonService : Disposable {
                     }
                 }
 
-                if (digmathonInfo.get().isEnded()) {
+                //the job may be canceled by the system, do a last check
+                if (isDigmathonStartedForUser() && digmathonInfo.get().isEnded()) {
                     end()
                 }
             }
@@ -124,15 +106,37 @@ class DigmathonService : Disposable {
     }
 
 
+    //this is needed so that we can call start and end only once
+    private fun isDigmathonStartedForUser(): Boolean {
+        return PersistenceService.getInstance().isDigmathonStartedForUser()
+    }
+
+    private fun markStartedDigmathonForUser() {
+        PersistenceService.getInstance().setDigmathonStartedForUser(true)
+    }
+
+    private fun markEndedDigmathonForUser() {
+        PersistenceService.getInstance().setDigmathonStartedForUser(false)
+    }
+
+
     private fun start() {
-        isDigmathonActive.set(true)
+        //reset persistence properties every time a new digmathon starts
+        PersistenceService.getInstance().setFinishDigmathonGameForUser(false)
+        PersistenceService.getInstance().setDigmathonInsightsViewed(null)
+        PersistenceService.getInstance().setDigmathonInsightsViewedLastUpdated(null)
+        markStartedDigmathonForUser()
         fireStateChangedEvent()
         reportEvent("start")
     }
 
 
     private fun end() {
-        isDigmathonActive.set(false)
+        //reset persistence properties for next time
+        PersistenceService.getInstance().setFinishDigmathonGameForUser(false)
+        PersistenceService.getInstance().setDigmathonInsightsViewed(null)
+        PersistenceService.getInstance().setDigmathonInsightsViewedLastUpdated(null)
+        markEndedDigmathonForUser()
         DigmathonProductKey().clear()
         fireStateChangedEvent()
         fireProductKeyStateChanged()
@@ -201,6 +205,71 @@ class DigmathonService : Disposable {
     }
 
 
+    private fun reportEvent(eventType: String, details: Map<String, String> = mapOf()) {
+        findActiveProject()?.let {
+            ActivityMonitor.getInstance(it).reportDigmathonEvent(eventType, details)
+        }
+    }
+
+    fun addInsightsViewed(insightsTypesViewed: List<String>) {
+        if (digmathonInfo.get().isActive() && !allInsightsExists(insightsTypesViewed)) {
+            //add only new insight types
+            insightsTypesViewed.forEach {
+                this.viewedInsights.computeIfAbsent(it) { Instant.now() }
+            }
+            flushInsightsViewedToPersistence()
+        }
+    }
+
+    private fun allInsightsExists(insightsTypesViewed: List<String>): Boolean {
+        return this.viewedInsights.keys.containsAll(insightsTypesViewed)
+    }
+
+
+    private fun flushInsightsViewedToPersistence() {
+        try {
+            val json = objectMapper.writeValueAsString(viewedInsights)
+            PersistenceService.getInstance().setDigmathonInsightsViewed(json)
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError("DigmathonService.flushInsightsViewedToPersistence", e)
+        }
+    }
+
+    private fun readInsightsViewedFromPersistence(): MutableMap<String, Instant> {
+        val json = PersistenceService.getInstance().getDigmathonInsightsViewed() ?: return mutableMapOf()
+        return try {
+            val ref = object : TypeReference<Map<String, Instant>>() {}
+            val viewedInsights = objectMapper.readValue(json, ref)
+            viewedInsights.toMutableMap()
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError("DigmathonService.readInsightsViewedFromPersistence", e)
+            mutableMapOf()
+        }
+    }
+
+
+    fun getDigmathonInsightsViewedLastUpdated(): Instant? {
+        return PersistenceService.getInstance().getDigmathonInsightsViewedLastUpdated()
+    }
+
+    fun updateDigmathonInsightsViewedLastUpdated() {
+        PersistenceService.getInstance().setDigmathonInsightsViewedLastUpdated(Instant.now())
+    }
+
+    fun setFinishDigmathonGameForUser() {
+        PersistenceService.getInstance().setFinishDigmathonGameForUser(true)
+        isUserFinishedDigmathon = true
+        fireUserFinishedDigmathon()
+        reportEvent("user finished digmathon")
+    }
+
+
+    private fun fireUserFinishedDigmathon() {
+        ApplicationManager.getApplication().messageBus.syncPublisher(UserFinishedDigmathonEvent.USER_FINISHED_DIGMATHON_TOPIC)
+            .userFinishedDigmathon()
+    }
+
+
     data class DigmathonInfo(val startTime: ZonedDateTime, val endTime: ZonedDateTime) {
 
         fun isActive(): Boolean {
@@ -215,35 +284,5 @@ class DigmathonService : Disposable {
         }
     }
 
-
-    private fun reportEvent(eventType: String, details: Map<String, String> = mapOf()) {
-        findActiveProject()?.let {
-            ActivityMonitor.getInstance(it).reportDigmathonEvent(eventType, details)
-        }
-    }
-
-    fun addInsightsViewed(insightsTypesViewed: List<String>) {
-        if (digmathonInfo.get().isActive()) {
-            this.viewedInsights.addAll(insightsTypesViewed)
-            flushInsightsViewedToPersistence()
-        }
-    }
-
-    private fun flushInsightsViewedToPersistence() {
-        PersistenceService.getInstance().setDigmathonInsightsViewed(viewedInsights.joinToString(","))
-    }
-
-    fun setFinishDigmathonGameForUser() {
-        PersistenceService.getInstance().setFinishDigmathonGameForUser()
-        isUserFinishedDigmathon = true
-        fireUserFinishedDigmathon()
-        reportEvent("user finished game")
-    }
-
-
-    private fun fireUserFinishedDigmathon() {
-        ApplicationManager.getApplication().messageBus.syncPublisher(UserFinishedDigmathonEvent.USER_FINISHED_DIGMATHON_TOPIC)
-            .userFinishedDigmathon()
-    }
 
 }

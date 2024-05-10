@@ -63,9 +63,11 @@ class InstrumentationRunConfigurationExtension : RunConfigurationExtension() {
                 if (runConfigurationHandler == null) {
                     reportUnknownConfigurationType(configuration)
                 } else {
-                    val javaToolOptions = runConfigurationHandler.updateParameters(configuration, params, runnerSettings)
-                    if (javaToolOptions != null) {
-                        reportRunConfig(runConfigurationHandler, javaToolOptions, configuration, params)
+
+                    //instrumentationParams contains the java tool options and otel resource attributes and is used for reporting only
+                    val instrumentationParams = runConfigurationHandler.updateParameters(configuration, params, runnerSettings)
+                    if (instrumentationParams != null) {
+                        reportRunConfig(runConfigurationHandler, instrumentationParams.first, instrumentationParams.second, configuration, params)
                     } else {
                         reportUnhandledConfiguration(runConfigurationHandler, configuration, params)
                     }
@@ -80,6 +82,7 @@ class InstrumentationRunConfigurationExtension : RunConfigurationExtension() {
     private fun reportRunConfig(
         runConfigurationHandler: RunConfigurationInstrumentationHandler,
         javaToolOptions: String,
+        resourceAttributes: String,
         configuration: RunConfiguration,
         params: SimpleProgramParameters
     ) {
@@ -91,6 +94,7 @@ class InstrumentationRunConfigurationExtension : RunConfigurationExtension() {
                     runConfigurationType.name,
                     runConfigDescription,
                     javaToolOptions,
+                    resourceAttributes,
                     isObservabilityEnabled(),
                     isConnectedToBackend(configuration.project)
                 )

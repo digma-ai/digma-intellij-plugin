@@ -113,6 +113,7 @@
         <editorNotificationProvider implementation="org.digma.intellij.plugin.editor.DigmaEditorNotificationProvider"
                                     id="org.digma.intellij.plugin.editor.DigmaEditorNotificationProvider"/>
 
+        <postStartupActivity implementation="org.digma.intellij.plugin.posthog.ActivityMonitorStarter"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.common.StartupStartupActivity"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.ui.recentactivity.RecentActivitiesStartup"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.posthog.ContainerEngineStartupActivity"/>

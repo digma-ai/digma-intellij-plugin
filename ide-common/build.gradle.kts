@@ -31,6 +31,7 @@ dependencies {
     api(libs.maven.artifact)
     api(libs.glovoapp.versioning)
     api(libs.byte.buddy)
+    api(libs.jackson.datetime)
 
 
     implementation(project(":model"))

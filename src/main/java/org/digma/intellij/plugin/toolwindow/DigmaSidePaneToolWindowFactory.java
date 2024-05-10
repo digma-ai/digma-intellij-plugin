@@ -7,7 +7,7 @@ import com.intellij.openapi.wm.*;
 import com.intellij.ui.content.ContentFactory;
 import com.intellij.util.ui.JBUI;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
-import org.digma.intellij.plugin.common.IDEUtilsService;
+import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
@@ -104,7 +104,10 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
             MainToolWindowCardsController.getInstance(project).showWizard(false);
         }
         else{
-            ActivityMonitor.getInstance(project).registerCustomEvent("skip-installation-wizard", Collections.emptyMap());
+            //run it on background because it may be the first time ActivityMonitor.getInstance(project) and that may
+            // cause the UI to wait for ActivityMonitor initialization
+            Backgroundable.executeOnPooledThread(() -> ActivityMonitor.getInstance(project).registerCustomEvent("skip-installation-wizard", Collections.emptyMap()));
+
         }
 
     }

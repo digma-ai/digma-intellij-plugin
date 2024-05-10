@@ -17,7 +17,11 @@ abstract class BaseRunConfigurationInstrumentationHandler : RunConfigurationInst
         return getService()?.isApplicableFor(configuration) ?: false
     }
 
-    override fun updateParameters(configuration: RunConfiguration, params: SimpleProgramParameters, runnerSettings: RunnerSettings?): String? {
+    override fun updateParameters(
+        configuration: RunConfiguration,
+        params: SimpleProgramParameters,
+        runnerSettings: RunnerSettings?
+    ): Pair<String, String>? {
         return getService()?.updateParameters(configuration, params, runnerSettings)
     }
 

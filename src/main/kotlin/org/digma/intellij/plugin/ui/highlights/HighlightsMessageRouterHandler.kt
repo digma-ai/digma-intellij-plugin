@@ -7,13 +7,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.analytics.getVersion
-import org.digma.intellij.plugin.analytics.isCentralized
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.highlights.HighlightsRequest
-import org.digma.intellij.plugin.ui.common.updateObservabilityValue
-import org.digma.intellij.plugin.ui.highlights.model.SetHighlightsImpactMessage
-import org.digma.intellij.plugin.ui.highlights.model.SetHighlightsPerformanceMessage
-import org.digma.intellij.plugin.ui.highlights.model.SetHighlightsTopInsightsMessage
+import org.digma.intellij.plugin.ui.highlights.model.*
 import org.digma.intellij.plugin.ui.jcef.BaseCommonMessageRouterHandler
 import org.digma.intellij.plugin.ui.jcef.getQueryMapFromPayload
 import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
@@ -23,12 +19,12 @@ class HighlightsMessageRouterHandler(project: Project) : BaseCommonMessageRouter
     override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
 
         var version = getVersion();
-        if (version == "unknown" || version >= "0.3.7")
-        {
+        if (version == "unknown" || compareVersions("0.3.7", version) <= 0) {
             when (action) {
                 "MAIN/GET_HIGHLIGHTS_PERFORMANCE_DATA" -> getHighlightsPerformanceV2(browser, requestJsonNode)
                 "MAIN/GET_HIGHLIGHTS_TOP_ISSUES_DATA" -> getHighlightsTopInsightsV2(browser, requestJsonNode)
                 "MAIN/GET_HIGHLIGHTS_IMPACT_DATA" -> getHighlightsImpact(browser, requestJsonNode)
+                "MAIN/GET_HIGHLIGHTS_SCALING_DATA" -> getHighlightsScaling(browser, requestJsonNode)
 
                 else -> {
                     return false
@@ -60,6 +56,21 @@ class HighlightsMessageRouterHandler(project: Project) : BaseCommonMessageRouter
         val message = SetHighlightsPerformanceMessage(payload)
         Log.log(logger::trace, project, "sending MAIN/SET_HIGHLIGHTS_PERFORMANCE_DATA message")
         serializeAndExecuteWindowPostMessageJavaScript(browser, message)
+    }
+
+    private fun compareVersions(left: String, right: String): Int {
+        val leftParts = left.split(".").map { it.toInt() }
+        val rightParts = right.split(".").map { it.toInt() }
+
+        for (i in 0 until minOf(leftParts.size, rightParts.size)) {
+            if (leftParts[i] < rightParts[i]) {
+                return -1
+            } else if (leftParts[i] > rightParts[i]) {
+                return 1
+            }
+        }
+
+        return leftParts.size.compareTo(rightParts.size)
     }
 
     private fun getHighlightsTopInsights(browser: CefBrowser, requestJsonNode: JsonNode) {
@@ -107,6 +118,26 @@ class HighlightsMessageRouterHandler(project: Project) : BaseCommonMessageRouter
             serializeAndExecuteWindowPostMessageJavaScript(browser, message)
         }
     }
+
+
+    @Synchronized
+    @Throws(JsonProcessingException::class)
+    private fun getHighlightsScaling(browser: CefBrowser, requestJsonNode: JsonNode) {
+
+        Log.log(logger::trace, project, "getHighlightsScaling called")
+
+        val payloadQuery = getPayloadQuery(requestJsonNode)
+        if (payloadQuery is ObjectNode) {
+
+            var request = createHighlightsRequest(payloadQuery, "scopedSpanCodeObjectId");
+            val payload = HighlightsService.getInstance(project).getHighlightsScaling(request)
+
+            val message = SetHighlightsScalingMessage(payload)
+            Log.log(logger::trace, project, "sending MAIN/SET_HIGHLIGHTS_PERFORMANCE_DATA message")
+            serializeAndExecuteWindowPostMessageJavaScript(browser, message)
+        }
+    }
+
 
     private fun getHighlightsTopInsightsV2(browser: CefBrowser, requestJsonNode: JsonNode) {
         Log.log(logger::trace, project, "getHighlightsTopInsights called")

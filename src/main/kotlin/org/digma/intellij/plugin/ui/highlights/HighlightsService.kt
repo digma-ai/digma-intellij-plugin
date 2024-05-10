@@ -83,4 +83,16 @@ class HighlightsService(val project: Project) : InsightsServiceImpl(project) {
             null
         }
     }
+
+    fun getHighlightsScaling(request: HighlightsRequest): String? {
+        EDT.assertNonDispatchThread()
+
+        return try {
+            val highlightsPerformance = AnalyticsService.getInstance(project).getHighlightsScaling(request)
+            highlightsPerformance
+        } catch (e: AnalyticsServiceException) {
+            Log.warnWithException(logger, project, e, "Error loading highlights top insights {}", e.message)
+            null
+        }
+    }
 }

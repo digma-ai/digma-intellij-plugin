@@ -403,6 +403,11 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.getHighlightsTopInsightsV2(request));
     }
 
+    public String getHighlightsScaling(HighlightsRequest request) throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.getHighlightsScaling(request));
+    }
+
+
     public String getHighlightsImpact(HighlightsRequest request) throws AnalyticsServiceException {
         return executeCatching(() -> analyticsProviderProxy.getHighlightsImpact(request));
     }

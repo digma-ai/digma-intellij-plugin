@@ -336,6 +336,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
+    public String getHighlightsScaling(HighlightsRequest request) {
+        return execute(() -> client.analyticsProvider.getHighlightsScaling(request));
+    }
+
+    @Override
     public HttpResponse lowLevelCall(HttpRequest request) {
 
         okhttp3.Response okHttp3Response;
@@ -954,5 +959,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         @POST("/authentication/register")
         Call<String> register(@Body Map<String, Object> request);
 
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/highlights/scaling")
+        Call<String> getHighlightsScaling(@Body HighlightsRequest request);
     }
 }

@@ -76,7 +76,11 @@ class OtelAgentPathProvider(configuration: RunConfiguration) {
 
 
     fun hasAgentPath(): Boolean {
-        return otelAgentPath != null && digmaExtensionPath != null && digmaAgentPath != null
+        return otelAgentPath != null && digmaExtensionPath != null
+    }
+
+    fun hasDigmaAgentPath(): Boolean {
+        return digmaAgentPath != null
     }
 
 }

@@ -39,15 +39,27 @@ open class JavaToolOptionsBuilder(
     }
 
 
-    open fun withOtelAgent(useAgent: Boolean): JavaToolOptionsBuilder {
+    open fun withOtelAgent(useAgent: Boolean, parametersExtractor: ParametersExtractor): JavaToolOptionsBuilder {
 
         if (useAgent) {
             if (!otelAgentPathProvider.hasAgentPath()) {
-                throw JavaToolOptionsBuilderException("useAgent is true but can't find agent paths")
+                throw JavaToolOptionsBuilderException("useAgent is true but can't find agent or extension paths")
             }
+
+            val shouldUseDigmaAgent = parametersExtractor.extractEnvValue(USE_DIGMA_AGENT_PROP_NAME) == "true"
+            if (shouldUseDigmaAgent) {
+                if (!otelAgentPathProvider.hasDigmaAgentPath()) {
+                    throw JavaToolOptionsBuilderException("USE_DIGMA_AGENT is true but can't find digma agent paths")
+                }
+
+                javaToolOptions
+                    .append("-javaagent:${otelAgentPathProvider.digmaAgentPath}")
+                    .append(" ")
+
+                disableExtendedObservabilityExtension()
+            }
+
             javaToolOptions
-                .append("-javaagent:${otelAgentPathProvider.digmaAgentPath}")
-                .append(" ")
                 .append("-javaagent:${otelAgentPathProvider.otelAgentPath}")
                 .append(" ")
                 .append("-Dotel.javaagent.extensions=${otelAgentPathProvider.digmaExtensionPath}")
@@ -262,12 +274,9 @@ open class JavaToolOptionsBuilder(
 
 
     open fun build(): String {
-        disableExtendedObservabilityExtension()
         return javaToolOptions.toString()
     }
 
-    //todo: disabled in this branch because it uses Digma agent that injects @WithSpan instead of the
-    // digma-methods instrumentation module.
     private fun disableExtendedObservabilityExtension() {
         javaToolOptions
             .append("-Dotel.instrumentation.digma-methods.enabled=false")

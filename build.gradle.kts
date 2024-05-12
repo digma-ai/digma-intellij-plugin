@@ -255,7 +255,7 @@ tasks {
             // usually when developing and we want to test the plugin
             //see org.digma.intellij.plugin.idea.execution.OtelAgentPathProvider
             //don't forget to comment when done testing !
-            //"digma.agent.override.path" to "/home/shalom/workspace/digma/digma-agent/build/libs/digma-agent-1.0.2.jar"
+            //"digma.agent.override.path" to "/home/shalom/workspace/digma/digma-agent/build/libs/digma-agent-1.0.8-SNAPSHOT.jar"
             //"digma.otel.extension.override.path" to "/home/shalom/workspace/digma/otel-java-instrumentation/agent-extension/build/libs/digma-otel-agent-extension-0.8.12.jar"
             //can also change the url from where the jar is downloaded when IDE starts
             //"org.digma.otel.extensionUrl" to "some url

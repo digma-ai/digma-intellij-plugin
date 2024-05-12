@@ -3,7 +3,8 @@ package org.digma.intellij.plugin.idea.execution
 const val JAVA_TOOL_OPTIONS = "JAVA_TOOL_OPTIONS"
 const val OTEL_RESOURCE_ATTRIBUTES = "OTEL_RESOURCE_ATTRIBUTES"
 const val DIGMA_ENVIRONMENT_ID_RESOURCE_ATTRIBUTE = "digma.environment.id"
-const val DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE = "digma.environment"
+const val DIGMA_ENVIRONMENT_NAME_RESOURCE_ATTRIBUTE = "digma.environment"
+const val DIGMA_ENVIRONMENT_TYPE_RESOURCE_ATTRIBUTE = "digma.environment.type"
 const val DIGMA_USER_ID_RESOURCE_ATTRIBUTE = "digma.user.id"
 const val DIGMA_SCM_COMMIT_ID_RESOURCE_ATTRIBUTE = "scm.commit.id"
 

@@ -22,9 +22,9 @@ open class OtelResourceAttributesBuilder(
 
         if (needToAddDigmaEnvironmentAttribute(parametersExtractor)) {
             if (isTest) {
-                withOtelResourceAttribute(DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE, LOCAL_TESTS_ENV)
+                withOtelResourceAttribute(DIGMA_ENVIRONMENT_NAME_RESOURCE_ATTRIBUTE, LOCAL_TESTS_ENV)
             } else {
-                withOtelResourceAttribute(DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE, LOCAL_ENV)
+                withOtelResourceAttribute(DIGMA_ENVIRONMENT_NAME_RESOURCE_ATTRIBUTE, LOCAL_ENV)
             }
         }
 

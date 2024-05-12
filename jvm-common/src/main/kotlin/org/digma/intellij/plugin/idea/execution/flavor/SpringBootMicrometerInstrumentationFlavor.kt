@@ -21,8 +21,9 @@ import org.digma.intellij.plugin.idea.execution.isMicrometerTracingInSettings
 import org.digma.intellij.plugin.vcs.VcsService
 
 private const val ATTRIBUTES_PREFIX = "MANAGEMENT_OPENTELEMETRY_RESOURCE-ATTRIBUTES"
-private const val ENVIRONMENT_RESOURCE_ATTRIBUTE = "${ATTRIBUTES_PREFIX}_digma_environment"
+private const val ENVIRONMENT_NAME_RESOURCE_ATTRIBUTE = "${ATTRIBUTES_PREFIX}_digma_environment"
 private const val ENVIRONMENT_ID_RESOURCE_ATTRIBUTE = "${ATTRIBUTES_PREFIX}_digma_environment_id"
+private const val ENVIRONMENT_TYPE_RESOURCE_ATTRIBUTE = "${ATTRIBUTES_PREFIX}_digma_environment_type"
 private const val USER_ID_RESOURCE_ATTRIBUTE = "${ATTRIBUTES_PREFIX}_digma_user_id"
 private const val SCM_COMMIT_ID_RESOURCE_ATTRIBUTE = "${ATTRIBUTES_PREFIX}_scm_commit_id"
 
@@ -32,6 +33,17 @@ class SpringBootMicrometerInstrumentationFlavor : DefaultInstrumentationFlavor()
     companion object {
         fun getEnvironmentIdAttributeKey(): String {
             return ENVIRONMENT_ID_RESOURCE_ATTRIBUTE
+        }
+        fun getEnvironmentNameAttributeKey(): String {
+            return ENVIRONMENT_NAME_RESOURCE_ATTRIBUTE
+        }
+
+        fun getEnvironmentTypeAttributeKey(): String {
+            return ENVIRONMENT_TYPE_RESOURCE_ATTRIBUTE
+        }
+
+        fun getUserIdAttributeKey(): String {
+            return USER_ID_RESOURCE_ATTRIBUTE
         }
     }
 
@@ -128,9 +140,9 @@ class SpringBootMicrometerInstrumentationFlavor : DefaultInstrumentationFlavor()
 
             if (needToAddDigmaEnvironmentAttribute(parametersExtractor)) {
                 if (isTest) {
-                    otelResourceAttributesBuilder.withOtelResourceAttribute(ENVIRONMENT_RESOURCE_ATTRIBUTE, LOCAL_TESTS_ENV)
+                    otelResourceAttributesBuilder.withOtelResourceAttribute(ENVIRONMENT_NAME_RESOURCE_ATTRIBUTE, LOCAL_TESTS_ENV)
                 } else {
-                    otelResourceAttributesBuilder.withOtelResourceAttribute(ENVIRONMENT_RESOURCE_ATTRIBUTE, LOCAL_ENV)
+                    otelResourceAttributesBuilder.withOtelResourceAttribute(ENVIRONMENT_NAME_RESOURCE_ATTRIBUTE, LOCAL_ENV)
                 }
 
             }
@@ -162,7 +174,7 @@ class SpringBootMicrometerInstrumentationFlavor : DefaultInstrumentationFlavor()
     }
 
     private fun hasEnvironmentAttribute(parametersExtractor: ParametersExtractor): Boolean {
-        return parametersExtractor.extractEnvValue(ENVIRONMENT_RESOURCE_ATTRIBUTE) != null
+        return parametersExtractor.extractEnvValue(ENVIRONMENT_NAME_RESOURCE_ATTRIBUTE) != null
     }
 
     private fun hasEnvironmentIdAttribute(parametersExtractor: ParametersExtractor): Boolean {

@@ -271,7 +271,7 @@ open class JavaToolOptionsBuilder(
     //only for quarkus
     fun withQuarkusTest(isTest: Boolean): JavaToolOptionsBuilder {
         if (isTest) {
-            val envPart = "$DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE=$LOCAL_TESTS_ENV"
+            val envPart = "$DIGMA_ENVIRONMENT_NAME_RESOURCE_ATTRIBUTE=$LOCAL_TESTS_ENV"
             javaToolOptions
                 .append("-Dquarkus.otel.resource.attributes=\"$envPart\"")
                 .append(" ")

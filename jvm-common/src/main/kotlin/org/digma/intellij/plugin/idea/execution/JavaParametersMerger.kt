@@ -62,23 +62,29 @@ open class JavaParametersMerger(
         }
     }
 
-
     private fun updateOtelResourceAttribute(
         configuration: RunConfiguration,
         params: SimpleProgramParameters,
         ourOtelResourceAttributes: Map<String, String>
     ) {
 
-        val ourOtelResourceAttributesStr = mapToFlatString(ourOtelResourceAttributes)
+        //it's a smart merge , if OTEL_RESOURCE_ATTRIBUTES exists we override existing values with our map
 
-        val mergedOtelResourceAttributes = if (params.env.containsKey(OTEL_RESOURCE_ATTRIBUTES)) {
-            params.env[OTEL_RESOURCE_ATTRIBUTES].plus(",")
-        } else {
-            ""
-        }.plus(ourOtelResourceAttributesStr)
+        //get the current attributes as a map
+        val resourceAttributes = params.env[OTEL_RESOURCE_ATTRIBUTES]?.let {
+            stringToMap(it)
+        } ?: mutableMapOf()
 
-        params.env[OTEL_RESOURCE_ATTRIBUTES] = mergedOtelResourceAttributes
+        //put all our values
+        resourceAttributes.putAll(ourOtelResourceAttributes)
+
+        //convert to string
+        val allOtelResourceAttributesStr = mapToFlatString(resourceAttributes)
+
+        //update the configuration env
+        params.env[OTEL_RESOURCE_ATTRIBUTES] = allOtelResourceAttributesStr
     }
+
 
     private fun updateSpringBootMicrometerResourceAttribute(
         configuration: RunConfiguration,

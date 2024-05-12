@@ -147,9 +147,7 @@ class SpringBootMicrometerInstrumentationFlavor : DefaultInstrumentationFlavor()
 
             }
 
-            if (!hasEnvironmentIdAttribute(parametersExtractor) &&
-                isCentralized(configuration.project)
-            ) {
+            if (isCentralized(configuration.project)) {
                 DigmaDefaultAccountHolder.getInstance().account?.userId?.let {
                     otelResourceAttributesBuilder.withOtelResourceAttribute(USER_ID_RESOURCE_ATTRIBUTE, it)
                 }

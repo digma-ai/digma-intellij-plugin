@@ -28,9 +28,7 @@ open class OtelResourceAttributesBuilder(
             }
         }
 
-        if (!parametersExtractor.hasDigmaEnvironmentIdAttribute() &&
-            isCentralized(configuration.project)
-        ) {
+        if (isCentralized(configuration.project)) {
             withUserId()
         }
 

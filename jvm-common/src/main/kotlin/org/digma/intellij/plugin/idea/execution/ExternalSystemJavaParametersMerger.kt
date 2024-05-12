@@ -95,17 +95,22 @@ class ExternalSystemJavaParametersMerger(
         ourOtelResourceAttributes: Map<String, String>
     ) {
 
-        val ourOtelResourceAttributesStr = mapToFlatString(ourOtelResourceAttributes)
+        //it's a smart merge , if OTEL_RESOURCE_ATTRIBUTES exists we override existing values with our map
 
+        //get the current attributes as a map
+        val resourceAttributes = configuration.settings.env[OTEL_RESOURCE_ATTRIBUTES]?.let {
+            stringToMap(it)
+        } ?: mutableMapOf()
+
+        //put all our values
+        resourceAttributes.putAll(ourOtelResourceAttributes)
+
+        //convert to string
+        val allOtelResourceAttributesStr = mapToFlatString(resourceAttributes)
+
+        //replace the map and put the new value
         val newEnv = configuration.settings.env.toMutableMap()
-        val currentOtelResourceAttributes = configuration.settings.env[OTEL_RESOURCE_ATTRIBUTES]
-        val otelResourceAttributes = if (!currentOtelResourceAttributes.isNullOrBlank()) {
-            currentOtelResourceAttributes.plus(",")
-        } else {
-            ""
-        }.plus(ourOtelResourceAttributesStr)
-
-        newEnv[OTEL_RESOURCE_ATTRIBUTES] = otelResourceAttributes
+        newEnv[OTEL_RESOURCE_ATTRIBUTES] = allOtelResourceAttributesStr
         configuration.settings.env = newEnv
     }
 

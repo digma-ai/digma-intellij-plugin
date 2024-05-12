@@ -21,6 +21,7 @@ import org.digma.intellij.plugin.idea.execution.DIGMA_ENVIRONMENT_TYPE_RESOURCE_
 import org.digma.intellij.plugin.idea.execution.DIGMA_USER_ID_RESOURCE_ATTRIBUTE
 import org.digma.intellij.plugin.idea.execution.OTEL_RESOURCE_ATTRIBUTES
 import org.digma.intellij.plugin.idea.execution.flavor.SpringBootMicrometerInstrumentationFlavor
+import org.digma.intellij.plugin.idea.execution.stringToMap
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
 import org.digma.intellij.plugin.log.Log
 
@@ -150,25 +151,8 @@ class AddEnvironmentsService {
                 val existingValue = envVars[OTEL_RESOURCE_ATTRIBUTES]
 
                 if (existingValue != null) {
-                    val valuesMap = try {
-                        existingValue.split(",").associate {
 
-                            val entry = it.split(delimiters = arrayOf("="), ignoreCase = false, limit = 2)
-
-                            val pair: Pair<String, String> = if (entry.size == 1) {
-                                val left = entry[0]
-                                val right = ""
-                                Pair(left, right)
-                            } else {
-                                val left = entry[0]
-                                val right = entry[1]
-                                Pair(left, right)
-                            }
-                            pair.first to pair.second
-                        }.toMutableMap()
-                    } catch (e: Throwable) {
-                        mutableMapOf()
-                    }
+                    val valuesMap = stringToMap(existingValue)
 
                     addEnvironmentWithFeatureFlag(envVars, valuesMap)
 

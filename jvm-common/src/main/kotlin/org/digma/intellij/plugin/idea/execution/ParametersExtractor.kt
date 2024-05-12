@@ -56,7 +56,7 @@ open class ParametersExtractor(protected val configuration: RunConfiguration, pr
         return params.env[OTEL_RESOURCE_ATTRIBUTES]?.contains("$DIGMA_ENVIRONMENT_ID_RESOURCE_ATTRIBUTE=") ?: false
     }
 
-    open fun hasDigmaEnvironmentAttribute(): Boolean {
+    open fun hasDigmaEnvironmentNameAttribute(): Boolean {
         if (configuration is ExternalSystemRunConfiguration &&
             configuration.settings.env[OTEL_RESOURCE_ATTRIBUTES]?.contains("$DIGMA_ENVIRONMENT_NAME_RESOURCE_ATTRIBUTE=") == true
         ) {

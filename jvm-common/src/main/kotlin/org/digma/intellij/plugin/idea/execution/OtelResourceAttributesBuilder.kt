@@ -60,7 +60,7 @@ open class OtelResourceAttributesBuilder(
 
     private fun needToAddDigmaEnvironmentAttribute(parametersExtractor: ParametersExtractor): Boolean {
         return !parametersExtractor.hasDigmaEnvironmentIdAttribute() &&
-                !parametersExtractor.hasDigmaEnvironmentAttribute()
+                !parametersExtractor.hasDigmaEnvironmentNameAttribute()
     }
 
 

@@ -67,7 +67,7 @@ abstract class BaseJvmRunConfigurationInstrumentationService : RunConfigurationI
                 ?: return null
 
             //if DIGMA_OBSERVABILITY exists force observability with InstrumentationFlavorType.Default.
-            //no need to check if INSTRUMENTATION_FLAVOR exists, if it did InstrumentationFlavor.get would return something.
+            //no need to check if INSTRUMENTATION_FLAVOR exists, if it existed InstrumentationFlavor.get would return something.
             //InstrumentationFlavor.getByType must return something, or we have a bug. it will throw an exception
             // if not. the exception will be caught and reported.
             instrumentationFlavor = InstrumentationFlavor.getByType(InstrumentationFlavorType.Default)

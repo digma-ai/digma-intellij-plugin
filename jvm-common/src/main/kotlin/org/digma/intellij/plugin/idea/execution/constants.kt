@@ -24,13 +24,16 @@ to force a different instrumentation flavor add INSTRUMENTATION_FLAVOR environme
  org.digma.intellij.plugin.idea.execution.flavor.InstrumentationFlavorType.
 examples:
 if running a task called myTask that we don't support:
-DIGMA_OBSERVABILITY or DIGMA_OBSERVABILITY=app -> will be treated as regula application with the default flavor
-DIGMA_OBSERVABILITY=test -> will be treated as a test execution.
+DIGMA_OBSERVABILITY or DIGMA_OBSERVABILITY=app -> will be treated as regular application with the default flavor.
+DIGMA_OBSERVABILITY=test -> will be treated as a test execution with the default flavor.
 
 together with
 DIGMA_OBSERVABILITY=test
 INSTRUMENTATION_FLAVOR=Quarkus
 will be treated as Quarkus flavor and a test execution.
+
+don't add DIGMA_OBSERVABILITY if it's not necessary, it may confuse the instrumentation flavor.
+
 */
 const val DIGMA_OBSERVABILITY = "DIGMA_OBSERVABILITY"
 

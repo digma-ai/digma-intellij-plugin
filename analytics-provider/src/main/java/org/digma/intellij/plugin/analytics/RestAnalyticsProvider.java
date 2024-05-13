@@ -341,6 +341,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
+    public String getSpanInfo(String spanCodeObjectId) {
+        return execute(() -> client.analyticsProvider.getSpanInfo(spanCodeObjectId));
+    }
+
+    @Override
     public HttpResponse lowLevelCall(HttpRequest request) {
 
         okhttp3.Response okHttp3Response;
@@ -965,5 +970,12 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @POST("/highlights/scaling")
         Call<String> getHighlightsScaling(@Body HighlightsRequest request);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @GET("/spans/info")
+        Call<String> getSpanInfo(@Query("SpanCodeObjectId") String spanCodeObjectId);
     }
 }

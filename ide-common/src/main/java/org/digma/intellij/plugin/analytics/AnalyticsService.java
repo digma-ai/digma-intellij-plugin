@@ -405,6 +405,9 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.getHighlightsScaling(request));
     }
 
+    public String getSpanInfo(String spanCodeObjectId) throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.getSpanInfo(spanCodeObjectId));
+    }
 
     public String getHighlightsImpact(HighlightsRequest request) throws AnalyticsServiceException {
         return executeCatching(() -> analyticsProviderProxy.getHighlightsImpact(request));

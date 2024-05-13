@@ -1,6 +1,13 @@
 # Changelog
 
-## [2.0.332] - 2024-05-10
+## [2.0.333] - 2024-05-13
+
+- Update UI by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2151
+- change AuthenticationException log level to debug by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2154
+- force observability with DIGMA_OBSERVABILITY #Closes 2144 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2156
+- Added span info endpoint by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2157
+
+## 2.0.332 - 2024-05-10
 
 - Added scaling highlights by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2135
 - Update UI by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2149

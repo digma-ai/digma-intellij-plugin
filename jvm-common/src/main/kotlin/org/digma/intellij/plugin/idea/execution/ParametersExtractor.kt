@@ -66,6 +66,14 @@ open class ParametersExtractor(protected val configuration: RunConfiguration, pr
         return params.env[OTEL_RESOURCE_ATTRIBUTES]?.contains("$DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE=") ?: false
     }
 
+
+    fun getDigmaObservability(): DigmaObservabilityType? {
+        return extractEnvValue(DIGMA_OBSERVABILITY)?.takeIf { it.isNotBlank() }?.let {
+            DigmaObservabilityType.valueOf(it)
+        } ?: if (isEnvExists(DIGMA_OBSERVABILITY)) DigmaObservabilityType.app else null
+    }
+
+
     fun extractEnvValue(envKeyName: String): String? {
 
         if (configuration is ExternalSystemRunConfiguration &&
@@ -79,6 +87,16 @@ open class ParametersExtractor(protected val configuration: RunConfiguration, pr
         }
 
         return null
+
+    }
+
+    fun isEnvExists(envKeyName: String): Boolean {
+
+        if (configuration is ExternalSystemRunConfiguration) {
+            return configuration.settings.env.containsKey(envKeyName)
+        }
+
+        return params.env.containsKey(envKeyName)
 
     }
 

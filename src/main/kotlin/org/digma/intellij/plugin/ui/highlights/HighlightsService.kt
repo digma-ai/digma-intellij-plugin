@@ -95,4 +95,16 @@ class HighlightsService(val project: Project) : InsightsServiceImpl(project) {
             null
         }
     }
+
+    fun getSpanInfo(spanCodeObjectId: String): String? {
+        EDT.assertNonDispatchThread()
+
+        return try {
+            val spanInfo = AnalyticsService.getInstance(project).getSpanInfo(spanCodeObjectId)
+            spanInfo
+        } catch (e: AnalyticsServiceException) {
+            Log.warnWithException(logger, project, e, "Error loading highlights top insights {}", e.message)
+            null
+        }
+    }
 }

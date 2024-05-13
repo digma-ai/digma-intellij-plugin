@@ -25,6 +25,7 @@ class HighlightsMessageRouterHandler(project: Project) : BaseCommonMessageRouter
                 "MAIN/GET_HIGHLIGHTS_TOP_ISSUES_DATA" -> getHighlightsTopInsightsV2(browser, requestJsonNode)
                 "MAIN/GET_HIGHLIGHTS_IMPACT_DATA" -> getHighlightsImpact(browser, requestJsonNode)
                 "MAIN/GET_HIGHLIGHTS_SCALING_DATA" -> getHighlightsScaling(browser, requestJsonNode)
+                "MAIN/GET_SPAN_INFO_DATA" -> getSpanInfo(browser, requestJsonNode)
 
                 else -> {
                     return false
@@ -134,6 +135,24 @@ class HighlightsMessageRouterHandler(project: Project) : BaseCommonMessageRouter
 
             val message = SetHighlightsScalingMessage(payload)
             Log.log(logger::trace, project, "sending MAIN/SET_HIGHLIGHTS_PERFORMANCE_DATA message")
+            serializeAndExecuteWindowPostMessageJavaScript(browser, message)
+        }
+    }
+
+    @Synchronized
+    @Throws(JsonProcessingException::class)
+    private fun getSpanInfo(browser: CefBrowser, requestJsonNode: JsonNode) {
+
+        Log.log(logger::trace, project, "getSpanInfo called")
+
+        val payloadQuery = getPayloadQuery(requestJsonNode)
+        if (payloadQuery is ObjectNode) {
+
+            val request = payloadQuery.get("spanCodeObjectId").asText()
+            val payload = HighlightsService.getInstance(project).getSpanInfo(request)
+
+            val message = SetSpanInfoMessage(payload)
+            Log.log(logger::trace, project, "sending MAIN/SET_SPAN_INFO_DATA message")
             serializeAndExecuteWindowPostMessageJavaScript(browser, message)
         }
     }

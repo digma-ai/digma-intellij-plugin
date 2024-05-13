@@ -19,6 +19,7 @@ import org.digma.intellij.plugin.idea.execution.ParametersExtractor
 import org.digma.intellij.plugin.idea.execution.ProjectHeuristics
 import org.digma.intellij.plugin.idea.execution.ServiceNameProvider
 import org.digma.intellij.plugin.idea.execution.flavor.InstrumentationFlavor
+import org.digma.intellij.plugin.idea.execution.flavor.InstrumentationFlavorType
 
 /**
  * base class that covers most of the configuration types.
@@ -39,7 +40,7 @@ abstract class BaseJvmRunConfigurationInstrumentationService : RunConfigurationI
         val otelResourceAttributesBuilder = getOtelResourceAttributesBuilder(configuration, params, runnerSettings)
 
 
-        val instrumentationFlavor: InstrumentationFlavor? =
+        var instrumentationFlavor: InstrumentationFlavor? =
             InstrumentationFlavor.get(
                 this,
                 configuration,
@@ -50,8 +51,27 @@ abstract class BaseJvmRunConfigurationInstrumentationService : RunConfigurationI
                 parametersExtractor
             )
 
+
         if (instrumentationFlavor == null) {
-            return null
+
+            //if no instrumentationFlavor was selected then maybe it's a gradle or maven task that we don't support.
+            //if it's not gradle or maven return null. otherwise check if DIGMA_OBSERVABILITY exists to force observability.
+            val buildSystem = getBuildSystem(configuration)
+            if (buildSystem != BuildSystem.GRADLE && buildSystem != BuildSystem.MAVEN) {
+                return null
+            }
+
+            //check is DIGMA_OBSERVABILITY exists else return null.
+            //DIGMA_OBSERVABILITY is also used to decide if to force app or test in the various flavors.
+            parametersExtractor.getDigmaObservability()
+                ?: return null
+
+            //if DIGMA_OBSERVABILITY exists force observability with InstrumentationFlavorType.Default.
+            //no need to check if INSTRUMENTATION_FLAVOR exists, if it did InstrumentationFlavor.get would return something.
+            //InstrumentationFlavor.getByType must return something, or we have a bug. it will throw an exception
+            // if not. the exception will be caught and reported.
+            instrumentationFlavor = InstrumentationFlavor.getByType(InstrumentationFlavorType.Default)
+
         }
 
 
@@ -69,8 +89,16 @@ abstract class BaseJvmRunConfigurationInstrumentationService : RunConfigurationI
             )
 
             javaToolOptions = javaToolOptions?.let {
-                //easier for us to see which flavor
-                " -Ddigma.flavor=${instrumentationFlavor.getFlavor()} ".plus(it)
+                //easier for us to see which flavor was selected
+                var newValue = " -Ddigma.flavor=${instrumentationFlavor.getFlavor()} ".plus(it)
+
+                //and if DIGMA_OBSERVABILITY was configured
+                if (parametersExtractor.getDigmaObservability() != null) {
+                    newValue = " -Ddigma.observability=${parametersExtractor.getDigmaObservability()} $newValue"
+                }
+
+                newValue
+
             }
 
             val otelResourceAttributes = instrumentationFlavor.buildOtelResourceAttributes(

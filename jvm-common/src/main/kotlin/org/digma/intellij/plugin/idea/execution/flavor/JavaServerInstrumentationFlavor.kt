@@ -35,6 +35,7 @@ class JavaServerInstrumentationFlavor : DefaultInstrumentationFlavor() {
 
     override fun isTest(
         instrumentationService: RunConfigurationInstrumentationService,
+        parametersExtractor: ParametersExtractor,
         configuration: RunConfiguration,
         params: SimpleProgramParameters
     ): Boolean {

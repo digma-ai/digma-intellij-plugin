@@ -1,6 +1,12 @@
 # Changelog
 
-## [2.0.333] - 2024-05-13
+## [2.0.334] - 2024-05-15
+
+- Updated ui by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2158
+- Updated ui by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2159
+- catch error in org.digma.intellij.plugin.analytics.BackendInfoHolder.… by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2160
+
+## 2.0.333 - 2024-05-13
 
 - Update UI by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2151
 - change AuthenticationException log level to debug by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2154

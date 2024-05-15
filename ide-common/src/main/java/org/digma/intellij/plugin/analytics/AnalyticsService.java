@@ -129,8 +129,6 @@ public class AnalyticsService implements Disposable {
 
         environment.refreshNowOnBackground();
 
-        BackendInfoHolder.getInstance().updateInBackground();
-
         ApplicationManager.getApplication().getMessageBus().syncPublisher(ApiClientChangedEvent.getAPI_CLIENT_CHANGED_TOPIC()).apiClientChanged(url);
 
     }
@@ -401,6 +399,14 @@ public class AnalyticsService implements Disposable {
 
     public String getHighlightsTopInsightsV2(HighlightsRequest request) throws AnalyticsServiceException {
         return executeCatching(() -> analyticsProviderProxy.getHighlightsTopInsightsV2(request));
+    }
+
+    public String getHighlightsScaling(HighlightsRequest request) throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.getHighlightsScaling(request));
+    }
+
+    public String getSpanInfo(String spanCodeObjectId) throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.getSpanInfo(spanCodeObjectId));
     }
 
     public String getHighlightsImpact(HighlightsRequest request) throws AnalyticsServiceException {

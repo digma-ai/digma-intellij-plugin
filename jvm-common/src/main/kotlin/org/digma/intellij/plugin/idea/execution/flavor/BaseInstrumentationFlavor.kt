@@ -52,6 +52,7 @@ abstract class BaseInstrumentationFlavor : InstrumentationFlavor {
 
     open fun isTest(
         instrumentationService: RunConfigurationInstrumentationService,
+        parametersExtractor: ParametersExtractor,
         configuration: RunConfiguration,
         params: SimpleProgramParameters
     ): Boolean {

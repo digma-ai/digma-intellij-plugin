@@ -34,8 +34,6 @@ fun createObjectMapperWithJavaTimeModule(): ObjectMapper {
 }
 
 
-
-
 /**
  * ObjectMapper is fully thread safe and does not need to be created many times.
  * usually its more convenient to create a class member in classes that need to use an ObjectMapper

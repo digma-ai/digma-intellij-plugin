@@ -8,6 +8,7 @@ import com.intellij.openapi.module.Module
 import org.digma.intellij.plugin.buildsystem.BuildSystem
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.execution.RunConfigurationInstrumentationService
+import org.digma.intellij.plugin.idea.execution.DigmaObservabilityType
 import org.digma.intellij.plugin.idea.execution.JavaToolOptionsBuilder
 import org.digma.intellij.plugin.idea.execution.ModuleResolver
 import org.digma.intellij.plugin.idea.execution.OtelResourceAttributesBuilder
@@ -105,7 +106,7 @@ class MicronautInstrumentationFlavor : BaseInstrumentationFlavor() {
     ): String? {
         return try {
 
-            val isTest = isTest(instrumentationService, configuration, params)
+            val isTest = isTest(instrumentationService, parametersExtractor, configuration, params)
 
             javaToolOptionsBuilder
                 .withMicronautTracing(true)
@@ -134,7 +135,7 @@ class MicronautInstrumentationFlavor : BaseInstrumentationFlavor() {
     ): Map<String, String> {
 
         return try {
-            val isTest = isTest(instrumentationService, configuration, params)
+            val isTest = isTest(instrumentationService, parametersExtractor, configuration, params)
 
             otelResourceAttributesBuilder
                 .withCommonResourceAttributes(isTest, parametersExtractor)
@@ -154,13 +155,24 @@ class MicronautInstrumentationFlavor : BaseInstrumentationFlavor() {
 
     override fun isTest(
         instrumentationService: RunConfigurationInstrumentationService,
+        parametersExtractor: ParametersExtractor,
         configuration: RunConfiguration,
         params: SimpleProgramParameters
     ): Boolean {
+        //maybe DIGMA_OBSERVABILITY exists , it can force test if we don't support the running task
+        // for gradle or maven
+        val digmaObservability = parametersExtractor.getDigmaObservability()
         val buildSystem = instrumentationService.getBuildSystem(configuration)
         return when (buildSystem) {
-            BuildSystem.GRADLE -> hasSupportedGradleTasks(instrumentationService.getTaskNames(configuration), SUPPORTED_GRADLE_TEST_TASKS)
-            BuildSystem.MAVEN -> hasSupportedMavenGoals(instrumentationService.getTaskNames(configuration), SUPPORTED_MAVEN_TEST_GOALS)
+            BuildSystem.GRADLE -> {
+                hasSupportedGradleTasks(instrumentationService.getTaskNames(configuration), SUPPORTED_GRADLE_TEST_TASKS)
+                        || digmaObservability == DigmaObservabilityType.test
+            }
+
+            BuildSystem.MAVEN -> {
+                hasSupportedMavenGoals(instrumentationService.getTaskNames(configuration), SUPPORTED_MAVEN_TEST_GOALS)
+                        || digmaObservability == DigmaObservabilityType.test
+            }
             BuildSystem.INTELLIJ -> configuration is JavaTestConfigurationBase
         }
     }

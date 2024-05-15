@@ -62,6 +62,12 @@ interface InstrumentationFlavor {
             }
         }
 
+        @Throws(NoSuchElementException::class)
+        fun getByType(type: InstrumentationFlavorType): InstrumentationFlavor {
+            return instrumentationFlavors.first {
+                it.getFlavor() == type
+            }
+        }
 
         private fun getFlavorInEnv(parametersExtractor: ParametersExtractor): InstrumentationFlavorType? {
             return try {
@@ -73,6 +79,8 @@ interface InstrumentationFlavor {
                 null
             }
         }
+
+
     }
 
 

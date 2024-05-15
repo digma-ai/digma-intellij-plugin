@@ -131,5 +131,9 @@ public interface AnalyticsProvider extends Closeable {
 
     String getHighlightsTopInsightsV2(HighlightsRequest request);
 
+    String getHighlightsScaling(HighlightsRequest request);
+
+    String getSpanInfo(String spanCodeObjectId);
+
     String getHighlightsImpact(HighlightsRequest request);
 }

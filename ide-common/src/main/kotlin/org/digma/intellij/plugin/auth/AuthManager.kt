@@ -221,7 +221,13 @@ class AuthManager : Disposable {
 
             } catch (e: InvocationTargetException) {
 
-                Log.warnWithException(logger, e, "Exception in auth proxy {}", ExceptionUtils.getNonEmptyMessage(e))
+                val authenticationException = ExceptionUtils.find(e, AuthenticationException::class.java)
+                //log debug on AuthenticationException because it happens a lot, every time the token expires
+                if (authenticationException == null) {
+                    Log.warnWithException(logger, e, "Exception in auth proxy {}", ExceptionUtils.getNonEmptyMessage(e))
+                } else {
+                    Log.debugWithException(logger, e, "AuthenticationException in auth proxy {}", ExceptionUtils.getNonEmptyMessage(e))
+                }
 
                 if (isPaused.get()) {
                     Log.log(logger::trace, "got Exception in auth proxy but proxy is paused, rethrowing")
@@ -229,12 +235,11 @@ class AuthManager : Disposable {
                 }
 
                 //check if this is an AuthenticationException, if not rethrow the exception
-                @Suppress("UNUSED_VARIABLE")
-                val authenticationException = ExceptionUtils.find(e, AuthenticationException::class.java)
-                    ?: throw e
+                if (authenticationException == null) {
+                    throw e
+                }
 
-                Log.log(logger::trace, "got AuthenticationException, calling onAuthenticationException")
-
+                Log.log(logger::trace, "got AuthenticationException {}, calling onAuthenticationException", ExceptionUtils.getNonEmptyMessage(e))
                 //call onAuthenticationException to refresh or login
                 onAuthenticationException()
 

@@ -70,8 +70,18 @@ class BackendInfoHolder : Disposable {
     fun updateInBackground() {
         @Suppress("UnstableApiUsage")
         disposingScope().launch {
-            findActiveProject()?.let {
-                aboutRef.set(AnalyticsService.getInstance(it).about)
+            try {
+
+                findActiveProject()?.let {
+                    aboutRef.set(AnalyticsService.getInstance(it).about)
+                }
+
+            } catch (e: Throwable) {
+                val isConnectionException = ExceptionUtils.isAnyConnectionException(e)
+
+                if (!isConnectionException) {
+                    ErrorReporter.getInstance().reportError("BackendUtilsKt.updateInBackground", e)
+                }
             }
         }
     }

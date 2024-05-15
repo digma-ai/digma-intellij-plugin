@@ -24,6 +24,7 @@ import org.digma.intellij.plugin.idea.execution.flavor.SpringBootMicrometerInstr
 import org.digma.intellij.plugin.idea.execution.stringToMap
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.model.rest.environment.EnvType
 
 //app level service so includes pending environments from all projects
 @Service(Service.Level.APP)
@@ -105,10 +106,16 @@ class AddEnvironmentsService {
         fun addEnvironmentWithFeatureFlagSpringBootWithMicroMeter(envVars: MutableMap<String, String>) {
 
             if (backendVersionIs0315OrHigher) {
+                if(envVars.containsKey(SpringBootMicrometerInstrumentationFlavor.getEnvironmentIdAttributeKey())){
+                    envVars.remove(SpringBootMicrometerInstrumentationFlavor.getEnvironmentIdAttributeKey())
+                }
                 if (isCentralized) {
                     envVars[SpringBootMicrometerInstrumentationFlavor.getEnvironmentNameAttributeKey()] = env.name
                     envVars[SpringBootMicrometerInstrumentationFlavor.getEnvironmentTypeAttributeKey()] = env.type.name
-                    envVars[SpringBootMicrometerInstrumentationFlavor.getUserIdAttributeKey()] = userId
+                    if(env.type ==  EnvType.Private) {//for public environment no need the userId
+                        envVars[SpringBootMicrometerInstrumentationFlavor.getUserIdAttributeKey()] = userId
+                    }
+
                 } else {
                     envVars[SpringBootMicrometerInstrumentationFlavor.getEnvironmentNameAttributeKey()] = env.name
                 }
@@ -121,10 +128,15 @@ class AddEnvironmentsService {
         fun addEnvironmentWithFeatureFlag(envVars: MutableMap<String, String>, valuesMap: MutableMap<String, String>) {
 
             if (backendVersionIs0315OrHigher) {
+                if(valuesMap.containsKey(DIGMA_ENVIRONMENT_ID_RESOURCE_ATTRIBUTE)){
+                    valuesMap.remove(DIGMA_ENVIRONMENT_ID_RESOURCE_ATTRIBUTE)
+                }
                 if (isCentralized) {
                     valuesMap[DIGMA_ENVIRONMENT_NAME_RESOURCE_ATTRIBUTE] = env.name
                     valuesMap[DIGMA_ENVIRONMENT_TYPE_RESOURCE_ATTRIBUTE] = env.type.name
-                    valuesMap[DIGMA_USER_ID_RESOURCE_ATTRIBUTE] = userId
+                    if(env.type ==  EnvType.Private) {//for public environment no need the userId
+                        valuesMap[DIGMA_USER_ID_RESOURCE_ATTRIBUTE] = userId
+                    }
                 } else {
                     valuesMap[DIGMA_ENVIRONMENT_NAME_RESOURCE_ATTRIBUTE] = env.name
                 }

@@ -13,7 +13,8 @@ const val OTEL_SERVICE_NAME_PROP_NAME = "otel.service.name"
 const val DIGMA_MARKER = "-Dorg.digma.marker=true"
 
 //a feature flag to use digma agent for extended instrumentation instead of the otel extension module
-const val USE_DIGMA_AGENT_PROP_NAME = "USE_DIGMA_AGENT"
+//todo: delete, not used anymore
+//const val USE_DIGMA_AGENT_PROP_NAME = "USE_DIGMA_AGENT"
 
 
 /*

@@ -57,6 +57,10 @@ open class JavaToolOptionsBuilder(
                 javaToolOptions
                     .append("-javaagent:${otelAgentPathProvider.digmaAgentPath}")
                     .append(" ")
+
+                withDigmaAgentDebug()
+
+
             }
 
             javaToolOptions
@@ -149,6 +153,18 @@ open class JavaToolOptionsBuilder(
         if (java.lang.Boolean.getBoolean("digma.otel.debug")) {
             javaToolOptions
                 .append("-Dotel.javaagent.debug=true")
+                .append(" ")
+        }
+        return this
+    }
+
+
+    open fun withDigmaAgentDebug(): JavaToolOptionsBuilder {
+        if (java.lang.Boolean.getBoolean("digma.agent.debug") ||
+            java.lang.Boolean.valueOf(System.getenv("DIGMA_AGENT_DEBUG"))
+        ) {
+            javaToolOptions
+                .append("-Ddigma.agent.debug=true")
                 .append(" ")
         }
         return this

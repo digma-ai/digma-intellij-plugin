@@ -2,7 +2,6 @@ package org.digma.intellij.plugin.ui.common
 
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.components.service
-import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
 import com.intellij.util.ui.JBUI
@@ -28,7 +27,6 @@ import javax.swing.SwingConstants
 
 
 class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
-    private val logger: Logger = Logger.getInstance(this::class.java)
 
     private var service = project.service<LoadStatusService>()
 
@@ -138,7 +136,7 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
 
             when (service.lastLoadStatus.throttlingType) {
                 "ExtendedObservability" -> {
-                    label.text = "Extended observability is generating too much data"
+                    label.text = "Please specify more granular ext. observability packages"
                     actionLink.text = ""
                 }
 

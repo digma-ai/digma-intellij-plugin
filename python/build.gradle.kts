@@ -1,46 +1,40 @@
-import common.IdeFlavor
 import common.currentProfile
-import common.logBuildProfile
+import common.dynamicPlatformType
+import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
+
 
 plugins {
     id("plugin-library")
 }
+
+//this module should always build with PC or PY
+val platformType: IntelliJPlatformType by extra(dynamicPlatformType(project))
+
 
 dependencies {
     compileOnly(project(":ide-common"))
     compileOnly(project(":model"))
 
     testImplementation(project(":model"))
-}
 
-//python module should always build with IC or PC
-//val platformType by extra(IdeFlavor.IC.name)
-val platformType by extra(IdeFlavor.PC.name)
+    intellijPlatform {
 
-logBuildProfile(project)
+        //the python module can also be built with IC and a dependency on python plugin.
+        //its better and more comfortable to just build with pycharm, in the past we had to build with IC
+        //because github workflow were running out of disk space when building with pycharm because then a build
+        //needed to download all IDEs. but we don't have this issue anymore so this module just builds with pycharm.
 
 
-intellij {
+        //this module can only build with PC or PY, so only support replacing to PY when
+        // we build with PY , otherwise build with PC even if platformType is something else like RD or IC
+        if (platformType == IntelliJPlatformType.PyCharmProfessional) {
+            pycharmProfessional(project.currentProfile().pycharmVersion)
+        } else {
+            pycharmCommunity(project.currentProfile().pycharmVersion)
+        }
 
-    //there is no source code for pycharm or python plugin
-    downloadSources.set(false)
-
-    //there are two ways to build the python module:
-
-    //with Idea and python plugin, python plugin version must be specified.
-    //the python plugin version must be compatible with platformVersion
-//    platformType = IC
-//    version.set("$platformType-${project.platformVersion()}")
-//    plugins.set(listOf("PythonCore:${project.currentProfile().pythonPluginVersion}"))
-
-    //or with pycharm, python plugin version does not need to be specified.
-//   platformType = PC
-//   version.set("$platformType-${project.currentProfile().pycharmVersion}")
-//   plugins.set(listOf("PythonCore"))
-
-//    version.set("$platformType-${project.platformVersion()}")
-//    plugins.set(listOf("PythonCore:${project.currentProfile().pythonPluginVersion}"))
-    version.set("$platformType-${project.currentProfile().pycharmVersion}")
-    plugins.set(listOf("PythonCore"))
-
+        //load plugin based on IDE PY or PC
+        val pythonPlugin = if (platformType == IntelliJPlatformType.PyCharmProfessional) "Pythonid" else "PythonCore"
+        bundledPlugin(pythonPlugin)
+    }
 }

@@ -13,7 +13,7 @@ jobs:
   publish-workflow:
     strategy:
       matrix:
-        profile: [ p223, p231, p232, p233, p241 ]
+        profile: [ p231, p232, p233, p241 ]
     uses: ./.github/workflows/publish-workflow.yml
     with:
       build-profile: ${{ matrix.profile }}
@@ -27,23 +27,23 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout main branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: main
           fetch-depth: 0
           token: ${{ secrets.GH_ADMIN_TOKEN }}
 
       - name: Setup Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'corretto'
 
       - name: Setup dotnet
-        uses: actions/setup-dotnet@v2
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: |
-            6.0.411
+            8.0.301
 
       - name: Export Changelog
         id: exportchangelog
@@ -65,13 +65,13 @@ jobs:
         env:
           CHANGELOG: ${{ steps.exportchangelog.outputs.changelog }}
         run: |
-          ./gradlew --no-configuration-cache -PdoNotDownloadSources=true patchChangelog --release-note="$CHANGELOG"
+          ./gradlew --no-configuration-cache patchChangelog --release-note="$CHANGELOG"
 
 
       - name: Increment version
         run: |
-          ./gradlew --no-configuration-cache -PdoNotDownloadSources=true  incrementSemanticVersionPatch 
-          ./gradlew --no-configuration-cache -PdoNotDownloadSources=true  printSemanticVersion -q
+          ./gradlew --no-configuration-cache  incrementSemanticVersionPatch 
+          ./gradlew --no-configuration-cache  printSemanticVersion -q
 
       - name: Commit next version to main
         run: |

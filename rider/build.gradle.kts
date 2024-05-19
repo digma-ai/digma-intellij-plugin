@@ -1,22 +1,47 @@
-import common.IdeFlavor
-import common.logBuildProfile
-import common.platformVersion
-import common.properties
-import common.rider.rdLibDirectory
+import com.jetbrains.plugin.structure.base.utils.isFile
+import common.BuildProfiles
+import common.BuildProfiles.greaterThan
+import common.currentProfile
 import common.withCurrentProfile
 import org.apache.tools.ant.filters.ReplaceTokens
+import org.jetbrains.intellij.platform.gradle.Constants
+import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import java.nio.file.Path
+import kotlin.io.path.absolute
+import kotlin.io.path.isDirectory
 
-@Suppress(
-    //see: https://youtrack.jetbrains.com/issue/KTIJ-19369
-    "DSL_SCOPE_VIOLATION"
-)
+
 plugins {
     id("plugin-library")
-    id("com.jetbrains.rdgen") version libs.versions.rider.rdgen.get()
 }
 
-private val dllOutputFolder = "${projectDir}/Digma.Rider.Plugin/Digma.Rider/bin/Digma.Rider/Debug/"
+private val dotnetPluginId = "Digma.Rider.Plugin"
+private val buildConfiguration = "Debug"
+private val solutionFile = "$dotnetPluginId/Digma.Rider.Plugin.sln"
+private val dotnetProjectDir = layout.projectDirectory.dir(dotnetPluginId)
+private val nugetConfigFile = dotnetProjectDir.file("nuget.config").asFile
+private val pluginPropsFile = dotnetProjectDir.file("Plugin.props").asFile
+private val pluginTestPropsFile = dotnetProjectDir.file("Plugin.Test.props").asFile
+private val dllOutputFolder = dotnetProjectDir.dir("Digma.Rider/bin/Digma.Rider/$buildConfiguration")
+private val digmaDll = "$dllOutputFolder/Digma.Rider.dll"
+private val digmaPbd = "$dllOutputFolder/Digma.Rider.pdb"
+private val rdGen = ":rider:protocol:rdgen"
+private val riderSdkProjectFilePath = "/Build/PackageReference.JetBrains.Rider.RdBackend.Common.Props"
+private val riderSdkTestProjectFilePath = "/Build/PackageReference.JetBrains.Rider.SDK.Tests.Props"
+
+fun deleteOutputs() {
+    delete(dotnetProjectDir.dir("Digma.Rider/bin"))
+    delete(dotnetProjectDir.dir("Digma.Rider/obj"))
+    delete(dotnetProjectDir.dir("Digma.Rider.Tests/bin"))
+    delete(dotnetProjectDir.dir("Digma.Rider.Tests/obj"))
+}
+
+
+
+
+//rider module should always build with RD
+val platformType: IntelliJPlatformType by extra(IntelliJPlatformType.Rider)
 
 
 dependencies {
@@ -24,155 +49,214 @@ dependencies {
     implementation(libs.commons.lang3)
     compileOnly(project(":ide-common"))
     compileOnly(project(":model"))
+
+    intellijPlatform {
+        rider(project.currentProfile().riderVersion)
+//        bundledPlugin("rider-plugins-appender")
+    }
 }
 
-
-//rider module should always build with RD
-val platformType by extra(IdeFlavor.RD.name)
-
-logBuildProfile(project)
-
-
-intellij {
-    version.set("$platformType-${project.platformVersion()}")
-    plugins.set(listOf("rider-plugins-appender"))
-    downloadSources.set(false) //there are no sources for rider
+val riderSdkPath by lazy {
+    val path = intellijPlatform.platformPath.resolve("lib/DotNetSdkForRdPlugins").absolute()
+    if (!path.isDirectory()) error("$path does not exist or not a directory")
+    return@lazy path
 }
 
+val riderSdkProjectFile by lazy {
+    return@lazy file("$riderSdkPath".replace(Regex("/*$"), "") + riderSdkProjectFilePath)
+}
 
+val riderSdkTestProjectFile by lazy {
+    return@lazy file("$riderSdkPath".replace(Regex("/*$"), "") + riderSdkTestProjectFilePath)
+}
 
-rdgen {
-
-    val modelDir = File(projectDir, "protocol/src/main/kotlin")
-    val csOutput = File(projectDir, "Digma.Rider.Plugin/Digma.Rider/Protocol")
-    val ktOutput = File(projectDir, "src/main/kotlin/org/digma/intellij/plugin/rider/protocol")
-
-    verbose = true
-    classpath(rdLibDirectory(project).canonicalPath + "/rider-model.jar")
-    logger.lifecycle("rdLibDirectory is ${rdLibDirectory(project).canonicalPath}")
-    sources("${modelDir.canonicalPath}/rider/model")
-    hashFolder = project.layout.buildDirectory.asFile.get().canonicalPath
-    packages = "rider.model"
-
-    generator {
-        language = "kotlin"
-        transform = "asis"
-        root = "com.jetbrains.rider.model.nova.ide.IdeRoot"
-        namespace = "org.digma.rider.protocol"
-        directory = ktOutput.canonicalPath
-    }
-
-    generator {
-        language = "csharp"
-        transform = "reversed"
-        root = "com.jetbrains.rider.model.nova.ide.IdeRoot"
-        namespace = "Digma.Rider.Protocol"
-        directory = csOutput.canonicalPath
-    }
+project.afterEvaluate {
+    logger.lifecycle("Rider Sdk Path: $riderSdkPath")
+    logger.lifecycle("Rider Sdk project file: $riderSdkProjectFile")
+    logger.lifecycle("Rider Sdk test project file: $riderSdkTestProjectFile")
 }
 
 
 tasks {
 
     withType<JavaCompile> {
-        dependsOn(named("rdgen"))
+        dependsOn(rdGen)
     }
     withType<KotlinCompile> {
-        dependsOn(named("rdgen"))
+        dependsOn(rdGen)
+    }
+
+    val deleteNuGetConfig by registering(Delete::class) {
+        delete(nugetConfigFile)
+    }
+
+    val generateNuGetConfig by registering {
+
+        inputs.property("profile", project.currentProfile().profile)
+        inputs.dir(riderSdkPath)
+        inputs.file(riderSdkProjectFile)
+
+        outputs.file(nugetConfigFile)
+
+        doLast {
+            val content =
+                """
+            <?xml version="1.0" encoding="utf-8"?>
+            <!-- Auto-generated from 'generateNuGetConfig's -->
+            <!-- Run `gradlew :prepare` to regenerate -->
+            <configuration>
+                <packageSources>
+                    <add key="rider-sdk" value="$riderSdkPath" />
+                </packageSources>
+            </configuration>
+            """.trimIndent()
+
+            logger.lifecycle("Writing nuget.config to $path, content $content")
+            val bytes = content.toByteArray()
+            nugetConfigFile.writeBytes(bytes)
+        }
     }
 
 
-    val deletePluginProps by registering(Delete::class){
-        delete(layout.projectDirectory.dir(properties("DotnetPluginId",project)).file("Plugin.props"))
+    val deletePluginProps by registering(Delete::class) {
+        delete(pluginPropsFile)
+        delete(pluginTestPropsFile)
     }
 
-    val initPluginProps by registering(Copy::class){
+    val initPluginProps by registering(Copy::class) {
 
-        dependsOn(deletePluginProps)
+        inputs.property("profile", project.currentProfile().profile)
+        inputs.dir(riderSdkPath)
+        inputs.file(riderSdkProjectFile)
+
+        outputs.file(pluginPropsFile)
+
 
         val tokens = mutableMapOf<String, String>()
 
-
         withCurrentProfile {
-            tokens["RESHARPER_VERSION"] = it.riderResharperVersion
+            tokens["DOTNET_SDK_PATH"] = "$riderSdkPath".replace(Regex("/*$"), "")
+            tokens["DOTNET_SDK_PROJECT"] = Path.of(riderSdkProjectFilePath).toString()
+            tokens["TARGET_FRAMEWORK"] = it.riderTargetFramework
             tokens["VERSION_CONSTANT"] = it.riderResharperVersionConstant
         }
 
         duplicatesStrategy = DuplicatesStrategy.INCLUDE
 
-        from(layout.projectDirectory.dir("Digma.Rider.Plugin"))
+        from(dotnetProjectDir)
         include("Plugin.props.template")
         filter<ReplaceTokens>("tokens" to tokens)
-        into(layout.projectDirectory.dir("Digma.Rider.Plugin"))
+        into(dotnetProjectDir)
         rename("(.+).template", "$1")
     }
 
 
-    val setBuildTool by registering {
-        doLast {
-            val toolArgs = ArrayList<String>()
-            extra["executable"] = "dotnet"
-            toolArgs.add("msbuild")
-            toolArgs.add(properties("DotnetPluginId", project) + "/" + properties("DotnetSolution", project))
-            toolArgs.add("/p:Configuration=" + properties("BuildConfiguration", project))
-            toolArgs.add("/p:HostFullIdentifier=")
+    val initPluginTestProps by registering(Copy::class) {
 
-            extra["args"] = toolArgs.toTypedArray()
+        mustRunAfter(initPluginProps)
+
+        inputs.property("profile", project.currentProfile().profile)
+        inputs.dir(riderSdkPath)
+        inputs.file(riderSdkProjectFile)
+
+        outputs.file(pluginTestPropsFile)
+
+        val tokens = mutableMapOf<String, String>()
+
+        //up to p233 the version should be 4.0.0, and 4.3.0 after p233
+        val traceSourceVersion = if(project.currentProfile().profile.greaterThan(BuildProfiles.Profiles.p233)){
+            "4.3.0"
+        }else{
+            "4.0.0"
         }
 
+        withCurrentProfile {
+            tokens["DOTNET_SDK_PATH"] = "$riderSdkPath".replace(Regex("/*$"), "")
+            tokens["DOTNET_SDK_TEST_PROJECT"] = Path.of(riderSdkTestProjectFilePath).toString()
+            tokens["TRACE_SOURCE_VERSION"] = traceSourceVersion
+        }
+
+        duplicatesStrategy = DuplicatesStrategy.INCLUDE
+
+        from(dotnetProjectDir)
+        include("Plugin.Test.props.template")
+        filter<ReplaceTokens>("tokens" to tokens)
+        into(dotnetProjectDir)
+        rename("(.+).template", "$1")
     }
 
 
-    val compileDotNet = create("compileDotNet") {
+    //call prepare before loading the project to Rider
+    val prepare by registering {
+        dependsOn(generateNuGetConfig, initPluginProps,initPluginTestProps, rdGen)
+    }
 
-        outputs.file("$dllOutputFolder/Digma.Rider.dll")
-        outputs.file("$dllOutputFolder/Digma.Rider.pdb")
 
-        dependsOn(initPluginProps)
-        dependsOn(setBuildTool)
-        dependsOn(named("rdgen"))
+    val compileDotNet by registering {
+
+        dependsOn(rdGen)
+
+        inputs.property("profile", project.currentProfile().profile)
+        inputs.dir(riderSdkPath)
+        inputs.file(riderSdkProjectFile)
+        inputs.file(riderSdkTestProjectFile)
+        inputs.files(generateNuGetConfig)
+        inputs.files(initPluginProps)
+        inputs.files(initPluginTestProps)
+
+        outputs.file(digmaDll)
+        outputs.file(digmaPbd)
 
         doLast {
-            @Suppress("UNCHECKED_CAST") //we know it's an array, it's built in setBuildTool
-            val arguments: MutableList<String> = (setBuildTool.get().extra.get("args") as Array<String>).toMutableList()
-            arguments.add("/t:Restore;Rebuild")
+
+            //msbuild command reference: https://learn.microsoft.com/en-us/visualstudio/msbuild/msbuild-command-line-reference?view=vs-2022
+
+            //the dotnet command will generate a binlog.
+            //to view the binlog run:
+            //dotnet msbuild rider/build/dotnet/msbuild.binlog  /flp:v=diag
+            //it will create msbuild.log file in the current directory.
+            //the command will also create msbuild.log in the rider directory, this is the /fl.
+            //for diagnostics add argument "/v:diag"
+
+            //about /r: in development we sometimes need to build with different profiles, for example 232 and then 241.
+            // sometimes the conpileDotnet task will fail and looks like its using the wrong assemblies. /r(estore) fixes it.
+
+            logger.lifecycle("compileDotNet:Plugin.props: ${pluginPropsFile.readText()}")
+            logger.lifecycle("compileDotNet:nuget.config: ${nugetConfigFile.readText()}")
+
             exec {
-                executable = setBuildTool.get().extra.get("executable").toString()
-                args = arguments
+                executable = "dotnet"
+                args = listOf(
+                    "msbuild",
+                    "/r",
+                    "/p:Configuration=$buildConfiguration",
+                    "/t:Clean;Restore;Rebuild",
+                    "/nodeReuse:False",
+                    "/fl",
+                    "/bl:${project.layout.buildDirectory.get().asFile.absolutePath}/dotnet/msbuild.binlog",
+                    solutionFile
+                )
                 workingDir = projectDir
             }
         }
     }
 
 
-    prepareSandbox {
+    //buildPlugin depends on build, declared in common-build-logic/src/main/kotlin/plugin-library.gradle.kts
+    build {
         dependsOn(compileDotNet)
     }
 
-    buildPlugin{
-        dependsOn(compileDotNet)
+
+    val deleteOutputs by registering(Delete::class) {
+        deleteOutputs()
     }
 
 
-    val cleanRdGen by registering(Delete::class) {
-        delete(fileTree("${projectDir}/src/main/kotlin/org/digma/intellij/plugin/rider/protocol/").matching {
-            include("*.Generated.kt")
-        })
-        delete(fileTree("${projectDir}/Digma.Rider.Plugin/Digma.Rider/Protocol/").matching {
-            include("*.Generated.cs")
-        })
-    }
-
-    named("rdgen") {
-        dependsOn(cleanRdGen)
-    }
-
-    clean{
-        dependsOn(cleanRdGen)
-        delete("${projectDir}/Digma.Rider.Plugin/Digma.Rider/bin")
-        delete("${projectDir}/Digma.Rider.Plugin/Digma.Rider/obj")
-        delete("${projectDir}/Digma.Rider.Plugin/Digma.Rider.Tests/bin")
-        delete("${projectDir}/Digma.Rider.Plugin/Digma.Rider.Tests/obj")
+    clean {
+        dependsOn(deleteNuGetConfig)
+        dependsOn(deletePluginProps)
+        dependsOn(deleteOutputs)
     }
 
 }
@@ -184,10 +268,29 @@ val riderDotNetObjects: Configuration by configurations.creating {
     isCanBeResolved = false
 }
 artifacts {
-    add("riderDotNetObjects", file("$dllOutputFolder/Digma.Rider.dll")) {
+    add("riderDotNetObjects", file(digmaDll)) {
         builtBy(compileDotNet)
     }
-    add("riderDotNetObjects", file("$dllOutputFolder/Digma.Rider.pdb")) {
+    add("riderDotNetObjects", file(digmaPbd)) {
         builtBy(compileDotNet)
     }
 }
+
+
+val riderModel: Configuration by configurations.creating {
+    isCanBeConsumed = true
+    isCanBeResolved = false
+}
+artifacts {
+    add(riderModel.name, provider {
+        intellijPlatform.platformPath.resolve("lib/rd/rider-model.jar").also {
+            logger.lifecycle("rider-model.jar: $it")
+            check(it.isFile) {
+                "rider-model.jar is not found at $it"
+            }
+        }
+    }) {
+        builtBy(Constants.Tasks.INITIALIZE_INTELLIJ_PLATFORM_PLUGIN)
+    }
+}
+

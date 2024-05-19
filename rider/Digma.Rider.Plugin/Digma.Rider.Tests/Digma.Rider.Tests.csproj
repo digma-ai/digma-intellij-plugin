@@ -1,13 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net472</TargetFramework>
+    <LanguageTargets>$(MSBuildToolsPath)\Microsoft.CSharp.targets</LanguageTargets>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="JetBrains.Rider.SDK.Tests" Version="$(SdkVersion)" />
-    <PackageReference Include="JetBrains.ReSharper.SDK.Tests" Version="$(SdkVersion)" />
     <PackageReference Include="MSTest.TestAdapter" Version="2.2.10" />
     <PackageReference Include="MSTest.TestFramework" Version="2.2.10" />
   </ItemGroup>
@@ -15,6 +16,9 @@
   <ItemGroup>
     <ProjectReference Include="..\Digma.Rider\Digma.Rider.csproj" />
   </ItemGroup>
+
+  <Import Project="..\Plugin.Test.props"/>
+
 
   <ItemGroup>
     <Compile Remove="test/**/*" />

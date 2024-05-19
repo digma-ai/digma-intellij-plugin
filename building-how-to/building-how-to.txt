@@ -19,7 +19,7 @@ this is a work that never ends.
 ## Build
 ############################################################
 
-the project can build few profiles, each profile correspond to an intellij release, for example: p223, p231, p232
+the project can build few profiles, each profile correspond to an intellij release, for example: p231, p231, p232
 
 the profile names are the first 3 digits of intellij build number with a 'p' prefix. intellij build numbers
 always start with 3 digits that correspond to the major release.
@@ -112,7 +112,7 @@ data class BuildProfile(
 a profile is activated by a gradle property: buildProfile=[PROFILE]
 
 for example:
-./gradlew clean buildPlugin -PbuildProfile=p223
+./gradlew clean buildPlugin -PbuildProfile=p231
 or
 ./gradlew clean buildPlugin -PbuildProfile=p232
 
@@ -122,7 +122,7 @@ when there is no profile the oldest release profile is active.
 ## How to build
 ############################################################
 
-If you built the project with p223 profile, and now you want to build with p232 its necessary to clean before, mainly
+If you built the project with p231 profile, and now you want to build with p232 its necessary to clean before, mainly
 because of some leftovers from previous build.
 so a workflow could be something like:
 you start a branch for some feature, do a clean build. form now on you work as usual. if you now want to

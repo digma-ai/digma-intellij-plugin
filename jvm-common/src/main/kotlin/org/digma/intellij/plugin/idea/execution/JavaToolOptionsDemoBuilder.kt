@@ -5,6 +5,7 @@ import com.intellij.execution.configurations.RunConfiguration
 import com.intellij.execution.configurations.SimpleProgramParameters
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 
+@Suppress("LightServiceMigrationCode") //don't make it light service because it will register in rider
 class JavaToolOptionsDemoBuilder {
 
     fun isSupported(configuration: RunConfiguration): Boolean {

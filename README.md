@@ -1,44 +1,22 @@
-# An IntelliJ Plugin to Identify Code Performance Issues in Runtime
+# Code Runtime Analysis for Non-Trivial Java  Code
 
-<!-- Plugin description -->
+## Build
 
-Digma is an IntelliJ plugin for automatically [identifying and fixing performance issues in your code](https://digma.ai/blog/introducing-the-digma-jetbrains-plugin/).
-It enables developers to find the root cause of bottlenecks, scaling problems and query issues in the code. 
-
-### Example of issues Digma detects automatically
-
-- Bottlenecks and concurrency anti-patterns
-- Query inefficiencies
-- Scaling problems
-- N+1 Selects 
-- Performance regressions
-
-For more info check out our [website](https://digma.ai)
-
-<!-- Plugin description end -->
+- ./gradlew clean buildPlugin [-PbuildProfile=XXX]</br>
 
 ## Load to Idea
 
 - load the project into IntelliJ IDEA community with 'Open' and select the project directory</br>
-- setup jdk 11 for the project 'Project Structure'</br>
-- setup ProjectJdk for gradle in 'Settings -> Gradle'</br>
+- setup jdk 17 for the project 'Project Structure'</br>
+- setup ProjectJdk or jdk 21 for gradle in 'Settings -> Gradle'</br>
 
+## Load the dotnet project to Rider
 
-### Local IDE testing with development instances
+- run ./gradlew :rider:prepare [-PbuildProfile=XXX]</br>
+- open in rider the solution rider/Digma.Rider.Plugin/Digma.Rider.Plugin.sln</br>
 
-- in gradle.properties change 'platformType' to any of the supported IDEs, default is Rider</br>
-- open gradle tool window in idea and execute task intellij.runIde. or from the 'Run/Debug configuration' load and run 'Run Plugin'</br>
-- load a relevant project in the development instance</br>
-- play with the plugin</br>
+### Build Profiles
 
-(when testing with IC or IU or RD it is possible to install the python plugin on the development instance 
-and test python projects too)
-
-
-### Rider
-
-Rider implementation is in rider module. </br>
-The dotnet solution can be opened with rider - rider/Digma.Rider.Plugin</br>
-TBD: dotnet requirements
-
-
+build profiles build and package a plugin for specific intellij platform version.</br>
+see the list of available profiles in  [BuildProfiles](common-build-logic/src/main/kotlin/common/BuildProfile.kt)</br>
+for example './gradlew clean buildPlugin -PbuildProfile=p241'

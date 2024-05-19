@@ -1,0 +1,16 @@
+<Project>
+
+  <PropertyGroup>
+    <DotNetSdkTestPath>@DOTNET_SDK_PATH@</DotNetSdkTestPath>
+  </PropertyGroup>
+
+
+  <Import Project="$(DotNetSdkTestPath)@DOTNET_SDK_TEST_PROJECT@"/>
+
+    <ItemGroup>
+        <!-- when building 241 and above compileDotnet complains about this package version. so we set the version
+               according to rider version. to reproduce remove this and build with 241 -->
+        <PackageReference Include="System.Diagnostics.TraceSource" Version="@TRACE_SOURCE_VERSION@" />
+    </ItemGroup>
+
+</Project>

@@ -45,7 +45,8 @@ out/
 *.iml
 *.ipr
 *.iws
-
+## keep .idea/codeStyles/ in git so it is shared
+!.idea/codeStyles/*
 ##############################
 ## Eclipse
 ##############################
@@ -90,3 +91,13 @@ nb-configuration.xml
 ## Qodana
 ##############################
 .qodana
+
+
+#############################
+## intellij platform gradle plugin
+#############################
+.intellijPlatform
+
+
+## dotnet binlog
+msbuild.log

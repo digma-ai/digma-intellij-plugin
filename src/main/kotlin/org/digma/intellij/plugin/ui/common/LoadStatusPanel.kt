@@ -56,13 +56,13 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
         val line1Panel = JPanel()
         line1Panel.layout = BoxLayout(line1Panel, BoxLayout.X_AXIS)
         line1Panel.isOpaque = false
-        line1Panel.add(JLabel(asHtml(spanBold("Digma is overloaded")), SwingConstants.LEFT))
+        line1Panel.add(JLabel(asHtml(spanBold("Some issues are not being detected")), SwingConstants.LEFT))
 
         val line2Panel = JPanel()
         line2Panel.layout = BoxLayout(line2Panel, BoxLayout.X_AXIS)
         line2Panel.isOpaque = false
-        line2Panel.add(JLabel("Please consider deploying Digma ", SwingConstants.LEFT))
-        line2Panel.add(ActionLink("centrally") {
+        line2Panel.add(JLabel("We're processing less data to conserve resources, consider ", SwingConstants.LEFT))
+        line2Panel.add(ActionLink("deploying centrally") {
             ActivityMonitor.getInstance(project).registerUserActionWithOrigin("digma overload warning docs link clicked", UserActionOrigin.LoadStatusPanel)
             BrowserUtil.browse(Links.DIGMA_OVERLOAD_WARNING_DOCS_URL, project)
         })

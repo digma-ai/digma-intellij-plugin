@@ -14,6 +14,7 @@ open class JavaToolOptionsBuilder(
 
     private val otelAgentPathProvider = OtelAgentPathProvider(configuration)
 
+    @Suppress("MemberVisibilityCanBePrivate")
     protected val javaToolOptions = StringBuilder(" ")
 
 
@@ -39,12 +40,29 @@ open class JavaToolOptionsBuilder(
     }
 
 
-    open fun withOtelAgent(useAgent: Boolean): JavaToolOptionsBuilder {
+    open fun withOtelAgent(useAgent: Boolean, parametersExtractor: ParametersExtractor): JavaToolOptionsBuilder {
 
         if (useAgent) {
+
             if (!otelAgentPathProvider.hasAgentPath()) {
-                throw JavaToolOptionsBuilderException("useAgent is true but can't find agent paths")
+                throw JavaToolOptionsBuilderException("useAgent is true but can't find agent or extension paths")
             }
+
+            if (isExtendedObservabilityConfigured()) {
+
+                if (!otelAgentPathProvider.hasDigmaAgentPath()) {
+                    throw JavaToolOptionsBuilderException("can't find digma-agent path")
+                }
+
+                javaToolOptions
+                    .append("-javaagent:${otelAgentPathProvider.digmaAgentPath}")
+                    .append(" ")
+
+                withDigmaAgentDebug()
+
+
+            }
+
             javaToolOptions
                 .append("-javaagent:${otelAgentPathProvider.otelAgentPath}")
                 .append(" ")
@@ -141,12 +159,33 @@ open class JavaToolOptionsBuilder(
     }
 
 
+    open fun withDigmaAgentDebug(): JavaToolOptionsBuilder {
+        if (java.lang.Boolean.getBoolean("digma.agent.debug") ||
+            java.lang.Boolean.valueOf(System.getenv("DIGMA_AGENT_DEBUG"))
+        ) {
+            javaToolOptions
+                .append("-Ddigma.agent.debug=true")
+                .append(" ")
+        }
+        return this
+    }
+
+
     open fun withExtendedObservability(): JavaToolOptionsBuilder {
-        if (!SettingsState.getInstance().extendedObservability.isNullOrBlank()) {
+
+        if (isExtendedObservabilityConfigured()) {
+
             javaToolOptions
                 .append("-Ddigma.autoinstrument.packages=${SettingsState.getInstance().extendedObservability}")
                 .append(" ")
+
+            if (!SettingsState.getInstance().extendedObservabilityExcludes.isNullOrBlank()) {
+                javaToolOptions
+                    .append("-Ddigma.autoinstrument.packages.exclude.names=${SettingsState.getInstance().extendedObservabilityExcludes}")
+                    .append(" ")
+            }
         }
+
         return this
     }
 
@@ -254,12 +293,32 @@ open class JavaToolOptionsBuilder(
 
 
     open fun build(): String {
+
+        //always disable extended observability extension because we changed to digma-agent
+        disableExtendedObservabilityExtension()
+
         return javaToolOptions.toString()
+    }
+
+
+    private fun disableExtendedObservabilityExtension() {
+        //todo: need to disable the extended observability extension completely in the otel agent extension
+        // project after some time that we use digma-agent and all users upgraded the plugin.
+        // can't disable it yet because some users may still use older version of the plugin and are using extended observability.
+        javaToolOptions
+            .append("-Dotel.instrumentation.digma-methods.enabled=false")
+            .append(" ")
     }
 
 
     open fun getExporterUrl(): String {
         return SettingsState.getInstance().runtimeObservabilityBackendUrl
+    }
+
+
+    @Suppress("MemberVisibilityCanBePrivate")
+    fun isExtendedObservabilityConfigured(): Boolean {
+        return !SettingsState.getInstance().extendedObservability.isNullOrBlank()
     }
 
 }

@@ -118,7 +118,7 @@ open class DefaultInstrumentationFlavor : BaseInstrumentationFlavor() {
             val isTest = isTest(instrumentationService, parametersExtractor, configuration, params)
 
             javaToolOptionsBuilder
-                .withOtelAgent(useOtelAgent())
+                .withOtelAgent(useOtelAgent(), parametersExtractor)
                 .withMockitoSupport(isTest)
                 .withServiceName(moduleResolver, parametersExtractor, serviceNameProvider)
                 .withExtendedObservability()

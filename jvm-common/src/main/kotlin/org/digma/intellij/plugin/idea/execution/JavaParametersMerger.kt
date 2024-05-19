@@ -95,9 +95,10 @@ open class JavaParametersMerger(
     protected fun smartMergeJavaToolOptions(myJavaToolOptions: String, currentJavaToolOptions: String): String {
 
         //merge two java tool options strings. values from myJavaToolOptions override values from currentJavaToolOptions
+        //we want to preserve the order , existing java tool options properties should be first
 
-        val myOptions = javaToolOptionsToMap(myJavaToolOptions)
         val currentOptions = javaToolOptionsToMap(currentJavaToolOptions)
+        val myOptions = javaToolOptionsToMap(myJavaToolOptions)
 
         val result = mutableMapOf<String, String?>()
         result.putAll(currentOptions)

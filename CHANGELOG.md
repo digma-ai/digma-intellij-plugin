@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.336] - 2024-05-19
+## [2.0.337] - 2024-05-19
+
+- extended-observability-experiment by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2153
+
+## 2.0.336 - 2024-05-19
 
 - updated message by @doppleware in https://github.com/digma-ai/digma-intellij-plugin/pull/2165
 

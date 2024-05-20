@@ -2,7 +2,6 @@ package org.digma.intellij.plugin.ui.common
 
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.components.service
-import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
 import com.intellij.util.ui.JBUI
@@ -133,6 +132,29 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
             toolTipText = service.lastLoadStatus.description +
                     "<br/>" +
                     "Last occurred at " + service.lastLoadStatus.lastUpdated
+
+            when (service.lastLoadStatus.throttlingType) {
+                "ExtendedObservability" -> {
+                    label.text = "Please specify more granular ext. observability packages"
+                    actionLink.text = ""
+                }
+
+                "InMemory" -> {
+                    label.text = "We're processing less data to conserve resources, consider "
+                    actionLink.text = "deploying centrally"
+                }
+
+                "Kafka" -> {
+                    label.text = "Please consider upgrading the centralized environment"
+                    actionLink.text = ""
+                }
+
+                else -> {
+                    // backward compatibility when no throttlingType for the old backend
+                    label.text = "We're processing less data to conserve resources, consider "
+                    actionLink.text = "deploying centrally"
+                }
+            }
         } else {
             isVisible = false
         }

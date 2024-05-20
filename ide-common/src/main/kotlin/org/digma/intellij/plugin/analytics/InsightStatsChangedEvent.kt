@@ -13,5 +13,12 @@ interface InsightStatsChangedEvent {
         )
     }
 
-    fun insightStatsChanged(scope: JsonNode?, analyticsInsightsCount: Int, issuesInsightsCount: Int, unreadInsightsCount: Int)
+    fun insightStatsChanged(
+        scope: JsonNode?,
+        analyticsInsightsCount: Int,
+        issuesInsightsCount: Int,
+        unreadInsightsCount: Int,
+        criticalInsightsCount: Int,
+        allIssuesCount: Int
+    )
 }

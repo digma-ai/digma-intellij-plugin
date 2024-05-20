@@ -8,7 +8,6 @@ import org.jetbrains.annotations.*;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
 import java.net.*;
 import java.util.Objects;
 
@@ -28,10 +27,16 @@ public class SettingsComponent {
     private final ComboBox<LinkMode> myJaegerLinkModeComboBox = new ComboBox<>(new EnumComboBoxModel<>(LinkMode.class));
     private final JBLabel myEmbeddedJaegerMessage = new JBLabel("<html><body><span style=\"color:\"" + JBColor.BLUE + "\"\"><b>Jaeger embedded is only supported for deployment on a local environment.</b></span></body>");
     private final ComboBox<SpringBootObservabilityMode> mySpringBootObservabilityModeComboBox = new ComboBox<>(new EnumComboBoxModel<>(SpringBootObservabilityMode.class));
+    private final JBLabel myRuntimeObservabilityBackendUrlLabel = new JBLabel("Runtime observability backend URL:");
     private final JBTextField myRuntimeObservabilityBackendUrlText = new JBTextField();
     private final JBTextField extendedObservabilityTextBox = new JBTextField();
+    private final JBTextField extendedObservabilityExcludeTextBox = new JBTextField();
 
     public SettingsComponent() {
+
+        extendedObservabilityTextBox.setToolTipText("packages names in format 'my.pkg1;my.pkg2");
+        extendedObservabilityExcludeTextBox.setToolTipText("class/method names to exclude in format 'MyClass;MyOtherClass.myOtherMethod;*get");
+
 
         var defaultLabelForeground = JBColor.foreground();
 
@@ -108,6 +113,23 @@ public class SettingsComponent {
         });
 
 
+        myRuntimeObservabilityBackendUrlLabel.setToolTipText("Where should observability data be sent from the IDE? This would be the Digma collector URL typically listening to port 5050");
+
+        myRuntimeObservabilityBackendUrlText.setInputVerifier(new InputVerifier() {
+            @Override
+            public boolean verify(JComponent input) {
+                try {
+                    new URL(myRuntimeObservabilityBackendUrlText.getText().trim());
+                    myRuntimeObservabilityBackendUrlLabel.setForeground(defaultLabelForeground);
+                    return true;
+                } catch (MalformedURLException e) {
+                    myRuntimeObservabilityBackendUrlLabel.setForeground(JBColor.RED);
+                    return false;
+                }
+            }
+        });
+
+
         myEmbeddedJaegerMessage.setForeground(JBColor.BLUE);
 
         var myJaegerLinkModeLabel = new JBLabel("Jaeger link mode: ");
@@ -125,27 +147,10 @@ public class SettingsComponent {
                 + "Micrometer will use Micrometer tracing, including the annotation of 'Observed' "
         );
 
-        var myRuntimeObservabilityBackendUrlLabel = new JBLabel("Runtime observability backend URL:");
-        myRuntimeObservabilityBackendUrlLabel.setToolTipText("Where should observability data be sent from the IDE? This would be the Digma collector URL typically listening to port 5050");
-        JBLabel feedbackForRuntimeObservabilityBackendUrl = buildFeedbackNotValidUrl();
-        myRuntimeObservabilityBackendUrlText.setInputVerifier(new InputVerifier() {
-            @Override
-            public boolean verify(JComponent input) {
-                try {
-                    new URL(myRuntimeObservabilityBackendUrlText.getText().trim());
-                    feedbackForRuntimeObservabilityBackendUrl.setVisible(false);
-                    return true;
-                } catch (MalformedURLException e) {
-                    feedbackForRuntimeObservabilityBackendUrl.setVisible(true);
-                    return false;
-                }
-            }
-        });
-
         var resetButton = new JButton("Reset to defaults");
         resetButton.addActionListener(e -> resetToDefaults());
 
-        var builder = FormBuilder.createFormBuilder()
+        myMainPanel = FormBuilder.createFormBuilder()
                 .addLabeledComponent(myUrlLabel, myApiUrlText, 1, false)
                 .addLabeledComponent(new JBLabel("Api token:"), myApiToken, 1, false)
                 .addLabeledComponent(myRefreshLabel, myRefreshDelay, 1, false)
@@ -155,31 +160,11 @@ public class SettingsComponent {
                 .addLabeledComponent(myJaegerQueryUrlLabel, myJaegerQueryUrlText, 1, false)
                 .addLabeledComponent(mySpringBootObservabilityModeLabel, mySpringBootObservabilityModeComboBox, 1, false)
                 .addLabeledComponent(myRuntimeObservabilityBackendUrlLabel, myRuntimeObservabilityBackendUrlText, 1, false)
-                .addComponentToRightColumn(feedbackForRuntimeObservabilityBackendUrl, 1)
                 .addLabeledComponent("Extended Observability (beta)", extendedObservabilityTextBox, 1, false)
-                .addComponent(resetButton);
-        //.addComponentFillVertically(new JPanel(), 0)
-
-        if ("digma".equals(System.getenv("devenv"))) {
-            builder.addComponent(getSwitchToCentralizedButton());
-
-        }
-
-        builder.addComponentFillVertically(new JPanel(), 0);
-        myMainPanel = builder.getPanel();
-    }
-
-    private JComponent getSwitchToCentralizedButton() {
-        var switchButton = new JButton("Switch To Centralized");
-        switchButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                myApiUrlText.setText("https://k8s-test-testanal-8fb5588e77-656549b60155bd92.elb.eu-west-1.amazonaws.com:5051");
-                myJaegerQueryUrlText.setText("http://k8s-test-testembe-bc3a31f355-363f3f02cca5c825.elb.eu-west-1.amazonaws.com:17686");
-                myRuntimeObservabilityBackendUrlText.setText("http://k8s-test-testcoll-9cc2840664-5a79b938206dc6d6.elb.eu-west-1.amazonaws.com:5050");
-            }
-        });
-        return switchButton;
+                .addLabeledComponent("Extended Observability Exclude (beta)", extendedObservabilityExcludeTextBox, 1, false)
+                .addComponent(resetButton)
+                .addComponentFillVertically(new JPanel(), 0)
+                .getPanel();
     }
 
 
@@ -206,19 +191,7 @@ public class SettingsComponent {
         }
     }
 
-    @NotNull
-    private static JBLabel buildFeedbackLabel(String text, String toolTip) {
-        var feedbackLabel = new JBLabel(text);
-        feedbackLabel.setToolTipText(toolTip);
-        feedbackLabel.setForeground(JBColor.RED);
-        feedbackLabel.setVisible(false);
-        return feedbackLabel;
-    }
 
-    @NotNull
-    private static JBLabel buildFeedbackNotValidUrl() {
-        return buildFeedbackLabel("Not a valid URL", "try to use value like http://somehost:8765");
-    }
 
     public JPanel getPanel() {
         return myMainPanel;
@@ -311,6 +284,16 @@ public class SettingsComponent {
         return extendedObservabilityTextBox.getText();
     }
 
+    public void setExtendedObservabilityExclude(@Nullable String extendedObservabilityExclude) {
+        extendedObservabilityExcludeTextBox.setText(extendedObservabilityExclude);
+    }
+
+    @Nullable
+    public String getExtendedObservabilityExclude() {
+        return extendedObservabilityExcludeTextBox.getText();
+    }
+
+
     private void resetToDefaults() {
         this.setApiUrlText(SettingsState.DEFAULT_API_URL);
         this.setApiToken(null);
@@ -322,5 +305,6 @@ public class SettingsComponent {
         this.setSpringBootObservabilityMode(SettingsState.DEFAULT_SPRING_BOOT_OBSERVABILITY_MODE);
         this.setRuntimeObservabilityBackendUrl(SettingsState.DEFAULT_RUNTIME_OBSERVABILITY_BACKEND_URL);
         this.setExtendedObservability(null);
+        this.setExtendedObservabilityExclude(null);
     }
 }

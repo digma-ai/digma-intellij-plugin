@@ -3,6 +3,23 @@ package org.digma.intellij.plugin.ui.jcef.model
 import com.fasterxml.jackson.annotation.JsonProperty
 import org.digma.intellij.plugin.ui.jcef.JCEFGlobalConstants
 
+
+data class ViewedInsight(val type: String, val foundAt: String)
+
+data class SetDigmathonProgressData(val payload: DigmathonProgressDataPayload) {
+    val type = JCEFGlobalConstants.REQUEST_MESSAGE_TYPE
+    val action = "RECENT_ACTIVITY/SET_DIGMATHON_PROGRESS_DATA"
+}
+
+data class DigmathonProgressDataPayload(
+    val insights: Collection<ViewedInsight>,
+    val lastUpdatedByUserAt: String?
+)
+
+
+
+
+
 data class SetDigmathonState(
     val payload: DigmathonStatePayload,
 ) {

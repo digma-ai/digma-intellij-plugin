@@ -12,6 +12,37 @@ const val OTEL_SERVICE_NAME_PROP_NAME = "otel.service.name"
 
 const val DIGMA_MARKER = "-Dorg.digma.marker=true"
 
+//a feature flag to use digma agent for extended instrumentation instead of the otel extension module
+//todo: delete, not used anymore
+//const val USE_DIGMA_AGENT_PROP_NAME = "USE_DIGMA_AGENT"
+
+
+/*
+DIGMA_OBSERVABILITY is an environment variable to forces observability when user executes an unsupported
+ gradle task or maven goal. it should be used only for gradle or maven. it can not force observability for unknown
+ configuration types because we don't know how to treat unknown configuration types. gradle and maven configuration
+ types are known to us, we just don't support all possible gradle task names or maven goals.
+there can be two values for DIGMA_OBSERVABILITY, app or test. when app, the observability will be treated as regular application,
+ when test, the observability will be treated as test and is mainly used to add digma.environment LOCAL or LOCAL_TESTS.
+when exists and value is empty it will be treated as app.
+to force a different instrumentation flavor add INSTRUMENTATION_FLAVOR environment variable with value one of
+ org.digma.intellij.plugin.idea.execution.flavor.InstrumentationFlavorType.
+examples:
+if running a task called myTask that we don't support:
+DIGMA_OBSERVABILITY or DIGMA_OBSERVABILITY=app -> will be treated as regular application with the default flavor.
+DIGMA_OBSERVABILITY=test -> will be treated as a test execution with the default flavor.
+
+together with
+DIGMA_OBSERVABILITY=test
+INSTRUMENTATION_FLAVOR=Quarkus
+will be treated as Quarkus flavor and a test execution.
+
+don't add DIGMA_OBSERVABILITY if it's not necessary, it may confuse the instrumentation flavor.
+
+*/
+const val DIGMA_OBSERVABILITY = "DIGMA_OBSERVABILITY"
+
+enum class DigmaObservabilityType { app, test }
 
 val KNOWN_IRRELEVANT_TASKS = setOf(
     /*
@@ -146,4 +177,4 @@ val KNOWN_IRRELEVANT_TASKS = setOf(
     "runIde",
     "setupDependencies"
 
-    )
+)

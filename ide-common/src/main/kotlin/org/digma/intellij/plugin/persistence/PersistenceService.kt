@@ -23,6 +23,7 @@ class PersistenceService {
 
     /**
      * Do not use this method to get the current environment.
+     * It is used only for restoring the current env after restart or after connection lost/gained
      */
     fun getLatestSelectedEnvId(): String? {
         return state.latestSelectedEnvId
@@ -300,20 +301,38 @@ class PersistenceService {
         return state.loadWarningAppearedTimestamp != null
     }
 
-    fun setFinishDigmathonGameForUser() {
-        state.isFinishDigmathonGameForUser = true
+    fun setFinishDigmathonGameForUser(isFinished: Boolean) {
+        state.isFinishDigmathonGameForUser = isFinished
     }
 
     fun isFinishDigmathonGameForUser(): Boolean {
         return state.isFinishDigmathonGameForUser
     }
 
-    fun setDigmathonInsightsViewed(insights: String) {
+    //nullable so it can be reset every time a new digmathon starts
+    fun setDigmathonInsightsViewed(insights: String?) {
         state.digmathonViewedInsights = insights
     }
 
     fun getDigmathonInsightsViewed(): String? {
         return state.digmathonViewedInsights
     }
+
+    fun setDigmathonInsightsViewedLastUpdated(instant: Instant?) {
+        state.digmathonViewedInsightsLastUpdated = instant
+    }
+
+    fun getDigmathonInsightsViewedLastUpdated(): Instant? {
+        return state.digmathonViewedInsightsLastUpdated
+    }
+
+    fun isDigmathonStartedForUser(): Boolean {
+        return state.digmathonStartedForUser
+    }
+
+    fun setDigmathonStartedForUser(started: Boolean) {
+        state.digmathonStartedForUser = started
+    }
+
 
 }

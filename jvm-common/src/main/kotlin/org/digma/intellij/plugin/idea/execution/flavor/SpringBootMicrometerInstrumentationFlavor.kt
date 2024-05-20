@@ -94,7 +94,7 @@ class SpringBootMicrometerInstrumentationFlavor : DefaultInstrumentationFlavor()
     ): String? {
         return try {
 
-            val isTest = isTest(instrumentationService, configuration, params)
+            val isTest = isTest(instrumentationService, parametersExtractor, configuration, params)
 
             javaToolOptionsBuilder
                 .withCommonSpringBootWithMicrometerTracing(true)
@@ -124,7 +124,7 @@ class SpringBootMicrometerInstrumentationFlavor : DefaultInstrumentationFlavor()
     ): Map<String, String> {
 
         return try {
-            val isTest = isTest(instrumentationService, configuration, params)
+            val isTest = isTest(instrumentationService, parametersExtractor, configuration, params)
 
             if (needToAddDigmaEnvironmentAttribute(parametersExtractor)) {
                 if (isTest) {

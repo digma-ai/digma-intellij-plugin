@@ -1,12 +1,16 @@
 package org.digma.intellij.plugin.posthog
 
 import com.fasterxml.jackson.core.JsonProcessingException
+import com.intellij.collaboration.async.disposingScope
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.jcef.JBCefApp
 import com.posthog.java.PostHog
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.datetime.toJavaInstant
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.common.ExceptionUtils
@@ -32,6 +36,7 @@ import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.Date
+import kotlin.time.Duration.Companion.minutes
 
 private const val INSTALL_STATUS_PROPERTY_NAME = "install_status"
 private const val ENVIRONMENT_ADDED_PROPERTY_NAME = "environment_added"
@@ -44,10 +49,24 @@ enum class InstallStatus { Active, Uninstalled, Disabled }
 class ActivityMonitor(private val project: Project) : Disposable {
 
     companion object {
+
+        private const val TOKEN = "phc_5sy6Kuv1EYJ9GAdWPeGl7gx31RAw7BR7NHnOuLCUQZK"
+
+
         @JvmStatic
         fun getInstance(project: Project): ActivityMonitor {
             return project.getService(ActivityMonitor::class.java)
         }
+
+
+        private fun checkAndConnect(): PostHog? {
+            return if (PosthogConnectionTester.isConnectionToPosthogOk()) {
+                return PostHog.Builder(TOKEN).build()
+            } else {
+                null
+            }
+        }
+
     }
 
 
@@ -62,8 +81,8 @@ class ActivityMonitor(private val project: Project) : Disposable {
 
         SessionMetadataProperties.getInstance().put(CURRENT_INSTALL_STATUS_KEY, InstallStatus.Active)
 
-        val token = "phc_5sy6Kuv1EYJ9GAdWPeGl7gx31RAw7BR7NHnOuLCUQZK"
-        postHog = PostHog.Builder(token).build()
+        postHog = checkAndConnect()
+
         registerSessionDetails()
 
         ServerVersionMonitor.getInstance(project)
@@ -71,7 +90,44 @@ class ActivityMonitor(private val project: Project) : Disposable {
 
         settingsChangeTracker.start(this)
 
+        //why we need all that?
+        //there are users that can't connect to posthog due to network restrictions like firewalls or company proxies.
+        //these users complain that there are many errors in idea.log. that is because PostHog prints connection errors with
+        //System.out/err and e.printStackTrace(), this is fault behaviour of posthog java client, and we can't change it.
+        //posthog does not throw or notifies about connection errors,it just prints them and doesn't send the events.
+        //So, on initialization, we try to connect with checkAndConnect(), if it fails then maybe it's one of these users,
+        // and we'll probably never succeed. checkAndConnect() will return null and when posthog is null no events will be
+        // sent and no errors will be logged.
+        //but, it could be just a momentary network issue, that's why we keep trying every 5 minutes.
+        //once we succeed connection and posthog is not null we stop trying because we have a posthog client.
+        //don't care if there are network issues later, the only reason for all this is to identify users that
+        // can never connect to posthog and prevent the unnecessary errors to idea.log.
+
+        //if posthog is not null don't even start the coroutine.
+        //try to keep connecting to posthog every 5 minutes but give up after 1 hour, if we couldn't connect for
+        // 1 hour it probably means we can't connect. this is meant to prevent endless trying when in fact there is
+        // no way to connect, usually it will be the users mentioned above were connection to posthog is impossible.
+        if (postHog == null) {
+            val startTime = Instant.now()
+            @Suppress("UnstableApiUsage")
+            disposingScope().launch {
+                //once we have a non-null posthog stop this coroutine.
+                //give up 1 hour after startTime.
+                while (isActive &&
+                    postHog == null &&
+                    startTime.plus(1, ChronoUnit.HOURS).isAfter(Instant.now())
+                ) {
+                    delay(5.minutes.inWholeMilliseconds)
+                    if (isActive) {
+                        postHog = checkAndConnect()
+                    }
+                }
+            }
+        }
+
     }
+
+
 
 
     override fun dispose() {
@@ -450,6 +506,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
                 "trace.depth.avg" to uss.traceDepthAvg,
                 "unique.spans.count" to uss.uniqueSpansCount,
                 "environments.count" to uss.environmentsCount,
+                "groupedByClassification" to uss.classificationAggregationString
             )
         )
     }
@@ -458,6 +515,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
         runConfigTypeName: String,
         description: String,
         javaToolOptions: String,
+        resourceAttributes: String,
         observabilityEnabled: Boolean,
         connectedToBackend: Boolean
     ) {
@@ -477,6 +535,8 @@ class ActivityMonitor(private val project: Project) : Disposable {
         } else {
             details["java tool options"] = javaToolOptions
         }
+
+        details["otel resource attributes"] = resourceAttributes
 
         capture(
             "instrumented run configuration",

@@ -1,16 +1,109 @@
 # Changelog
 
-## [2.0.320] - 2024-04-18
+## [2.0.337] - 2024-05-19
+
+- extended-observability-experiment by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2153
+
+## 2.0.336 - 2024-05-19
+
+- updated message by @doppleware in https://github.com/digma-ai/digma-intellij-plugin/pull/2165
+
+## 2.0.335 - 2024-05-16
+
+- Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2162
+
+## 2.0.334 - 2024-05-15
+
+- Updated ui by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2158
+- Updated ui by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2159
+- catch error in org.digma.intellij.plugin.analytics.BackendInfoHolder.… by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2160
+
+## 2.0.333 - 2024-05-13
+
+- Update UI by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2151
+- change AuthenticationException log level to debug by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2154
+- force observability with DIGMA_OBSERVABILITY #Closes 2144 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2156
+- Added span info endpoint by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2157
+
+## 2.0.332 - 2024-05-10
+
+- Added scaling highlights by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2135
+- Update UI by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2149
+- fix-CycleInitializationException by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2150
+
+## 2.0.331 - 2024-05-09
+
+- clear current env when deleting last env Closes #2139 by @shalom938
+  in https://github.com/digma-ai/digma-intellij-plugin/pull/2140
+- put jars urls in properties file by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2147
+
+## 2.0.330 - 2024-05-06
+
+- Update Digmathon by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2134
+
+## 2.0.329 - 2024-05-05
+
+- prevent posthog errors when can't connect Closes #2041 by @shalom938
+  in https://github.com/digma-ai/digma-intellij-plugin/pull/2137
+- don't log NoSelectedEnvironmentException in warn level Closes #2136 by @shalom938
+  in https://github.com/digma-ai/digma-intellij-plugin/pull/2138
+
+## 2.0.328 - 2024-05-01
+
+- remove some info from settings events Closes #2013 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2127
+- update build profiles by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2131
+- Fix insights stats on analytics by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2132
+- Fix dashboards by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2133
+
+## 2.0.327 - 2024-04-30
+
+- auth manager analytics provider Closes #2124 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2125
+
+## 2.0.326 - 2024-04-30
+
+- Rollback by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2126
+
+## 2.0.325 - 2024-04-29
+
+- reorder log messages in auth package by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2120
+- Feature/statistics by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2121
+- Feature/highlights impact by @borisermakof in https://github.com/digma-ai/digma-intellij-plugin/pull/2122
+
+## 2.0.324 - 2024-04-26
+
+- improve AuthManager by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2115
+
+## 2.0.323 - 2024-04-25
+
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2113
+
+## 2.0.322 - 2024-04-24
+
+- Feature/asset naviagation by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2105
+- Fixed error message for login by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2109
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2112
+
+## 2.0.321 - 2024-04-22
+
+- unify action names by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2094
+- catch exceptions in settings changed Closes #2100 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2102
+- add groupedByClassification to user-stats posthog by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/2103
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2104
+
+## 2.0.320 - 2024-04-18
 
 - Fix env refresh by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2022
 - Support digma auth header by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2028
-- Feature/new environment api user id in account by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2030
+- Feature/new environment api user id in account by @shalom938
+  in https://github.com/digma-ai/digma-intellij-plugin/pull/2030
 - Send user info to UI by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2039
 - Contracts refactoring 1 by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/2061
 - Feature/sign in suggestion by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2071
 - Feature/sign in by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2065
-- refactor documentation app for common jcef infrastructure by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2082
-- ensue no read access in Backgroundable Closes #2084 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2086
+- refactor documentation app for common jcef infrastructure by @shalom938
+  in https://github.com/digma-ai/digma-intellij-plugin/pull/2082
+- ensue no read access in Backgroundable Closes #2084 by @shalom938
+  in https://github.com/digma-ai/digma-intellij-plugin/pull/2086
 - Feature/new environment api by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2032
 - Rollback tmp changes by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/2089
 - Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2090

@@ -83,7 +83,7 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
                 project.service<RecentActivityUpdater>().updateLatestActivities()
             }
 
-            "RECENT_ACTIVITY/DELETE_ENVIRONMENT_V2" -> {
+            "RECENT_ACTIVITY/DELETE_ENVIRONMENT" -> {
                 val environmentId = getEnvironmentIdFromPayload(requestJsonNode)
                 environmentId?.let {
                     project.service<RecentActivityService>().deleteEnvironmentV2(environmentId)
@@ -92,7 +92,20 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
             }
 
             "RECENT_ACTIVITY/GET_DIGMATHON_PROGRESS_DATA" -> {
-                RecentActivityService.getInstance(project).setDigmathonProgressData(DigmathonService.getInstance().viewedInsights)
+                RecentActivityService.getInstance(project)
+                    .setDigmathonProgressData(
+                        DigmathonService.getInstance().viewedInsights,
+                        DigmathonService.getInstance().getDigmathonInsightsViewedLastUpdated()
+                    )
+            }
+
+            "RECENT_ACTIVITY/UPDATE_DIGMATHON_PROGRESS_DATA" -> {
+                DigmathonService.getInstance().updateDigmathonInsightsViewedLastUpdated()
+                RecentActivityService.getInstance(project)
+                    .setDigmathonProgressData(
+                        DigmathonService.getInstance().viewedInsights,
+                        DigmathonService.getInstance().getDigmathonInsightsViewedLastUpdated()
+                    )
             }
 
             else -> return false

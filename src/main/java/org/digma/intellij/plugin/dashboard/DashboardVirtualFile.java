@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 public class DashboardVirtualFile extends LightVirtualFile implements DigmaVirtualFileMarker {
 
     public static final Key<String> DASHBOARD_EDITOR_KEY = Key.create("Digma.DASHBOARD_EDITOR_KEY");
-    private String dashboardEnvId;
+    private String dashboardName;
     public DashboardVirtualFile(String myTitle) {
         super(myTitle);
         setFileType(DashboardFileType.INSTANCE);
@@ -25,16 +25,16 @@ public class DashboardVirtualFile extends LightVirtualFile implements DigmaVirtu
     @NotNull
     public static VirtualFile createVirtualFile(@NotNull String dashboardName) {
         var file = new DashboardVirtualFile(dashboardName);
-        file.setDashboardEnvId(dashboardName);
+        file.setDashboardName(dashboardName);
         DASHBOARD_EDITOR_KEY.set(file, DashboardFileEditorProvider.DASHBOARD_EDITOR_TYPE);
         return file;
     }
 
-    public void setDashboardEnvId(String documentationPage) {
-        this.dashboardEnvId = documentationPage;
+    public void setDashboardName(String documentationPage) {
+        this.dashboardName = documentationPage;
     }
 
-    public String getDashboardEnvId() {
-        return dashboardEnvId;
+    public String getDashboardName() {
+        return dashboardName;
     }
 }

@@ -87,7 +87,11 @@ class InsightsMessageRouterHandler(project: Project) : AbstractInsightsMessageRo
                 DigmathonService.getInstance().addInsightsViewed(insightTypeList.map { it.first })
                 //stop sending this message if user finished the digmathon
                 if (!DigmathonService.getInstance().isUserFinishedDigmathon) {
-                    RecentActivityService.getInstance(project).setDigmathonProgressData(DigmathonService.getInstance().viewedInsights)
+                    RecentActivityService.getInstance(project)
+                        .setDigmathonProgressData(
+                            DigmathonService.getInstance().viewedInsights,
+                            DigmathonService.getInstance().getDigmathonInsightsViewedLastUpdated()
+                        )
                 }
             }
         }

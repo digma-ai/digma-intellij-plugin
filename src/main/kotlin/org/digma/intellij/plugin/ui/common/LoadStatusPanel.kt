@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.ui.common
 
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.components.service
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
 import com.intellij.util.ui.JBUI
@@ -25,13 +26,12 @@ import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.SwingConstants
 
-
 class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
 
     private var service = project.service<LoadStatusService>()
 
-    val label = JLabel("Please consider deploying Digma ", SwingConstants.LEFT)
-    var actionLink = ActionLink("centrally") {
+    val label = JLabel("We're processing less data to conserve resources, consider ", SwingConstants.LEFT)
+    var actionLink = ActionLink("deploying centrally") {
         ActivityMonitor.getInstance(project).registerUserActionWithOrigin("digma overload warning docs link clicked", UserActionOrigin.LoadStatusPanel)
         BrowserUtil.browse(Links.DIGMA_OVERLOAD_WARNING_DOCS_URL, project)
     }
@@ -68,7 +68,7 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
         val line1Panel = JPanel()
         line1Panel.layout = BoxLayout(line1Panel, BoxLayout.X_AXIS)
         line1Panel.isOpaque = false
-        line1Panel.add(JLabel(asHtml(spanBold("Digma is overloaded")), SwingConstants.LEFT))
+        line1Panel.add(JLabel(asHtml(spanBold("Some issues are not being detected")), SwingConstants.LEFT))
 
         val line2Panel = JPanel()
         line2Panel.layout = BoxLayout(line2Panel, BoxLayout.X_AXIS)
@@ -133,29 +133,6 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
             toolTipText = service.lastLoadStatus.description +
                     "<br/>" +
                     "Last occurred at " + service.lastLoadStatus.lastUpdated
-
-            when (service.lastLoadStatus.throttlingType) {
-                "ExtendedObservability" -> {
-                    label.text = "Please specify more granular ext. observability packages"
-                    actionLink.text = ""
-                }
-
-                "InMemory" -> {
-                    label.text = "Please consider deploying Digma "
-                    actionLink.text = "centrally"
-                }
-
-                "Kafka" -> {
-                    label.text = "Please consider upgrading the centralized environment"
-                    actionLink.text = ""
-                }
-
-                else -> {
-                    // backward compatibility when no throttlingType for the old backend
-                    label.text = "Please consider deploying Digma "
-                    actionLink.text = "centrally"
-                }
-            }
         } else {
             isVisible = false
         }

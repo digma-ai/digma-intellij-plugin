@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.analytics;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.openapi.Disposable;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.*;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.JBColor;
@@ -22,6 +23,7 @@ import org.digma.intellij.plugin.model.rest.environment.Env;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.event.*;
+import org.digma.intellij.plugin.model.rest.highlights.HighlightsRequest;
 import org.digma.intellij.plugin.model.rest.insights.*;
 import org.digma.intellij.plugin.model.rest.livedata.*;
 import org.digma.intellij.plugin.model.rest.lowlevel.*;
@@ -51,6 +53,7 @@ import java.util.stream.Collectors;
 import static org.digma.intellij.plugin.analytics.EnvUtilsKt.getAllEnvironmentsNames;
 import static org.digma.intellij.plugin.analytics.EnvironmentRefreshSchedulerKt.scheduleEnvironmentRefresh;
 import static org.digma.intellij.plugin.common.ExceptionUtils.*;
+import static org.digma.intellij.plugin.log.Log.API_LOGGER_NAME;
 
 
 public class AnalyticsService implements Disposable {
@@ -60,7 +63,7 @@ public class AnalyticsService implements Disposable {
     private static final Logger LOGGER = Logger.getInstance(AnalyticsService.class);
 
     private final Environment environment;
-    private String myApiUrl;
+
     private final Project project;
 
     /**
@@ -83,35 +86,10 @@ public class AnalyticsService implements Disposable {
         BackendConnectionMonitor.getInstance(project);
         //initialize MainToolWindowCardsController when starting, so it is aware early on connection statuses
         MainToolWindowCardsController.getInstance(project);
-        SettingsState settingsState = SettingsState.getInstance();
         environment = new Environment(project, this);
         this.project = project;
-        myApiUrl = settingsState.apiUrl;
-        replaceClient(myApiUrl);
+        replaceClient(SettingsState.getInstance().apiUrl);
         scheduleEnvironmentRefresh(this, environment);
-
-        settingsState.addChangeListener(state -> {
-
-            Log.log(LOGGER::debug, "settings changed event");
-
-            boolean shouldReplaceClient = false;
-
-            if (!Objects.equals(state.apiUrl, myApiUrl)) {
-                myApiUrl = state.apiUrl;
-                shouldReplaceClient = true;
-            }
-
-            //replace the client only when apiUrl is changed.
-            //there is no need top replace the client when api token is changed because there is an
-            // AuthenticationProvider that always takes it from the settings
-            if (shouldReplaceClient) {
-                Log.log(LOGGER::debug, "api url changed to {}, calling replace client", myApiUrl);
-                AuthManager.getInstance().logout();
-                AuthManager.getInstance().pauseBeforeClientChange();
-                replaceClient(myApiUrl);
-            }
-
-        }, this);
     }
 
 
@@ -126,7 +104,8 @@ public class AnalyticsService implements Disposable {
 
     //just replace the client and do not fire any events
     //this method should be synchronized, and it shouldn't be a problem, it doesn't happen too often.
-    private synchronized void replaceClient(String url) {
+    //package private, should not be called other than from AnalyticsServiceSettingsWatcher
+    synchronized void replaceClient(String url) {
 
         Log.log(LOGGER::debug, "replacing AnalyticsProvider for url {}", url);
 
@@ -142,7 +121,7 @@ public class AnalyticsService implements Disposable {
         AnalyticsProvider analyticsProvider =
                 AuthManager.getInstance().withAuth(new RestAnalyticsProvider(url, AuthManager.getInstance().getAuthenticationProviders(),
                         message -> {
-                            var apiLogger = Logger.getInstance("api.digma.org");
+                            var apiLogger = Logger.getInstance(API_LOGGER_NAME);
                             Log.log(apiLogger::debug, "API: {}", message);
                         }));
         Log.log(LOGGER::debug, "AuthManager.withAuth successfully wrapped AnalyticsProvider for url {}", url);
@@ -150,7 +129,7 @@ public class AnalyticsService implements Disposable {
 
         environment.refreshNowOnBackground();
 
-        BackendInfoHolder.getInstance().updateInBackground();
+        ApplicationManager.getApplication().getMessageBus().syncPublisher(ApiClientChangedEvent.getAPI_CLIENT_CHANGED_TOPIC()).apiClientChanged(url);
 
     }
 
@@ -421,6 +400,26 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.getHighlightsTopInsights(queryParams));
     }
 
+    public String getHighlightsPerformanceV2(HighlightsRequest request) throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.getHighlightsPerformanceV2(request));
+    }
+
+    public String getHighlightsTopInsightsV2(HighlightsRequest request) throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.getHighlightsTopInsightsV2(request));
+    }
+
+    public String getHighlightsScaling(HighlightsRequest request) throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.getHighlightsScaling(request));
+    }
+
+    public String getSpanInfo(String spanCodeObjectId) throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.getSpanInfo(spanCodeObjectId));
+    }
+
+    public String getHighlightsImpact(HighlightsRequest request) throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.getHighlightsImpact(request));
+    }
+
     public Optional<LoadStatusResponse> getLoadStatus() throws AnalyticsServiceException {
         return executeCatching(() -> analyticsProviderProxy.getLoadStatus());
     }
@@ -499,7 +498,6 @@ public class AnalyticsService implements Disposable {
             var env = getCurrentEnvironmentId();
             var envId = getCurrentEnvironmentId();
             var params = new HashMap<String, Object>();
-            params.put("Environment", env);
             params.put("Environment", envId);
 
             if (spanCodeObjectId != null) {
@@ -512,7 +510,7 @@ public class AnalyticsService implements Disposable {
         } catch (Exception e) {
             Log.debugWithException(LOGGER, project, e, "error calling  insights stats", e.getMessage());
         }
-        return new InsightsStatsResult(0, 0, 0, 0);
+        return new InsightsStatsResult(0, 0, 0, 0, 0, 0);
     }
 
     public HttpResponse lowLevelCall(HttpRequest request) throws AnalyticsServiceException {

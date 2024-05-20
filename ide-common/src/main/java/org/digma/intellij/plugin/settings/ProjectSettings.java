@@ -46,7 +46,8 @@ public class ProjectSettings implements Configurable {
                 isJaegerLinkModeChanged(settings) ||
                 isSpringBootObservabilityModeChanged(settings) ||
                 isRuntimeObservabilityBackendUrlChanged(settings) ||
-                isExtendedObservabilityChanged(settings);
+                isExtendedObservabilityChanged(settings) ||
+                isExtendedObservabilityExcludeChanged(settings);
     }
 
     private boolean isRefreshDelayChanged(SettingsState settings) {
@@ -85,14 +86,28 @@ public class ProjectSettings implements Configurable {
         return !Objects.equals(settings.extendedObservability, mySettingsComponent.getExtendedObservability());
     }
 
+    private boolean isExtendedObservabilityExcludeChanged(SettingsState settings) {
+        return !Objects.equals(settings.extendedObservabilityExcludes, mySettingsComponent.getExtendedObservabilityExclude());
+    }
+
     @Override
     public void apply() throws ConfigurationException {
         SettingsState settings = SettingsState.getInstance();
         try {
             Objects.requireNonNull(mySettingsComponent.getApiUrlText(), "api url can not be null");
+            Objects.requireNonNull(mySettingsComponent.getRuntimeObservabilityBackendUrl(), "Runtime observability url can not be null");
         } catch (Exception e) {
             throw new ConfigurationException(e.getMessage(), e, e.getClass().getSimpleName());
         }
+
+        if (mySettingsComponent.getApiUrlText().isBlank()) {
+            throw new ConfigurationException("Api url can not be empty");
+        }
+
+        if (mySettingsComponent.getRuntimeObservabilityBackendUrl().isBlank()) {
+            throw new ConfigurationException("Runtime observability url can not be empty");
+        }
+
 
         if (!CommonUtils.isWelFormedUrl(mySettingsComponent.getApiUrlText())) {
             throw new ConfigurationException("Api url is not a well formed url");
@@ -102,11 +117,16 @@ public class ProjectSettings implements Configurable {
             throw new ConfigurationException("Api url schema must be https");
         }
 
+        if (!CommonUtils.isWelFormedUrl(mySettingsComponent.getRuntimeObservabilityBackendUrl())) {
+            throw new ConfigurationException("Runtime observability is not a well formed url");
+        }
+
         if (mySettingsComponent.getJaegerUrl() != null &&
                 !mySettingsComponent.getJaegerUrl().isBlank() &&
                 !CommonUtils.isWelFormedUrl(mySettingsComponent.getJaegerUrl())) {
             throw new ConfigurationException("Jaeger url is not a well formed url");
         }
+
 
         if (mySettingsComponent.getJaegerLinkMode() == LinkMode.Embedded) {
             if (!CommonUtils.isWelFormedUrl(mySettingsComponent.getJaegerQueryUrl())) {
@@ -134,6 +154,7 @@ public class ProjectSettings implements Configurable {
         settings.springBootObservabilityMode = mySettingsComponent.getSpringBootObservabilityMode();
         settings.runtimeObservabilityBackendUrl = mySettingsComponent.getRuntimeObservabilityBackendUrl();
         settings.extendedObservability = mySettingsComponent.getExtendedObservability();
+        settings.extendedObservabilityExcludes = mySettingsComponent.getExtendedObservabilityExclude();
         settings.fireChanged();
     }
 
@@ -149,6 +170,7 @@ public class ProjectSettings implements Configurable {
         mySettingsComponent.setSpringBootObservabilityMode(settings.springBootObservabilityMode);
         mySettingsComponent.setRuntimeObservabilityBackendUrl(settings.runtimeObservabilityBackendUrl);
         mySettingsComponent.setExtendedObservability(settings.extendedObservability);
+        mySettingsComponent.setExtendedObservabilityExclude(settings.extendedObservabilityExcludes);
     }
 
 

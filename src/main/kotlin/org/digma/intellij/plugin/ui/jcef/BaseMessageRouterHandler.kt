@@ -14,7 +14,7 @@ import org.cef.handler.CefMessageRouterHandlerAdapter
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.InsightStatsChangedEvent
 import org.digma.intellij.plugin.analytics.getAllEnvironments
-import org.digma.intellij.plugin.analytics.getEnvironmentNameById
+import org.digma.intellij.plugin.analytics.getEnvironmentById
 import org.digma.intellij.plugin.analytics.setCurrentEnvironmentById
 import org.digma.intellij.plugin.auth.AuthManager
 import org.digma.intellij.plugin.auth.LoginResult
@@ -81,7 +81,7 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
 
                 //do common messages for all apps, or call doOnQuery
                 when (action) {
-                    JCEFGlobalConstants.GLOBAL_REGISTER -> {
+                    JCEFGlobalConstants.GLOBAL_PERSONALIZE_REGISTER -> {
                         val payload = getPayloadFromRequestNonNull(requestJsonNode)
                         val registrationMap: Map<String, String> =
                             payload.fields().asSequence()
@@ -166,8 +166,9 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                     JCEFGlobalConstants.GLOBAL_OPEN_DASHBOARD -> {
                         val envId = getEnvironmentIdFromPayload(requestJsonNode)
                         envId?.let { env ->
-                            val envName = getEnvironmentNameById(project, env)
-                            DashboardService.getInstance(project).openDashboard("Dashboard Panel - $envName")
+                            getEnvironmentById(project, env)?.let {
+                                DashboardService.getInstance(project).openDashboard("Dashboard Panel - ${it.name} - ${it.type}")
+                            }
                         }
                     }
 
@@ -204,7 +205,7 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                         changeScope(requestJsonNode)
                     }
 
-                    JCEFGlobalConstants.GLOBAL_REGISTRATION -> {
+                    JCEFGlobalConstants.GLOBAL_REGISTER -> {
                         val payload = getPayloadFromRequest(requestJsonNode)
                         payload?.let {
                             val userDetails = mapOf("email" to payload.get("email").asText());
@@ -251,7 +252,14 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                             if (scopeNode is NullNode) {
                                 val stats = AnalyticsService.getInstance(project).getInsightsStats(null)
                                 project.messageBus.syncPublisher(InsightStatsChangedEvent.INSIGHT_STATS_CHANGED_TOPIC)
-                                    .insightStatsChanged(null, stats.analyticsInsightsCount, stats.issuesInsightsCount, stats.unreadInsightsCount)
+                                    .insightStatsChanged(
+                                        null,
+                                        stats.analyticsInsightsCount,
+                                        stats.issuesInsightsCount,
+                                        stats.unreadInsightsCount,
+                                        stats.criticalInsightsCount,
+                                        stats.allIssuesCount
+                                    )
                             } else {
                                 val spanCodeObjectId = scopeNode.get("span").get("spanCodeObjectId").asText()
                                 val stats = AnalyticsService.getInstance(project).getInsightsStats(spanCodeObjectId)
@@ -260,11 +268,11 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                                         scopeNode,
                                         stats.analyticsInsightsCount,
                                         stats.issuesInsightsCount,
-                                        stats.unreadInsightsCount
+                                        stats.unreadInsightsCount,
+                                        stats.criticalInsightsCount,
+                                        stats.allIssuesCount
                                     )
                             }
-
-
                         }
                     }
 
@@ -309,7 +317,7 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
         payload?.let {
             val viewId = payload.get("view")?.asText()
             viewId?.let { vuid ->
-                MainContentViewSwitcher.getInstance(project).showViewById(vuid, true)
+                MainContentViewSwitcher.getInstance(project).showViewById(vuid, payload.get("isUserAction")?.asBoolean() ?: true)
             }
         }
     }
@@ -348,7 +356,7 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
 
         sendEnvironmentsList(browser, getAllEnvironments(project))
 
-        sendUserInfoMessage(browser, DigmaDefaultAccountHolder.getInstance().account?.userId)
+        sendUserInfoMessage(browser, DigmaDefaultAccountHolder.getInstance().account?.userId, project)
 
         sendScopeChangedMessage(
             browser,

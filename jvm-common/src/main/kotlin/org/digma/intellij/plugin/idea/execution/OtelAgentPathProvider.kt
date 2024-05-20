@@ -13,21 +13,30 @@ class OtelAgentPathProvider(configuration: RunConfiguration) {
 
     val otelAgentPath: String?
     val digmaExtensionPath: String?
+    val digmaAgentPath: String?
 
     init {
-        val tmpAgentPath = service<OTELJarProvider>().getOtelAgentJarPath()
-        val tmpDigmaExtensionPath = service<OTELJarProvider>().getDigmaAgentExtensionJarPath()
-        if (tmpAgentPath != null && tmpDigmaExtensionPath != null) {
+
+        //paths can be overrider with system properties for development purposes
+        val tmpOtelAgentPath = System.getProperty("digma.otel.agent.override.path", service<OTELJarProvider>().getOtelAgentJarPath())
+        val tmpDigmaExtensionPath =
+            System.getProperty("digma.otel.extension.override.path", service<OTELJarProvider>().getDigmaAgentExtensionJarPath())
+        val tmpDigmaAgentPath = System.getProperty("digma.agent.override.path", service<OTELJarProvider>().getDigmaAgentJarPath())
+
+        if (tmpOtelAgentPath != null && tmpDigmaExtensionPath != null && tmpDigmaAgentPath != null) {
             if (isWsl(configuration)) {
-                otelAgentPath = FileUtils.convertWinToWslPath(tmpAgentPath)
+                otelAgentPath = FileUtils.convertWinToWslPath(tmpOtelAgentPath)
                 digmaExtensionPath = FileUtils.convertWinToWslPath(tmpDigmaExtensionPath)
+                digmaAgentPath = FileUtils.convertWinToWslPath(tmpDigmaAgentPath)
             } else {
-                otelAgentPath = tmpAgentPath
+                otelAgentPath = tmpOtelAgentPath
                 digmaExtensionPath = tmpDigmaExtensionPath
+                digmaAgentPath = tmpDigmaAgentPath
             }
         } else {
             otelAgentPath = null
             digmaExtensionPath = null
+            digmaAgentPath = null
         }
 
     }
@@ -68,6 +77,10 @@ class OtelAgentPathProvider(configuration: RunConfiguration) {
 
     fun hasAgentPath(): Boolean {
         return otelAgentPath != null && digmaExtensionPath != null
+    }
+
+    fun hasDigmaAgentPath(): Boolean {
+        return digmaAgentPath != null
     }
 
 }

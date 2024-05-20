@@ -74,6 +74,8 @@ public interface AnalyticsProvider extends Closeable {
 
     void setReadNotificationsTime(SetReadNotificationsRequest setReadNotificationsRequest);
 
+    void resetThrottlingStatus();
+
     UnreadNotificationsCountResponse getUnreadNotificationsCount(GetUnreadNotificationsCountRequest getUnreadNotificationsCountRequest);
 
     //Testing

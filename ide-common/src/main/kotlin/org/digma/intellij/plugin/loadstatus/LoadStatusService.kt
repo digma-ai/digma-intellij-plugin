@@ -30,7 +30,7 @@ class LoadStatusService(private val project: Project) : Disposable {
     }
 
     var affectedPanel: DigmaResettablePanel? = null // late init
-    var lastLoadStatus = LoadStatusResponse("", Date(0), false)
+    var lastLoadStatus = LoadStatusResponse("", Date(0), false, "")
 
     init {
         @Suppress("UnstableApiUsage")
@@ -63,7 +63,7 @@ class LoadStatusService(private val project: Project) : Disposable {
             }
         } catch (e: Throwable) {
             Log.log(logger::debug, "AnalyticsServiceException for getLoadStatus: {}", e.message)
-            lastLoadStatus = LoadStatusResponse("", Date(0), false)
+            lastLoadStatus = LoadStatusResponse("", Date(0), false, "")
         }
 
         EDT.ensureEDT {

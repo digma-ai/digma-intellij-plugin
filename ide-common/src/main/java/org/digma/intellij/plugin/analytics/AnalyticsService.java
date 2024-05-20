@@ -367,6 +367,13 @@ public class AnalyticsService implements Disposable {
         });
     }
 
+    public void resetThrottlingStatus() throws AnalyticsServiceException {
+        executeCatching(() -> {
+            analyticsProviderProxy.resetThrottlingStatus();
+            return null;
+        });
+    }
+
     public UnreadNotificationsCountResponse getUnreadNotificationsCount(String notificationsStartDate, String userId) throws AnalyticsServiceException {
         var env = getCurrentEnvironmentId();
         return executeCatching(() -> analyticsProviderProxy.getUnreadNotificationsCount(new GetUnreadNotificationsCountRequest(env, userId, notificationsStartDate)));
@@ -552,7 +559,6 @@ public class AnalyticsService implements Disposable {
                 new Class[]{AnalyticsProvider.class, Closeable.class},
                 new AnalyticsInvocationHandler(obj));
     }
-
 
     /**
      * A proxy for cross-cutting concerns across all api methods.

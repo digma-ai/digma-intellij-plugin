@@ -972,6 +972,12 @@ class ActivityMonitor(private val project: Project) : Disposable {
 
     }
 
+    fun registerCloseThrottlingMessage(throttlingType: String) {
+        capture(
+            "throttlingClosed",
+            mapOf("throttlingType" to throttlingType)
+        )
+    }
 
     private fun getEmailForEvent(): String {
         return PersistenceService.getInstance().getUserRegistrationEmail() ?: PersistenceService.getInstance().getUserEmail() ?: ""

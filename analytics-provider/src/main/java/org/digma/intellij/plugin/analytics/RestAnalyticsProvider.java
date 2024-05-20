@@ -346,6 +346,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
+    public void resetThrottlingStatus() {
+        execute(() -> client.analyticsProvider.resetThrottlingStatus());
+    }
+
+    @Override
     public HttpResponse lowLevelCall(HttpRequest request) {
 
         okhttp3.Response okHttp3Response;
@@ -968,6 +973,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
+
         @POST("/highlights/scaling")
         Call<String> getHighlightsScaling(@Body HighlightsRequest request);
 
@@ -975,7 +981,14 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
+
         @GET("/spans/info")
         Call<String> getSpanInfo(@Query("SpanCodeObjectId") String spanCodeObjectId);
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/PerformanceMetrics/reset-throttling")
+        Call<ResponseBody> resetThrottlingStatus();
     }
 }

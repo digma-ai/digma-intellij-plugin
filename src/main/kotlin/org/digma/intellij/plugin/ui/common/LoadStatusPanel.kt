@@ -2,27 +2,43 @@ package org.digma.intellij.plugin.ui.common
 
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.components.service
-import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
 import com.intellij.util.ui.JBUI
+import org.apache.maven.artifact.versioning.ComparableVersion
+import org.digma.intellij.plugin.analytics.AnalyticsService
+import org.digma.intellij.plugin.common.Backgroundable
+import org.digma.intellij.plugin.common.buildVersionRequest
+import org.digma.intellij.plugin.common.newerThan
 import org.digma.intellij.plugin.loadstatus.LoadStatusService
+import org.digma.intellij.plugin.model.rest.version.VersionResponse
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.UserActionOrigin
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import java.awt.BorderLayout
+import java.awt.Cursor
+import java.awt.Dimension
 import java.awt.GridLayout
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
+import java.util.concurrent.CountDownLatch
 import javax.swing.BorderFactory
 import javax.swing.Box
 import javax.swing.BoxLayout
+import javax.swing.JButton
 import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.SwingConstants
 
 class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
-    private val logger: Logger = Logger.getInstance(this::class.java)
 
     private var service = project.service<LoadStatusService>()
+
+    val label = JLabel("We're processing less data to conserve resources, consider ", SwingConstants.LEFT)
+    var actionLink = ActionLink("deploying centrally") {
+        ActivityMonitor.getInstance(project).registerUserActionWithOrigin("digma overload warning docs link clicked", UserActionOrigin.LoadStatusPanel)
+        BrowserUtil.browse(Links.DIGMA_OVERLOAD_WARNING_DOCS_URL, project)
+    }
 
     init {
         service.affectedPanel = this
@@ -61,11 +77,9 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
         val line2Panel = JPanel()
         line2Panel.layout = BoxLayout(line2Panel, BoxLayout.X_AXIS)
         line2Panel.isOpaque = false
-        line2Panel.add(JLabel("We're processing less data to conserve resources, consider ", SwingConstants.LEFT))
-        line2Panel.add(ActionLink("deploying centrally") {
-            ActivityMonitor.getInstance(project).registerUserActionWithOrigin("digma overload warning docs link clicked", UserActionOrigin.LoadStatusPanel)
-            BrowserUtil.browse(Links.DIGMA_OVERLOAD_WARNING_DOCS_URL, project)
-        })
+
+        line2Panel.add(label)
+        line2Panel.add(actionLink)
 
         linesPanel.add(line1Panel)
         linesPanel.add(line2Panel)
@@ -73,10 +87,61 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
         contentPanel.add(infoIconWrapper, BorderLayout.WEST)
         contentPanel.add(linesPanel, BorderLayout.CENTER)
 
+        val closeButton = JButton("❌")
+
+        closeButton.isVisible = shouldDisplayCloseButton()
+        closeButton.isOpaque = false
+        closeButton.isBorderPainted = false
+        closeButton.isContentAreaFilled = false
+        closeButton.preferredSize = Dimension(25, 25)
+
+        closeButton.addMouseListener(object : MouseAdapter() {
+            override fun mouseEntered(e: MouseEvent?) {
+                closeButton.cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+            }
+
+            override fun mouseExited(e: MouseEvent?) {
+                closeButton.cursor = Cursor.getDefaultCursor()
+            }
+        })
+
+        closeButton.addActionListener { e ->
+            isVisible = false
+
+            Backgroundable.ensurePooledThread {
+                ActivityMonitor.getInstance(project).registerCloseThrottlingMessage(service.lastLoadStatus.throttlingType.toString())
+                if (service.lastLoadStatus.throttlingType == "ExtendedObservability")
+                {
+                    val analyticsService = project.service<AnalyticsService>()
+                    analyticsService.resetThrottlingStatus()
+                }
+            }
+        }
+
+        contentPanel.add(closeButton, BorderLayout.EAST)
+
+
         borderedPanel.add(Box.createVerticalStrut(2))
         borderedPanel.add(contentPanel)
         borderedPanel.add(Box.createVerticalStrut(2))
         this.add(borderedPanel)
+    }
+
+    private fun shouldDisplayCloseButton(): Boolean
+    {
+        var versionsResp: VersionResponse? = null
+        val latch = CountDownLatch(1)
+
+        Backgroundable.ensurePooledThread {
+            versionsResp = AnalyticsService.getInstance(project).getVersions(buildVersionRequest())
+            latch.countDown()
+        }
+
+        latch.await()
+
+        val currentBackendVersion = ComparableVersion(versionsResp?.backend?.currentVersion)
+        val closeButtonBackendVersion = ComparableVersion("0.3.25")
+        return currentBackendVersion.newerThan(closeButtonBackendVersion)
     }
 
     override fun reset() {
@@ -91,6 +156,29 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
             toolTipText = service.lastLoadStatus.description +
                     "<br/>" +
                     "Last occurred at " + service.lastLoadStatus.lastUpdated
+
+            when (service.lastLoadStatus.throttlingType) {
+                "ExtendedObservability" -> {
+                    label.text = "Please specify more granular ext. observability packages"
+                    actionLink.text = ""
+                }
+
+                "InMemory" -> {
+                    label.text = "We're processing less data to conserve resources, consider "
+                    actionLink.text = "deploying centrally"
+                }
+
+                "Kafka" -> {
+                    label.text = "Please consider upgrading the centralized environment"
+                    actionLink.text = ""
+                }
+
+                else -> {
+                    // backward compatibility when no throttlingType for the old backend
+                    label.text = "We're processing less data to conserve resources, consider "
+                    actionLink.text = "deploying centrally"
+                }
+            }
         } else {
             isVisible = false
         }

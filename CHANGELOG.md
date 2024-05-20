@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.337] - 2024-05-19
+## [2.0.338] - 2024-05-20
+
+- Feature/throttling popup for extended observability by @ohrebeniuk in https://github.com/digma-ai/digma-intellij-plugin/pull/2097
+- Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2168
+
+## 2.0.337 - 2024-05-19
 
 - extended-observability-experiment by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2153
 

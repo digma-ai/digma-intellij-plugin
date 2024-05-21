@@ -77,6 +77,12 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
                 }
             }
 
+            "RECENT_ACTIVITY/CLEAR_RUN_CONFIG" -> {
+                ActivityMonitor.getInstance(project)
+                    .registerUserAction("clear run config")
+                project.service<RecentActivityService>().clearSelectedRunConfig()
+            }
+
             "RECENT_ACTIVITY/CREATE_ENVIRONMENT" -> {
                 val request: MutableMap<String, Any> = getMapFromNode(requestJsonNode.get("payload"), objectMapper)
                 project.service<RecentActivityService>().createEnvironment(request)

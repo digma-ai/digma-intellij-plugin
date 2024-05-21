@@ -1,14 +1,24 @@
 package org.digma.intellij.plugin.ui.jcef
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.intellij.execution.RunnerAndConfigurationSettings
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.jcef.JBCefBrowser
 import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.analytics.AnalyticsService
+import org.digma.intellij.plugin.common.getEnvironmentMapFromRunConfiguration
 import org.digma.intellij.plugin.docker.DigmaInstallationStatus
 import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import org.digma.intellij.plugin.idea.execution.DIGMA_ENVIRONMENT_ID_RESOURCE_ATTRIBUTE
+import org.digma.intellij.plugin.idea.execution.DIGMA_ENVIRONMENT_NAME_RESOURCE_ATTRIBUTE
+import org.digma.intellij.plugin.idea.execution.DIGMA_ENVIRONMENT_TYPE_RESOURCE_ATTRIBUTE
+import org.digma.intellij.plugin.idea.execution.DIGMA_USER_ID_RESOURCE_ATTRIBUTE
+import org.digma.intellij.plugin.idea.execution.OTEL_RESOURCE_ATTRIBUTES
+import org.digma.intellij.plugin.idea.execution.flavor.SpringBootMicrometerInstrumentationFlavor
+import org.digma.intellij.plugin.idea.execution.stringToMap
+import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
 import org.digma.intellij.plugin.model.rest.environment.Env
 import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
 import org.digma.intellij.plugin.navigation.View
@@ -24,6 +34,7 @@ import org.digma.intellij.plugin.ui.jcef.model.IsJaegerButtonEnabledMessagePaylo
 import org.digma.intellij.plugin.ui.jcef.model.IsMicrometerPayload
 import org.digma.intellij.plugin.ui.jcef.model.IsObservabilityEnabledMessage
 import org.digma.intellij.plugin.ui.jcef.model.IsObservabilityEnabledPayload
+import org.digma.intellij.plugin.ui.jcef.model.RunConfigurationAttributesPayload
 import org.digma.intellij.plugin.ui.jcef.model.SetApiUrlMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetDigmathonProductKey
 import org.digma.intellij.plugin.ui.jcef.model.SetDigmathonState
@@ -34,6 +45,7 @@ import org.digma.intellij.plugin.ui.jcef.model.SetEnvironmentsMessagePayload
 import org.digma.intellij.plugin.ui.jcef.model.SetInsightStatsMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetInsightStatsMessagePayload
 import org.digma.intellij.plugin.ui.jcef.model.SetIsMicrometerMessage
+import org.digma.intellij.plugin.ui.jcef.model.SetRunConfigurationAttributesMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetScopeMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetScopeMessagePayload
 import org.digma.intellij.plugin.ui.jcef.model.SetStateMessage
@@ -248,4 +260,55 @@ fun sendSetInsightStatsMessage(
             )
         )
     )
+}
+
+
+fun sendRunConfigurationAttributes(
+    cefBrowser: CefBrowser,
+    runnerAndConfigurationSettings: RunnerAndConfigurationSettings?
+) {
+
+    runnerAndConfigurationSettings?.let { selectedConfiguration ->
+        val config = selectedConfiguration.configuration
+
+        val envVars = getEnvironmentMapFromRunConfiguration(config)
+        envVars?.let {
+            if (it.contains(OTEL_RESOURCE_ATTRIBUTES)) {
+                val existingValue = envVars[OTEL_RESOURCE_ATTRIBUTES]
+                if (existingValue != null) {
+                    val attributes = stringToMap(existingValue)
+                    val environmentId: String? = attributes[DIGMA_ENVIRONMENT_ID_RESOURCE_ATTRIBUTE]
+                    val environmentName: String? = attributes[DIGMA_ENVIRONMENT_NAME_RESOURCE_ATTRIBUTE]
+                    val environmentType: String? = attributes[DIGMA_ENVIRONMENT_TYPE_RESOURCE_ATTRIBUTE]
+                    val userId: String? = attributes[DIGMA_USER_ID_RESOURCE_ATTRIBUTE]
+                    sendRunConfigurationAttributes(cefBrowser, environmentId, environmentName, environmentType, userId)
+                } else {
+                    sendRunConfigurationAttributes(cefBrowser, null, null, null, null)
+                }
+            } else if (SpringBootMicrometerConfigureDepsService.isSpringBootWithMicrometer()) {
+
+                val environmentId: String? = it[SpringBootMicrometerInstrumentationFlavor.getEnvironmentIdAttributeKey()]
+                val environmentName: String? = it[SpringBootMicrometerInstrumentationFlavor.getEnvironmentNameAttributeKey()]
+                val environmentType: String? = it[SpringBootMicrometerInstrumentationFlavor.getEnvironmentTypeAttributeKey()]
+                val userId: String? = it[SpringBootMicrometerInstrumentationFlavor.getUserIdAttributeKey()]
+                sendRunConfigurationAttributes(cefBrowser, environmentId, environmentName, environmentType, userId)
+            }
+        }
+    } ?: sendRunConfigurationAttributes(cefBrowser, null, null, null, null)
+}
+
+
+fun sendRunConfigurationAttributes(
+    cefBrowser: CefBrowser,
+    environmentId: String?,
+    environmentName: String?,
+    environmentType: String?,
+    userId: String?
+) {
+    val message = SetRunConfigurationAttributesMessage(
+        RunConfigurationAttributesPayload(
+            environmentId, environmentName, environmentType, userId
+        )
+    )
+    serializeAndExecuteWindowPostMessageJavaScript(cefBrowser, message)
 }

@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.338] - 2024-05-20
+## [2.0.339] - 2024-05-22
+
+- fix await latch by @ohrebeniuk in https://github.com/digma-ai/digma-intellij-plugin/pull/2173
+
+## 2.0.338 - 2024-05-20
 
 - Feature/throttling popup for extended observability by @ohrebeniuk in https://github.com/digma-ai/digma-intellij-plugin/pull/2097
 - Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2168

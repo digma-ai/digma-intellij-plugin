@@ -34,6 +34,7 @@ import org.digma.intellij.plugin.ui.jcef.model.IsJaegerButtonEnabledMessagePaylo
 import org.digma.intellij.plugin.ui.jcef.model.IsMicrometerPayload
 import org.digma.intellij.plugin.ui.jcef.model.IsObservabilityEnabledMessage
 import org.digma.intellij.plugin.ui.jcef.model.IsObservabilityEnabledPayload
+import org.digma.intellij.plugin.ui.jcef.model.RunConfigObservabilityMode
 import org.digma.intellij.plugin.ui.jcef.model.RunConfigurationAttributesPayload
 import org.digma.intellij.plugin.ui.jcef.model.SetApiUrlMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetDigmathonProductKey
@@ -281,9 +282,16 @@ fun sendRunConfigurationAttributes(
                     val environmentName: String? = attributes[DIGMA_ENVIRONMENT_NAME_RESOURCE_ATTRIBUTE]
                     val environmentType: String? = attributes[DIGMA_ENVIRONMENT_TYPE_RESOURCE_ATTRIBUTE]
                     val userId: String? = attributes[DIGMA_USER_ID_RESOURCE_ATTRIBUTE]
-                    sendRunConfigurationAttributes(cefBrowser, environmentId, environmentName, environmentType, userId)
+                    sendRunConfigurationAttributes(
+                        cefBrowser,
+                        environmentId,
+                        environmentName,
+                        environmentType,
+                        userId,
+                        RunConfigObservabilityMode.OtelAgent
+                    )
                 } else {
-                    sendRunConfigurationAttributes(cefBrowser, null, null, null, null)
+                    sendRunConfigurationAttributes(cefBrowser, null, null, null, null, null)
                 }
             } else if (SpringBootMicrometerConfigureDepsService.isSpringBootWithMicrometer()) {
 
@@ -291,12 +299,19 @@ fun sendRunConfigurationAttributes(
                 val environmentName: String? = it[SpringBootMicrometerInstrumentationFlavor.getEnvironmentNameAttributeKey()]
                 val environmentType: String? = it[SpringBootMicrometerInstrumentationFlavor.getEnvironmentTypeAttributeKey()]
                 val userId: String? = it[SpringBootMicrometerInstrumentationFlavor.getUserIdAttributeKey()]
-                sendRunConfigurationAttributes(cefBrowser, environmentId, environmentName, environmentType, userId)
+                sendRunConfigurationAttributes(
+                    cefBrowser,
+                    environmentId,
+                    environmentName,
+                    environmentType,
+                    userId,
+                    RunConfigObservabilityMode.Micrometer
+                )
             }else{
-                sendRunConfigurationAttributes(cefBrowser, null, null, null, null)
+                sendRunConfigurationAttributes(cefBrowser, null, null, null, null, null)
             }
-        } ?: sendRunConfigurationAttributes(cefBrowser, null, null, null, null)
-    } ?: sendRunConfigurationAttributes(cefBrowser, null, null, null, null)
+        } ?: sendRunConfigurationAttributes(cefBrowser, null, null, null, null, null)
+    } ?: sendRunConfigurationAttributes(cefBrowser, null, null, null, null, null)
 }
 
 
@@ -305,11 +320,12 @@ fun sendRunConfigurationAttributes(
     environmentId: String?,
     environmentName: String?,
     environmentType: String?,
-    userId: String?
+    userId: String?,
+    observabilityMode: RunConfigObservabilityMode?
 ) {
     val message = SetRunConfigurationAttributesMessage(
         RunConfigurationAttributesPayload(
-            environmentId, environmentName, environmentType, userId
+            environmentId, environmentName, environmentType, userId, observabilityMode
         )
     )
     serializeAndExecuteWindowPostMessageJavaScript(cefBrowser, message)

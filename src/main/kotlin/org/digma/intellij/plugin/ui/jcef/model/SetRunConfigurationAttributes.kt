@@ -11,5 +11,9 @@ data class RunConfigurationAttributesPayload(
     val environmentId: String?,
     val environmentName: String?,
     val environmentType: String?,
-    val userId: String?
+    val userId: String?,
+    val observabilityMode: RunConfigObservabilityMode?
 )
+
+enum class RunConfigObservabilityMode { Micrometer, OtelAgent }
+

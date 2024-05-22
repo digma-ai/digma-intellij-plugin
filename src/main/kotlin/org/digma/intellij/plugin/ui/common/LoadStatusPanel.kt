@@ -5,13 +5,14 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
 import com.intellij.util.ui.JBUI
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.apache.maven.artifact.versioning.ComparableVersion
 import org.digma.intellij.plugin.analytics.AnalyticsService
+import org.digma.intellij.plugin.analytics.BackendInfoHolder
 import org.digma.intellij.plugin.common.Backgroundable
-import org.digma.intellij.plugin.common.buildVersionRequest
 import org.digma.intellij.plugin.common.newerThan
 import org.digma.intellij.plugin.loadstatus.LoadStatusService
-import org.digma.intellij.plugin.model.rest.version.VersionResponse
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.UserActionOrigin
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
@@ -21,7 +22,6 @@ import java.awt.Dimension
 import java.awt.GridLayout
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
-import java.util.concurrent.CountDownLatch
 import javax.swing.BorderFactory
 import javax.swing.Box
 import javax.swing.BoxLayout
@@ -89,7 +89,7 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
 
         val closeButton = JButton("❌")
 
-        closeButton.isVisible = shouldDisplayCloseButton()
+        closeButton.isVisible = false
         closeButton.isOpaque = false
         closeButton.isBorderPainted = false
         closeButton.isContentAreaFilled = false
@@ -125,21 +125,18 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
         borderedPanel.add(contentPanel)
         borderedPanel.add(Box.createVerticalStrut(2))
         this.add(borderedPanel)
+
+        GlobalScope.launch {
+            closeButton.isVisible = shouldDisplayCloseButton()
+        }
     }
 
     private fun shouldDisplayCloseButton(): Boolean
     {
-        var versionsResp: VersionResponse? = null
-        val latch = CountDownLatch(1)
 
-        Backgroundable.ensurePooledThread {
-            versionsResp = AnalyticsService.getInstance(project).getVersions(buildVersionRequest())
-            latch.countDown()
-        }
+        val version = BackendInfoHolder.getInstance().getAboutLoadIfNull()?.applicationVersion ?: return false
 
-        latch.await()
-
-        val currentBackendVersion = ComparableVersion(versionsResp?.backend?.currentVersion)
+        val currentBackendVersion = ComparableVersion(version)
         val closeButtonBackendVersion = ComparableVersion("0.3.25")
         return currentBackendVersion.newerThan(closeButtonBackendVersion)
     }

@@ -86,6 +86,11 @@ private constructor(
             override fun runConfigurationSelected(settings: RunnerAndConfigurationSettings?) {
                 sendRunConfigurationAttributes(jbCefBrowser.cefBrowser, RunManager.getInstance(project).selectedConfiguration)
             }
+
+            override fun runConfigurationChanged(settings: RunnerAndConfigurationSettings) {
+                //always send the selected one not necessarily the one that changed
+                sendRunConfigurationAttributes(jbCefBrowser.cefBrowser, RunManager.getInstance(project).selectedConfiguration)
+            }
         })
 
 

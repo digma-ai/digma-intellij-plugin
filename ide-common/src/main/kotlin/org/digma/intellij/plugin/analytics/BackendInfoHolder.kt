@@ -66,6 +66,16 @@ class BackendInfoHolder : Disposable {
         return aboutRef.get()
     }
 
+    fun getAboutLoadIfNull(): AboutResult? {
+        if (aboutRef.get() == null) {
+            findActiveProject()?.let {
+                loadAboutInBackgroundNow(it)
+            }
+        }
+        return aboutRef.get()
+    }
+
+
     //updateInBackground is also called every time the analytics client is replaced
     fun updateInBackground() {
         @Suppress("UnstableApiUsage")
@@ -120,6 +130,25 @@ class BackendInfoHolder : Disposable {
             }
 
             false
+        }
+    }
+
+    private fun loadAboutInBackgroundNow(project: Project) {
+
+        try {
+
+            val future = Backgroundable.ensurePooledThreadWithoutReadAccess(Callable {
+                AnalyticsService.getInstance(project).about
+            })
+
+            aboutRef.set(future.get(5, TimeUnit.SECONDS))
+
+        } catch (e: Throwable) {
+            val isConnectionException = ExceptionUtils.isAnyConnectionException(e)
+
+            if (!isConnectionException) {
+                ErrorReporter.getInstance().reportError("BackendUtilsKt.isCentralized", e)
+            }
         }
     }
 }

@@ -134,7 +134,7 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
     private fun shouldDisplayCloseButton(): Boolean
     {
 
-        val version = BackendInfoHolder.getInstance().getAbout()?.applicationVersion ?: return false
+        val version = BackendInfoHolder.getInstance().getAboutLoadIfNull()?.applicationVersion ?: return false
 
         val currentBackendVersion = ComparableVersion(version)
         val closeButtonBackendVersion = ComparableVersion("0.3.25")

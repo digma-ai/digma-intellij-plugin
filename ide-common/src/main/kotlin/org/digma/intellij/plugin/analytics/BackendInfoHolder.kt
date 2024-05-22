@@ -147,7 +147,7 @@ class BackendInfoHolder : Disposable {
             val isConnectionException = ExceptionUtils.isAnyConnectionException(e)
 
             if (!isConnectionException) {
-                ErrorReporter.getInstance().reportError("BackendUtilsKt.isCentralized", e)
+                ErrorReporter.getInstance().reportError("BackendUtilsKt.loadAboutInBackgroundNow", e)
             }
         }
     }

@@ -1,9 +1,8 @@
 package org.digma.intellij.plugin.ui.jcef
 
 import com.intellij.execution.RunnerAndConfigurationSettings
-import com.intellij.execution.application.ApplicationConfigurationType
 import com.intellij.execution.configurations.RunConfiguration
-import com.intellij.execution.configurations.SimpleProgramParameters
+import com.intellij.openapi.components.serviceOrNull
 import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.common.getEnvironmentMapFromRunConfiguration
@@ -12,8 +11,8 @@ import org.digma.intellij.plugin.idea.execution.DIGMA_ENVIRONMENT_ID_RESOURCE_AT
 import org.digma.intellij.plugin.idea.execution.DIGMA_ENVIRONMENT_NAME_RESOURCE_ATTRIBUTE
 import org.digma.intellij.plugin.idea.execution.DIGMA_ENVIRONMENT_TYPE_RESOURCE_ATTRIBUTE
 import org.digma.intellij.plugin.idea.execution.DIGMA_USER_ID_RESOURCE_ATTRIBUTE
+import org.digma.intellij.plugin.idea.execution.JavaToolOptionsDemoBuilder
 import org.digma.intellij.plugin.idea.execution.OTEL_RESOURCE_ATTRIBUTES
-import org.digma.intellij.plugin.idea.execution.RunConfigurationHandlersHolder
 import org.digma.intellij.plugin.idea.execution.flavor.SpringBootMicrometerInstrumentationFlavor
 import org.digma.intellij.plugin.idea.execution.stringToMap
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
@@ -23,9 +22,14 @@ import org.digma.intellij.plugin.ui.jcef.model.RunConfigurationAttributesPayload
 class SetRunConfigurationMessageBuilder(
     private val project: Project,
     private val cefBrowser: CefBrowser,
-    private val selectedConfiguration: RunnerAndConfigurationSettings?
+    private val selectedConfiguration: RunnerAndConfigurationSettings?,
 ) {
 
+    //hides classes that are available only in Idea and not in Rider.
+    //it will be null in Rider.
+    //we need it because in order to build a java tool options string we need to use classes that only
+    // exists in Idea and not in Rider, in Rider we don't need to build java tool options.
+    private val javaToolOptionsDemoBuilder: JavaToolOptionsDemoBuilder? = serviceOrNull<JavaToolOptionsDemoBuilder>()
 
     fun sendRunConfigurationAttributes() {
 
@@ -120,60 +124,32 @@ class SetRunConfigurationMessageBuilder(
 
 
     private fun isSupported(configuration: RunConfiguration): Boolean {
-        return RunConfigurationHandlersHolder.runConfigurationHandlers.find { it.isApplicableFor(configuration) } != null
+        return javaToolOptionsDemoBuilder?.isSupported(configuration) ?: false
     }
 
 
     private fun sendNotSupportedWithJavaToolOptions(configuration: RunConfiguration) {
 
-        //we want to build java tool options. instead of refactoring all related classes we can use a dummy
-        // configuration and run the RunConfigurationInstrumentationHandler on it. fortunately the method
-        // updateParameters returns the java tool options and we can use it.
-        // using ApplicationConfiguration makes sure its supported.
-
-        try {
-            val factory = ApplicationConfigurationType.getInstance().configurationFactories.first()
-            val template = factory.createTemplateConfiguration(configuration.project)
-            val dummyConfig = factory.createConfiguration("dummy", template)
-
-            val handler = RunConfigurationHandlersHolder.runConfigurationHandlers.find { it.isApplicableFor(dummyConfig) }
-
-            if (handler == null) {
-                sendEmpty(false)
-                return
-            }
-
-
-            val instrumentationParams = handler.updateParameters(dummyConfig, SimpleProgramParameters(), null)
-            if (instrumentationParams != null) {
-                val javaToolOptions = instrumentationParams.first
-
-                val observabilityMode = if (SpringBootMicrometerConfigureDepsService.isSpringBootWithMicrometer()) {
-                    RunConfigObservabilityMode.Micrometer
-                } else {
-                    RunConfigObservabilityMode.OtelAgent
-                }
-
-                val payload = RunConfigurationAttributesPayload(
-                    null,
-                    null,
-                    null,
-                    null,
-                    observabilityMode,
-                    false,
-                    javaToolOptions
-                )
-
-                sendRunConfigurationAttributes(project, cefBrowser, payload)
-
+        javaToolOptionsDemoBuilder?.let {
+            val javaToolOptions = it.buildDemoJavaToolOptions(configuration)
+            val observabilityMode = if (SpringBootMicrometerConfigureDepsService.isSpringBootWithMicrometer()) {
+                RunConfigObservabilityMode.Micrometer
             } else {
-                sendEmpty(false)
+                RunConfigObservabilityMode.OtelAgent
             }
 
-        } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("SetRunConfigurationMessageBuilder.sendNotSupportedWithJavaToolOptions", e)
-            sendEmpty(false)
-        }
+            val payload = RunConfigurationAttributesPayload(
+                null,
+                null,
+                null,
+                null,
+                observabilityMode,
+                false,
+                javaToolOptions
+            )
+
+            sendRunConfigurationAttributes(project, cefBrowser, payload)
+        } ?: sendEmpty(false)
     }
 
 }

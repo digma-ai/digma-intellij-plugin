@@ -85,6 +85,9 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
                 ActivityMonitor.getInstance(project)
                     .registerUserAction("clear run config")
                 project.service<RecentActivityService>().clearSelectedRunConfig()
+                val setRunConfigurationMessageBuilder =
+                    SetRunConfigurationMessageBuilder(browser, RunManager.getInstance(project).selectedConfiguration)
+                setRunConfigurationMessageBuilder.sendRunConfigurationAttributes()
             }
 
             "RECENT_ACTIVITY/CREATE_ENVIRONMENT" -> {

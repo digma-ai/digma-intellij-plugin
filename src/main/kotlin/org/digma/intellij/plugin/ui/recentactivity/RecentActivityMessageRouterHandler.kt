@@ -76,7 +76,7 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
                         .registerUserAction("add environment to run config", mapOf("environment" to environmentId))
                     project.service<RecentActivityService>().addVarRunToConfig(it)
                     val setRunConfigurationMessageBuilder =
-                        SetRunConfigurationMessageBuilder(browser, RunManager.getInstance(project).selectedConfiguration)
+                        SetRunConfigurationMessageBuilder(project, browser, RunManager.getInstance(project).selectedConfiguration)
                     setRunConfigurationMessageBuilder.sendRunConfigurationAttributes()
                 }
             }
@@ -86,7 +86,7 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
                     .registerUserAction("clear run config")
                 project.service<RecentActivityService>().clearSelectedRunConfig()
                 val setRunConfigurationMessageBuilder =
-                    SetRunConfigurationMessageBuilder(browser, RunManager.getInstance(project).selectedConfiguration)
+                    SetRunConfigurationMessageBuilder(project, browser, RunManager.getInstance(project).selectedConfiguration)
                 setRunConfigurationMessageBuilder.sendRunConfigurationAttributes()
             }
 

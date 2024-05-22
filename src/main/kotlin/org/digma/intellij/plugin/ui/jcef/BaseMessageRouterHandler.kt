@@ -369,7 +369,8 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
             insightsStats?.unreadInsightsCount ?: 0
         )
 
-        val setRunConfigurationMessageBuilder = SetRunConfigurationMessageBuilder(browser, RunManager.getInstance(project).selectedConfiguration)
+        val setRunConfigurationMessageBuilder =
+            SetRunConfigurationMessageBuilder(project, browser, RunManager.getInstance(project).selectedConfiguration)
         setRunConfigurationMessageBuilder.sendRunConfigurationAttributes()
     }
 

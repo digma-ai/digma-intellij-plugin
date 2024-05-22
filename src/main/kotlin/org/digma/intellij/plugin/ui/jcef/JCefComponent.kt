@@ -85,14 +85,14 @@ private constructor(
         project.messageBus.connect(runConfigurationChangedParentDisposable).subscribe(RunManagerListener.TOPIC, object : RunManagerListener {
             override fun runConfigurationSelected(settings: RunnerAndConfigurationSettings?) {
                 val setRunConfigurationMessageBuilder =
-                    SetRunConfigurationMessageBuilder(jbCefBrowser.cefBrowser, RunManager.getInstance(project).selectedConfiguration)
+                    SetRunConfigurationMessageBuilder(project, jbCefBrowser.cefBrowser, RunManager.getInstance(project).selectedConfiguration)
                 setRunConfigurationMessageBuilder.sendRunConfigurationAttributes()
             }
 
             override fun runConfigurationChanged(settings: RunnerAndConfigurationSettings) {
                 //always send the selected one not necessarily the one that changed
                 val setRunConfigurationMessageBuilder =
-                    SetRunConfigurationMessageBuilder(jbCefBrowser.cefBrowser, RunManager.getInstance(project).selectedConfiguration)
+                    SetRunConfigurationMessageBuilder(project, jbCefBrowser.cefBrowser, RunManager.getInstance(project).selectedConfiguration)
                 setRunConfigurationMessageBuilder.sendRunConfigurationAttributes()
             }
         })

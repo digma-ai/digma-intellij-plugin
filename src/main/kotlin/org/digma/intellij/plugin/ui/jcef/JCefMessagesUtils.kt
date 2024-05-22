@@ -255,8 +255,8 @@ fun sendSetInsightStatsMessage(
 
 
 fun sendRunConfigurationAttributes(
-    cefBrowser: CefBrowser, payload: RunConfigurationAttributesPayload
+    project: Project, cefBrowser: CefBrowser, payload: RunConfigurationAttributesPayload
 ) {
     val message = SetRunConfigurationAttributesMessage(payload)
-    serializeAndExecuteWindowPostMessageJavaScript(cefBrowser, message)
+    serializeAndExecuteWindowPostMessageJavaScript(cefBrowser, message, project)
 }

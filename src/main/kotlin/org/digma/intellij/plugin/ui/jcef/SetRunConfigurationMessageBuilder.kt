@@ -4,6 +4,7 @@ import com.intellij.execution.RunnerAndConfigurationSettings
 import com.intellij.execution.application.ApplicationConfigurationType
 import com.intellij.execution.configurations.RunConfiguration
 import com.intellij.execution.configurations.SimpleProgramParameters
+import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.common.getEnvironmentMapFromRunConfiguration
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
@@ -20,6 +21,7 @@ import org.digma.intellij.plugin.ui.jcef.model.RunConfigObservabilityMode
 import org.digma.intellij.plugin.ui.jcef.model.RunConfigurationAttributesPayload
 
 class SetRunConfigurationMessageBuilder(
+    private val project: Project,
     private val cefBrowser: CefBrowser,
     private val selectedConfiguration: RunnerAndConfigurationSettings?
 ) {
@@ -44,7 +46,7 @@ class SetRunConfigurationMessageBuilder(
 
             val payload = buildPayloadWithAttributes(configuration)
             payload?.let {
-                sendRunConfigurationAttributes(cefBrowser, it)
+                sendRunConfigurationAttributes(project, cefBrowser, it)
             } ?: sendEmpty()
 
         } catch (e: Throwable) {
@@ -56,6 +58,7 @@ class SetRunConfigurationMessageBuilder(
 
     private fun sendEmpty(isSupported: Boolean = true) {
         sendRunConfigurationAttributes(
+            project,
             cefBrowser, RunConfigurationAttributesPayload(
                 null,
                 null,
@@ -161,7 +164,7 @@ class SetRunConfigurationMessageBuilder(
                     javaToolOptions
                 )
 
-                sendRunConfigurationAttributes(cefBrowser, payload)
+                sendRunConfigurationAttributes(project, cefBrowser, payload)
 
             } else {
                 sendEmpty(false)
@@ -172,6 +175,5 @@ class SetRunConfigurationMessageBuilder(
             sendEmpty(false)
         }
     }
-
 
 }

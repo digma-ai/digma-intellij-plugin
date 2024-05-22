@@ -3,10 +3,9 @@ package org.digma.intellij.plugin.idea.execution
 import com.intellij.execution.application.ApplicationConfigurationType
 import com.intellij.execution.configurations.RunConfiguration
 import com.intellij.execution.configurations.SimpleProgramParameters
-import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 
-class JavaToolOptionsDemoBuilder(private val project: Project) {
+class JavaToolOptionsDemoBuilder {
 
     fun isSupported(configuration: RunConfiguration): Boolean {
         return RunConfigurationHandlersHolder.runConfigurationHandlers.find { it.isApplicableFor(configuration) } != null

@@ -215,8 +215,12 @@ class AddEnvironmentsService {
                     valuesMap.remove(DIGMA_ENVIRONMENT_TYPE_RESOURCE_ATTRIBUTE)
                     valuesMap.remove(DIGMA_USER_ID_RESOURCE_ATTRIBUTE)
 
-                    val newValue = mapToFlatString(valuesMap)
-                    envVars[OTEL_RESOURCE_ATTRIBUTES] = newValue
+                    if (valuesMap.isEmpty()) {
+                        envVars.remove(OTEL_RESOURCE_ATTRIBUTES)
+                    } else {
+                        val newValue = mapToFlatString(valuesMap)
+                        envVars[OTEL_RESOURCE_ATTRIBUTES] = newValue
+                    }
                 }
             }
         }

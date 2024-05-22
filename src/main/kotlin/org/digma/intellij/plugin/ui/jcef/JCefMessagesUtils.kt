@@ -292,8 +292,10 @@ fun sendRunConfigurationAttributes(
                 val environmentType: String? = it[SpringBootMicrometerInstrumentationFlavor.getEnvironmentTypeAttributeKey()]
                 val userId: String? = it[SpringBootMicrometerInstrumentationFlavor.getUserIdAttributeKey()]
                 sendRunConfigurationAttributes(cefBrowser, environmentId, environmentName, environmentType, userId)
+            }else{
+                sendRunConfigurationAttributes(cefBrowser, null, null, null, null)
             }
-        }
+        } ?: sendRunConfigurationAttributes(cefBrowser, null, null, null, null)
     } ?: sendRunConfigurationAttributes(cefBrowser, null, null, null, null)
 }
 

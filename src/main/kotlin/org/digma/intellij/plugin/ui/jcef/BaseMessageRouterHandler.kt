@@ -369,7 +369,8 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
             insightsStats?.unreadInsightsCount ?: 0
         )
 
-        sendRunConfigurationAttributes(browser, RunManager.getInstance(project).selectedConfiguration)
+        val setRunConfigurationMessageBuilder = SetRunConfigurationMessageBuilder(browser, RunManager.getInstance(project).selectedConfiguration)
+        setRunConfigurationMessageBuilder.sendRunConfigurationAttributes()
     }
 
     private fun changeScope(requestJsonNode: JsonNode) {

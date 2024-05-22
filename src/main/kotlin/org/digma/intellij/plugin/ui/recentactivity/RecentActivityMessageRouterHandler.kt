@@ -11,9 +11,9 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.UserActionOrigin
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
+import org.digma.intellij.plugin.ui.jcef.SetRunConfigurationMessageBuilder
 import org.digma.intellij.plugin.ui.jcef.getMapFromNode
 import org.digma.intellij.plugin.ui.jcef.jsonToObject
-import org.digma.intellij.plugin.ui.jcef.sendRunConfigurationAttributes
 import org.digma.intellij.plugin.ui.recentactivity.model.CloseLiveViewMessage
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityGoToSpanRequest
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityGoToTraceRequest
@@ -27,7 +27,6 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
 
 
     override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
-
 
         //exceptions are handles in BaseMessageRouterHandler.onQuery
 
@@ -76,7 +75,9 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
                     ActivityMonitor.getInstance(project)
                         .registerUserAction("add environment to run config", mapOf("environment" to environmentId))
                     project.service<RecentActivityService>().addVarRunToConfig(it)
-                    sendRunConfigurationAttributes(browser, RunManager.getInstance(project).selectedConfiguration)
+                    val setRunConfigurationMessageBuilder =
+                        SetRunConfigurationMessageBuilder(browser, RunManager.getInstance(project).selectedConfiguration)
+                    setRunConfigurationMessageBuilder.sendRunConfigurationAttributes()
                 }
             }
 

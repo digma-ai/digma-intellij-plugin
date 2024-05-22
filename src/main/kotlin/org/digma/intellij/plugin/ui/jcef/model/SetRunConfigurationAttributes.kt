@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.ui.jcef.model
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import org.digma.intellij.plugin.ui.jcef.JCEFGlobalConstants
 
 data class SetRunConfigurationAttributesMessage(val payload: RunConfigurationAttributesPayload) {
@@ -12,7 +13,12 @@ data class RunConfigurationAttributesPayload(
     val environmentName: String?,
     val environmentType: String?,
     val userId: String?,
-    val observabilityMode: RunConfigObservabilityMode?
+    val observabilityMode: RunConfigObservabilityMode?,
+    @get:JsonProperty("isRunConfigurationSupported")
+    @param:JsonProperty("isRunConfigurationSupported")
+    val isRunConfigurationSupported: Boolean,
+    val javaToolOptions: String?
+
 )
 
 enum class RunConfigObservabilityMode { Micrometer, OtelAgent }

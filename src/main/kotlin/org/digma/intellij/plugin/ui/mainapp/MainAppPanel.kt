@@ -47,7 +47,7 @@ class MainAppPanel(private val project: Project) : DisposablePanel() {
         return if (JBCefApp.isSupported()) {
             JCefComponent.JCefComponentBuilder(project, "Main", MainAppService.getInstance(project))
                 .url(MAIN_APP_URL)
-                .addMessageRouterHandler(MainAppMessageRouterHandler(project))
+                .addMessageRouterHandler(MainAppMessageRouterHandler(project, MainAppService.getInstance(project)))
                 .schemeHandlerFactory(MainAppSchemeHandlerFactory(project))
                 .withDownloadAdapter(DownloadHandlerAdapter())
                 .build()

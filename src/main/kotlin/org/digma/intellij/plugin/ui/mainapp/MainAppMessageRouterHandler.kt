@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.ui.mainapp
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
@@ -13,7 +14,7 @@ import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
 import org.digma.intellij.plugin.ui.jcef.sendCurrentViewsState
 import org.digma.intellij.plugin.ui.tests.TestsMessageRouterHandler
 
-class MainAppMessageRouterHandler(project: Project) : BaseMessageRouterHandler(project) {
+class MainAppMessageRouterHandler(project: Project, parentDisposable: Disposable) : BaseMessageRouterHandler(project, parentDisposable) {
 
 
     //using old router handlers instead of rewriting them.
@@ -27,12 +28,14 @@ class MainAppMessageRouterHandler(project: Project) : BaseMessageRouterHandler(p
     )
 
 
-    override fun getOriginForTroubleshootingEvent(): String {
+    override fun getName(): String {
         return "main"
     }
 
 
     override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
+
+        Log.log(logger::trace, project, "got action {} with message {}", action, requestJsonNode)
 
         when (action) {
 

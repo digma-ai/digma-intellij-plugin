@@ -30,7 +30,7 @@ public class DocumentationFileEditor extends UserDataHolderBase implements FileE
         if (JBCefApp.isSupported()) {
             return new JCefComponent.JCefComponentBuilder(project, "Documentation", DocumentationService.getInstance(project))
                     .url(DocumentationConstants.DOCUMENTATION_URL)
-                    .addMessageRouterHandler(new DocumentationMessageRouterHandler(project))
+                    .addMessageRouterHandler(new DocumentationMessageRouterHandler(project, this))
                     .schemeHandlerFactory(new DocumentationSchemeHandlerFactory(project, file))
                     .withDownloadAdapter(new DownloadHandlerAdapter())
                     .build();

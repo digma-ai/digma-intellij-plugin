@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.dashboard;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import org.cef.browser.*;
@@ -25,14 +26,14 @@ public class DashboardMessageRouterHandler extends BaseMessageRouterHandler {
 
     private final Logger logger = Logger.getInstance(this.getClass());
 
-    public DashboardMessageRouterHandler(Project project) {
-        super(project);
+    public DashboardMessageRouterHandler(Project project, Disposable parentDisposable) {
+        super(project, parentDisposable);
     }
 
 
     @NotNull
     @Override
-    public String getOriginForTroubleshootingEvent() {
+    public String getName() {
         return "dashboard";
     }
 

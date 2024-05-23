@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.idea.externalsystem
+package org.digma.intellij.plugin.externalsystem
 
 import com.intellij.openapi.application.ApplicationManager
 import org.digma.intellij.plugin.buildsystem.BuildSystemHelperService

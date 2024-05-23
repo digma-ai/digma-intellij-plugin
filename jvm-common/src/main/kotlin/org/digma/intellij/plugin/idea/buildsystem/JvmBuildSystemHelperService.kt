@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.idea.buildsystem
 
+import com.intellij.execution.configurations.RunConfiguration
 import com.intellij.openapi.externalSystem.ExternalSystemModulePropertyManager
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
@@ -11,7 +12,7 @@ import java.util.ServiceLoader
 // we want it to register only in Idea.
 // see: org.digma.intellij-with-jvm.xml
 @Suppress("LightServiceMigrationCode")
-class BuildSystemChecker(private val project: Project) {
+class JvmBuildSystemHelperService(private val project: Project) {
 
     private var buildSystemHelpers: List<BuildSystemHelper>
 
@@ -40,6 +41,28 @@ class BuildSystemChecker(private val project: Project) {
             val buildSystemHelper = buildSystemHelpers.find { it.isBuildSystem(systemId) }
             buildSystemHelper?.getBuildSystem(systemId) ?: BuildSystem.INTELLIJ
         } ?: BuildSystem.INTELLIJ
+    }
+
+
+    fun isMaven(config: RunConfiguration): Boolean {
+        val buildSystemHelper = buildSystemHelpers.find { it.isBuildSystemForConfiguration(config) }
+        return buildSystemHelper?.isMaven() ?: false
+    }
+
+    fun isGradle(config: RunConfiguration): Boolean {
+        val buildSystemHelper = buildSystemHelpers.find { it.isBuildSystemForConfiguration(config) }
+        return buildSystemHelper?.isGradle() ?: false
+    }
+
+
+    fun getEnvironmentMapFromRunConfiguration(config: RunConfiguration): Map<String, String>? {
+        val buildSystemHelper = buildSystemHelpers.find { it.isBuildSystemForConfiguration(config) }
+        return buildSystemHelper?.getEnvironmentMapFromRunConfiguration(config)
+    }
+
+    fun updateEnvironmentOnConfiguration(config: RunConfiguration, envs: Map<String, String>) {
+        val buildSystemHelper = buildSystemHelpers.find { it.isBuildSystemForConfiguration(config) }
+        buildSystemHelper?.updateEnvironmentOnConfiguration(config, envs)
     }
 
 }

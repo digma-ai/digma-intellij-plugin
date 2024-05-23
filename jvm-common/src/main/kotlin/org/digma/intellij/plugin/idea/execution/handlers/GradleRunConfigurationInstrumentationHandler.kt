@@ -1,7 +1,7 @@
 package org.digma.intellij.plugin.idea.execution.handlers
 
 import org.digma.intellij.plugin.execution.RunConfigurationInstrumentationService
-import org.digma.intellij.plugin.idea.externalsystem.findGradleRunConfigurationInstrumentationService
+import org.digma.intellij.plugin.externalsystem.findGradleRunConfigurationInstrumentationService
 
 class GradleRunConfigurationInstrumentationHandler : BaseRunConfigurationInstrumentationHandler() {
 

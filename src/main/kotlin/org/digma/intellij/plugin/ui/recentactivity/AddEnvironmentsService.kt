@@ -4,6 +4,7 @@ import com.intellij.execution.CommonProgramRunConfigurationParameters
 import com.intellij.execution.RunManager
 import com.intellij.execution.configuration.AbstractRunConfiguration
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemRunConfiguration
 import com.intellij.openapi.project.Project
@@ -12,8 +13,10 @@ import org.digma.intellij.plugin.analytics.BackendInfoHolder
 import org.digma.intellij.plugin.analytics.getEnvironmentById
 import org.digma.intellij.plugin.analytics.isCentralized
 import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
+import org.digma.intellij.plugin.common.IDEUtilsService
 import org.digma.intellij.plugin.common.newerThan
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import org.digma.intellij.plugin.idea.buildsystem.JvmBuildSystemHelperService
 import org.digma.intellij.plugin.idea.execution.DIGMA_ENVIRONMENT_ID_RESOURCE_ATTRIBUTE
 import org.digma.intellij.plugin.idea.execution.DIGMA_ENVIRONMENT_NAME_RESOURCE_ATTRIBUTE
 import org.digma.intellij.plugin.idea.execution.DIGMA_ENVIRONMENT_TYPE_RESOURCE_ATTRIBUTE
@@ -184,8 +187,22 @@ class AddEnvironmentsService {
             }
 
             else -> {
-                Log.log(logger::info, "configuration {} is not supported, not adding environment", config.name)
-                false
+
+                //maven run configuration does not fall in the categories above and requires special handling
+
+                val jvmBuildSystemHelperService: JvmBuildSystemHelperService = project.service<JvmBuildSystemHelperService>()
+                if (IDEUtilsService.isIdeaIDE() && jvmBuildSystemHelperService.isMaven(config)) {
+                    Log.log(logger::info, "adding environment to configuration {}", config.name)
+                    //if environment is empty we create new one jvmBuildSystemHelperService.updateEnvironmentOnConfiguration
+                    // will create a new env on maven configuration
+                    val envs = jvmBuildSystemHelperService.getEnvironmentMapFromRunConfiguration(config)?.toMutableMap() ?: mutableMapOf()
+                    addEnvironmentToOtelResourceAttributes(envs)
+                    jvmBuildSystemHelperService.updateEnvironmentOnConfiguration(config, envs)
+                    true
+                } else {
+                    Log.log(logger::info, "configuration {} is not supported, not adding environment", config.name)
+                    false
+                }
             }
         }
     }
@@ -252,10 +269,23 @@ class AddEnvironmentsService {
             }
 
             else -> {
-                Log.log(logger::info, "configuration {} is not supported, not clearing configuration", config.name)
+
+                //maven run configuration does not fall in the categories above and requires special handling
+
+                val jvmBuildSystemHelperService: JvmBuildSystemHelperService = project.service<JvmBuildSystemHelperService>()
+                if (IDEUtilsService.isIdeaIDE() && jvmBuildSystemHelperService.isMaven(config)) {
+                    Log.log(logger::info, "clearing configuration {}", config.name)
+                    val envs = jvmBuildSystemHelperService.getEnvironmentMapFromRunConfiguration(config)?.toMutableMap()
+                    //if there is no env there is nothing to clean
+                    if (envs != null) {
+                        clearAttributesFromConfig(envs)
+                        jvmBuildSystemHelperService.updateEnvironmentOnConfiguration(config, envs)
+                    }
+                } else {
+                    Log.log(logger::info, "configuration {} is not supported, not clearing configuration", config.name)
+                }
             }
         }
-
     }
 
 }

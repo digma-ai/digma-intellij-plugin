@@ -4,6 +4,8 @@ import com.intellij.execution.CommonProgramRunConfigurationParameters
 import com.intellij.execution.configuration.AbstractRunConfiguration
 import com.intellij.execution.configurations.RunConfiguration
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemRunConfiguration
+import org.digma.intellij.plugin.buildsystem.BuildSystemHelperService
+import org.digma.intellij.plugin.externalsystem.findMavenService
 
 
 //this is usually to extract the value of otel resource attributes as a map
@@ -23,8 +25,13 @@ fun getEnvironmentMapFromRunConfiguration(config: RunConfiguration): Map<String,
         }
 
         else -> {
-            null
+            tryGetFromMaven(config)
         }
     }
 
+}
+
+fun tryGetFromMaven(config: RunConfiguration): Map<String, String>? {
+    val mavenService: BuildSystemHelperService? = findMavenService()
+    return mavenService?.getEnvironmentMapFromRunConfiguration(config)
 }

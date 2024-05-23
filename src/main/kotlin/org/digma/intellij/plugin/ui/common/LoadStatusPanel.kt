@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.ui.common
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
+import com.intellij.ui.JBColor
 import com.intellij.ui.components.ActionLink
 import com.intellij.util.ui.JBUI
 import kotlinx.coroutines.GlobalScope
@@ -88,6 +89,7 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
         contentPanel.add(linesPanel, BorderLayout.CENTER)
 
         val closeButton = JButton("❌")
+        closeButton.foreground = JBColor.GRAY
 
         closeButton.isVisible = false
         closeButton.isOpaque = false

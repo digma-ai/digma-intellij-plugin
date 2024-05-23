@@ -24,6 +24,7 @@ import org.digma.intellij.plugin.ui.jcef.model.IsJaegerButtonEnabledMessagePaylo
 import org.digma.intellij.plugin.ui.jcef.model.IsMicrometerPayload
 import org.digma.intellij.plugin.ui.jcef.model.IsObservabilityEnabledMessage
 import org.digma.intellij.plugin.ui.jcef.model.IsObservabilityEnabledPayload
+import org.digma.intellij.plugin.ui.jcef.model.RunConfigurationAttributesPayload
 import org.digma.intellij.plugin.ui.jcef.model.SetApiUrlMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetDigmathonProductKey
 import org.digma.intellij.plugin.ui.jcef.model.SetDigmathonState
@@ -34,6 +35,7 @@ import org.digma.intellij.plugin.ui.jcef.model.SetEnvironmentsMessagePayload
 import org.digma.intellij.plugin.ui.jcef.model.SetInsightStatsMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetInsightStatsMessagePayload
 import org.digma.intellij.plugin.ui.jcef.model.SetIsMicrometerMessage
+import org.digma.intellij.plugin.ui.jcef.model.SetRunConfigurationAttributesMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetScopeMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetScopeMessagePayload
 import org.digma.intellij.plugin.ui.jcef.model.SetStateMessage
@@ -248,4 +250,13 @@ fun sendSetInsightStatsMessage(
             )
         )
     )
+}
+
+
+
+fun sendRunConfigurationAttributes(
+    project: Project, cefBrowser: CefBrowser, payload: RunConfigurationAttributesPayload
+) {
+    val message = SetRunConfigurationAttributesMessage(payload)
+    serializeAndExecuteWindowPostMessageJavaScript(cefBrowser, message, project)
 }

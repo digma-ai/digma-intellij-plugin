@@ -17,7 +17,7 @@ import org.digma.intellij.plugin.buildsystem.BuildSystem
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
-import org.digma.intellij.plugin.idea.buildsystem.BuildSystemChecker
+import org.digma.intellij.plugin.idea.buildsystem.JvmBuildSystemHelperService
 import org.digma.intellij.plugin.idea.deps.ModuleExt
 import org.digma.intellij.plugin.idea.deps.ModulesDepsService
 import org.digma.intellij.plugin.log.Log
@@ -170,7 +170,7 @@ class SpringBootMicrometerConfigureDepsService(private val project: Project) : D
 
     fun addMissingDependenciesForSpringBootObservability(moduleExt: ModuleExt) {
         val module = moduleExt.module
-        val moduleBuildSystem = project.service<BuildSystemChecker>().determineBuildSystem(module)
+        val moduleBuildSystem = project.service<JvmBuildSystemHelperService>().determineBuildSystem(module)
 
         val uniDeps = mutableSetOf<UnifiedDependency>()
         if (!moduleExt.metadata.hasSpringBootStarterActuator) {

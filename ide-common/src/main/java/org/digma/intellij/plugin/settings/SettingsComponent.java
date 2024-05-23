@@ -4,6 +4,7 @@ import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.*;
 import com.intellij.ui.components.*;
 import com.intellij.util.ui.FormBuilder;
+import org.digma.intellij.plugin.auth.account.*;
 import org.jetbrains.annotations.*;
 
 import javax.swing.*;
@@ -150,6 +151,15 @@ public class SettingsComponent {
         var resetButton = new JButton("Reset to defaults");
         resetButton.addActionListener(e -> resetToDefaults());
 
+
+        var userId = "";
+        if (DigmaDefaultAccountHolder.getInstance().getAccount() != null &&
+                !DigmaDefaultAccountHolder.getInstance().getAccount().getUserId().equals(DigmaAccountKt.DEFAULT_LOGIN_ID)) {
+            userId = DigmaDefaultAccountHolder.getInstance().getAccount().getUserId();
+        }
+        var userIdLabel = new JBLabel(userId);
+        userIdLabel.setCopyable(true);
+
         myMainPanel = FormBuilder.createFormBuilder()
                 .addLabeledComponent(myUrlLabel, myApiUrlText, 1, false)
                 .addLabeledComponent(new JBLabel("Api token:"), myApiToken, 1, false)
@@ -163,6 +173,7 @@ public class SettingsComponent {
                 .addLabeledComponent("Extended Observability (beta)", extendedObservabilityTextBox, 1, false)
                 .addLabeledComponent("Extended Observability Exclude (beta)", extendedObservabilityExcludeTextBox, 1, false)
                 .addComponent(resetButton)
+                .addLabeledComponent(new JBLabel("User Id"), userIdLabel)
                 .addComponentFillVertically(new JPanel(), 0)
                 .getPanel();
     }

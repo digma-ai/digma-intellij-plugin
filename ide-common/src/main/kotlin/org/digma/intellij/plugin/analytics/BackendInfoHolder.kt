@@ -37,6 +37,11 @@ class BackendInfoHolder : Disposable {
         }
     }
 
+    fun loadOnStartup(project: Project) {
+        updateInBackground(project)
+    }
+
+
     override fun dispose() {
         //nothing to do, used as parent disposable
     }
@@ -63,6 +68,12 @@ class BackendInfoHolder : Disposable {
 
 
     fun getAbout(): AboutResult? {
+        if (aboutRef.get() == null) {
+            findActiveProject()?.let {
+                getInBackgroundNow(it)
+            }
+        }
+
         return aboutRef.get()
     }
 
@@ -77,7 +88,7 @@ class BackendInfoHolder : Disposable {
 
 
     //updateInBackground is also called every time the analytics client is replaced
-    fun updateInBackground() {
+    private fun updateInBackground() {
         @Suppress("UnstableApiUsage")
         disposingScope().launch {
             try {
@@ -93,6 +104,14 @@ class BackendInfoHolder : Disposable {
                     ErrorReporter.getInstance().reportError("BackendUtilsKt.updateInBackground", e)
                 }
             }
+        }
+    }
+
+    //updateInBackground is also called every time the analytics client is replaced
+    private fun updateInBackground(project: Project) {
+        @Suppress("UnstableApiUsage")
+        disposingScope().launch {
+            aboutRef.set(AnalyticsService.getInstance(project).about)
         }
     }
 

@@ -40,7 +40,7 @@
         <projectService serviceImplementation="org.digma.intellij.plugin.idea.userstats.UserStatsService"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.idea.userstats.UserStatsServiceStarter"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.idea.buildsystem.BuildSystemChecker"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.idea.buildsystem.JvmBuildSystemHelperService"/>
 
         <projectService
                 serviceImplementation="org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService"/>

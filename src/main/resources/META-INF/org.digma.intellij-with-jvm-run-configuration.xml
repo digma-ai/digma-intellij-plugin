@@ -18,6 +18,9 @@
         <applicationService
                 serviceImplementation="org.digma.intellij.plugin.idea.execution.services.KotlinRunConfigurationInstrumentationService"/>
 
+        <applicationService
+                serviceImplementation="org.digma.intellij.plugin.idea.execution.JavaToolOptionsDemoBuilder"/>
+
     </extensions>
 
 </idea-plugin>

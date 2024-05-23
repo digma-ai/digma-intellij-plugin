@@ -194,6 +194,14 @@ class RecentActivityService(val project: Project) : Disposable {
         project.service<RecentActivityUpdater>().updateLatestActivities()
     }
 
+
+    fun clearSelectedRunConfig() {
+        service<AddEnvironmentsService>().clearSelectedRunConfig(project)
+    }
+
+
+
+
     fun openRegistrationDialog() {
 
         project.service<RecentActivityToolWindowShower>().showToolWindow()
@@ -235,5 +243,6 @@ class RecentActivityService(val project: Project) : Disposable {
             )
         }
     }
+
 
 }

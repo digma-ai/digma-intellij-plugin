@@ -34,7 +34,10 @@ public abstract class InsightsServiceImpl implements Disposable {
 
     public void showInsight(@NotNull String spanId) {
         Log.log(logger::debug, project, "showInsight called {}", spanId);
-        ScopeManager.getInstance(project).changeScope(new SpanScope(spanId));
+        //this is called from message INSIGHTS/GO_TO_ASSET, which is called from the Issues tab and
+        // analytics tab, in both cases we don't want to change the view so send changeView=false
+        // to method changeScope
+        ScopeManager.getInstance(project).changeScope(new SpanScope(spanId), false);
     }
 
 

@@ -62,7 +62,10 @@ class ScopeManager(private val project: Project) {
         fireScopeChangedEvent(null, CodeLocation(listOf(), listOf()), false)
     }
 
-    fun changeScope(scope: Scope) {
+    //if changeView is true some logic wil run to decide if to change the view
+    // to analytics or to insights. some callers will send false and change view according
+    // to other logic
+    fun changeScope(scope: Scope, changeView: Boolean = true) {
 
         EDT.assertNonDispatchThread()
 
@@ -70,7 +73,7 @@ class ScopeManager(private val project: Project) {
 
         try {
             when (scope) {
-                is SpanScope -> changeToSpanScope(scope)
+                is SpanScope -> changeToSpanScope(scope, changeView)
 
                 else -> {
                     ErrorReporter.getInstance().reportError(
@@ -84,10 +87,10 @@ class ScopeManager(private val project: Project) {
         } catch (e: Throwable) {
             ErrorReporter.getInstance().reportError(project, "ScopeManager.changeScope", e)
         }
-
     }
 
-    private fun changeToSpanScope(scope: SpanScope) {
+
+    private fun changeToSpanScope(scope: SpanScope, changeView: Boolean) {
 
         val spanScopeInfo = try {
             AnalyticsService.getInstance(project).getAssetDisplayInfo(scope.spanCodeObjectId)
@@ -107,31 +110,35 @@ class ScopeManager(private val project: Project) {
         val codeLocation: CodeLocation =
             buildCodeLocation(project, scope.spanCodeObjectId, scope.displayName ?: "", scope.methodId)
 
-        val insightsStats = AnalyticsService.getInstance(project).getInsightsStats(scope.spanCodeObjectId);
+
+        val hasErrors = tryPopulateErrors(scope)
+
+        fireScopeChangedEvent(scope, codeLocation, hasErrors)
+
+        val insightsStats = AnalyticsService.getInstance(project).getInsightsStats(scope.spanCodeObjectId)
+        if (changeView) {
+            showHomeView(insightsStats)
+        }
+
+
         EDT.ensureEDT {
             MainToolWindowCardsController.getInstance(project).closeAllNotificationsIfShowing()
             MainToolWindowCardsController.getInstance(project).closeCoveringViewsIfNecessary()
             project.service<ErrorsViewOrchestrator>().closeErrorDetails()
             ToolWindowShower.getInstance(project).showToolWindow()
-            showHomeView(scope, insightsStats)
         }
-
-        val hasErrors = tryPopulateErrors(scope)
-
-        fireScopeChangedEvent(scope, codeLocation, hasErrors)
     }
 
 
-    private fun showHomeView(scope: SpanScope, insightsStats: InsightsStatsResult?) {
-        val contentViewSwitcher = MainContentViewSwitcher.getInstance(project)
+    private fun showHomeView(insightsStats: InsightsStatsResult?) {
         if (insightsStats != null) {
             if (insightsStats.analyticsInsightsCount > 0 && insightsStats.issuesInsightsCount == 0) {
-                contentViewSwitcher.showAnalytics()
+                MainContentViewSwitcher.getInstance(project).showAnalytics()
                 return
             }
         }
 
-        contentViewSwitcher.showInsights()
+        MainContentViewSwitcher.getInstance(project).showInsights()
     }
 
     private fun tryPopulateErrors(scope: SpanScope): Boolean {

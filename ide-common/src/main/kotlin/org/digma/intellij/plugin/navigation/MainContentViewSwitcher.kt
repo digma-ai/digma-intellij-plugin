@@ -5,6 +5,7 @@ import com.google.common.base.Objects
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
+import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.navigation.View.Companion.Assets
 import org.digma.intellij.plugin.navigation.View.Companion.getSelected
 import org.digma.intellij.plugin.navigation.View.Companion.hideErrorDetails
@@ -65,6 +66,10 @@ class MainContentViewSwitcher(val project: Project) {
         showView(View.Analytics)
     }
 
+    fun showHighlights() {
+        showView(View.Highlights)
+    }
+
 
     fun showView(view: View, isTriggeredByJcef: Boolean = false) {
         showView(view, fireEvent = true, isTriggeredByJcef = isTriggeredByJcef)
@@ -87,14 +92,16 @@ class MainContentViewSwitcher(val project: Project) {
 
         setSelected(view)
 
-        //todo: it's all unnecessary , we only need to change between the main app and errors tab
-        when (view) {
-            View.Errors,
-            View.ErrorDetails,
-            -> myLayout.show(mainContentPanel, ERRORS_PANEL_CARD_NAME)
+        EDT.ensureEDT {
+            when (view) {
+                View.Errors,
+                View.ErrorDetails,
+                    -> myLayout.show(mainContentPanel, ERRORS_PANEL_CARD_NAME)
 
-            else -> myLayout.show(mainContentPanel, MAIN_PANEL_CARD_NAME)
+                else -> myLayout.show(mainContentPanel, MAIN_PANEL_CARD_NAME)
+            }
         }
+
 
         if (fireEvent) {
             fireViewChanged(isTriggeredByJcef)

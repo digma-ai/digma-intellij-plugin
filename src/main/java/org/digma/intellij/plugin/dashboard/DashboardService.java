@@ -85,6 +85,6 @@ public final class DashboardService {
 
         var span = goToSpan.payload();
 
-        setCurrentEnvironmentById(project, span.environment(), () -> ScopeManager.getInstance(project).changeScope(new SpanScope(span.spanCodeObjectId())));
+        setCurrentEnvironmentById(project, span.environment(), () -> ScopeManager.getInstance(project).changeScope(new SpanScope(span.spanCodeObjectId()), true));
     }
 }

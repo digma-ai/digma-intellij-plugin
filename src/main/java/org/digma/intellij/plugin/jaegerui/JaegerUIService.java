@@ -10,6 +10,7 @@ import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.jaegerui.model.incoming.*;
 import org.digma.intellij.plugin.jaegerui.model.outgoing.*;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.navigation.MainContentViewSwitcher;
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator;
 import org.digma.intellij.plugin.posthog.*;
 import org.digma.intellij.plugin.psi.*;
@@ -140,7 +141,8 @@ public class JaegerUIService implements Disposable {
         //if we're here then code location was not found
         ActivityMonitor.getInstance(project).registerSpanLinkClicked(goToSpanMessage.payload().spanId(), UserActionOrigin.JaegerUI);
         MainToolWindowCardsController.getInstance(project).closeAllNotificationsIfShowing();
-        ScopeManager.getInstance(project).changeScope(new SpanScope(span.spanCodeObjectId()));
+        ScopeManager.getInstance(project).changeScope(new SpanScope(span.spanCodeObjectId()), false);
+        MainContentViewSwitcher.getInstance(project).showHighlights();
     }
 
     public Map<String, SpanData> getResolvedSpans(SpansMessage spansMessage) {

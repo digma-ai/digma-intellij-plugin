@@ -10,6 +10,7 @@ import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.createObjectMapper
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.navigation.MainContentViewSwitcher
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.UserActionOrigin
@@ -83,7 +84,8 @@ class AssetsService(private val project: Project) : Disposable {
         EDT.assertNonDispatchThread()
         Log.log(logger::trace, project, "showAsset called for {}", spanId)
         ActivityMonitor.getInstance(project).registerSpanLinkClicked(spanId, UserActionOrigin.Assets)
-        ScopeManager.getInstance(project).changeScope(SpanScope(spanId))
+        ScopeManager.getInstance(project).changeScope(SpanScope(spanId), false)
+        MainContentViewSwitcher.getInstance(project).showHighlights()
     }
 
 

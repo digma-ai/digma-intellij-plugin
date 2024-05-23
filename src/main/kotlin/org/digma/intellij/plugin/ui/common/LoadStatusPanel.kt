@@ -17,6 +17,7 @@ import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.UserActionOrigin
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import java.awt.BorderLayout
+import java.awt.Color
 import java.awt.Cursor
 import java.awt.Dimension
 import java.awt.GridLayout
@@ -88,6 +89,7 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
         contentPanel.add(linesPanel, BorderLayout.CENTER)
 
         val closeButton = JButton("❌")
+        closeButton.setForeground(Color.GRAY);
 
         closeButton.isVisible = false
         closeButton.isOpaque = false

@@ -219,10 +219,10 @@ fun sendIsJaegerButtonEnabledMessage(cefBrowser: CefBrowser) {
 }
 
 
-fun sendCurrentViewsState(cefBrowser: CefBrowser, action: String, views: List<View>, isTriggeredByJcef: Boolean) {
+fun sendCurrentViewsState(cefBrowser: CefBrowser, action: String, views: List<View>, createHistoryStep: Boolean) {
     serializeAndExecuteWindowPostMessageJavaScript(
         cefBrowser,
-        SetViewMessage(action, SetViewMessagePayload(views, isTriggeredByJcef))
+        SetViewMessage(action, SetViewMessagePayload(views, createHistoryStep))
     )
 }
 

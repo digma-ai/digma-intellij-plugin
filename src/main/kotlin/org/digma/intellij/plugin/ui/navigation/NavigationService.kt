@@ -44,9 +44,9 @@ class NavigationService(private val project: Project) : Disposable {
 
     init {
         project.messageBus.connect(this).subscribe(
-            ViewChangedEvent.VIEW_CHANGED_TOPIC, ViewChangedEvent { views, isTriggeredByJcef ->
+            ViewChangedEvent.VIEW_CHANGED_TOPIC, ViewChangedEvent { views, createHistoryStep ->
                 jCefComponent?.let {
-                    sendCurrentViewsState(it.jbCefBrowser.cefBrowser, NAVIGATION_SET_VIEWS_ACTION, views, isTriggeredByJcef)
+                    sendCurrentViewsState(it.jbCefBrowser.cefBrowser, NAVIGATION_SET_VIEWS_ACTION, views, createHistoryStep)
                 }
             })
     }

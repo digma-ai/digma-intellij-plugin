@@ -7,5 +7,5 @@ data class SetViewMessage(val action: String, val payload: SetViewMessagePayload
     val type = JCEFGlobalConstants.REQUEST_MESSAGE_TYPE
 }
 
-data class SetViewMessagePayload(val views: List<View>, val isTriggeredByJcef: Boolean)
+data class SetViewMessagePayload(val views: List<View>, val createHistoryStep: Boolean)
 

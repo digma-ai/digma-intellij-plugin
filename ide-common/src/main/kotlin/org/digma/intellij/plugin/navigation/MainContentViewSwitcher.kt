@@ -71,11 +71,11 @@ class MainContentViewSwitcher(val project: Project) {
     }
 
 
-    fun showView(view: View, isTriggeredByJcef: Boolean = false) {
-        showView(view, fireEvent = true, isTriggeredByJcef = isTriggeredByJcef)
+    fun showView(view: View, createHistoryStep: Boolean = false) {
+        showView(view, fireEvent = true, createHistoryStep)
     }
 
-    private fun showView(view: View, fireEvent: Boolean, isTriggeredByJcef: Boolean) {
+    private fun showView(view: View, fireEvent: Boolean, createHistoryStep: Boolean) {
         if (view == View.ErrorDetails) {
             hideErrors()
         } else {
@@ -104,21 +104,21 @@ class MainContentViewSwitcher(val project: Project) {
 
 
         if (fireEvent) {
-            fireViewChanged(isTriggeredByJcef)
+            fireViewChanged(createHistoryStep)
         }
     }
 
 
-    private fun fireViewChanged(isTriggeredByJcef: Boolean) {
+    private fun fireViewChanged(createHistoryStep: Boolean) {
         val publisher = project.messageBus.syncPublisher(ViewChangedEvent.VIEW_CHANGED_TOPIC)
-        publisher.viewChanged(views, isTriggeredByJcef)
+        publisher.viewChanged(views, createHistoryStep)
     }
 
     fun getSelectedView(): View? {
         return getSelected()
     }
 
-    fun showViewById(viewId: String, isTriggeredByJcef: Boolean = false) {
+    fun showViewById(viewId: String, createHistoryStep: Boolean = false) {
         val segments = viewId.split("/")
         if (segments[1] == "assets") {
             if (segments.count() > 2) {
@@ -126,11 +126,11 @@ class MainContentViewSwitcher(val project: Project) {
             } else {
                 Assets.path = null
             }
-            showView(Assets, isTriggeredByJcef = isTriggeredByJcef)
+            showView(Assets, createHistoryStep)
         }
 
         View.findById(viewId)?.let { view ->
-            showView(view, isTriggeredByJcef = isTriggeredByJcef)
+            showView(view, createHistoryStep)
         }
     }
 

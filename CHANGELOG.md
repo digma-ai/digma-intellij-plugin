@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.339] - 2024-05-22
+## [2.0.340] - 2024-05-23
+
+- Changed color for close button by @ohrebeniuk in https://github.com/digma-ai/digma-intellij-plugin/pull/2176
+- add env name instead of id to current run config Closes #2116 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2152
+
+## 2.0.339 - 2024-05-22
 
 - fix await latch by @ohrebeniuk in https://github.com/digma-ai/digma-intellij-plugin/pull/2173
 

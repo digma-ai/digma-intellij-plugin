@@ -22,15 +22,13 @@ open class OtelResourceAttributesBuilder(
 
         if (needToAddDigmaEnvironmentAttribute(parametersExtractor)) {
             if (isTest) {
-                withOtelResourceAttribute(DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE, LOCAL_TESTS_ENV)
+                withOtelResourceAttribute(DIGMA_ENVIRONMENT_NAME_RESOURCE_ATTRIBUTE, LOCAL_TESTS_ENV)
             } else {
-                withOtelResourceAttribute(DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE, LOCAL_ENV)
+                withOtelResourceAttribute(DIGMA_ENVIRONMENT_NAME_RESOURCE_ATTRIBUTE, LOCAL_ENV)
             }
         }
 
-        if (!parametersExtractor.hasDigmaEnvironmentIdAttribute() &&
-            isCentralized(configuration.project)
-        ) {
+        if (isCentralized(configuration.project)) {
             withUserId()
         }
 
@@ -60,7 +58,7 @@ open class OtelResourceAttributesBuilder(
 
     private fun needToAddDigmaEnvironmentAttribute(parametersExtractor: ParametersExtractor): Boolean {
         return !parametersExtractor.hasDigmaEnvironmentIdAttribute() &&
-                !parametersExtractor.hasDigmaEnvironmentAttribute()
+                !parametersExtractor.hasDigmaEnvironmentNameAttribute()
     }
 
 

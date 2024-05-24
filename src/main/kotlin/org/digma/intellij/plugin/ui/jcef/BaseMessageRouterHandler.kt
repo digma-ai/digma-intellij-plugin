@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.ui.jcef
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.NullNode
+import com.intellij.execution.RunManager
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.fileEditor.impl.HTMLEditorProvider
@@ -367,6 +368,10 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
             insightsStats?.issuesInsightsCount ?: 0,
             insightsStats?.unreadInsightsCount ?: 0
         )
+
+        val setRunConfigurationMessageBuilder =
+            SetRunConfigurationMessageBuilder(project, browser, RunManager.getInstance(project).selectedConfiguration)
+        setRunConfigurationMessageBuilder.sendRunConfigurationAttributes()
     }
 
     private fun changeScope(requestJsonNode: JsonNode) {

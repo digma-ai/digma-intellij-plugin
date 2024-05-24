@@ -18,7 +18,7 @@ public class AnalyticsServiceStarter implements StartupActivity.DumbAware {
 
             AnalyticsService.getInstance(project);
             //make sure BackendInfoHolder is initialized after AnalyticsService
-            BackendInfoHolder.getInstance();
+            BackendInfoHolder.getInstance().loadOnStartup(project);
         });
     }
 }

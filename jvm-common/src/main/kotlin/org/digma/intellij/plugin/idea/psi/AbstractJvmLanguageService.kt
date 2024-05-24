@@ -46,7 +46,7 @@ import org.digma.intellij.plugin.editor.CaretContextService
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.errorreporting.SEVERITY_MEDIUM_TRY_FIX
 import org.digma.intellij.plugin.errorreporting.SEVERITY_PROP_NAME
-import org.digma.intellij.plugin.idea.buildsystem.BuildSystemChecker
+import org.digma.intellij.plugin.idea.buildsystem.JvmBuildSystemHelperService
 import org.digma.intellij.plugin.idea.deps.ModulesDepsService
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
 import org.digma.intellij.plugin.idea.navigation.JvmEndpointNavigationProvider
@@ -679,7 +679,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
         if (isSpringBootAndMicrometer(module)) {
             addDepsForSpringBootAndMicrometer(module)
         } else {
-            val moduleBuildSystem = project.service<BuildSystemChecker>().determineBuildSystem(module)
+            val moduleBuildSystem = project.service<JvmBuildSystemHelperService>().determineBuildSystem(module)
             val dependencyLib = mapBuildSystem2Dependency[moduleBuildSystem]
 
             val dependencyModifierService = DependencyModifierService.getInstance(project)

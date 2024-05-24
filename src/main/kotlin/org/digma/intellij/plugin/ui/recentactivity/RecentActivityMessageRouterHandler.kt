@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.ui.recentactivity
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.intellij.execution.RunManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
@@ -10,6 +11,7 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.UserActionOrigin
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
+import org.digma.intellij.plugin.ui.jcef.SetRunConfigurationMessageBuilder
 import org.digma.intellij.plugin.ui.jcef.getMapFromNode
 import org.digma.intellij.plugin.ui.jcef.jsonToObject
 import org.digma.intellij.plugin.ui.recentactivity.model.CloseLiveViewMessage
@@ -25,7 +27,6 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
 
 
     override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
-
 
         //exceptions are handles in BaseMessageRouterHandler.onQuery
 
@@ -74,7 +75,19 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
                     ActivityMonitor.getInstance(project)
                         .registerUserAction("add environment to run config", mapOf("environment" to environmentId))
                     project.service<RecentActivityService>().addVarRunToConfig(it)
+                    val setRunConfigurationMessageBuilder =
+                        SetRunConfigurationMessageBuilder(project, browser, RunManager.getInstance(project).selectedConfiguration)
+                    setRunConfigurationMessageBuilder.sendRunConfigurationAttributes()
                 }
+            }
+
+            "RECENT_ACTIVITY/CLEAR_RUN_CONFIG" -> {
+                ActivityMonitor.getInstance(project)
+                    .registerUserAction("clear run config")
+                project.service<RecentActivityService>().clearSelectedRunConfig()
+                val setRunConfigurationMessageBuilder =
+                    SetRunConfigurationMessageBuilder(project, browser, RunManager.getInstance(project).selectedConfiguration)
+                setRunConfigurationMessageBuilder.sendRunConfigurationAttributes()
             }
 
             "RECENT_ACTIVITY/CREATE_ENVIRONMENT" -> {

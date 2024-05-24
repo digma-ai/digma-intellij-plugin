@@ -1,6 +1,9 @@
 package org.digma.intellij.plugin.ui.jcef
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.intellij.execution.RunManager
+import com.intellij.execution.RunManagerListener
+import com.intellij.execution.RunnerAndConfigurationSettings
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
@@ -9,7 +12,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.ui.jcef.JBCefBrowser
 import com.intellij.util.Alarm
-import com.intellij.util.AlarmFactory
 import com.intellij.util.messages.MessageBusConnection
 import org.cef.CefApp
 import org.cef.browser.CefBrowser
@@ -73,10 +75,28 @@ private constructor(
     private val productKeyAddedParentDisposable = Disposer.newDisposable()
     private val userFinishedDigmathonParentDisposable = Disposer.newDisposable()
     private val apiClientChangedParentDisposable = Disposer.newDisposable()
+    private val runConfigurationChangedParentDisposable = Disposer.newDisposable()
 
 
     init {
-        val connectionEventAlarm = AlarmFactory.getInstance().create(Alarm.ThreadToUse.POOLED_THREAD, connectionEventAlarmParentDisposable)
+        val connectionEventAlarm = Alarm(Alarm.ThreadToUse.POOLED_THREAD, connectionEventAlarmParentDisposable)
+
+
+        project.messageBus.connect(runConfigurationChangedParentDisposable).subscribe(RunManagerListener.TOPIC, object : RunManagerListener {
+            override fun runConfigurationSelected(settings: RunnerAndConfigurationSettings?) {
+                val setRunConfigurationMessageBuilder =
+                    SetRunConfigurationMessageBuilder(project, jbCefBrowser.cefBrowser, RunManager.getInstance(project).selectedConfiguration)
+                setRunConfigurationMessageBuilder.sendRunConfigurationAttributes()
+            }
+
+            override fun runConfigurationChanged(settings: RunnerAndConfigurationSettings) {
+                //always send the selected one not necessarily the one that changed
+                val setRunConfigurationMessageBuilder =
+                    SetRunConfigurationMessageBuilder(project, jbCefBrowser.cefBrowser, RunManager.getInstance(project).selectedConfiguration)
+                setRunConfigurationMessageBuilder.sendRunConfigurationAttributes()
+            }
+        })
+
 
 
         ApplicationManager.getApplication().messageBus.connect(apiClientChangedParentDisposable)
@@ -314,6 +334,7 @@ private constructor(
 
     override fun dispose() {
         try {
+            Disposer.dispose(runConfigurationChangedParentDisposable)
             Disposer.dispose(apiClientChangedParentDisposable)
             Disposer.dispose(userFinishedDigmathonParentDisposable)
             Disposer.dispose(productKeyAddedParentDisposable)

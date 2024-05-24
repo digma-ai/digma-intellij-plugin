@@ -33,7 +33,7 @@ class ScopeManager(private val project: Project) {
         }
     }
 
-    fun changeToHome(isCalledFromReact: Boolean = false) {
+    fun changeToHome(isCalledFromReact: Boolean = false, forceNavigation: Boolean = false) {
 
         EDT.assertNonDispatchThread()
 
@@ -53,9 +53,11 @@ class ScopeManager(private val project: Project) {
                 ToolWindowShower.getInstance(project).showToolWindow()
             }
 
-            val contentViewSwitcher = MainContentViewSwitcher.getInstance(project)
-            if (contentViewSwitcher.getSelectedView() != View.Assets) {
-                contentViewSwitcher.showInsights()
+            if (!forceNavigation) {
+                val contentViewSwitcher = MainContentViewSwitcher.getInstance(project)
+                if (contentViewSwitcher.getSelectedView() != View.Assets) {
+                    contentViewSwitcher.showInsights()
+                }
             }
         }
 

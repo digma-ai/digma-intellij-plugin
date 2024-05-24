@@ -373,6 +373,7 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
         val payload = getPayloadFromRequest(requestJsonNode)
         payload?.let { pl ->
             val span = pl.get("span")
+            val forceNavigation = pl.get("forceNavigation")?.asBoolean()
             val spanScope: SpanScope? = span?.takeIf { span !is NullNode }?.let { sp ->
                 val spanObj = objectMapper.readTree(sp.toString())
                 val spanId = if (spanObj.get("spanCodeObjectId") is NullNode) null else spanObj.get("spanCodeObjectId").asText()
@@ -382,8 +383,8 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
             }
 
             spanScope?.let {
-                ScopeManager.getInstance(project).changeScope(it)
-            } ?: ScopeManager.getInstance(project).changeToHome(true)
+                ScopeManager.getInstance(project).changeScope(it, forceNavigation?.not() ?: true)
+            } ?: ScopeManager.getInstance(project).changeToHome(true, forceNavigation ?: false)
         }
     }
 

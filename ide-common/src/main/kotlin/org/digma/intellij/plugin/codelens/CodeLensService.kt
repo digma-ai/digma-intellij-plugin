@@ -22,7 +22,7 @@ import org.digma.intellij.plugin.document.CodeLensUtils.psiFileToKey
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.lens.CodeLens
-import org.digma.intellij.plugin.navigation.MainContentViewSwitcher
+import org.digma.intellij.plugin.navigation.View
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.scope.ScopeManager
@@ -226,11 +226,9 @@ class CodeLensService(private val project: Project) : Disposable {
                     if (lens.scopeCodeObjectId.startsWith("span:")) {
                         //order must be first change scope then change view, UI relies on this order
                         if (lens.importance <= 4) {
-                            ScopeManager.getInstance(project).changeScope(SpanScope(lens.scopeCodeObjectId), false)
-                            MainContentViewSwitcher.getInstance(project).showInsights()
+                            ScopeManager.getInstance(project).changeScope(SpanScope(lens.scopeCodeObjectId), View.Insights)
                         } else if (lens.lensTitle.contains("runtime data", false)) {
-                            ScopeManager.getInstance(project).changeScope(SpanScope(lens.scopeCodeObjectId), false)
-                            MainContentViewSwitcher.getInstance(project).showHighlights()
+                            ScopeManager.getInstance(project).changeScope(SpanScope(lens.scopeCodeObjectId), View.Highlights)
                         } else {
                             ScopeManager.getInstance(project).changeScope(SpanScope(lens.scopeCodeObjectId))
                         }

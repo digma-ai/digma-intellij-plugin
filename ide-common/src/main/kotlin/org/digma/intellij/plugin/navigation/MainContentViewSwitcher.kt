@@ -120,17 +120,17 @@ class MainContentViewSwitcher(val project: Project) {
 
     fun showViewById(viewId: String, createHistoryStep: Boolean = false) {
         val segments = viewId.split("/")
-        if (segments[1] == "assets") {
+        if (segments.size > 1 && segments[1] == "assets") {
             if (segments.count() > 2) {
                 Assets.path = viewId.removePrefix("/assets/");
             } else {
                 Assets.path = null
             }
             showView(Assets, createHistoryStep)
-        }
-
-        View.findById(viewId)?.let { view ->
-            showView(view, createHistoryStep)
+        } else {
+            View.findById(viewId)?.let { view ->
+                showView(view, createHistoryStep)
+            }
         }
     }
 
@@ -168,12 +168,25 @@ private constructor(
 
     companion object {
 
+        @JvmStatic
         val Highlights = View(title = "", id = "/highlights", cardName = "highlights")
+
+        @JvmStatic
         val Insights = View(title = "Issues", id = "/insights", cardName = "insights", isSelected = true)
+
+        @JvmStatic
         val Assets = View("Assets", "/assets", "assets")
+
+        @JvmStatic
         val Errors = View("Errors", "/errors", "errors")
+
+        @JvmStatic
         val ErrorDetails = View(title = "Error Details", id = "/errors/details", cardName = "errors", isHidden = true)
+
+        @JvmStatic
         val Tests = View("Tests", "/tests", "tests")
+
+        @JvmStatic
         val Analytics = View("Analytics", "/analytics", "analytics")
 
 

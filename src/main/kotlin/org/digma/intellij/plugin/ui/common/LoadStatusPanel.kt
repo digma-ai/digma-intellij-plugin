@@ -1,17 +1,18 @@
 package org.digma.intellij.plugin.ui.common
 
+import com.intellij.collaboration.async.disposingScope
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.ActionLink
 import com.intellij.util.ui.JBUI
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.apache.maven.artifact.versioning.ComparableVersion
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.BackendInfoHolder
 import org.digma.intellij.plugin.common.Backgroundable
+import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.newerThan
 import org.digma.intellij.plugin.loadstatus.LoadStatusService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
@@ -36,17 +37,21 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
     private var service = project.service<LoadStatusService>()
 
     val label = JLabel("We're processing less data to conserve resources, consider ", SwingConstants.LEFT)
-    var actionLink = ActionLink("deploying centrally") {
+    private var actionLink = ActionLink("deploying centrally") {
         ActivityMonitor.getInstance(project).registerUserActionWithOrigin("digma overload warning docs link clicked", UserActionOrigin.LoadStatusPanel)
         BrowserUtil.browse(Links.DIGMA_OVERLOAD_WARNING_DOCS_URL, project)
     }
 
+    private val closeButton = JButton("❌")
+
     init {
-        service.affectedPanel = this
         isOpaque = false
         layout = BoxLayout(this, BoxLayout.X_AXIS)
         isVisible = false
         buildItemsInPanel()
+
+        //must be set only after the panel is built
+        service.affectedPanel = this
     }
 
     private fun buildItemsInPanel() {
@@ -88,9 +93,8 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
         contentPanel.add(infoIconWrapper, BorderLayout.WEST)
         contentPanel.add(linesPanel, BorderLayout.CENTER)
 
-        val closeButton = JButton("❌")
-        closeButton.foreground = JBColor.GRAY
 
+        closeButton.foreground = JBColor.GRAY
         closeButton.isVisible = false
         closeButton.isOpaque = false
         closeButton.isBorderPainted = false
@@ -107,7 +111,7 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
             }
         })
 
-        closeButton.addActionListener { e ->
+        closeButton.addActionListener {
             isVisible = false
 
             Backgroundable.ensurePooledThread {
@@ -128,15 +132,13 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
         borderedPanel.add(Box.createVerticalStrut(2))
         this.add(borderedPanel)
 
-        GlobalScope.launch {
-            closeButton.isVisible = shouldDisplayCloseButton()
-        }
+
     }
 
     private fun shouldDisplayCloseButton(): Boolean
     {
 
-        val version = BackendInfoHolder.getInstance().getAboutLoadIfNull()?.applicationVersion ?: return false
+        val version = BackendInfoHolder.getInstance().getAbout(project)?.applicationVersion ?: return false
 
         val currentBackendVersion = ComparableVersion(version)
         val closeButtonBackendVersion = ComparableVersion("0.3.25")
@@ -151,7 +153,20 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
                     service.lastLoadStatus.description ?: "",
                     service.lastLoadStatus.lastUpdated
                 )
+
+                @Suppress("UnstableApiUsage")
+                service.disposingScope().launch {
+                    val shouldShowClose = try {
+                        shouldDisplayCloseButton()
+                    } catch (e: Throwable) {
+                        false
+                    }
+                    EDT.ensureEDT {
+                        closeButton.isVisible = shouldShowClose
+                    }
+                }
             }
+
             toolTipText = service.lastLoadStatus.description +
                     "<br/>" +
                     "Last occurred at " + service.lastLoadStatus.lastUpdated

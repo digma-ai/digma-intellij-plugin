@@ -40,7 +40,6 @@ class ScopeManager(private val project: Project) {
 
         ErrorsViewService.getInstance(project).empty()
 
-
         fireScopeChangedEvent(null, CodeLocation(listOf(), listOf()), false)
 
         if (!forceNavigation) {
@@ -65,7 +64,7 @@ class ScopeManager(private val project: Project) {
     }
 
     //preferredView is the preferred view to show after changing scope.
-    fun changeScope(scope: Scope, preferredView: View? = null) {
+    fun changeScope(scope: Scope, changeView: Boolean = true, preferredView: View? = null) {
 
         EDT.assertNonDispatchThread()
 
@@ -73,7 +72,7 @@ class ScopeManager(private val project: Project) {
 
         try {
             when (scope) {
-                is SpanScope -> changeToSpanScope(scope, preferredView)
+                is SpanScope -> changeToSpanScope(scope, changeView, preferredView)
 
                 else -> {
                     ErrorReporter.getInstance().reportError(
@@ -90,7 +89,7 @@ class ScopeManager(private val project: Project) {
     }
 
 
-    private fun changeToSpanScope(scope: SpanScope, preferredView: View? = null) {
+    private fun changeToSpanScope(scope: SpanScope, changeView: Boolean = true, preferredView: View? = null) {
 
         val spanScopeInfo = try {
             AnalyticsService.getInstance(project).getAssetDisplayInfo(scope.spanCodeObjectId)
@@ -115,7 +114,9 @@ class ScopeManager(private val project: Project) {
 
         fireScopeChangedEvent(scope, codeLocation, hasErrors)
 
-        showViewAfterScopeChange(scope, preferredView)
+        if (changeView) {
+            changeViewAfterScopeChange(scope, preferredView)
+        }
 
         EDT.ensureEDT {
             MainToolWindowCardsController.getInstance(project).closeAllNotificationsIfShowing()
@@ -127,7 +128,7 @@ class ScopeManager(private val project: Project) {
     }
 
 
-    private fun showViewAfterScopeChange(scope: SpanScope, preferredView: View?) {
+    private fun changeViewAfterScopeChange(scope: SpanScope, preferredView: View?) {
 
         //in both these cases, if there are no insights, show analytics
         if (preferredView == null || preferredView == View.Insights) {

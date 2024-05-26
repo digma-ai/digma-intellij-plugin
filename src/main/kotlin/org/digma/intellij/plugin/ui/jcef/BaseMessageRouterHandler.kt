@@ -388,7 +388,7 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
             }
 
             spanScope?.let {
-                ScopeManager.getInstance(project).changeScope(it)
+                ScopeManager.getInstance(project).changeScope(it, forceNavigation?.not() ?: true)
             } ?: ScopeManager.getInstance(project).changeToHome(true, forceNavigation ?: false)
         }
     }

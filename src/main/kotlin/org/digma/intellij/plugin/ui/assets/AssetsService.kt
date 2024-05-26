@@ -84,7 +84,7 @@ class AssetsService(private val project: Project) : Disposable {
         EDT.assertNonDispatchThread()
         Log.log(logger::trace, project, "showAsset called for {}", spanId)
         ActivityMonitor.getInstance(project).registerSpanLinkClicked(spanId, UserActionOrigin.Assets)
-        ScopeManager.getInstance(project).changeScope(SpanScope(spanId), View.Highlights)
+        ScopeManager.getInstance(project).changeScope(SpanScope(spanId), preferredView = View.Highlights)
     }
 
 

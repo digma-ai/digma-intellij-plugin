@@ -141,7 +141,7 @@ public class JaegerUIService implements Disposable {
         //if we're here then code location was not found
         ActivityMonitor.getInstance(project).registerSpanLinkClicked(goToSpanMessage.payload().spanId(), UserActionOrigin.JaegerUI);
         MainToolWindowCardsController.getInstance(project).closeAllNotificationsIfShowing();
-        ScopeManager.getInstance(project).changeScope(new SpanScope(span.spanCodeObjectId()), View.getHighlights());
+        ScopeManager.getInstance(project).changeScope(new SpanScope(span.spanCodeObjectId()), true, View.getHighlights());
     }
 
     public Map<String, SpanData> getResolvedSpans(SpansMessage spansMessage) {

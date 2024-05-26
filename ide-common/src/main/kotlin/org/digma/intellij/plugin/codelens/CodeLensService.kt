@@ -226,9 +226,9 @@ class CodeLensService(private val project: Project) : Disposable {
                     if (lens.scopeCodeObjectId.startsWith("span:")) {
                         //order must be first change scope then change view, UI relies on this order
                         if (lens.importance <= 4) {
-                            ScopeManager.getInstance(project).changeScope(SpanScope(lens.scopeCodeObjectId), View.Insights)
+                            ScopeManager.getInstance(project).changeScope(SpanScope(lens.scopeCodeObjectId), preferredView = View.Insights)
                         } else if (lens.lensTitle.contains("runtime data", false)) {
-                            ScopeManager.getInstance(project).changeScope(SpanScope(lens.scopeCodeObjectId), View.Highlights)
+                            ScopeManager.getInstance(project).changeScope(SpanScope(lens.scopeCodeObjectId), preferredView = View.Highlights)
                         } else {
                             ScopeManager.getInstance(project).changeScope(SpanScope(lens.scopeCodeObjectId))
                         }

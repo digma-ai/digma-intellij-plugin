@@ -156,7 +156,11 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
 
                 @Suppress("UnstableApiUsage")
                 service.disposingScope().launch {
-                    val shouldShowClose = shouldDisplayCloseButton()
+                    val shouldShowClose = try {
+                        shouldDisplayCloseButton()
+                    } catch (e: Throwable) {
+                        false
+                    }
                     EDT.ensureEDT {
                         closeButton.isVisible = shouldShowClose
                     }

@@ -41,6 +41,8 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
         BrowserUtil.browse(Links.DIGMA_OVERLOAD_WARNING_DOCS_URL, project)
     }
 
+    private val closeButton = JButton("❌")
+
     init {
         service.affectedPanel = this
         isOpaque = false
@@ -88,7 +90,7 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
         contentPanel.add(infoIconWrapper, BorderLayout.WEST)
         contentPanel.add(linesPanel, BorderLayout.CENTER)
 
-        val closeButton = JButton("❌")
+
         closeButton.foreground = JBColor.GRAY
 
         closeButton.isVisible = false
@@ -128,10 +130,7 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
         borderedPanel.add(Box.createVerticalStrut(2))
         this.add(borderedPanel)
 
-        @Suppress("UnstableApiUsage")
-        service.disposingScope().launch {
-            closeButton.isVisible = shouldDisplayCloseButton()
-        }
+
     }
 
     private fun shouldDisplayCloseButton(): Boolean
@@ -152,7 +151,13 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
                     service.lastLoadStatus.description ?: "",
                     service.lastLoadStatus.lastUpdated
                 )
+
+                @Suppress("UnstableApiUsage")
+                service.disposingScope().launch {
+                    closeButton.isVisible = shouldDisplayCloseButton()
+                }
             }
+
             toolTipText = service.lastLoadStatus.description +
                     "<br/>" +
                     "Last occurred at " + service.lastLoadStatus.lastUpdated

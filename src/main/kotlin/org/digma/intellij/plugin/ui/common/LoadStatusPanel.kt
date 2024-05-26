@@ -44,11 +44,13 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
     private val closeButton = JButton("❌")
 
     init {
-        service.affectedPanel = this
         isOpaque = false
         layout = BoxLayout(this, BoxLayout.X_AXIS)
         isVisible = false
         buildItemsInPanel()
+
+        //must be set only after the panel is built
+        service.affectedPanel = this
     }
 
     private fun buildItemsInPanel() {

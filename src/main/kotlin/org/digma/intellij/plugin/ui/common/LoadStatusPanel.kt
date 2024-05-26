@@ -12,6 +12,7 @@ import org.apache.maven.artifact.versioning.ComparableVersion
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.BackendInfoHolder
 import org.digma.intellij.plugin.common.Backgroundable
+import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.newerThan
 import org.digma.intellij.plugin.loadstatus.LoadStatusService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
@@ -94,7 +95,6 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
 
 
         closeButton.foreground = JBColor.GRAY
-
         closeButton.isVisible = false
         closeButton.isOpaque = false
         closeButton.isBorderPainted = false
@@ -156,7 +156,10 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
 
                 @Suppress("UnstableApiUsage")
                 service.disposingScope().launch {
-                    closeButton.isVisible = shouldDisplayCloseButton()
+                    val shouldShowClose = shouldDisplayCloseButton()
+                    EDT.ensureEDT {
+                        closeButton.isVisible = shouldShowClose
+                    }
                 }
             }
 

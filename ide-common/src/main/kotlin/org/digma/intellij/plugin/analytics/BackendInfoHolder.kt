@@ -7,15 +7,15 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import org.digma.intellij.plugin.common.Backgroundable
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.common.findActiveProject
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.AboutResult
-import java.util.concurrent.Callable
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
 /**
@@ -67,35 +67,20 @@ class BackendInfoHolder : Disposable {
     }
 
 
-    fun getAbout(): AboutResult? {
-        if (aboutRef.get() == null) {
-            findActiveProject()?.let {
-                getInBackgroundNow(it)
-            }
-        }
-
-        return aboutRef.get()
-    }
-
-    fun getAboutLoadIfNull(): AboutResult? {
-        if (aboutRef.get() == null) {
-            findActiveProject()?.let {
-                loadAboutInBackgroundNow(it)
-            }
-        }
-        return aboutRef.get()
-    }
-
-
     //updateInBackground is also called every time the analytics client is replaced
     private fun updateInBackground() {
+        findActiveProject()?.let {
+            updateInBackground(it)
+        }
+    }
+
+    //updateInBackground is also called every time the analytics client is replaced
+    private fun updateInBackground(project: Project) {
         @Suppress("UnstableApiUsage")
         disposingScope().launch {
             try {
 
-                findActiveProject()?.let {
-                    aboutRef.set(AnalyticsService.getInstance(it).about)
-                }
+                aboutRef.set(AnalyticsService.getInstance(project).about)
 
             } catch (e: Throwable) {
                 val isConnectionException = ExceptionUtils.isAnyConnectionException(e)
@@ -107,12 +92,27 @@ class BackendInfoHolder : Disposable {
         }
     }
 
-    //updateInBackground is also called every time the analytics client is replaced
-    private fun updateInBackground(project: Project) {
-        @Suppress("UnstableApiUsage")
-        disposingScope().launch {
-            aboutRef.set(AnalyticsService.getInstance(project).about)
+
+    fun getAbout(): AboutResult? {
+        return aboutRef.get() ?: findActiveProject()?.let {
+            getAbout(it)
         }
+    }
+
+    fun getAbout(project: Project): AboutResult? {
+        if (aboutRef.get() == null) {
+            return getAboutInBackgroundNow(project)
+        }
+
+        return aboutRef.get()
+    }
+
+
+    private fun getAboutInBackgroundNow(project: Project): AboutResult? {
+        if (aboutRef.get() == null) {
+            return getAboutInBackgroundNowWithTimeout(project)
+        }
+        return aboutRef.get()
     }
 
 
@@ -127,47 +127,40 @@ class BackendInfoHolder : Disposable {
     fun isCentralized(project: Project): Boolean {
         return aboutRef.get()?.let {
             it.isCentralize ?: false
-        } ?: getInBackgroundNow(project)
+        } ?: getIsCentralizedInBackgroundNow(project)
     }
 
-    private fun getInBackgroundNow(project: Project): Boolean {
 
-        return try {
+    private fun getIsCentralizedInBackgroundNow(project: Project): Boolean {
+        return getAboutInBackgroundNowWithTimeout(project)?.isCentralize ?: false
+    }
 
-            val future = Backgroundable.ensurePooledThreadWithoutReadAccess(Callable {
-                AnalyticsService.getInstance(project).about
-            })
 
-            aboutRef.set(future.get(5, TimeUnit.SECONDS))
-            aboutRef.get()?.isCentralize ?: false
+    private fun getAboutInBackgroundNowWithTimeout(project: Project): AboutResult? {
 
-        } catch (e: Throwable) {
-            val isConnectionException = ExceptionUtils.isAnyConnectionException(e)
-
-            if (!isConnectionException) {
-                ErrorReporter.getInstance().reportError("BackendUtilsKt.isCentralized", e)
+        @Suppress("UnstableApiUsage")
+        val deferred = disposingScope().async {
+            try {
+                aboutRef.set(AnalyticsService.getInstance(project).about)
+            } catch (e: Throwable) {
+                val isConnectionException = ExceptionUtils.isAnyConnectionException(e)
+                if (!isConnectionException) {
+                    ErrorReporter.getInstance().reportError("BackendUtilsKt.getAboutInBackgroundNowWithTimeout", e)
+                }
             }
-
-            false
         }
-    }
 
-    private fun loadAboutInBackgroundNow(project: Project) {
 
-        try {
-
-            val future = Backgroundable.ensurePooledThreadWithoutReadAccess(Callable {
-                AnalyticsService.getInstance(project).about
-            })
-
-            aboutRef.set(future.get(5, TimeUnit.SECONDS))
-
-        } catch (e: Throwable) {
-            val isConnectionException = ExceptionUtils.isAnyConnectionException(e)
-
-            if (!isConnectionException) {
-                ErrorReporter.getInstance().reportError("BackendUtilsKt.loadAboutInBackgroundNow", e)
+        return runBlocking {
+            try {
+                withTimeout(5000) {
+                    deferred.await()
+                }
+                aboutRef.get()
+            } catch (e: Throwable) {
+                null
             }
         }
     }
+
 }

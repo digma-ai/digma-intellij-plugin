@@ -73,7 +73,7 @@ class AddEnvironmentsService {
             return false
         }
 
-        val backendVersion = BackendInfoHolder.getInstance().getAbout()?.applicationVersion
+        val backendVersion = BackendInfoHolder.getInstance().getAbout(project)?.applicationVersion
         if (backendVersion == null) {
             Log.log(logger::info, "can not load backend version, not adding environment to current run config")
             return false

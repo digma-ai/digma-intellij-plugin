@@ -1,12 +1,12 @@
 package org.digma.intellij.plugin.ui.common
 
+import com.intellij.collaboration.async.disposingScope
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.ActionLink
 import com.intellij.util.ui.JBUI
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.apache.maven.artifact.versioning.ComparableVersion
 import org.digma.intellij.plugin.analytics.AnalyticsService
@@ -36,7 +36,7 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
     private var service = project.service<LoadStatusService>()
 
     val label = JLabel("We're processing less data to conserve resources, consider ", SwingConstants.LEFT)
-    var actionLink = ActionLink("deploying centrally") {
+    private var actionLink = ActionLink("deploying centrally") {
         ActivityMonitor.getInstance(project).registerUserActionWithOrigin("digma overload warning docs link clicked", UserActionOrigin.LoadStatusPanel)
         BrowserUtil.browse(Links.DIGMA_OVERLOAD_WARNING_DOCS_URL, project)
     }
@@ -107,7 +107,7 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
             }
         })
 
-        closeButton.addActionListener { e ->
+        closeButton.addActionListener {
             isVisible = false
 
             Backgroundable.ensurePooledThread {
@@ -128,7 +128,8 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
         borderedPanel.add(Box.createVerticalStrut(2))
         this.add(borderedPanel)
 
-        GlobalScope.launch {
+        @Suppress("UnstableApiUsage")
+        service.disposingScope().launch {
             closeButton.isVisible = shouldDisplayCloseButton()
         }
     }
@@ -136,7 +137,7 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
     private fun shouldDisplayCloseButton(): Boolean
     {
 
-        val version = BackendInfoHolder.getInstance().getAboutLoadIfNull()?.applicationVersion ?: return false
+        val version = BackendInfoHolder.getInstance().getAbout(project)?.applicationVersion ?: return false
 
         val currentBackendVersion = ComparableVersion(version)
         val closeButtonBackendVersion = ComparableVersion("0.3.25")

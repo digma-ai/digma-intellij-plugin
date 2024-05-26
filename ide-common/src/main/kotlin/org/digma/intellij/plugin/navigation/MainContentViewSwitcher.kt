@@ -5,6 +5,7 @@ import com.google.common.base.Objects
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
+import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.navigation.View.Companion.Assets
 import org.digma.intellij.plugin.navigation.View.Companion.getSelected
 import org.digma.intellij.plugin.navigation.View.Companion.hideErrorDetails
@@ -65,12 +66,16 @@ class MainContentViewSwitcher(val project: Project) {
         showView(View.Analytics)
     }
 
-
-    fun showView(view: View, isTriggeredByJcef: Boolean = false) {
-        showView(view, fireEvent = true, isTriggeredByJcef = isTriggeredByJcef)
+    fun showHighlights() {
+        showView(View.Highlights)
     }
 
-    private fun showView(view: View, fireEvent: Boolean, isTriggeredByJcef: Boolean) {
+
+    fun showView(view: View, createHistoryStep: Boolean = false) {
+        showView(view, fireEvent = true, createHistoryStep)
+    }
+
+    private fun showView(view: View, fireEvent: Boolean, createHistoryStep: Boolean) {
         if (view == View.ErrorDetails) {
             hideErrors()
         } else {
@@ -87,43 +92,45 @@ class MainContentViewSwitcher(val project: Project) {
 
         setSelected(view)
 
-        //todo: it's all unnecessary , we only need to change between the main app and errors tab
-        when (view) {
-            View.Errors,
-            View.ErrorDetails,
-            -> myLayout.show(mainContentPanel, ERRORS_PANEL_CARD_NAME)
+        EDT.ensureEDT {
+            when (view) {
+                View.Errors,
+                View.ErrorDetails,
+                    -> myLayout.show(mainContentPanel, ERRORS_PANEL_CARD_NAME)
 
-            else -> myLayout.show(mainContentPanel, MAIN_PANEL_CARD_NAME)
+                else -> myLayout.show(mainContentPanel, MAIN_PANEL_CARD_NAME)
+            }
         }
 
+
         if (fireEvent) {
-            fireViewChanged(isTriggeredByJcef)
+            fireViewChanged(createHistoryStep)
         }
     }
 
 
-    private fun fireViewChanged(isTriggeredByJcef: Boolean) {
+    private fun fireViewChanged(createHistoryStep: Boolean) {
         val publisher = project.messageBus.syncPublisher(ViewChangedEvent.VIEW_CHANGED_TOPIC)
-        publisher.viewChanged(views, isTriggeredByJcef)
+        publisher.viewChanged(views, createHistoryStep)
     }
 
     fun getSelectedView(): View? {
         return getSelected()
     }
 
-    fun showViewById(viewId: String, isTriggeredByJcef: Boolean = false) {
+    fun showViewById(viewId: String, createHistoryStep: Boolean = false) {
         val segments = viewId.split("/")
-        if (segments[1] == "assets") {
+        if (segments.size > 1 && segments[1] == "assets") {
             if (segments.count() > 2) {
                 Assets.path = viewId.removePrefix("/assets/");
             } else {
                 Assets.path = null
             }
-            showView(Assets, isTriggeredByJcef = isTriggeredByJcef)
-        }
-
-        View.findById(viewId)?.let { view ->
-            showView(view, isTriggeredByJcef = isTriggeredByJcef)
+            showView(Assets, createHistoryStep)
+        } else {
+            View.findById(viewId)?.let { view ->
+                showView(view, createHistoryStep)
+            }
         }
     }
 
@@ -161,12 +168,25 @@ private constructor(
 
     companion object {
 
+        @JvmStatic
         val Highlights = View(title = "", id = "/highlights", cardName = "highlights")
+
+        @JvmStatic
         val Insights = View(title = "Issues", id = "/insights", cardName = "insights", isSelected = true)
+
+        @JvmStatic
         val Assets = View("Assets", "/assets", "assets")
+
+        @JvmStatic
         val Errors = View("Errors", "/errors", "errors")
+
+        @JvmStatic
         val ErrorDetails = View(title = "Error Details", id = "/errors/details", cardName = "errors", isHidden = true)
+
+        @JvmStatic
         val Tests = View("Tests", "/tests", "tests")
+
+        @JvmStatic
         val Analytics = View("Analytics", "/analytics", "analytics")
 
 

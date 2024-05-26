@@ -10,7 +10,6 @@ import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.errorreporting.SEVERITY_HIGH_TRY_FIX
 import org.digma.intellij.plugin.errorreporting.SEVERITY_PROP_NAME
-import org.digma.intellij.plugin.model.rest.insights.InsightsStatsResult
 import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
 import org.digma.intellij.plugin.navigation.MainContentViewSwitcher
 import org.digma.intellij.plugin.navigation.View
@@ -33,7 +32,7 @@ class ScopeManager(private val project: Project) {
         }
     }
 
-    fun changeToHome(isCalledFromReact: Boolean = false) {
+    fun changeToHome(isCalledFromReact: Boolean = false, forceNavigation: Boolean = false) {
 
         EDT.assertNonDispatchThread()
 
@@ -41,28 +40,31 @@ class ScopeManager(private val project: Project) {
 
         ErrorsViewService.getInstance(project).empty()
 
-        EDT.ensureEDT {
-            MainToolWindowCardsController.getInstance(project).closeAllNotificationsIfShowing()
-            MainToolWindowCardsController.getInstance(project).closeCoveringViewsIfNecessary()
-            project.service<ErrorsViewOrchestrator>().closeErrorDetails()
+        fireScopeChangedEvent(null, CodeLocation(listOf(), listOf()), false)
 
-            if (!isCalledFromReact) {
-                //if the tool window is not shown already don't show it.
-                // if react called changeToHome it's ok not to show the tool window, usually its on connection events.
-                //if change to home was called because of user click then the window is already shown.
-                ToolWindowShower.getInstance(project).showToolWindow()
-            }
-
+        if (!forceNavigation) {
             val contentViewSwitcher = MainContentViewSwitcher.getInstance(project)
             if (contentViewSwitcher.getSelectedView() != View.Assets) {
                 contentViewSwitcher.showInsights()
             }
         }
 
-        fireScopeChangedEvent(null, CodeLocation(listOf(), listOf()), false)
+
+        EDT.ensureEDT {
+            MainToolWindowCardsController.getInstance(project).closeAllNotificationsIfShowing()
+            MainToolWindowCardsController.getInstance(project).closeCoveringViewsIfNecessary()
+            project.service<ErrorsViewOrchestrator>().closeErrorDetails()
+
+            if (!isCalledFromReact) {
+                // if react called changeToHome it's ok not to show the tool window, usually its on connection events.
+                ToolWindowShower.getInstance(project).showToolWindow()
+            }
+        }
+
     }
 
-    fun changeScope(scope: Scope) {
+    //preferredView is the preferred view to show after changing scope.
+    fun changeScope(scope: Scope, changeView: Boolean = true, preferredView: View? = null) {
 
         EDT.assertNonDispatchThread()
 
@@ -70,7 +72,7 @@ class ScopeManager(private val project: Project) {
 
         try {
             when (scope) {
-                is SpanScope -> changeToSpanScope(scope)
+                is SpanScope -> changeToSpanScope(scope, changeView, preferredView)
 
                 else -> {
                     ErrorReporter.getInstance().reportError(
@@ -84,10 +86,10 @@ class ScopeManager(private val project: Project) {
         } catch (e: Throwable) {
             ErrorReporter.getInstance().reportError(project, "ScopeManager.changeScope", e)
         }
-
     }
 
-    private fun changeToSpanScope(scope: SpanScope) {
+
+    private fun changeToSpanScope(scope: SpanScope, changeView: Boolean = true, preferredView: View? = null) {
 
         val spanScopeInfo = try {
             AnalyticsService.getInstance(project).getAssetDisplayInfo(scope.spanCodeObjectId)
@@ -107,32 +109,40 @@ class ScopeManager(private val project: Project) {
         val codeLocation: CodeLocation =
             buildCodeLocation(project, scope.spanCodeObjectId, scope.displayName ?: "", scope.methodId)
 
-        val insightsStats = AnalyticsService.getInstance(project).getInsightsStats(scope.spanCodeObjectId);
+
+        val hasErrors = tryPopulateErrors(scope)
+
+        fireScopeChangedEvent(scope, codeLocation, hasErrors)
+
+        if (changeView) {
+            changeViewAfterScopeChange(scope, preferredView)
+        }
+
         EDT.ensureEDT {
             MainToolWindowCardsController.getInstance(project).closeAllNotificationsIfShowing()
             MainToolWindowCardsController.getInstance(project).closeCoveringViewsIfNecessary()
             project.service<ErrorsViewOrchestrator>().closeErrorDetails()
             ToolWindowShower.getInstance(project).showToolWindow()
-            showHomeView(scope, insightsStats)
         }
 
-        val hasErrors = tryPopulateErrors(scope)
-
-        fireScopeChangedEvent(scope, codeLocation, hasErrors)
     }
 
 
-    private fun showHomeView(scope: SpanScope, insightsStats: InsightsStatsResult?) {
-        val contentViewSwitcher = MainContentViewSwitcher.getInstance(project)
-        if (insightsStats != null) {
-            if (insightsStats.analyticsInsightsCount > 0 && insightsStats.issuesInsightsCount == 0) {
-                contentViewSwitcher.showAnalytics()
-                return
+    private fun changeViewAfterScopeChange(scope: SpanScope, preferredView: View?) {
+
+        //in both these cases, if there are no insights, show analytics
+        if (preferredView == null || preferredView == View.Insights) {
+            val insightsStats = AnalyticsService.getInstance(project).getInsightsStats(scope.spanCodeObjectId)
+            if (insightsStats.issuesInsightsCount == 0) {
+                MainContentViewSwitcher.getInstance(project).showAnalytics()
+            } else {
+                MainContentViewSwitcher.getInstance(project).showInsights()
             }
+        } else {
+            MainContentViewSwitcher.getInstance(project).showView(preferredView)
         }
-
-        contentViewSwitcher.showInsights()
     }
+
 
     private fun tryPopulateErrors(scope: SpanScope): Boolean {
         return scope.methodId?.let {

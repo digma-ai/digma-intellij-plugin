@@ -1,6 +1,12 @@
 # Changelog
 
-## [2.0.340] - 2024-05-23
+## [2.0.341] - 2024-05-26
+
+- Added quantity to duration breakdown insight  by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2175
+- navigation changes Closes #2177 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2178
+- try-catch-in-BackendInfoHolder by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2182
+
+## 2.0.340 - 2024-05-23
 
 - Changed color for close button by @ohrebeniuk in https://github.com/digma-ai/digma-intellij-plugin/pull/2176
 - add env name instead of id to current run config Closes #2116 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2152

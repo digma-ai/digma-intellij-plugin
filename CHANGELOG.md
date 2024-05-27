@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.342] - 2024-05-27
+## [2.0.343] - 2024-05-27
+
+- Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2186
+
+## 2.0.342 - 2024-05-27
 
 - don't change view when navigating from analytics/issues Closes #2184 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2185
 

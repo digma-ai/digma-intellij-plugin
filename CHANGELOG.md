@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.341] - 2024-05-26
+## [2.0.342] - 2024-05-27
+
+- don't change view when navigating from analytics/issues Closes #2184 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2185
+
+## 2.0.341 - 2024-05-26
 
 - Added quantity to duration breakdown insight  by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2175
 - navigation changes Closes #2177 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2178

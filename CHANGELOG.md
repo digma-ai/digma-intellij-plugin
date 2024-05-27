@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.343] - 2024-05-27
+## [2.0.344] - 2024-05-27
+
+- Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2187
+
+## 2.0.343 - 2024-05-27
 
 - Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2186
 

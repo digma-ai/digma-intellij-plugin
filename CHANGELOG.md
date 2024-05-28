@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.344] - 2024-05-27
+## [2.0.345] - 2024-05-28
+
+- Fix highlights refresh by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2190
+
+## 2.0.344 - 2024-05-27
 
 - Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2187
 

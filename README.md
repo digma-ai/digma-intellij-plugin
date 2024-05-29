@@ -1,26 +1,21 @@
-# Code Runtime Analysis for Non-Trivial Java  Code
+# An IntelliJ Plugin to Identify Code Performance Issues in Runtime
 
-<!-- https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax -->
 <!-- Plugin description -->
 
-#### [Digma is launching on ProductHunt!](https://www.producthunt.com/posts/digma-ai)
+Digma is an IntelliJ plugin for automatically [identifying and fixing performance issues in your code](https://digma.ai/blog/introducing-the-digma-jetbrains-plugin/).
+It enables developers to find the root cause of bottlenecks, scaling problems and query issues in the code. 
 
-Digma is an IDE plugin for [analyzing code runtime data](https://digma.ai/blog/introducing-the-digma-jetbrains-plugin/).
-It enables rapid development in complex
-projects by linting and detecting issues as they appear, highlighting possible risks in code and providing code change analysis and context
+### Example of issues Digma detects automatically
 
-### Digma lints common code smells and issues as you code
+- Bottlenecks and concurrency anti-patterns
+- Query inefficiencies
+- Scaling problems
+- N+1 Selects 
+- Performance regressions
 
-- Error hotspots
-- Bottlenecks and concurrency
-- Query anti-patterns
-  - Identify risks and affected code for code changes
-- Performance trends
-
-For more info check out the Digma [main repo](https://github.com/digma-ai/digma)
+For more info check out our [website](https://digma.ai)
 
 <!-- Plugin description end -->
-
 
 ## Load to Idea
 

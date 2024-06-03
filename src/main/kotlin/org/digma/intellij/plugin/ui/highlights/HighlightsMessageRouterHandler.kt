@@ -5,8 +5,10 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.intellij.openapi.project.Project
+import org.apache.maven.artifact.versioning.ComparableVersion
 import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.analytics.getVersion
+import org.digma.intellij.plugin.common.newerThan
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.highlights.HighlightsRequest
 import org.digma.intellij.plugin.ui.highlights.model.*
@@ -19,7 +21,8 @@ class HighlightsMessageRouterHandler(project: Project) : BaseCommonMessageRouter
     override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
 
         var version = getVersion();
-        if (version == "unknown" || compareVersions("0.3.7", version) <= 0) {
+        var comparableVersion = ComparableVersion(version);
+        if (version == "unknown" || comparableVersion.newerThan(ComparableVersion("0.3.7"))) {
             when (action) {
                 "MAIN/GET_HIGHLIGHTS_PERFORMANCE_DATA" -> getHighlightsPerformanceV2(browser, requestJsonNode)
                 "MAIN/GET_HIGHLIGHTS_TOP_ISSUES_DATA" -> getHighlightsTopInsightsV2(browser, requestJsonNode)
@@ -57,21 +60,6 @@ class HighlightsMessageRouterHandler(project: Project) : BaseCommonMessageRouter
         val message = SetHighlightsPerformanceMessage(payload)
         Log.log(logger::trace, project, "sending MAIN/SET_HIGHLIGHTS_PERFORMANCE_DATA message")
         serializeAndExecuteWindowPostMessageJavaScript(browser, message)
-    }
-
-    private fun compareVersions(left: String, right: String): Int {
-        val leftParts = left.split(".").map { it.toInt() }
-        val rightParts = right.split(".").map { it.toInt() }
-
-        for (i in 0 until minOf(leftParts.size, rightParts.size)) {
-            if (leftParts[i] < rightParts[i]) {
-                return -1
-            } else if (leftParts[i] > rightParts[i]) {
-                return 1
-            }
-        }
-
-        return leftParts.size.compareTo(rightParts.size)
     }
 
     private fun getHighlightsTopInsights(browser: CefBrowser, requestJsonNode: JsonNode) {

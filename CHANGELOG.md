@@ -1,6 +1,14 @@
 # Changelog
 
-## [2.0.345] - 2024-05-28
+## [2.0.346] - 2024-06-04
+
+- updated readme by @doppleware in https://github.com/digma-ai/digma-intellij-plugin/pull/2193
+- Refactor version comparison by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2200
+- Update Recent Activity UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2201
+- Update Recent Activity UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2203
+- fix deadlock Closes #2189  Closes #2195 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2204
+
+## 2.0.345 - 2024-05-28
 
 - Fix highlights refresh by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2190
 

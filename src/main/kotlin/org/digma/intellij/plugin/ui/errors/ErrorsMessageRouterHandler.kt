@@ -26,7 +26,7 @@ class ErrorsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHand
             "ERRORS/OPEN_RAW_ERROR_STACK_TRACE_IN_EDITOR" -> openStackTrace(project, requestJsonNode)
             "ERRORS/GO_TO_CODE_LOCATION" -> navigateToCode(project, requestJsonNode)
             "ERRORS/GET_FILES_URIS" -> getFilesUrls(project, browser, requestJsonNode)
-            "ERRORS/GO_TO_TRACE" -> goToTrace(project, browser, requestJsonNode)
+            "ERRORS/GO_TO_TRACE" -> goToTrace(project, requestJsonNode)
 
             else -> return false
         }
@@ -97,7 +97,7 @@ class ErrorsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHand
             val workspaceUrls = ErrorsService.getInstance(project).getWorkspaceUris(list)
 
             val filesUrlsWrapper = objectMapper.createObjectNode()
-            filesUrlsWrapper.set<ObjectNode>("filesURIs", objectMapper.valueToTree<JsonNode>(workspaceUrls))
+            filesUrlsWrapper.set<ObjectNode>("filesURIs", objectMapper.valueToTree(workspaceUrls))
             val setFilesUrlsMessage = SetFilesUrlsMessage(filesUrlsWrapper)
             serializeAndExecuteWindowPostMessageJavaScript(browser, setFilesUrlsMessage, project)
 
@@ -105,7 +105,7 @@ class ErrorsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHand
     }
 
 
-    private fun goToTrace(project: Project, browser: CefBrowser, requestJsonNode: JsonNode) {
+    private fun goToTrace(project: Project, requestJsonNode: JsonNode) {
         getPayloadFromRequest(requestJsonNode)?.let { payload ->
             val traceId = payload.get("traceId")?.takeIf { it !is NullNode }?.asText()
             val spanName = payload.get("spanName")?.takeIf { it !is NullNode }?.asText()

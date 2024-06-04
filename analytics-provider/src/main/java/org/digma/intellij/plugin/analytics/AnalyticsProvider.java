@@ -8,8 +8,6 @@ import org.digma.intellij.plugin.model.rest.common.SpanHistogramQuery;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.env.*;
 import org.digma.intellij.plugin.model.rest.environment.Env;
-import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
-import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.event.*;
 import org.digma.intellij.plugin.model.rest.highlights.HighlightsRequest;
 import org.digma.intellij.plugin.model.rest.insights.*;
@@ -42,11 +40,11 @@ public interface AnalyticsProvider extends Closeable {
 
     LatestCodeObjectEventsResponse getLatestEvents(LatestCodeObjectEventsRequest latestCodeObjectEventsRequest);
 
-    List<CodeObjectError> getErrorsOfCodeObject(String environment, List<String> codeObjectIds);
+    String getErrors(String environment, List<String> codeObjectIds);
 
     void setInsightCustomStartTime(CustomStartTimeInsightRequest customStartTimeInsightRequest);
 
-    CodeObjectErrorDetails getCodeObjectErrorDetails(String errorSourceId);
+    String getErrorDetails(String errorSourceId);
 
     String getHtmlGraphForSpanPercentiles(SpanHistogramQuery request);
 

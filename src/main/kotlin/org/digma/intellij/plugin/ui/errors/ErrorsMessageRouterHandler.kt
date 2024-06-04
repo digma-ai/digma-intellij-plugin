@@ -1,0 +1,84 @@
+package org.digma.intellij.plugin.ui.errors
+
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.NullNode
+import com.fasterxml.jackson.databind.node.ObjectNode
+import com.intellij.openapi.project.Project
+import org.cef.browser.CefBrowser
+import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.ui.errors.model.SetErrorsDataMessage
+import org.digma.intellij.plugin.ui.errors.model.SetErrorsDetailsMessage
+import org.digma.intellij.plugin.ui.errors.model.SetFilesUrlsMessage
+import org.digma.intellij.plugin.ui.jcef.BaseCommonMessageRouterHandler
+import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
+
+class ErrorsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHandler(project) {
+
+    override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
+
+        Log.log(logger::trace, project, "got action '$action' with message $requestJsonNode")
+
+        when (action) {
+            "ERRORS/GET_ERRORS_DATA_ERRORS" -> getErrorsData(project, browser, requestJsonNode)
+            "ERRORS/GET_ERROR_DETAILS" -> getErrorDetails(project, browser, requestJsonNode)
+            "ERRORS/OPEN_RAW_ERROR_STACK_TRACE_IN_EDITOR" -> openStackTrace(project, requestJsonNode)
+            "ERRORS/GO_TO_CODE_LOCATION" -> navigateToCode(project, requestJsonNode)
+            "ERRORS/GET_FILES_URIS" -> getFilesUrls(project, browser, requestJsonNode)
+
+            else -> return false
+        }
+
+        return true
+    }
+
+
+    private fun getErrorsData(project: Project, browser: CefBrowser, requestJsonNode: JsonNode) {
+        getPayloadFromRequest(requestJsonNode)?.let { payload ->
+            val spanCodeObjectId = payload.get("spanCodeObjectId")?.takeIf { it !is NullNode }?.asText()
+            val methodId = payload.get("methodId")?.takeIf { it !is NullNode }?.asText()
+
+            val objectIds = listOfNotNull(spanCodeObjectId, methodId)
+            if (objectIds.isNotEmpty()) {
+                val errorsData = objectMapper.readTree(ErrorsService.getInstance(project).getErrorsData(objectIds))
+                val errorsDataWrapper = objectMapper.createObjectNode()
+                errorsDataWrapper.set<JsonNode>("errors", errorsData)
+                val setErrorsDataMessage = SetErrorsDataMessage(errorsDataWrapper)
+                serializeAndExecuteWindowPostMessageJavaScript(browser, setErrorsDataMessage)
+            }
+        }
+    }
+
+    private fun getErrorDetails(project: Project, browser: CefBrowser, requestJsonNode: JsonNode) {
+        getPayloadFromRequest(requestJsonNode)?.let { payload ->
+            val errorId = payload.get("errorId")?.takeIf { it !is NullNode }?.asText()
+            if (errorId != null) {
+                val errorDetails = objectMapper.readTree(ErrorsService.getInstance(project).getErrorDetails(errorId))
+                val errorDetailsWrapper = objectMapper.createObjectNode()
+                errorDetailsWrapper.set<JsonNode>("details", errorDetails)
+                val setErrorDetailsMessage = SetErrorsDetailsMessage(errorDetailsWrapper)
+                serializeAndExecuteWindowPostMessageJavaScript(browser, setErrorDetailsMessage)
+            }
+        }
+    }
+
+    private fun openStackTrace(project: Project, requestJsonNode: JsonNode) {
+    }
+
+    private fun navigateToCode(project: Project, requestJsonNode: JsonNode) {
+    }
+
+    private fun getFilesUrls(project: Project, browser: CefBrowser, requestJsonNode: JsonNode) {
+        getPayloadFromRequest(requestJsonNode)?.let { payload ->
+
+            val codeObjectIds = payload.get("codeObjectIds")
+
+
+            val filesUrlsWrapper = objectMapper.createObjectNode()
+            filesUrlsWrapper.set<ObjectNode>("filesURIs", objectMapper.createObjectNode())
+            val setFilesUrlsMessage = SetFilesUrlsMessage(filesUrlsWrapper)
+            serializeAndExecuteWindowPostMessageJavaScript(browser, setFilesUrlsMessage)
+
+        }
+    }
+
+}

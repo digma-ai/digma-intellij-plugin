@@ -12,6 +12,7 @@ import net.bytebuddy.matcher.ElementMatchers
 import org.digma.intellij.plugin.analytics.NoSelectedEnvironmentException
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.common.findActiveProject
+import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import kotlin.time.Duration.Companion.minutes
@@ -176,17 +177,9 @@ open class ErrorReporter {
     }
 
 
-    /*
-       message is actually more a hint of where the error happened for quickly understanding that from the error event.
-       see usage examples.
-       the event will contain the stack trace and exception message.
-     */
-    open fun reportAnalyticsServiceError(message: String, methodName: String, exception: Exception, isConnectionException: Boolean) {
-        reportAnalyticsServiceError(findActiveProject(), methodName, message, exception, isConnectionException)
-    }
 
     open fun reportAnalyticsServiceError(
-        project: Project?,
+        project: Project,
         message: String,
         methodName: String,
         exception: Exception,
@@ -198,14 +191,12 @@ open class ErrorReporter {
                 return
             }
 
-            //todo: change ActivityMonitor to application service so no need for project
-
-            val projectToUse = project ?: findActiveProject()
-
-            projectToUse?.let {
-                if (it.isDisposed) return
-                ActivityMonitor.getInstance(it).registerAnalyticsServiceError(exception, message, methodName, isConnectionException)
+            if (!isProjectValid(project)) {
+                return
             }
+
+            ActivityMonitor.getInstance(project).registerAnalyticsServiceError(exception, message, methodName, isConnectionException)
+
         } catch (e: Exception) {
             Log.warnWithException(logger, e, "error in error reporter")
         }

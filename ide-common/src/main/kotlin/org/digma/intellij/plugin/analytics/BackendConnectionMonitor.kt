@@ -1,7 +1,6 @@
 package org.digma.intellij.plugin.analytics
 
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.project.Project
 import com.intellij.util.messages.MessageBusConnection
@@ -11,7 +10,6 @@ import com.intellij.util.messages.MessageBusConnection
  * no connection message in the plugin window.
  * see also class NoConnectionPanel
  */
-//todo: change to application service , and AnalyticsServiceConnectionEvent too
 @Service(Service.Level.PROJECT)
 class BackendConnectionMonitor(val project: Project) : Disposable, AnalyticsServiceConnectionEvent {
 
@@ -56,14 +54,10 @@ class BackendConnectionMonitor(val project: Project) : Disposable, AnalyticsServ
 
     override fun connectionLost() {
         connectionError()
-        //using this event as a bridge to fire BackendConnectionEvent
-        ApplicationManager.getApplication().messageBus.syncPublisher(BackendConnectionEvent.BACKEND_CONNECTION_STATE_TOPIC).connectionLost()
     }
 
     override fun connectionGained() {
         connectionOk()
-        //using this event as a bridge to fire BackendConnectionEvent
-        ApplicationManager.getApplication().messageBus.syncPublisher(BackendConnectionEvent.BACKEND_CONNECTION_STATE_TOPIC).connectionGained()
     }
 
 }

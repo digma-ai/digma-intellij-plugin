@@ -2,7 +2,6 @@ package org.digma.intellij.plugin.analytics;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.openapi.Disposable;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.*;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.JBColor;
@@ -129,7 +128,7 @@ public class AnalyticsService implements Disposable {
 
         environment.refreshNowOnBackground();
 
-        ApplicationManager.getApplication().getMessageBus().syncPublisher(ApiClientChangedEvent.getAPI_CLIENT_CHANGED_TOPIC()).apiClientChanged(url);
+        project.getMessageBus().syncPublisher(ApiClientChangedEvent.getAPI_CLIENT_CHANGED_TOPIC()).apiClientChanged(url);
 
     }
 
@@ -581,7 +580,7 @@ public class AnalyticsService implements Disposable {
         private final ReentrantLock myConnectionLostLock = new ReentrantLock();
 
 
-        private final Set<String> methodsToIgnoreExceptions = Set.of(new String[]{"getPerformanceMetrics", "getAbout"});
+        private final Set<String> methodsToIgnoreExceptions = Set.of(new String[]{"getPerformanceMetrics", "getAbout", "getVersions"});
 
         //sometimes the connection lost is momentary or regaining is momentary, use the alarm to wait
         // before notifying listeners of connectionLost/ConnectionGained
@@ -678,8 +677,8 @@ public class AnalyticsService implements Disposable {
                 // while status is in error, following connection exceptions will not be logged, other exceptions
                 // will be logged only once.
 
-                //handleInvocationTargetException may rethrow an exception, if it didn't then always
-                // an AnalyticsServiceException will be throws
+                //handleInvocationTargetException may rethrow an exception, if it didn't then always throw
+                // an AnalyticsServiceException.
                 handleInvocationTargetException(e, method, args);
                 if (e.getCause() != null) {
                     //this is caught in executeCatching
@@ -703,7 +702,7 @@ public class AnalyticsService implements Disposable {
 
 
         private void handleInvocationTargetException(InvocationTargetException invocationTargetException, Method method, Object[] args) throws Throwable {
-            boolean isConnectionException = isConnectionException(invocationTargetException) || isSslConnectionException(invocationTargetException);
+            boolean isConnectionException = isAnyConnectionException(invocationTargetException);
             String message;
             if (isConnectionException(invocationTargetException)) {
                 message = getConnectExceptionMessage(invocationTargetException);
@@ -712,6 +711,12 @@ public class AnalyticsService implements Disposable {
             } else {
                 message = invocationTargetException.getCause() != null ? invocationTargetException.getCause().getMessage() : invocationTargetException.getMessage();
             }
+
+            if (message == null) {
+                message = invocationTargetException.toString();
+            }
+
+
             if (isConnectionOK()) {
                 //if more than one thread enter this section the worst that will happen is that we
                 // report the error more than once but connectionLost will be fired once because
@@ -720,25 +725,23 @@ public class AnalyticsService implements Disposable {
                     markConnectionLostAndNotify();
                     errorReportingHelper.addIfNewError(invocationTargetException);
                     Log.warnWithException(LOGGER, project, invocationTargetException, "Connection exception: error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), message);
-                    NotificationUtil.notifyError(project, "<html>Connection error with Digma backend api for method " + method.getName() + ".<br> "
+                    NotificationUtil.notifyWarning(project, "<html>Connection error with Digma backend api for method " + method.getName() + ".<br> "
                             + message + ".<br> See logs for details.");
                 } else {
                     Log.warnWithException(LOGGER, project, invocationTargetException, "Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), invocationTargetException.getCause().getMessage());
                     if (errorReportingHelper.addIfNewError(invocationTargetException)) {
-                        NotificationUtil.notifyError(project, "<html>Error with Digma backend api for method " + method.getName() + ".<br> "
+                        NotificationUtil.notifyWarning(project, "<html>Error with Digma backend api for method " + method.getName() + ".<br> "
                                 + message + ".<br> See logs for details.");
                         if (isEOFException(invocationTargetException)) {
                             NotificationUtil.showBalloonWarning(project, "Digma API EOF error: " + message);
                         }
                     }
                 }
-            }
-            // status was not ok but it's a new error
-            else if (errorReportingHelper.addIfNewError(invocationTargetException)) {
+            } else if (errorReportingHelper.addIfNewError(invocationTargetException)) {
                 Log.warnWithException(LOGGER, project, invocationTargetException, "New Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), message);
             }
 
-            ErrorReporter.getInstance().reportAnalyticsServiceError(project, "AnalyticsInvocationHandler.invoke." + method.getName(), method.getName(), invocationTargetException, isConnectionException);
+            ErrorReporter.getInstance().reportAnalyticsServiceError(project, "AnalyticsInvocationHandler.invoke." + message, method.getName(), invocationTargetException, isConnectionException);
 
         }
 
@@ -750,24 +753,21 @@ public class AnalyticsService implements Disposable {
 
         private void resetConnectionLostAndNotifyIfNecessary() {
 
-
             Log.log(LOGGER::trace, "resetConnectionLostAndNotifyIfNecessary called");
 
             //this is the critical section of the race condition, there is a performance penalty
-            // for the locking , and if we recover from exception then also for the notification,
-            // but only when recovering from connection lost, otherwise its very fast, and we are not a critical
-            // multithreading application, so it's probably ok to lock in every API call
+            // for the locking, but only when recovering from connection lost, otherwise It's very fast.
             // the reason for locking here and in markConnectionLostAndNotify is to avoid a situation were myConnectionLostFlag
             // if marked but never reset and to make sure that if we notified connectionLost we will also notify when its gained back.
             try {
                 //if connection is ok do nothing.
                 if (isConnectionOK()) {
-                    Log.log(LOGGER::trace, "resetConnectionLostAndNotifyIfNecessary called, connection ok nothing to do.");
+                    Log.log(LOGGER::trace, "resetConnectionLostAndNotifyIfNecessary called, connection ok, nothing to do.");
                     return;
                 }
                 Log.log(LOGGER::info, "acquiring lock to reset connection status after connection lost");
                 myConnectionLostLock.lock();
-                if (myConnectionLostFlag.get()) {
+                if (!isConnectionOK()) {
                     Log.log(LOGGER::warn, "resetting connection status after connection lost");
                     myConnectionLostFlag.set(false);
                     errorReportingHelper.reset();
@@ -779,7 +779,7 @@ public class AnalyticsService implements Disposable {
                     myConnectionStatusNotifyAlarm.addRequest(() -> {
                         Log.log(LOGGER::warn, "notifying connectionGained");
                         project.getMessageBus().syncPublisher(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC).connectionGained();
-                    }, 500);
+                    }, 1000);
 
 
                     EDT.ensureEDT(() -> NotificationUtil.showNotification(project, "Digma: Connection reestablished !"));
@@ -809,18 +809,18 @@ public class AnalyticsService implements Disposable {
 
                     //must notify BackendConnectionMonitor immediately and not on background thread, the main reason is
                     // that on startup it must be notified immediately before starting to create UI components
-                    // it will also catch the connection lost event
+                    // it will also catch the connection lost event later
                     BackendConnectionMonitor.getInstance(project).connectionLost();
                     ActivityMonitor.getInstance(project).registerConnectionLost();
 
-                    //wait half a second because maybe the connection lost is momentary, and it will be back
+                    //wait a second because maybe the connection lost is momentary, and it will be back
                     // very soon
                     myConnectionStatusNotifyAlarm.cancelAllRequests();
                     myConnectionStatusNotifyAlarm
                             .addRequest(() -> {
                                 Log.log(LOGGER::warn, "notifying connectionLost");
                                 project.getMessageBus().syncPublisher(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC).connectionLost();
-                            }, 500);
+                            }, 2000);
                 }
             } finally {
                 if (myConnectionLostLock.isHeldByCurrentThread()) {
@@ -828,9 +828,6 @@ public class AnalyticsService implements Disposable {
                 }
             }
         }
-
-
-        //Exceptions that may indicate that connection can't be established
 
 
         private String resultToString(Object result) {

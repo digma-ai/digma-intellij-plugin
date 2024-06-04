@@ -16,8 +16,8 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.apache.maven.artifact.versioning.ComparableVersion
 import org.digma.intellij.plugin.analytics.AnalyticsService
-import org.digma.intellij.plugin.analytics.ApiClientChangedEvent
-import org.digma.intellij.plugin.analytics.BackendConnectionEvent
+import org.digma.intellij.plugin.analytics.AnalyticsServiceAppLevelConnectionEvent
+import org.digma.intellij.plugin.analytics.ApiClientChangedAppLevelEvent
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.common.buildVersionRequest
 import org.digma.intellij.plugin.common.findActiveProject
@@ -93,7 +93,9 @@ class AggressiveUpdateService : Disposable {
             startMonitoring()
 
             ApplicationManager.getApplication().messageBus.connect(this)
-                .subscribe(BackendConnectionEvent.BACKEND_CONNECTION_STATE_TOPIC, object : BackendConnectionEvent {
+                .subscribe(
+                    AnalyticsServiceAppLevelConnectionEvent.ANALYTICS_SERVICE_APP_LEVEL_CONNECTION_EVENT_TOPIC,
+                    object : AnalyticsServiceAppLevelConnectionEvent {
                     override fun connectionLost() {
                         Log.log(logger::debug, "got connectionLost")
                         isConnectionLost.set(true)
@@ -105,16 +107,15 @@ class AggressiveUpdateService : Disposable {
                         isConnectionLost.set(false)
 
                         //startMonitoring is canceled on connection lost, resume it on connection gained.
-                        //connectionGained will be invoked for every open project because BackendConnectionEvent is currently not
+                        //connectionGained will be invoked for every open project because AnalyticsServiceAppLevelConnectionEvent is currently not
                         // a real application event. but startMonitoring is synchronized and protected against multiple threads.
                         startMonitoring()
                     }
                 })
 
 
-            ApplicationManager.getApplication().messageBus.connect(this).subscribe(ApiClientChangedEvent.API_CLIENT_CHANGED_TOPIC, object :
-                ApiClientChangedEvent {
-                override fun apiClientChanged(newUrl: String) {
+            ApplicationManager.getApplication().messageBus.connect(this)
+                .subscribe(ApiClientChangedAppLevelEvent.API_CLIENT_CHANGED_APP_LEVEL_TOPIC, ApiClientChangedAppLevelEvent {
                     @Suppress("UnstableApiUsage")
                     disposingScope().launch {
                         try {
@@ -132,9 +133,7 @@ class AggressiveUpdateService : Disposable {
                         //and call startMonitoring just in case it is stopped by a previous connectionLost but there was no connection gained
                         startMonitoring()
                     }
-                }
-
-            })
+                })
 
         } else {
             Log.log(logger::info, "not starting, disabled in internal settings")

@@ -2,7 +2,6 @@ package org.digma.intellij.plugin.updates
 
 import com.intellij.collaboration.async.disposingScope
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
@@ -13,8 +12,8 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.apache.maven.artifact.versioning.ComparableVersion
 import org.digma.intellij.plugin.analytics.AnalyticsService
+import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
 import org.digma.intellij.plugin.analytics.ApiClientChangedEvent
-import org.digma.intellij.plugin.analytics.BackendConnectionEvent
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.common.buildVersionRequest
@@ -86,8 +85,8 @@ class UpdatesService(private val project: Project) : Disposable {
         }
 
 
-        ApplicationManager.getApplication().messageBus.connect(this)
-            .subscribe(BackendConnectionEvent.BACKEND_CONNECTION_STATE_TOPIC, object : BackendConnectionEvent {
+        project.messageBus.connect(this)
+            .subscribe(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC, object : AnalyticsServiceConnectionEvent {
                 override fun connectionLost() {
                 }
 
@@ -108,24 +107,21 @@ class UpdatesService(private val project: Project) : Disposable {
 
 
 
-        ApplicationManager.getApplication().messageBus.connect(this)
-            .subscribe(ApiClientChangedEvent.API_CLIENT_CHANGED_TOPIC, object : ApiClientChangedEvent {
-                override fun apiClientChanged(newUrl: String) {
-                    @Suppress("UnstableApiUsage")
-                    disposingScope().launch {
-                        try {
-                            //update state immediately after settings change. we are interested in api url change, but it will
-                            // do no harm to call it on any settings change
-                            checkForNewerVersions()
-                        } catch (e: CancellationException) {
-                            Log.debugWithException(logger, e, "Exception in checkForNewerVersions")
-                        } catch (e: Throwable) {
-                            Log.debugWithException(logger, e, "Exception in checkForNewerVersions {}", ExceptionUtils.getNonEmptyMessage(e))
-                            ErrorReporter.getInstance().reportError("UpdatesService.settingsChanged", e)
-                        }
+        project.messageBus.connect(this)
+            .subscribe(ApiClientChangedEvent.API_CLIENT_CHANGED_TOPIC, ApiClientChangedEvent {
+                @Suppress("UnstableApiUsage")
+                disposingScope().launch {
+                    try {
+                        //update state immediately after settings change. we are interested in api url change, but it will
+                        // do no harm to call it on any settings change
+                        checkForNewerVersions()
+                    } catch (e: CancellationException) {
+                        Log.debugWithException(logger, e, "Exception in checkForNewerVersions")
+                    } catch (e: Throwable) {
+                        Log.debugWithException(logger, e, "Exception in checkForNewerVersions {}", ExceptionUtils.getNonEmptyMessage(e))
+                        ErrorReporter.getInstance().reportError("UpdatesService.settingsChanged", e)
+                    }
                 }
-            }
-
             })
     }
 
@@ -137,9 +133,7 @@ class UpdatesService(private val project: Project) : Disposable {
     private fun checkForNewerVersions() {
 
         Log.log(logger::trace, "checking for new versions")
-
-        var versionsResp: VersionResponse? = null
-        versionsResp = AnalyticsService.getInstance(project).getVersions(buildVersionRequest())
+        val versionsResp: VersionResponse = AnalyticsService.getInstance(project).getVersions(buildVersionRequest())
         Log.log(logger::debug, "got version response {}", versionsResp)
 
         if (versionsResp.errors.isNotEmpty()) {

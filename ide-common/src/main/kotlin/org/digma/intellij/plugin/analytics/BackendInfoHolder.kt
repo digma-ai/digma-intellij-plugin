@@ -48,7 +48,9 @@ class BackendInfoHolder : Disposable {
 
     init {
         ApplicationManager.getApplication().messageBus.connect(this)
-            .subscribe(BackendConnectionEvent.BACKEND_CONNECTION_STATE_TOPIC, object : BackendConnectionEvent {
+            .subscribe(
+                AnalyticsServiceAppLevelConnectionEvent.ANALYTICS_SERVICE_APP_LEVEL_CONNECTION_EVENT_TOPIC,
+                object : AnalyticsServiceAppLevelConnectionEvent {
                 override fun connectionLost() {
                     Log.log(logger::debug, "got connectionLost")
                 }
@@ -60,7 +62,7 @@ class BackendInfoHolder : Disposable {
             })
 
         ApplicationManager.getApplication().messageBus.connect(this)
-            .subscribe(ApiClientChangedEvent.API_CLIENT_CHANGED_TOPIC, ApiClientChangedEvent {
+            .subscribe(ApiClientChangedAppLevelEvent.API_CLIENT_CHANGED_APP_LEVEL_TOPIC, ApiClientChangedAppLevelEvent {
                 Log.log(logger::debug, "got apiClientChanged")
                 updateInBackground()
             })

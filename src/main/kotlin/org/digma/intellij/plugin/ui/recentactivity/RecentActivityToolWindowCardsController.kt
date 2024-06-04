@@ -5,7 +5,7 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import org.digma.intellij.plugin.analytics.BackendConnectionEvent
+import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.log.Log
@@ -42,8 +42,8 @@ class RecentActivityToolWindowCardsController(private val project: Project) {
     }
 
     init {
-        ApplicationManager.getApplication().messageBus.connect()
-            .subscribe(BackendConnectionEvent.BACKEND_CONNECTION_STATE_TOPIC, object : BackendConnectionEvent {
+        project.messageBus.connect()
+            .subscribe(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC, object : AnalyticsServiceConnectionEvent {
                 override fun connectionLost() {
                     Log.log(logger::debug, "Got connectionLost")
                     isConnectionLost.set(true)

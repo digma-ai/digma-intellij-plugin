@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.analytics;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.startup.StartupActivity;
 import org.digma.intellij.plugin.common.Backgroundable;
@@ -19,6 +20,8 @@ public class AnalyticsServiceStarter implements StartupActivity.DumbAware {
             AnalyticsService.getInstance(project);
             //make sure BackendInfoHolder is initialized after AnalyticsService
             BackendInfoHolder.getInstance().loadOnStartup(project);
+
+            ApplicationManager.getApplication().getService(ProjectToAppBackendEventsBridge.class).registerListeners(project);
         });
     }
 }

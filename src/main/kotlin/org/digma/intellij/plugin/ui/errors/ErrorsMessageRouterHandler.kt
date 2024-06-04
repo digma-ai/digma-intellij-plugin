@@ -1,6 +1,8 @@
 package org.digma.intellij.plugin.ui.errors
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectReader
 import com.fasterxml.jackson.databind.node.NullNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.intellij.openapi.project.Project
@@ -24,12 +26,14 @@ class ErrorsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHand
             "ERRORS/OPEN_RAW_ERROR_STACK_TRACE_IN_EDITOR" -> openStackTrace(project, requestJsonNode)
             "ERRORS/GO_TO_CODE_LOCATION" -> navigateToCode(project, requestJsonNode)
             "ERRORS/GET_FILES_URIS" -> getFilesUrls(project, browser, requestJsonNode)
+            "ERRORS/GO_TO_TRACE" -> goToTrace(project, browser, requestJsonNode)
 
             else -> return false
         }
 
         return true
     }
+
 
 
     private fun getErrorsData(project: Project, browser: CefBrowser, requestJsonNode: JsonNode) {
@@ -43,7 +47,7 @@ class ErrorsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHand
                 val errorsDataWrapper = objectMapper.createObjectNode()
                 errorsDataWrapper.set<JsonNode>("errors", errorsData)
                 val setErrorsDataMessage = SetErrorsDataMessage(errorsDataWrapper)
-                serializeAndExecuteWindowPostMessageJavaScript(browser, setErrorsDataMessage)
+                serializeAndExecuteWindowPostMessageJavaScript(browser, setErrorsDataMessage, project)
             }
         }
     }
@@ -56,28 +60,60 @@ class ErrorsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHand
                 val errorDetailsWrapper = objectMapper.createObjectNode()
                 errorDetailsWrapper.set<JsonNode>("details", errorDetails)
                 val setErrorDetailsMessage = SetErrorsDetailsMessage(errorDetailsWrapper)
-                serializeAndExecuteWindowPostMessageJavaScript(browser, setErrorDetailsMessage)
+                serializeAndExecuteWindowPostMessageJavaScript(browser, setErrorDetailsMessage, project)
             }
         }
     }
 
     private fun openStackTrace(project: Project, requestJsonNode: JsonNode) {
+        getPayloadFromRequest(requestJsonNode)?.let { payload ->
+            val stackTrace = payload.get("stackTrace")?.takeIf { it !is NullNode }?.asText()
+            if (stackTrace != null) {
+                ErrorsService.getInstance(project).openRawStackTrace(stackTrace)
+            }
+
+        }
     }
 
     private fun navigateToCode(project: Project, requestJsonNode: JsonNode) {
+        getPayloadFromRequest(requestJsonNode)?.let { payload ->
+            val uri = payload.get("URI")?.takeIf { it !is NullNode }?.asText()
+            val lineNumber = payload.get("lineNumber")?.takeIf { it !is NullNode }?.asText() ?: "1"
+            val lastInstanceCommitId = payload.get("lastInstanceCommitId")?.takeIf { it !is NullNode }?.asText()
+
+            if (uri != null) {
+                ErrorsService.getInstance(project).openErrorFrameWorkspaceFile(uri, lineNumber, lastInstanceCommitId)
+            }
+        }
     }
 
     private fun getFilesUrls(project: Project, browser: CefBrowser, requestJsonNode: JsonNode) {
         getPayloadFromRequest(requestJsonNode)?.let { payload ->
 
             val codeObjectIds = payload.get("codeObjectIds")
+            val reader: ObjectReader = objectMapper.readerFor(object : TypeReference<List<String>>() {})
+            val list: List<String> = reader.readValue(codeObjectIds)
 
+            val workspaceUrls = ErrorsService.getInstance(project).getWorkspaceUris(list)
 
             val filesUrlsWrapper = objectMapper.createObjectNode()
-            filesUrlsWrapper.set<ObjectNode>("filesURIs", objectMapper.createObjectNode())
+            filesUrlsWrapper.set<ObjectNode>("filesURIs", objectMapper.valueToTree<JsonNode>(workspaceUrls))
             val setFilesUrlsMessage = SetFilesUrlsMessage(filesUrlsWrapper)
-            serializeAndExecuteWindowPostMessageJavaScript(browser, setFilesUrlsMessage)
+            serializeAndExecuteWindowPostMessageJavaScript(browser, setFilesUrlsMessage, project)
 
+        }
+    }
+
+
+    private fun goToTrace(project: Project, browser: CefBrowser, requestJsonNode: JsonNode) {
+        getPayloadFromRequest(requestJsonNode)?.let { payload ->
+            val traceId = payload.get("traceId")?.takeIf { it !is NullNode }?.asText()
+            val spanName = payload.get("spanName")?.takeIf { it !is NullNode }?.asText()
+            val spanCodeObjectId = payload.get("spanCodeObjectId")?.takeIf { it !is NullNode }?.asText()
+
+            if (traceId != null && spanName != null) {
+                ErrorsService.getInstance(project).openTrace(traceId, spanName, spanCodeObjectId)
+            }
         }
     }
 

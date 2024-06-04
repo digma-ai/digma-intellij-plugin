@@ -5,13 +5,18 @@ import com.google.common.base.Objects
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
+import org.digma.intellij.plugin.navigation.View.Companion.Analytics
 import org.digma.intellij.plugin.navigation.View.Companion.Assets
+import org.digma.intellij.plugin.navigation.View.Companion.Errors
+import org.digma.intellij.plugin.navigation.View.Companion.Highlights
+import org.digma.intellij.plugin.navigation.View.Companion.Tests
 import org.digma.intellij.plugin.navigation.View.Companion.getSelected
 import org.digma.intellij.plugin.navigation.View.Companion.setSelected
 import org.digma.intellij.plugin.navigation.View.Companion.views
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 
 //todo: this class is still used while transitioning to a single jcef app but should be removed at some point
+@Suppress("unused")
 @Service(Service.Level.PROJECT)
 class MainContentViewSwitcher(val project: Project) {
 
@@ -34,23 +39,19 @@ class MainContentViewSwitcher(val project: Project) {
     }
 
     fun showErrors() {
-        showView(View.Errors)
-    }
-
-    fun showErrorDetails() {
-        showView(View.ErrorDetails)
+        showView(Errors)
     }
 
     fun showTests() {
-        showView(View.Tests)
+        showView(Tests)
     }
 
     fun showAnalytics() {
-        showView(View.Analytics)
+        showView(Analytics)
     }
 
     fun showHighlights() {
-        showView(View.Highlights)
+        showView(Highlights)
     }
 
 
@@ -62,6 +63,10 @@ class MainContentViewSwitcher(val project: Project) {
 
         if (view != Assets) {
             Assets.path = null
+        }
+
+        if (view != Errors) {
+            Errors.path = null
         }
 
         if (view == View.Insights && getSelected() != View.Insights) {
@@ -94,6 +99,13 @@ class MainContentViewSwitcher(val project: Project) {
                 Assets.path = null
             }
             showView(Assets, createHistoryStep)
+        } else if (segments.size > 1 && segments[1] == "errors") {
+            if (segments.count() > 2) {
+                Errors.path = viewId.removePrefix("/errors/")
+            } else {
+                Errors.path = null
+            }
+            showView(Errors, createHistoryStep)
         } else {
             View.findById(viewId)?.let { view ->
                 showView(view, createHistoryStep)
@@ -148,16 +160,13 @@ private constructor(
         val Errors = View("Errors", "/errors", "errors")
 
         @JvmStatic
-        val ErrorDetails = View(title = "Error Details", id = "/errors/details", cardName = "errors", isHidden = true)
-
-        @JvmStatic
         val Tests = View("Tests", "/tests", "tests")
 
         @JvmStatic
         val Analytics = View("Analytics", "/analytics", "analytics")
 
 
-        val views = listOf(Highlights, Insights, Assets, Analytics, Errors, ErrorDetails, Tests)
+        val views = listOf(Highlights, Insights, Assets, Analytics, Errors, Tests)
 
         fun findById(id: String): View? {
             return views.find { it.id == id }

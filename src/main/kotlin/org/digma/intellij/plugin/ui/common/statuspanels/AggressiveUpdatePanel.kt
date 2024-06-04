@@ -1,7 +1,6 @@
 package org.digma.intellij.plugin.ui.common.statuspanels
 
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
 import com.intellij.ui.AncestorListenerAdapter
@@ -59,7 +58,7 @@ fun createAggressiveUpdatePanel(project: Project, parentDisposable: Disposable, 
         updateClickAlarm.cancelAllRequests()
         updateClickAlarm.addRequest({
 
-            val updateState = AggressiveUpdateService.getInstance().getUpdateState()
+            val updateState = AggressiveUpdateService.getInstance(project).getUpdateState()
 
             ActivityMonitor.getInstance(project).registerUserAction(
                 "force update button clicked", mapOf(
@@ -92,14 +91,14 @@ fun createAggressiveUpdatePanel(project: Project, parentDisposable: Disposable, 
 
     mainPanel.addAncestorListener(object : AncestorListenerAdapter() {
         override fun ancestorAdded(event: AncestorEvent?) {
-            val updateState = AggressiveUpdateService.getInstance().getUpdateState()
+            val updateState = AggressiveUpdateService.getInstance(project).getUpdateState()
             changeText(updateState, textPane)
         }
     })
 
 
 
-    ApplicationManager.getApplication().messageBus.connect(parentDisposable)
+    project.messageBus.connect(parentDisposable)
         .subscribe(AggressiveUpdateStateChangedEvent.UPDATE_STATE_CHANGED_TOPIC, object : AggressiveUpdateStateChangedEvent {
             override fun stateChanged(updateState: PublicUpdateState) {
                 EDT.ensureEDT {
@@ -127,7 +126,7 @@ private fun updatePlugin(project: Project) {
 }
 
 private fun updateBackend(project: Project, updateButton: UpdateActionButton) {
-    UpdateBackendAction().updateBackend(project, AggressiveUpdateService.getInstance().getUpdateState().backendDeploymentType, updateButton)
+    UpdateBackendAction().updateBackend(project, AggressiveUpdateService.getInstance(project).getUpdateState().backendDeploymentType, updateButton)
 }
 
 

@@ -48,7 +48,7 @@ class UpdateVersionPanel(
 
     private fun changeState() {
         //don't show if in update mode. will maybe show the next time
-        if (AggressiveUpdateService.getInstance().isInUpdateMode()) {
+        if (AggressiveUpdateService.getInstance(project).isInUpdateMode()) {
             return
         }
 

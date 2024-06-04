@@ -1,7 +1,6 @@
 package org.digma.intellij.plugin.ui;
 
 import com.intellij.openapi.Disposable;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
@@ -68,9 +67,9 @@ public class MainToolWindowCardsController implements Disposable {
     public MainToolWindowCardsController(@NotNull Project project) {
         this.project = project;
 
-        ApplicationManager.getApplication().getMessageBus()
+        project.getMessageBus()
                 .connect()
-                .subscribe(BackendConnectionEvent.getBACKEND_CONNECTION_STATE_TOPIC(), new BackendConnectionEvent() {
+                .subscribe(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC, new AnalyticsServiceConnectionEvent() {
                     @Override
                     public void connectionLost() {
                         Log.log(LOGGER::debug, "Got connectionLost");
@@ -87,7 +86,7 @@ public class MainToolWindowCardsController implements Disposable {
                 });
 
 
-        ApplicationManager.getApplication().getMessageBus().connect().subscribe(AggressiveUpdateStateChangedEvent.Companion.getUPDATE_STATE_CHANGED_TOPIC(),
+        project.getMessageBus().connect().subscribe(AggressiveUpdateStateChangedEvent.Companion.getUPDATE_STATE_CHANGED_TOPIC(),
                 (AggressiveUpdateStateChangedEvent) this::updateStateChanged);
 
     }
@@ -395,7 +394,7 @@ public class MainToolWindowCardsController implements Disposable {
         // on connectionGained the listener will try to change it to MAIN but if
         // AggressiveUpdateService is still in update mode we need to replace back to UPDATE_MODE
         MainWindowCard cardToUse;
-        if (AggressiveUpdateService.getInstance().isInUpdateMode() && card == MainWindowCard.MAIN) {
+        if (AggressiveUpdateService.getInstance(project).isInUpdateMode() && card == MainWindowCard.MAIN) {
             cardToUse = MainWindowCard.UPDATE_MODE;
         } else {
             cardToUse = card;

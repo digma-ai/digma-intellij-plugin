@@ -3,13 +3,9 @@ package org.digma.intellij.plugin.analytics
 import com.intellij.openapi.project.Project
 
 fun isCentralized(project: Project): Boolean {
-    return BackendInfoHolder.getInstance().isCentralized(project)
+    return BackendInfoHolder.getInstance(project).isCentralized()
 }
 
-fun isCentralized(): Boolean {
-    return BackendInfoHolder.getInstance().isCentralized()
-}
-
-fun getVersion(): String {
-    return BackendInfoHolder.getInstance().getAbout()?.applicationVersion ?: "unknown";
+fun getVersion(project: Project): String {
+    return BackendInfoHolder.getInstance(project).getAbout()?.applicationVersion ?: "unknown";
 }

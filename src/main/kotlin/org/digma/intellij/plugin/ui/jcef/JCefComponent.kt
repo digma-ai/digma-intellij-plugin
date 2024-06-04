@@ -99,7 +99,7 @@ private constructor(
 
 
 
-        ApplicationManager.getApplication().messageBus.connect(apiClientChangedParentDisposable)
+        project.messageBus.connect(apiClientChangedParentDisposable)
             .subscribe(ApiClientChangedEvent.API_CLIENT_CHANGED_TOPIC,
                 ApiClientChangedEvent {
 

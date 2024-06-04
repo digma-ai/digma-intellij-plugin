@@ -2,7 +2,6 @@ package org.digma.intellij.plugin.analytics
 
 import com.intellij.collaboration.async.disposingScope
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
@@ -12,7 +11,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.digma.intellij.plugin.common.ExceptionUtils
-import org.digma.intellij.plugin.common.findActiveProject
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.AboutResult
@@ -23,8 +21,8 @@ import java.util.concurrent.atomic.AtomicReference
  * Its necessary because there is code that runs on EDT that may need the backend info. it's possible
  * in that case to do it on background but then the EDT will wait for the api call, and we don't want that.
  */
-@Service(Service.Level.APP)
-class BackendInfoHolder : Disposable {
+@Service(Service.Level.PROJECT)
+class BackendInfoHolder(val project: Project) : Disposable {
 
     private val logger: Logger = Logger.getInstance(BackendInfoHolder::class.java)
 
@@ -32,13 +30,13 @@ class BackendInfoHolder : Disposable {
 
     companion object {
         @JvmStatic
-        fun getInstance(): BackendInfoHolder {
-            return service<BackendInfoHolder>()
+        fun getInstance(project: Project): BackendInfoHolder {
+            return project.service<BackendInfoHolder>()
         }
     }
 
-    fun loadOnStartup(project: Project) {
-        updateInBackground(project)
+    fun loadOnStartup() {
+        updateInBackground()
     }
 
 
@@ -47,19 +45,21 @@ class BackendInfoHolder : Disposable {
     }
 
     init {
-        ApplicationManager.getApplication().messageBus.connect(this)
-            .subscribe(BackendConnectionEvent.BACKEND_CONNECTION_STATE_TOPIC, object : BackendConnectionEvent {
-                override fun connectionLost() {
-                    Log.log(logger::debug, "got connectionLost")
-                }
+        project.messageBus.connect(this)
+            .subscribe(
+                AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC,
+                object : AnalyticsServiceConnectionEvent {
+                    override fun connectionLost() {
+                        Log.log(logger::debug, "got connectionLost")
+                    }
 
-                override fun connectionGained() {
-                    Log.log(logger::debug, "got connectionGained")
-                    updateInBackground()
-                }
-            })
+                    override fun connectionGained() {
+                        Log.log(logger::debug, "got connectionGained")
+                        updateInBackground()
+                    }
+                })
 
-        ApplicationManager.getApplication().messageBus.connect(this)
+        project.messageBus.connect(this)
             .subscribe(ApiClientChangedEvent.API_CLIENT_CHANGED_TOPIC, ApiClientChangedEvent {
                 Log.log(logger::debug, "got apiClientChanged")
                 updateInBackground()
@@ -69,13 +69,6 @@ class BackendInfoHolder : Disposable {
 
     //updateInBackground is also called every time the analytics client is replaced
     private fun updateInBackground() {
-        findActiveProject()?.let {
-            updateInBackground(it)
-        }
-    }
-
-    //updateInBackground is also called every time the analytics client is replaced
-    private fun updateInBackground(project: Project) {
         @Suppress("UnstableApiUsage")
         disposingScope().launch {
             try {
@@ -93,50 +86,38 @@ class BackendInfoHolder : Disposable {
     }
 
 
+
     fun getAbout(): AboutResult? {
-        return aboutRef.get() ?: findActiveProject()?.let {
-            getAbout(it)
-        }
-    }
-
-    fun getAbout(project: Project): AboutResult? {
         if (aboutRef.get() == null) {
-            return getAboutInBackgroundNow(project)
+            return getAboutInBackgroundNow()
         }
 
         return aboutRef.get()
     }
 
 
-    private fun getAboutInBackgroundNow(project: Project): AboutResult? {
+    private fun getAboutInBackgroundNow(): AboutResult? {
         if (aboutRef.get() == null) {
-            return getAboutInBackgroundNowWithTimeout(project)
+            return getAboutInBackgroundNowWithTimeout()
         }
         return aboutRef.get()
     }
+
 
 
     fun isCentralized(): Boolean {
         return aboutRef.get()?.let {
             it.isCentralize ?: false
-        } ?: findActiveProject()?.let {
-            isCentralized(it)
-        } ?: false
-    }
-
-    fun isCentralized(project: Project): Boolean {
-        return aboutRef.get()?.let {
-            it.isCentralize ?: false
-        } ?: getIsCentralizedInBackgroundNow(project)
+        } ?: getIsCentralizedInBackgroundNow()
     }
 
 
-    private fun getIsCentralizedInBackgroundNow(project: Project): Boolean {
-        return getAboutInBackgroundNowWithTimeout(project)?.isCentralize ?: false
+    private fun getIsCentralizedInBackgroundNow(): Boolean {
+        return getAboutInBackgroundNowWithTimeout()?.isCentralize ?: false
     }
 
 
-    private fun getAboutInBackgroundNowWithTimeout(project: Project): AboutResult? {
+    private fun getAboutInBackgroundNowWithTimeout(): AboutResult? {
 
         @Suppress("UnstableApiUsage")
         val deferred = disposingScope().async {

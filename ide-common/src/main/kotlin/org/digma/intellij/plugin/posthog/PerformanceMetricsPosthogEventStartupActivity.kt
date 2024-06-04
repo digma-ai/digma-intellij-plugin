@@ -14,7 +14,6 @@ import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.common.Retries
-import org.digma.intellij.plugin.common.findActiveProject
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.version.PerformanceMetricsResponse
@@ -57,33 +56,33 @@ class ContinuousPerformanceMetricsReporter : Disposable {
         disposingScope().launch {
 
             if (!PersistenceService.getInstance().isFirstTimePerformanceMetrics()) {
-                waitForFirstTime(this)
+                waitForFirstTime(this, project)
                 //after first time wait 6 hours for next report
-                launchContinuousReport(6.hours)
+                launchContinuousReport(6.hours, project)
             } else {
                 //this will happen on startup, make sure we have a report in 10 minutes and then every 6 hours
-                launchContinuousReport(10.minutes)
+                launchContinuousReport(10.minutes, project)
             }
         }
 
     }
 
 
-    private suspend fun waitForFirstTime(coroutineScope: CoroutineScope) {
+    private suspend fun waitForFirstTime(coroutineScope: CoroutineScope, project: Project) {
 
         while (!PersistenceService.getInstance().isFirstTimePerformanceMetrics() && coroutineScope.isActive) {
             try {
 
                 delay(10.minutes.inWholeMilliseconds)
 
-                getAnalyticsService()?.let { analyticsService ->
+                getAnalyticsService(project).let { analyticsService ->
                     val result: PerformanceMetricsResponse = Retries.retryWithResult({
                         analyticsService.performanceMetrics
                     }, AnalyticsServiceException::class.java, 30000, 20)
 
                     if (result.metrics.isNotEmpty()) {
                         filterMetrics(result)
-                        getActivityMonitor()?.let { activityMonitor ->
+                        getActivityMonitor(project).let { activityMonitor ->
                             Log.log(logger::info, "registering first time performance metrics")
                             activityMonitor.registerPerformanceMetrics(result, true)
                             if (!PersistenceService.getInstance().isFirstTimePerformanceMetrics()) {
@@ -96,13 +95,13 @@ class ContinuousPerformanceMetricsReporter : Disposable {
             } catch (e: Exception) {
                 Log.warnWithException(logger, e, "failed in first time registerPerformanceMetrics")
                 ErrorReporter.getInstance()
-                    .reportError(findActiveProject(), "PerformanceMetricsPosthogEventStartupActivity.firstTimePerformanceMetrics", e)
+                    .reportError(project, "PerformanceMetricsPosthogEventStartupActivity.firstTimePerformanceMetrics", e)
             }
         }
     }
 
 
-    private fun launchContinuousReport(nextReport: Duration) {
+    private fun launchContinuousReport(nextReport: Duration, project: Project) {
 
         @Suppress("UnstableApiUsage")
         disposingScope().launch {
@@ -111,7 +110,7 @@ class ContinuousPerformanceMetricsReporter : Disposable {
 
             while (isActive) {
                 try {
-                    getAnalyticsService()?.let { analyticsService ->
+                    getAnalyticsService(project).let { analyticsService ->
                         val result: PerformanceMetricsResponse = Retries.retryWithResult({
                             analyticsService.performanceMetrics
                         }, AnalyticsServiceException::class.java, 30000, 20)
@@ -119,7 +118,7 @@ class ContinuousPerformanceMetricsReporter : Disposable {
                         if (result.metrics.isNotEmpty()) {
                             filterMetrics(result)
                             Log.log(logger::info, "registering continuous performance metrics")
-                            getActivityMonitor()?.registerPerformanceMetrics(result, false)
+                            getActivityMonitor(project).registerPerformanceMetrics(result, false)
                         }
                     }
 
@@ -151,12 +150,12 @@ class ContinuousPerformanceMetricsReporter : Disposable {
     }
 
 
-    private fun getActivityMonitor(): ActivityMonitor? {
-        return findActiveProject()?.service<ActivityMonitor>()
+    private fun getActivityMonitor(project: Project): ActivityMonitor {
+        return ActivityMonitor.getInstance(project)
     }
 
-    private fun getAnalyticsService(): AnalyticsService? {
-        return findActiveProject()?.service<AnalyticsService>()
+    private fun getAnalyticsService(project: Project): AnalyticsService {
+        return AnalyticsService.getInstance(project)
     }
 
 }

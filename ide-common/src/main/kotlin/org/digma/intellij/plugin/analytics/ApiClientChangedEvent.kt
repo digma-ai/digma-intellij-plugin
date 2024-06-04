@@ -8,9 +8,11 @@ import com.intellij.util.messages.Topic
  * usually when user changes the api url in settings.
  */
 fun interface ApiClientChangedEvent {
+
+
     companion object {
         @JvmStatic
-        @Topic.AppLevel
+        @Topic.ProjectLevel
         val API_CLIENT_CHANGED_TOPIC: Topic<ApiClientChangedEvent> = Topic.create(
             "API CLIENT CHANGED",
             ApiClientChangedEvent::class.java

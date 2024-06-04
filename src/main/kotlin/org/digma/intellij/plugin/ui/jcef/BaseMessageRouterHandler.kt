@@ -209,7 +209,7 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                     JCEFGlobalConstants.GLOBAL_REGISTER -> {
                         val payload = getPayloadFromRequest(requestJsonNode)
                         payload?.let {
-                            val userDetails = mapOf("email" to payload.get("email").asText());
+                            val userDetails = mapOf("email" to payload.get("email").asText())
                             ActivityMonitor.getInstance(project).registerCustomEvent("register user", userDetails)
 
                             val requestParams = getMapFromNode(it, objectMapper)
@@ -364,9 +364,9 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
             null,
             CodeLocation(listOf(), listOf()),
             false,
-            insightsStats?.analyticsInsightsCount ?: 0,
-            insightsStats?.issuesInsightsCount ?: 0,
-            insightsStats?.unreadInsightsCount ?: 0
+            insightsStats.analyticsInsightsCount,
+            insightsStats.issuesInsightsCount,
+            insightsStats.unreadInsightsCount
         )
 
         val setRunConfigurationMessageBuilder =
@@ -407,10 +407,10 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                 AuthManager.getInstance().logout()
                 AuthManager.getInstance().login(it.get("email").asText(), it.get("password").asText())
             } catch (e: Exception) {
-                return@let LoginResult(false, null, null);
+                return@let LoginResult(false, null, null)
             }
         }
-        return result;
+        return result
     }
 }
 

@@ -17,6 +17,14 @@ public class NotificationUtil {
                 .notify(project);
     }
 
+    public static void notifyWarning(Project project, String content) {
+
+        NotificationGroupManager.getInstance()
+                .getNotificationGroup(DIGMA_HIDDEN_NOTIFICATION_GROUP)
+                .createNotification(content, NotificationType.WARNING)
+                .notify(project);
+    }
+
     public static void notifyFadingError(Project project, String content) {
 
         NotificationGroupManager.getInstance()

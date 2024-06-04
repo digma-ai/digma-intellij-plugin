@@ -84,6 +84,13 @@ public class ExceptionUtils {
 
         //InterruptedIOException is thrown when the connection is dropped , for example by iptables
 
+        //SocketTimeoutException and HttpTimeoutException are not considered connection unavailable.
+        //but their derived classed may be. so compare equals and not instanceof
+        if (SocketTimeoutException.class.equals(exception.getClass()) ||
+                HttpTimeoutException.class.equals(exception.getClass())) {
+            return false;
+        }
+
         return exception instanceof SocketException ||
                 exception instanceof UnknownHostException ||
                 exception instanceof HttpTimeoutException ||
@@ -158,6 +165,9 @@ public class ExceptionUtils {
             }
         }
 
+        if (exceptionMessage == null) {
+            return exception.toString();
+        }
 
         return exceptionMessage;
     }

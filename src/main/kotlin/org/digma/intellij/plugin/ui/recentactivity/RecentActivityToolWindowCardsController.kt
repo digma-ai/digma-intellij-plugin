@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.ui.recentactivity
 
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
@@ -58,7 +57,7 @@ class RecentActivityToolWindowCardsController(private val project: Project) {
             })
 
 
-        ApplicationManager.getApplication().messageBus.connect()
+        project.messageBus.connect()
             .subscribe(AggressiveUpdateStateChangedEvent.UPDATE_STATE_CHANGED_TOPIC, object : AggressiveUpdateStateChangedEvent {
                 override fun stateChanged(updateState: PublicUpdateState) {
                     updateStateChanged(updateState)
@@ -152,7 +151,7 @@ class RecentActivityToolWindowCardsController(private val project: Project) {
         // will change to NO_CONNECTION, in that case we want to see the no connection message.
         // on connectionGained the listener will try to change it to MAIN but if
         // AggressiveUpdateService is still in update mode we need to replace back to UPDATE_MODE
-        val cardToUse = if (AggressiveUpdateService.getInstance().isInUpdateMode() && card == RecentActivityWindowCard.MAIN) {
+        val cardToUse = if (AggressiveUpdateService.getInstance(project).isInUpdateMode() && card == RecentActivityWindowCard.MAIN) {
             RecentActivityWindowCard.UPDATE_MODE
         } else {
             card

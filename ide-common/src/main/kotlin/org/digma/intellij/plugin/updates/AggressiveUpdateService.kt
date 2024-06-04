@@ -2,7 +2,6 @@ package org.digma.intellij.plugin.updates
 
 import com.intellij.collaboration.async.disposingScope
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
@@ -16,11 +15,10 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.apache.maven.artifact.versioning.ComparableVersion
 import org.digma.intellij.plugin.analytics.AnalyticsService
-import org.digma.intellij.plugin.analytics.AnalyticsServiceAppLevelConnectionEvent
-import org.digma.intellij.plugin.analytics.ApiClientChangedAppLevelEvent
+import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
+import org.digma.intellij.plugin.analytics.ApiClientChangedEvent
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.common.buildVersionRequest
-import org.digma.intellij.plugin.common.findActiveProject
 import org.digma.intellij.plugin.common.getPluginVersion
 import org.digma.intellij.plugin.common.newerThan
 import org.digma.intellij.plugin.common.runWIthRetry
@@ -44,8 +42,8 @@ import kotlin.time.Duration.Companion.seconds
 
 enum class CurrentUpdateState { OK, UPDATE_BACKEND, UPDATE_PLUGIN, UPDATE_BOTH }
 
-@Service(Service.Level.APP)
-class AggressiveUpdateService : Disposable {
+@Service(Service.Level.PROJECT)
+class AggressiveUpdateService(val project: Project) : Disposable {
 
     private val logger: Logger = Logger.getInstance(AggressiveUpdateService::class.java)
 
@@ -75,8 +73,8 @@ class AggressiveUpdateService : Disposable {
 
 
         @JvmStatic
-        fun getInstance(): AggressiveUpdateService {
-            return service<AggressiveUpdateService>()
+        fun getInstance(project: Project): AggressiveUpdateService {
+            return project.service<AggressiveUpdateService>()
         }
     }
 
@@ -92,30 +90,30 @@ class AggressiveUpdateService : Disposable {
 
             startMonitoring()
 
-            ApplicationManager.getApplication().messageBus.connect(this)
+            project.messageBus.connect(this)
                 .subscribe(
-                    AnalyticsServiceAppLevelConnectionEvent.ANALYTICS_SERVICE_APP_LEVEL_CONNECTION_EVENT_TOPIC,
-                    object : AnalyticsServiceAppLevelConnectionEvent {
-                    override fun connectionLost() {
-                        Log.log(logger::debug, "got connectionLost")
-                        isConnectionLost.set(true)
-                        myJob?.cancel(CancellationException("connection lost"))
-                    }
+                    AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC,
+                    object : AnalyticsServiceConnectionEvent {
+                        override fun connectionLost() {
+                            Log.log(logger::debug, "got connectionLost")
+                            isConnectionLost.set(true)
+                            myJob?.cancel(CancellationException("connection lost"))
+                        }
 
-                    override fun connectionGained() {
-                        Log.log(logger::debug, "got connectionGained")
-                        isConnectionLost.set(false)
+                        override fun connectionGained() {
+                            Log.log(logger::debug, "got connectionGained")
+                            isConnectionLost.set(false)
 
-                        //startMonitoring is canceled on connection lost, resume it on connection gained.
-                        //connectionGained will be invoked for every open project because AnalyticsServiceAppLevelConnectionEvent is currently not
-                        // a real application event. but startMonitoring is synchronized and protected against multiple threads.
-                        startMonitoring()
-                    }
-                })
+                            //startMonitoring is canceled on connection lost, resume it on connection gained.
+                            //connectionGained will be invoked for every open project because AnalyticsServiceConnectionEvent is currently not
+                            // a real application event. but startMonitoring is synchronized and protected against multiple threads.
+                            startMonitoring()
+                        }
+                    })
 
 
-            ApplicationManager.getApplication().messageBus.connect(this)
-                .subscribe(ApiClientChangedAppLevelEvent.API_CLIENT_CHANGED_APP_LEVEL_TOPIC, ApiClientChangedAppLevelEvent {
+            project.messageBus.connect(this)
+                .subscribe(ApiClientChangedEvent.API_CLIENT_CHANGED_TOPIC, ApiClientChangedEvent {
                     @Suppress("UnstableApiUsage")
                     disposingScope().launch {
                         try {
@@ -213,18 +211,16 @@ class AggressiveUpdateService : Disposable {
             //todo: don't need the lock, only one thread is calling this method
             updateStateLock.lock()
             runWIthRetry({
-                findActiveProject()?.let { project ->
-                    Log.log(logger::debug, "loading version")
-                    val versionsResponse = AnalyticsService.getInstance(project).getVersions(buildVersionRequest())
-                    reportVersionsErrorsIfNecessary(versionsResponse.errors)
-                    val versions = Versions.fromVersionsResponse(versionsResponse)
-                    Log.log(logger::debug, "loaded versions {}", versions)
-                    Log.log(logger::debug, "updating state")
-                    val prevUpdateState = updateStateRef.get().copy()
-                    update(versions)
-                    registerStartupEventIfStateOK(versions)
-                    Log.log(logger::debug, "state updated. prev state: {}, new state: {}", prevUpdateState, updateStateRef)
-                }
+                Log.log(logger::debug, "loading version")
+                val versionsResponse = AnalyticsService.getInstance(project).getVersions(buildVersionRequest())
+                reportVersionsErrorsIfNecessary(versionsResponse.errors)
+                val versions = Versions.fromVersionsResponse(versionsResponse)
+                Log.log(logger::debug, "loaded versions {}", versions)
+                Log.log(logger::debug, "updating state")
+                val prevUpdateState = updateStateRef.get().copy()
+                update(versions)
+                registerStartupEventIfStateOK(versions)
+                Log.log(logger::debug, "state updated. prev state: {}, new state: {}", prevUpdateState, updateStateRef)
             }, backOffMillis = 2000, maxRetries = 5)
 
         } finally {
@@ -358,7 +354,7 @@ class AggressiveUpdateService : Disposable {
 
 
     private fun fireStateChanged() {
-        ApplicationManager.getApplication().messageBus.syncPublisher(AggressiveUpdateStateChangedEvent.UPDATE_STATE_CHANGED_TOPIC)
+        project.messageBus.syncPublisher(AggressiveUpdateStateChangedEvent.UPDATE_STATE_CHANGED_TOPIC)
             .stateChanged(updateStateRef.get().copy())
     }
 
@@ -380,10 +376,8 @@ class AggressiveUpdateService : Disposable {
             details["first event for this IDE session"] = "true"
         }
 
-        findActiveProject()?.let {
-            Log.log(logger::info, "sending posthog event for {}", currentState)
-            ActivityMonitor.getInstance(it).registerCustomEvent("ForceUpdate", details)
-        }
+        Log.log(logger::info, "sending posthog event for {}", currentState)
+        ActivityMonitor.getInstance(project).registerCustomEvent("ForceUpdate", details)
     }
 
 
@@ -409,9 +403,8 @@ class AggressiveUpdateService : Disposable {
 data class PublicUpdateState(val updateState: CurrentUpdateState, val backendDeploymentType: BackendDeploymentType)
 
 
-//todo: maybe change to AppLifecycleListener
 class AggressiveUpdateServiceStarter : StartupActivity.DumbAware {
     override fun runActivity(project: Project) {
-        getInstance()
+        getInstance(project)
     }
 }

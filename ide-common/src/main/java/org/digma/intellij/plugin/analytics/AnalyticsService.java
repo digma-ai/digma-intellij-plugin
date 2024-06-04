@@ -92,6 +92,7 @@ public class AnalyticsService implements Disposable {
     }
 
 
+    @NotNull
     public static AnalyticsService getInstance(@NotNull Project project) {
         return project.getService(AnalyticsService.class);
     }

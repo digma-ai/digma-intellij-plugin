@@ -159,13 +159,10 @@
         <listener
                 class="org.digma.intellij.plugin.document.CodeLensProviderDocumentInfoAndEnvironmentChangedListener"
                 topic="org.digma.intellij.plugin.analytics.EnvironmentChanged"/>
-    </projectListeners>
-
-    <applicationListeners>
         <listener
                 class="org.digma.intellij.plugin.ui.notificationcenter.AppNotificationCenter$AggressiveUpdateStateChangedEventListener"
                 topic="org.digma.intellij.plugin.updates.AggressiveUpdateStateChangedEvent"/>
-    </applicationListeners>
+    </projectListeners>
 
 
 </idea-plugin>

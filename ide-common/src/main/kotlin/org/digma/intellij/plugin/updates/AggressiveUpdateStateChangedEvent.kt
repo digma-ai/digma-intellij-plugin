@@ -6,7 +6,7 @@ interface AggressiveUpdateStateChangedEvent {
 
     companion object {
         @JvmStatic
-        @Topic.AppLevel
+        @Topic.ProjectLevel
         val UPDATE_STATE_CHANGED_TOPIC: Topic<AggressiveUpdateStateChangedEvent> = Topic.create(
             "UPDATE STATE CHANGED",
             AggressiveUpdateStateChangedEvent::class.java

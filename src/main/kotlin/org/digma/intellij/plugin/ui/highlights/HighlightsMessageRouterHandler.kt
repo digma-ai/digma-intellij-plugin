@@ -20,8 +20,8 @@ class HighlightsMessageRouterHandler(project: Project) : BaseCommonMessageRouter
 
     override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
 
-        var version = getVersion();
-        var comparableVersion = ComparableVersion(version);
+        val version = getVersion(project)
+        val comparableVersion = ComparableVersion(version)
         if (version == "unknown" || comparableVersion.newerThan(ComparableVersion("0.3.7"))) {
             when (action) {
                 "MAIN/GET_HIGHLIGHTS_PERFORMANCE_DATA" -> getHighlightsPerformanceV2(browser, requestJsonNode)
@@ -81,7 +81,7 @@ class HighlightsMessageRouterHandler(project: Project) : BaseCommonMessageRouter
         val payloadQuery = getPayloadQuery(requestJsonNode)
         if (payloadQuery is ObjectNode) {
 
-            var request = createHighlightsRequest(payloadQuery, "scopedSpanCodeObjectId");
+            val request = createHighlightsRequest(payloadQuery, "scopedSpanCodeObjectId")
             val payload = HighlightsService.getInstance(project).getHighlightsPerformanceV2(request)
 
             val message = SetHighlightsPerformanceMessage(payload)
@@ -99,7 +99,7 @@ class HighlightsMessageRouterHandler(project: Project) : BaseCommonMessageRouter
         val payloadQuery = getPayloadQuery(requestJsonNode)
         if (payloadQuery is ObjectNode) {
 
-            var request = createHighlightsRequest(payloadQuery, "scopedSpanCodeObjectId");
+            val request = createHighlightsRequest(payloadQuery, "scopedSpanCodeObjectId")
             val payload = HighlightsService.getInstance(project).getHighlightsImpact(request)
 
             val message = SetHighlightsImpactMessage(payload)
@@ -118,7 +118,7 @@ class HighlightsMessageRouterHandler(project: Project) : BaseCommonMessageRouter
         val payloadQuery = getPayloadQuery(requestJsonNode)
         if (payloadQuery is ObjectNode) {
 
-            var request = createHighlightsRequest(payloadQuery, "scopedSpanCodeObjectId");
+            val request = createHighlightsRequest(payloadQuery, "scopedSpanCodeObjectId")
             val payload = HighlightsService.getInstance(project).getHighlightsScaling(request)
 
             val message = SetHighlightsScalingMessage(payload)
@@ -152,7 +152,7 @@ class HighlightsMessageRouterHandler(project: Project) : BaseCommonMessageRouter
         val payloadQuery = getPayloadQuery(requestJsonNode)
         if (payloadQuery is ObjectNode) {
 
-            var request = createHighlightsRequest(payloadQuery, "scopedCodeObjectId");
+            val request = createHighlightsRequest(payloadQuery, "scopedCodeObjectId")
             val payload = HighlightsService.getInstance(project).getHighlightsTopInsightsV2(request)
 
             val message = SetHighlightsTopInsightsMessage(payload)
@@ -171,13 +171,13 @@ class HighlightsMessageRouterHandler(project: Project) : BaseCommonMessageRouter
 
         val highlightsRequest = HighlightsRequest(scopedCodeObjectId, environments)
 
-        return highlightsRequest;
+        return highlightsRequest
     }
 
     private fun getPayloadQuery(requestJsonNode: JsonNode): JsonNode{
         val payloadNode: JsonNode = objectMapper.readTree(requestJsonNode.get("payload").toString())
         val payloadQuery: JsonNode = objectMapper.readTree(payloadNode.get("query").toString())
 
-        return payloadQuery;
+        return payloadQuery
     }
 }

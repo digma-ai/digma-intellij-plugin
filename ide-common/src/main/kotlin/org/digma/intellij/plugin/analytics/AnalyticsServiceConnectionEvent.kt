@@ -8,7 +8,6 @@ import com.intellij.util.messages.Topic
  */
 interface AnalyticsServiceConnectionEvent {
 
-    //Note: make sure that only project level services listen to this event and not app level services
 
     companion object {
         @JvmField

@@ -54,7 +54,7 @@ class AppNotificationCenter : Disposable {
 
 
     //this listener is registered in plugin.xml, so it will receive the event early if an event will be fired.
-    class AggressiveUpdateStateChangedEventListener : AggressiveUpdateStateChangedEvent {
+    class AggressiveUpdateStateChangedEventListener(val project: Project) : AggressiveUpdateStateChangedEvent {
         override fun stateChanged(updateState: PublicUpdateState) {
             //cancel previous job. the job will exit anyway when
             // AggressiveUpdateService is not in update mode. but it may change from backend update to
@@ -65,6 +65,7 @@ class AppNotificationCenter : Disposable {
                 getInstance().clearCurrentlyShowingAggressiveUpdateNotifications()
             } else {
                 getInstance().aggressiveUpdateTimerJob = startAggressiveUpdateNotificationTimer(
+                    project,
                     getInstance(),
                     getInstance().currentlyShowingAggressiveUpdateNotifications
                 )

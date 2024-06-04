@@ -1,7 +1,6 @@
 package org.digma.intellij.plugin.ui.notificationcenter
 
 import com.intellij.collaboration.async.disposingScope
-import com.intellij.ide.impl.ProjectUtil
 import com.intellij.notification.Notification
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
@@ -30,6 +29,7 @@ import kotlin.time.toJavaDuration
 
 
 fun startAggressiveUpdateNotificationTimer(
+    project: Project,
     parentDisposable: Disposable,
     currentlyShowingAggressiveUpdateNotifications: MutableList<Notification>
 ): Job {
@@ -37,7 +37,7 @@ fun startAggressiveUpdateNotificationTimer(
     @Suppress("UnstableApiUsage")
     return parentDisposable.disposingScope().launch {
 
-        while (isActive && AggressiveUpdateService.getInstance().isInUpdateMode()) {
+        while (isActive && AggressiveUpdateService.getInstance(project).isInUpdateMode()) {
 
             val nextTime = if (service<NotificationsPersistenceState>().state.aggressiveUpdateLastNotified == null) {
                 service<NotificationsPersistenceState>().state.aggressiveUpdateLastNotified = Instant.now()
@@ -53,12 +53,10 @@ fun startAggressiveUpdateNotificationTimer(
 
             delay(delay)
 
-            if (isActive && AggressiveUpdateService.getInstance().isInUpdateMode()) {
+            if (isActive && AggressiveUpdateService.getInstance(project).isInUpdateMode()) {
                 AppNotificationCenter.getInstance().clearCurrentlyShowingAggressiveUpdateNotifications()
                 service<NotificationsPersistenceState>().state.aggressiveUpdateLastNotified = Instant.now()
-                ProjectUtil.getOpenProjects().forEach {
-                    showAggressiveUpdateNotification(it, currentlyShowingAggressiveUpdateNotifications)
-                }
+                showAggressiveUpdateNotification(project, currentlyShowingAggressiveUpdateNotifications)
             }
         }
     }
@@ -69,7 +67,7 @@ private fun showAggressiveUpdateNotification(project: Project, currentlyShowingN
 
     val notificationName = "UpdateRequiredNotification"
 
-    val updateState = AggressiveUpdateService.getInstance().getUpdateState()
+    val updateState = AggressiveUpdateService.getInstance(project).getUpdateState()
     val content = when (updateState.updateState) {
         CurrentUpdateState.UPDATE_BACKEND -> "Your Digma Engine is too old. please update it now using the update link."
         CurrentUpdateState.UPDATE_PLUGIN -> "Your Digma Plugin is too old. please update it now using the update link."
@@ -78,7 +76,7 @@ private fun showAggressiveUpdateNotification(project: Project, currentlyShowingN
     }
 
     //check again in case it just changed
-    if (!AggressiveUpdateService.getInstance().isInUpdateMode()) {
+    if (!AggressiveUpdateService.getInstance(project).isInUpdateMode()) {
         return
     }
 
@@ -118,7 +116,7 @@ private class UpdatedNotificationAction(
         try {
             Log.log(AppNotificationCenter.logger::info, "in $notificationName, action clicked")
 
-            val updateState = AggressiveUpdateService.getInstance().getUpdateState()
+            val updateState = AggressiveUpdateService.getInstance(project).getUpdateState()
 
             ActivityMonitor.getInstance(project).registerUserAction(
                 "force update button clicked", mapOf(

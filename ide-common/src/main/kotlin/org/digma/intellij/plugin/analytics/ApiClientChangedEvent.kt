@@ -9,7 +9,6 @@ import com.intellij.util.messages.Topic
  */
 fun interface ApiClientChangedEvent {
 
-    //Note: make sure that only project level services listen to this event and not app level services
 
     companion object {
         @JvmStatic

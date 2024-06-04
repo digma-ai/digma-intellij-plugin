@@ -19,7 +19,7 @@ class ErrorsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHand
         Log.log(logger::trace, project, "got action '$action' with message $requestJsonNode")
 
         when (action) {
-            "ERRORS/GET_ERRORS_DATA_ERRORS" -> getErrorsData(project, browser, requestJsonNode)
+            "ERRORS/GET_ERRORS_DATA" -> getErrorsData(project, browser, requestJsonNode)
             "ERRORS/GET_ERROR_DETAILS" -> getErrorDetails(project, browser, requestJsonNode)
             "ERRORS/OPEN_RAW_ERROR_STACK_TRACE_IN_EDITOR" -> openStackTrace(project, requestJsonNode)
             "ERRORS/GO_TO_CODE_LOCATION" -> navigateToCode(project, requestJsonNode)

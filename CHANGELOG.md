@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.346] - 2024-06-04
+## [2.0.347] - 2024-06-05
+
+- Update Recent Activity UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2205
+
+## 2.0.346 - 2024-06-04
 
 - updated readme by @doppleware in https://github.com/digma-ai/digma-intellij-plugin/pull/2193
 - Refactor version comparison by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2200

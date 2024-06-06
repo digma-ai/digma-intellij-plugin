@@ -28,6 +28,7 @@
         window.isDockerInstalled = ${isDockerInstalled?string('true', 'false')};
         window.isDockerComposeInstalled = ${isDockerComposeInstalled?string('true', 'false')};
         window.digmaApiUrl = "${digmaApiUrl}";
+        window.isLoggingEnabled = ${isLoggingEnabled?string('true', 'false')};
 
         window.dashboardRefreshInterval = "${dashboardRefreshInterval}";
         window.dashboardEnvironment = "${dashboardEnvironment}";

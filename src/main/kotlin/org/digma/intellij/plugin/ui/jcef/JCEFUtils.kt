@@ -5,6 +5,12 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 
 
+fun getIsLoggingEnabledSystemProperty():Boolean{
+    return java.lang.Boolean.getBoolean("org.digma.plugin.enable.JCEFLogging")
+}
+
+
+
 fun getQueryMapFromPayload(requestJsonNode: JsonNode, objectMapper: ObjectMapper): MutableMap<String, Any> {
 
     val payloadNode: JsonNode = objectMapper.readTree(requestJsonNode.get("payload").toString())

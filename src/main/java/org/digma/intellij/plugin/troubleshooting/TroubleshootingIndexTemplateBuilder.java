@@ -14,6 +14,9 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 
+import static org.digma.intellij.plugin.ui.jcef.BaseIndexTemplateBuilderKt.IS_LOGGING_ENABLED;
+import static org.digma.intellij.plugin.ui.jcef.JCEFUtilsKt.getIsLoggingEnabledSystemProperty;
+
 class TroubleshootingIndexTemplateBuilder {
 
     private final Logger logger = Logger.getInstance(TroubleshootingIndexTemplateBuilder.class);
@@ -53,7 +56,7 @@ class TroubleshootingIndexTemplateBuilder {
             data.put(IS_DIGMA_ENGINE_RUNNING, ApplicationManager.getApplication().getService(DockerService.class).isEngineRunning(project));
             data.put(IS_DOCKER_INSTALLED, ApplicationManager.getApplication().getService(DockerService.class).isDockerInstalled());
             data.put(IS_DOCKER_COMPOSE_INSTALLED, ApplicationManager.getApplication().getService(DockerService.class).isDockerInstalled());
-
+            data.put(IS_LOGGING_ENABLED, getIsLoggingEnabledSystemProperty());
 
             Template template = freemarketConfiguration.getTemplate(INDEX_TEMPLATE_NAME);
             StringWriter stringWriter = new StringWriter();

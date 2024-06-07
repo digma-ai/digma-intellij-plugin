@@ -19,8 +19,6 @@ import org.digma.intellij.plugin.model.rest.common.SpanHistogramQuery;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.env.*;
 import org.digma.intellij.plugin.model.rest.environment.Env;
-import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
-import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.event.*;
 import org.digma.intellij.plugin.model.rest.highlights.HighlightsRequest;
 import org.digma.intellij.plugin.model.rest.insights.*;
@@ -252,15 +250,20 @@ public class AnalyticsService implements Disposable {
     }
 
 
-    public List<CodeObjectError> getErrorsOfCodeObject(List<String> codeObjectIds) throws AnalyticsServiceException {
+    public String getErrors(List<String> codeObjectIds) throws AnalyticsServiceException {
         var env = getCurrentEnvironmentId();
         Log.log(LOGGER::trace, "Requesting insights for next codeObjectId {} and next environment {}", codeObjectIds, env);
-        var errors = executeCatching(() -> analyticsProviderProxy.getErrorsOfCodeObject(env, codeObjectIds));
+        var errors = executeCatching(() -> analyticsProviderProxy.getErrors(env, codeObjectIds));
         if (errors == null) {
-            errors = Collections.emptyList();
+            errors = "[]";
         }
         return errors;
     }
+
+    public String getErrorDetails(String errorUid) throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.getErrorDetails(errorUid));
+    }
+
 
 
     public void setInsightCustomStartTime(String insightId) throws AnalyticsServiceException {
@@ -275,10 +278,6 @@ public class AnalyticsService implements Disposable {
                     ));
             return null;
         });
-    }
-
-    public CodeObjectErrorDetails getErrorDetails(String errorUid) throws AnalyticsServiceException {
-        return executeCatching(() -> analyticsProviderProxy.getCodeObjectErrorDetails(errorUid));
     }
 
 

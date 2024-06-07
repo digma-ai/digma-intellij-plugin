@@ -5,40 +5,28 @@ import com.google.common.base.Objects
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
-import org.digma.intellij.plugin.common.EDT
+import org.digma.intellij.plugin.navigation.View.Companion.Analytics
 import org.digma.intellij.plugin.navigation.View.Companion.Assets
+import org.digma.intellij.plugin.navigation.View.Companion.Errors
+import org.digma.intellij.plugin.navigation.View.Companion.Highlights
+import org.digma.intellij.plugin.navigation.View.Companion.Tests
 import org.digma.intellij.plugin.navigation.View.Companion.getSelected
-import org.digma.intellij.plugin.navigation.View.Companion.hideErrorDetails
-import org.digma.intellij.plugin.navigation.View.Companion.hideErrors
 import org.digma.intellij.plugin.navigation.View.Companion.setSelected
 import org.digma.intellij.plugin.navigation.View.Companion.views
 import org.digma.intellij.plugin.posthog.ActivityMonitor
-import org.digma.intellij.plugin.ui.service.ErrorsViewOrchestrator
-import java.awt.CardLayout
-import java.awt.Container
 
 //todo: this class is still used while transitioning to a single jcef app but should be removed at some point
+@Suppress("unused")
 @Service(Service.Level.PROJECT)
 class MainContentViewSwitcher(val project: Project) {
 
-    private lateinit var myLayout: CardLayout
-    private lateinit var mainContentPanel: Container
-
 
     companion object {
-
-        const val MAIN_PANEL_CARD_NAME = "MainPanel"
-        const val ERRORS_PANEL_CARD_NAME = "ErrorsPanel"
 
         @JvmStatic
         fun getInstance(project: Project): MainContentViewSwitcher {
             return project.service<MainContentViewSwitcher>()
         }
-    }
-
-    fun setLayout(myLayout: CardLayout, mainContentPanel: Container) {
-        this.myLayout = myLayout
-        this.mainContentPanel = mainContentPanel
     }
 
 
@@ -47,27 +35,23 @@ class MainContentViewSwitcher(val project: Project) {
     }
 
     fun showAssets() {
-        showView(View.Assets)
+        showView(Assets)
     }
 
     fun showErrors() {
-        showView(View.Errors)
-    }
-
-    fun showErrorDetails() {
-        showView(View.ErrorDetails)
+        showView(Errors)
     }
 
     fun showTests() {
-        showView(View.Tests)
+        showView(Tests)
     }
 
     fun showAnalytics() {
-        showView(View.Analytics)
+        showView(Analytics)
     }
 
     fun showHighlights() {
-        showView(View.Highlights)
+        showView(Highlights)
     }
 
 
@@ -76,14 +60,13 @@ class MainContentViewSwitcher(val project: Project) {
     }
 
     private fun showView(view: View, fireEvent: Boolean, createHistoryStep: Boolean) {
-        if (view == View.ErrorDetails) {
-            hideErrors()
-        } else {
-            project.service<ErrorsViewOrchestrator>().closeErrorDetails()
-            hideErrorDetails()
+
+        if (view != Assets) {
+            Assets.path = null
         }
-        if (view != View.Assets) {
-            View.Assets.path = null;
+
+        if (view != Errors) {
+            Errors.path = null
         }
 
         if (view == View.Insights && getSelected() != View.Insights) {
@@ -91,17 +74,6 @@ class MainContentViewSwitcher(val project: Project) {
         }
 
         setSelected(view)
-
-        EDT.ensureEDT {
-            when (view) {
-                View.Errors,
-                View.ErrorDetails,
-                    -> myLayout.show(mainContentPanel, ERRORS_PANEL_CARD_NAME)
-
-                else -> myLayout.show(mainContentPanel, MAIN_PANEL_CARD_NAME)
-            }
-        }
-
 
         if (fireEvent) {
             fireViewChanged(createHistoryStep)
@@ -122,11 +94,18 @@ class MainContentViewSwitcher(val project: Project) {
         val segments = viewId.split("/")
         if (segments.size > 1 && segments[1] == "assets") {
             if (segments.count() > 2) {
-                Assets.path = viewId.removePrefix("/assets/");
+                Assets.path = viewId.removePrefix("/assets/")
             } else {
                 Assets.path = null
             }
             showView(Assets, createHistoryStep)
+        } else if (segments.size > 1 && segments[1] == "errors") {
+            if (segments.count() > 2) {
+                Errors.path = viewId.removePrefix("/errors/")
+            } else {
+                Errors.path = null
+            }
+            showView(Errors, createHistoryStep)
         } else {
             View.findById(viewId)?.let { view ->
                 showView(view, createHistoryStep)
@@ -181,16 +160,13 @@ private constructor(
         val Errors = View("Errors", "/errors", "errors")
 
         @JvmStatic
-        val ErrorDetails = View(title = "Error Details", id = "/errors/details", cardName = "errors", isHidden = true)
-
-        @JvmStatic
         val Tests = View("Tests", "/tests", "tests")
 
         @JvmStatic
         val Analytics = View("Analytics", "/analytics", "analytics")
 
 
-        val views = listOf(Highlights, Insights, Assets, Analytics, Errors, ErrorDetails, Tests)
+        val views = listOf(Highlights, Insights, Assets, Analytics, Errors, Tests)
 
         fun findById(id: String): View? {
             return views.find { it.id == id }
@@ -206,16 +182,5 @@ private constructor(
             return views.find { it.isSelected }
         }
 
-        fun hideErrorDetails() {
-            views.forEach { v ->
-                v.isHidden = v == ErrorDetails
-            }
-        }
-
-        fun hideErrors() {
-            views.forEach { v ->
-                v.isHidden = v == Errors
-            }
-        }
     }
 }

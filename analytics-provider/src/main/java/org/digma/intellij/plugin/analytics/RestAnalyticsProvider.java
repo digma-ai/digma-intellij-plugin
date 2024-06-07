@@ -13,8 +13,6 @@ import org.digma.intellij.plugin.model.rest.common.SpanHistogramQuery;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.env.*;
 import org.digma.intellij.plugin.model.rest.environment.Env;
-import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
-import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.event.*;
 import org.digma.intellij.plugin.model.rest.highlights.HighlightsRequest;
 import org.digma.intellij.plugin.model.rest.insights.*;
@@ -110,8 +108,8 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
-    public List<CodeObjectError> getErrorsOfCodeObject(String environment, List<String> codeObjectIds) {
-        return execute(() -> client.analyticsProvider.getErrorsOfCodeObject(environment, codeObjectIds));
+    public String getErrors(String environment, List<String> codeObjectIds) {
+        return execute(() -> client.analyticsProvider.getErrors(environment, codeObjectIds));
     }
 
     @Override
@@ -120,8 +118,8 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
-    public CodeObjectErrorDetails getCodeObjectErrorDetails(String errorSourceId) {
-        return execute(() -> client.analyticsProvider.getCodeObjectErrorDetails(errorSourceId));
+    public String getErrorDetails(String errorSourceId) {
+        return execute(() -> client.analyticsProvider.getErrorDetails(errorSourceId));
     }
 
     @Override
@@ -650,13 +648,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Content-Type:application/json"
         })
         @GET("/CodeAnalytics/codeObjects/errors")
-        Call<List<CodeObjectError>> getErrorsOfCodeObject(@Query("environment") String environment, @Query("codeObjectId") List<String> codeObjectIds);
+        Call<String> getErrors(@Query("environment") String environment, @Query("codeObjectId") List<String> codeObjectIds);
 
         @Headers({
                 "Content-Type:application/json"
         })
         @GET("/CodeAnalytics/codeObjects/errors/{errorSourceId}")
-        Call<CodeObjectErrorDetails> getCodeObjectErrorDetails(@Path("errorSourceId") String errorSourceId);
+        Call<String> getErrorDetails(@Path("errorSourceId") String errorSourceId);
 
 
         @Headers({

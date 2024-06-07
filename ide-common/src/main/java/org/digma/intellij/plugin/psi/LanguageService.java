@@ -309,9 +309,39 @@ public interface LanguageService extends Disposable {
 
         return null;
     }
-    
-    
-    
+
+
+    @NotNull
+    static Map<String, String> findWorkspaceUrisForCodeObjectIdsForErrorStackTrace(Project project, List<String> methodCodeObjectIds) {
+
+        //we don't know which language the method ids belong to. so we try all language services and take the
+        // first one that returns something.
+        //if its a java or kotlin project then AbstractJvmLanguageService will return something. else maybe the other
+        //language services will return something. if no language service returns something then return an empty map.
+
+        for (SupportedLanguages value : SupportedLanguages.values()) {
+
+            try {
+                Class<? extends LanguageService> clazz = (Class<? extends LanguageService>) Class.forName(value.getLanguageServiceClassName());
+                LanguageService languageService = project.getService(clazz);
+                var workspaceUris = languageService.findWorkspaceUrisForCodeObjectIdsForErrorStackTrace(methodCodeObjectIds);
+                if (workspaceUris != null && !workspaceUris.isEmpty()) {
+                    return workspaceUris;
+                }
+            } catch (Throwable e) {
+                //catch Throwable because there may be errors.
+                //ignore: some classes will fail to load , for example the CSharpLanguageService
+                //will fail to load if it's not rider because it depends on rider classes.
+                //JavaLanguageService will fail to load on rider, etc.
+                //don't log, it will happen too many times
+            }
+        }
+
+        return Collections.emptyMap();
+    }
+
+
+
     
 
     /**

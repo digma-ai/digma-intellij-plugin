@@ -51,6 +51,7 @@ const val DIGMATHON_ENABLED = "isDigmathonModeEnabled"
 const val DIGMATHON_PRODUCT_KEY = "productKey"
 const val USER_ID = "userId"
 const val USER_FINISHED_DIGMATHON = "isDigmathonGameFinished"
+const val IS_LOGGING_ENABLED = "isLoggingEnabled"
 
 
 abstract class BaseIndexTemplateBuilder(resourceFolderName: String, private val indexTemplateName: String) {
@@ -91,6 +92,7 @@ abstract class BaseIndexTemplateBuilder(resourceFolderName: String, private val 
             data[DIGMATHON_PRODUCT_KEY] = DigmathonService.getInstance().getProductKey().orEmpty()
             data[USER_ID] = UniqueGeneratedUserId.userId
             data[USER_FINISHED_DIGMATHON] = DigmathonService.getInstance().isUserFinishedDigmathon
+            data[IS_LOGGING_ENABLED] = getIsLoggingEnabledSystemProperty()
 
             addAppSpecificEnvVariable(project, data)
 

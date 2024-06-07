@@ -31,6 +31,7 @@
   window.isDigmathonGameFinished = ${isDigmathonGameFinished?string('true', 'false')};
   window.productKey = "${productKey}";
   window.userId = "${userId}";
+  window.isLoggingEnabled = ${isLoggingEnabled?string('true', 'false')};
 
   window.wizardFirstLaunch = ${wizardFirstLaunch?string('true', 'false')};
   window.wizardSkipInstallationStep = ${wizardSkipInstallationStep?string('true', 'false')};

@@ -10,12 +10,13 @@ import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.common.JaegerUtilKt;
 import org.digma.intellij.plugin.ui.jcef.BaseIndexTemplateBuilderKt;
-
+import static org.digma.intellij.plugin.ui.jcef.BaseIndexTemplateBuilderKt.IS_LOGGING_ENABLED;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 
 import static org.digma.intellij.plugin.analytics.EnvUtilsKt.getCurrentEnvironmentId;
+import static org.digma.intellij.plugin.ui.jcef.JCEFUtilsKt.getIsLoggingEnabledSystemProperty;
 
 public class DashboardIndexTemplateBuilder {
     private final Logger logger = Logger.getInstance(DashboardIndexTemplateBuilder.class);
@@ -62,6 +63,7 @@ public class DashboardIndexTemplateBuilder {
 
             data.put(DASHBOARD_REFRESH_INTERVAL, 10*1000);
             data.put(DASHBOARD_ENVIRONMENT, getCurrentEnvironmentId(project));
+            data.put(IS_LOGGING_ENABLED,getIsLoggingEnabledSystemProperty());
 
             Template template = freemarketConfiguration.getTemplate(INDEX_TEMPLATE_NAME);
             StringWriter stringWriter = new StringWriter();

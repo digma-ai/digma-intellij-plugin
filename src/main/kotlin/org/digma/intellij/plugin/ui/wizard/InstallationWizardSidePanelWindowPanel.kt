@@ -48,10 +48,12 @@ import org.digma.intellij.plugin.ui.common.isJaegerButtonEnabled
 import org.digma.intellij.plugin.ui.common.updateObservabilityValue
 import org.digma.intellij.plugin.ui.jcef.DIGMATHON_ENABLED
 import org.digma.intellij.plugin.ui.jcef.DIGMATHON_PRODUCT_KEY
+import org.digma.intellij.plugin.ui.jcef.IS_LOGGING_ENABLED
 import org.digma.intellij.plugin.ui.jcef.JBCefBrowserBuilderCreator
 import org.digma.intellij.plugin.ui.jcef.JCEFGlobalConstants
 import org.digma.intellij.plugin.ui.jcef.USER_FINISHED_DIGMATHON
 import org.digma.intellij.plugin.ui.jcef.USER_ID
+import org.digma.intellij.plugin.ui.jcef.getIsLoggingEnabledSystemProperty
 import org.digma.intellij.plugin.ui.jcef.jsonToObject
 import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest
 import org.digma.intellij.plugin.ui.jcef.model.SendTrackingEventRequest
@@ -136,7 +138,9 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
         DIGMATHON_ENABLED to DigmathonService.getInstance().getDigmathonState().isActive(),
         DIGMATHON_PRODUCT_KEY to DigmathonService.getInstance().getProductKey().orEmpty(),
         USER_ID to UniqueGeneratedUserId.userId,
-        USER_FINISHED_DIGMATHON to DigmathonService.getInstance().isUserFinishedDigmathon
+        USER_FINISHED_DIGMATHON to DigmathonService.getInstance().isUserFinishedDigmathon,
+        IS_LOGGING_ENABLED to getIsLoggingEnabledSystemProperty()
+
     )
 
 

@@ -17,8 +17,6 @@ import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
-import org.digma.intellij.plugin.ui.service.ErrorsViewOrchestrator
-import org.digma.intellij.plugin.ui.service.ErrorsViewService
 
 @Service(Service.Level.PROJECT)
 class ScopeManager(private val project: Project) {
@@ -38,8 +36,6 @@ class ScopeManager(private val project: Project) {
 
         ActivityMonitor.getInstance(project).registerScopeChanged("home")
 
-        ErrorsViewService.getInstance(project).empty()
-
         fireScopeChangedEvent(null, CodeLocation(listOf(), listOf()), false)
 
         if (!forceNavigation) {
@@ -53,7 +49,6 @@ class ScopeManager(private val project: Project) {
         EDT.ensureEDT {
             MainToolWindowCardsController.getInstance(project).closeAllNotificationsIfShowing()
             MainToolWindowCardsController.getInstance(project).closeCoveringViewsIfNecessary()
-            project.service<ErrorsViewOrchestrator>().closeErrorDetails()
 
             if (!isCalledFromReact) {
                 // if react called changeToHome it's ok not to show the tool window, usually its on connection events.
@@ -110,7 +105,9 @@ class ScopeManager(private val project: Project) {
             buildCodeLocation(project, scope.spanCodeObjectId, scope.displayName ?: "", scope.methodId)
 
 
-        val hasErrors = tryPopulateErrors(scope)
+        //todo: this is temporary, the plugin loads the errors just so that the UI can show a red dot.
+        // it should be removed at some point
+        val hasErrors = checkIfHasErrors(scope)
 
         fireScopeChangedEvent(scope, codeLocation, hasErrors)
 
@@ -121,10 +118,15 @@ class ScopeManager(private val project: Project) {
         EDT.ensureEDT {
             MainToolWindowCardsController.getInstance(project).closeAllNotificationsIfShowing()
             MainToolWindowCardsController.getInstance(project).closeCoveringViewsIfNecessary()
-            project.service<ErrorsViewOrchestrator>().closeErrorDetails()
             ToolWindowShower.getInstance(project).showToolWindow()
         }
 
+    }
+
+    private fun checkIfHasErrors(scope: SpanScope): Boolean {
+        val objectIds = listOfNotNull(scope.spanCodeObjectId, scope.methodId)
+        val errors = AnalyticsService.getInstance(project).getErrors(objectIds)
+        return !errors.isNullOrBlank() && errors != "[]"
     }
 
 
@@ -143,12 +145,6 @@ class ScopeManager(private val project: Project) {
         }
     }
 
-
-    private fun tryPopulateErrors(scope: SpanScope): Boolean {
-        return scope.methodId?.let {
-            ErrorsViewService.getInstance(project).updateErrors(CodeObjectsUtil.stripMethodPrefix(it))
-        } ?: ErrorsViewService.getInstance(project).empty()
-    }
 
     private fun tryGetMethodIdForSpan(spanCodeObjectId: String): String? {
         return CodeNavigator.getInstance(project).findMethodCodeObjectId(spanCodeObjectId)

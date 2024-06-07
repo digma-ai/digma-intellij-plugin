@@ -7,6 +7,7 @@ import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.navigation.View
 import org.digma.intellij.plugin.ui.assets.AssetsMessageRouterHandler
+import org.digma.intellij.plugin.ui.errors.ErrorsMessageRouterHandler
 import org.digma.intellij.plugin.ui.highlights.HighlightsMessageRouterHandler
 import org.digma.intellij.plugin.ui.insights.InsightsMessageRouterHandler
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
@@ -18,12 +19,12 @@ class MainAppMessageRouterHandler(project: Project) : BaseMessageRouterHandler(p
 
     //using old router handlers instead of rewriting them.
     // their original onQuery will never be called.
-    //todo:
     private val handlers = listOf(
         AssetsMessageRouterHandler(project),
         InsightsMessageRouterHandler(project),
         HighlightsMessageRouterHandler(project),
-        TestsMessageRouterHandler(project)
+        TestsMessageRouterHandler(project),
+        ErrorsMessageRouterHandler(project)
     )
 
 

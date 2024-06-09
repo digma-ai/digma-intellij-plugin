@@ -53,17 +53,9 @@ namespace Digma.Rider.Highlighting
             _showToolWindowHost.ShowToolWindow();
         }
 
-
-    #if (PROFILE_2022_3) // FIX_WHEN_MIN_IS_232
-        public virtual CodeLensAnchorKind DefaultAnchor => CodeLensAnchorKind.Top;
-        public virtual ICollection<CodeLensRelativeOrdering> RelativeOrderings => new CodeLensRelativeOrdering[]
-            { new CodeLensRelativeOrderingAfter(nameof(LiveMethodInsightsProvider)) };
-    #else
         public virtual CodeVisionAnchorKind DefaultAnchor => CodeVisionAnchorKind.Top;
         public virtual ICollection<CodeVisionRelativeOrdering> RelativeOrderings => new CodeVisionRelativeOrdering[]
             { new CodeVisionRelativeOrderingAfter(nameof(LiveMethodInsightsProvider)) };
-
-#endif
 
     }
 }

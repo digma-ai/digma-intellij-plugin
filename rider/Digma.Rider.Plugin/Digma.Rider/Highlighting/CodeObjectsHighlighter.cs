@@ -7,7 +7,6 @@ using JetBrains.ReSharper.Daemon.CodeInsights;
 using JetBrains.ReSharper.Feature.Services.Daemon;
 using JetBrains.ReSharper.Psi.CSharp.Tree;
 using JetBrains.ReSharper.Psi.Tree;
-using JetBrains.Rider.Backend.Platform.Icons;
 using JetBrains.Util;
 using static Digma.Rider.Logging.Logger;
 
@@ -22,7 +21,6 @@ namespace Digma.Rider.Highlighting
 
         public CodeObjectsHighlighter(ILogger logger,
             ISolution solution,
-            IconHost iconHost,
             ShowToolWindowHost showToolWindowHost,
             CodeLensProviderFactory codeLensProviderFactory, 
             LanguageServiceHost languageServiceHost)

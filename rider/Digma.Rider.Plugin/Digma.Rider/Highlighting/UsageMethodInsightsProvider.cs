@@ -16,13 +16,7 @@ namespace Digma.Rider.Highlighting
         public override string ProviderId => nameof(UsageMethodInsightsProvider);
         public override string DisplayName => "Usage Method Hints";
         
-    #if (PROFILE_2022_3) // FIX_WHEN_MIN_IS_232
-        public new ICollection<CodeLensRelativeOrdering> RelativeOrderings => new CodeLensRelativeOrdering[]
-            { new CodeLensRelativeOrderingAfter(nameof(ErrorHotspotMethodInsightsProvider)) };
-    #else
        public new ICollection<CodeVisionRelativeOrdering> RelativeOrderings => new CodeVisionRelativeOrdering[]
             { new CodeVisionRelativeOrderingAfter(nameof(ErrorHotspotMethodInsightsProvider)) };
-    #endif
-        
     }
 }

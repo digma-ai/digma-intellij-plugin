@@ -1,13 +1,15 @@
-import common.IdeFlavor
-import common.logBuildProfile
+import common.dynamicPlatformType
 import common.platformVersion
-import common.shouldDownloadSources
 import de.undercouch.gradle.tasks.download.Download
+import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import java.util.Properties
 
 plugins {
     id("plugin-library")
 }
+
+//jvm module should always build with IC or IU
+val platformType: IntelliJPlatformType by extra(dynamicPlatformType(project))
 
 
 dependencies {
@@ -15,17 +17,20 @@ dependencies {
     compileOnly(project(":model"))
 
     testImplementation(project(":ide-common"))
-}
 
-//jvm module should always build with IC
-val platformType by extra(IdeFlavor.IC.name)
+    intellijPlatform {
 
-logBuildProfile(project)
+        //this module can only build with IC or IU, so only support replacing to IU when
+        // we build with IU , otherwise build with IC even if platformType is something else like RD or PY
+        if (platformType == IntelliJPlatformType.IntellijIdeaUltimate) {
+            intellijIdeaUltimate(project.platformVersion())
+        } else {
+            intellijIdeaCommunity(project.platformVersion())
+        }
 
-intellij {
-    version.set("$platformType-${project.platformVersion()}")
-    plugins.set(listOf("com.intellij.java", "org.jetbrains.kotlin"))
-    downloadSources.set(project.shouldDownloadSources())
+        bundledPlugin("com.intellij.java")
+        bundledPlugin("org.jetbrains.kotlin")
+    }
 }
 
 
@@ -44,10 +49,11 @@ tasks {
             )
         )
 
-        logger.lifecycle("jars to download $properties")
+        logger.lifecycle("${project.name}: jars to download $properties")
 
         dest(File(project.sourceSets.main.get().output.resourcesDir, "otelJars"))
-        overwrite(true)
+        overwrite(false)
+        onlyIfModified(true)
         //if a jar is downloaded with version then its name needs to change. it may happen
         // in development if the url for some of the jars is changed to download from somewhere else.
         //usually latest jar is downloaded without version

@@ -9,4 +9,8 @@ Digma.Rider.Plugin/Digma.Rider.Tests/obj/
 src/main/kotlin/org/digma/intellij/plugin/rider/protocol/*.Generated.kt
 Digma.Rider.Plugin/Digma.Rider/Protocol/*.Generated.cs
 
-Digma.Rider.Plugin/Plugin.props
+/Digma.Rider.Plugin/Plugin.props
+/Digma.Rider.Plugin/Plugin.Test.props
+/Digma.Rider.Plugin/nuget.config
+
+msbuild.log

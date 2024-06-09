@@ -1,8 +1,7 @@
 import common.dynamicPlatformType
-import common.logBuildProfile
 import common.platformVersion
-import common.shouldDownloadSources
 import de.undercouch.gradle.tasks.download.Download
+import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 
 plugins {
     id("plugin-library")
@@ -10,49 +9,50 @@ plugins {
 
 //ide-common module should build with different platform types, if running rider with runIde it should
 // build with RD, if running idea it should build with IC, etc.
-val platformType by extra(dynamicPlatformType(project))
+val platformType: IntelliJPlatformType by extra(dynamicPlatformType(project))
 
-logBuildProfile(project)
-
-intellij {
-    version.set("$platformType-${project.platformVersion()}")
-    plugins.set(listOf("Git4Idea"))
-    downloadSources.set(project.shouldDownloadSources())
-}
 
 dependencies {
-    //todo: pretty time can be moved to the model project, so it's accessible to all project classes.
-    //from here the model classes can't use it
-    api(libs.prettytime)
+
     api(libs.threeten)
     api(libs.commons.lang3)
     api(libs.commons.collections4)
     api(libs.posthog)
     api(libs.maven.artifact)
-    api(libs.glovoapp.versioning)
+    api(libs.glovoapp.versioning) {
+        //glovoapp brings very old jetbrains annotations, and it messes up the compile-classpath.
+        //we don't need its transitive dependencies, everything it needs is already in place.
+        isTransitive = false
+    }
     api(libs.byte.buddy)
     api(libs.jackson.datetime)
 
-
     implementation(project(":model"))
     implementation(project(":analytics-provider"))
+
+    intellijPlatform {
+        create(platformType, project.platformVersion())
+        bundledPlugin("Git4Idea")
+    }
 }
 
-tasks{
 
-    val downloadComposeFile = register("downloadComposeFile", Download::class.java){
+tasks {
+
+    val downloadComposeFile = register("downloadComposeFile", Download::class.java) {
         src(
             listOf(
-                "https://get.digma.ai/")
+                "https://get.digma.ai/"
+            )
         )
 
-        val dir = File(project.sourceSets.main.get().output.resourcesDir,"docker-compose")
-        dest(File(dir,"docker-compose.yml"))
+        val dir = File(project.sourceSets.main.get().output.resourcesDir, "docker-compose")
+        dest(File(dir, "docker-compose.yml"))
         overwrite(false)
         onlyIfModified(true)
     }
 
-    processResources{
+    processResources {
         dependsOn(downloadComposeFile)
     }
 }

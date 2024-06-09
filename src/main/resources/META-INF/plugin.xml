@@ -6,17 +6,18 @@
     <version>${project.version}</version>
     <name>Digma Continuous Feedback</name>
     <vendor>digma</vendor>
-    <description>
-        Please write plugin description in README.md , see <!-- Plugin description --> section
-    </description>
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.vcs</depends>
 
     <!--
-     Python support is currently disabled. the python module still builds and packaged but python is considered
-       non-supported language
-    <depends optional="true" config-file="org.digma.intellij-with-python.xml">com.intellij.modules.python</depends>
-    -->
+     we don't support python anymore.
+     (the build profiles in BuildProfile.kt still have the pycharm properties for future support)
+     to add it back:
+     add this depends line.
+     add python to the modules list in settings.gradle.kts
+     add dependency to python module in the main build.gradle.kts
+     <depends optional="true" config-file="org.digma.intellij-with-python.xml">com.intellij.modules.python</depends>
+     -->
 
     <depends optional="true" config-file="org.digma.intellij-with-jvm.xml">com.intellij.modules.java</depends>
     <depends optional="true" config-file="org.digma.intellij-with-kotlin.xml">org.jetbrains.kotlin</depends>

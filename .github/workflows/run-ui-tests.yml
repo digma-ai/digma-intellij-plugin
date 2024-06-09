@@ -27,17 +27,17 @@ jobs:
           - os: windows-latest
             runIde: start gradlew.bat runIdeForUiTests
           - os: macos-latest
-            runIde: ./gradlew -PdoNotDownloadSources=true runIdeForUiTests &
+            runIde: ./gradlew runIdeForUiTests &
 
     steps:
 
       # Check out current repository
       - name: Fetch Sources
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v4
 
       # Setup Java 11 environment for the next steps
       - name: Setup Java
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v4
         with:
           distribution: zulu
           java-version: 17
@@ -57,4 +57,4 @@ jobs:
 
       # Run tests
       - name: Tests
-        run: ./gradlew -PdoNotDownloadSources=true test
+        run: ./gradlew test

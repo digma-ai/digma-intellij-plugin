@@ -139,7 +139,7 @@ namespace Digma.Rider.Protocol
             }
         }
 
-        private void FocusOn(ITextControl textControl,[NotNull] ICSharpFunctionDeclaration declaration)
+        private void FocusOn(ITextControl textControl,[JetBrains.Annotations.NotNull] ICSharpFunctionDeclaration declaration)
         {
             Log(_logger, "Moving caret in {0} to {1}",textControl.Document,declaration);
 

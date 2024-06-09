@@ -1,6 +1,5 @@
 ﻿using Digma.Rider.Discovery;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using NUnit.Framework;
 using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
 
 namespace Digma.Rider.Tests.Discovery;
@@ -73,7 +72,7 @@ public class IdentitiesTests
         Assert.IsTrue(managedToResolve);
     }
 
-    [Test]
+    [TestMethod]
     public void Test_GetParameterTypeFqn_UnresolvedType()
     {
         Assert.AreEqual( "???", Identities.GetParameterTypeFqn("???", false, out bool managedToResolveReferences));

@@ -1,6 +1,13 @@
 # Changelog
 
-## [2.0.347] - 2024-06-05
+## [2.0.348] - 2024-06-09
+
+- Add Errors tab by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2206
+- jcef logging system property by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2207
+- Support 2024.2 eap Closes #2167 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2198
+- fix find posthog url by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2209
+
+## 2.0.347 - 2024-06-05
 
 - Update Recent Activity UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2205
 

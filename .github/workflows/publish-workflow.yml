@@ -77,6 +77,15 @@ jobs:
           POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL }}
         run: ./gradlew buildPlugin --no-configuration-cache -PbuildProfile=${{ inputs.build-profile }} -PbuildSearchableOptions=true
 
+
+      - name: Export Version
+        id: exportversion
+        shell: bash
+        run: |
+          VERSION=$(cat version.properties |grep "version="|cut -d= -f2)
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+
       - name: Find posthog url
         id: posthog
         shell: bash

@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.348] - 2024-06-09
+## [2.0.349] - 2024-06-10
+
+**Full Changelog**: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.348...v2.0.349
+
+## 2.0.348 - 2024-06-09
 
 - Add Errors tab by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2206
 - jcef logging system property by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2207

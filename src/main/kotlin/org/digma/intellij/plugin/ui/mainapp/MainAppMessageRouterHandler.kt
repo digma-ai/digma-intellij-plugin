@@ -12,6 +12,7 @@ import org.digma.intellij.plugin.ui.highlights.HighlightsMessageRouterHandler
 import org.digma.intellij.plugin.ui.insights.InsightsMessageRouterHandler
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
 import org.digma.intellij.plugin.ui.jcef.sendCurrentViewsState
+import org.digma.intellij.plugin.ui.navigation.NavigationMessageRouterHandler
 import org.digma.intellij.plugin.ui.tests.TestsMessageRouterHandler
 
 class MainAppMessageRouterHandler(project: Project) : BaseMessageRouterHandler(project) {
@@ -24,7 +25,8 @@ class MainAppMessageRouterHandler(project: Project) : BaseMessageRouterHandler(p
         InsightsMessageRouterHandler(project),
         HighlightsMessageRouterHandler(project),
         TestsMessageRouterHandler(project),
-        ErrorsMessageRouterHandler(project)
+        ErrorsMessageRouterHandler(project),
+        NavigationMessageRouterHandler(project)
     )
 
 

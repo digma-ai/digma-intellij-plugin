@@ -4,22 +4,16 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
 import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
-import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.common.CodeObjectsUtil
 import org.digma.intellij.plugin.editor.EditorRangeHighlighter
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.navigation.MainContentViewSwitcher
 import org.digma.intellij.plugin.navigation.View
-import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
+import org.digma.intellij.plugin.ui.jcef.BaseCommonMessageRouterHandler
 import org.digma.intellij.plugin.ui.jcef.sendCurrentViewsState
 
-class NavigationMessageRouterHandler(project: Project) : BaseMessageRouterHandler(project) {
+class NavigationMessageRouterHandler(project: Project): BaseCommonMessageRouterHandler(project) {
 
-
-    override fun getOriginForTroubleshootingEvent(): String {
-        return "navigation"
-    }
 
 
     override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
@@ -84,7 +78,6 @@ class NavigationMessageRouterHandler(project: Project) : BaseMessageRouterHandle
 
     private fun onInitialize(browser: CefBrowser) {
         try {
-            doCommonInitialize(browser)
             sendCurrentViewsState(browser, NAVIGATION_SET_VIEWS_ACTION, View.views, false)
         } catch (e: AnalyticsServiceException) {
             Log.warnWithException(logger, e, "error getting backend info")

@@ -10,7 +10,6 @@ import org.digma.intellij.plugin.common.IDEUtilsService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.frameworks.QuarkusConfigureDepsPanel
 import org.digma.intellij.plugin.ui.frameworks.SpringBootMicrometerConfigureDepsPanel
-import org.digma.intellij.plugin.ui.navigation.NavigationPanel
 import java.awt.BorderLayout
 import javax.swing.BorderFactory
 import javax.swing.BoxLayout
@@ -18,8 +17,6 @@ import javax.swing.JLabel
 import javax.swing.JPanel
 
 fun createMainToolWindowPanel(project: Project, mainContentPanel: JPanel): JPanel {
-
-    val navigationPanel = NavigationPanel(project)
 
     val updatePanel = UpdateVersionPanel(project)
 
@@ -67,7 +64,6 @@ fun createMainToolWindowPanel(project: Project, mainContentPanel: JPanel): JPane
     springBootConfigureDepsPanel?.let {
         topPanel.add(it)
     }
-    topPanel.add(navigationPanel)
 
     result.add(topPanel, BorderLayout.NORTH)
     result.add(mainContentPanel, BorderLayout.CENTER)

@@ -4,7 +4,7 @@ import com.intellij.collaboration.async.disposingScope
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
-import com.intellij.ui.JBColor
+import com.intellij.openapi.util.IconLoader
 import com.intellij.ui.components.ActionLink
 import com.intellij.util.ui.JBUI
 import kotlinx.coroutines.launch
@@ -14,6 +14,7 @@ import org.digma.intellij.plugin.analytics.BackendInfoHolder
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.newerThan
+import org.digma.intellij.plugin.icons.AppIcons
 import org.digma.intellij.plugin.loadstatus.LoadStatusService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.UserActionOrigin
@@ -42,7 +43,8 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
         BrowserUtil.browse(Links.DIGMA_OVERLOAD_WARNING_DOCS_URL, project)
     }
 
-    private val closeButton = JButton("❌")
+    val closeIcon = IconLoader.getIcon("/icons/close.svg", AppIcons::class.java.classLoader)
+    private val closeButton = JButton(closeIcon)
 
     init {
         isOpaque = false
@@ -94,7 +96,6 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
         contentPanel.add(linesPanel, BorderLayout.CENTER)
 
 
-        closeButton.foreground = JBColor.GRAY
         closeButton.isVisible = false
         closeButton.isOpaque = false
         closeButton.isBorderPainted = false

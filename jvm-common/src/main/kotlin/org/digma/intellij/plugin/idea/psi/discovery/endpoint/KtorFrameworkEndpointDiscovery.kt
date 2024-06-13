@@ -74,7 +74,7 @@ class KtorFrameworkEndpointDiscovery(private val project: Project) : EndpointDis
             val declarations =
                 runInReadAccessInSmartModeWithResultAndRetryIgnorePCE(project) {
                     //todo: maybe cache the declarations, maybe in SmartElementPointer
-                    val declarations = KotlinTopLevelFunctionFqnNameIndex.get(fqName, project, GlobalSearchScope.allScope(project))
+                    val declarations = KotlinTopLevelFunctionFqnNameIndex[fqName, project, GlobalSearchScope.allScope(project)]
                     declarations.filter { ktNamedFunction: KtNamedFunction -> ktNamedFunction.containingKtFile.isCompiled }
                 }
 

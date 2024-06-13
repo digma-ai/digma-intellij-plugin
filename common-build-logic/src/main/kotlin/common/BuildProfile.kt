@@ -71,9 +71,9 @@ fun Project.currentProfile(): BuildProfile = BuildProfiles.currentProfile(this)
 
 object BuildProfiles {
 
-    enum class Profiles { p231, p232, p233, p241, p242 }
+    enum class Profile { p231, p232, p233, p241, p242 }
 
-    fun Profiles.greaterThan(other:Profiles):Boolean{
+    fun Profile.greaterThan(other:Profile):Boolean{
         val thisNumber = this.name.substring(1).toInt()
         val otherNumber = other.name.substring(1).toInt()
         return thisNumber > otherNumber
@@ -89,18 +89,18 @@ object BuildProfiles {
                 profileToUse = profileAliases[it] as String
             }
 
-            Profiles.valueOf(profileToUse)
+            Profile.valueOf(profileToUse)
 
-        } ?: Profiles.p231
+        } ?: Profile.p231
 
         return profiles[selectedProfile] ?: throw GradleException("can not find profile $selectedProfile")
     }
 
     //update this list as new profiles are added or removed
     private val profileAliases = mapOf(
-        "lowest" to Profiles.p231.name,
-        "latest" to Profiles.p241.name,
-        "eap" to Profiles.p242.name,
+        "lowest" to Profile.p231.name,
+        "latest" to Profile.p241.name,
+        "eap" to Profile.p242.name,
     )
 
 
@@ -117,13 +117,18 @@ object BuildProfiles {
         //https://www.jetbrains.com/intellij-repository/releases/
         //https://www.jetbrains.com/intellij-repository/snapshots/
 
+        //the java and kotlin version required for each release is here:
+        //see https://github.com/JetBrains/intellij-platform-gradle-plugin/blob/92e4348bcc64d6b958f7fb53f043aa61719566ca/src/main/kotlin/org/jetbrains/intellij/platform/gradle/utils/PlatformJavaVersions.kt
+        ///see https://github.com/JetBrains/intellij-platform-gradle-plugin/blob/92e4348bcc64d6b958f7fb53f043aa61719566ca/src/main/kotlin/org/jetbrains/intellij/platform/gradle/utils/PlatformKotlinVersions.kt
+
+
         //see building-how-to/*
 
-        Profiles.p231 to BuildProfile(
-            profile = Profiles.p231,
-            platformVersion = "2023.1.6",
-            riderVersion = "2023.1.4",
-            pycharmVersion = "2023.1.5",
+        Profile.p231 to BuildProfile(
+            profile = Profile.p231,
+            platformVersion = "2023.1.7",
+            riderVersion = "2023.1.7",
+            pycharmVersion = "2023.1.7",
             riderTargetFramework = "net472",
             riderResharperVersionConstant = "PROFILE_2023_1",
             platformVersionCode = "231",
@@ -133,11 +138,11 @@ object BuildProfiles {
             javaVersion = JavaVersion.VERSION_17.majorVersion
         ),
 
-        Profiles.p232 to BuildProfile(
-            profile = Profiles.p232,
-            platformVersion = "2023.2.6",
-            riderVersion = "2023.2.3",
-            pycharmVersion = "2023.2.6",
+        Profile.p232 to BuildProfile(
+            profile = Profile.p232,
+            platformVersion = "2023.2.7",
+            riderVersion = "2023.2.5",
+            pycharmVersion = "2023.2.7",
             riderTargetFramework = "net472",
             riderResharperVersionConstant = "PROFILE_2023_2",
             platformVersionCode = "232",
@@ -148,12 +153,12 @@ object BuildProfiles {
         ),
 
 
-        Profiles.p233 to BuildProfile(
+        Profile.p233 to BuildProfile(
 
-            profile = Profiles.p233,
-            platformVersion = "2023.3.4",
-            riderVersion = "2023.3.3",
-            pycharmVersion = "2023.3.3",
+            profile = Profile.p233,
+            platformVersion = "2023.3.7",
+            riderVersion = "2023.3.6",
+            pycharmVersion = "2023.3.7",
             riderTargetFramework = "net472",
             riderResharperVersionConstant = "PROFILE_2023_2",
             platformVersionCode = "233",
@@ -164,12 +169,12 @@ object BuildProfiles {
         ),
 
 
-        Profiles.p241 to BuildProfile(
+        Profile.p241 to BuildProfile(
 
-            profile = Profiles.p241,
+            profile = Profile.p241,
             platformVersion = "2024.1.3",
-            riderVersion = "2024.1.2",
-            pycharmVersion = "2024.1.2",
+            riderVersion = "2024.1.3",
+            pycharmVersion = "2024.1.3",
             riderTargetFramework = "net8.0",
             riderResharperVersionConstant = "PROFILE_2023_2",
             platformVersionCode = "241",
@@ -181,16 +186,13 @@ object BuildProfiles {
 
 
 
-        //todo: probably needs java 21, see in intellij plugin PlatformJavaVersions.kt and PlatformKotlinVersions.kt
-        //see https://github.com/JetBrains/intellij-platform-gradle-plugin/blob/92e4348bcc64d6b958f7fb53f043aa61719566ca/src/main/kotlin/org/jetbrains/intellij/platform/gradle/utils/PlatformJavaVersions.kt
-        ///see https://github.com/JetBrains/intellij-platform-gradle-plugin/blob/92e4348bcc64d6b958f7fb53f043aa61719566ca/src/main/kotlin/org/jetbrains/intellij/platform/gradle/utils/PlatformKotlinVersions.kt
-        Profiles.p242 to BuildProfile(
+        Profile.p242 to BuildProfile(
 
             isEAP = true,
-            profile = Profiles.p242,
-            platformVersion = "242-EAP-SNAPSHOT",
-            riderVersion = "2024.2-SNAPSHOT",
-            pycharmVersion = "242-EAP-SNAPSHOT",
+            profile = Profile.p242,
+            platformVersion = "242.16677-EAP-CANDIDATE-SNAPSHOT",
+            riderVersion = "2024.2-EAP2-SNAPSHOT",
+            pycharmVersion = "242.16677-EAP-CANDIDATE-SNAPSHOT",
             riderTargetFramework = "net8.0",
             riderResharperVersionConstant = "PROFILE_2023_2",
             platformVersionCode = "242",
@@ -204,17 +206,8 @@ object BuildProfiles {
 
 }
 
-/*
- * Notes:
- * pythonPluginVersion:
- *  pythonPluginVersion is necessary when building the python module with type=IC, in that case the version needs to be compatible
- *  with the IC platform version. if building the python module with type=PC then pythonPluginVersion is not relevant.
- *  building with type=PC means more disk space in GitHub.
- *  currently we build python with type=PC because matching the pythonPluginVersion and latest EAP build is not always possible,
- *  sometimes it takes time before there is a compatible python plugin version. and anyway it's easier to just build with PC.
- */
 data class BuildProfile(
-    val profile: BuildProfiles.Profiles,
+    val profile: BuildProfiles.Profile,
     val isEAP: Boolean = false,
     val platformVersion: String,
     val riderVersion: String,

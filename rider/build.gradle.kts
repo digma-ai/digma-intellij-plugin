@@ -164,7 +164,7 @@ tasks {
         val tokens = mutableMapOf<String, String>()
 
         //up to p233 the version should be 4.0.0, and 4.3.0 after p233
-        val traceSourceVersion = if(project.currentProfile().profile.greaterThan(BuildProfiles.Profiles.p233)){
+        val traceSourceVersion = if(project.currentProfile().profile.greaterThan(BuildProfiles.Profile.p233)){
             "4.3.0"
         }else{
             "4.0.0"

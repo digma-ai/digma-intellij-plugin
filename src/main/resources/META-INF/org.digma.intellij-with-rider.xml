@@ -1,6 +1,6 @@
 <idea-plugin>
 
-    <depends>rider.intellij.plugin.appender</depends>
+<!--    <depends>rider.intellij.plugin.appender</depends>-->
 
     <extensions defaultExtensionNs="com.intellij">
 

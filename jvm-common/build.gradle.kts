@@ -1,3 +1,5 @@
+import common.BuildProfiles
+import common.currentProfile
 import common.dynamicPlatformType
 import common.platformVersion
 import de.undercouch.gradle.tasks.download.Download
@@ -8,9 +10,18 @@ plugins {
     id("plugin-library")
 }
 
-//jvm module should always build with IC or IU
-val platformType: IntelliJPlatformType by extra(dynamicPlatformType(project))
-
+//todo: modules that need to build with Idea can always use IC , there is no real need to build with IU
+//this module should always build with IC or IU.
+//if building with buildWithRider=true then this module should not use the dynamic type.
+// it should use the dynamic type only when building with buildWIthUltimate=true
+//platformType impacts project.platformVersion() so it must be accurate.
+val platformType: IntelliJPlatformType by extra {
+    if (dynamicPlatformType(project) == IntelliJPlatformType.IntellijIdeaUltimate){
+        IntelliJPlatformType.IntellijIdeaUltimate
+    }else{
+        IntelliJPlatformType.IntellijIdeaCommunity
+    }
+}
 
 dependencies {
     compileOnly(project(":ide-common"))
@@ -29,7 +40,16 @@ dependencies {
         }
 
         bundledPlugin("com.intellij.java")
-        bundledPlugin("org.jetbrains.kotlin")
+
+        //there is an issue with plugin verifier that prevents using bundledPlugin("org.jetbrains.kotlin") for 242.
+        //https://youtrack.jetbrains.com/issue/MP-6594
+        //until this issue is fixed we use a direct dependency on kotlin plugin, which is not the best but works.
+        //todo: the dependency is on a version that i'm not sure compatible with 242
+        if (project.currentProfile().profile > BuildProfiles.Profile.p241){
+            plugin("org.jetbrains.kotlin","232-1.9.24-release-822-IJ10072.27")
+        }else{
+            bundledPlugin("org.jetbrains.kotlin")
+        }
     }
 }
 

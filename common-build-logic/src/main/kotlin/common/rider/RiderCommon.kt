@@ -5,11 +5,11 @@ import common.BuildProfiles
 
 fun rdGenVersion(profile: String): String {
 
-    val profileToUse: BuildProfiles.Profiles = when (profile) {
-        "lowest" -> BuildProfiles.Profiles.p231
-        "latest" -> BuildProfiles.Profiles.p241
-        "eap" -> BuildProfiles.Profiles.p242
-        else -> BuildProfiles.Profiles.valueOf(profile)
+    val profileToUse: BuildProfiles.Profile = when (profile) {
+        "lowest" -> BuildProfiles.Profile.p231
+        "latest" -> BuildProfiles.Profile.p241
+        "eap" -> BuildProfiles.Profile.p242
+        else -> BuildProfiles.Profile.valueOf(profile)
     }
 
     return rdGenVersionByProfile(profileToUse)
@@ -17,12 +17,12 @@ fun rdGenVersion(profile: String): String {
 }
 
 
-fun rdGenVersionByProfile(profile: BuildProfiles.Profiles): String {
+fun rdGenVersionByProfile(profile: BuildProfiles.Profile): String {
     return when (profile) {
-        BuildProfiles.Profiles.p231 -> "2023.2.0"
-        BuildProfiles.Profiles.p232 -> "2023.2.2"
-        BuildProfiles.Profiles.p233 -> "2023.3.2"
-        BuildProfiles.Profiles.p241 -> "2023.3.2"
-        BuildProfiles.Profiles.p242 -> "2024.1.1"
+        BuildProfiles.Profile.p231 -> "2023.2.0"
+        BuildProfiles.Profile.p232 -> "2023.2.2"
+        BuildProfiles.Profile.p233 -> "2023.3.2"
+        BuildProfiles.Profile.p241 -> "2023.3.2"
+        BuildProfiles.Profile.p242 -> "2024.1.1"
     }
 }

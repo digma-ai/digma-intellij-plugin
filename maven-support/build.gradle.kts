@@ -6,8 +6,18 @@ plugins {
     id("plugin-library")
 }
 
-//this module should always build with IC or IU
-val platformType: IntelliJPlatformType by extra(dynamicPlatformType(project))
+//todo: modules that need to build with Idea can always use IC , there is no real need to build with IU
+//this module should always build with IC or IU.
+//if building with buildWithRider=true then this module should not use the dynamic type.
+// it should use the dynamic type only when building with buildWIthUltimate=true
+//platformType impacts project.platformVersion() so it must be accurate.
+val platformType: IntelliJPlatformType by extra {
+    if (dynamicPlatformType(project) == IntelliJPlatformType.IntellijIdeaUltimate){
+        IntelliJPlatformType.IntellijIdeaUltimate
+    }else{
+        IntelliJPlatformType.IntellijIdeaCommunity
+    }
+}
 
 
 dependencies {

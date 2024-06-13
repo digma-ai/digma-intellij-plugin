@@ -17,6 +17,7 @@ for i in {1..5}; do echo; done
 
 echo "############ building with 241 ################"
 ./gradlew clean buildPlugin -PbuildProfile=p241
+for i in {1..5}; do echo; done
 
 echo "############ building with 242 ################"
 ./gradlew clean buildPlugin -PbuildProfile=p242

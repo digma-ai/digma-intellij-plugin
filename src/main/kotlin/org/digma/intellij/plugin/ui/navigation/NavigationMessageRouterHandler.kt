@@ -4,13 +4,10 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
 import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
-import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.common.CodeObjectsUtil
 import org.digma.intellij.plugin.editor.EditorRangeHighlighter
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.navigation.View
 import org.digma.intellij.plugin.ui.jcef.BaseCommonMessageRouterHandler
-import org.digma.intellij.plugin.ui.jcef.sendCurrentViewsState
 
 class NavigationMessageRouterHandler(project: Project): BaseCommonMessageRouterHandler(project) {
 
@@ -21,8 +18,6 @@ class NavigationMessageRouterHandler(project: Project): BaseCommonMessageRouterH
         Log.log(logger::trace, project, "got action '$action' with message $requestJsonNode")
 
         when (action) {
-
-            "NAVIGATION/INITIALIZE" -> onInitialize(browser)
 
             "NAVIGATION/AUTOFIX_MISSING_DEPENDENCY" -> {
                 fixMissingDependencies(requestJsonNode)
@@ -76,13 +71,6 @@ class NavigationMessageRouterHandler(project: Project): BaseCommonMessageRouterH
         }
     }
 
-    private fun onInitialize(browser: CefBrowser) {
-        try {
-            sendCurrentViewsState(browser, NAVIGATION_SET_VIEWS_ACTION, View.views, false)
-        } catch (e: AnalyticsServiceException) {
-            Log.warnWithException(logger, e, "error getting backend info")
-        }
-    }
 
     private fun fixMissingDependencies(requestJsonNode: JsonNode) {
         val payload = getPayloadFromRequest(requestJsonNode)

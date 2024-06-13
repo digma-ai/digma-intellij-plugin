@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.ui.navigation.model
+package org.digma.intellij.plugin.ui.jcef.model
 
 import org.digma.intellij.plugin.navigation.View
 import org.digma.intellij.plugin.ui.jcef.JCEFGlobalConstants

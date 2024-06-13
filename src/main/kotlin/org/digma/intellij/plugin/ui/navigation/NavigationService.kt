@@ -16,14 +16,12 @@ import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.isValidVirtualFile
 import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.navigation.ViewChangedEvent
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator
 import org.digma.intellij.plugin.notifications.NotificationUtil
 import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.psi.LanguageServiceLocator
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
-import org.digma.intellij.plugin.ui.jcef.sendCurrentViewsState
 import org.digma.intellij.plugin.ui.navigation.model.InstrumentationResult
 import java.time.Instant
 
@@ -40,15 +38,6 @@ class NavigationService(private val project: Project) : Disposable {
         fun getInstance(project: Project): NavigationService {
             return project.service<NavigationService>()
         }
-    }
-
-    init {
-        project.messageBus.connect(this).subscribe(
-            ViewChangedEvent.VIEW_CHANGED_TOPIC, ViewChangedEvent { views, createHistoryStep ->
-                jCefComponent?.let {
-                    sendCurrentViewsState(it.jbCefBrowser.cefBrowser, NAVIGATION_SET_VIEWS_ACTION, views, createHistoryStep)
-                }
-            })
     }
 
 

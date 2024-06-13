@@ -1,7 +1,5 @@
 <idea-plugin>
 
-<!--    <depends>rider.intellij.plugin.appender</depends>-->
-
     <extensions defaultExtensionNs="com.intellij">
 
         <postStartupActivity implementation="org.digma.intellij.plugin.rider.ServicesStarter" id="rider-startup"/>

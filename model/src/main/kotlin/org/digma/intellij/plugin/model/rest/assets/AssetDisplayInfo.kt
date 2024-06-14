@@ -15,4 +15,4 @@ data class AssetDisplayInfo
 constructor(val displayName: String, val methodCodeObjectId: String? = null, val role: Role)
 
 
-enum class Role { Entry, Internal, Unknown }
+enum class Role { Entry, Internal, Unknown, Test }

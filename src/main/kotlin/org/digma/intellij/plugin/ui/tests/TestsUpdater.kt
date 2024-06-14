@@ -31,6 +31,15 @@ class TestsUpdater(private val project: Project) {
 
     private var lastKnownFilterForLatestTests: FilterForLatestTests = FilterForLatestTests(emptySet())
 
+
+    companion object {
+        @JvmStatic
+        fun getInstance(project: Project): TestsUpdater {
+            return project.service<TestsUpdater>()
+        }
+    }
+
+
     //should be called when the panel is initialized
     fun setJCefComponent(jCefComponent: JCefComponent) {
         this.jCefComponent = jCefComponent

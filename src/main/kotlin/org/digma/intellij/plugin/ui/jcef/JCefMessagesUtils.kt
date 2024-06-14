@@ -51,8 +51,8 @@ import org.digma.intellij.plugin.ui.jcef.model.UiThemePayload
 import org.digma.intellij.plugin.ui.jcef.model.UserEmailPayload
 import org.digma.intellij.plugin.ui.jcef.model.UserFinishedDigmathonPayload
 import org.digma.intellij.plugin.ui.jcef.model.UserInfoPayload
-import org.digma.intellij.plugin.ui.navigation.model.SetViewMessage
-import org.digma.intellij.plugin.ui.navigation.model.SetViewMessagePayload
+import org.digma.intellij.plugin.ui.jcef.model.SetViewMessage
+import org.digma.intellij.plugin.ui.jcef.model.SetViewMessagePayload
 import org.digma.intellij.plugin.ui.settings.Theme
 
 

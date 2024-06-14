@@ -24,11 +24,13 @@ plugins {
 }
 
 
-//the platformType is determined dynamically based on other property.
-//we build with IU,RD,PC,PY etc. we also runIde with different platform type.
-//it enables launching different IDEs with different versions and still let the other modules
-//compile correctly. most modules always compile with the same platform type.
-//see method dynamicPlatformType for details.
+//the platformType determines which platform we build with, it may be IC,IU,PC,PY,RD.
+//it is a good way for us to test that we don't have leaking usages of classes that exist in one platform
+//but don't exist in another.
+//this module should be compatible with all IDEs, and thus it should build with IC,IU,RD with no issues.
+//the platformType is determined dynamically based on other property,
+// we have for example buildWithRider,buildWIthUltimate.
+//the other modules either also build with dynamic platform type or always build with the same type.
 val platformType: IntelliJPlatformType by extra(dynamicPlatformType(project))
 
 

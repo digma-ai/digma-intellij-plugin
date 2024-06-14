@@ -55,7 +55,7 @@ add new run configurations for the new profile.
 as new releases come out, older versions become more difficult to maintain because of API changes or build system changes,
 sometimes new releases require changes in gradle build scripts that will not work with older versions.
 we try to keep support for as many releases as possible without too much work. if it becomes too difficult to support
-older releases we can remove the oldest profiles.
+older releases we can remove the oldest profile.
 we must support at least 2 versions plus the next EAP.
 
 to remove a profile do the revers of adding a profile.
@@ -93,7 +93,7 @@ need to map the profile name to a suitable rd-gen version and also support the c
 profiles are declared in buildSrc/src/main/kotlin/common/BuildProfile.kt
 a profile holds a few properties for the project, mainly platformVersion,riderVersion and more.
 data class BuildProfile(
-    val profile: BuildProfiles.Profiles,
+    val profile: BuildProfiles.Profile,
     val platformVersion: String,
     val riderVersion: String,
     val pycharmVersion: String,

@@ -7,8 +7,10 @@ plugins {
     id("plugin-library")
 }
 
-//ide-common module should build with different platform types, if running rider with runIde it should
-// build with RD, if running idea it should build with IC, etc.
+//ide-common module should build with different platform types, if running rider with runIde or building
+// with buildWithRider=true it should build with RD,
+// if running ultimate or building with buildWIthUltimate=true it should build with IU, etc.
+//the default is to build with IC
 val platformType: IntelliJPlatformType by extra(dynamicPlatformType(project))
 
 

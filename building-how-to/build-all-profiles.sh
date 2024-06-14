@@ -13,13 +13,14 @@ set -e
 ## check that profile aliases work
 ./gradlew clean buildPlugin -PbuildProfile=lowest
 ./gradlew clean buildPlugin -PbuildProfile=latest
-#./gradlew clean buildPlugin -PbuildProfile=eap
+./gradlew clean buildPlugin -PbuildProfile=eap
 
 
 ./gradlew clean buildPlugin -PbuildProfile=p231
 ./gradlew clean buildPlugin -PbuildProfile=p232
 ./gradlew clean buildPlugin -PbuildProfile=p233
 ./gradlew clean buildPlugin -PbuildProfile=p241
+./gradlew clean buildPlugin -PbuildProfile=p242
 
 
 ###################### idea ultimate
@@ -29,6 +30,7 @@ set -e
 ./gradlew clean buildPlugin -PbuildWIthUltimate=true -PbuildProfile=p232
 ./gradlew clean buildPlugin -PbuildWIthUltimate=true -PbuildProfile=p233
 ./gradlew clean buildPlugin -PbuildWIthUltimate=true -PbuildProfile=p241
+./gradlew clean buildPlugin -PbuildWIthUltimate=true -PbuildProfile=p242
 
 
 
@@ -38,6 +40,7 @@ set -e
 ./gradlew clean buildPlugin -PbuildWithRider=true -PbuildProfile=p232
 ./gradlew clean buildPlugin -PbuildWithRider=true -PbuildProfile=p233
 ./gradlew clean buildPlugin -PbuildWithRider=true -PbuildProfile=p241
+./gradlew clean buildPlugin -PbuildWithRider=true -PbuildProfile=p242
 
 ######################  pycharm
 
@@ -46,6 +49,7 @@ set -e
 #./gradlew clean buildPlugin -PbuildWithPycharm=true -PbuildProfile=p232
 #./gradlew clean buildPlugin -PbuildWithPycharm=true -PbuildProfile=p233
 #./gradlew clean buildPlugin -PbuildWithPycharm=true -PbuildProfile=p241
+#./gradlew clean buildPlugin -PbuildWithPycharm=true -PbuildProfile=p242
 
 
 ######################  pycharm pro
@@ -55,4 +59,5 @@ set -e
 #./gradlew clean buildPlugin -PbuildWithPycharmPro=true -PbuildProfile=p232
 #./gradlew clean buildPlugin -PbuildWithPycharmPro=true -PbuildProfile=p233
 #./gradlew clean buildPlugin -PbuildWithPycharmPro=true -PbuildProfile=p241
+#./gradlew clean buildPlugin -PbuildWithPycharmPro=true -PbuildProfile=p242
 

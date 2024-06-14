@@ -8,7 +8,15 @@ plugins {
 }
 
 //this module should always build with PC or PY
-val platformType: IntelliJPlatformType by extra(dynamicPlatformType(project))
+//if building with buildWithRider=true then this module should not use the dynamic type, only
+// when building with buildWithPycharmPro=true
+val platformType: IntelliJPlatformType by extra {
+    if (dynamicPlatformType(project) == IntelliJPlatformType.PyCharmProfessional){
+        IntelliJPlatformType.PyCharmProfessional
+    }else{
+        IntelliJPlatformType.PyCharmCommunity
+    }
+}
 
 
 dependencies {

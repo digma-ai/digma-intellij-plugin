@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.350] - 2024-06-12
+## [2.0.351] - 2024-06-14
+
+- Support 242 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2213
+
+## 2.0.350 - 2024-06-12
 
 - Added close button image by @ohrebeniuk in https://github.com/digma-ai/digma-intellij-plugin/pull/2211
 - Update Jaeger UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2210

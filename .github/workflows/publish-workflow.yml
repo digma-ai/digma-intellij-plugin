@@ -1,5 +1,5 @@
 
-name: Publish to jetbrains marketplace
+name: Publish workflow
 on:
   workflow_call:
     inputs:

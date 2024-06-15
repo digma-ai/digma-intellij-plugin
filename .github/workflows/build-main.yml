@@ -26,9 +26,7 @@ jobs:
       build-with-rider: true
     secrets: inherit
 
-  ## todo : add plugin verifier for rider
   plugin-verifier-workflow:
-    needs: [ build-workflow,build-workflow-with-rider ]
     strategy:
       matrix:
         profile: [ p231, p232, p233, p241, p242 ]

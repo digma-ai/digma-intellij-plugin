@@ -41,17 +41,9 @@ jobs:
         with:
           ref: ${{ inputs.ref-name }}
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'corretto'
+      - name: Workflow setup
+        uses: ./github-actions/workflow-setup
 
-      - name: Setup dotnet
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: |
-            8.0.301
 
       - name: Run Plugin Verifier
         run: ./gradlew buildPlugin verifyPlugin -PbuildProfile=${{ inputs.build-profile }}

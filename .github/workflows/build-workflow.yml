@@ -23,10 +23,25 @@ jobs:
       - name: Debug
         run: echo "Building ref ${{ inputs.ref-name }} with profile ${{ inputs.build-profile }}"
 
+      - name: Maximize build space
+        uses: AdityaGarg8/remove-unwanted-software@v3
+        with:
+          remove-android: true
+          remove-haskell: true
+          remove-codeql: true
+          remove-docker-images: true
+          remove-large-packages: true
+          remove-cached-tools: true
+          remove-swapfile: true
+
+      - name: Fetch Sources
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref-name }}
+
+
       - name: Workflow setup
         uses: ./github-actions/workflow-setup
-        with:
-          checkout-ref: ${{ inputs.ref-name }}
 
 
       ## wrapper-validation-action fails too often with this error https://github.com/gradle/wrapper-validation-action/issues/40

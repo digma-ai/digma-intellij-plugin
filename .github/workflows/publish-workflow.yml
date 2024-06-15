@@ -22,33 +22,11 @@ jobs:
       - name: Debug
         run: echo "Publishing ref ${{ inputs.tag-name }} with profile ${{ inputs.build-profile }} with changelog ${{ inputs.changelog }}"
 
-      - name: Maximize build space
-        uses: AdityaGarg8/remove-unwanted-software@v3
+      - name: Workflow setup
+        uses: ./github-actions/workflow-setup
         with:
-          remove-android: true
-          remove-haskell: true
-          remove-codeql: true
-          remove-docker-images: true
-          remove-large-packages: true
-          remove-cached-tools: true
-          remove-swapfile: true
+          checkout-ref: ${{ inputs.tag-name }}
 
-      - name: Fetch Sources
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.tag-name }}
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'corretto'
-
-      - name: Setup dotnet
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: |
-            8.0.301
 
       ## wrapper-validation-action fails too often with this error https://github.com/gradle/wrapper-validation-action/issues/40
       ## we don't need it because we usually don't have contributors replacing it

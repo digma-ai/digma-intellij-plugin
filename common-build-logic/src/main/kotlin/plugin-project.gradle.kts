@@ -1,7 +1,6 @@
 import common.logBuildProfile
 import common.logIntellijPlatformPlugin
 import common.properties
-import gradle.kotlin.dsl.accessors._43c381c3e4d273ea5198119a0017e0c8.intellijPlatform
 
 plugins {
     id("digma-base")

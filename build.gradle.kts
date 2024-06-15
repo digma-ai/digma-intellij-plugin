@@ -194,21 +194,20 @@ intellijPlatform {
         ides {
             //use the same platformType and version as in intellijPlatform dependencies
             //Note: recommended() doesn't work well and tries to resolve a wrong IDE
-            withCurrentProfile { buildProfile ->
-                ide(platformType,buildProfile.platformVersion)
-
-                if (!buildProfile.isEAP) {
-                    select {
-                        types =
-                            listOf(IntelliJPlatformType.IntellijIdeaCommunity, IntelliJPlatformType.IntellijIdeaUltimate)
-                        channels = listOf(ProductRelease.Channel.RELEASE)
-                        sinceBuild = project.currentProfile().pluginSinceBuild
-                        untilBuild = project.currentProfile().pluginUntilBuild
-                    }
-                }
-            }
-
-
+            recommended()
+//            withCurrentProfile { buildProfile ->
+//                ide(platformType,buildProfile.platformVersion)
+//
+//                if (!buildProfile.isEAP) {
+//                    select {
+//                        types =
+//                            listOf(IntelliJPlatformType.IntellijIdeaCommunity, IntelliJPlatformType.IntellijIdeaUltimate)
+//                        channels = listOf(ProductRelease.Channel.RELEASE)
+//                        sinceBuild = project.currentProfile().pluginSinceBuild
+//                        untilBuild = project.currentProfile().pluginUntilBuild
+//                    }
+//                }
+//            }
         }
         subsystemsToCheck = VerifyPluginTask.Subsystems.WITHOUT_ANDROID
     }

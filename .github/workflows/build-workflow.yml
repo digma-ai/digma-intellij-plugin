@@ -24,7 +24,7 @@ jobs:
         run: echo "Building ref ${{ inputs.ref-name }} with profile ${{ inputs.build-profile }}"
 
       - name: Maximize build space
-        uses: AdityaGarg8/remove-unwanted-software@v1
+        uses: AdityaGarg8/remove-unwanted-software@v3
         with:
           remove-android: true
           remove-haskell: true

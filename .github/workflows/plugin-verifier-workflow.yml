@@ -26,7 +26,7 @@ jobs:
 
     steps:
       - name: Maximize build space
-        uses: AdityaGarg8/remove-unwanted-software@v1
+        uses: AdityaGarg8/remove-unwanted-software@v3
         with:
           remove-android: true
           remove-haskell: true

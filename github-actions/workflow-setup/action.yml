@@ -1,0 +1,17 @@
+name: 'Workflow setup'
+description: 'Setup the workflow environment and tools'
+runs:
+  using: "composite"
+  steps:
+
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'corretto'
+
+    - name: Setup dotnet
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: |
+          8.0.301

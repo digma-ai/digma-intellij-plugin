@@ -193,7 +193,7 @@ intellijPlatform {
 
         ides {
             //use the same platformType and version as in intellijPlatform dependencies
-            //Note: recommended() doesn't work well and tries to resolve a wrong IDE
+            //Note: recommended() doesn't work well, sometimes tries to resolve a wrong IDE and fails in GitHub
             withCurrentProfile { buildProfile ->
                 ide(platformType,buildProfile.platformVersion)
 
@@ -207,8 +207,6 @@ intellijPlatform {
                     }
                 }
             }
-
-
         }
         subsystemsToCheck = VerifyPluginTask.Subsystems.WITHOUT_ANDROID
     }

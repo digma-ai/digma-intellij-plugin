@@ -24,27 +24,25 @@ jobs:
         run: echo "Building ref ${{ inputs.ref-name }} with profile ${{ inputs.build-profile }}"
 
       - name: Maximize build space
-        uses: AdityaGarg8/remove-unwanted-software@v1
+        uses: AdityaGarg8/remove-unwanted-software@v3
         with:
           remove-android: true
           remove-haskell: true
+          remove-codeql: true
+          remove-docker-images: true
+          remove-large-packages: true
+          remove-cached-tools: true
+          remove-swapfile: true
 
       - name: Fetch Sources
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref-name }}
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'corretto'
 
-      - name: Setup dotnet
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: |
-            8.0.301
+      - name: Workflow setup
+        uses: ./github-actions/workflow-setup
+
 
       ## wrapper-validation-action fails too often with this error https://github.com/gradle/wrapper-validation-action/issues/40
       ## we don't need it because we usually don't have contributors replacing it
@@ -64,34 +62,10 @@ jobs:
           POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL }}
         run: ./gradlew clean test buildPlugin --no-configuration-cache -PbuildWithRider=true -PbuildProfile=${{ inputs.build-profile }} -PbuildSearchableOptions=true
 
-      - name: Export Version
-        id: exportversion
-        shell: bash
-        run: |
-          VERSION=$(cat version.properties |grep "version="|cut -d= -f2)
-          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-
-      - name: Find posthog url
-        id: posthog
-        shell: bash
-        run: |
-          IJ_RELEASE_NUMBER=$(echo "${{ inputs.build-profile }}"|cut -c 2-)
-          cd ${{ github.workspace }}/build/libs
-          FILENAME=`ls digma-intellij-plugin-${{ steps.exportversion.outputs.version }}+$IJ_RELEASE_NUMBER.jar`
-          unzip -q "$FILENAME" -d content
-          URL=$(cat ./content/posthog-token-url.txt)
-          echo "url=${URL}" >> "$GITHUB_OUTPUT"
-
-      - name: Debug posthog url
-        if: ${{ steps.posthog.outputs.url == '' }}
-        run: echo "posthog url is empty,failing build"
-
-      - name: Verify posthog url exists
-        if: ${{ steps.posthog.outputs.url == '' }}
-        uses: actions/github-script@v7
+      - name: Validate posthog url
+        uses: ./github-actions/validate-posthog-url
         with:
-          script: |
-            core.setFailed('posthog url is empty')
+          build-profile: ${{ inputs.build-profile }}
 
       - name: Prepare Plugin Artifact
         if: ${{ inputs.build-with-rider != 'true' }}

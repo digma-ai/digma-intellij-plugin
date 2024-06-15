@@ -1,6 +1,6 @@
 
 
-name: Publish to jetbrains marketplace
+name: Release - Publish and update to next version
 on:
   release:
     types: [prereleased, released]

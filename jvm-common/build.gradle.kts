@@ -2,6 +2,7 @@ import common.BuildProfiles
 import common.currentProfile
 import common.dynamicPlatformType
 import common.platformVersion
+import common.withSilenceLogging
 import de.undercouch.gradle.tasks.download.Download
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import java.util.Properties
@@ -69,7 +70,10 @@ tasks {
             )
         )
 
-        logger.lifecycle("${project.name}: jars to download $properties")
+        withSilenceLogging {
+            logger.lifecycle("${project.name}: jars to download $properties")
+        }
+
 
         dest(File(project.sourceSets.main.get().output.resourcesDir, "otelJars"))
         overwrite(false)

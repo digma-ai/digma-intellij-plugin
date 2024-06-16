@@ -1,8 +1,10 @@
 import com.jetbrains.plugin.structure.base.utils.isFile
 import common.BuildProfiles
 import common.BuildProfiles.greaterThan
+import common.DIGMA_NO_INFO_LOGGING
 import common.currentProfile
 import common.withCurrentProfile
+import common.withSilenceLogging
 import org.apache.tools.ant.filters.ReplaceTokens
 import org.jetbrains.intellij.platform.gradle.Constants
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
@@ -18,7 +20,7 @@ plugins {
 
 private val dotnetPluginId = "Digma.Rider.Plugin"
 private val buildConfiguration = "Debug"
-private val solutionFile = "$dotnetPluginId/Digma.Rider.Plugin.sln"
+private val solutionFile = "Digma.Rider.Plugin.sln"
 private val dotnetProjectDir = layout.projectDirectory.dir(dotnetPluginId)
 private val nugetConfigFile = dotnetProjectDir.file("nuget.config").asFile
 private val pluginPropsFile = dotnetProjectDir.file("Plugin.props").asFile
@@ -71,9 +73,11 @@ val riderSdkTestProjectFile by lazy {
 }
 
 project.afterEvaluate {
-    logger.lifecycle("Rider Sdk Path: $riderSdkPath")
-    logger.lifecycle("Rider Sdk project file: $riderSdkProjectFile")
-    logger.lifecycle("Rider Sdk test project file: $riderSdkTestProjectFile")
+    withSilenceLogging {
+        logger.lifecycle("Rider Sdk Path: $riderSdkPath")
+        logger.lifecycle("Rider Sdk project file: $riderSdkProjectFile")
+        logger.lifecycle("Rider Sdk test project file: $riderSdkTestProjectFile")
+    }
 }
 
 
@@ -111,7 +115,9 @@ tasks {
             </configuration>
             """.trimIndent()
 
-            logger.lifecycle("Writing nuget.config to $path, content $content")
+            withSilenceLogging {
+                logger.lifecycle("Writing nuget.config to $path, content $content")
+            }
             val bytes = content.toByteArray()
             nugetConfigFile.writeBytes(bytes)
         }
@@ -164,9 +170,9 @@ tasks {
         val tokens = mutableMapOf<String, String>()
 
         //up to p233 the version should be 4.0.0, and 4.3.0 after p233
-        val traceSourceVersion = if(project.currentProfile().profile.greaterThan(BuildProfiles.Profile.p233)){
+        val traceSourceVersion = if (project.currentProfile().profile.greaterThan(BuildProfiles.Profile.p233)) {
             "4.3.0"
-        }else{
+        } else {
             "4.0.0"
         }
 
@@ -188,7 +194,7 @@ tasks {
 
     //call prepare before loading the project to Rider
     val prepare by registering {
-        dependsOn(generateNuGetConfig, initPluginProps,initPluginTestProps, rdGen)
+        dependsOn(generateNuGetConfig, initPluginProps, initPluginTestProps, rdGen)
     }
 
 
@@ -219,24 +225,38 @@ tasks {
             //for diagnostics add argument "/v:diag"
 
             //about /r: in development we sometimes need to build with different profiles, for example 232 and then 241.
-            // sometimes the conpileDotnet task will fail and looks like its using the wrong assemblies. /r(estore) fixes it.
+            // sometimes the compileDotnet task will fail and looks like its using the wrong assemblies. /r(estore) fixes it.
 
-            logger.lifecycle("compileDotNet:Plugin.props: ${pluginPropsFile.readText()}")
-            logger.lifecycle("compileDotNet:nuget.config: ${nugetConfigFile.readText()}")
+            withSilenceLogging {
+                logger.lifecycle("compileDotNet:Plugin.props: ${pluginPropsFile.readText()}")
+                logger.lifecycle("compileDotNet:nuget.config: ${nugetConfigFile.readText()}")
+            }
+
+            val argsList = mutableListOf(
+                "msbuild",
+                "/r",
+                "/p:Configuration=$buildConfiguration",
+                "/t:Rebuild",
+                "/nodeReuse:False",
+                "/fl",
+                "/bl:${project.layout.buildDirectory.get().asFile.absolutePath}/dotnet/msbuild.binlog"
+            )
+
+            if (project.hasProperty(DIGMA_NO_INFO_LOGGING)) {
+                argsList.add("-noConsoleLogger")
+            }
+
+            argsList.add(solutionFile)
+
+            withSilenceLogging {
+                logger.lifecycle("dotnet args: [${argsList.joinToString(" ")}]")
+            }
 
             exec {
                 executable = "dotnet"
-                args = listOf(
-                    "msbuild",
-                    "/r",
-                    "/p:Configuration=$buildConfiguration",
-                    "/t:Clean;Restore;Rebuild",
-                    "/nodeReuse:False",
-                    "/fl",
-                    "/bl:${project.layout.buildDirectory.get().asFile.absolutePath}/dotnet/msbuild.binlog",
-                    solutionFile
-                )
-                workingDir = projectDir
+                args = argsList.toList()
+
+                workingDir = dotnetProjectDir.asFile
             }
         }
     }
@@ -284,7 +304,10 @@ val riderModel: Configuration by configurations.creating {
 artifacts {
     add(riderModel.name, provider {
         intellijPlatform.platformPath.resolve("lib/rd/rider-model.jar").also {
-            logger.lifecycle("rider-model.jar: $it")
+            withSilenceLogging {
+                logger.lifecycle("rider-model.jar: $it")
+            }
+
             check(it.isFile) {
                 "rider-model.jar is not found at $it"
             }

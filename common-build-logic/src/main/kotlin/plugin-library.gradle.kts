@@ -1,5 +1,6 @@
 import common.logBuildProfile
 import common.logIntellijPlatformPlugin
+import common.withSilenceLogging
 
 plugins {
     id("digma-base")
@@ -25,8 +26,10 @@ dependencies {
 
 afterEvaluate {
     if (gradle.startParameter.taskNames.contains("buildPlugin")) {
-        logBuildProfile(project)
-        logIntellijPlatformPlugin(project, intellijPlatform)
+        withSilenceLogging {
+            logBuildProfile(project)
+            logIntellijPlatformPlugin(project, intellijPlatform)
+        }
     }
 }
 

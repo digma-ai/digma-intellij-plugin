@@ -4,6 +4,18 @@ import org.gradle.api.Project
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import org.jetbrains.intellij.platform.gradle.extensions.IntelliJPlatformExtension
 
+//send -Pdigma-no-info-logging to silence some console logging, useful when debugging issues so the log is not too noisy.
+const val DIGMA_NO_INFO_LOGGING = "digma-no-info-logging"
+
+//use for messages we want to silence sometimes with DIGMA_NO_INFO_LOGGING
+fun Project.withSilenceLogging(consumer: () -> Unit){
+    if (!hasProperty(DIGMA_NO_INFO_LOGGING)) {
+        consumer.invoke()
+    }
+}
+
+
+
 fun properties(key: String, project: Project) = project.findProperty(key).toString()
 
 fun platformTypeProperty(project: Project) = project.findProperty("platformType") as IntelliJPlatformType

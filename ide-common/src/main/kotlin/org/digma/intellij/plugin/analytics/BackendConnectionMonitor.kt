@@ -2,8 +2,10 @@ package org.digma.intellij.plugin.analytics
 
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.util.messages.MessageBusConnection
+import org.digma.intellij.plugin.log.Log
 
 /**
  * This service keeps track of the analytics service connection status. it is used to decide when to show the
@@ -12,6 +14,9 @@ import com.intellij.util.messages.MessageBusConnection
  */
 @Service(Service.Level.PROJECT)
 class BackendConnectionMonitor(val project: Project) : Disposable, AnalyticsServiceConnectionEvent {
+
+
+    private val logger: Logger = Logger.getInstance(this::class.java)
 
     companion object {
         @JvmStatic
@@ -53,10 +58,12 @@ class BackendConnectionMonitor(val project: Project) : Disposable, AnalyticsServ
     }
 
     override fun connectionLost() {
+        Log.log(logger::trace,"got connectionLost")
         connectionError()
     }
 
     override fun connectionGained() {
+        Log.log(logger::trace,"got connectionGained")
         connectionOk()
     }
 

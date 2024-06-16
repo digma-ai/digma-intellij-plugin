@@ -670,6 +670,16 @@ public class AnalyticsService implements Disposable {
                     throw new AnalyticsServiceException(e);
                 }
 
+
+                //this message should help us understand the logs when debugging issues. it will help
+                // understand that there are more and more exceptions.
+                //code below and in handleInvocationTargetException will log the exceptions but our Log class
+                // will not explode the logs, so we don't see all the exceptions in the log as they happen.
+                //this message will explode the idea.log if user has digma trace logging on and no backend running,
+                // which shouldn't happen, users should not have digma trace logging on all the time.
+                Log.log(LOGGER::trace,"got exception in AnalyticsService {}",ExceptionUtils.findFirstRealExceptionCause(e));
+
+
                 //Note: when logging LOGGER.error idea will pop up a red message which we don't want, so only report warn messages.
 
                 //handle only InvocationTargetException, other exceptions are probably a bug.

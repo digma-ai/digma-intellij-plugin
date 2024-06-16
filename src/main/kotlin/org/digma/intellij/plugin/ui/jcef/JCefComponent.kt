@@ -205,6 +205,8 @@ private constructor(
             //this event run on EDT
             Backgroundable.executeOnPooledThread {
                 try {
+                    //can not rely here on backend about info because this event may be processed before the api client was changed.
+                    //the API_CLIENT_CHANGED_TOPIC is more suitable. it is handled here.
                     val apiUrl = settings.apiUrl
                     sendApiUrl(jbCefBrowser.cefBrowser, apiUrl)
                     sendIsMicrometerProject(jbCefBrowser.cefBrowser, SpringBootMicrometerConfigureDepsService.isSpringBootWithMicrometer())
@@ -255,16 +257,14 @@ private constructor(
 
 
         project.messageBus.connect(observabilityChangeParentDisposable).subscribe(
-            ObservabilityChanged.OBSERVABILITY_CHANGED_TOPIC, object : ObservabilityChanged {
-                override fun observabilityChanged(isObservabilityEnabled: Boolean) {
-                    try {
-                        sendObservabilityEnabledMessage(
-                            jbCefBrowser.cefBrowser,
-                            isObservabilityEnabled
-                        )
-                    } catch (e: Throwable) {
-                        ErrorReporter.getInstance().reportError("JCefComponent.observabilityChanged", e)
-                    }
+            ObservabilityChanged.OBSERVABILITY_CHANGED_TOPIC, ObservabilityChanged { isObservabilityEnabled ->
+                try {
+                    sendObservabilityEnabledMessage(
+                        jbCefBrowser.cefBrowser,
+                        isObservabilityEnabled
+                    )
+                } catch (e: Throwable) {
+                    ErrorReporter.getInstance().reportError("JCefComponent.observabilityChanged", e)
                 }
             }
         )
@@ -281,9 +281,9 @@ private constructor(
                             scope,
                             codeLocation,
                             hasErrors,
-                            insightsStats?.analyticsInsightsCount ?: 0,
-                            insightsStats?.issuesInsightsCount ?: 0,
-                            insightsStats?.unreadInsightsCount ?: 0
+                            insightsStats.analyticsInsightsCount,
+                            insightsStats.issuesInsightsCount,
+                            insightsStats.unreadInsightsCount
                         )
                     } catch (e: Throwable) {
                         ErrorReporter.getInstance().reportError("JCefComponent.scopeChanged", e)

@@ -217,6 +217,15 @@ intellijPlatform {
 tasks {
 
     prepareSandbox {
+
+        /*
+        sometimes runIde fails with this error:
+        Execution failed for task ':prepareSandbox'.
+        > Cannot access output property '$1$4' of task ':prepareSandbox'. Accessing unreadable inputs or outputs is not supported. Declare the task as untracked by using Task.doNotTrackState(). For more information, please refer to https://docs.gradle.org/8.8/userguide/incremental_build.html#sec:disable-state-tracking in the Gradle documentation.
+        > java.io.IOException: Cannot snapshot /home/shalom/workspace/digma/digma-intellij-plugin/build/idea-sandbox/IC-2024.1.3/system/jcef_cache/SingletonSocket: not a regular file
+        */
+        doNotTrackState("prepareSandbox needs to re-run every time")
+
         //copy rider dlls to the plugin sandbox, so it is packaged in the zip
         from(configurations.getByName("riderDotNetObjects")) {
             into("${rootProject.name}/dotnet/")
@@ -264,7 +273,12 @@ tasks {
 
     val deleteLog by registering(Delete::class) {
         outputs.upToDateWhen { false }
-        project.layout.buildDirectory.dir("idea-sandbox/system/log").get().asFile.walk().forEach {
+        val ideFolderName = if(platformType == IntelliJPlatformType.Rider){
+            "${platformType.code}-${project.currentProfile().riderVersion}"
+        }else{
+            "${platformType.code}-${project.currentProfile().platformVersion}"
+        }
+        project.layout.buildDirectory.dir("idea-sandbox/$ideFolderName/log").get().asFile.walk().forEach {
             if (it.name.endsWith(".log")) {
                 delete(it)
             }

@@ -6,7 +6,7 @@ import com.intellij.openapi.components.Service;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.*;
 import org.digma.intellij.plugin.auth.AuthManager;
-import org.digma.intellij.plugin.common.ProjectUtilsKt;
+import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.settings.SettingsState;
 
@@ -32,31 +32,33 @@ public final class AnalyticsServiceSettingsWatcher implements Disposable {
 
         SettingsState.getInstance().addChangeListener(state -> {
 
-            Log.log(LOGGER::debug, "settings changed event");
+            Backgroundable.executeOnPooledThread(() -> {
+                Log.log(LOGGER::debug, "settings changed event");
 
-            boolean shouldReplaceClient = false;
+                boolean shouldReplaceClient = false;
 
-            if (!Objects.equals(state.apiUrl, myApiUrl)) {
-                myApiUrl = state.apiUrl;
-                shouldReplaceClient = true;
-            }
+                if (!Objects.equals(state.apiUrl, myApiUrl)) {
+                    myApiUrl = state.apiUrl;
+                    shouldReplaceClient = true;
+                }
 
-            //replace the client only when apiUrl is changed.
-            //there is no need to replace the client when api token is changed because there is an
-            // AuthenticationProvider that always takes it from the settings
-            if (shouldReplaceClient) {
-                Log.log(LOGGER::debug, "api url changed to {}, calling replace client", myApiUrl);
-                AuthManager.getInstance().logout();
-                AuthManager.getInstance().pauseBeforeClientChange();
-                AuthManager.getInstance().replaceClient(myApiUrl);
+                //replace the client only when apiUrl is changed.
+                //there is no need to replace the client when api token is changed because there is an
+                // AuthenticationProvider that always takes it from the settings
+                if (shouldReplaceClient) {
+                    Log.log(LOGGER::debug, "api url changed to {}, calling replace client", myApiUrl);
+                    AuthManager.getInstance().logout();
+                    AuthManager.getInstance().pauseBeforeClientChange();
+                    AuthManager.getInstance().replaceClient(myApiUrl);
 
-                for (Project openProject : ProjectManager.getInstance().getOpenProjects()) {
-                    if (ProjectUtilsKt.isProjectValid(openProject)) {
-                        var analyticsService = AnalyticsService.getInstance(openProject);
-                        analyticsService.replaceClient(myApiUrl);
+                    for (Project openProject : ProjectManager.getInstance().getOpenProjects()) {
+                        if (ProjectUtilsKt.isProjectValid(openProject)) {
+                            var analyticsService = AnalyticsService.getInstance(openProject);
+                            analyticsService.replaceClient(myApiUrl);
+                        }
                     }
                 }
-            }
+            });
 
         }, this);
 

@@ -6,7 +6,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.ui.content.*;
 import org.digma.intellij.plugin.analytics.*;
-import org.digma.intellij.plugin.common.EDT;
+import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.ui.panels.DisposablePanel;
 import org.digma.intellij.plugin.updates.*;
@@ -89,7 +89,32 @@ public class MainToolWindowCardsController implements Disposable {
         project.getMessageBus().connect().subscribe(AggressiveUpdateStateChangedEvent.Companion.getUPDATE_STATE_CHANGED_TOPIC(),
                 (AggressiveUpdateStateChangedEvent) this::updateStateChanged);
 
+
+        project.getMessageBus().connect().subscribe(ApiClientChangedEvent.getAPI_CLIENT_CHANGED_TOPIC(),new ApiClientChangedEvent(){
+
+            @Override
+            public void apiClientChanged(@NotNull String newUrl) {
+                Backgroundable.ensurePooledThread(() -> {
+                    if (wizard.isOn()){
+                        if(isCentralized()){
+                            EDT.ensureEDT(() -> wizardFinished());
+                        }
+                    }
+                });
+            }
+        });
     }
+
+
+    private boolean isCentralized(){
+        try{
+            var about = AnalyticsService.getInstance(project).getAbout();
+            return Boolean.TRUE.equals(about.isCentralize());
+        }catch (Throwable e){
+            return false;
+        }
+    }
+
 
 
     public static MainToolWindowCardsController getInstance(@NotNull Project project) {

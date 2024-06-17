@@ -67,7 +67,7 @@ import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJav
 import org.digma.intellij.plugin.ui.jcef.updateDigmaEngineStatus
 import org.digma.intellij.plugin.ui.notificationcenter.AppNotificationCenter
 import org.digma.intellij.plugin.ui.panels.DisposablePanel
-import org.digma.intellij.plugin.ui.recentactivity.RecentActivityToolWindowShower
+import org.digma.intellij.plugin.recentactivity.RecentActivityToolWindowShower
 import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier
 import org.digma.intellij.plugin.ui.settings.SettingsChangeListener
 import org.digma.intellij.plugin.ui.settings.Theme
@@ -143,8 +143,6 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
 
     )
 
-
-    PersistenceService.getInstance().firstWizardLaunchDone()
 
 
     val lifeSpanHandler: CefLifeSpanHandlerAdapter = object : CefLifeSpanHandlerAdapter() {
@@ -223,6 +221,8 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                 payload?.productKey?.let {
                     DigmathonService.getInstance().setProductKey(it)
                 }
+
+                PersistenceService.getInstance().firstWizardLaunchDone()
 
                 EDT.ensureEDT {
                     updateInstallationWizardFlag()

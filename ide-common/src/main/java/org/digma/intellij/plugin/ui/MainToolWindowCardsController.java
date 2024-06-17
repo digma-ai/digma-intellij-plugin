@@ -8,6 +8,8 @@ import com.intellij.ui.content.*;
 import org.digma.intellij.plugin.analytics.*;
 import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.persistence.PersistenceService;
+import org.digma.intellij.plugin.recentactivity.RecentActivityToolWindowShower;
 import org.digma.intellij.plugin.ui.panels.DisposablePanel;
 import org.digma.intellij.plugin.updates.*;
 import org.jetbrains.annotations.NotNull;
@@ -95,9 +97,26 @@ public class MainToolWindowCardsController implements Disposable {
             @Override
             public void apiClientChanged(@NotNull String newUrl) {
                 Backgroundable.ensurePooledThread(() -> {
-                    if (wizard.isOn()){
+                    //on new install the wizard opens and lets user install digma backend.
+                    //if the user doesn't have docker and wants to change to centralized deployment,
+                    // user will change the url in settings, the plugin will connect to the centralized deployment,
+                    // but there will be no way out of the wizard because there is no close button and no finish button.
+                    //so here we close the wizard in this scenario, the wizard will close and user will see the login screen.
+                    //isFirstWizardLaunch will be true on new install, when the wizard opens first time,
+                    // the flag will change only when INSTALLATION_WIZARD/FINISH message, so while the wizard is open
+                    // isFirstWizardLaunch should be true.
+                    //if user had a working local deployment and then decides to change to centralized, if the wizard is open
+                    // in that stage the wizard should have a close button.
+                    if (wizard.isOn() && PersistenceService.getInstance().isFirstWizardLaunch()){
                         if(isCentralized()){
-                            EDT.ensureEDT(() -> wizardFinished());
+                            //do here everything that happens on INSTALLATION_WIZARD/FINISH message
+                            PersistenceService.getInstance().firstWizardLaunchDone();
+                            updateInstallationWizardFlag();
+                            EDT.ensureEDT(() -> {
+                                ToolWindowShower.getInstance(project).showToolWindow();
+                                project.getService(RecentActivityToolWindowShower.class).showToolWindow();
+                                wizardFinished();
+                            });
                         }
                     }
                 });

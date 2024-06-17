@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.ui.recentactivity
+package org.digma.intellij.plugin.recentactivity
 
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.Logger

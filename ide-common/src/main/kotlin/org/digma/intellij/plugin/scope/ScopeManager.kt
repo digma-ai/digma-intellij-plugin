@@ -5,6 +5,7 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.analytics.AnalyticsService
+import org.digma.intellij.plugin.analytics.setCurrentEnvironmentById
 import org.digma.intellij.plugin.common.CodeObjectsUtil
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
@@ -31,13 +32,23 @@ class ScopeManager(private val project: Project) {
         }
     }
 
-    fun changeToHome(isCalledFromReact: Boolean = false, forceNavigation: Boolean = false) {
+    fun changeToHome(
+        isCalledFromReact: Boolean = false,
+        forceNavigation: Boolean = false,
+        scopeContext: ScopeContext? = null,
+        environmentId: String? = null
+    ) {
 
         EDT.assertNonDispatchThread()
 
         ActivityMonitor.getInstance(project).registerScopeChanged("home")
 
-        fireScopeChangedEvent(null, CodeLocation(listOf(), listOf()), false)
+        //must happen before firing the event
+        if (!environmentId.isNullOrBlank()){
+            setCurrentEnvironmentById(project,environmentId)
+        }
+
+        fireScopeChangedEvent(null, CodeLocation(listOf(), listOf()), false, scopeContext,environmentId)
 
         if (!forceNavigation) {
             val contentViewSwitcher = MainContentViewSwitcher.getInstance(project)
@@ -63,7 +74,13 @@ class ScopeManager(private val project: Project) {
     }
 
     //preferredView is the preferred view to show after changing scope.
-    fun changeScope(scope: Scope, changeView: Boolean = true, preferredView: View? = null) {
+    fun changeScope(
+        scope: Scope,
+        changeView: Boolean = true,
+        preferredView: View? = null,
+        scopeContext: ScopeContext? = null,
+        environmentId: String? = null
+    ) {
 
         EDT.assertNonDispatchThread()
 
@@ -71,7 +88,7 @@ class ScopeManager(private val project: Project) {
 
         try {
             when (scope) {
-                is SpanScope -> changeToSpanScope(scope, changeView, preferredView)
+                is SpanScope -> changeToSpanScope(scope, changeView, preferredView, scopeContext, environmentId)
 
                 else -> {
                     ErrorReporter.getInstance().reportError(
@@ -88,7 +105,13 @@ class ScopeManager(private val project: Project) {
     }
 
 
-    private fun changeToSpanScope(scope: SpanScope, changeView: Boolean = true, preferredView: View? = null) {
+    private fun changeToSpanScope(
+        scope: SpanScope,
+        changeView: Boolean = true,
+        preferredView: View? = null,
+        scopeContext: ScopeContext? = null,
+        environmentId: String? = null
+    ) {
 
         val spanScopeInfo = try {
             AnalyticsService.getInstance(project).getAssetDisplayInfo(scope.spanCodeObjectId)
@@ -113,7 +136,12 @@ class ScopeManager(private val project: Project) {
         // it should be removed at some point
         val hasErrors = checkIfHasErrors(scope)
 
-        fireScopeChangedEvent(scope, codeLocation, hasErrors)
+        //must happen before firing the event
+        if (!environmentId.isNullOrBlank()){
+            setCurrentEnvironmentById(project,environmentId)
+        }
+
+        fireScopeChangedEvent(scope, codeLocation, hasErrors, scopeContext, environmentId)
 
         if (changeView) {
             changeViewAfterScopeChange(scope, preferredView)
@@ -156,10 +184,10 @@ class ScopeManager(private val project: Project) {
 
 
     private fun fireScopeChangedEvent(
-        scope: SpanScope?, codeLocation: CodeLocation, hasErrors: Boolean,
+        scope: SpanScope?, codeLocation: CodeLocation, hasErrors: Boolean, scopeContext: ScopeContext?, environmentId: String?,
     ) {
         project.messageBus.syncPublisher(ScopeChangedEvent.SCOPE_CHANGED_TOPIC)
-            .scopeChanged(scope, codeLocation, hasErrors)
+            .scopeChanged(scope, codeLocation, hasErrors, scopeContext,environmentId)
     }
 
 }

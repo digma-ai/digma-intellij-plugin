@@ -16,5 +16,5 @@ interface ScopeChangedEvent {
     }
 
 
-    fun scopeChanged(scope: SpanScope?, codeLocation: CodeLocation, hasErrors: Boolean)
+    fun scopeChanged(scope: SpanScope?, codeLocation: CodeLocation, hasErrors: Boolean, scopeContext: ScopeContext?, environmentId: String?)
 }

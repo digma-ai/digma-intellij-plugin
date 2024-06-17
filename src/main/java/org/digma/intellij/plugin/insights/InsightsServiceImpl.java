@@ -37,7 +37,7 @@ public abstract class InsightsServiceImpl implements Disposable {
         //this is called from message INSIGHTS/GO_TO_ASSET, which is called from the Issues tab and
         // analytics tab, in both cases we don't want to change the view so send changeView=false
         // to method changeScope
-        ScopeManager.getInstance(project).changeScope(new SpanScope(spanId), false, null);
+        ScopeManager.getInstance(project).changeScope(new SpanScope(spanId), false, null, null, null);
     }
 
 
@@ -45,7 +45,7 @@ public abstract class InsightsServiceImpl implements Disposable {
 
         Log.log(logger::debug, project, "openHistogram called {}", spanCodeObjectId);
         ActivityMonitor.getInstance(project).registerUserActionWithOrigin("open histogram", UserActionOrigin.Insights, Collections.singletonMap("insight type", insightType));
-        var title  = displayName;
+        var title = displayName;
         try {
 
             try {

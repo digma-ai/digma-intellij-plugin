@@ -12,6 +12,7 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.model.rest.environment.Env
 import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
 import org.digma.intellij.plugin.navigation.View
+import org.digma.intellij.plugin.scope.ScopeContext
 import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.ui.common.isJaegerButtonEnabled
 import org.digma.intellij.plugin.ui.jcef.model.ApiUrlPayload
@@ -200,11 +201,24 @@ fun sendScopeChangedMessage(
     hasErrors: Boolean,
     analyticsInsightsCount: Number,
     issuesInsightsCount: Number,
-    unreadInsightsCount: Number
+    unreadInsightsCount: Number,
+    scopeContext: ScopeContext?,
+    environmentId: String?
 ) {
     serializeAndExecuteWindowPostMessageJavaScript(
         cefBrowser,
-        SetScopeMessage(SetScopeMessagePayload(scope, codeLocation, hasErrors, analyticsInsightsCount, issuesInsightsCount, unreadInsightsCount))
+        SetScopeMessage(
+            SetScopeMessagePayload(
+                scope,
+                codeLocation,
+                hasErrors,
+                analyticsInsightsCount,
+                issuesInsightsCount,
+                unreadInsightsCount,
+                scopeContext,
+                environmentId
+            )
+        )
     )
 }
 
@@ -251,7 +265,6 @@ fun sendSetInsightStatsMessage(
         )
     )
 }
-
 
 
 fun sendRunConfigurationAttributes(

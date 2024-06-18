@@ -21,10 +21,12 @@ class UserRegistrationManager(private val project: Project) {
 
         ActivityMonitor.getInstance(project).registerCustomEvent("register local user", registrationMap)
         ActivityMonitor.getInstance(project).registerUserAction("local user registered", registrationMap)
+        val courseRequested = registrationMap["scope"] == "promotion"
+
 
         registrationMap["email"]?.let { userEmail ->
             PersistenceService.getInstance().setUserRegistrationEmail(userEmail)
-            ActivityMonitor.getInstance(project).registerEmail(userEmail)//override the onboarding email
+            ActivityMonitor.getInstance(project).registerEmail(userEmail, courseRequested)//override the onboarding email
             project.messageBus.syncPublisher(UserRegistrationEvent.USER_REGISTRATION_TOPIC).userRegistered(userEmail)
         } ?: ErrorReporter.getInstance().reportError(
             project, "UserRegistrationManager.register", "register user email", mapOf(

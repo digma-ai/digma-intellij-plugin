@@ -1,6 +1,18 @@
 # Changelog
 
-## [2.0.351] - 2024-06-14
+## [2.0.352] - 2024-06-18
+
+- Deprecate Navigation JCEF app by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2214
+- Added new role by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2215
+- upgrade intellij platform gradle plugin to beta7 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2218
+- use composite setup action in plugin verifier workflow by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2219
+- close wizard when changing to centralized Closes #2216 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2221
+- improve build time by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2223
+- Close wizard only on first launch by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2224
+- Added promotion by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2227
+- Update ui by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2228
+
+## 2.0.351 - 2024-06-14
 
 - Support 242 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2213
 

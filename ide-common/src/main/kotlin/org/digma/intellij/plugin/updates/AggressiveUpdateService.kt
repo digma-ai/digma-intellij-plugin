@@ -20,6 +20,7 @@ import org.digma.intellij.plugin.analytics.ApiClientChangedEvent
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.common.buildVersionRequest
 import org.digma.intellij.plugin.common.getPluginVersion
+import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.common.newerThan
 import org.digma.intellij.plugin.common.runWIthRetry
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
@@ -117,8 +118,7 @@ class AggressiveUpdateService(val project: Project) : Disposable {
                     @Suppress("UnstableApiUsage")
                     disposingScope().launch {
                         try {
-                            //update state immediately after settings change. we are interested in api url change, but it will
-                            // do no harm to call it on any settings change
+                            //update state immediately after client is replaced.
                             updateState()
                         } catch (c: CancellationException) {
                             Log.debugWithException(logger, c, "settings change canceled {}", c)
@@ -160,6 +160,11 @@ class AggressiveUpdateService(val project: Project) : Disposable {
 
         if (myJob?.isActive == true) {
             Log.log(logger::debug, "startMonitoring called but already monitoring")
+            return
+        }
+
+        if (!isProjectValid(project)){
+            Log.log(logger::debug, "startMonitoring called but project is not valid, not starting monitoring")
             return
         }
 

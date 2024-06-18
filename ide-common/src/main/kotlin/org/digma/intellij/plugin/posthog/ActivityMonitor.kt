@@ -166,14 +166,15 @@ class ActivityMonitor(private val project: Project) : Disposable {
         )
     }
 
-    fun registerEmail(email: String) {
-        postHog?.alias(userId, email)
+    fun registerEmail(email: String, courseRequested: Boolean) {
         postHog?.identify(
             userId, mapOf(
                 "email" to getEmailForEvent(),
-                INSTALL_STATUS_PROPERTY_NAME to getCurrentInstallStatus()
+                INSTALL_STATUS_PROPERTY_NAME to getCurrentInstallStatus(),
+                "user_requested_course" to courseRequested.toString()
             )
         )
+        postHog?.alias(userId, email)
     }
 
     fun registerCustomEvent(eventName: String, tags: Map<String, Any> = mapOf()) {
@@ -670,7 +671,8 @@ class ActivityMonitor(private val project: Project) : Disposable {
                     INSTALL_STATUS_PROPERTY_NAME to getCurrentInstallStatus(),
                     ENVIRONMENT_ADDED_PROPERTY_NAME to PersistenceService.getInstance().isEnvironmentAdded(),
                     LOAD_WARNING_APPEARED_PROPERTY_NAME to PersistenceService.getInstance().isLoadWarningAppeared(),
-                    JIRA_FIELD_COPIED_PROPERTY_NAME to PersistenceService.getInstance().isJiraFieldCopied()
+                    JIRA_FIELD_COPIED_PROPERTY_NAME to PersistenceService.getInstance().isJiraFieldCopied(),
+                    "user_requested_course" to "false"
                 )
             )
         }
@@ -695,7 +697,8 @@ class ActivityMonitor(private val project: Project) : Disposable {
                     INSTALL_STATUS_PROPERTY_NAME to getCurrentInstallStatus(),
                     ENVIRONMENT_ADDED_PROPERTY_NAME to PersistenceService.getInstance().isEnvironmentAdded(),
                     LOAD_WARNING_APPEARED_PROPERTY_NAME to PersistenceService.getInstance().isLoadWarningAppeared(),
-                    JIRA_FIELD_COPIED_PROPERTY_NAME to PersistenceService.getInstance().isJiraFieldCopied()
+                    JIRA_FIELD_COPIED_PROPERTY_NAME to PersistenceService.getInstance().isJiraFieldCopied(),
+                    "user_requested_course" to "false"
                 )
             )
         }
@@ -881,11 +884,12 @@ class ActivityMonitor(private val project: Project) : Disposable {
         postHog?.identify(
             userId,
             mapOf(
-                LOAD_WARNING_APPEARED_PROPERTY_NAME + "_timestamp" to PersistenceService.getInstance().getLoadWarningAppearedTimestamp()
+                LOAD_WARNING_APPEARED_PROPERTY_NAME + "_timestamp" to PersistenceService.getInstance().getLoadWarningAppearedTimestamp(),
+                "user_requested_course" to "false"
             ),
             mapOf(
-                LOAD_WARNING_APPEARED_PROPERTY_NAME to PersistenceService.getInstance().isLoadWarningAppeared()
-            )
+                LOAD_WARNING_APPEARED_PROPERTY_NAME to PersistenceService.getInstance().isLoadWarningAppeared(),
+            ),
         )
 
     }
@@ -911,7 +915,8 @@ class ActivityMonitor(private val project: Project) : Disposable {
         postHog?.identify(
             userId,
             mapOf(
-                ENVIRONMENT_ADDED_PROPERTY_NAME + "_timestamp" to PersistenceService.getInstance().getEnvironmentAddedTimestamp()
+                ENVIRONMENT_ADDED_PROPERTY_NAME + "_timestamp" to PersistenceService.getInstance().getEnvironmentAddedTimestamp(),
+                "user_requested_course" to "false"
             ),
             mapOf(
                 ENVIRONMENT_ADDED_PROPERTY_NAME to PersistenceService.getInstance().isEnvironmentAdded()
@@ -943,7 +948,8 @@ class ActivityMonitor(private val project: Project) : Disposable {
         postHog?.identify(
             userId,
             mapOf(
-                JIRA_FIELD_COPIED_PROPERTY_NAME + "_timestamp" to PersistenceService.getInstance().getJiraFieldCopiedTimestamp()
+                JIRA_FIELD_COPIED_PROPERTY_NAME + "_timestamp" to PersistenceService.getInstance().getJiraFieldCopiedTimestamp(),
+                "user_requested_course" to "false"
             ),
             mapOf(
                 JIRA_FIELD_COPIED_PROPERTY_NAME to PersistenceService.getInstance().isJiraFieldCopied()

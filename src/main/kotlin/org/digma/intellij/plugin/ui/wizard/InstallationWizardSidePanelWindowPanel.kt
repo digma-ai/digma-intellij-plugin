@@ -42,6 +42,7 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.persistence.updateInstallationWizardFlag
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.recentactivity.RecentActivityToolWindowShower
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import org.digma.intellij.plugin.ui.common.isJaegerButtonEnabled
@@ -67,7 +68,6 @@ import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJav
 import org.digma.intellij.plugin.ui.jcef.updateDigmaEngineStatus
 import org.digma.intellij.plugin.ui.notificationcenter.AppNotificationCenter
 import org.digma.intellij.plugin.ui.panels.DisposablePanel
-import org.digma.intellij.plugin.recentactivity.RecentActivityToolWindowShower
 import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier
 import org.digma.intellij.plugin.ui.settings.SettingsChangeListener
 import org.digma.intellij.plugin.ui.settings.Theme
@@ -215,7 +215,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                 val email = payload?.email
                 PersistenceService.getInstance().setUserEmail(email)
                 if (email != null) {
-                    ActivityMonitor.getInstance(project).registerEmail(email)
+                    ActivityMonitor.getInstance(project).registerEmail(email, false)
                 }
 
                 payload?.productKey?.let {

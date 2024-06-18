@@ -172,7 +172,6 @@ class ActivityMonitor(private val project: Project) : Disposable {
                 "email" to getEmailForEvent(),
                 INSTALL_STATUS_PROPERTY_NAME to getCurrentInstallStatus(),
                 "user_requested_course" to courseRequested.toString()
-
             )
         )
         postHog?.alias(userId, email)

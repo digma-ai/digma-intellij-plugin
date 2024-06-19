@@ -34,17 +34,11 @@ class AssetsService(private val project: Project) : Disposable {
 
     fun getAssetCategories(queryParams: Map<String, Any?>): String {
         EDT.assertNonDispatchThread()
-
-        return try {
-            Log.log(logger::trace, project, "got get categories request")
-            val categories = AnalyticsService.getInstance(project).getAssetCategories(queryParams)
-            checkInsightExists()
-            Log.log(logger::trace, project, "got categories [{}]", categories)
-            categories
-        } catch (e: AnalyticsServiceException) {
-            Log.warnWithException(logger, project, e, "Error loading categories {}", e.message)
-            "{ \"assetCategories\": [] }"
-        }
+        Log.log(logger::trace, project, "got get categories request")
+        val categories = AnalyticsService.getInstance(project).getAssetCategories(queryParams)
+        checkInsightExists()
+        Log.log(logger::trace, project, "got categories [{}]", categories)
+        return categories
     }
 
 
@@ -67,16 +61,10 @@ class AssetsService(private val project: Project) : Disposable {
 
     fun getAssets(queryParams: MutableMap<String, Any>): String {
         EDT.assertNonDispatchThread()
-
-        return try {
-            Log.log(logger::trace, project, "got get assets request")
-            val assets = AnalyticsService.getInstance(project).getAssets(queryParams)
-            Log.log(logger::trace, project, "got assets [{}]", assets)
-            assets
-        } catch (e: AnalyticsServiceException) {
-            Log.warnWithException(logger, project, e, "Error loading assets {}", e.message)
-            ""
-        }
+        Log.log(logger::trace, project, "got get assets request")
+        val assets = AnalyticsService.getInstance(project).getAssets(queryParams)
+        Log.log(logger::trace, project, "got assets [{}]", assets)
+        return assets
     }
 
 

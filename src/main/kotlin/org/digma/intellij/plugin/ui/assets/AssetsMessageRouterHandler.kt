@@ -4,12 +4,14 @@ import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.JsonNode
 import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
+import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.ui.assets.model.SetAssetsDataFiltersMessage
 import org.digma.intellij.plugin.ui.assets.model.SetAssetsDataMessage
 import org.digma.intellij.plugin.ui.assets.model.SetCategoriesDataMessage
 import org.digma.intellij.plugin.ui.jcef.BaseCommonMessageRouterHandler
 import org.digma.intellij.plugin.ui.jcef.getQueryMapFromPayload
+import org.digma.intellij.plugin.ui.jcef.model.ErrorPayload
 import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
 
 class AssetsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHandler(project) {
@@ -39,9 +41,16 @@ class AssetsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHand
 
         Log.log(logger::trace, project, "pushCategories called")
 
-        val backendQueryParams = getQueryMapFromPayload(requestJsonNode, objectMapper)
-        val payload = objectMapper.readTree(AssetsService.getInstance(project).getAssetCategories(backendQueryParams))
-        val message = SetCategoriesDataMessage(payload)
+        val message = try {
+            val backendQueryParams = getQueryMapFromPayload(requestJsonNode, objectMapper)
+            val payload = objectMapper.readTree(AssetsService.getInstance(project).getAssetCategories(backendQueryParams))
+            SetCategoriesDataMessage(payload)
+        } catch (e: AnalyticsServiceException) {
+            Log.warnWithException(logger, project, e, "Error loading categories {}", e.message)
+            val error = ErrorPayload(e.meaningfulMessage)
+            val payload = objectMapper.readTree("{ \"assetCategories\": [] }")
+            SetCategoriesDataMessage(payload, error)
+        }
         Log.log(logger::trace, project, "sending ASSETS/SET_CATEGORIES_DATA message")
         serializeAndExecuteWindowPostMessageJavaScript(browser, message)
     }
@@ -60,10 +69,18 @@ class AssetsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHand
     @Throws(JsonProcessingException::class)
     private fun pushAssets(browser: CefBrowser, requestJsonNode: JsonNode) {
 
-        val backendQueryParams = getQueryMapFromPayload(requestJsonNode, objectMapper)
         Log.log(logger::trace, project, "pushAssets called")
-        val payload = objectMapper.readTree(AssetsService.getInstance(project).getAssets(backendQueryParams))
-        val message = SetAssetsDataMessage(payload)
+        val message = try{
+            val backendQueryParams = getQueryMapFromPayload(requestJsonNode, objectMapper)
+            val assets = AssetsService.getInstance(project).getAssets(backendQueryParams)
+            val payload = objectMapper.readTree(assets)
+            SetAssetsDataMessage(payload)
+        }catch (e: AnalyticsServiceException){
+            Log.warnWithException(logger,project,e,"Error loading assets {}",e)
+            val error = ErrorPayload(e.meaningfulMessage)
+            val payload = objectMapper.readTree("")
+            SetAssetsDataMessage(payload,error)
+        }
         Log.log(logger::trace, project, "sending ASSETS/SET_DATA message")
         serializeAndExecuteWindowPostMessageJavaScript(browser, message)
     }

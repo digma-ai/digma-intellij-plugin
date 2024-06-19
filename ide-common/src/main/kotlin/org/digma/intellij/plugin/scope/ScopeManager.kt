@@ -14,6 +14,7 @@ import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
 import org.digma.intellij.plugin.navigation.MainContentViewSwitcher
 import org.digma.intellij.plugin.navigation.View
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator
+import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
@@ -47,12 +48,15 @@ class ScopeManager(private val project: Project) {
 
 
         EDT.ensureEDT {
-            MainToolWindowCardsController.getInstance(project).closeAllNotificationsIfShowing()
-            MainToolWindowCardsController.getInstance(project).closeCoveringViewsIfNecessary()
+            //don't do that on first wizard launch to let user complete the installation wizard.
+            if (!PersistenceService.getInstance().isFirstWizardLaunch()) {
+                MainToolWindowCardsController.getInstance(project).closeAllNotificationsIfShowing()
+                MainToolWindowCardsController.getInstance(project).closeCoveringViewsIfNecessary()
 
-            if (!isCalledFromReact) {
-                // if react called changeToHome it's ok not to show the tool window, usually its on connection events.
-                ToolWindowShower.getInstance(project).showToolWindow()
+                if (!isCalledFromReact) {
+                    // if react called changeToHome it's ok not to show the tool window, usually its on connection events.
+                    ToolWindowShower.getInstance(project).showToolWindow()
+                }
             }
         }
 

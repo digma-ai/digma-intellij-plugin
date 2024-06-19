@@ -16,6 +16,7 @@ import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.newerThan
 import org.digma.intellij.plugin.icons.AppIcons
 import org.digma.intellij.plugin.loadstatus.LoadStatusService
+import org.digma.intellij.plugin.persistence.NotificationsPersistenceState
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.UserActionOrigin
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
@@ -25,6 +26,8 @@ import java.awt.Dimension
 import java.awt.GridLayout
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
+import java.time.Duration
+import java.time.Instant
 import javax.swing.BorderFactory
 import javax.swing.Box
 import javax.swing.BoxLayout
@@ -115,6 +118,8 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
         closeButton.addActionListener {
             isVisible = false
 
+            service<NotificationsPersistenceState>().state.closeButtonLastClickedTime = Instant.now()
+
             Backgroundable.ensurePooledThread {
                 ActivityMonitor.getInstance(project).registerCloseThrottlingMessage(service.lastLoadStatus.throttlingType.toString())
                 if (service.lastLoadStatus.throttlingType == "ExtendedObservability")
@@ -146,8 +151,15 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
         return currentBackendVersion.newerThan(closeButtonBackendVersion)
     }
 
+    private fun wasClosedRecently(): Boolean {
+        val lastCloseTime = service<NotificationsPersistenceState>().state.closeButtonLastClickedTime ?: return false
+        val currentTime = Instant.now()
+        val duration = Duration.between(lastCloseTime, currentTime)
+        return duration.toHours() < 24
+    }
+
     override fun reset() {
-        if (service.lastLoadStatus.occurredRecently) {
+        if (service.lastLoadStatus.occurredRecently && !wasClosedRecently()) {
             if (!isVisible) {
                 isVisible = true
                 ActivityMonitor.getInstance(project).registerLoadWarning(

@@ -40,4 +40,6 @@ data class NotificationsState(
     var requestRegistrationLastNotified: Instant? = null,
     @OptionTag(converter = InstantConverter::class)
     var aggressiveUpdateLastNotified: Instant? = null,
+    @OptionTag(converter = InstantConverter::class)
+    var closeButtonLastClickedTime: Instant? = null,
 )

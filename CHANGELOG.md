@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.352] - 2024-06-18
+## [2.0.353] - 2024-06-19
+
+- check project valid Closes #2225 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2226
+
+## 2.0.352 - 2024-06-18
 
 - Deprecate Navigation JCEF app by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2214
 - Added new role by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2215

@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.354] - 2024-06-19
+## [2.0.355] - 2024-06-19
+
+- Add error to UI messages by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2230
+
+## 2.0.354 - 2024-06-19
 
 - Added delay to throttling popup appearance by @ohrebeniuk in https://github.com/digma-ai/digma-intellij-plugin/pull/2229
 

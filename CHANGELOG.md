@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.353] - 2024-06-19
+## [2.0.354] - 2024-06-19
+
+- Added delay to throttling popup appearance by @ohrebeniuk in https://github.com/digma-ai/digma-intellij-plugin/pull/2229
+
+## 2.0.353 - 2024-06-19
 
 - check project valid Closes #2225 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2226
 

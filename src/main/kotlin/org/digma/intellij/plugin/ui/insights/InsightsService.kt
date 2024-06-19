@@ -24,6 +24,7 @@ import org.digma.intellij.plugin.ui.insights.model.SetInsightsMarkAsReadMessage
 import org.digma.intellij.plugin.ui.insights.model.SetUnDismissedData
 import org.digma.intellij.plugin.ui.insights.model.SetUnDismissedMessage
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
+import org.digma.intellij.plugin.ui.jcef.model.ErrorPayload
 import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
 
 
@@ -49,18 +50,18 @@ class InsightsService(val project: Project) : InsightsServiceImpl(project) {
 
     fun refreshInsightsList(backendQueryParams: MutableMap<String, Any>) {
 
-        val insightsResponse = try {
+        val message = try {
             val insights = AnalyticsService.getInstance(project).getInsights(backendQueryParams)
             onInsightReceived(insights)
-            insights
+            SetInsightDataListMessage(insights)
         } catch (e: AnalyticsServiceException) {
             Log.debugWithException(logger, project, e, "Error loading insights {}", e.message)
-            "{\"totalCount\":0,\"insights\":[]}"
+            val error = ErrorPayload(e.meaningfulMessage)
+            SetInsightDataListMessage("{\"totalCount\":0,\"insights\":[]}",error)
         }
 
-        val msg = SetInsightDataListMessage(insightsResponse)
         jCefComponent?.let {
-            serializeAndExecuteWindowPostMessageJavaScript(it.jbCefBrowser.cefBrowser, msg)
+            serializeAndExecuteWindowPostMessageJavaScript(it.jbCefBrowser.cefBrowser, message)
         }
     }
 

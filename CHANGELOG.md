@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.356] - 2024-06-19
+## [2.0.357] - 2024-06-21
+
+- Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2233
+
+## 2.0.356 - 2024-06-19
 
 - keep-wizard-on-on-change-scope-on-startup Closes #2231 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2232
 

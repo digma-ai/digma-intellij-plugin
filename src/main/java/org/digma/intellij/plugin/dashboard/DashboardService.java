@@ -15,8 +15,6 @@ import org.jetbrains.annotations.NotNull;
 import java.io.InputStream;
 import java.util.*;
 
-import static org.digma.intellij.plugin.analytics.EnvUtilsKt.setCurrentEnvironmentById;
-
 @Service(Service.Level.PROJECT)
 public final class DashboardService {
 
@@ -86,6 +84,6 @@ public final class DashboardService {
 
         var span = goToSpan.payload();
 
-        setCurrentEnvironmentById(project, span.environment(), () -> ScopeManager.getInstance(project).changeScope(new SpanScope(span.spanCodeObjectId()), true, null, null, null));
+        ScopeManager.getInstance(project).changeScope(new SpanScope(span.spanCodeObjectId()),false,null,null,span.environment());
     }
 }

@@ -86,6 +86,7 @@ class ScopeManager(private val project: Project) {
 
         ActivityMonitor.getInstance(project).registerScopeChanged(scope.toString())
 
+
         try {
             when (scope) {
                 is SpanScope -> changeToSpanScope(scope, changeView, preferredView, scopeContext, environmentId)
@@ -113,6 +114,11 @@ class ScopeManager(private val project: Project) {
         environmentId: String? = null
     ) {
 
+        //must happen before anything else
+        if (!environmentId.isNullOrBlank()){
+            setCurrentEnvironmentById(project,environmentId)
+        }
+
         val spanScopeInfo = try {
             AnalyticsService.getInstance(project).getAssetDisplayInfo(scope.spanCodeObjectId)
         } catch (e: Throwable) {
@@ -136,10 +142,7 @@ class ScopeManager(private val project: Project) {
         // it should be removed at some point
         val hasErrors = checkIfHasErrors(scope)
 
-        //must happen before firing the event
-        if (!environmentId.isNullOrBlank()){
-            setCurrentEnvironmentById(project,environmentId)
-        }
+
 
         fireScopeChangedEvent(scope, codeLocation, hasErrors, scopeContext, environmentId)
 

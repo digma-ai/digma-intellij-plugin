@@ -19,8 +19,6 @@ import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.PluginId
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
-import org.digma.intellij.plugin.analytics.getCurrentEnvironmentId
-import org.digma.intellij.plugin.analytics.setCurrentEnvironmentById
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.createObjectMapper
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
@@ -31,6 +29,7 @@ import org.digma.intellij.plugin.model.rest.event.FirstImportantInsightEvent
 import org.digma.intellij.plugin.model.rest.event.LatestCodeObjectEventsResponse
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.scope.ScopeContext
 import org.digma.intellij.plugin.scope.ScopeManager
 import org.digma.intellij.plugin.scope.SpanScope
 import java.time.ZoneOffset
@@ -209,20 +208,9 @@ class GoToCodeObjectInsightsAction(
 
         ActivityMonitor.getInstance(project).registerNotificationCenterEvent("$notificationName.clicked", mapOf())
 
-        val runnable = Runnable {
-            Backgroundable.ensurePooledThreadWithoutReadAccess {
-                ScopeManager.getInstance(project).changeScope(SpanScope(codeObjectId))
-            }
-        }
-
-        if (getCurrentEnvironmentId(project) != environmentId) {
-
-            setCurrentEnvironmentById(project, environmentId) {
-                runnable.run()
-            }
-
-        } else {
-            runnable.run()
+        Backgroundable.ensurePooledThreadWithoutReadAccess {
+            val scopeContext = ScopeContext("IDE/NOTIFICATION_LINK_CLICKED",null)
+            ScopeManager.getInstance(project).changeScope(SpanScope(codeObjectId),false,null,scopeContext,environmentId)
         }
 
         notification.expire()

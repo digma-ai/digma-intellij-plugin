@@ -61,7 +61,6 @@ class ScopeManager(private val project: Project) {
         EDT.ensureEDT {
             //don't do that on first wizard launch to let user complete the installation wizard.
             if (!PersistenceService.getInstance().isFirstWizardLaunch()) {
-                MainToolWindowCardsController.getInstance(project).closeAllNotificationsIfShowing()
                 MainToolWindowCardsController.getInstance(project).closeCoveringViewsIfNecessary()
 
                 if (!isCalledFromReact) {
@@ -151,7 +150,6 @@ class ScopeManager(private val project: Project) {
         }
 
         EDT.ensureEDT {
-            MainToolWindowCardsController.getInstance(project).closeAllNotificationsIfShowing()
             MainToolWindowCardsController.getInstance(project).closeCoveringViewsIfNecessary()
             ToolWindowShower.getInstance(project).showToolWindow()
         }

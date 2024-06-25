@@ -17,7 +17,6 @@ import org.digma.intellij.plugin.troubleshooting.TroubleshootingPanel;
 import org.digma.intellij.plugin.ui.*;
 import org.digma.intellij.plugin.ui.common.MainContentPanel;
 import org.digma.intellij.plugin.ui.common.statuspanels.*;
-import org.digma.intellij.plugin.ui.notifications.AllNotificationsPanel;
 import org.digma.intellij.plugin.ui.panels.DisposablePanel;
 import org.jetbrains.annotations.NotNull;
 
@@ -95,12 +94,9 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
 
         Supplier<DisposablePanel> troubleshootingPanelBuilder = () -> new TroubleshootingPanel(project);
 
-        Supplier<DisposablePanel> allNotificationsPanelBuilder = () -> new AllNotificationsPanel(project);
-
         MainToolWindowCardsController.getInstance(project).initComponents(toolWindow, mainContent, mainCardsPanel,
                 wizardPanelBuilder,
-                troubleshootingPanelBuilder,
-                allNotificationsPanelBuilder);
+                troubleshootingPanelBuilder);
 
         if (IDEUtilsService.shouldOpenWizard()) {
             ActivityMonitor.getInstance(project).registerCustomEvent("show-installation-wizard",

@@ -30,7 +30,6 @@ class ShowTroubleshootingAction(
 
             ActivityMonitor.getInstance(project).registerNotificationCenterEvent("$notificationName.clicked", mapOf())
 
-            MainToolWindowCardsController.getInstance(project).closeAllNotificationsIfShowing()
             ToolWindowShower.getInstance(project).showToolWindow()
             MainToolWindowCardsController.getInstance(project).showTroubleshooting()
             notification.expire()

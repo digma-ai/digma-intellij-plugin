@@ -16,7 +16,6 @@ import org.digma.intellij.plugin.posthog.*;
 import org.digma.intellij.plugin.psi.*;
 import org.digma.intellij.plugin.scope.*;
 import org.digma.intellij.plugin.settings.SettingsState;
-import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
 import org.digma.intellij.plugin.ui.model.TraceSample;
 import org.jetbrains.annotations.*;
 
@@ -140,7 +139,6 @@ public class JaegerUIService implements Disposable {
         var span = goToSpanMessage.payload();
         //if we're here then code location was not found
         ActivityMonitor.getInstance(project).registerSpanLinkClicked(goToSpanMessage.payload().spanId(), UserActionOrigin.JaegerUI);
-        MainToolWindowCardsController.getInstance(project).closeAllNotificationsIfShowing();
         ScopeManager.getInstance(project).changeScope(new SpanScope(span.spanCodeObjectId()), true, View.getHighlights(), null, null);
     }
 

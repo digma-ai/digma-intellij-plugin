@@ -38,6 +38,7 @@ afterEvaluate {
 dependencies {
     intellijPlatform {
         instrumentationTools()
+        pluginVerifier()
     }
 }
 

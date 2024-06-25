@@ -20,6 +20,7 @@ repositories {
 dependencies {
     intellijPlatform {
         instrumentationTools()
+        pluginVerifier()
     }
 }
 

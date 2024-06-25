@@ -190,7 +190,7 @@ object BuildProfiles {
 
             isEAP = true,
             profile = Profile.p242,
-            platformVersion = "241.18034-EAP-CANDIDATE-SNAPSHOT",
+            platformVersion = "242.18071-EAP-CANDIDATE-SNAPSHOT",
             riderVersion = "2024.2-EAP3-SNAPSHOT",
             pycharmVersion = "242-EAP-SNAPSHOT",
             riderTargetFramework = "net8.0",

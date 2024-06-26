@@ -15,6 +15,10 @@ fun getAllEnvironmentsNames(project: Project): List<String> {
     return AnalyticsService.getInstance(project).environment.environments.map { it.name }
 }
 
+fun getAllEnvironmentsIds(project: Project): List<String> {
+    return AnalyticsService.getInstance(project).environment.environments.map { it.id }
+}
+
 fun getCurrentEnvironment(project: Project): Env? {
     return AnalyticsService.getInstance(project).environment.current
 }

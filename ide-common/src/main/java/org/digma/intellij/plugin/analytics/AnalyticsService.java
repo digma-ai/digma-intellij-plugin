@@ -47,7 +47,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import static org.digma.intellij.plugin.analytics.EnvUtilsKt.getAllEnvironmentsNames;
+import static org.digma.intellij.plugin.analytics.EnvUtilsKt.getAllEnvironmentsIds;
 import static org.digma.intellij.plugin.analytics.EnvironmentRefreshSchedulerKt.scheduleEnvironmentRefresh;
 import static org.digma.intellij.plugin.common.ExceptionUtils.*;
 import static org.digma.intellij.plugin.log.Log.API_LOGGER_NAME;
@@ -199,7 +199,8 @@ public class AnalyticsService implements Disposable {
 
 
     public LatestCodeObjectEventsResponse getLatestEvents(@NotNull String lastReceivedTime) throws AnalyticsServiceException {
-        return executeCatching(() -> analyticsProviderProxy.getLatestEvents(new LatestCodeObjectEventsRequest(getAllEnvironmentsNames(project), lastReceivedTime)));
+        List<String> environments = getAllEnvironmentsIds(project);
+        return executeCatching(() -> analyticsProviderProxy.getLatestEvents(new LatestCodeObjectEventsRequest(environments, lastReceivedTime)));
     }
 
 

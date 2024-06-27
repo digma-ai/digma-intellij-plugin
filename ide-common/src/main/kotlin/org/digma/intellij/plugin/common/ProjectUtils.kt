@@ -23,6 +23,6 @@ fun findActiveProject(): Project? {
 }
 
 
-fun isProjectValid(project: Project): Boolean {
-    return !project.isDisposed && !project.isDefault && project.isOpen
+fun isProjectValid(project: Project?): Boolean {
+    return project != null && !project.isDisposed && !project.isDefault && project.isOpen
 }

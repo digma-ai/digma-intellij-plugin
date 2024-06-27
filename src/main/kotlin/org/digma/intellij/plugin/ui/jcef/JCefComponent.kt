@@ -12,7 +12,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.ui.jcef.JBCefBrowser
 import com.intellij.util.Alarm
-import com.intellij.util.messages.MessageBusConnection
 import org.cef.CefApp
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefMessageRouter
@@ -44,45 +43,33 @@ import org.digma.intellij.plugin.ui.jcef.state.StateChangedEvent
 import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier
 import org.digma.intellij.plugin.ui.settings.SettingsChangeListener
 import org.digma.intellij.plugin.ui.settings.Theme
+import java.lang.ref.WeakReference
 import java.util.Objects
 import javax.swing.JComponent
 
+/*
+JCefComponentBuilder.build already registers a disposable for this JCefComponent using parentDisposable,
+ this JCefComponent uses parentDisposable for all its listeners and connections.
+ */
 class JCefComponent
 private constructor(
-    val project: Project,
+    private val project: Project,
+    parentDisposable: Disposable,
     val name: String,
     val jbCefBrowser: JBCefBrowser,
-    private val cefMessageRouter: CefMessageRouter,
-    val messageRouterHandlers: MutableList<BaseMessageRouterHandler>,
-    val schemeHandlerFactory: BaseSchemeHandlerFactory?,
-    private val lifeSpanHandler: CefLifeSpanHandlerAdapter,
+    private val cefMessageRouter: CefMessageRouter
 ) : Disposable {
 
     private val logger: Logger = Logger.getInstance(JCefComponent::class.java)
 
     private val settingsChangeListener: SettingsChangeListener
-    private val analyticsServiceConnectionEventMessageBusConnection: MessageBusConnection
-    private val settingsListenerParentDisposable = Disposer.newDisposable()
-    private val authInfoChangeListenerParentDisposable = Disposer.newDisposable()
-    private val connectionEventAlarmParentDisposable = Disposer.newDisposable()
-    private val userRegistrationParentDisposable = Disposer.newDisposable()
-    private val environmentChangeParentDisposable = Disposer.newDisposable()
-    private val observabilityChangeParentDisposable = Disposer.newDisposable()
-    private val scopeChangeParentDisposable = Disposer.newDisposable()
-    private val stateChangeParentDisposable = Disposer.newDisposable()
-    private val insightStatsChangeParentDisposable = Disposer.newDisposable()
-    private val digmathonActivatedParentDisposable = Disposer.newDisposable()
-    private val productKeyAddedParentDisposable = Disposer.newDisposable()
-    private val userFinishedDigmathonParentDisposable = Disposer.newDisposable()
-    private val apiClientChangedParentDisposable = Disposer.newDisposable()
-    private val runConfigurationChangedParentDisposable = Disposer.newDisposable()
 
 
     init {
-        val connectionEventAlarm = Alarm(Alarm.ThreadToUse.POOLED_THREAD, connectionEventAlarmParentDisposable)
+        val connectionEventAlarm = Alarm(Alarm.ThreadToUse.POOLED_THREAD, parentDisposable)
 
 
-        project.messageBus.connect(runConfigurationChangedParentDisposable).subscribe(RunManagerListener.TOPIC, object : RunManagerListener {
+        project.messageBus.connect(parentDisposable).subscribe(RunManagerListener.TOPIC, object : RunManagerListener {
             override fun runConfigurationSelected(settings: RunnerAndConfigurationSettings?) {
                 val setRunConfigurationMessageBuilder =
                     SetRunConfigurationMessageBuilder(project, jbCefBrowser.cefBrowser, RunManager.getInstance(project).selectedConfiguration)
@@ -99,7 +86,7 @@ private constructor(
 
 
 
-        project.messageBus.connect(apiClientChangedParentDisposable)
+        project.messageBus.connect(parentDisposable)
             .subscribe(ApiClientChangedEvent.API_CLIENT_CHANGED_TOPIC,
                 ApiClientChangedEvent {
 
@@ -122,20 +109,20 @@ private constructor(
                 })
 
 
-        ApplicationManager.getApplication().messageBus.connect(userFinishedDigmathonParentDisposable)
+        ApplicationManager.getApplication().messageBus.connect(parentDisposable)
             .subscribe(
                 UserFinishedDigmathonEvent.USER_FINISHED_DIGMATHON_TOPIC,
                 UserFinishedDigmathonEvent {
                     sendUserFinishedDigmathon(jbCefBrowser.cefBrowser)
                 })
 
-        ApplicationManager.getApplication().messageBus.connect(productKeyAddedParentDisposable)
+        ApplicationManager.getApplication().messageBus.connect(parentDisposable)
             .subscribe(DigmathonProductKeyStateChangedEvent.PRODUCT_KEY_STATE_CHANGED_TOPIC,
                 DigmathonProductKeyStateChangedEvent { productKey ->
                     sendDigmathonProductKey(productKey, jbCefBrowser.cefBrowser)
                 })
 
-        ApplicationManager.getApplication().messageBus.connect(digmathonActivatedParentDisposable)
+        ApplicationManager.getApplication().messageBus.connect(parentDisposable)
             .subscribe(DigmathonActivationEvent.DIGMATHON_ACTIVATION_TOPIC,
                 DigmathonActivationEvent { isActive -> sendDigmathonState(isActive, jbCefBrowser.cefBrowser) })
 
@@ -155,6 +142,7 @@ private constructor(
         }
 
         ApplicationUISettingsChangeNotifier.getInstance(project).addSettingsChangeListener(settingsChangeListener)
+
         AuthManager.getInstance().addAuthInfoChangeListener({ authInfo ->
             try {
                 if (logger.isTraceEnabled) {
@@ -164,10 +152,9 @@ private constructor(
             } catch (e: Throwable) {
                 ErrorReporter.getInstance().reportError("JCefComponent.userChanged", e)
             }
-        }, authInfoChangeListenerParentDisposable)
+        }, parentDisposable)
 
-        analyticsServiceConnectionEventMessageBusConnection = project.messageBus.connect()
-        analyticsServiceConnectionEventMessageBusConnection.subscribe(
+        project.messageBus.connect(parentDisposable).subscribe(
             AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC, object : AnalyticsServiceConnectionEvent {
 
                 override fun connectionLost() {
@@ -218,10 +205,10 @@ private constructor(
                     ErrorReporter.getInstance().reportError("JCefComponent.settingsChanged", e)
                 }
             }
-        }, settingsListenerParentDisposable)
+        }, parentDisposable)
 
 
-        project.messageBus.connect(userRegistrationParentDisposable).subscribe(
+        project.messageBus.connect(parentDisposable).subscribe(
             UserRegistrationEvent.USER_REGISTRATION_TOPIC, object : UserRegistrationEvent {
                 override fun userRegistered(email: String) {
                     try {
@@ -233,7 +220,7 @@ private constructor(
             })
 
 
-        project.messageBus.connect(environmentChangeParentDisposable).subscribe(
+        project.messageBus.connect(parentDisposable).subscribe(
             EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC, object : EnvironmentChanged {
                 override fun environmentChanged(newEnv: Env) {
                     try {
@@ -256,7 +243,7 @@ private constructor(
             })
 
 
-        project.messageBus.connect(observabilityChangeParentDisposable).subscribe(
+        project.messageBus.connect(parentDisposable).subscribe(
             ObservabilityChanged.OBSERVABILITY_CHANGED_TOPIC, ObservabilityChanged { isObservabilityEnabled ->
                 try {
                     sendObservabilityEnabledMessage(
@@ -269,7 +256,7 @@ private constructor(
             }
         )
 
-        project.messageBus.connect(scopeChangeParentDisposable).subscribe(
+        project.messageBus.connect(parentDisposable).subscribe(
             ScopeChangedEvent.SCOPE_CHANGED_TOPIC, object : ScopeChangedEvent {
                 override fun scopeChanged(
                     scope: SpanScope?, codeLocation: CodeLocation, hasErrors: Boolean,
@@ -292,7 +279,7 @@ private constructor(
             }
         )
 
-        project.messageBus.connect(stateChangeParentDisposable).subscribe(
+        project.messageBus.connect(parentDisposable).subscribe(
             StateChangedEvent.JCEF_STATE_CHANGED_TOPIC, object : StateChangedEvent {
                 override fun stateChanged(state: JsonNode) {
                     try {
@@ -304,7 +291,7 @@ private constructor(
             }
         )
 
-        project.messageBus.connect(insightStatsChangeParentDisposable).subscribe(
+        project.messageBus.connect(parentDisposable).subscribe(
             InsightStatsChangedEvent.INSIGHT_STATS_CHANGED_TOPIC, object : InsightStatsChangedEvent {
                 override fun insightStatsChanged(
                     scope: JsonNode?,
@@ -334,23 +321,10 @@ private constructor(
 
     override fun dispose() {
         try {
-            Disposer.dispose(runConfigurationChangedParentDisposable)
-            Disposer.dispose(apiClientChangedParentDisposable)
-            Disposer.dispose(userFinishedDigmathonParentDisposable)
-            Disposer.dispose(productKeyAddedParentDisposable)
-            Disposer.dispose(digmathonActivatedParentDisposable)
-            Disposer.dispose(connectionEventAlarmParentDisposable)
-            Disposer.dispose(analyticsServiceConnectionEventMessageBusConnection)
-            Disposer.dispose(settingsListenerParentDisposable)
-            Disposer.dispose(userRegistrationParentDisposable)
-            Disposer.dispose(environmentChangeParentDisposable)
-            Disposer.dispose(observabilityChangeParentDisposable)
-            Disposer.dispose(scopeChangeParentDisposable)
-            Disposer.dispose(stateChangeParentDisposable)
-            Disposer.dispose(insightStatsChangeParentDisposable)
-            Disposer.dispose(authInfoChangeListenerParentDisposable)
-            jbCefBrowser.jbCefClient.removeLifeSpanHandler(lifeSpanHandler, jbCefBrowser.cefBrowser)
+            jbCefBrowser.jbCefClient.dispose()
             jbCefBrowser.dispose()
+            //todo: not sure this is necessary
+            //cefMessageRouter.removeHandler(messageRouterHandler)
             cefMessageRouter.dispose()
             ApplicationUISettingsChangeNotifier.getInstance(project).removeSettingsChangeListener(settingsChangeListener)
         } catch (e: Exception) {
@@ -363,95 +337,87 @@ private constructor(
     }
 
 
-    //must provide a parentDisposable that is not the project
-    class JCefComponentBuilder(private val project: Project, private val name: String, private var parentDisposable: Disposable) {
+    //must provide a parentDisposable that is not the project.
+    //instances of JCefComponentBuilder need to be local to a function, so they can be garbage collected
+    class JCefComponentBuilder(
+        private val project: Project,
+        private val name: String,
+        parentDisposable: Disposable,
+        url: String,
+        messageRouterHandler: BaseMessageRouterHandler,
+        schemeHandlerFactory: BaseSchemeHandlerFactory
+    ) {
 
-        private var url: String? = null
-        private var messageRouterHandlers: MutableList<BaseMessageRouterHandler> = mutableListOf()
-        private var schemeHandlerFactory: BaseSchemeHandlerFactory? = null
-        private var downloadAdapter: CefDownloadHandler? = null
+        private val url = WeakReference(Objects.requireNonNull(url, "url must not be null"))
+        private val messageRouterHandler = WeakReference(Objects.requireNonNull(messageRouterHandler, "messageRouterHandlers must not be null"))
+        private val schemeHandlerFactory = WeakReference(Objects.requireNonNull(schemeHandlerFactory, "schemeHandlerFactory must not be null"))
+        private val parentDisposable = WeakReference(parentDisposable)
+        private var downloadAdapter: WeakReference<CefDownloadHandler>? = null
 
 
         fun build(): JCefComponent {
 
-            Objects.requireNonNull(url, "url must not be null")
-            Objects.requireNonNull(messageRouterHandlers, "messageRouterHandlers must not be null")
-            Objects.requireNonNull(schemeHandlerFactory, "schemeHandlerFactory must not be null")
-
             val jbCefBrowser = JBCefBrowserBuilderCreator.create()
-                .setUrl(url)
+                .setUrl(url.get())
                 .build()
 
             val jbCefClient = jbCefBrowser.jbCefClient
             val cefMessageRouter = CefMessageRouter.create()
-
-            messageRouterHandlers.forEach {
-                cefMessageRouter.addHandler(it, true)
-            }
-
+            cefMessageRouter.addHandler(messageRouterHandler.get()!!, true)
             jbCefClient.cefClient.addMessageRouter(cefMessageRouter)
 
             jbCefClient.cefClient.addDisplayHandler(JCefDisplayHandler(name))
 
-            val lifeSpanHandler: CefLifeSpanHandlerAdapter = object : CefLifeSpanHandlerAdapter() {
-                override fun onAfterCreated(browser: CefBrowser) {
-                    //schemeHandlerFactory must not be null here!
-                    registerAppSchemeHandler(schemeHandlerFactory!!)
-                    registerMailtoSchemeHandler(MailtoSchemaHandlerFactory())
-                }
+            jbCefBrowser.jbCefClient.addLifeSpanHandler(LifeSpanHandle(schemeHandlerFactory.get()!!), jbCefBrowser.cefBrowser)
+
+            downloadAdapter?.let {
+                jbCefClient.cefClient.addDownloadHandler(it.get())
             }
 
-            jbCefBrowser.jbCefClient.addLifeSpanHandler(lifeSpanHandler, jbCefBrowser.cefBrowser)
-
             val jCefComponent =
-                JCefComponent(project, name, jbCefBrowser, cefMessageRouter, messageRouterHandlers, schemeHandlerFactory, lifeSpanHandler)
+                JCefComponent(project, parentDisposable.get()!!, name, jbCefBrowser, cefMessageRouter)
 
-            parentDisposable.let {
+            //usually the component that holds a reference to JCefComponent needs to call JCefComponent.dispose.
+            //when a parentDisposable is supplied then use it also to dispose, worst case dispose will be called twice.
+            parentDisposable.get()!!.let {
                 Disposer.register(it) {
-                    jbCefBrowser.jbCefClient.removeLifeSpanHandler(lifeSpanHandler, jbCefBrowser.cefBrowser)
                     jCefComponent.dispose()
                 }
             }
 
-            downloadAdapter?.let {
-                jbCefClient.cefClient.addDownloadHandler(it)
-            }
+
 
             return jCefComponent
         }
 
 
-        private fun registerAppSchemeHandler(schemeHandlerFactory: BaseSchemeHandlerFactory) {
-            CefApp.getInstance().registerSchemeHandlerFactory(
-                schemeHandlerFactory.getSchema(), schemeHandlerFactory.getDomain(), schemeHandlerFactory
-            )
-        }
 
-        private fun registerMailtoSchemeHandler(schemeHandlerFactory: MailtoSchemaHandlerFactory) {
-            CefApp.getInstance().registerSchemeHandlerFactory(
-                schemeHandlerFactory.getSchema(), null, schemeHandlerFactory
-            )
-        }
-
-
-        fun url(url: String): JCefComponentBuilder {
-            this.url = url
-            return this
-        }
-
-        fun addMessageRouterHandler(messageRouterHandler: BaseMessageRouterHandler): JCefComponentBuilder {
-            this.messageRouterHandlers.add(messageRouterHandler)
-            return this
-        }
-
-        fun schemeHandlerFactory(schemeHandlerFactory: BaseSchemeHandlerFactory): JCefComponentBuilder {
-            this.schemeHandlerFactory = schemeHandlerFactory
-            return this
-        }
 
         fun withDownloadAdapter(adapter: CefDownloadHandler): JCefComponentBuilder {
-            this.downloadAdapter = adapter
+            this.downloadAdapter = WeakReference(Objects.requireNonNull(adapter, "downloadAdapter must not be null"))
             return this
         }
+    }
+}
+
+class LifeSpanHandle(private val schemeHandlerFactory: BaseSchemeHandlerFactory) : CefLifeSpanHandlerAdapter(){
+
+    override fun onAfterCreated(browser: CefBrowser) {
+        //schemeHandlerFactory must not be null here!
+        registerAppSchemeHandler(schemeHandlerFactory)
+        registerMailtoSchemeHandler(MailtoSchemaHandlerFactory())
+    }
+
+
+    private fun registerAppSchemeHandler(schemeHandlerFactory: BaseSchemeHandlerFactory) {
+        CefApp.getInstance().registerSchemeHandlerFactory(
+            schemeHandlerFactory.getSchema(), schemeHandlerFactory.getDomain(), schemeHandlerFactory
+        )
+    }
+
+    private fun registerMailtoSchemeHandler(schemeHandlerFactory: MailtoSchemaHandlerFactory) {
+        CefApp.getInstance().registerSchemeHandlerFactory(
+            schemeHandlerFactory.getSchema(), null, schemeHandlerFactory
+        )
     }
 }

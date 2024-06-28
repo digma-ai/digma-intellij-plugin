@@ -24,7 +24,7 @@ import static org.digma.intellij.plugin.persistence.PersistenceUtilsKt.updateIns
 
 /**
  * Controls the current view in digma tool window.
- * there is a main content, wizard,troubleshooting ,notifications and no connection.
+ * there is a main content, wizard,troubleshooting and no connection.
  * the main content has a no connection empty card and the main card.
  * the tool window should have only one content.
  * Not handling any exceptions in this class. if an exception is thrown we must know that because it's probably a serious bug.

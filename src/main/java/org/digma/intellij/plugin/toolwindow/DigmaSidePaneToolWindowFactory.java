@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.toolwindow;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.wm.*;
 import com.intellij.ui.content.ContentFactory;
 import com.intellij.util.ui.JBUI;
@@ -75,6 +76,9 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
         var mainCardsPanel = createCardsPanel(project, mainToolWindowPanel, AnalyticsService.getInstance(project));
         //mainContent contains the mainCardsPanel ,MainToolWindowCardsController switches between no connection and mainToolWindowPanel
         var mainContent = ContentFactory.getInstance().createContent(mainCardsPanel, null, false);
+
+        //register disposable for mainContent,any project service is good for parent disposable
+        Disposer.register(AnalyticsService.getInstance(project), mainContent);
 
         toolWindow.getContentManager().addContent(mainContent);
 

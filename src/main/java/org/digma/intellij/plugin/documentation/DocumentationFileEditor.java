@@ -16,7 +16,7 @@ public class DocumentationFileEditor extends UserDataHolderBase implements FileE
     private final VirtualFile file;
 
     @Nullable
-    private final JCefComponent jCefComponent;
+    private JCefComponent jCefComponent;
 
 
     public DocumentationFileEditor(Project project, DocumentationVirtualFile file) {
@@ -99,6 +99,7 @@ public class DocumentationFileEditor extends UserDataHolderBase implements FileE
     public void dispose() {
         if (jCefComponent != null) {
             jCefComponent.dispose();
+            jCefComponent = null;
         }
     }
 

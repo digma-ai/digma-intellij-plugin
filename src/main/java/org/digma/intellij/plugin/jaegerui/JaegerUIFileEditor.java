@@ -16,7 +16,7 @@ public class JaegerUIFileEditor extends UserDataHolderBase implements FileEditor
     private final VirtualFile file;
 
     @Nullable
-    private final JCefComponent jCefComponent;
+    private JCefComponent jCefComponent;
 
     public JaegerUIFileEditor(Project project, JaegerUIVirtualFile file) {
         this.file = file;
@@ -98,6 +98,7 @@ public class JaegerUIFileEditor extends UserDataHolderBase implements FileEditor
     public void dispose() {
         if (jCefComponent != null) {
             jCefComponent.dispose();
+            jCefComponent = null;
         }
     }
 

@@ -43,6 +43,7 @@ class LiveViewUpdater(val project: Project) : Disposable {
         myDisposable?.let {
             Disposer.dispose(it)
         }
+        jCefComponent = null
     }
 
 

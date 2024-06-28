@@ -50,6 +50,7 @@ import javax.swing.JComponent
 /*
 JCefComponentBuilder.build already registers a disposable for this JCefComponent using parentDisposable,
  this JCefComponent uses parentDisposable for all its listeners and connections.
+
  */
 class JCefComponent
 private constructor(
@@ -323,8 +324,6 @@ private constructor(
         try {
             jbCefBrowser.jbCefClient.dispose()
             jbCefBrowser.dispose()
-            //todo: not sure this is necessary
-            //cefMessageRouter.removeHandler(messageRouterHandler)
             cefMessageRouter.dispose()
             ApplicationUISettingsChangeNotifier.getInstance(project).removeSettingsChangeListener(settingsChangeListener)
         } catch (e: Exception) {
@@ -348,41 +347,45 @@ private constructor(
         schemeHandlerFactory: BaseSchemeHandlerFactory
     ) {
 
-        private val url = WeakReference(Objects.requireNonNull(url, "url must not be null"))
-        private val messageRouterHandler = WeakReference(Objects.requireNonNull(messageRouterHandler, "messageRouterHandlers must not be null"))
-        private val schemeHandlerFactory = WeakReference(Objects.requireNonNull(schemeHandlerFactory, "schemeHandlerFactory must not be null"))
-        private val parentDisposable = WeakReference(parentDisposable)
-        private var downloadAdapter: WeakReference<CefDownloadHandler>? = null
+        private val urlRef = WeakReference(Objects.requireNonNull(url, "url must not be null"))
+        private val messageRouterHandlerRef = WeakReference(Objects.requireNonNull(messageRouterHandler, "messageRouterHandlers must not be null"))
+        private val schemeHandlerFactoryRef = WeakReference(Objects.requireNonNull(schemeHandlerFactory, "schemeHandlerFactory must not be null"))
+        private val parentDisposableRef = WeakReference(parentDisposable)
+        private var downloadAdapterRef: WeakReference<CefDownloadHandler>? = null
 
 
         fun build(): JCefComponent {
 
+            val url: String = Objects.requireNonNull(urlRef.get(), "url must not be null")!!
+            val messageRouterHandler = Objects.requireNonNull(messageRouterHandlerRef.get(), "messageRouterHandlers must not be null")!!
+            val schemeHandlerFactory = Objects.requireNonNull(schemeHandlerFactoryRef.get(), "schemeHandlerFactory must not be null")!!
+            val parentDisposable = Objects.requireNonNull(parentDisposableRef.get(), "parentDisposable must not be null")!!
+
+
             val jbCefBrowser = JBCefBrowserBuilderCreator.create()
-                .setUrl(url.get())
+                .setUrl(url)
                 .build()
 
             val jbCefClient = jbCefBrowser.jbCefClient
             val cefMessageRouter = CefMessageRouter.create()
-            cefMessageRouter.addHandler(messageRouterHandler.get()!!, true)
+            cefMessageRouter.addHandler(messageRouterHandler, true)
             jbCefClient.cefClient.addMessageRouter(cefMessageRouter)
 
             jbCefClient.cefClient.addDisplayHandler(JCefDisplayHandler(name))
 
-            jbCefBrowser.jbCefClient.addLifeSpanHandler(LifeSpanHandle(schemeHandlerFactory.get()!!), jbCefBrowser.cefBrowser)
+            jbCefBrowser.jbCefClient.addLifeSpanHandler(LifeSpanHandle(schemeHandlerFactory), jbCefBrowser.cefBrowser)
 
-            downloadAdapter?.let {
-                jbCefClient.cefClient.addDownloadHandler(it.get())
+            downloadAdapterRef?.get()?.let {
+                jbCefClient.cefClient.addDownloadHandler(it)
             }
 
             val jCefComponent =
-                JCefComponent(project, parentDisposable.get()!!, name, jbCefBrowser, cefMessageRouter)
+                JCefComponent(project, parentDisposable, name, jbCefBrowser, cefMessageRouter)
 
             //usually the component that holds a reference to JCefComponent needs to call JCefComponent.dispose.
             //when a parentDisposable is supplied then use it also to dispose, worst case dispose will be called twice.
-            parentDisposable.get()!!.let {
-                Disposer.register(it) {
-                    jCefComponent.dispose()
-                }
+            Disposer.register(parentDisposable) {
+                jCefComponent.dispose()
             }
 
 
@@ -391,16 +394,14 @@ private constructor(
         }
 
 
-
-
         fun withDownloadAdapter(adapter: CefDownloadHandler): JCefComponentBuilder {
-            this.downloadAdapter = WeakReference(Objects.requireNonNull(adapter, "downloadAdapter must not be null"))
+            this.downloadAdapterRef = WeakReference(Objects.requireNonNull(adapter, "downloadAdapter must not be null"))
             return this
         }
     }
 }
 
-class LifeSpanHandle(private val schemeHandlerFactory: BaseSchemeHandlerFactory) : CefLifeSpanHandlerAdapter(){
+class LifeSpanHandle(private val schemeHandlerFactory: BaseSchemeHandlerFactory) : CefLifeSpanHandlerAdapter() {
 
     override fun onAfterCreated(browser: CefBrowser) {
         //schemeHandlerFactory must not be null here!

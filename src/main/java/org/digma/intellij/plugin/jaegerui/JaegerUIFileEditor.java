@@ -16,7 +16,7 @@ public class JaegerUIFileEditor extends UserDataHolderBase implements FileEditor
     private final VirtualFile file;
 
     @Nullable
-    private final JCefComponent jCefComponent;
+    private JCefComponent jCefComponent;
 
     public JaegerUIFileEditor(Project project, JaegerUIVirtualFile file) {
         this.file = file;
@@ -27,10 +27,10 @@ public class JaegerUIFileEditor extends UserDataHolderBase implements FileEditor
     private JCefComponent createJcefComponent(Project project, JaegerUIVirtualFile file) {
 
         if (JBCefApp.isSupported()) {
-            return new JCefComponent.JCefComponentBuilder(project, "JaegerUI", JaegerUIService.getInstance(project))
-                    .url(JaegerUIConstants.JAEGER_UI_URL)
-                    .addMessageRouterHandler(new JaegerUIMessageRouterHandler(project))
-                    .schemeHandlerFactory(new JaegerUiSchemeHandlerFactory(project, file))
+            return new JCefComponent.JCefComponentBuilder(project, "JaegerUI", this,
+                    JaegerUIConstants.JAEGER_UI_URL,
+                    new JaegerUIMessageRouterHandler(project),
+                    new JaegerUiSchemeHandlerFactory(project, file))
                     .withDownloadAdapter(new DownloadHandlerAdapter())
                     .build();
 
@@ -98,6 +98,7 @@ public class JaegerUIFileEditor extends UserDataHolderBase implements FileEditor
     public void dispose() {
         if (jCefComponent != null) {
             jCefComponent.dispose();
+            jCefComponent = null;
         }
     }
 

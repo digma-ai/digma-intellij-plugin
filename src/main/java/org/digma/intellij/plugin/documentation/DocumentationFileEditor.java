@@ -16,7 +16,7 @@ public class DocumentationFileEditor extends UserDataHolderBase implements FileE
     private final VirtualFile file;
 
     @Nullable
-    private final JCefComponent jCefComponent;
+    private JCefComponent jCefComponent;
 
 
     public DocumentationFileEditor(Project project, DocumentationVirtualFile file) {
@@ -28,10 +28,10 @@ public class DocumentationFileEditor extends UserDataHolderBase implements FileE
     private JCefComponent createJcefComponent(Project project, DocumentationVirtualFile file) {
 
         if (JBCefApp.isSupported()) {
-            return new JCefComponent.JCefComponentBuilder(project, "Documentation", DocumentationService.getInstance(project))
-                    .url(DocumentationConstants.DOCUMENTATION_URL)
-                    .addMessageRouterHandler(new DocumentationMessageRouterHandler(project))
-                    .schemeHandlerFactory(new DocumentationSchemeHandlerFactory(project, file))
+            return new JCefComponent.JCefComponentBuilder(project, "Documentation", DocumentationService.getInstance(project),
+                    DocumentationConstants.DOCUMENTATION_URL,
+                    new DocumentationMessageRouterHandler(project),
+                    new DocumentationSchemeHandlerFactory(project, file))
                     .withDownloadAdapter(new DownloadHandlerAdapter())
                     .build();
 
@@ -99,6 +99,7 @@ public class DocumentationFileEditor extends UserDataHolderBase implements FileE
     public void dispose() {
         if (jCefComponent != null) {
             jCefComponent.dispose();
+            jCefComponent = null;
         }
     }
 

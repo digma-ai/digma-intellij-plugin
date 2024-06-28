@@ -42,7 +42,7 @@ class CodeButtonCaretContextService(private val project: Project) : CaretContext
     }
 
     override fun dispose() {
-        //nothing to do
+        jCefComponent = null
     }
 
     override fun contextChanged(methodUnderCaret: MethodUnderCaret) {

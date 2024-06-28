@@ -4,6 +4,7 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.ui.content.ContentFactory
@@ -37,6 +38,9 @@ class RecentActivityToolWindowFactory : ToolWindowFactory {
         val mainCardsPanel = createCardsPanel(project, recentActivityPanel, RecentActivityService.getInstance(project))
 
         val content = ContentFactory.getInstance().createContent(mainCardsPanel, null, false)
+
+        //register disposable for content
+        Disposer.register(AnalyticsService.getInstance(project), content)
 
         toolWindow.contentManager.addContent(content)
 

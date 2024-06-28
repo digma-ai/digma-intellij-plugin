@@ -42,7 +42,7 @@ class NavigationService(private val project: Project) : Disposable {
 
 
     override fun dispose() {
-        //nothing to do , used as parent disposable
+        jCefComponent = null
     }
 
     fun setJCefComponent(jCefComponent: JCefComponent) {

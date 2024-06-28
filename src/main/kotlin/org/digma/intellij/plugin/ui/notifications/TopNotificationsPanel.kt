@@ -34,10 +34,12 @@ class TopNotificationsPanel(private val project: Project) : DisposablePanel() {
 
     private fun createJcefComponent(): JCefComponent? {
         return if (JBCefApp.isSupported()) {
-            JCefComponentBuilder(project, "TopNotifications", project.service<NotificationsService>())
-                .url(NOTIFICATIONS_URL)
-                .addMessageRouterHandler(TopNotificationsMessageRouterHandler(project, this))
-                .schemeHandlerFactory(NotificationsSchemeHandlerFactory(project, NotificationViewMode.popup))
+            JCefComponentBuilder(
+                project, "TopNotifications", project.service<NotificationsService>(),
+                NOTIFICATIONS_URL,
+                TopNotificationsMessageRouterHandler(project, this),
+                NotificationsSchemeHandlerFactory(project, NotificationViewMode.popup)
+            )
                 .build()
 
         } else {
@@ -48,7 +50,6 @@ class TopNotificationsPanel(private val project: Project) : DisposablePanel() {
     override fun getInsets(): Insets {
         return JBUI.emptyInsets()
     }
-
 
 
     //call when clicking the X button or view all

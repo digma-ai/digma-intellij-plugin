@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.ui.tests
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
@@ -21,7 +22,7 @@ import org.digma.intellij.plugin.ui.tests.model.SetLatestTestsMessage
 
 
 @Service(Service.Level.PROJECT)
-class TestsUpdater(private val project: Project) {
+class TestsUpdater(private val project: Project) : Disposable {
 
     private val logger = Logger.getInstance(this::class.java)
 
@@ -39,6 +40,9 @@ class TestsUpdater(private val project: Project) {
         }
     }
 
+    override fun dispose() {
+        jCefComponent = null
+    }
 
     //should be called when the panel is initialized
     fun setJCefComponent(jCefComponent: JCefComponent) {
@@ -52,7 +56,7 @@ class TestsUpdater(private val project: Project) {
         updateTestsData(scopeRequest, lastKnownFilterForLatestTests)
     }*/
 
-    fun updateTestsData(scope: SpanScope ?, filter: FilterForLatestTests) {
+    fun updateTestsData(scope: SpanScope?, filter: FilterForLatestTests) {
         //keep the last filter for next use when calling updateTestsData(scopeRequest: ScopeRequest)
         this.lastKnownFilterForLatestTests = filter
 
@@ -61,17 +65,18 @@ class TestsUpdater(private val project: Project) {
             Log.log(logger::warn, "updateTestsData was called but cefBrowser is null")
             return
         }
-        if(scope == null) {
+        if (scope == null) {
             serializeAndExecuteWindowPostMessageJavaScript(cefBrowser, SetLatestTestsMessage(Payload(null)))
             return
         }
 
         try {
             var spanCodeObjectIds: Set<String> = setOf()
-            if(scope.spanCodeObjectId.isNotEmpty())
+            if (scope.spanCodeObjectId.isNotEmpty())
                 spanCodeObjectIds = setOf(scope.spanCodeObjectId)
 
-            val testsOfSpanJson = project.service<TestsService>().getLatestTestsOfSpan(TestsScopeRequest(spanCodeObjectIds, scope.methodId, null), lastKnownFilterForLatestTests)
+            val testsOfSpanJson = project.service<TestsService>()
+                .getLatestTestsOfSpan(TestsScopeRequest(spanCodeObjectIds, scope.methodId, null), lastKnownFilterForLatestTests)
             Log.log(logger::trace, project, "got tests of span {}", testsOfSpanJson)
             val payload = objectMapper.readTree(testsOfSpanJson)
             val message = SetLatestTestsMessage(Payload(payload))

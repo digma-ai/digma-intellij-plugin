@@ -44,6 +44,10 @@ class InsightsService(val project: Project) : InsightsServiceImpl(project) {
         }
     }
 
+    override fun dispose(){
+        jCefComponent = null
+    }
+
     fun setJCefComponent(jCefComponent: JCefComponent?) {
         this.jCefComponent = jCefComponent
     }

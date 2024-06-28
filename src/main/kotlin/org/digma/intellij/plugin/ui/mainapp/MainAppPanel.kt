@@ -19,11 +19,9 @@ import javax.swing.JLabel
 
 class MainAppPanel(private val project: Project) : DisposablePanel() {
 
-    private var jCefComponent: JCefComponent? = null
-
     init {
 
-        jCefComponent = createJcefComponent()
+        val jCefComponent = createJcefComponent()
 
         val jcefUiComponent: JComponent = jCefComponent?.getComponent() ?: JLabel("JCEF not supported")
 
@@ -33,6 +31,8 @@ class MainAppPanel(private val project: Project) : DisposablePanel() {
         background = listBackground()
 
         Disposer.register(MainAppService.getInstance(project)) {
+            jCefComponent?.dispose()
+            remove(jcefUiComponent)
             dispose()
         }
 
@@ -48,10 +48,12 @@ class MainAppPanel(private val project: Project) : DisposablePanel() {
 
     private fun createJcefComponent(): JCefComponent? {
         return if (JBCefApp.isSupported()) {
-            JCefComponent.JCefComponentBuilder(project, "Main", MainAppService.getInstance(project))
-                .url(MAIN_APP_URL)
-                .addMessageRouterHandler(MainAppMessageRouterHandler(project))
-                .schemeHandlerFactory(MainAppSchemeHandlerFactory(project))
+            JCefComponent.JCefComponentBuilder(
+                project, "Main", MainAppService.getInstance(project),
+                MAIN_APP_URL,
+                MainAppMessageRouterHandler(project),
+                MainAppSchemeHandlerFactory(project)
+            )
                 .withDownloadAdapter(DownloadHandlerAdapter())
                 .build()
         } else {
@@ -65,6 +67,6 @@ class MainAppPanel(private val project: Project) : DisposablePanel() {
     }
 
     override fun dispose() {
-        jCefComponent?.dispose()
+        //nothing to do
     }
 }

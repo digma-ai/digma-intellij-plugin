@@ -15,12 +15,9 @@ import javax.swing.JLabel
 
 class RecentActivityPanel(private val project: Project) : DisposablePanel() {
 
-    private var jCefComponent: JCefComponent?
-
-
     init {
 
-        jCefComponent = createJcefComponent()
+        val jCefComponent = createJcefComponent()
 
         val jcefUiComponent: JComponent = jCefComponent?.getComponent() ?: JLabel("JCEF not supported")
 
@@ -30,6 +27,8 @@ class RecentActivityPanel(private val project: Project) : DisposablePanel() {
         add(jcefUiComponent, BorderLayout.CENTER)
 
         Disposer.register(project.service<RecentActivityService>()) {
+            jCefComponent?.dispose()
+            remove(jcefUiComponent)
             dispose()
         }
 
@@ -43,10 +42,10 @@ class RecentActivityPanel(private val project: Project) : DisposablePanel() {
 
     private fun createJcefComponent(): JCefComponent? {
         return if (JBCefApp.isSupported()) {
-            JCefComponentBuilder(project, "RecentActivity", project.service<RecentActivityService>())
-                .url(RECENT_ACTIVITY_URL)
-                .addMessageRouterHandler(RecentActivityMessageRouterHandler(project))
-                .schemeHandlerFactory(RecentActivitySchemeHandlerFactory(project))
+            JCefComponentBuilder(project, "RecentActivity", project.service<RecentActivityService>(),
+                RECENT_ACTIVITY_URL,
+                RecentActivityMessageRouterHandler(project),
+                RecentActivitySchemeHandlerFactory(project))
                 .build()
         } else {
             null
@@ -55,6 +54,6 @@ class RecentActivityPanel(private val project: Project) : DisposablePanel() {
 
 
     override fun dispose() {
-        jCefComponent?.dispose()
+        //nothing to do
     }
 }

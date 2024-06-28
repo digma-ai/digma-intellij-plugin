@@ -1,6 +1,13 @@
 # Changelog
 
-## [2.0.357] - 2024-06-21
+## [2.0.358] - 2024-06-28
+
+- update-build-profile-18034-EAP by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2235
+- update eap profile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2238
+- fix-events-notifications Closes #2239 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2240
+- Fix memory leak by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2243
+
+## 2.0.357 - 2024-06-21
 
 - Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2233
 

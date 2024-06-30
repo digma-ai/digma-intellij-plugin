@@ -4,6 +4,7 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.common.FrequencyDetector
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.max
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.toJavaDuration
@@ -14,7 +15,7 @@ class ApiPerformanceMonitor(private val project:Project) {
 
     private val frequencyDetector = FrequencyDetector(10.minutes.toJavaDuration())
 
-    private val durations = mutableMapOf<String,Long>()
+    private val durations = ConcurrentHashMap(mutableMapOf<String,Long>())
 
     fun addPerformance(apiName: String, duration: Long) {
         if (duration < 2000) {

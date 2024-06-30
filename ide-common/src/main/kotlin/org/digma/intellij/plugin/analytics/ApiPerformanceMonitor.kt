@@ -21,7 +21,7 @@ class ApiPerformanceMonitor(private val project:Project) {
             return
         }
 
-        durations[apiName] = max(duration, durations[apiName] ?: 0)
+        durations[apiName] = max(duration, durations[apiName] ?: 0L)
 
         durations[apiName]?.let {
             report(apiName, it)
@@ -32,6 +32,9 @@ class ApiPerformanceMonitor(private val project:Project) {
         if (frequencyDetector.isTooFrequentMessage(apiName)){
             return
         }
+
+        //reset the max duration before reporting, new one will be collected
+        durations[apiName] = 0L
 
         val details = mutableMapOf<String,Any>(
             "api name" to apiName,

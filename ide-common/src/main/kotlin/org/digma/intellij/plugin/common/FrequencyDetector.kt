@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.errorreporting
+package org.digma.intellij.plugin.common
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.intellij.openapi.diagnostic.UntraceableException
@@ -8,9 +8,18 @@ import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration
 import kotlin.time.toKotlinDuration
 
-class FrequentErrorDetector(cacheExpirationTime: java.time.Duration) {
+class FrequencyDetector(cacheExpirationTime: java.time.Duration) {
 
     private val myCache = MyCache(cacheExpirationTime.toKotlinDuration())
+
+
+    fun isTooFrequentMessage(message: String): Boolean {
+        val counter = myCache.getOrCreate(message)
+        val occurrences = counter.incrementAndGet()
+        return occurrences > 1
+    }
+
+
 
 
     fun isTooFrequentError(message: String, action: String): Boolean {
@@ -83,5 +92,9 @@ private class MyCache(cacheExpirationTime: Duration) {
 
     fun getOrCreate(message: String, action: String): AtomicInteger {
         return cache.get("$message:$action") { AtomicInteger() }
+    }
+
+    fun getOrCreate(message: String): AtomicInteger {
+        return cache.get(message) { AtomicInteger() }
     }
 }

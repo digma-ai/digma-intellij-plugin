@@ -11,6 +11,7 @@ import net.bytebuddy.implementation.bind.annotation.RuntimeType
 import net.bytebuddy.matcher.ElementMatchers
 import org.digma.intellij.plugin.analytics.NoSelectedEnvironmentException
 import org.digma.intellij.plugin.common.ExceptionUtils
+import org.digma.intellij.plugin.common.FrequencyDetector
 import org.digma.intellij.plugin.common.findActiveProject
 import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.log.Log
@@ -29,7 +30,7 @@ open class ErrorReporter {
 
     private val logger: Logger = Logger.getInstance(this::class.java)
 
-    private val frequentErrorDetector = FrequentErrorDetector(60.minutes.toJavaDuration())
+    private val frequencyDetector = FrequencyDetector(60.minutes.toJavaDuration())
 
     //must be public class
     class MyPauseInterceptor {
@@ -119,7 +120,7 @@ open class ErrorReporter {
     open fun reportError(project: Project?, message: String, action: String, details: Map<String, String>) {
 
 
-        if (frequentErrorDetector.isTooFrequentError(message, action)) {
+        if (frequencyDetector.isTooFrequentError(message, action)) {
             return
         }
 
@@ -150,7 +151,7 @@ open class ErrorReporter {
                 return
             }
 
-            if (frequentErrorDetector.isTooFrequentException(message, throwable)) {
+            if (frequencyDetector.isTooFrequentException(message, throwable)) {
                 return
             }
 
@@ -187,7 +188,7 @@ open class ErrorReporter {
     ) {
 
         try {
-            if (frequentErrorDetector.isTooFrequentException(message, exception)) {
+            if (frequencyDetector.isTooFrequentException(message, exception)) {
                 return
             }
 
@@ -208,7 +209,7 @@ open class ErrorReporter {
     }
 
     open fun reportBackendError(project: Project?, message: String, action: String) {
-        if (frequentErrorDetector.isTooFrequentError(message, action)) {
+        if (frequencyDetector.isTooFrequentError(message, action)) {
             return
         }
 
@@ -234,7 +235,7 @@ open class ErrorReporter {
     // if the error is not a result of an exception create a new RuntimeException and send it, so we have the stack trace.
     open fun reportInternalFatalError(project: Project, source: String, exception: Throwable, details: Map<String, String> = mapOf()) {
 
-        if (frequentErrorDetector.isTooFrequentException(source, exception)) {
+        if (frequencyDetector.isTooFrequentException(source, exception)) {
             return
         }
 

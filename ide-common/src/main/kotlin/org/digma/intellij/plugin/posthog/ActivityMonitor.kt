@@ -989,5 +989,11 @@ class ActivityMonitor(private val project: Project) : Disposable {
         return PersistenceService.getInstance().getUserRegistrationEmail() ?: PersistenceService.getInstance().getUserEmail() ?: ""
     }
 
+    fun reportApiPerformanceIssue(details: MutableMap<String, Any>) {
+        capture(
+            "api-performance-issue",details
+        )
+    }
+
 
 }

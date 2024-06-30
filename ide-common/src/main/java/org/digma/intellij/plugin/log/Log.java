@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.log;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.analytics.NoSelectedEnvironmentException;
+import org.digma.intellij.plugin.common.FrequencyDetector;
 import org.digma.intellij.plugin.errorreporting.*;
 
 import java.time.Duration;
@@ -19,7 +20,7 @@ public class Log {
     public static final String API_LOGGER_NAME = "api.digma.org";
 
 
-    private static final FrequentErrorDetector FREQUENT_ERROR_DETECTOR = new FrequentErrorDetector(Duration.ofMinutes(30));
+    private static final FrequencyDetector FREQUENT_ERROR_DETECTOR = new FrequencyDetector(Duration.ofMinutes(30));
 
 
 

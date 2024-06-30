@@ -13,10 +13,12 @@ import java.beans.PropertyChangeListener;
 
 public class JaegerUIFileEditor extends UserDataHolderBase implements FileEditor {
 
-    private final VirtualFile file;
+    private final JaegerUIVirtualFile file;
 
     @Nullable
     private JCefComponent jCefComponent;
+
+    private boolean disposed = false;
 
     public JaegerUIFileEditor(Project project, JaegerUIVirtualFile file) {
         this.file = file;
@@ -81,7 +83,7 @@ public class JaegerUIFileEditor extends UserDataHolderBase implements FileEditor
 
     @Override
     public boolean isValid() {
-        return true;
+        return !disposed;
     }
 
     @Override
@@ -100,6 +102,8 @@ public class JaegerUIFileEditor extends UserDataHolderBase implements FileEditor
             jCefComponent.dispose();
             jCefComponent = null;
         }
+        disposed = true;
+        file.setValid(false);
     }
 
 }

@@ -13,6 +13,7 @@ import java.util.List;
 
 public class JaegerUIVirtualFile extends LightVirtualFile implements DigmaVirtualFileMarker {
 
+    //todo: not sure this key is necessary, it is not used
     public static final Key<String> JAEGER_UI_EDITOR_KEY = Key.create("Digma.JAEGER_UI_EDITOR_KEY");
     private String jaegerBaseUrl;
     private String traceId;

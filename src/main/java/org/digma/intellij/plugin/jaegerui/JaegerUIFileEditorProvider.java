@@ -23,12 +23,6 @@ public class JaegerUIFileEditorProvider implements FileEditorProvider {
     }
 
     @Override
-    public void disposeEditor(@NotNull FileEditor editor) {
-        FileEditorProvider.super.disposeEditor(editor);
-    }
-
-
-    @Override
     public @NotNull @NonNls String getEditorTypeId() {
         return JAEGER_UI_EDITOR_TYPE;
     }

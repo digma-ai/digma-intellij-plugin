@@ -373,19 +373,24 @@ private constructor(
 
             jbCefClient.cefClient.addDisplayHandler(JCefDisplayHandler(name))
 
-            jbCefBrowser.jbCefClient.addLifeSpanHandler(LifeSpanHandle(schemeHandlerFactory), jbCefBrowser.cefBrowser)
+            val lifeSpanHandle = LifeSpanHandle(schemeHandlerFactory)
+            jbCefClient.addLifeSpanHandler(lifeSpanHandle, jbCefBrowser.cefBrowser)
 
             downloadAdapterRef?.get()?.let {
-                jbCefClient.cefClient.addDownloadHandler(it)
+                jbCefClient.addDownloadHandler(it, jbCefBrowser.cefBrowser)
             }
 
             val jCefComponent =
                 JCefComponent(project, parentDisposable, name, jbCefBrowser, cefMessageRouter)
 
-            //usually the component that holds a reference to JCefComponent needs to call JCefComponent.dispose.
-            //when a parentDisposable is supplied then use it also to dispose, worst case dispose will be called twice.
             Disposer.register(parentDisposable) {
-                jCefComponent.dispose()
+                cefMessageRouter.removeHandler(messageRouterHandler)
+                cefMessageRouter.dispose()
+                jbCefClient.cefClient.removeMessageRouter(cefMessageRouter)
+                jbCefClient.removeLifeSpanHandler(lifeSpanHandle, jbCefBrowser.cefBrowser)
+                downloadAdapterRef?.get()?.let {
+                    jbCefClient.removeDownloadHandle(it, jbCefBrowser.cefBrowser)
+                }
             }
 
 
@@ -421,4 +426,5 @@ class LifeSpanHandle(private val schemeHandlerFactory: BaseSchemeHandlerFactory)
             schemeHandlerFactory.getSchema(), null, schemeHandlerFactory
         )
     }
+
 }

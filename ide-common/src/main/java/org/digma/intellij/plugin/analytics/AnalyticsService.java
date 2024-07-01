@@ -59,7 +59,7 @@ public class AnalyticsService implements Disposable {
 
     private static final Logger LOGGER = Logger.getInstance(AnalyticsService.class);
 
-    private final Environment environment;
+    private Environment environment;
 
     private final Project project;
 
@@ -522,6 +522,8 @@ public class AnalyticsService implements Disposable {
     public void dispose() {
         try {
             analyticsProviderProxy.close();
+            analyticsProviderProxy = null;
+            environment = null;
         } catch (Exception e) {
             Log.warnWithException(LOGGER, project, e, "exception while closing AnalyticsProvider {}", e.getMessage());
         }

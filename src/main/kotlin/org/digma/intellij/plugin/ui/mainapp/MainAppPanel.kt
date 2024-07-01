@@ -51,8 +51,7 @@ class MainAppPanel(private val project: Project) : DisposablePanel() {
             JCefComponent.JCefComponentBuilder(
                 project, "Main", MainAppService.getInstance(project),
                 MAIN_APP_URL,
-                MainAppMessageRouterHandler(project),
-                MainAppSchemeHandlerFactory(project)
+                MainAppMessageRouterHandler(project)
             )
                 .withDownloadAdapter(DownloadHandlerAdapter())
                 .build()

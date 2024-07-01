@@ -11,13 +11,16 @@ import org.jetbrains.annotations.*;
 import javax.swing.*;
 import java.beans.PropertyChangeListener;
 
+import static org.digma.intellij.plugin.ui.jcef.JBcefBrowserPropertiesKt.JCEF_DOCUMENTATION_FILE_PROPERTY_NAME;
+
 public class DocumentationFileEditor extends UserDataHolderBase implements FileEditor {
 
-    private final VirtualFile file;
+    private final DocumentationVirtualFile file;
 
     @Nullable
     private JCefComponent jCefComponent;
 
+    private boolean disposed = false;
 
     public DocumentationFileEditor(Project project, DocumentationVirtualFile file) {
         this.file = file;
@@ -30,8 +33,8 @@ public class DocumentationFileEditor extends UserDataHolderBase implements FileE
         if (JBCefApp.isSupported()) {
             return new JCefComponent.JCefComponentBuilder(project, "Documentation", DocumentationService.getInstance(project),
                     DocumentationConstants.DOCUMENTATION_URL,
-                    new DocumentationMessageRouterHandler(project),
-                    new DocumentationSchemeHandlerFactory(project, file))
+                    new DocumentationMessageRouterHandler(project))
+                    .withArg(JCEF_DOCUMENTATION_FILE_PROPERTY_NAME,file)
                     .withDownloadAdapter(new DownloadHandlerAdapter())
                     .build();
 
@@ -82,7 +85,7 @@ public class DocumentationFileEditor extends UserDataHolderBase implements FileE
 
     @Override
     public boolean isValid() {
-        return true;
+        return !disposed;
     }
 
     @Override
@@ -101,6 +104,8 @@ public class DocumentationFileEditor extends UserDataHolderBase implements FileE
             jCefComponent.dispose();
             jCefComponent = null;
         }
+        disposed = true;
+        file.setValid(false);
     }
 
 }

@@ -11,6 +11,8 @@ import org.jetbrains.annotations.*;
 import javax.swing.*;
 import java.beans.PropertyChangeListener;
 
+import static org.digma.intellij.plugin.ui.jcef.JBcefBrowserPropertiesKt.JCEF_JAEGER_UI_FILE_PROPERTY_NAME;
+
 public class JaegerUIFileEditor extends UserDataHolderBase implements FileEditor {
 
     private final JaegerUIVirtualFile file;
@@ -31,8 +33,8 @@ public class JaegerUIFileEditor extends UserDataHolderBase implements FileEditor
         if (JBCefApp.isSupported()) {
             return new JCefComponent.JCefComponentBuilder(project, "JaegerUI", this,
                     JaegerUIConstants.JAEGER_UI_URL,
-                    new JaegerUIMessageRouterHandler(project),
-                    new JaegerUiSchemeHandlerFactory(project, file))
+                    new JaegerUIMessageRouterHandler(project))
+                    .withArg(JCEF_JAEGER_UI_FILE_PROPERTY_NAME, file)
                     .withDownloadAdapter(new DownloadHandlerAdapter())
                     .build();
 

@@ -1,20 +1,19 @@
 package org.digma.intellij.plugin.jaegerui;
 
 import com.intellij.openapi.project.Project;
-import org.digma.intellij.plugin.ui.jcef.BaseResourceHandler;
+import org.cef.browser.CefBrowser;
+import org.digma.intellij.plugin.errorreporting.ErrorReporter;
+import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.ui.jcef.*;
 import org.jetbrains.annotations.*;
 
 import java.io.InputStream;
+import java.util.Collections;
 
 public class JaegerUiResourceHandler extends BaseResourceHandler {
 
-    private final Project project;
-    private final JaegerUIVirtualFile file;
-
-    public JaegerUiResourceHandler(Project project, @NotNull String path, JaegerUIVirtualFile file) {
-        super(path);
-        this.project = project;
-        this.file = file;
+    public JaegerUiResourceHandler(@NotNull CefBrowser browser, @NotNull String path) {
+        super(path,browser);
     }
 
     @Override
@@ -25,6 +24,18 @@ public class JaegerUiResourceHandler extends BaseResourceHandler {
     @Nullable
     @Override
     public InputStream buildIndexFromTemplate(@NotNull String path) {
+        Project project = JBcefBrowserPropertiesKt.getProject(getBrowser());
+        if (project == null) {
+            Log.log(getLogger()::warn, "project is null , should never happen");
+            ErrorReporter.getInstance().reportError(null, "JaegerUiResourceHandler.buildIndexFromTemplate", "project is null", Collections.emptyMap());
+            return null;
+        }
+        JaegerUIVirtualFile file = (JaegerUIVirtualFile) JBcefBrowserPropertiesKt.getProperty(getBrowser(),JBcefBrowserPropertiesKt.JCEF_JAEGER_UI_FILE_PROPERTY_NAME);
+        if (file == null){
+            Log.log(getLogger()::warn, "JaegerUIVirtualFile is null , should never happen");
+            ErrorReporter.getInstance().reportError(null, "JaegerUiResourceHandler.buildIndexFromTemplate", "JaegerUIVirtualFile is null", Collections.emptyMap());
+            return null;
+        }
         return new JaegerUiIndexTemplateBuilder(file).build(project);
     }
 }

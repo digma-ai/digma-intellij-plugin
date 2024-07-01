@@ -20,6 +20,10 @@ class MailtoSchemaHandlerFactory : CefSchemeHandlerFactory {
     fun getSchema(): String {
         return "mailto"
     }
+
+    fun getDomain(): String? {
+        return null
+    }
 }
 
 

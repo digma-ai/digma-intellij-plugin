@@ -1,16 +1,16 @@
 package org.digma.intellij.plugin.ui.mainapp
 
-import com.intellij.openapi.project.Project
+import org.cef.browser.CefBrowser
 import org.cef.handler.CefResourceHandler
 import org.digma.intellij.plugin.ui.jcef.BaseSchemeHandlerFactory
 
-class MainAppSchemeHandlerFactory(project: Project) : BaseSchemeHandlerFactory(project) {
+class MainAppSchemeHandlerFactory : BaseSchemeHandlerFactory() {
 
-    override fun createResourceHandler(resourceName: String, resourceExists: Boolean): CefResourceHandler {
+    override fun createResourceHandler(resourceName: String, resourceExists: Boolean, browser: CefBrowser): CefResourceHandler {
         return if (resourceExists) {
-            MainAppResourceHandler(project, resourceName)
+            MainAppResourceHandler(browser, resourceName)
         } else {
-            MainAppResourceHandler(project, "$MAIN_APP_RESOURCE_FOLDER_NAME/index.html")
+            MainAppResourceHandler(browser, "$MAIN_APP_RESOURCE_FOLDER_NAME/index.html")
         }
     }
 

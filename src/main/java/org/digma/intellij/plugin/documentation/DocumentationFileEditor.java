@@ -31,7 +31,7 @@ public class DocumentationFileEditor extends UserDataHolderBase implements FileE
     private JCefComponent createJcefComponent(Project project, DocumentationVirtualFile file) {
 
         if (JBCefApp.isSupported()) {
-            return new JCefComponent.JCefComponentBuilder(project, "Documentation", DocumentationService.getInstance(project),
+            return new JCefComponent.JCefComponentBuilder(project, "Documentation", this,
                     DocumentationConstants.DOCUMENTATION_URL,
                     new DocumentationMessageRouterHandler(project))
                     .withArg(JCEF_DOCUMENTATION_FILE_PROPERTY_NAME,file)

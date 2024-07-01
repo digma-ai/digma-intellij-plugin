@@ -125,8 +125,6 @@
         <errorHandler implementation="org.digma.intellij.plugin.ui.reports.DigmaErrorReportSubmitter"/>
 
         <postStartupActivity
-                implementation="org.digma.intellij.plugin.updates.AggressiveUpdateServiceStarter"/>
-        <postStartupActivity
                 implementation="org.digma.intellij.plugin.ui.updates.AggressiveUpdateProjectStartup"/>
 
 

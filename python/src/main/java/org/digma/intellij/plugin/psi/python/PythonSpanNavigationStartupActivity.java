@@ -1,12 +1,11 @@
 package org.digma.intellij.plugin.psi.python;
 
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.startup.StartupActivity;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.jetbrains.annotations.NotNull;
 
-public class PythonSpanNavigationStartupActivity implements StartupActivity {
+public class PythonSpanNavigationStartupActivity implements ProjectActivity {
 
 
     @Override

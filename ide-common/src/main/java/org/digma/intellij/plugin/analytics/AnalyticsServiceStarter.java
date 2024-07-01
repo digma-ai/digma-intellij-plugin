@@ -1,17 +1,18 @@
 package org.digma.intellij.plugin.analytics;
 
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.startup.StartupActivity;
 import org.digma.intellij.plugin.common.Backgroundable;
+import org.digma.intellij.plugin.startup.DigmaProjectActivity;
 import org.jetbrains.annotations.NotNull;
 
 /**
  * Initialize AnalyticsService early as possible
  */
-public class AnalyticsServiceStarter implements StartupActivity.DumbAware {
+public class AnalyticsServiceStarter extends DigmaProjectActivity {
+
 
     @Override
-    public void runActivity(@NotNull Project project) {
+    public void executeProjectStartup(@NotNull Project project) {
         Backgroundable.ensureBackgroundWithoutReadAccess(project, "initializing analytics service", () -> {
             //start AnalyticsServiceSettingsWatcher so it will start listening to settings change events
             AnalyticsServiceSettingsWatcher.getInstance();

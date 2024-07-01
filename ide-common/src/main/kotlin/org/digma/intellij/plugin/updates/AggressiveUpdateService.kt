@@ -6,7 +6,6 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.startup.StartupActivity
 import io.ktor.utils.io.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
@@ -29,7 +28,6 @@ import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
 import org.digma.intellij.plugin.model.rest.version.VersionResponse
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.settings.InternalFileSettings
-import org.digma.intellij.plugin.updates.AggressiveUpdateService.Companion.getInstance
 import org.digma.intellij.plugin.updates.CurrentUpdateState.OK
 import org.digma.intellij.plugin.updates.CurrentUpdateState.UPDATE_BACKEND
 import org.digma.intellij.plugin.updates.CurrentUpdateState.UPDATE_BOTH
@@ -406,10 +404,3 @@ class AggressiveUpdateService(val project: Project) : Disposable {
 
 
 data class PublicUpdateState(val updateState: CurrentUpdateState, val backendDeploymentType: BackendDeploymentType)
-
-
-class AggressiveUpdateServiceStarter : StartupActivity.DumbAware {
-    override fun runActivity(project: Project) {
-        getInstance(project)
-    }
-}

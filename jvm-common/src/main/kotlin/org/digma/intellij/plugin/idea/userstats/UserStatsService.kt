@@ -2,9 +2,9 @@ package org.digma.intellij.plugin.idea.userstats
 
 import com.intellij.collaboration.async.disposingScope
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.startup.StartupActivity
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -12,8 +12,10 @@ import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.startup.DigmaProjectActivity
 import java.util.concurrent.TimeUnit
 
+@Service(Service.Level.PROJECT)
 class UserStatsService(private val project: Project) : Disposable {
 
     companion object {
@@ -73,9 +75,8 @@ class UserStatsService(private val project: Project) : Disposable {
 
 }
 
-class UserStatsServiceStarter : StartupActivity {
-    override fun runActivity(project: Project) {
-        // its enough just to have reference to the service, and it will get initialized
-        val service = UserStatsService.getInstance(project)
+class UserStatsServiceStarter : DigmaProjectActivity() {
+    override fun executeProjectStartup(project: Project) {
+        UserStatsService.getInstance(project)
     }
 }

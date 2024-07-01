@@ -1,17 +1,14 @@
 package org.digma.intellij.plugin.idea.navigation
 
-import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.startup.StartupActivity
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.startup.DigmaProjectActivity
 
-internal class JvmNavigationDiscoveryStartupActivity : StartupActivity {
+internal class JvmNavigationDiscoveryStartupActivity : DigmaProjectActivity() {
 
-    private val logger = Logger.getInstance(this::class.java)
-
-    override fun runActivity(project: Project) {
+    override fun executeProjectStartup(project: Project) {
 
         Backgroundable.executeOnPooledThread {
 

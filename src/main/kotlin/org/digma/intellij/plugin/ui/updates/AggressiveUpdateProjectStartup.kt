@@ -1,16 +1,16 @@
 package org.digma.intellij.plugin.ui.updates
 
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.startup.StartupActivity
+import org.digma.intellij.plugin.startup.DigmaProjectActivity
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.recentactivity.RecentActivityToolWindowCardsController
 import org.digma.intellij.plugin.updates.AggressiveUpdateService
 
-class AggressiveUpdateProjectStartup : StartupActivity {
+class AggressiveUpdateProjectStartup : DigmaProjectActivity() {
 
-    override fun runActivity(project: Project) {
 
-        //make sure it started
+    override fun executeProjectStartup(project: Project) {
+        //make sure AggressiveUpdateService started
         AggressiveUpdateService.getInstance(project)
 
         //update the state for any project that is starting.
@@ -22,4 +22,5 @@ class AggressiveUpdateProjectStartup : StartupActivity {
         MainToolWindowCardsController.getInstance(project).updateStateChanged(AggressiveUpdateService.getInstance(project).getUpdateState())
         RecentActivityToolWindowCardsController.getInstance(project).updateStateChanged(AggressiveUpdateService.getInstance(project).getUpdateState())
     }
+
 }

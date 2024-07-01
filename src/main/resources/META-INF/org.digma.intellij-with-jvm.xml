@@ -37,7 +37,6 @@
         <projectService serviceImplementation="org.digma.intellij.plugin.idea.deps.ModulesDepsService"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.idea.deps.ModuleDepsStarter"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.idea.userstats.UserStatsService"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.idea.userstats.UserStatsServiceStarter"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.idea.buildsystem.JvmBuildSystemHelperService"/>

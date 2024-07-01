@@ -7,10 +7,10 @@ import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.LibraryOrderEntry
 import com.intellij.openapi.roots.ModuleRootManager
-import com.intellij.openapi.startup.StartupActivity
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.MonitoredFramework
+import org.digma.intellij.plugin.startup.DigmaProjectActivity
 import org.jetbrains.annotations.NotNull
 import java.util.Timer
 import java.util.TimerTask
@@ -406,8 +406,8 @@ class ModulesDepsService(private val project: Project) : Disposable {
     }
 }
 
-class ModuleDepsStarter : StartupActivity {
-    override fun runActivity(project: Project) {
+class ModuleDepsStarter : DigmaProjectActivity() {
+    override fun executeProjectStartup(project: Project) {
         // its enough just call getInstance and it will be initialized
         ModulesDepsService.getInstance(project)
     }

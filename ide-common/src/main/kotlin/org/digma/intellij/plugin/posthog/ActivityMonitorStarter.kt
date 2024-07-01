@@ -1,13 +1,13 @@
 package org.digma.intellij.plugin.posthog
 
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.startup.StartupActivity
+import org.digma.intellij.plugin.startup.DigmaProjectActivity
 
-class ActivityMonitorStarter : StartupActivity.Background {
+class ActivityMonitorStarter : DigmaProjectActivity() {
 
     //try to start ActivityMonitor as early as possible. although if the digma tool window is opened on start it will call
     // ActivityMonitor on UI thread
-    override fun runActivity(project: Project) {
+    override fun executeProjectStartup(project: Project) {
         ActivityMonitor.getInstance(project)
     }
 

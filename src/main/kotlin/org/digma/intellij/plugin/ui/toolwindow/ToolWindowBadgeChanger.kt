@@ -3,20 +3,20 @@ package org.digma.intellij.plugin.ui.toolwindow
 import com.intellij.collaboration.async.disposingScope
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.startup.StartupActivity
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import org.digma.intellij.plugin.startup.DigmaProjectActivity
 import org.digma.intellij.plugin.ui.notifications.NotificationsService
 
 //todo: remove. Its disabled, we don't need that anymore
-class ToolWindowBadgeChanger : StartupActivity {
+class ToolWindowBadgeChanger : DigmaProjectActivity() {
 
     private var hasUnreadNotifications = false
 
-    override fun runActivity(project: Project) {
+    override fun executeProjectStartup(project: Project) {
 
         val notificationsService = project.service<NotificationsService>()
 

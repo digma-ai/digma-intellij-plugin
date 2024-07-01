@@ -1,11 +1,11 @@
 package org.digma.intellij.plugin.digmathon
 
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.startup.StartupActivity
+import org.digma.intellij.plugin.startup.DigmaProjectActivity
 
-class DigmathonStartup : StartupActivity.DumbAware {
+class DigmathonStartup : DigmaProjectActivity() {
 
-    override fun runActivity(project: Project) {
+    override fun executeProjectStartup(project: Project) {
         DigmathonService.getInstance()
     }
 }

@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.ui.recentactivity
 
+import com.intellij.collaboration.async.disposingScope
 import com.intellij.execution.runners.ExecutionUtil
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
@@ -8,11 +9,15 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowManager
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.PluginId
 import org.digma.intellij.plugin.analytics.EnvironmentChanged
 import org.digma.intellij.plugin.analytics.getAllEnvironments
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.icons.AppIcons
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.environment.Env
@@ -29,6 +34,7 @@ import java.time.temporal.ChronoUnit
 import java.util.Date
 import java.util.Optional
 import javax.swing.Icon
+import kotlin.coroutines.cancellation.CancellationException
 
 
 private const val RECENT_ACTIVITY_SET_DATA = "RECENT_ACTIVITY/SET_DATA"
@@ -53,6 +59,27 @@ class RecentActivityUpdater(val project: Project) : Disposable {
                 //nothing to do
             }
         })
+
+
+        @Suppress("UnstableApiUsage")
+        disposingScope().launch {
+
+            while (isActive) {
+                delay(10000)
+                try {
+                    if (isActive) {
+                        Log.log(logger::trace, "calling updateLatestActivities")
+                        updateLatestActivities()
+                    }
+                } catch (e: CancellationException) {
+                    Log.log(logger::trace, project, "recent activity timer job canceled")
+                    break
+                } catch (e: Exception) {
+                    Log.warnWithException(logger, e, "Exception updating RecentActivities")
+                    ErrorReporter.getInstance().reportError(project, "RecentActivityService.updateRecentActivitiesTimer", e)
+                }
+            }
+        }
 
     }
 

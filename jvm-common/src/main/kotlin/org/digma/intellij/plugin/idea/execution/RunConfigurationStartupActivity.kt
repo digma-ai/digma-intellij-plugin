@@ -5,12 +5,13 @@ import com.intellij.execution.RunnerAndConfigurationSettings
 import com.intellij.execution.configurations.RunConfiguration
 import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.startup.StartupActivity
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.startup.DigmaProjectActivity
 
-class RunConfigurationStartupActivity : StartupActivity {
-    override fun runActivity(project: Project) {
+class RunConfigurationStartupActivity : DigmaProjectActivity() {
+
+    override fun executeProjectStartup(project: Project) {
 
 
         try {

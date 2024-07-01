@@ -6,7 +6,6 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.startup.StartupActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -20,13 +19,15 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.version.PerformanceMetricsResponse
 import org.digma.intellij.plugin.persistence.PersistenceService
+import org.digma.intellij.plugin.startup.DigmaProjectActivity
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 
-class PerformanceMetricsPosthogEventStartupActivity : StartupActivity {
-    override fun runActivity(project: Project) {
+class PerformanceMetricsPosthogEventStartupActivity : DigmaProjectActivity() {
+
+    override fun executeProjectStartup(project: Project) {
         service<ContinuousPerformanceMetricsReporter>().start()
     }
 }

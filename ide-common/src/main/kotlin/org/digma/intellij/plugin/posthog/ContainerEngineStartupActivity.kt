@@ -2,14 +2,12 @@ package org.digma.intellij.plugin.posthog
 
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.util.ExecUtil
-import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.startup.StartupActivity
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.startup.DigmaProjectActivity
 
-class ContainerEngineStartupActivity : StartupActivity {
-    private val logger = Logger.getInstance(ContainerEngineStartupActivity::class.java)
+class ContainerEngineStartupActivity : DigmaProjectActivity() {
     private val isWindows: Boolean = System.getProperty("os.name").startsWith("windows", true)
 
     enum class ContainerEngine {
@@ -18,7 +16,7 @@ class ContainerEngineStartupActivity : StartupActivity {
         UNKNOWN
     }
 
-    override fun runActivity(project: Project) {
+    override fun executeProjectStartup(project: Project) {
         val containerPlatform = getInstalled(project).toString().lowercase()
         ActivityMonitor.getInstance(project).registerContainerEngine(containerPlatform)
     }
@@ -32,6 +30,8 @@ class ContainerEngineStartupActivity : StartupActivity {
 
         return ContainerEngine.UNKNOWN
     }
+
+
     private fun getExecPath(project: Project, executable: String): String ? {
         val cmd = GeneralCommandLine(if (isWindows) "where" else "which")
         cmd.addParameter(executable)

@@ -224,7 +224,7 @@ class CodeLensService(private val project: Project) : Disposable {
                     }
                 }
                 Backgroundable.ensurePooledThreadWithoutReadAccess {
-                    val contextPayload = objectToJsonNode(lens)
+                    val contextPayload = objectToJsonNode(ChangeScopeMessagePayload(lens))
                     val scopeContext = ScopeContext("IDE/CODE_LENS_CLICKED",contextPayload)
                     ScopeManager.getInstance(project).changeScope(SpanScope(lens.scopeCodeObjectId),false,null,scopeContext,null)
                 }

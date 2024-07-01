@@ -30,7 +30,6 @@ public class DashboardIndexTemplateBuilder {
     private static final String IS_DIGMA_ENGINE_INSTALLED = "isDigmaEngineInstalled";
     private static final String IS_DIGMA_ENGINE_RUNNING = "isDigmaEngineRunning";
     private static final String IS_JAEGER_ENABLED = "isJaegerEnabled";
-    private static final String DASHBOARD_REFRESH_INTERVAL = "dashboardRefreshInterval";
     private static final String DASHBOARD_ENVIRONMENT = "dashboardEnvironment";
     private static final String DIGMA_API_URL = "digmaApiUrl";
 
@@ -61,7 +60,6 @@ public class DashboardIndexTemplateBuilder {
             data.put(IS_DOCKER_COMPOSE_INSTALLED, ApplicationManager.getApplication().getService(DockerService.class).isDockerInstalled());
             data.put(DIGMA_API_URL, SettingsState.getInstance().apiUrl);
 
-            data.put(DASHBOARD_REFRESH_INTERVAL, 10*1000);
             data.put(DASHBOARD_ENVIRONMENT, getCurrentEnvironmentId(project));
             data.put(IS_LOGGING_ENABLED,getIsLoggingEnabledSystemProperty());
 

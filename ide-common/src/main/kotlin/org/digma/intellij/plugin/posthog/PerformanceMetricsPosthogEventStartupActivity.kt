@@ -6,6 +6,7 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import com.intellij.serviceContainer.AlreadyDisposedException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -104,6 +105,10 @@ class ContinuousPerformanceMetricsReporter : Disposable {
                     }
                 }
 
+            } catch (e: AlreadyDisposedException) {
+                //ignore this exception.
+                // it may happen when closing projects because this class uses any active project when it needs one on every iteration,
+                // and sometimes the project will close before the current iteration ends.
             } catch (e: Exception) {
                 Log.warnWithException(logger, e, "failed in first time registerPerformanceMetrics")
                 ErrorReporter.getInstance()
@@ -142,6 +147,10 @@ class ContinuousPerformanceMetricsReporter : Disposable {
 
                     delay(6.hours.inWholeMilliseconds)
 
+                } catch (e: AlreadyDisposedException) {
+                    //ignore this exception.
+                    // it may happen when closing projects because this class uses any active project when it needs one on every iteration,
+                    // and sometimes the project will close before the current iteration ends.
                 } catch (e: Exception) {
                     Log.warnWithException(logger, e, "failed in continuous registerPerformanceMetrics")
                     ErrorReporter.getInstance()

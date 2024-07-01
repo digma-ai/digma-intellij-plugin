@@ -1,15 +1,17 @@
 package org.digma.intellij.plugin.ui.recentactivity
 
-import com.intellij.openapi.project.Project
+import org.cef.browser.CefBrowser
 import org.cef.handler.CefResourceHandler
 import org.digma.intellij.plugin.ui.jcef.BaseSchemeHandlerFactory
 
-class RecentActivitySchemeHandlerFactory(project: Project) : BaseSchemeHandlerFactory(project) {
-    override fun createResourceHandler(resourceName: String, resourceExists: Boolean): CefResourceHandler {
+class RecentActivitySchemeHandlerFactory : BaseSchemeHandlerFactory() {
+
+
+    override fun createResourceHandler(resourceName: String, resourceExists: Boolean, browser: CefBrowser): CefResourceHandler {
         return if (resourceExists) {
-            RecentActivityResourceHandler(project, resourceName)
+            RecentActivityResourceHandler(browser, resourceName)
         } else {
-            RecentActivityResourceHandler(project, "$RECENT_ACTIVITY_RESOURCE_FOLDER_NAME/index.html")
+            RecentActivityResourceHandler(browser, "$RECENT_ACTIVITY_RESOURCE_FOLDER_NAME/index.html")
         }
     }
 

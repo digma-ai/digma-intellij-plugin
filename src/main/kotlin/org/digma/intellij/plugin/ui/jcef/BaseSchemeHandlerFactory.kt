@@ -1,11 +1,13 @@
 package org.digma.intellij.plugin.ui.jcef
 
-import com.intellij.openapi.project.Project
+import com.intellij.openapi.diagnostic.Logger
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
 import org.cef.callback.CefSchemeHandlerFactory
 import org.cef.handler.CefResourceHandler
 import org.cef.network.CefRequest
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import org.digma.intellij.plugin.log.Log
 import java.net.MalformedURLException
 import java.net.URL
 
@@ -13,10 +15,26 @@ import java.net.URL
 private const val COMMON_FILES_FOLDER: String = "/webview/common"
 
 
-abstract class BaseSchemeHandlerFactory(protected val project: Project) : CefSchemeHandlerFactory {
+abstract class BaseSchemeHandlerFactory : CefSchemeHandlerFactory {
 
+    private val logger: Logger = Logger.getInstance(this::class.java)
 
     override fun create(browser: CefBrowser?, frame: CefFrame?, schemeName: String, request: CefRequest): CefResourceHandler? {
+
+        //browser and project should never be null.
+        if (browser == null) {
+            Log.log(logger::warn, "browser is null , should never happen")
+            ErrorReporter.getInstance().reportError(null, "BaseSchemeHandlerFactory.create", "browser is null", mapOf())
+            return null
+        }
+
+        val project = getProject(browser)
+        if (project == null) {
+            Log.log(logger::warn, "project is null , should never happen")
+            ErrorReporter.getInstance().reportError(null, "BaseSchemeHandlerFactory.create", "project is null", mapOf())
+            return null
+        }
+
 
         val url = getUrl(request)
 
@@ -25,9 +43,11 @@ abstract class BaseSchemeHandlerFactory(protected val project: Project) : CefSch
             val host = url.host
             val file = url.file
 
-            if(ApiProxyResourceHandler.isApiProxyCall(url)){
+
+            if (ApiProxyResourceHandler.isApiProxyCall(url)) {
                 return ApiProxyResourceHandler(project)
             }
+
 
             if (getDomain() == host && getSchema() == schemeName) {
                 var resourceName = getResourceFolderName() + file
@@ -38,7 +58,7 @@ abstract class BaseSchemeHandlerFactory(protected val project: Project) : CefSch
                     resource = javaClass.getResource(resourceName)
                 }
 
-                return createResourceHandler(resourceName, resource !== null)
+                return createResourceHandler(resourceName, resource !== null, browser)
             }
         }
         return null
@@ -54,7 +74,7 @@ abstract class BaseSchemeHandlerFactory(protected val project: Project) : CefSch
     }
 
 
-    abstract fun createResourceHandler(resourceName: String, resourceExists: Boolean): CefResourceHandler
+    abstract fun createResourceHandler(resourceName: String, resourceExists: Boolean, browser: CefBrowser): CefResourceHandler
     abstract fun getSchema(): String
     abstract fun getDomain(): String
     abstract fun getResourceFolderName(): String

@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.ui.jcef
 
 import com.intellij.openapi.diagnostic.Logger
+import org.cef.browser.CefBrowser
 import org.cef.callback.CefCallback
 import org.cef.handler.CefLoadHandler
 import org.cef.handler.CefResourceHandler
@@ -13,7 +14,7 @@ import java.io.IOException
 import java.io.InputStream
 import kotlin.math.min
 
-abstract class BaseResourceHandler(private val path: String) : CefResourceHandler {
+abstract class BaseResourceHandler(private val path: String, protected val browser: CefBrowser) : CefResourceHandler {
 
     val logger = Logger.getInstance(this::class.java)
 
@@ -24,7 +25,6 @@ abstract class BaseResourceHandler(private val path: String) : CefResourceHandle
 
     abstract fun isIndexHtml(path: String): Boolean
 
-    //todo: probably path is not necessary
     abstract fun buildIndexFromTemplate(path: String): InputStream?
 
 

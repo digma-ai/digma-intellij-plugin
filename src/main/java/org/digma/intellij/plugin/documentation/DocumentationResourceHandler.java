@@ -1,24 +1,19 @@
 package org.digma.intellij.plugin.documentation;
 
-import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
-import org.digma.intellij.plugin.ui.jcef.BaseResourceHandler;
+import org.cef.browser.CefBrowser;
+import org.digma.intellij.plugin.errorreporting.ErrorReporter;
+import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.ui.jcef.*;
 import org.jetbrains.annotations.*;
 
 import java.io.InputStream;
+import java.util.Collections;
 
 public class DocumentationResourceHandler extends BaseResourceHandler {
 
-    private static final Logger LOGGER = Logger.getInstance(DocumentationResourceHandler.class);
-
-
-    private final Project project;
-    private final DocumentationVirtualFile documentationVirtualFile;
-
-    public DocumentationResourceHandler(@NotNull Project project, @NotNull String path, @NotNull DocumentationVirtualFile file) {
-        super(path);
-        this.project = project;
-        this.documentationVirtualFile = file;
+    public DocumentationResourceHandler(@NotNull CefBrowser browser, @NotNull String path) {
+        super(path, browser);
     }
 
     @Override
@@ -29,6 +24,18 @@ public class DocumentationResourceHandler extends BaseResourceHandler {
     @Nullable
     @Override
     public InputStream buildIndexFromTemplate(@NotNull String path) {
-        return new DocumentationIndexTemplateBuilder(documentationVirtualFile).build(project);
+        Project project = JBcefBrowserPropertiesKt.getProject(getBrowser());
+        if (project == null) {
+            Log.log(getLogger()::warn, "project is null , should never happen");
+            ErrorReporter.getInstance().reportError(null, "DocumentationResourceHandler.buildIndexFromTemplate", "project is null", Collections.emptyMap());
+            return null;
+        }
+        DocumentationVirtualFile file = (DocumentationVirtualFile) JBcefBrowserPropertiesKt.getProperty(getBrowser(), JBcefBrowserPropertiesKt.JCEF_DOCUMENTATION_FILE_PROPERTY_NAME);
+        if (file == null) {
+            Log.log(getLogger()::warn, "DocumentationVirtualFile is null , should never happen");
+            ErrorReporter.getInstance().reportError(null, "DocumentationResourceHandler.buildIndexFromTemplate", "DocumentationVirtualFile is null", Collections.emptyMap());
+            return null;
+        }
+        return new DocumentationIndexTemplateBuilder(file).build(project);
     }
 }

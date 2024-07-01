@@ -1,6 +1,6 @@
 package org.digma.intellij.plugin.jaegerui;
 
-import com.intellij.openapi.project.Project;
+import org.cef.browser.CefBrowser;
 import org.cef.handler.CefResourceHandler;
 import org.digma.intellij.plugin.ui.jcef.BaseSchemeHandlerFactory;
 import org.jetbrains.annotations.NotNull;
@@ -9,21 +9,14 @@ import static org.digma.intellij.plugin.jaegerui.JaegerUIConstants.JAEGER_UI_SCH
 
 public class JaegerUiSchemeHandlerFactory extends BaseSchemeHandlerFactory {
 
-    private final JaegerUIVirtualFile file;
-
-    public JaegerUiSchemeHandlerFactory(Project project, JaegerUIVirtualFile file) {
-        super(project);
-        this.file = file;
-    }
-
 
     @NotNull
     @Override
-    public CefResourceHandler createResourceHandler(@NotNull String resourceName, boolean resourceExists) {
+    public CefResourceHandler createResourceHandler(@NotNull String resourceName, boolean resourceExists, @NotNull CefBrowser browser) {
         if (resourceExists) {
-            return new JaegerUiResourceHandler(getProject(), resourceName, file);
+            return new JaegerUiResourceHandler(browser, resourceName);
         } else {
-            return new JaegerUiResourceHandler(getProject(), JaegerUIConstants.JAEGER_UI_RESOURCE_FOLDER_NAME + "/index.html", file);
+            return new JaegerUiResourceHandler(browser, JaegerUIConstants.JAEGER_UI_RESOURCE_FOLDER_NAME + "/index.html");
         }
     }
 

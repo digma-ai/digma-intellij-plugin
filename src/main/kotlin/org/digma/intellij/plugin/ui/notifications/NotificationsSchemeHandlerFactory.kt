@@ -1,18 +1,18 @@
 package org.digma.intellij.plugin.ui.notifications
 
-import com.intellij.openapi.project.Project
+import org.cef.browser.CefBrowser
 import org.cef.handler.CefResourceHandler
 import org.digma.intellij.plugin.ui.jcef.BaseSchemeHandlerFactory
 
-class NotificationsSchemeHandlerFactory(project: Project, val notificationViewMode: NotificationViewMode) : BaseSchemeHandlerFactory(project) {
+class NotificationsSchemeHandlerFactory(val notificationViewMode: NotificationViewMode) : BaseSchemeHandlerFactory() {
 
 
-    override fun createResourceHandler(resourceName: String, resourceExists: Boolean): CefResourceHandler {
+    override fun createResourceHandler(resourceName: String, resourceExists: Boolean, browser: CefBrowser): CefResourceHandler {
 
         return if (resourceExists) {
-            NotificationsResourceHandler(project, notificationViewMode, resourceName)
+            NotificationsResourceHandler(browser, notificationViewMode, resourceName)
         } else {
-            NotificationsResourceHandler(project, notificationViewMode, "$NOTIFICATIONS_RESOURCE_FOLDER_NAME/index.html")
+            NotificationsResourceHandler(browser, notificationViewMode, "$NOTIFICATIONS_RESOURCE_FOLDER_NAME/index.html")
         }
     }
 

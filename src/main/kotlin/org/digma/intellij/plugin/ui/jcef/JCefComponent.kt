@@ -45,20 +45,18 @@ import org.digma.intellij.plugin.ui.settings.SettingsChangeListener
 import org.digma.intellij.plugin.ui.settings.Theme
 import java.lang.ref.WeakReference
 import java.util.Objects
+import java.util.WeakHashMap
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.locks.ReentrantLock
 import javax.swing.JComponent
 
-/*
-JCefComponentBuilder.build already registers a disposable for this JCefComponent using parentDisposable,
- this JCefComponent uses parentDisposable for all its listeners and connections.
 
- */
 class JCefComponent
 private constructor(
     private val project: Project,
     parentDisposable: Disposable,
     val name: String,
-    val jbCefBrowser: JBCefBrowser,
-    private val cefMessageRouter: CefMessageRouter
+    val jbCefBrowser: JBCefBrowser
 ) : Disposable {
 
     private val logger: Logger = Logger.getInstance(JCefComponent::class.java)
@@ -324,7 +322,6 @@ private constructor(
         try {
             jbCefBrowser.jbCefClient.dispose()
             jbCefBrowser.dispose()
-            cefMessageRouter.dispose()
             ApplicationUISettingsChangeNotifier.getInstance(project).removeSettingsChangeListener(settingsChangeListener)
         } catch (e: Exception) {
             ErrorReporter.getInstance().reportError(project, "JCefComponent.dispose", e)
@@ -343,28 +340,35 @@ private constructor(
         private val name: String,
         parentDisposable: Disposable,
         url: String,
-        messageRouterHandler: BaseMessageRouterHandler,
-        schemeHandlerFactory: BaseSchemeHandlerFactory
+        messageRouterHandler: BaseMessageRouterHandler
     ) {
 
         private val urlRef = WeakReference(Objects.requireNonNull(url, "url must not be null"))
         private val messageRouterHandlerRef = WeakReference(Objects.requireNonNull(messageRouterHandler, "messageRouterHandlers must not be null"))
-        private val schemeHandlerFactoryRef = WeakReference(Objects.requireNonNull(schemeHandlerFactory, "schemeHandlerFactory must not be null"))
         private val parentDisposableRef = WeakReference(parentDisposable)
         private var downloadAdapterRef: WeakReference<CefDownloadHandler>? = null
+
+        //arguments per jcef instance, for example jaeger ui virtual file, or documentation virtual file
+        private val arguments = WeakHashMap<String, Any>()
 
 
         fun build(): JCefComponent {
 
             val url: String = Objects.requireNonNull(urlRef.get(), "url must not be null")!!
             val messageRouterHandler = Objects.requireNonNull(messageRouterHandlerRef.get(), "messageRouterHandlers must not be null")!!
-            val schemeHandlerFactory = Objects.requireNonNull(schemeHandlerFactoryRef.get(), "schemeHandlerFactory must not be null")!!
             val parentDisposable = Objects.requireNonNull(parentDisposableRef.get(), "parentDisposable must not be null")!!
 
 
             val jbCefBrowser = JBCefBrowserBuilderCreator.create()
                 .setUrl(url)
                 .build()
+
+            //set properties that are used by resource handlers.
+            setProject(jbCefBrowser, project)
+            arguments.forEach {
+                setProperty(jbCefBrowser, it.key, it.value)
+            }
+
 
             val jbCefClient = jbCefBrowser.jbCefClient
             val cefMessageRouter = CefMessageRouter.create()
@@ -373,27 +377,32 @@ private constructor(
 
             jbCefClient.cefClient.addDisplayHandler(JCefDisplayHandler(name))
 
-            val lifeSpanHandle = LifeSpanHandle(schemeHandlerFactory)
-            jbCefClient.addLifeSpanHandler(lifeSpanHandle, jbCefBrowser.cefBrowser)
+            val lifeSpanHandle = if (!LifeSpanHandle.registered.get()) {
+                jbCefClient.addLifeSpanHandler(LifeSpanHandle, jbCefBrowser.cefBrowser)
+                LifeSpanHandle
+            } else {
+                null
+            }
 
             downloadAdapterRef?.get()?.let {
                 jbCefClient.addDownloadHandler(it, jbCefBrowser.cefBrowser)
             }
 
             val jCefComponent =
-                JCefComponent(project, parentDisposable, name, jbCefBrowser, cefMessageRouter)
+                JCefComponent(project, parentDisposable, name, jbCefBrowser)
 
+            //register disposable for the above components
             Disposer.register(parentDisposable) {
                 cefMessageRouter.removeHandler(messageRouterHandler)
                 cefMessageRouter.dispose()
                 jbCefClient.cefClient.removeMessageRouter(cefMessageRouter)
-                jbCefClient.removeLifeSpanHandler(lifeSpanHandle, jbCefBrowser.cefBrowser)
+                lifeSpanHandle?.let {
+                    jbCefClient.removeLifeSpanHandler(it, jbCefBrowser.cefBrowser)
+                }
                 downloadAdapterRef?.get()?.let {
                     jbCefClient.removeDownloadHandle(it, jbCefBrowser.cefBrowser)
                 }
             }
-
-
 
             return jCefComponent
         }
@@ -403,28 +412,54 @@ private constructor(
             this.downloadAdapterRef = WeakReference(Objects.requireNonNull(adapter, "downloadAdapter must not be null"))
             return this
         }
+
+        fun withArg(key: String, value: Any): JCefComponentBuilder {
+            arguments[key] = value
+            return this
+        }
     }
 }
 
-class LifeSpanHandle(private val schemeHandlerFactory: BaseSchemeHandlerFactory) : CefLifeSpanHandlerAdapter() {
 
-    override fun onAfterCreated(browser: CefBrowser) {
-        //schemeHandlerFactory must not be null here!
-        registerAppSchemeHandler(schemeHandlerFactory)
-        registerMailtoSchemeHandler(MailtoSchemaHandlerFactory())
+object LifeSpanHandle : CefLifeSpanHandlerAdapter() {
+
+    val registered = AtomicBoolean(false)
+
+    private val registrationLock = ReentrantLock()
+
+    override fun onAfterCreated(browser: CefBrowser?) {
+
+        //register only one CefSchemeHandlerFactory for every type.
+        //CefSchemeHandlerFactory can be registered only on browser thread, onAfterCreated after the first jcef browser
+        // is created and at this stage it is possible to register CefSchemeHandlerFactory.
+        //it may be that this LifeSpanHandle will be registered to more than one client, but it will still register
+        // only one CefSchemeHandlerFactory for type. it is removed from the client in dispose.
+
+        try {
+            registrationLock.lock()
+            if (registered.get()) {
+                return
+            }
+
+            allSchemaHandlerFactories().forEach {
+                CefApp.getInstance().registerSchemeHandlerFactory(
+                    it.getSchema(), it.getDomain(), it
+                )
+            }
+
+            val mailtoSchemaHandlerFactory = MailtoSchemaHandlerFactory()
+            CefApp.getInstance().registerSchemeHandlerFactory(
+                mailtoSchemaHandlerFactory.getSchema(), mailtoSchemaHandlerFactory.getDomain(), mailtoSchemaHandlerFactory
+            )
+
+            registered.set(true)
+
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError("LifeSpanHandle.onAfterCreated", e)
+        } finally {
+            if (registrationLock.isHeldByCurrentThread) {
+                registrationLock.unlock()
+            }
+        }
     }
-
-
-    private fun registerAppSchemeHandler(schemeHandlerFactory: BaseSchemeHandlerFactory) {
-        CefApp.getInstance().registerSchemeHandlerFactory(
-            schemeHandlerFactory.getSchema(), schemeHandlerFactory.getDomain(), schemeHandlerFactory
-        )
-    }
-
-    private fun registerMailtoSchemeHandler(schemeHandlerFactory: MailtoSchemaHandlerFactory) {
-        CefApp.getInstance().registerSchemeHandlerFactory(
-            schemeHandlerFactory.getSchema(), null, schemeHandlerFactory
-        )
-    }
-
 }

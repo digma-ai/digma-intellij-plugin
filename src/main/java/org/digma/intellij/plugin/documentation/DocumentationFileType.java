@@ -3,11 +3,8 @@ package org.digma.intellij.plugin.documentation;
 import com.intellij.openapi.fileTypes.ex.FakeFileType;
 import com.intellij.openapi.util.NlsContexts;
 import com.intellij.openapi.vfs.VirtualFile;
-import org.jetbrains.annotations.Nls;
-import org.jetbrains.annotations.NonNls;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.*;
 
-@SuppressWarnings("UnstableApiUsage")
 public class DocumentationFileType extends FakeFileType {
 
     private DocumentationFileType() {

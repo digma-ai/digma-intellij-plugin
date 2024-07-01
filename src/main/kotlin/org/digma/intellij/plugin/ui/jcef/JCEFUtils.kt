@@ -3,6 +3,20 @@ package org.digma.intellij.plugin.ui.jcef
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
+import org.digma.intellij.plugin.documentation.DocumentationSchemeHandlerFactory
+import org.digma.intellij.plugin.jaegerui.JaegerUiSchemeHandlerFactory
+import org.digma.intellij.plugin.ui.mainapp.MainAppSchemeHandlerFactory
+import org.digma.intellij.plugin.ui.recentactivity.RecentActivitySchemeHandlerFactory
+
+
+fun allSchemaHandlerFactories(): List<BaseSchemeHandlerFactory> {
+    return listOf(
+        DocumentationSchemeHandlerFactory(),
+        JaegerUiSchemeHandlerFactory(),
+        MainAppSchemeHandlerFactory(),
+        RecentActivitySchemeHandlerFactory()
+    )
+}
 
 
 fun getIsLoggingEnabledSystemProperty():Boolean{

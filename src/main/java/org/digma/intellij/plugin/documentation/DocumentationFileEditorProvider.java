@@ -22,12 +22,6 @@ public class DocumentationFileEditorProvider implements FileEditorProvider {
     }
 
     @Override
-    public void disposeEditor(@NotNull FileEditor editor) {
-        FileEditorProvider.super.disposeEditor(editor);
-    }
-
-
-    @Override
     public @NotNull @NonNls String getEditorTypeId() {
         return DOCUMENTATION_EDITOR_TYPE;
     }

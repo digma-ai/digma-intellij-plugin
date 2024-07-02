@@ -2,7 +2,6 @@ import common.logBuildProfile
 import common.logIntellijPlatformPlugin
 import common.properties
 import common.withSilenceLogging
-import gradle.kotlin.dsl.accessors._44bd68d24449dd49451fa0f0c4976aa6.intellijPlatform
 
 plugins {
     id("digma-base")

@@ -9,7 +9,6 @@ import org.jetbrains.changelog.date
 import org.jetbrains.changelog.exceptions.MissingVersionException
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import org.jetbrains.intellij.platform.gradle.models.ProductRelease
-import org.jetbrains.intellij.platform.gradle.tasks.CustomRunIdeTask
 import org.jetbrains.intellij.platform.gradle.tasks.VerifyPluginTask
 
 fun properties(key: String) = properties(key, project)
@@ -282,22 +281,6 @@ tasks {
             if (it.name.endsWith(".log")) {
                 delete(it)
             }
-        }
-    }
-
-// todo: create custom tasks, for example: runWithoutKotlin, runWithoutGradle etc
-// see:https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-custom-tasks.html
-
-
-    val runWithoutGitHubPlugin by registering(CustomRunIdeTask::class) {
-        plugins {
-            disablePlugin("org.jetbrains.plugins.github")
-        }
-    }
-
-    val runWithoutKotlinPlugin by registering(CustomRunIdeTask::class) {
-        plugins {
-            disablePlugin("org.jetbrains.kotlin")
         }
     }
 

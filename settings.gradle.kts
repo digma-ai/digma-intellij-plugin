@@ -21,8 +21,6 @@ plugins {
 /*
 kotlin-stdlib: the kotlin-stdlib must be compatible with the intellij platform version,
  see: https://plugins.jetbrains.com/docs/intellij/kotlin.html#kotlin-standard-library
-
- todo: maybe use java-platforms instead of versionCatalogs
  */
 dependencyResolutionManagement {
     versionCatalogs {

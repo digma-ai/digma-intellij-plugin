@@ -41,16 +41,7 @@ dependencies {
         }
 
         bundledPlugin("com.intellij.java")
-
-        //there is an issue with plugin verifier that prevents using bundledPlugin("org.jetbrains.kotlin") for 242.
-        //https://youtrack.jetbrains.com/issue/MP-6594
-        //until this issue is fixed we use a direct dependency on kotlin plugin, which is not the best but works.
-        //todo: the dependency is on a version that i'm not sure compatible with 242
-        if (project.currentProfile().profile > BuildProfiles.Profile.p241){
-            plugin("org.jetbrains.kotlin","232-1.9.24-release-822-IJ10072.27")
-        }else{
-            bundledPlugin("org.jetbrains.kotlin")
-        }
+        bundledPlugin("org.jetbrains.kotlin")
     }
 }
 

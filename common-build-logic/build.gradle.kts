@@ -11,7 +11,7 @@ repositories {
 }
 
 dependencies {
-    implementation("org.jetbrains.intellij.platform:intellij-platform-gradle-plugin:2.0.0-beta7")
+    implementation("org.jetbrains.intellij.platform:intellij-platform-gradle-plugin:2.0.0-beta8")
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.24")
     implementation("com.glovoapp.gradle:versioning:1.1.10")
     implementation("de.undercouch:gradle-download-task:5.6.0")

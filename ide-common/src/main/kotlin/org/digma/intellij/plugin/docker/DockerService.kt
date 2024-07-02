@@ -108,7 +108,7 @@ class DockerService {
 
             val containerId = ExecUtil.execAndReadLine(getContainerIdCommand)
 
-            val getLogCommand = GeneralCommandLine(dockerCmd, "logs", "--tail", "2000", "$containerId")
+            val getLogCommand = GeneralCommandLine(dockerCmd, "logs", "--tail", "1000", "$containerId")
                 .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
 
             val processOutput: ProcessOutput =  ExecUtil.execAndGetOutput(getLogCommand)

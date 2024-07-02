@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.docker
 
 import com.intellij.execution.configurations.GeneralCommandLine
+import com.intellij.execution.process.ProcessOutput
 import com.intellij.execution.util.ExecUtil
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
@@ -89,6 +90,35 @@ class DockerService {
         return exitValue.contains("Cannot connect to the Docker daemon", true) ||//mac, linux
                 exitValue.contains("docker daemon is not running", true) || //win
                 exitValue.contains("Error while fetching server API version", true)
+    }
+
+
+
+    fun collectDigmaContainerLog(): String {
+        try {
+
+            if (!isInstalled(DOCKER_COMMAND)) {
+                return "could not find docker command"
+            }
+
+            val dockerCmd = getDockerCommand()
+
+            val getContainerIdCommand = GeneralCommandLine(dockerCmd, "ps", "--filter", "name=digma-compound", "--format", "{{.ID}}")
+                .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
+
+            val containerId = ExecUtil.execAndReadLine(getContainerIdCommand)
+
+            val getLogCommand = GeneralCommandLine(dockerCmd, "logs", "--tail", "2000", "$containerId")
+                .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
+
+            val processOutput: ProcessOutput =  ExecUtil.execAndGetOutput(getLogCommand)
+            return processOutput.toString()
+
+        } catch (ex: Exception) {
+            Log.warnWithException(logger, ex, "Failed in collectDigmaContainerLog")
+            ErrorReporter.getInstance().reportError("DockerService.collectDigmaContainerLog", ex)
+            return "could not collect docker container log because: $ex"
+        }
     }
 
 
@@ -420,5 +450,7 @@ class DockerService {
     private fun notifyResult(errorMsg: String, resultTask: Consumer<String>) {
         resultTask.accept(errorMsg)
     }
+
+
 
 }

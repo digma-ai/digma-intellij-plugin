@@ -18,7 +18,7 @@ constructor (
     val spanCodeObjectId: String,
     var displayName: String? = null,
     val serviceName: String? = null,
-    var role: Role?,
+    var role: Role? = null,
     var methodId: String? = null,
 ) :
     AbstractScope() {

@@ -18,7 +18,6 @@
       @GLOBAL_ENV_VARS@
 
       window.recentActivityExpirationLimit = ${recentActivityExpirationLimit};
-      window.recentActivityDocumentationURL = "https://youtu.be/F1Y0kETn-QQ";
     </script>
     <script src="/index.js"></script>
   </body>

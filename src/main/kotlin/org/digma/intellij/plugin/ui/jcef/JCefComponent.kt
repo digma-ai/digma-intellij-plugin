@@ -37,6 +37,7 @@ import org.digma.intellij.plugin.model.rest.environment.Env
 import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
 import org.digma.intellij.plugin.observability.ObservabilityChanged
 import org.digma.intellij.plugin.scope.ScopeChangedEvent
+import org.digma.intellij.plugin.scope.ScopeContext
 import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.ui.jcef.state.StateChangedEvent
@@ -258,7 +259,7 @@ private constructor(
         project.messageBus.connect(parentDisposable).subscribe(
             ScopeChangedEvent.SCOPE_CHANGED_TOPIC, object : ScopeChangedEvent {
                 override fun scopeChanged(
-                    scope: SpanScope?, codeLocation: CodeLocation, hasErrors: Boolean,
+                    scope: SpanScope?, codeLocation: CodeLocation, hasErrors: Boolean, scopeContext: ScopeContext?, environmentId: String?
                 ) {
                     try {
                         val insightsStats = AnalyticsService.getInstance(project).getInsightsStats(scope?.spanCodeObjectId)
@@ -269,7 +270,9 @@ private constructor(
                             hasErrors,
                             insightsStats.analyticsInsightsCount,
                             insightsStats.issuesInsightsCount,
-                            insightsStats.unreadInsightsCount
+                            insightsStats.unreadInsightsCount,
+                            scopeContext,
+                            environmentId
                         )
                     } catch (e: Throwable) {
                         ErrorReporter.getInstance().reportError("JCefComponent.scopeChanged", e)

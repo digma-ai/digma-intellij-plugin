@@ -16,15 +16,16 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.SmartPointerManager
 import com.jetbrains.rd.util.ConcurrentHashMap
 import org.digma.intellij.plugin.common.Backgroundable
+import org.digma.intellij.plugin.common.objectToJsonNode
 import org.digma.intellij.plugin.document.CodeLensChanged
 import org.digma.intellij.plugin.document.CodeLensProvider
 import org.digma.intellij.plugin.document.CodeLensUtils.psiFileToKey
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.lens.CodeLens
-import org.digma.intellij.plugin.navigation.View
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.psi.LanguageService
+import org.digma.intellij.plugin.scope.ScopeContext
 import org.digma.intellij.plugin.scope.ScopeManager
 import org.digma.intellij.plugin.scope.SpanScope
 import java.awt.event.MouseEvent
@@ -223,16 +224,9 @@ class CodeLensService(private val project: Project) : Disposable {
                     }
                 }
                 Backgroundable.ensurePooledThreadWithoutReadAccess {
-                    if (lens.scopeCodeObjectId.startsWith("span:")) {
-                        //order must be first change scope then change view, UI relies on this order
-                        if (lens.importance <= 4) {
-                            ScopeManager.getInstance(project).changeScope(SpanScope(lens.scopeCodeObjectId), preferredView = View.Insights)
-                        } else if (lens.lensTitle.contains("runtime data", false)) {
-                            ScopeManager.getInstance(project).changeScope(SpanScope(lens.scopeCodeObjectId), preferredView = View.Highlights)
-                        } else {
-                            ScopeManager.getInstance(project).changeScope(SpanScope(lens.scopeCodeObjectId))
-                        }
-                    }
+                    val contextPayload = objectToJsonNode(ChangeScopeMessagePayload(lens))
+                    val scopeContext = ScopeContext("IDE/CODE_LENS_CLICKED",contextPayload)
+                    ScopeManager.getInstance(project).changeScope(SpanScope(lens.scopeCodeObjectId),false,null,scopeContext,null)
                 }
 
             } catch (e: Exception) {

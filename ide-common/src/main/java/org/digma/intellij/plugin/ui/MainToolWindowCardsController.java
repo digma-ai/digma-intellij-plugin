@@ -24,7 +24,7 @@ import static org.digma.intellij.plugin.persistence.PersistenceUtilsKt.updateIns
 
 /**
  * Controls the current view in digma tool window.
- * there is a main content, wizard,troubleshooting ,notifications and no connection.
+ * there is a main content, wizard,troubleshooting and no connection.
  * the main content has a no connection empty card and the main card.
  * the tool window should have only one content.
  * Not handling any exceptions in this class. if an exception is thrown we must know that because it's probably a serious bug.
@@ -60,9 +60,6 @@ public class MainToolWindowCardsController implements Disposable {
     private final TroubleshootingComponents troubleshooting = new TroubleshootingComponents();
     private Supplier<DisposablePanel> troubleshootingPanelBuilder;
 
-    private final NotificationsComponents notifications = new NotificationsComponents();
-    private Supplier<DisposablePanel> allNotificationsPanelBuilder;
-
     private final AtomicBoolean isConnectionLost = new AtomicBoolean(false);
 
 
@@ -92,36 +89,30 @@ public class MainToolWindowCardsController implements Disposable {
                 (AggressiveUpdateStateChangedEvent) this::updateStateChanged);
 
 
-        project.getMessageBus().connect().subscribe(ApiClientChangedEvent.getAPI_CLIENT_CHANGED_TOPIC(),new ApiClientChangedEvent(){
-
-            @Override
-            public void apiClientChanged(@NotNull String newUrl) {
-                Backgroundable.ensurePooledThread(() -> {
-                    //on new install the wizard opens and lets user install digma backend.
-                    //if the user doesn't have docker and wants to change to centralized deployment,
-                    // user will change the url in settings, the plugin will connect to the centralized deployment,
-                    // but there will be no way out of the wizard because there is no close button and no finish button.
-                    //so here we close the wizard in this scenario, the wizard will close and user will see the login screen.
-                    //isFirstWizardLaunch will be true on new install, when the wizard opens first time,
-                    // the flag will change only when INSTALLATION_WIZARD/FINISH message, so while the wizard is open
-                    // isFirstWizardLaunch should be true.
-                    //if user had a working local deployment and then decides to change to centralized, if the wizard is open
-                    // in that stage the wizard should have a close button.
-                    if (wizard.isOn() && PersistenceService.getInstance().isFirstWizardLaunch()){
-                        if(isCentralized()){
-                            //do here everything that happens on INSTALLATION_WIZARD/FINISH message
-                            PersistenceService.getInstance().firstWizardLaunchDone();
-                            updateInstallationWizardFlag();
-                            EDT.ensureEDT(() -> {
-                                ToolWindowShower.getInstance(project).showToolWindow();
-                                project.getService(RecentActivityToolWindowShower.class).showToolWindow();
-                                wizardFinished();
-                            });
-                        }
-                    }
-                });
+        project.getMessageBus().connect().subscribe(ApiClientChangedEvent.getAPI_CLIENT_CHANGED_TOPIC(), (ApiClientChangedEvent) newUrl -> Backgroundable.ensurePooledThread(() -> {
+            //on new install the wizard opens and lets user install digma backend.
+            //if the user doesn't have docker and wants to change to centralized deployment,
+            // user will change the url in settings, the plugin will connect to the centralized deployment,
+            // but there will be no way out of the wizard because there is no close button and no finish button.
+            //so here we close the wizard in this scenario, the wizard will close and user will see the login screen.
+            //isFirstWizardLaunch will be true on new install, when the wizard opens first time,
+            // the flag will change only when INSTALLATION_WIZARD/FINISH message, so while the wizard is open
+            // isFirstWizardLaunch should be true.
+            //if user had a working local deployment and then decides to change to centralized, if the wizard is open
+            // in that stage the wizard should have a close button.
+            if (wizard.isOn() && PersistenceService.getInstance().isFirstWizardLaunch()){
+                if(isCentralized()){
+                    //do here everything that happens on INSTALLATION_WIZARD/FINISH message
+                    PersistenceService.getInstance().firstWizardLaunchDone();
+                    updateInstallationWizardFlag();
+                    EDT.ensureEDT(() -> {
+                        ToolWindowShower.getInstance(project).showToolWindow();
+                        project.getService(RecentActivityToolWindowShower.class).showToolWindow();
+                        wizardFinished();
+                    });
+                }
             }
-        });
+        }));
     }
 
 
@@ -154,8 +145,7 @@ public class MainToolWindowCardsController implements Disposable {
                                @NotNull Content mainContent,
                                @NotNull JPanel mainCardsPanel,
                                @NotNull Function<Boolean, DisposablePanel> wizardPanelBuilder,
-                               Supplier<DisposablePanel> troubleshootingPanelBuilder,
-                               Supplier<DisposablePanel> allNotificationsPanelBuilder) {
+                               Supplier<DisposablePanel> troubleshootingPanelBuilder) {
 
         Log.log(LOGGER::debug, "initComponents called");
 
@@ -170,8 +160,6 @@ public class MainToolWindowCardsController implements Disposable {
         this.wizardPanelBuilder = wizardPanelBuilder;
 
         this.troubleshootingPanelBuilder = troubleshootingPanelBuilder;
-
-        this.allNotificationsPanelBuilder = allNotificationsPanelBuilder;
 
         //it may be that there was a connection lost event before the panels were ready.
         // in that case show connection lost panel
@@ -257,9 +245,6 @@ public class MainToolWindowCardsController implements Disposable {
         if (troubleshootingPanel != null) {
 
             Content troubleshootingContent = ContentFactory.getInstance().createContent(troubleshootingPanel, null, false);
-//            if (wizard.isOn()) {
-//                wizardFinished();
-//            }
 
             toolWindow.getContentManager().removeContent(mainContent, false);
             toolWindow.getContentManager().addContent(troubleshootingContent);
@@ -293,58 +278,6 @@ public class MainToolWindowCardsController implements Disposable {
     }
 
 
-    public void showAllNotifications() {
-        Log.log(LOGGER::debug, "showAllNotifications called");
-
-        //in case showAllNotifications is called while notifications is already on
-        if (notifications.isOn()) {
-            Log.log(LOGGER::debug, project, "showAllNotifications was called but notifications on. nothing to do.");
-            return;
-        }
-
-        //build the notifications panel every time its necessary and dispose it when the notifications closed.
-        var notificationsPanel = allNotificationsPanelBuilder.get();
-        if (notificationsPanel != null) {
-            Content notificationsContent = ContentFactory.getInstance().createContent(notificationsPanel, null, false);
-            toolWindow.getContentManager().removeContent(mainContent, false);
-            toolWindow.getContentManager().addContent(notificationsContent);
-            notifications.notificationsContent = notificationsContent;
-            notifications.notificationsPanel = notificationsPanel;
-        } else {
-            Log.log(LOGGER::debug, project, "showAllNotifications was called but notificationsPanel is null. it may happen if the runtime JVM does not support JCEF");
-        }
-    }
-
-
-    public void closeAllNotificationsIfShowing() {
-        if (notifications.isOn()) {
-            closeAllNotifications();
-        }
-    }
-
-
-    public void closeAllNotifications() {
-        Log.log(LOGGER::debug, "closeAllNotifications called");
-
-        EDT.ensureEDT(() -> {
-            if (notifications.isOn()) {
-                toolWindow.getContentManager().removeContent(notifications.notificationsContent, true);
-                toolWindow.getContentManager().addContent(mainContent);
-                //dispose the notifications panel which will dispose the jcef browser
-                notifications.notificationsPanel.dispose();
-                notifications.notificationsContent = null;
-                notifications.notificationsPanel = null;
-
-            } else {
-                Log.log(LOGGER::debug, project, "closeAllNotifications was called but notifications is not on.");
-            }
-        });
-
-    }
-
-
-
-
     /**
      * it may happen that user clicks a span link while the troubleshooting or wizard are on.
      * it can happen if user opens troubleshooting or the wizard and then clicks a link in recent activity,
@@ -366,7 +299,6 @@ public class MainToolWindowCardsController implements Disposable {
         }
         wizardFinished();
         troubleshootingFinished();
-        closeAllNotificationsIfShowing();
     }
 
     public void showMainPanel() {
@@ -472,13 +404,5 @@ public class MainToolWindowCardsController implements Disposable {
         }
     }
 
-    private static class NotificationsComponents {
-        Content notificationsContent;
-        DisposablePanel notificationsPanel;
-
-        public boolean isOn() {
-            return notificationsContent != null && notificationsPanel != null;
-        }
-    }
 
 }

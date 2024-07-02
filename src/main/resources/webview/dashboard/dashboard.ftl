@@ -30,7 +30,6 @@
         window.digmaApiUrl = "${digmaApiUrl}";
         window.isLoggingEnabled = ${isLoggingEnabled?string('true', 'false')};
 
-        window.dashboardRefreshInterval = "${dashboardRefreshInterval}";
         window.dashboardEnvironment = "${dashboardEnvironment}";
     </script>
     <script src="/index.js"></script>

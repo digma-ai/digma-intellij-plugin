@@ -15,13 +15,12 @@ import org.jetbrains.annotations.NotNull;
 import java.io.InputStream;
 import java.util.*;
 
-import static org.digma.intellij.plugin.analytics.EnvUtilsKt.setCurrentEnvironmentById;
-
 @Service(Service.Level.PROJECT)
 public final class DashboardService {
 
     private final Logger logger = Logger.getInstance(DashboardService.class);
     private final Project project;
+
     public DashboardService(Project project) {
         this.project = project;
     }
@@ -73,7 +72,7 @@ public final class DashboardService {
     }
 
     @NotNull
-    public String getDashboard(@NotNull Map<String,String> queryParams) throws AnalyticsServiceException {
+    public String getDashboard(@NotNull Map<String, String> queryParams) throws AnalyticsServiceException {
         return AnalyticsService.getInstance(project).getDashboard(queryParams);
     }
 
@@ -85,6 +84,6 @@ public final class DashboardService {
 
         var span = goToSpan.payload();
 
-        setCurrentEnvironmentById(project, span.environment(), () -> ScopeManager.getInstance(project).changeScope(new SpanScope(span.spanCodeObjectId()), true, null));
+        ScopeManager.getInstance(project).changeScope(new SpanScope(span.spanCodeObjectId()),false,null,null,span.environment());
     }
 }

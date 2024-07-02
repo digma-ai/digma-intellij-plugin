@@ -12,6 +12,11 @@ fun objectToJson(value: Any): String {
 }
 
 @Throws(JsonProcessingException::class)
+fun objectToJsonNode(value: Any): JsonNode {
+    return sharedObjectMapper.valueToTree(value)
+}
+
+@Throws(JsonProcessingException::class)
 fun readTree(tree: String): JsonNode {
     return sharedObjectMapper.readTree(tree)
 }

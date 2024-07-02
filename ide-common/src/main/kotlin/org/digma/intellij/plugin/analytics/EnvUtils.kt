@@ -43,10 +43,6 @@ fun setCurrentEnvironmentById(project: Project, envId: String) {
     AnalyticsService.getInstance(project).environment.setCurrentById(envId)
 }
 
-fun setCurrentEnvironmentById(project: Project, envId: String, taskToRunAfterChange: Runnable) {
-    AnalyticsService.getInstance(project).environment.setCurrentById(envId, taskToRunAfterChange)
-}
-
 fun refreshEnvironmentsNowOnBackground(project: Project) {
     AnalyticsService.getInstance(project).environment.refreshNowOnBackground()
 }

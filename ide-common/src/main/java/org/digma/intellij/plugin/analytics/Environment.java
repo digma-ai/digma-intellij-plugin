@@ -50,25 +50,13 @@ public class Environment {
     }
 
 
-    void setCurrentById(@Nullable String envId) {
-
-        if (StringUtils.isEmpty(envId)) {
-            return;
-        }
-
-        setCurrentById(envId, null);
-    }
-
-
-    //this method does not handle illegal or null environment. it should be called with a non-null newEnv
-    // that exists in the DB.
-    void setCurrentById(@NotNull String envId, @Nullable Runnable taskToRunAfterChange) {
+    void setCurrentById(@NotNull String envId) {
 
         try {
             Log.log(LOGGER::debug, "Setting current environment by id , old={},new={}", current, envId);
 
             if (StringUtils.isEmpty(envId) || StringUtils.isBlank(envId)) {
-                Log.log(LOGGER::debug, "setCurrent was called with an empty environment {}", envId);
+                Log.log(LOGGER::debug, "setCurrentById was called with an empty environment {}", envId);
                 return;
             }
 
@@ -86,11 +74,6 @@ public class Environment {
                     if (envChangeLock.isHeldByCurrentThread()) {
                         envChangeLock.unlock();
                     }
-                }
-
-                //runs in background but not under lock
-                if (taskToRunAfterChange != null) {
-                    taskToRunAfterChange.run();
                 }
             };
 

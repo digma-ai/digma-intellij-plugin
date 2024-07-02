@@ -38,6 +38,7 @@ import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import org.digma.intellij.plugin.ui.common.updateObservabilityValue
+import org.digma.intellij.plugin.ui.jcef.model.ChangeScopeMessage
 import org.digma.intellij.plugin.ui.jcef.model.GetFromPersistenceRequest
 import org.digma.intellij.plugin.ui.jcef.model.LoginResultPayload
 import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest
@@ -366,7 +367,9 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
             false,
             insightsStats.analyticsInsightsCount,
             insightsStats.issuesInsightsCount,
-            insightsStats.unreadInsightsCount
+            insightsStats.unreadInsightsCount,
+            null,
+            null
         )
 
         val setRunConfigurationMessageBuilder =
@@ -374,22 +377,27 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
         setRunConfigurationMessageBuilder.sendRunConfigurationAttributes()
     }
 
+
     private fun changeScope(requestJsonNode: JsonNode) {
         val payload = getPayloadFromRequest(requestJsonNode)
         payload?.let { pl ->
-            val span = pl.get("span")
-            val forceNavigation = pl.get("forceNavigation")?.asBoolean()
-            val spanScope: SpanScope? = span?.takeIf { span !is NullNode }?.let { sp ->
-                val spanObj = objectMapper.readTree(sp.toString())
-                val spanId = if (spanObj.get("spanCodeObjectId") is NullNode) null else spanObj.get("spanCodeObjectId").asText()
-                spanId?.let {
-                    SpanScope(it, null, null, null)
-                }
-            }
 
-            spanScope?.let {
-                ScopeManager.getInstance(project).changeScope(it, forceNavigation?.not() ?: true)
-            } ?: ScopeManager.getInstance(project).changeToHome(true, forceNavigation ?: false)
+            val changeScopeMessage = jsonToObject(pl, ChangeScopeMessage::class.java)
+
+            changeScopeMessage.span?.spanCodeObjectId?.let { spanId ->
+                val spanScope = SpanScope(spanId)
+                ScopeManager.getInstance(project).changeScope(
+                    scope = spanScope,
+                    changeView = changeScopeMessage.forceNavigation?.not() ?: true,
+                    scopeContext = changeScopeMessage.context,
+                    environmentId = changeScopeMessage.environmentId
+                )
+            } ?: ScopeManager.getInstance(project).changeToHome(
+                isCalledFromReact = true,
+                forceNavigation = changeScopeMessage.forceNavigation ?: false,
+                scopeContext = changeScopeMessage.context,
+                environmentId = changeScopeMessage.environmentId
+            )
         }
     }
 
@@ -400,7 +408,7 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
         }
     }
 
-    private fun login (requestJsonNode: JsonNode): LoginResult? {
+    private fun login(requestJsonNode: JsonNode): LoginResult? {
         val payload = getPayloadFromRequest(requestJsonNode)
         val result = payload?.let {
             try {

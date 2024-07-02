@@ -2,7 +2,6 @@ import common.logBuildProfile
 import common.logIntellijPlatformPlugin
 import common.properties
 import common.withSilenceLogging
-import gradle.kotlin.dsl.accessors._44bd68d24449dd49451fa0f0c4976aa6.intellijPlatform
 
 plugins {
     id("digma-base")
@@ -19,11 +18,22 @@ repositories {
     }
 }
 
+dependencies {
+    intellijPlatform {
+        instrumentationTools()
+        pluginVerifier()
+        //we need to supply a jetbrains runtime to runIde because we use maven artifacts for IDEs
+        jetbrainsRuntime()
+    }
+}
+
 intellijPlatform {
     //buildSearchableOptions is a long-running task, we don't need it in every build,
     // local build can do without it. we activate it only in GitHub
     buildSearchableOptions = properties("buildSearchableOptions", project).toBoolean()
 }
+
+
 
 afterEvaluate {
     if (gradle.startParameter.taskNames.contains("buildPlugin")) {
@@ -31,14 +41,6 @@ afterEvaluate {
             logBuildProfile(project)
             logIntellijPlatformPlugin(project, intellijPlatform)
         }
-    }
-}
-
-
-dependencies {
-    intellijPlatform {
-        instrumentationTools()
-        pluginVerifier()
     }
 }
 

@@ -173,8 +173,8 @@ object BuildProfiles {
 
             profile = Profile.p241,
             platformVersion = "2024.1.4",
-            riderVersion = "2024.1.3",
-            pycharmVersion = "2024.1.3",
+            riderVersion = "2024.1.4",
+            pycharmVersion = "2024.1.4",
             riderTargetFramework = "net8.0",
             riderResharperVersionConstant = "PROFILE_2023_2",
             platformVersionCode = "241",
@@ -190,15 +190,15 @@ object BuildProfiles {
 
             isEAP = true,
             profile = Profile.p242,
-            platformVersion = "242.18071-EAP-CANDIDATE-SNAPSHOT",
-            riderVersion = "2024.2-EAP4-SNAPSHOT",
+            platformVersion = "242.19533-EAP-CANDIDATE-SNAPSHOT",
+            riderVersion = "2024.2-EAP5-SNAPSHOT",
             pycharmVersion = "242-EAP-SNAPSHOT",
             riderTargetFramework = "net8.0",
             riderResharperVersionConstant = "PROFILE_2023_2",
             platformVersionCode = "242",
             pluginSinceBuild = "242",
             pluginUntilBuild = "242.*",
-            kotlinTarget = KotlinVersion.KOTLIN_1_9.version, //todo: maybe need to upgrade to 2.0
+            kotlinTarget = KotlinVersion.KOTLIN_1_9.version,
             javaVersion = JavaVersion.VERSION_17.majorVersion,
         )
 

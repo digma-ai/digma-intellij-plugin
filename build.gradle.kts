@@ -9,7 +9,6 @@ import org.jetbrains.changelog.date
 import org.jetbrains.changelog.exceptions.MissingVersionException
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import org.jetbrains.intellij.platform.gradle.models.ProductRelease
-import org.jetbrains.intellij.platform.gradle.tasks.CustomRunIdeTask
 import org.jetbrains.intellij.platform.gradle.tasks.VerifyPluginTask
 
 fun properties(key: String) = properties(key, project)
@@ -83,10 +82,6 @@ dependencies {
         pluginModule(implementation(project(":maven-support")))
         pluginModule(implementation(project(":rider")))
 
-
-        //we need to supply a jetbrains runtime to runIde because we use maven artifacts for IDE
-        // downloads, see in gradle.properties useBinaryReleases=false
-        jetbrainsRuntime()
         pluginVerifier()
         zipSigner()
     }
@@ -218,14 +213,6 @@ tasks {
 
     prepareSandbox {
 
-        /*
-        sometimes runIde fails with this error:
-        Execution failed for task ':prepareSandbox'.
-        > Cannot access output property '$1$4' of task ':prepareSandbox'. Accessing unreadable inputs or outputs is not supported. Declare the task as untracked by using Task.doNotTrackState(). For more information, please refer to https://docs.gradle.org/8.8/userguide/incremental_build.html#sec:disable-state-tracking in the Gradle documentation.
-        > java.io.IOException: Cannot snapshot /home/shalom/workspace/digma/digma-intellij-plugin/build/idea-sandbox/IC-2024.1.3/system/jcef_cache/SingletonSocket: not a regular file
-        */
-        doNotTrackState("prepareSandbox needs to re-run every time")
-
         //copy rider dlls to the plugin sandbox, so it is packaged in the zip
         from(configurations.getByName("riderDotNetObjects")) {
             into("${rootProject.name}/dotnet/")
@@ -282,22 +269,6 @@ tasks {
             if (it.name.endsWith(".log")) {
                 delete(it)
             }
-        }
-    }
-
-// todo: create custom tasks, for example: runWithoutKotlin, runWithoutGradle etc
-// see:https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-custom-tasks.html
-
-
-    val runWithoutGitHubPlugin by registering(CustomRunIdeTask::class) {
-        plugins {
-            disablePlugin("org.jetbrains.plugins.github")
-        }
-    }
-
-    val runWithoutKotlinPlugin by registering(CustomRunIdeTask::class) {
-        plugins {
-            disablePlugin("org.jetbrains.kotlin")
         }
     }
 

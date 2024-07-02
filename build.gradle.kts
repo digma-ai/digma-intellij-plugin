@@ -82,10 +82,6 @@ dependencies {
         pluginModule(implementation(project(":maven-support")))
         pluginModule(implementation(project(":rider")))
 
-
-        //we need to supply a jetbrains runtime to runIde because we use maven artifacts for IDE
-        // downloads, see in gradle.properties useBinaryReleases=false
-        jetbrainsRuntime()
         pluginVerifier()
         zipSigner()
     }

@@ -14,6 +14,7 @@ plugins {
 repositories {
     intellijPlatform {
         defaultRepositories()
+        jetbrainsRuntime()
     }
 }
 
@@ -21,8 +22,11 @@ dependencies {
     intellijPlatform {
         instrumentationTools()
         pluginVerifier()
+        //we need to supply a jetbrains runtime to runIde because we use maven artifacts for IDEs
+        jetbrainsRuntime()
     }
 }
+
 
 
 afterEvaluate {

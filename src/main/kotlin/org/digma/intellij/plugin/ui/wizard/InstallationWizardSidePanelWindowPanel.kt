@@ -286,8 +286,13 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                         if (!connectionOk) {
                             Log.log(logger::warn, "no connection after engine installation")
                             if (success) {
+                                val log = DockerService.getInstance().collectDigmaContainerLog()
                                 ActivityMonitor.getInstance(project)
-                                    .registerDigmaEngineEventError("installEngine", "No connection 2 minutes after successful engine install")
+                                    .registerDigmaEngineEventError("installEngine", "No connection 2 minutes after successful engine install",
+                                        mapOf(
+                                            "docker log" to log
+                                        )
+                                    )
                             }
                         }
                         val isEngineUp = connectionOk && success
@@ -409,8 +414,13 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                         if (!connectionOk) {
                             Log.log(logger::warn, "no connection after engine start")
                             if (success) {
+                                val log = DockerService.getInstance().collectDigmaContainerLog()
                                 ActivityMonitor.getInstance(project)
-                                    .registerDigmaEngineEventError("startEngine", "No connection after successful engine start")
+                                    .registerDigmaEngineEventError("startEngine", "No connection 2 minutes after successful engine start",
+                                        mapOf(
+                                            "docker log" to log
+                                        )
+                                    )
                             }
                         }
 

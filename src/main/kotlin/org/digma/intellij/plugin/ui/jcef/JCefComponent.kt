@@ -99,7 +99,7 @@ private constructor(
                     Backgroundable.executeOnPooledThread {
                         try {
                             sendUserInfoMessage(jbCefBrowser.cefBrowser, DigmaDefaultAccountHolder.getInstance().account?.userId, project)
-                            val status = service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionLost()
+                            val status = service<DockerService>().getActualRunningEngine(project)
                             updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
                             sendBackendAboutInfo(jbCefBrowser.cefBrowser, project)
                         } catch (e: Throwable) {
@@ -199,7 +199,7 @@ private constructor(
                     sendIsMicrometerProject(jbCefBrowser.cefBrowser, SpringBootMicrometerConfigureDepsService.isSpringBootWithMicrometer())
                     sendIsJaegerButtonEnabledMessage(jbCefBrowser.cefBrowser)
                     sendBackendAboutInfo(jbCefBrowser.cefBrowser, project)
-                    val status = service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionLost()
+                    val status = service<DockerService>().getActualRunningEngine(project)
                     updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
                 } catch (e: Throwable) {
                     ErrorReporter.getInstance().reportError("JCefComponent.settingsChanged", e)

@@ -6,7 +6,7 @@ import org.digma.intellij.plugin.analytics.EnvironmentChanged;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.model.rest.environment.Env;
-import org.eclipse.sisu.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 

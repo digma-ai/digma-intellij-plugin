@@ -2,7 +2,7 @@ package org.digma.intellij.plugin.analytics;
 
 import com.intellij.util.messages.Topic;
 import org.digma.intellij.plugin.model.rest.environment.Env;
-import org.eclipse.sisu.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 

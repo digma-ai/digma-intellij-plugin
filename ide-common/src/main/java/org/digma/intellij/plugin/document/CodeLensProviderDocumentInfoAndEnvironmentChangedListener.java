@@ -6,6 +6,7 @@ import org.digma.intellij.plugin.analytics.EnvironmentChanged;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.model.rest.environment.Env;
+import org.eclipse.sisu.Nullable;
 
 import java.util.List;
 
@@ -32,7 +33,7 @@ public class CodeLensProviderDocumentInfoAndEnvironmentChangedListener implement
     }
 
     @Override
-    public void environmentChanged(Env newEnv) {
+    public void environmentChanged(@Nullable Env newEnv) {
         Backgroundable.executeOnPooledThread(() -> {
             try {
                 var changedPsiFiles = CodeLensProvider.getInstance(project).refresh();

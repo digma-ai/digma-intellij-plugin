@@ -222,9 +222,11 @@ private constructor(
 
         project.messageBus.connect(parentDisposable).subscribe(
             EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC, object : EnvironmentChanged {
-                override fun environmentChanged(newEnv: Env) {
+                override fun environmentChanged(newEnv: Env?) {
                     try {
-                        sendCurrentEnvironment(jbCefBrowser.cefBrowser, newEnv)
+                        newEnv?.let {
+                            sendCurrentEnvironment(jbCefBrowser.cefBrowser, it)
+                        }
                     } catch (e: Throwable) {
                         ErrorReporter.getInstance().reportError("JCefComponent.environmentChanged", e)
                     }

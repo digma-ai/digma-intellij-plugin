@@ -119,10 +119,10 @@ class AggressiveUpdateService(val project: Project) : Disposable {
                             //update state immediately after client is replaced.
                             updateState()
                         } catch (c: CancellationException) {
-                            Log.debugWithException(logger, c, "settings change canceled {}", c)
+                            Log.debugWithException(logger, c, "apiClientChanged canceled {}", c)
                         } catch (e: Throwable) {
                             val message = ExceptionUtils.getNonEmptyMessage(e)
-                            Log.debugWithException(logger, e, "error in settings changed {}", message)
+                            Log.debugWithException(logger, e, "error in apiClientChanged {}", message)
                             errorReporter.reportError("${this::class.simpleName}.apiClientChanged", e)
                         }
 

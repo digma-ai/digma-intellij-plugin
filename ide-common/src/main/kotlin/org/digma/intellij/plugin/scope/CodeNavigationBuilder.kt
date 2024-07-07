@@ -55,7 +55,11 @@ private fun buildCodeLocationFromAssetNavigation(
     assetNavigation: AssetNavigationResponse,
 ): CodeLocation {
 
-    val codeDetailsList = buildFromCodeLocation(project, assetNavigation.codeLocation)
+    val codeDetailsList = assetNavigation.codeLocation?.let {
+        buildFromCodeLocation(project, it)
+    } ?: listOf()
+
+
     //if has code locations no need to continue
     if (codeDetailsList.isNotEmpty()) {
         return CodeLocation(codeDetailsList, listOf())

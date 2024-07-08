@@ -12,6 +12,7 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.insights.InsightsServiceImpl
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.insights.MarkInsightsAsReadScope
+import org.digma.intellij.plugin.model.rest.insights.issues.GetIssuesRequestPayload
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.insights.model.SetAllInsightsAsReadData
@@ -21,6 +22,8 @@ import org.digma.intellij.plugin.ui.insights.model.SetDismissedMessage
 import org.digma.intellij.plugin.ui.insights.model.SetInsightDataListMessage
 import org.digma.intellij.plugin.ui.insights.model.SetInsightsAsReadData
 import org.digma.intellij.plugin.ui.insights.model.SetInsightsMarkAsReadMessage
+import org.digma.intellij.plugin.ui.insights.model.SetIssuesDataListMessage
+import org.digma.intellij.plugin.ui.insights.model.SetIssuesFilterMessage
 import org.digma.intellij.plugin.ui.insights.model.SetUnDismissedData
 import org.digma.intellij.plugin.ui.insights.model.SetUnDismissedMessage
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
@@ -68,6 +71,35 @@ class InsightsService(val project: Project) : InsightsServiceImpl(project) {
             serializeAndExecuteWindowPostMessageJavaScript(it.jbCefBrowser.cefBrowser, message)
         }
     }
+
+    fun refreshIssuesList(request: GetIssuesRequestPayload) {
+        val message = try {
+            val issues = AnalyticsService.getInstance(project).getIssues(request)
+            SetIssuesDataListMessage(issues)
+        } catch (e: AnalyticsServiceException) {
+            Log.debugWithException(logger, project, e, "Error loading issues {}", e.message)
+            val error = ErrorPayload(e.meaningfulMessage)
+            SetIssuesDataListMessage("{\"totalCount\":0,\"insights\":[]}", error)
+        }
+
+        jCefComponent?.let {
+            serializeAndExecuteWindowPostMessageJavaScript(it.jbCefBrowser.cefBrowser, message)
+        }
+    }
+
+    fun refreshIssuesFilters(backendQueryParams: MutableMap<String, Any>) {
+        val message = try {
+            val filters = AnalyticsService.getInstance(project).getIssuesFilters(backendQueryParams)
+            SetIssuesFilterMessage(filters)
+        } catch (e: AnalyticsServiceException) {
+            Log.debugWithException(logger, project, e, "Error loading issues filters {}", e.message)
+        }
+
+        jCefComponent?.let {
+            serializeAndExecuteWindowPostMessageJavaScript(it.jbCefBrowser.cefBrowser, message)
+        }
+    }
+
 
     fun undismissInsight(insightId: String) {
         var status = ""

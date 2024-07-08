@@ -40,7 +40,7 @@ class InstrumentationRunConfigurationExtension : RunConfigurationExtension() {
     }
 
     private fun getHandlerForConfiguration(configuration: RunConfiguration): RunConfigurationInstrumentationHandler? {
-        return RunConfigurationHandlersHolder.runConfigurationHandlers.find { it.isApplicableFor(configuration) }
+        return RunConfigurationHandlersHolder.getInstance().getRunConfigurationHandlers().find { it.isApplicableFor(configuration) }
     }
 
     override fun <T : RunConfigurationBase<*>?> updateJavaParameters(
@@ -164,7 +164,7 @@ class InstrumentationRunConfigurationExtension : RunConfigurationExtension() {
 
             //find a handler that wants to handle this configuration and also that should clean after start
             val configurationInstrumentationHandler =
-                RunConfigurationHandlersHolder.runConfigurationHandlers.find {
+                RunConfigurationHandlersHolder.getInstance().getRunConfigurationHandlers().find {
                     it.isApplicableFor(configuration) && it.shouldCleanConfigurationAfterStart(configuration)
                 }
 

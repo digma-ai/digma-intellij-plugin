@@ -49,6 +49,9 @@
         <projectService
                 serviceImplementation="org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscoveryService"/>
 
+        <applicationService
+                serviceImplementation="org.digma.intellij.plugin.idea.execution.RunConfigurationHandlersHolder"/>
+
     </extensions>
 
 

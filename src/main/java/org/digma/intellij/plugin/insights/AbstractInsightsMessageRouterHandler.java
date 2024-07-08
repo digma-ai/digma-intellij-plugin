@@ -9,6 +9,7 @@ import org.cef.browser.CefBrowser;
 import org.digma.intellij.plugin.analytics.*;
 import org.digma.intellij.plugin.common.CodeObjectsUtil;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.model.rest.insights.issues.GetIssuesRequestPayload;
 import org.digma.intellij.plugin.model.rest.navigation.*;
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator;
 import org.digma.intellij.plugin.posthog.*;
@@ -33,7 +34,6 @@ public abstract class AbstractInsightsMessageRouterHandler extends BaseCommonMes
     public AbstractInsightsMessageRouterHandler(Project project) {
         super(project);
     }
-
 
     @Override
     public boolean doOnQuery(@NotNull Project project, @NotNull CefBrowser browser, @NotNull JsonNode requestJsonNode, @NotNull String rawRequest, @NotNull String action) throws Exception {
@@ -68,6 +68,10 @@ public abstract class AbstractInsightsMessageRouterHandler extends BaseCommonMes
 
             case "INSIGHTS/UNDISMISS" -> undismissInsight(requestJsonNode);
 
+            case "ISSUES/GET_DATA_LIST" -> pushIssuesListData(requestJsonNode);
+
+            case "ISSUES/GET_FILTERS" -> pushIssuesFiltersData(requestJsonNode);
+
             default -> {
                 return false;
             }
@@ -80,6 +84,30 @@ public abstract class AbstractInsightsMessageRouterHandler extends BaseCommonMes
         Log.log(LOGGER::debug, getProject(), "got INSIGHTS/GET_DATA_LIST message");
         Map<String, Object> backendQueryParams = getQueryMapFromPayload(jsonNode, getObjectMapper());
         InsightsService.getInstance(getProject()).refreshInsightsList(backendQueryParams);
+    }
+
+    private void pushIssuesListData(JsonNode jsonNode) throws JsonProcessingException {
+        Log.log(LOGGER::debug, getProject(), "got ISSUES/GET_DATA_LIST message");
+        var payload = getObjectMapper().readTree(jsonNode.get("payload").toString());
+        var query = payload.get("query");
+        var request = new GetIssuesRequestPayload(
+                query.at("/environment").asText(""),
+                query.at("/scopedSpanCodeObjectId").asText(""),
+                query.at("/displayName").asText(null),
+                query.at("/showDismissed").asBoolean(false),
+                query.at("/filters").toString(),
+                query.at("/sorting/criterion").asText(null),
+                query.at("/sorting/order").asText(null),
+                query.at("/insightTypes").toString(),
+                query.at("/page").asInt(0));
+
+        InsightsService.getInstance(getProject()).refreshIssuesList(request);
+    }
+
+    private void pushIssuesFiltersData(JsonNode jsonNode) {
+        Log.log(LOGGER::debug, getProject(), "got ISSUES/GET_FILTERS message");
+        Map<String, Object> backendQueryParams = getQueryMapFromPayload(jsonNode, getObjectMapper());
+        InsightsService.getInstance(getProject()).refreshIssuesFilters(backendQueryParams);
     }
 
     private void dismissInsight(JsonNode jsonNode) {
@@ -109,14 +137,10 @@ public abstract class AbstractInsightsMessageRouterHandler extends BaseCommonMes
             }
         });
 
-
         var message = new SetCommitInfoMessage("digma", "INSIGHTS/SET_COMMIT_INFO", new SetCommitInfoData(commitInfos));
         serializeAndExecuteWindowPostMessageJavaScript(browser, message);
 
     }
-
-
-
 
     private void linkTicket(@NotNull CefBrowser browser, JsonNode jsonNode) throws JsonProcessingException, AnalyticsServiceException {
         Log.log(LOGGER::trace, getProject(), "got INSIGHTS/LINK_TICKET message");
@@ -288,3 +312,4 @@ public abstract class AbstractInsightsMessageRouterHandler extends BaseCommonMes
 
 
 }
+

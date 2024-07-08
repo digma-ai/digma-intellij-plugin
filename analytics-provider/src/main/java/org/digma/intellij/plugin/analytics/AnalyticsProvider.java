@@ -11,6 +11,7 @@ import org.digma.intellij.plugin.model.rest.environment.Env;
 import org.digma.intellij.plugin.model.rest.event.*;
 import org.digma.intellij.plugin.model.rest.highlights.HighlightsRequest;
 import org.digma.intellij.plugin.model.rest.insights.*;
+import org.digma.intellij.plugin.model.rest.insights.issues.GetIssuesRequestPayload;
 import org.digma.intellij.plugin.model.rest.livedata.*;
 import org.digma.intellij.plugin.model.rest.login.*;
 import org.digma.intellij.plugin.model.rest.lowlevel.*;
@@ -103,6 +104,10 @@ public interface AnalyticsProvider extends Closeable {
     AssetDisplayInfo getAssetDisplayInfo(String env, String codeObjectId);
 
     String getInsights(Map<String, Object> queryParams);
+
+    String getIssues(GetIssuesRequestPayload queryParams);
+
+    String getIssuesFilters(Map<String, Object> queryParams);
 
     AssetNavigationResponse getAssetNavigation(String env, String spanCodeObjectId);
 

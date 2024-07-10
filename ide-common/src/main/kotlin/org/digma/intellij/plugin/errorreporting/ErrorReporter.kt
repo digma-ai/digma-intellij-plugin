@@ -118,9 +118,9 @@ open class ErrorReporter {
 
     private fun isTooFrequent(message: String, stackTrace: String?): Boolean {
         if (!stackTrace.isNullOrEmpty()) {
-            return frequencyDetector.isTooFrequentStackTrace(message, stackTrace);
+            return frequencyDetector.isTooFrequentStackTrace(message, stackTrace)
         }
-        return frequencyDetector.isTooFrequentError(message, "");
+        return frequencyDetector.isTooFrequentError(message, "")
     }
 
     open fun reportError(message: String, stackTrace: String?, details: Map<String, Any>, project: Project?, useFrequencyDetector: Boolean = true) {

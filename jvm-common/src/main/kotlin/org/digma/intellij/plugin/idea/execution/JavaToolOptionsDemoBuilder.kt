@@ -9,7 +9,7 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter
 class JavaToolOptionsDemoBuilder {
 
     fun isSupported(configuration: RunConfiguration): Boolean {
-        return RunConfigurationHandlersHolder.runConfigurationHandlers.find { it.isApplicableFor(configuration) } != null
+        return RunConfigurationHandlersHolder.getInstance().getRunConfigurationHandlers().find { it.isApplicableFor(configuration) } != null
     }
 
 
@@ -25,7 +25,7 @@ class JavaToolOptionsDemoBuilder {
             val template = factory.createTemplateConfiguration(configuration.project)
             val dummyConfig = factory.createConfiguration("dummy", template)
 
-            val handler = RunConfigurationHandlersHolder.runConfigurationHandlers.find { it.isApplicableFor(dummyConfig) }
+            val handler = RunConfigurationHandlersHolder.getInstance().getRunConfigurationHandlers().find { it.isApplicableFor(dummyConfig) }
 
             if (handler == null) {
                 return null

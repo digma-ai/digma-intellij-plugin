@@ -51,7 +51,7 @@ class RecentActivityUpdater(val project: Project) : Disposable {
 
     init {
         project.messageBus.connect(this).subscribe<EnvironmentChanged>(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC, object : EnvironmentChanged {
-            override fun environmentChanged(newEnv: Env) {
+            override fun environmentChanged(newEnv: Env?) {
                 Backgroundable.ensurePooledThreadWithoutReadAccess { updateLatestActivities() }
             }
 

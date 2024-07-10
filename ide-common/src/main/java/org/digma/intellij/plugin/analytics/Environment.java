@@ -187,6 +187,9 @@ public class Environment {
     }
 
     private Optional<Env> find(@Nullable String envIdToFind) {
+        if (envIdToFind == null) {
+            return Optional.empty();
+        }
         return environments.stream().filter(env -> env.getId().equals(envIdToFind)).findFirst();
     }
 
@@ -223,7 +226,7 @@ public class Environment {
     }
 
 
-    private void notifyEnvironmentChanged(Env oldEnv, Env newEnv) {
+    private void notifyEnvironmentChanged(@Nullable Env oldEnv, @Nullable Env newEnv) {
         if (project.isDisposed()) {
             return;
         }

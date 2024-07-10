@@ -116,7 +116,32 @@ open class ErrorReporter {
         )
     }
 
-    //this method is used to report an error that is not an exception. it should contain some details to say what the error is
+    private fun isTooFrequent(message: String, stackTrace: String ?): Boolean{
+        if(!stackTrace.isNullOrEmpty()){
+            return frequencyDetector.isTooFrequentStackTrace(message, stackTrace);
+        }
+        return frequencyDetector.isTooFrequentError(message,"");
+    }
+    open fun reportError(message: String, stackTrace: String ?, details: Map<String, Any>, project: Project?) {
+        if(message.isNullOrEmpty() && stackTrace.isNullOrEmpty())
+        {
+            reportError(project, "At least one of the following properties must be set: [message] or [stackTrace].","reportError",
+                mapOf(
+                    SEVERITY_PROP_NAME to SEVERITY_HIGH_TRY_FIX
+                ))
+            return
+        }
+        if(isTooFrequent(message, stackTrace)) {
+            return
+        }
+        val projectToUse = project ?: findActiveProject()
+
+        projectToUse?.let {
+            if (it.isDisposed) return
+            ActivityMonitor.getInstance(it).registerError(null, message, details)
+        }
+    }
+        //this method is used to report an error that is not an exception. it should contain some details to say what the error is
     open fun reportError(project: Project?, message: String, action: String, details: Map<String, String>) {
 
 

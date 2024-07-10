@@ -315,7 +315,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
     }
 
 
-    fun registerError(exception: Throwable?, message: String, extraDetails: Map<String, String> = mapOf()) {
+    fun registerError(exception: Throwable?, message: String, extraDetails: Map<String, Any> = mapOf()) {
 
         try {
             val osType = System.getProperty("os.name")
@@ -327,7 +327,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
 
             //Don't call directly, use ErrorReporter.reportError
 
-            val details = mutableMapOf(
+            val details = mutableMapOf<String,Any>(
                 "error.source" to "plugin",
                 "action" to "unknown",
                 "message" to message,

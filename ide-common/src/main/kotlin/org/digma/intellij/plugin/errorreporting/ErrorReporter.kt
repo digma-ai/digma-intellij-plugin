@@ -122,7 +122,7 @@ open class ErrorReporter {
         }
         return frequencyDetector.isTooFrequentError(message,"");
     }
-    open fun reportError(message: String, stackTrace: String ?, details: Map<String, Any>, project: Project?) {
+    open fun reportError(message: String, stackTrace: String ?, details: Map<String, Any>, project: Project?, useFrequencyDetector: Boolean = true) {
         if(message.isNullOrEmpty() && stackTrace.isNullOrEmpty())
         {
             reportError(project, "At least one of the following properties must be set: [message] or [stackTrace].","reportError",
@@ -131,7 +131,7 @@ open class ErrorReporter {
                 ))
             return
         }
-        if(isTooFrequent(message, stackTrace)) {
+        if(useFrequencyDetector && isTooFrequent(message, stackTrace)) {
             return
         }
         val projectToUse = project ?: findActiveProject()

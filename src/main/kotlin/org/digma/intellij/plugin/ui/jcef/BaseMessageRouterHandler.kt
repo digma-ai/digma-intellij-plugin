@@ -146,11 +146,20 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                         val trackingRequest = jsonToObject(request, SendTrackingEventRequest::class.java)
                         trackingRequest.let {
                             it.payload?.let { pl ->
-                                if (pl.data == null) {
-                                    ActivityMonitor.getInstance(project).registerCustomEvent(pl.eventName)
+                                if (pl.eventName == "error") {
+                                    pl.data?.let {
+                                        val stackTrace = pl.data["exception.stack-trace"] as String?
+                                        val message = pl.data["message"] as String
+                                        ErrorReporter.getInstance().reportError(message, stackTrace, pl.data, project, false)
+                                    }
                                 } else {
-                                    ActivityMonitor.getInstance(project).registerCustomEvent(pl.eventName, pl.data)
+                                    if (pl.data == null) {
+                                        ActivityMonitor.getInstance(project).registerCustomEvent(pl.eventName)
+                                    } else {
+                                        ActivityMonitor.getInstance(project).registerCustomEvent(pl.eventName, pl.data)
+                                    }
                                 }
+
                             }
                         }
                     }

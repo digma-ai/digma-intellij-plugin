@@ -22,6 +22,7 @@ import org.digma.intellij.plugin.model.rest.environment.Env;
 import org.digma.intellij.plugin.model.rest.event.*;
 import org.digma.intellij.plugin.model.rest.highlights.HighlightsRequest;
 import org.digma.intellij.plugin.model.rest.insights.*;
+import org.digma.intellij.plugin.model.rest.insights.issues.GetIssuesRequestPayload;
 import org.digma.intellij.plugin.model.rest.livedata.*;
 import org.digma.intellij.plugin.model.rest.lowlevel.*;
 import org.digma.intellij.plugin.model.rest.navigation.*;
@@ -449,6 +450,18 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.getInsights(queryParams));
     }
 
+    public String getIssues(GetIssuesRequestPayload requestPayload) throws AnalyticsServiceException {
+        var env = getCurrentEnvironmentId();
+        requestPayload.setEnvironment(env);
+        return executeCatching(() -> analyticsProviderProxy.getIssues(requestPayload));
+    }
+
+    public String getIssuesFilters(@NotNull Map<String, Object> queryParams) throws AnalyticsServiceException {
+        var env = getCurrentEnvironmentId();
+        queryParams.put(ENVIRONMENT_QUERY_PARAM_NAME, env);
+        return executeCatching(() -> analyticsProviderProxy.getIssuesFilters(queryParams));
+    }
+
     public void markInsightsAsRead(@NotNull List<String> insightIds) throws AnalyticsServiceException {
         executeCatching(() -> {
             analyticsProviderProxy.markInsightsAsRead(insightIds);
@@ -493,16 +506,18 @@ public class AnalyticsService implements Disposable {
     }
 
     @NotNull
-    public InsightsStatsResult getInsightsStats(String spanCodeObjectId) throws AnalyticsServiceException {
-
+    public InsightsStatsResult getInsightsStats(String spanCodeObjectId, String insightTypes) throws AnalyticsServiceException {
         try {
-            var env = getCurrentEnvironmentId();
             var envId = getCurrentEnvironmentId();
             var params = new HashMap<String, Object>();
             params.put("Environment", envId);
 
             if (spanCodeObjectId != null) {
                 params.put("ScopedSpanCodeObjectId", spanCodeObjectId);
+            }
+
+            if (insightTypes != null && !insightTypes.isEmpty()) {
+                params.put("insights", insightTypes);
             }
 
             return executeCatching(() -> analyticsProviderProxy.getInsightsStats(params));

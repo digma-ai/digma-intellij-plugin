@@ -187,7 +187,7 @@ public class Environment {
     }
 
     private Optional<Env> find(@Nullable String envIdToFind) {
-        if(envIdToFind == null){
+        if (envIdToFind == null) {
             return Optional.empty();
         }
         return environments.stream().filter(env -> env.getId().equals(envIdToFind)).findFirst();

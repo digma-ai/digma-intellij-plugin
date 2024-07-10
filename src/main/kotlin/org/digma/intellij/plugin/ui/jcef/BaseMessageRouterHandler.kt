@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.ui.jcef
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.NullNode
 import com.intellij.execution.RunManager
 import com.intellij.ide.BrowserUtil
@@ -260,8 +261,15 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                         val payload = getPayloadFromRequest(requestJsonNode)
                         payload?.let {
                             val scopeNode = payload.get("scope")
+                            val insightTypesJsonArray = payload.at("/filters/insights")
+                            val insightTypes = mutableListOf<String>()
+                            if (insightTypesJsonArray is ArrayNode) {
+                                insightTypesJsonArray.forEach { type: JsonNode ->
+                                    insightTypes.add(type.asText())
+                                }
+                            }
                             if (scopeNode is NullNode) {
-                                val stats = AnalyticsService.getInstance(project).getInsightsStats(null)
+                                val stats = AnalyticsService.getInstance(project).getInsightsStats(null, insightTypes.joinToString())
                                 project.messageBus.syncPublisher(InsightStatsChangedEvent.INSIGHT_STATS_CHANGED_TOPIC)
                                     .insightStatsChanged(
                                         null,
@@ -273,7 +281,7 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                                     )
                             } else {
                                 val spanCodeObjectId = scopeNode.get("span").get("spanCodeObjectId").asText()
-                                val stats = AnalyticsService.getInstance(project).getInsightsStats(spanCodeObjectId)
+                                val stats = AnalyticsService.getInstance(project).getInsightsStats(spanCodeObjectId, insightTypes.joinToString())
                                 project.messageBus.syncPublisher(InsightStatsChangedEvent.INSIGHT_STATS_CHANGED_TOPIC)
                                     .insightStatsChanged(
                                         scopeNode,
@@ -361,7 +369,7 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
             Log.debugWithException(logger, project, e, "error calling about")
         }
 
-        val insightsStats = AnalyticsService.getInstance(project).getInsightsStats(null)
+        val insightsStats = AnalyticsService.getInstance(project).getInsightsStats(null, null)
 
         updateDigmaEngineStatus(project, browser)
 

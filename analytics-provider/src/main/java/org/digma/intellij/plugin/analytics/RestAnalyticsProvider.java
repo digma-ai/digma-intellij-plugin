@@ -16,6 +16,7 @@ import org.digma.intellij.plugin.model.rest.environment.Env;
 import org.digma.intellij.plugin.model.rest.event.*;
 import org.digma.intellij.plugin.model.rest.highlights.HighlightsRequest;
 import org.digma.intellij.plugin.model.rest.insights.*;
+import org.digma.intellij.plugin.model.rest.insights.issues.GetIssuesRequestPayload;
 import org.digma.intellij.plugin.model.rest.livedata.*;
 import org.digma.intellij.plugin.model.rest.login.*;
 import org.digma.intellij.plugin.model.rest.lowlevel.*;
@@ -260,6 +261,17 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     @Override
     public String getInsights(Map<String, Object> queryParams) {
         return execute(() -> client.analyticsProvider.getInsights(queryParams));
+    }
+
+    @Override
+    public String getIssues(GetIssuesRequestPayload queryParams) {
+        return execute(() -> client.analyticsProvider.getIssues(queryParams));
+
+    }
+
+    @Override
+    public String getIssuesFilters(Map<String, Object> queryParams) {
+        return execute(() -> client.analyticsProvider.getIssuesFilters(queryParams));
     }
 
     @Override
@@ -858,6 +870,20 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @GET("/insights/get_insights_view")
         Call<String> getInsights(@QueryMap Map<String, Object> fields);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/insights/issues")
+        Call<String> getIssues(@Body GetIssuesRequestPayload fields);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @GET("/insights/issues/filters")
+        Call<String> getIssuesFilters(@QueryMap Map<String, Object> fields);
 
         @Headers({
                 "Accept: text/plain",

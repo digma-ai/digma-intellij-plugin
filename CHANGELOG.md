@@ -1,6 +1,24 @@
 # Changelog
 
-## [2.0.358] - 2024-06-28
+## [2.0.359] - 2024-07-10
+
+- api performance issue event Closes #2245 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2246
+- dispose some jcef components by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2247
+- Stateless schema handler factory and register only one instance per jcef type  Closes #2248 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2251
+- migrate-startup-activity-to-project-activity Closes #1865 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2252
+- ignore-AlreadyDisposedException Closes #2244 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2253
+- upgrade to beta8 and remove kotlin plugin workaround by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2254
+- Refactor navigation by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2237
+- collect-docker-container-logs Closes #2236 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2255
+- make newEnv in environmentChanged nullable Closes #2257 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2259
+- make-codeLocation-nullable Closes #2264 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2265
+- fix typo by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2267
+- fix typo by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2268
+- fix-error-in-242 Closes #2271 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2272
+- UI error support by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/2279
+- Feature/issues filtering by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2273
+
+## 2.0.358 - 2024-06-28
 
 - update-build-profile-18034-EAP by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2235
 - update eap profile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2238

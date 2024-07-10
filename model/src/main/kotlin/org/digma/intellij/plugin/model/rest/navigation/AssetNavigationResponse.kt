@@ -11,7 +11,7 @@ data class AssetNavigationResponse
     "codeLocation",
     "relatedCodeLocations"
 )
-constructor(val codeLocation: AssetCodeLocation, val relatedCodeLocations: List<AssetRelatedCodeLocation>)
+constructor(val codeLocation: AssetCodeLocation?, val relatedCodeLocations: List<AssetRelatedCodeLocation>)
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class AssetCodeLocation

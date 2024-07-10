@@ -128,8 +128,6 @@ class ActivityMonitor(private val project: Project) : Disposable {
     }
 
 
-
-
     override fun dispose() {
         //nothing to do, used as parent disposable
     }
@@ -315,7 +313,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
     }
 
 
-    fun registerError(exception: Throwable?, message: String, extraDetails: Map<String, String> = mapOf()) {
+    fun registerError(exception: Throwable?, message: String, extraDetails: Map<String, Any> = mapOf()) {
 
         try {
             val osType = System.getProperty("os.name")
@@ -327,7 +325,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
 
             //Don't call directly, use ErrorReporter.reportError
 
-            val details = mutableMapOf(
+            val details = mutableMapOf<String, Any>(
                 "error.source" to "plugin",
                 "action" to "unknown",
                 "message" to message,
@@ -644,8 +642,6 @@ class ActivityMonitor(private val project: Project) : Disposable {
     }
 
 
-
-
     //todo: remove at some point
     fun registerFirstTimePluginLoaded() {
         postHog?.capture(userId, "plugin first-loaded")
@@ -822,7 +818,6 @@ class ActivityMonitor(private val project: Project) : Disposable {
     }
 
 
-
     private fun registerSessionDetails() {
 
         SessionMetadataProperties.getInstance().put(CURRENT_INSTALL_STATUS_KEY, InstallStatus.Active)
@@ -925,7 +920,6 @@ class ActivityMonitor(private val project: Project) : Disposable {
     }
 
 
-
     fun registerJiraFieldCopied(eventName: String, details: Map<String, Any>) {
 
         PersistenceService.getInstance().setJiraFieldCopiedTimestamp()
@@ -991,7 +985,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
 
     fun reportApiPerformanceIssue(details: MutableMap<String, Any>) {
         capture(
-            "api-performance-issue",details
+            "api-performance-issue", details
         )
     }
 

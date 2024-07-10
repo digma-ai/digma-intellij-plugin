@@ -18,10 +18,12 @@ class FrequencyDetector(cacheExpirationTime: java.time.Duration) {
         val occurrences = counter.incrementAndGet()
         return occurrences > 1
     }
-
-
-
-
+    fun isTooFrequentStackTrace(message: String, stacktrace: String): Boolean {
+        val hash = stacktrace.hashCode()
+        val counter = myCache.getOrCreate(message, hash.toString())
+        val occurrences = counter.incrementAndGet()
+        return occurrences > 1
+    }
     fun isTooFrequentError(message: String, action: String): Boolean {
         val counter = myCache.getOrCreate(message, action)
         val occurrences = counter.incrementAndGet()

@@ -10,6 +10,7 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.rest.environment.Env;
 import org.digma.intellij.plugin.psi.*;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
@@ -30,7 +31,7 @@ public class EnvironmentChangeHandler implements EnvironmentChanged {
     //environmentChanged must run in a background thread.
     //when fired by the Environment object it is on background
     @Override
-    public void environmentChanged(Env newEnv) {
+    public void environmentChanged(@Nullable Env newEnv) {
 
         try {
 

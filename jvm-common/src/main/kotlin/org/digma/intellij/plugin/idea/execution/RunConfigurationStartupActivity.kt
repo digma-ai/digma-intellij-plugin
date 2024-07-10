@@ -52,7 +52,7 @@ class RunConfigurationStartupActivity : DigmaProjectActivity() {
 
                 val isTemp = isTempRunConfig(config, tempConfigurations)
 
-                val handler = RunConfigurationHandlersHolder.runConfigurationHandlers.find {
+                val handler = RunConfigurationHandlersHolder.getInstance().getRunConfigurationHandlers().find {
                     it.isApplicableFor(config)
                 }
 

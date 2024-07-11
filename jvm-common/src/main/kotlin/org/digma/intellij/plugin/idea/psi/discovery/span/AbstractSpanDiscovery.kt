@@ -20,7 +20,7 @@ import org.digma.intellij.plugin.common.runInReadAccessInSmartModeWithResultAndR
 import org.digma.intellij.plugin.idea.psi.PsiPointers
 import org.digma.intellij.plugin.idea.psi.discovery.MicrometerTracingFramework
 import org.digma.intellij.plugin.model.discovery.SpanInfo
-import org.digma.intellij.plugin.psi.BuildDocumentInfoProcessContext
+import org.digma.intellij.plugin.document.BuildDocumentInfoProcessContext
 import org.digma.intellij.plugin.psi.PsiFileCachedValueWithUri
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.jetbrains.uast.UMethod

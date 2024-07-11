@@ -20,7 +20,7 @@ import org.digma.intellij.plugin.idea.psi.getMethodsInClass
 import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.discovery.SpanInfo
-import org.digma.intellij.plugin.psi.BuildDocumentInfoProcessContext
+import org.digma.intellij.plugin.document.BuildDocumentInfoProcessContext
 import org.digma.intellij.plugin.psi.PsiFileCachedValueWithUri
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.jetbrains.uast.UClass
@@ -82,8 +82,6 @@ abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSp
 
      */
 
-    //todo: run under process and use org.digma.intellij.plugin.progress.ProcessContext
-    // to track errors, create a ProcessContext class for buildDocumentInfo like BuildDocumentInfoProcessContext
     open fun buildDocumentInfo(
         project: Project,
         psiFileCachedValue: PsiFileCachedValueWithUri,

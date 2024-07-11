@@ -59,8 +59,8 @@ import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret
 import org.digma.intellij.plugin.model.discovery.TextRange
-import org.digma.intellij.plugin.progress.assertUnderProgress
-import org.digma.intellij.plugin.psi.BuildDocumentInfoProcessContext
+import org.digma.intellij.plugin.process.assertUnderProgress
+import org.digma.intellij.plugin.document.BuildDocumentInfoProcessContext
 import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.psi.PsiFileCachedValueWithUri
 import org.digma.intellij.plugin.psi.PsiFileNotFountException

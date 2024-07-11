@@ -34,7 +34,7 @@ import org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils
 import org.digma.intellij.plugin.idea.psi.toFileUri
 import org.digma.intellij.plugin.model.discovery.EndpointFramework
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
-import org.digma.intellij.plugin.progress.ProcessContext
+import org.digma.intellij.plugin.process.ProcessContext
 import org.digma.intellij.plugin.psi.PsiUtils
 import java.util.Locale
 

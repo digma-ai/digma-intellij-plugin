@@ -1,18 +1,21 @@
 package org.digma.intellij.plugin.idea.navigation
 
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.fileEditor.FileDocumentManager
-import com.intellij.openapi.progress.ProcessCanceledException
-import com.intellij.openapi.progress.ProgressIndicator
+import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiDocumentManager
+import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiManager
+import com.intellij.psi.PsiTreeAnyChangeAbstractAdapter
 import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.util.Alarm
 import com.intellij.util.concurrency.AppExecutorUtil
 import kotlinx.datetime.Clock
-import org.apache.commons.lang3.time.StopWatch
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.ReadActions
@@ -21,23 +24,19 @@ import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.common.isValidVirtualFile
 import org.digma.intellij.plugin.common.runInReadAccessWithResult
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
-import org.digma.intellij.plugin.errorreporting.SEVERITY_LOW_NO_FIX
-import org.digma.intellij.plugin.errorreporting.SEVERITY_MEDIUM_TRY_FIX
-import org.digma.intellij.plugin.errorreporting.SEVERITY_PROP_NAME
+import org.digma.intellij.plugin.idea.navigation.model.NavigationDiscoveryTrigger
 import org.digma.intellij.plugin.idea.navigation.model.NavigationProcessContext
-import org.digma.intellij.plugin.idea.navigation.model.Origin
 import org.digma.intellij.plugin.idea.psi.isJvmSupportedFile
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
-import org.digma.intellij.plugin.progress.RetryableTask
+import org.digma.intellij.plugin.process.ProcessManager
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.digma.intellij.plugin.session.SessionMetadataProperties
 import org.digma.intellij.plugin.session.getPluginLoadedKey
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
-import java.util.function.Consumer
-import java.util.function.Supplier
 import kotlin.time.Duration
 
 abstract class AbstractNavigationDiscovery(protected val project: Project) : Disposable {
@@ -51,6 +50,20 @@ abstract class AbstractNavigationDiscovery(protected val project: Project) : Dis
         get() = AppExecutorUtil.createBoundedScheduledExecutorService("${this.type}Nav", 1)
 
 
+    init {
+        //we need PsiTreeChange because bulk file listener does not always notify on time on changes, it will notify all changes only
+        // when saving files. for example if refactoring name for class A that requires changes on class B, bulk file listener will notify on A,
+        // but not on B, only when the system decides to save changes it will notify on B.
+        //psi change events will be fired immediately on all changed classes.
+        //on the other hand psi change events will not be fired for file deletion, but bulk listener will.
+        //so we use a combination of both.
+        //many times we will be notified for the same file more than once, and we will run a process more than once for the same file, while its better
+        // not to the performance and resource consumption is not much more.
+        @Suppress("LeakingThis")
+        PsiManager.getInstance(project).addPsiTreeChangeListener(MyPsiTreeAnyChangeListener(this), this)
+    }
+
+
     override fun dispose() {
         scheduledExecutorService.shutdownNow()
     }
@@ -61,8 +74,9 @@ abstract class AbstractNavigationDiscovery(protected val project: Project) : Dis
 
     abstract fun removeDiscoveryForPath(path: String)
 
-    abstract fun getTask(myContext: NavigationProcessContext, origin: Origin, name: String, indicator: ProgressIndicator, retry: Int): Runnable
+    abstract fun getTask(myContext: NavigationProcessContext): Runnable
 
+    abstract fun getNumFound(): Int
 
     //navigation discovery will run on startup using a single thread scheduler and invisible retryable task.
     // the task will retry a few times in case of errors but in the meantime will collect discovery objects and store them.
@@ -71,13 +85,13 @@ abstract class AbstractNavigationDiscovery(protected val project: Project) : Dis
     //max 20 attempts to complete with no errors.
     //on file changed the same thing will happen for one file.
     fun buildNavigationDiscovery() {
-        schedule({ GlobalSearchScope.projectScope(project) }, null, Origin.Startup, "all")
+        schedule({ GlobalSearchScope.projectScope(project) }, null, NavigationDiscoveryTrigger.Startup)
     }
 
 
     protected fun schedule(
         searchScopeProvider: SearchScopeProvider,
-        preTask: Runnable?, origin: Origin, name: String, delayMillis: Long = 0, retry: Int = 0,
+        preTask: Runnable?, navigationDiscoveryTrigger: NavigationDiscoveryTrigger, delayMillis: Long = 0, retry: Int = 0,
     ) {
 
         //this method should be very fast, only schedule a task. it may be called on EDT.
@@ -86,141 +100,78 @@ abstract class AbstractNavigationDiscovery(protected val project: Project) : Dis
             return
         }
 
+        Log.log(logger::trace, "Scheduling navigation discovery , retry {}", retry)
+
         //max 20 retries and give up
         if (retry > 20) {
+            Log.log(logger::trace, "Max retries exceeded, Not scheduling navigation discovery , retry {}", retry)
             return
         }
 
         //scheduledExecutorService is single thread and thus only one thread at a time will process scheduled tasks.
         // which means that scheduling is not accurate and does not need to be in this case.
         scheduledExecutorService.schedule({
-            //run the preTask on same thread before the main task
-            preTask?.run()
-            buildNavigationUnderProgress(searchScopeProvider, origin, name, retry)
+
+            try {
+                Log.log(logger::trace, "Starting navigation discovery process in smart mode")
+                DumbService.getInstance(project).waitForSmartMode()
+                //run the preTask on same thread before the main task
+                preTask?.run()
+                buildNavigationUnderProgress(searchScopeProvider, navigationDiscoveryTrigger, retry)
+            } catch (e: Throwable) {
+                Log.warnWithException(logger, project, e, "Error in navigation discovery process")
+                ErrorReporter.getInstance().reportError(project, "${this::class.simpleName}.schedule", e)
+            }
+
         }, delayMillis, TimeUnit.MILLISECONDS)
     }
 
 
-    private fun buildNavigationUnderProgress(searchScopeProvider: SearchScopeProvider, origin: Origin, name: String, retry: Int) {
+    private fun buildNavigationUnderProgress(
+        searchScopeProvider: SearchScopeProvider,
+        navigationDiscoveryTrigger: NavigationDiscoveryTrigger,
+        retry: Int
+    ) {
+
+        Log.log(logger::trace, "Building navigation discovery process")
 
         if (!isProjectValid(project)) {
             return
         }
 
-        val stopWatch = StopWatch.createStarted()
-        registerStartEvent("$type-discovery-started", origin, retry)
+        registerStartEvent("$type-discovery-started", navigationDiscoveryTrigger, retry)
 
-        var context: NavigationProcessContext? = null
-        val workTask = Consumer<ProgressIndicator> {
-            val myContext = NavigationProcessContext(searchScopeProvider, it)
-            context = myContext
-            getTask(myContext, origin, name, it, retry).run()
-        }
+        val processName = "${this::class.simpleName}.buildNavigationUnderProgress"
 
-        val beforeRetryTask = Consumer<RetryableTask> { task ->
-            //this is a hook before every retry to change anything on the task,
-            // may even change the work task or anything else.
+        val context = NavigationProcessContext(searchScopeProvider, processName)
+        val task = getTask(context)
+        val processResult = project.service<ProcessManager>().runTaskUnderProcess(task, context, true, 10, true)
 
-            //increase the delay on every retry
-            task.delayBetweenRetriesMillis += 5000L
-        }
-
-        val shouldRetryTask = Supplier<Boolean> {
-            //a hook to stop retrying
-            isProjectValid(project)
-        }
-
-        val onErrorTask = Consumer<Throwable> {
-            ErrorReporter.getInstance().reportError(
-                "${this::class.simpleName}.buildNavigationUnderProgress.onError", it, mapOf(
-                    SEVERITY_PROP_NAME to SEVERITY_MEDIUM_TRY_FIX
-                )
-            )
-        }
-
-        val onPCETask = Consumer<ProcessCanceledException> {
-            ErrorReporter.getInstance().reportError(
-                "${this::class.simpleName}.buildNavigationUnderProgress.onPCE", it, mapOf(
-                    SEVERITY_PROP_NAME to SEVERITY_LOW_NO_FIX
-                )
-            )
-        }
-
-        val onFinish = Consumer<RetryableTask> { task ->
-
-            val hadProgressErrors = task.error != null
-            val hadPCE = task.processCanceledException != null
-            val success = task.isCompletedSuccessfully()
-
-            if (success) {
-                Log.log(logger::info, "${this::class.simpleName} completed successfully")
-            } else {
-                if (hadProgressErrors) {
-                    Log.log(logger::info, "${this::class.simpleName} completed with errors")
-                } else if (hadPCE && task.isExhausted()) {
-                    Log.log(logger::info, "${this::class.simpleName} process retry exhausted")
-                } else if (hadPCE && task.isStoppedBeforeExhausted()) {
-                    Log.log(logger::info, "${this::class.simpleName} completed before exhausted")
-                } else {
-                    Log.log(logger::info, "${this::class.simpleName} completed abnormally")
-                }
-
-                //if no success schedule a retry in some minutes.
-                // no success means an error in the process, process cancellation or some other error.
-                // try again, and maybe it will have more success. the schedule method limits maximum 20 retries.
-                schedule(searchScopeProvider, null, origin, name, TimeUnit.MINUTES.toMillis(2L), retry + 1)
-            }
-
-            val time = stopWatch.getTime(TimeUnit.MILLISECONDS)
-            val hadErrors = context?.hasErrors() ?: false
-            registerFinishedEvent("$type-discovery-finished", origin, success, task.isExhausted(), retry, time, hadErrors, hadPCE)
-        }
-
-
-        val task = RetryableTask.Invisible(
-            project = project,
-            title = "$type discovery $name", //title is ignored in RetryableTask.Invisible but may be used for logging
-            workTask = workTask,
-            beforeRetryTask = beforeRetryTask,
-            shouldRetryTask = shouldRetryTask,
-            onErrorTask = onErrorTask,
-            onFinish = onFinish,
-            onPCETask = onPCETask,
-            maxRetries = 10,
-            delayBetweenRetriesMillis = 2000L
+        registerFinishedEvent(
+            "$type-discovery-finished",
+            navigationDiscoveryTrigger,
+            processResult.success,
+            processResult.duration,
+            retry,
+            context.hasErrors(),
+            processResult.error
         )
 
-        //very important, it will run on the scheduler thread which is limited to one thread at a time
-        task.reuseCurrentThread = true
-        task.runInBackground()
-    }
-
-
-    protected fun handleErrorsInProcess(context: NavigationProcessContext, origin: Origin, name: String, retry: Int) {
-        //the process is about to finish. check if there were errors and schedule again from scratch.
-        //these are errors that were swallowed to let the process do best effort and at least collect some spans,
-        // but still probably some things didn't succeed. maybe another try will succeed. but at least we have some spans collected.
-        if (context.hasErrors()) {
-            context.errorsList().forEach { entry ->
-                val hint = entry.key
-                val errors = entry.value
-                errors.forEach { err ->
-                    Log.warnWithException(logger, err, "Exception in build $type navigation")
-                    ErrorReporter.getInstance().reportError(
-                        project, "${this::class.simpleName}.$hint", err, mapOf(
-                            SEVERITY_PROP_NAME to SEVERITY_MEDIUM_TRY_FIX
-                        )
-                    )
-                }
-            }
-
-            //if there were errors in the process schedule another try. the first run already inserted discovery
-            // to spanLocations , but maybe there were errors for some files or index not ready somewhere,
-            // try again, and maybe it will have more success. the schedule method limits maximum 20 retries.
-            schedule(context.searchScope, null, origin, name, TimeUnit.MINUTES.toMillis(2L), retry + 1)
+        //if process failed, schedule another retry immediately.
+        //if process succeeded but there are errors schedule again in 2 minutes,hopefully with fewer errors
+        if (!processResult.success) {
+            Log.log(logger::trace, "Navigation discovery process failed,please check the log {}", processResult)
+            schedule(searchScopeProvider, null, navigationDiscoveryTrigger, 0, retry + 1)
+        } else if (context.hasErrors()) {
+            Log.log(logger::trace, "Navigation discovery process had errors,please check the log {}", processResult)
+            schedule(searchScopeProvider, null, navigationDiscoveryTrigger, TimeUnit.MINUTES.toMillis(2L), retry + 1)
+        } else {
+            Log.log(logger::trace, "Navigation discovery process completed successfully {}", processResult)
         }
-    }
 
+        context.logErrors(logger, project)
+
+    }
 
     fun documentChanged(document: Document) {
 
@@ -239,7 +190,7 @@ abstract class AbstractNavigationDiscovery(protected val project: Project) : Dis
             }
 
             psiFile?.let {
-                if (PsiUtils.isValidPsiFile(psiFile) && isJvmSupportedFile(project, it)) {
+                if (PsiUtils.isValidPsiFile(it) && isJvmSupportedFile(project, it)) {
                     val virtualFile = FileDocumentManager.getInstance().getFile(document)
                     virtualFile?.takeIf { isValidVirtualFile(virtualFile) }?.let { vf ->
                         fileChanged(vf)
@@ -262,16 +213,23 @@ abstract class AbstractNavigationDiscovery(protected val project: Project) : Dis
         //this method should be very fast and only schedule a task for the changed file.
         //it's called on background from BulkFileChangeListenerForJvmNavigationDiscovery.processEvents.
         //it's called on background from documentChanged
+        //it's called on background from MyPsiTreeAnyChangeListener
 
         if (!isProjectValid(project) || !isValidVirtualFile(virtualFile)) {
             return
         }
 
+        Log.log(logger::trace, "got fileChanged for {}", virtualFile)
+
         try {
             virtualFile?.takeIf { isValidVirtualFile(virtualFile) }?.let { vf ->
                 //must remove the document spans before building discovery for that file again,
                 // the preTask sent to schedule will do it on the same thread where the task will run
-                schedule({ GlobalSearchScope.fileScope(project, virtualFile) }, { removeDiscoveryForFile(vf) }, Origin.FileChanged, vf.name)
+                schedule(
+                    { GlobalSearchScope.fileScope(project, virtualFile) },
+                    { removeDiscoveryForFile(vf) },
+                    NavigationDiscoveryTrigger.FileChanged
+                )
             }
         } catch (e: Throwable) {
             Log.warnWithException(logger, e, "Exception in fileChanged")
@@ -315,10 +273,10 @@ abstract class AbstractNavigationDiscovery(protected val project: Project) : Dis
     }
 
 
-    private fun registerStartEvent(eventName: String, origin: Origin, retry: Int) {
+    private fun registerStartEvent(eventName: String, navigationDiscoveryTrigger: NavigationDiscoveryTrigger, retry: Int) {
 
         //no need to send the event on file changed because it is too many
-        if (origin == Origin.FileChanged) {
+        if (navigationDiscoveryTrigger == NavigationDiscoveryTrigger.FileChanged) {
             return
         }
 
@@ -333,15 +291,15 @@ abstract class AbstractNavigationDiscovery(protected val project: Project) : Dis
         val startupLagToShow =
             if (startupLagMillis > 2000) "${TimeUnit.MILLISECONDS.toSeconds(startupLagMillis)} seconds" else "$startupLagMillis millis"
 
-        val details = if (origin == Origin.Startup) {
+        val details = if (navigationDiscoveryTrigger == NavigationDiscoveryTrigger.Startup) {
             mapOf(
                 "startupLag" to startupLagToShow,
-                "origin" to origin,
+                "navigationDiscoveryTrigger" to navigationDiscoveryTrigger,
                 "retry" to retry
             )
         } else {
             mapOf(
-                "origin" to origin,
+                "navigationDiscoveryTrigger" to navigationDiscoveryTrigger,
                 "retry" to retry
             )
         }
@@ -354,35 +312,58 @@ abstract class AbstractNavigationDiscovery(protected val project: Project) : Dis
 
     private fun registerFinishedEvent(
         eventName: String,
-        origin: Origin,
+        navigationDiscoveryTrigger: NavigationDiscoveryTrigger,
         success: Boolean,
-        exhaustedRetries: Boolean,
+        duration: Duration,
         retry: Int,
-        timeTookMillis: Long,
         hadErrors: Boolean,
-        hadPCE: Boolean,
+        error: Throwable?
     ) {
 
         //no need to send the event on file changed because it is too many
-        if (origin == Origin.FileChanged) {
+        if (navigationDiscoveryTrigger == NavigationDiscoveryTrigger.FileChanged) {
             return
         }
-
-        val timeToShow = if (timeTookMillis > 2000) "${TimeUnit.MILLISECONDS.toSeconds(timeTookMillis)} seconds" else "$timeTookMillis millis"
 
         ActivityMonitor.getInstance(project).registerJvmNavigationDiscoveryEvent(
             eventName,
             mapOf(
-                "timeTook" to timeToShow,
-                "origin" to origin,
+                "duration" to duration.inWholeMilliseconds,
+                "found.locations" to getNumFound(),
+                "navigationDiscoveryTrigger" to navigationDiscoveryTrigger,
                 "success" to success,
-                "exhaustedRetries" to exhaustedRetries,
                 "retry" to retry,
                 "hadErrors" to hadErrors,
-                "hadPCE" to hadPCE
+                "error" to error.toString()
             )
         )
     }
 
+
+    //PsiTreeChangeEvent are fired many times for the same file, actually for every psi change in the file.
+    //this listener will make sure not to call fileChanged for every event.
+    //it collects the changed files and calls fileChanged every 5 seconds for the collected files.
+    private inner class MyPsiTreeAnyChangeListener(val abstractNavigationDiscovery: AbstractNavigationDiscovery) : PsiTreeAnyChangeAbstractAdapter() {
+
+        private val changeAlarm = Alarm(Alarm.ThreadToUse.POOLED_THREAD, abstractNavigationDiscovery)
+        private val changedFiles = ConcurrentHashMap.newKeySet<VirtualFile>()
+
+        override fun onChange(file: PsiFile?) {
+            file?.let {
+                val vf = it.virtualFile
+                if (isValidRelevantFile(project, vf) && PsiUtils.isValidPsiFile(it) && isJvmSupportedFile(project, it)) {
+                    changedFiles.add(vf)
+                    changeAlarm.cancelAllRequests()
+                    changeAlarm.addRequest({
+                        changedFiles.forEach { file ->
+                            Log.log(logger::trace, "got psi tree change for file {}", file)
+                            changedFiles.remove(file)
+                            abstractNavigationDiscovery.fileChanged(file)
+                        }
+                    }, 5000)
+                }
+            }
+        }
+    }
 
 }

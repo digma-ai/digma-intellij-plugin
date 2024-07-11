@@ -10,7 +10,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import kotlin.Pair;
 import org.digma.intellij.plugin.common.*;
-import org.digma.intellij.plugin.document.DocumentInfoService;
+import org.digma.intellij.plugin.document.*;
 import org.digma.intellij.plugin.instrumentation.*;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.*;

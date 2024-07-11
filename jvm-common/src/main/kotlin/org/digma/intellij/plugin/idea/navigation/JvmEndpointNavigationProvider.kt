@@ -1,14 +1,12 @@
 package org.digma.intellij.plugin.idea.navigation
 
 import com.intellij.openapi.components.service
-import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.util.Urls
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.idea.navigation.model.NavigationProcessContext
-import org.digma.intellij.plugin.idea.navigation.model.Origin
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscovery
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscoveryService
 import org.digma.intellij.plugin.log.Log
@@ -40,15 +38,17 @@ internal class JvmEndpointNavigationProvider(project: Project) : AbstractNavigat
     }
 
 
-
-
-    override fun getTask(myContext: NavigationProcessContext, origin: Origin, name: String, indicator: ProgressIndicator, retry: Int): Runnable {
+    override fun getTask(myContext: NavigationProcessContext): Runnable {
         return Runnable {
-            buildEndpointNavigation(myContext, origin, name, indicator, retry)
+            buildEndpointNavigation(myContext)
         }
     }
 
-    private fun buildEndpointNavigation(context: NavigationProcessContext, origin: Origin, name: String, indicator: ProgressIndicator, retry: Int) {
+    override fun getNumFound(): Int {
+        return endpointsMap.values.flatten().size
+    }
+
+    private fun buildEndpointNavigation(context: NavigationProcessContext) {
 
         EDT.assertNonDispatchThread()
         //should not run in read action so that every section can wait for smart mode
@@ -71,15 +71,15 @@ internal class JvmEndpointNavigationProvider(project: Project) : AbstractNavigat
                     }
                 }
 
-                indicator.checkCanceled()
+                context.indicator.checkCanceled()
             }
         } finally {
+            Log.log(logger::info, "Building endpoint navigation completed, have {} endpoints locations", endpointsMap.size)
             if (buildLock.isHeldByCurrentThread) {
                 buildLock.unlock()
             }
         }
 
-        handleErrorsInProcess(context, origin, name, retry)
     }
 
 

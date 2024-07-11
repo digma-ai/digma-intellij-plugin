@@ -1,11 +1,11 @@
 package org.digma.intellij.plugin.rider.protocol
 
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorManager
-import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
 import com.jetbrains.rd.framework.IProtocol
@@ -20,6 +20,7 @@ import org.apache.commons.collections4.map.LRUMap
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.isValidVirtualFile
+import org.digma.intellij.plugin.document.BuildDocumentInfoProcessContext
 import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.editor.CaretContextService
 import org.digma.intellij.plugin.log.Log
@@ -27,7 +28,7 @@ import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret
 import org.digma.intellij.plugin.model.discovery.SpanInfo
-import org.digma.intellij.plugin.psi.BuildDocumentInfoProcessContext
+import org.digma.intellij.plugin.process.ProcessManager
 import org.digma.intellij.plugin.psi.LanguageServiceLocator
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.digma.intellij.plugin.rider.psi.csharp.CSharpLanguageUtil
@@ -58,8 +59,10 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
     init {
 
         SolutionLifecycleHost.getInstance(project).isBackendLoaded.whenTrue(componentLifetime) {
-            Log.log(logger::debug, "solution loaded, warm startup: {}, initializing {}",
-                SolutionStartupService.getInstance(project).isWarmStartup(),SolutionStartupService.getInstance(project).isInitializing())
+            Log.log(
+                logger::debug, "solution loaded, warm startup: {}, initializing {}",
+                SolutionStartupService.getInstance(project).isWarmStartup(), SolutionStartupService.getInstance(project).isInitializing()
+            )
 
             solutionLoaded = true
             csharpMethodCache.clear()
@@ -114,11 +117,10 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
 
                                 Backgroundable.executeOnPooledThread {
 
-                                    BuildDocumentInfoProcessContext.buildDocumentInfoUnderProcess(
-                                        project,
-                                        psiFile.name
-                                    ) { progressIndicator: ProgressIndicator ->
-                                        val context = BuildDocumentInfoProcessContext(progressIndicator)
+
+                                    val processName = "LanguageServiceHost.buildDocumentInfo"
+                                    val context = BuildDocumentInfoProcessContext(processName)
+                                    val runnable = Runnable {
                                         val documentInfoService = DocumentInfoService.getInstance(project)
                                         val documentInfo = languageService.buildDocumentInfo(psiFileCachedValue, selectedEditor, context)
                                         val upToDatePsiFile = psiFileCachedValue.value
@@ -129,6 +131,9 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
                                             CaretContextService.getInstance(project).contextChanged(methodUnderCaret)
                                         }
                                     }
+                                    val processResult = project.service<ProcessManager>().runTaskUnderProcess(runnable, context, true, 2, false)
+                                    Log.log(logger::trace, "buildDocumentInfo completed {}", processResult)
+                                    context.logErrors(logger, project)
                                 }
                             }
                         }
@@ -165,7 +170,13 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
     //this method should never be called on EDT
     fun getDocumentInfo(psiFile: PsiFile, fileEditor: FileEditor?): DocumentInfo? {
 
-        Log.log(logger::debug,"Got request for getDocumentInfo for PsiFile {}, selectedEditor {}, solution loaded {}",psiFile.virtualFile,fileEditor,solutionLoaded)
+        Log.log(
+            logger::debug,
+            "Got request for getDocumentInfo for PsiFile {}, selectedEditor {}, solution loaded {}",
+            psiFile.virtualFile,
+            fileEditor,
+            solutionLoaded
+        )
 
         val projectModelId: Int? = tryGetProjectModelId(psiFile, fileEditor, project)
         val psiUri = PsiUtils.psiFileToUri(psiFile)
@@ -193,7 +204,13 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
     //todo:change to psi cached value
     fun detectMethodUnderCaret(psiFile: PsiFile, selectedEditor: Editor?, caretOffset: Int): MethodUnderCaret {
 
-        Log.log(logger::debug,"Got request to detectMethodUnderCaret for PsiFile {}, selectedEditor {}, solution loaded {}",psiFile.virtualFile,selectedEditor,solutionLoaded)
+        Log.log(
+            logger::debug,
+            "Got request to detectMethodUnderCaret for PsiFile {}, selectedEditor {}, solution loaded {}",
+            psiFile.virtualFile,
+            selectedEditor,
+            solutionLoaded
+        )
 
         //always try to find ProjectModelId.
         //projectModelId is the preferred way to find a IPsiSourceFile in rider backend. the backend will try to find

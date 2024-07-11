@@ -7,14 +7,16 @@ import com.intellij.openapi.vfs.newvfs.events.VFileDeleteEvent
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent
 import com.intellij.openapi.vfs.newvfs.events.VFileMoveEvent
 import com.intellij.openapi.vfs.newvfs.events.VFilePropertyChangeEvent
+import com.intellij.psi.PsiManager
 import org.digma.intellij.plugin.bulklistener.AbstractBulkFileChangeListener
 import org.digma.intellij.plugin.common.isProjectValid
+import org.digma.intellij.plugin.common.runInReadAccessWithResult
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.errorreporting.SEVERITY_LOW_NO_FIX
 import org.digma.intellij.plugin.errorreporting.SEVERITY_PROP_NAME
-import org.digma.intellij.plugin.idea.psi.JvmLanguageService
+import org.digma.intellij.plugin.idea.psi.isJvmSupportedFile
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.psi.LanguageService
+import org.digma.intellij.plugin.psi.PsiUtils
 
 class BulkFileChangeListenerForJvmNavigationDiscovery : AbstractBulkFileChangeListener() {
 
@@ -81,11 +83,15 @@ class BulkFileChangeListenerForJvmNavigationDiscovery : AbstractBulkFileChangeLi
 
     private fun updateNavigation(project: Project, file: VirtualFile) {
         if (isValidRelevantFile(project, file)) {
-            val languageService = LanguageService.findLanguageServiceByFile(project, file)
-            if (JvmLanguageService::class.java.isAssignableFrom(languageService.javaClass)) {
-                Log.log(logger::trace, "calling fileChanged for {}", file)
-                JvmSpanNavigationProvider.getInstance(project).fileChanged(file)
-                JvmEndpointNavigationProvider.getInstance(project).fileChanged(file)
+            val psiFile = runInReadAccessWithResult {
+                PsiManager.getInstance(project).findFile(file)
+            }
+            psiFile?.let {
+                if (PsiUtils.isValidPsiFile(it) && isJvmSupportedFile(project, it)) {
+                    Log.log(logger::trace, "calling fileChanged for {}", file)
+                    JvmSpanNavigationProvider.getInstance(project).fileChanged(file)
+                    JvmEndpointNavigationProvider.getInstance(project).fileChanged(file)
+                }
             }
         }
     }

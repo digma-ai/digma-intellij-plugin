@@ -13,6 +13,7 @@ import com.jetbrains.rider.projectView.SolutionLifecycleHost;
 import kotlin.Pair;
 import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.common.*;
+import org.digma.intellij.plugin.document.BuildDocumentInfoProcessContext;
 import org.digma.intellij.plugin.editor.CaretContextService;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.instrumentation.*;

@@ -12,10 +12,11 @@ import com.intellij.psi.*;
 import com.intellij.util.*;
 import com.intellij.util.Alarm.ThreadToUse;
 import org.digma.intellij.plugin.common.*;
-import org.digma.intellij.plugin.document.DocumentInfoService;
+import org.digma.intellij.plugin.document.*;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
+import org.digma.intellij.plugin.process.ProcessManager;
 import org.digma.intellij.plugin.psi.*;
 import org.jetbrains.annotations.*;
 
@@ -73,7 +74,7 @@ class DocumentChangeListener {
 
         document.addDocumentListener(new DocumentListener() {
 
-            private final Alarm documentChangeAlarm = AlarmFactory.getInstance().create(ThreadToUse.POOLED_THREAD,parentDisposable);
+            private final Alarm documentChangeAlarm = AlarmFactory.getInstance().create(ThreadToUse.POOLED_THREAD, parentDisposable);
 
             @Override
             public void documentChanged(@NotNull DocumentEvent event) {
@@ -142,13 +143,17 @@ class DocumentChangeListener {
 
         LanguageService languageService = LanguageServiceLocator.getInstance(project).locate(psiFileCachedValue.getValue().getLanguage());
 
-        BuildDocumentInfoProcessContext.buildDocumentInfoUnderProcess(project, psiFileCachedValue.getValue().getName(), progressIndicator -> {
-            var context = new BuildDocumentInfoProcessContext(progressIndicator);
+        var processName = "DocumentChangeListener.buildDocumentInfo";
+        var context = new BuildDocumentInfoProcessContext(processName);
+        Runnable runnable = () -> {
             DocumentInfo documentInfo = languageService.buildDocumentInfo(psiFileCachedValue, fileEditor, context);
             Log.log(LOGGER::debug, "got DocumentInfo for {}", psiFileCachedValue.getValue().getVirtualFile());
             documentInfoService.addCodeObjects(psiFileCachedValue.getValue(), documentInfo);
             Log.log(LOGGER::debug, "documentInfoService updated with DocumentInfo for {}", psiFileCachedValue.getValue().getVirtualFile());
-        });
+        };
+        var processResult = project.getService(ProcessManager.class).runTaskUnderProcess(runnable, context, true, 2, false);
+        Log.log(LOGGER::trace, "buildDocumentInfo completed {}", processResult);
+        context.logErrors(LOGGER, project);
     }
 
 

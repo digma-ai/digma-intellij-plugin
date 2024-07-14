@@ -1,14 +1,12 @@
 package org.digma.intellij.plugin.idea.navigation
 
 import com.intellij.openapi.components.service
-import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.util.Urls
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.idea.navigation.model.NavigationProcessContext
-import org.digma.intellij.plugin.idea.navigation.model.Origin
 import org.digma.intellij.plugin.idea.navigation.model.SpanLocation
 import org.digma.intellij.plugin.log.Log
 import java.util.concurrent.ConcurrentHashMap
@@ -48,14 +46,17 @@ internal class JvmSpanNavigationProvider(project: Project) : AbstractNavigationD
     }
 
 
-
-    override fun getTask(myContext: NavigationProcessContext, origin: Origin, name: String, indicator: ProgressIndicator, retry: Int): Runnable {
+    override fun getTask(myContext: NavigationProcessContext): Runnable {
         return Runnable {
-            buildSpanNavigation(myContext, origin, name, indicator, retry)
+            buildSpanNavigation(myContext)
         }
     }
 
-    private fun buildSpanNavigation(context: NavigationProcessContext, origin: Origin, name: String, indicator: ProgressIndicator, retry: Int) {
+    override fun getNumFound(): Int {
+        return spanLocations.size
+    }
+
+    private fun buildSpanNavigation(context: NavigationProcessContext) {
 
         EDT.assertNonDispatchThread()
         //should not run in read action so that every section can wait for smart mode
@@ -71,15 +72,15 @@ internal class JvmSpanNavigationProvider(project: Project) : AbstractNavigationD
                     val otelSpans: Map<String, SpanLocation> = provider.discover(context)
                     spanLocations.putAll(otelSpans)
                 }
-                indicator.checkCanceled()
+                context.indicator.checkCanceled()
             }
         } finally {
+            Log.log(logger::info, "Building span navigation completed, have {} span locations", spanLocations.size)
             if (buildLock.isHeldByCurrentThread) {
                 buildLock.unlock()
             }
         }
 
-        handleErrorsInProcess(context, origin, name, retry)
     }
 
 

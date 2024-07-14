@@ -23,7 +23,7 @@ import org.digma.intellij.plugin.idea.psi.toFileUri
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.EndpointFramework
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
-import org.digma.intellij.plugin.progress.ProcessContext
+import org.digma.intellij.plugin.process.ProcessContext
 
 private const val BINDABLE_SERVICE_ANNOTATION_STR = "io.grpc.BindableService"
 private const val DIGMA_UNKNOWN_SERVICE_NAME = "Digma.Unknown.Grpc.Service"
@@ -162,11 +162,6 @@ open class GrpcFrameworkEndpointDiscovery(private val project: Project) : Endpoi
         //value for example: "epRPC:helloworld.Greeter/SayHello"
         return "" +  // digma part
                 "epRPC:" +  // GRPC part
-                grpcServiceName + "/" + capitalizeFirstLetter(psiMethod.name)
-    }
-
-    private fun capitalizeFirstLetter(value: String): String {
-        val firstCharUcase = value[0].uppercaseChar()
-        return firstCharUcase.toString() + value.substring(1)
+                grpcServiceName + "/" + psiMethod.name.replaceFirstChar { it.uppercase() }
     }
 }

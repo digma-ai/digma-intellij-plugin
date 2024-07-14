@@ -17,7 +17,7 @@ import org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils
 import org.digma.intellij.plugin.idea.psi.toFileUri
 import org.digma.intellij.plugin.model.discovery.EndpointFramework
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
-import org.digma.intellij.plugin.progress.ProcessContext
+import org.digma.intellij.plugin.process.ProcessContext
 import java.util.Locale
 
 private const val CONTROLLER_ANNOTATION_STR = "org.springframework.stereotype.Controller"

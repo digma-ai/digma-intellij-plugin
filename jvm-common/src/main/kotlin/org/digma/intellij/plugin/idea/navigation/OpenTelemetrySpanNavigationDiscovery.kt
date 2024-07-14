@@ -116,6 +116,7 @@ class OpenTelemetrySpanNavigationDiscovery(private val project: Project) : SpanN
             val tracerBuilderClassPointer = psiPointers.getPsiClassPointer(project, SPAN_BUILDER_FQN)
             tracerBuilderClassPointer?.let {
                 val startSpanMethodPointer = psiPointers.getOtelStartSpanMethodPointer(project, tracerBuilderClassPointer)
+                //todo: fix this https://us.posthog.com/project/22368/events/dacee4cc-fd23-4974-b663-318cc9723cf3/2024-07-10T17%3A13%3A51.622000-07%3A00
                 Objects.requireNonNull(startSpanMethodPointer, "startSpan method must be found in SpanBuilder class")
                 startSpanMethodPointer?.let {
                     findMethodReferences(project, startSpanMethodPointer, context.searchScope)
@@ -130,10 +131,13 @@ class OpenTelemetrySpanNavigationDiscovery(private val project: Project) : SpanN
 
         val spanLocations = mutableMapOf<String, SpanLocation>()
 
+
         startSpanReferences.forEach { reference ->
 
             executeCatchingWithRetry(context, getName(), 50, 5) {
-                val spanInfo = runInReadAccessInSmartModeWithResultAndRetryIgnorePCE(project) {
+
+
+            val spanInfo = runInReadAccessInSmartModeWithResultAndRetryIgnorePCE(project) {
                     JavaSpanDiscoveryUtils.getSpanInfoFromStartSpanMethodReference(project, reference)
                 }
                 spanInfo?.let {

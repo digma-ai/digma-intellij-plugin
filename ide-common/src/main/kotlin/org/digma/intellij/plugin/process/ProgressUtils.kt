@@ -1,32 +1,7 @@
-package org.digma.intellij.plugin.progress
+package org.digma.intellij.plugin.process
 
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.progress.ProgressManager
-import org.digma.intellij.plugin.common.Backgroundable
-
-
-fun runBackgroundTaskInProgressWithRetry(task: RetryableTask) {
-    val backgroundTask = RetryableBackgroundTask(task)
-    ProgressManager.getInstance().run(backgroundTask)
-}
-
-
-fun runInvisibleBackgroundTaskInProgressWithRetry(task: RetryableTask.Invisible) {
-
-    val invisibleRetryableTask = InvisibleRetryableTask(task)
-
-    if (task.reuseCurrentThread) {
-        //even if reuseCurrentThread is true , still make sure it's a background thread. these tasks
-        // are not meant to run on EDT.
-        Backgroundable.ensurePooledThreadWithoutReadAccess {
-            invisibleRetryableTask.run()
-        }
-    } else {
-        Backgroundable.executeOnPooledThread {
-            invisibleRetryableTask.run()
-        }
-    }
-}
 
 
 fun assertUnderProgress() {

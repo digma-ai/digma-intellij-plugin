@@ -8,10 +8,11 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.intellij.util.*;
 import org.digma.intellij.plugin.common.*;
-import org.digma.intellij.plugin.document.DocumentInfoService;
+import org.digma.intellij.plugin.document.*;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.*;
+import org.digma.intellij.plugin.process.ProcessManager;
 import org.digma.intellij.plugin.psi.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -130,7 +131,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
 
             Log.log(LOGGER::trace, "handling new open file:{}", newFile);
 
-            //some language services need the selected editor , for exampl  e CSharpLanguageService need to take
+            //some language services need the selected editor , for example  e CSharpLanguageService need to take
             // getProjectModelId from the selected editor. it may be null
             var newEditor = editorManagerEvent.getNewEditor();
 
@@ -175,8 +176,9 @@ public class EditorEventsHandler implements FileEditorManagerListener {
                         Log.log(LOGGER::trace, "Found language service {} for :{}", languageService, newFile);
 
 
-                        BuildDocumentInfoProcessContext.buildDocumentInfoUnderProcess(project, psiFile.getName(), progressIndicator -> {
-                            var context = new BuildDocumentInfoProcessContext(progressIndicator);
+                        var processName = "EditorEventsHandler.buildDocumentInfo";
+                        var context = new BuildDocumentInfoProcessContext(processName);
+                        Runnable runnable = () -> {
                             DocumentInfo documentInfo = languageService.buildDocumentInfo(psiFileCachedValue, newEditor, context);
                             Log.log(LOGGER::trace, "got DocumentInfo for :{}", newFile);
                             //get the value again, maybe it was invalidated
@@ -185,7 +187,12 @@ public class EditorEventsHandler implements FileEditorManagerListener {
                                 documentInfoService.addCodeObjects(upToDatePsiFile, documentInfo);
                                 Log.log(LOGGER::trace, "documentInfoService updated with DocumentInfo for :{}", newFile);
                             }
-                        });
+                        };
+
+                        var processResult = project.getService(ProcessManager.class).runTaskUnderProcess(runnable, context, true, 2, false);
+                        Log.log(LOGGER::trace, "buildDocumentInfo completed {}", processResult);
+                        context.logErrors(LOGGER, project);
+
                     }
                 } else {
                     Log.log(LOGGER::trace, "documentInfoService already contains :{}", newFile);

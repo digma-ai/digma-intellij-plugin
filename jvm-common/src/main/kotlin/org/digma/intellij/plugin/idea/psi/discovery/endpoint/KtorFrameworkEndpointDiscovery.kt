@@ -13,7 +13,7 @@ import org.digma.intellij.plugin.idea.psi.createMethodCodeObjectId
 import org.digma.intellij.plugin.idea.psi.getExpressionValue
 import org.digma.intellij.plugin.model.discovery.EndpointFramework
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
-import org.digma.intellij.plugin.progress.ProcessContext
+import org.digma.intellij.plugin.process.ProcessContext
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.jetbrains.kotlin.idea.stubindex.KotlinTopLevelFunctionFqnNameIndex
 import org.jetbrains.kotlin.psi.KtNamedFunction

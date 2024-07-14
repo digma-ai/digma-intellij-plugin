@@ -1,5 +1,5 @@
 package org.digma.intellij.plugin.idea.navigation.model
 
-enum class Origin {
+enum class NavigationDiscoveryTrigger {
     Startup, FileChanged
 }

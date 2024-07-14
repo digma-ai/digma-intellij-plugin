@@ -7,6 +7,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import kotlin.Pair;
+import org.digma.intellij.plugin.document.BuildDocumentInfoProcessContext;
 import org.digma.intellij.plugin.instrumentation.*;
 import org.digma.intellij.plugin.model.discovery.*;
 import org.jetbrains.annotations.*;

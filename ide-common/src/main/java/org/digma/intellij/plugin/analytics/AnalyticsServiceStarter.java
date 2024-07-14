@@ -19,7 +19,7 @@ public class AnalyticsServiceStarter extends DigmaProjectActivity {
 
             AnalyticsService.getInstance(project);
             //make sure BackendInfoHolder is initialized after AnalyticsService
-            BackendInfoHolder.getInstance(project).loadOnStartup();
+            BackendInfoHolder.getInstance(project);
         });
     }
 }

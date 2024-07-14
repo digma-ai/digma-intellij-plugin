@@ -724,7 +724,9 @@ public class AnalyticsService implements Disposable {
                 throw e;
             } finally {
                 stopWatch.stop();
-                project.getService(ApiPerformanceMonitor.class).addPerformance(method.getName(),stopWatch.getTime(TimeUnit.MILLISECONDS));
+                if (BackendConnectionMonitor.getInstance(project).isConnectionOk()) {
+                    project.getService(ApiPerformanceMonitor.class).addPerformance(method.getName(), stopWatch.getTime(TimeUnit.MILLISECONDS));
+                }
                 if (LOGGER.isTraceEnabled()) {
                     Log.log(LOGGER::trace, "Api call {} took {} milliseconds", method.getName(), stopWatch.getTime(TimeUnit.MILLISECONDS));
                 }

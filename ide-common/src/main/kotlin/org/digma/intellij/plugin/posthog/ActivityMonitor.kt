@@ -13,6 +13,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.datetime.toJavaInstant
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
+import org.digma.intellij.plugin.analytics.BackendInfoHolder
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.common.UniqueGeneratedUserId
 import org.digma.intellij.plugin.common.objectToJson
@@ -85,7 +86,6 @@ class ActivityMonitor(private val project: Project) : Disposable {
 
         registerSessionDetails()
 
-        ServerVersionMonitor.getInstance(project)
         PluginActivityMonitor.getInstance(project)
 
         settingsChangeTracker.start(this)
@@ -334,7 +334,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
                 "ide.version" to ideVersion,
                 "ide.build" to ideBuildNumber,
                 "plugin.version" to pluginVersion,
-                "server.version" to ServerVersionMonitor.getInstance(project).getServerVersion(),
+                "server.version" to BackendInfoHolder.getInstance(project).getAbout()?.applicationVersion.toString(),
                 "user.type" to if (isDevUser) "internal" else "external"
             )
 
@@ -423,7 +423,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
         details["user.type"] = if (UniqueGeneratedUserId.isDevUser) "internal" else "external"
         details["error source"] = source
         details["plugin.version"] = pluginVersion
-        details["server.version"] = ServerVersionMonitor.getInstance(project).getServerVersion()
+        details["server.version"] = BackendInfoHolder.getInstance(project).getAbout()?.applicationVersion.toString()
 
 
         capture(
@@ -466,7 +466,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
                     "ide.version" to ideVersion,
                     "ide.build" to ideBuildNumber,
                     "plugin.version" to pluginVersion,
-                    "server.version" to ServerVersionMonitor.getInstance(project).getServerVersion(),
+                    "server.version" to BackendInfoHolder.getInstance(project).getAbout()?.applicationVersion.toString(),
                     "user.type" to if (isDevUser) "internal" else "external"
                 )
             )

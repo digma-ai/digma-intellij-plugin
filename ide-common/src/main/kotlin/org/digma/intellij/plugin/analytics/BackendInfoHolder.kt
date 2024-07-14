@@ -1,20 +1,24 @@
 package org.digma.intellij.plugin.analytics
 
 import com.intellij.collaboration.async.disposingScope
-import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
+import org.digma.intellij.plugin.common.DisposableAdaptor
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.AboutResult
+import org.digma.intellij.plugin.posthog.ActivityMonitor
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.time.Duration.Companion.minutes
 
 /**
  * keep the backend info and tracks it on connection events.
@@ -22,7 +26,7 @@ import java.util.concurrent.atomic.AtomicReference
  * in that case to do it on background but then the EDT will wait for the api call, and we don't want that.
  */
 @Service(Service.Level.PROJECT)
-class BackendInfoHolder(val project: Project) : Disposable {
+class BackendInfoHolder(val project: Project) : DisposableAdaptor {
 
     private val logger: Logger = Logger.getInstance(BackendInfoHolder::class.java)
 
@@ -35,14 +39,6 @@ class BackendInfoHolder(val project: Project) : Disposable {
         }
     }
 
-    fun loadOnStartup() {
-        updateInBackground()
-    }
-
-
-    override fun dispose() {
-        //nothing to do, used as parent disposable
-    }
 
     init {
         project.messageBus.connect(this)
@@ -64,27 +60,40 @@ class BackendInfoHolder(val project: Project) : Disposable {
                 Log.log(logger::debug, "got apiClientChanged")
                 updateInBackground()
             })
-    }
 
 
-    //updateInBackground is also called every time the analytics client is replaced
-    private fun updateInBackground() {
         @Suppress("UnstableApiUsage")
         disposingScope().launch {
-            try {
-
-                aboutRef.set(AnalyticsService.getInstance(project).about)
-
-            } catch (e: Throwable) {
-                val isConnectionException = ExceptionUtils.isAnyConnectionException(e)
-
-                if (!isConnectionException) {
-                    ErrorReporter.getInstance().reportError("BackendUtilsKt.updateInBackground", e)
-                }
+            while (isActive) {
+                update()
+                delay(1.minutes.inWholeMilliseconds)
             }
         }
     }
 
+
+    private fun updateInBackground() {
+        @Suppress("UnstableApiUsage")
+        disposingScope().launch {
+            update()
+        }
+    }
+
+
+    //must be called in background coroutine
+    private fun update() {
+        try {
+            aboutRef.set(AnalyticsService.getInstance(project).about)
+            aboutRef.get()?.let {
+                ActivityMonitor.getInstance(project).registerServerInfo(it)
+            }
+        } catch (e: Throwable) {
+            val isConnectionException = ExceptionUtils.isAnyConnectionException(e)
+            if (!isConnectionException) {
+                ErrorReporter.getInstance().reportError("BackendInfoHolder.update", e)
+            }
+        }
+    }
 
 
     fun getAbout(): AboutResult? {
@@ -104,7 +113,6 @@ class BackendInfoHolder(val project: Project) : Disposable {
     }
 
 
-
     fun isCentralized(): Boolean {
         return aboutRef.get()?.let {
             it.isCentralize ?: false
@@ -121,16 +129,8 @@ class BackendInfoHolder(val project: Project) : Disposable {
 
         @Suppress("UnstableApiUsage")
         val deferred = disposingScope().async {
-            try {
-                aboutRef.set(AnalyticsService.getInstance(project).about)
-            } catch (e: Throwable) {
-                val isConnectionException = ExceptionUtils.isAnyConnectionException(e)
-                if (!isConnectionException) {
-                    ErrorReporter.getInstance().reportError("BackendUtilsKt.getAboutInBackgroundNowWithTimeout", e)
-                }
-            }
+            update()
         }
-
 
         return runBlocking {
             try {

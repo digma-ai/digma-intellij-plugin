@@ -63,7 +63,7 @@ class InsightsService(val project: Project) : InsightsServiceImpl(project) {
             SetInsightDataListMessage(insights)
         } catch (e: AnalyticsServiceException) {
             Log.debugWithException(logger, project, e, "Error loading insights {}", e.message)
-            val error = ErrorPayload(e.meaningfulMessage)
+            val error = ErrorPayload(e.nonNullMessage)
             SetInsightDataListMessage("{\"totalCount\":0,\"insights\":[]}",error)
         }
 
@@ -78,7 +78,7 @@ class InsightsService(val project: Project) : InsightsServiceImpl(project) {
             SetIssuesDataListMessage(issues)
         } catch (e: AnalyticsServiceException) {
             Log.debugWithException(logger, project, e, "Error loading issues {}", e.message)
-            val error = ErrorPayload(e.meaningfulMessage)
+            val error = ErrorPayload(e.nonNullMessage)
             SetIssuesDataListMessage("{\"totalCount\":0,\"insights\":[]}", error)
         }
 

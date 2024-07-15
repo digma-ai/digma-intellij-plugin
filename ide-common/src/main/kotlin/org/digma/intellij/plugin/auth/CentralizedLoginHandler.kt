@@ -100,7 +100,7 @@ class CentralizedLoginHandler(analyticsProvider: RestAnalyticsProvider) : Abstra
             //and user will be redirected to log in again
             if (e is AuthenticationException) {
                 val errorMessage = ExceptionUtils.getNonEmptyMessage(e)
-                reportPosthogEvent("loginOrRefresh failed", mapOf("error" to errorMessage.toString()))
+                reportPosthogEvent("loginOrRefresh failed", mapOf("error" to errorMessage))
                 logout()
             }
 

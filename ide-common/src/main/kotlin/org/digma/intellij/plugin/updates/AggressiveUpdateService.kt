@@ -123,7 +123,7 @@ class AggressiveUpdateService(val project: Project) : Disposable {
                         } catch (e: Throwable) {
                             val message = ExceptionUtils.getNonEmptyMessage(e)
                             Log.debugWithException(logger, e, "error in apiClientChanged {}", message)
-                            errorReporter.reportError("${this::class.simpleName}.apiClientChanged", e)
+                            errorReporter.reportError("AggressiveUpdateService.apiClientChanged", e)
                         }
 
                         //and call startMonitoring just in case it is stopped by a previous connectionLost but there was no connection gained

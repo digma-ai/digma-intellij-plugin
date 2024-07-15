@@ -94,7 +94,7 @@ public class DashboardMessageRouterHandler extends BaseMessageRouterHandler {
             ErrorReporter.getInstance().reportError(getProject(), "DashboardMessageRouterHandler.getData", e);
 
             var errorCode = e.getErrorCode();
-            var errorMessage = e.getMeaningfulMessage();
+            var errorMessage = e.getNonNullMessage();
             if (errorCode == 404) {
                 errorMessage = "Digma analysis backend version is outdated. Please update.";
             }

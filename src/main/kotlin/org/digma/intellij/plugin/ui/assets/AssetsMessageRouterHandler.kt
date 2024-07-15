@@ -47,7 +47,7 @@ class AssetsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHand
             SetCategoriesDataMessage(payload)
         } catch (e: AnalyticsServiceException) {
             Log.warnWithException(logger, project, e, "Error loading categories {}", e.message)
-            val error = ErrorPayload(e.meaningfulMessage)
+            val error = ErrorPayload(e.nonNullMessage)
             val payload = objectMapper.readTree("{ \"assetCategories\": [] }")
             SetCategoriesDataMessage(payload, error)
         }
@@ -77,7 +77,7 @@ class AssetsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHand
             SetAssetsDataMessage(payload)
         }catch (e: AnalyticsServiceException){
             Log.warnWithException(logger,project,e,"Error loading assets {}",e)
-            val error = ErrorPayload(e.meaningfulMessage)
+            val error = ErrorPayload(e.nonNullMessage)
             val payload = objectMapper.readTree("")
             SetAssetsDataMessage(payload,error)
         }

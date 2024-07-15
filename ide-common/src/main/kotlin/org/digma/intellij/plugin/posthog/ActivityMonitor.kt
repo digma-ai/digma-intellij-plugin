@@ -327,7 +327,6 @@ class ActivityMonitor(private val project: Project) : Disposable {
 
             val details = mutableMapOf<String, Any>(
                 "error.source" to "plugin",
-                "action" to "unknown",
                 "message" to message,
                 "os.type" to osType,
                 "ide.name" to ideName,
@@ -346,11 +345,9 @@ class ActivityMonitor(private val project: Project) : Disposable {
                     stringWriter.toString()
                 }
 
-                val exceptionMessage: String = it.let {
-                    ExceptionUtils.getNonEmptyMessage(it)
-                } ?: ""
+                val exceptionMessage: String = ExceptionUtils.getNonEmptyMessage(it)
 
-                val causeExceptionType = ExceptionUtils.getFirstRealExceptionCauseTypeName(it)
+                val causeExceptionType = ExceptionUtils.findFirstRealExceptionCauseTypeName(it)
 
                 details["exception.message"] = exceptionMessage
                 details["exception.stack-trace"] = exceptionStackTrace
@@ -397,11 +394,9 @@ class ActivityMonitor(private val project: Project) : Disposable {
                 stringWriter.toString()
             }
 
-            val exceptionMessage: String = it.let {
-                ExceptionUtils.getNonEmptyMessage(it)
-            } ?: ""
+            val exceptionMessage: String = ExceptionUtils.getNonEmptyMessage(it)
 
-            val causeExceptionType = ExceptionUtils.getFirstRealExceptionCauseTypeName(it)
+            val causeExceptionType = ExceptionUtils.findFirstRealExceptionCauseTypeName(it)
 
             details["exception.message"] = exceptionMessage
             details["exception.stack-trace"] = exceptionStackTrace
@@ -447,7 +442,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
             val stringWriter = StringWriter()
             exception.printStackTrace(PrintWriter(stringWriter))
 
-            val exceptionMessage: String? = ExceptionUtils.getNonEmptyMessage(exception)
+            val exceptionMessage: String = ExceptionUtils.getNonEmptyMessage(exception)
 
             val eventName = if (isConnectionException) "connection error" else "analytics api error"
 
@@ -458,8 +453,8 @@ class ActivityMonitor(private val project: Project) : Disposable {
                     "apiMethodName" to methodName,
                     "message" to message,
                     "exception.type" to exception.javaClass.name,
-                    "cause.exception.type" to ExceptionUtils.getFirstRealExceptionCauseTypeName(exception),
-                    "exception.message" to exceptionMessage.toString(),
+                    "cause.exception.type" to ExceptionUtils.findFirstRealExceptionCauseTypeName(exception),
+                    "exception.message" to exceptionMessage,
                     "exception.stack-trace" to stringWriter.toString(),
                     "os.type" to osType,
                     "ide.name" to ideName,
@@ -889,6 +884,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
 
     }
 
+    @Suppress("unused")
     fun registerAddEnvironment(environment: String) {
 
         PersistenceService.getInstance().setEnvironmentAddedTimestamp()
@@ -988,6 +984,5 @@ class ActivityMonitor(private val project: Project) : Disposable {
             "api-performance-issue", details
         )
     }
-
 
 }

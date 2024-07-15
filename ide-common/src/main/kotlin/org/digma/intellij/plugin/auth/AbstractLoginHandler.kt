@@ -15,7 +15,7 @@ abstract class AbstractLoginHandler(protected val analyticsProvider: RestAnalyti
 
     protected val authApiClient = AuthApiClient(analyticsProvider)
 
-    protected fun defaultAccountExists(): Boolean {
+    private fun defaultAccountExists(): Boolean {
         return DigmaDefaultAccountHolder.getInstance().account != null
     }
 
@@ -56,7 +56,7 @@ abstract class AbstractLoginHandler(protected val analyticsProvider: RestAnalyti
                 Log.warnWithException(logger, e, "Exception in login, url {}", analyticsProvider.apiUrl)
                 ErrorReporter.getInstance().reportError("AuthManager.login", e)
                 val errorMessage = ExceptionUtils.getNonEmptyMessage(e)
-                reportPosthogEvent("login failed", mapOf("user" to user, "error" to errorMessage.toString()))
+                reportPosthogEvent("login failed", mapOf("user" to user, "error" to errorMessage))
                 //return no success LoginResult
                 LoginResult(false, null, e.detailedMessage)
             }

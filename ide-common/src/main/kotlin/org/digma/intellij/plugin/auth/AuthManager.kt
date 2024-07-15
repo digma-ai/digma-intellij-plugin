@@ -59,7 +59,6 @@ class AuthManager : Disposable {
     }
 
 
-
     override fun dispose() {
         //nothing to do, used as parent disposable
     }
@@ -221,7 +220,7 @@ class AuthManager : Disposable {
 
             } catch (e: InvocationTargetException) {
 
-                val authenticationException = ExceptionUtils.find(e, AuthenticationException::class.java)
+                val authenticationException = ExceptionUtils.findCause(AuthenticationException::class.java, e)
                 //log debug on AuthenticationException because it happens a lot, every time the token expires
                 if (authenticationException == null) {
                     Log.warnWithException(logger, e, "Exception in auth proxy {}", ExceptionUtils.getNonEmptyMessage(e))

@@ -183,8 +183,6 @@ open class ErrorReporter {
                 return
             }
 
-            //todo: change ActivityMonitor to application service so no need for project
-
             val projectToUse = project ?: findActiveProject()
 
             projectToUse?.let {

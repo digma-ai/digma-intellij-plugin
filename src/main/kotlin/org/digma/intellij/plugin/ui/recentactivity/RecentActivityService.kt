@@ -87,7 +87,7 @@ class RecentActivityService(val project: Project) : Disposable {
             recentActivityData
 
         } catch (e: AnalyticsServiceException) {
-            Log.debugWithException(logger, project, e, "AnalyticsServiceException for getRecentActivity: {}", e.meaningfulMessage)
+            Log.debugWithException(logger, project, e, "AnalyticsServiceException for getRecentActivity: {}", e.nonNullMessage)
             ErrorReporter.getInstance().reportError(project, "RecentActivityService.getRecentActivities", e)
             null
         }

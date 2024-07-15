@@ -130,16 +130,12 @@ class ContinuousPerformanceMetricsReporter : Disposable {
 
                     findActiveProject()?.takeIf { isProjectValid(it) }?.let { project ->
 
-                        getAnalyticsService(project).let { analyticsService ->
-                            val result: PerformanceMetricsResponse = Retries.retryWithResult({
-                                analyticsService.performanceMetrics
-                            }, AnalyticsServiceException::class.java, 30000, 20)
+                        val result = AnalyticsService.getInstance(project).performanceMetrics
 
-                            if (result.metrics.isNotEmpty()) {
-                                filterMetrics(result)
-                                Log.log(logger::info, "registering continuous performance metrics")
-                                getActivityMonitor(project).registerPerformanceMetrics(result, false)
-                            }
+                        if (result.metrics.isNotEmpty()) {
+                            filterMetrics(result)
+                            Log.log(logger::info, "registering continuous performance metrics")
+                            getActivityMonitor(project).registerPerformanceMetrics(result, false)
                         }
 
                     }

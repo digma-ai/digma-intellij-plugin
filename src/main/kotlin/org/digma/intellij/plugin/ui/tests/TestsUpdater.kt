@@ -88,7 +88,7 @@ class TestsUpdater(private val project: Project) : Disposable {
             Log.warnWithException(logger, e, "error setting tests of span data")
             var errorDescription = e.toString()
             if (e is AnalyticsServiceException) {
-                errorDescription = e.getMeaningfulMessage()
+                errorDescription = e.nonNullMessage
             }
             val message = SetLatestTestsMessage(
                 Payload(null, ErrorPayload(errorDescription))

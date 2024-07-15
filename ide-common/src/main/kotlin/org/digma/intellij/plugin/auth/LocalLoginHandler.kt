@@ -120,7 +120,7 @@ class LocalLoginHandler(analyticsProvider: RestAnalyticsProvider) : AbstractLogi
             //and we'll do silent login on the next loginOrRefresh
             if (e is AuthenticationException) {
                 val errorMessage = ExceptionUtils.getNonEmptyMessage(e)
-                reportPosthogEvent("loginOrRefresh failed", mapOf("error" to errorMessage.toString()))
+                reportPosthogEvent("loginOrRefresh failed", mapOf("error" to errorMessage))
                 logout()
             }
 

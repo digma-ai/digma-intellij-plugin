@@ -26,7 +26,6 @@ import org.digma.intellij.plugin.model.rest.insights.issues.GetIssuesRequestPayl
 import org.digma.intellij.plugin.model.rest.livedata.*;
 import org.digma.intellij.plugin.model.rest.lowlevel.*;
 import org.digma.intellij.plugin.model.rest.navigation.*;
-import org.digma.intellij.plugin.model.rest.notifications.*;
 import org.digma.intellij.plugin.model.rest.recentactivity.*;
 import org.digma.intellij.plugin.model.rest.tests.*;
 import org.digma.intellij.plugin.model.rest.user.*;
@@ -36,7 +35,7 @@ import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
-import org.jetbrains.annotations.*;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
 import java.lang.reflect.*;
@@ -133,34 +132,6 @@ public class AnalyticsService implements Disposable {
     }
 
 
-    @NotNull
-    public ConnectionTestResult testRemoteConnection(@NotNull String serverUrl, @Nullable String token) {
-        try (RestAnalyticsProvider analyticsProvider = new RestAnalyticsProvider(serverUrl, Collections.singletonList(new AuthenticationProvider() {
-            @Nullable
-            @Override
-            public String getHeaderName() {
-                return "Authorization";
-            }
-
-            @Nullable
-            @Override
-            public String getHeaderValue() {
-                return token;
-            }
-        }), message -> Log.log(LOGGER::debug, message))) {
-            //todo: use health check to test connection
-            var envs = analyticsProvider.getEnvironments();
-            if (envs != null) {
-                return ConnectionTestResult.success();
-            }
-            return ConnectionTestResult.failure("unknown");
-        } catch (Exception e) {
-            ErrorReporter.getInstance().reportError(project, "AnalyticsService.testRemoteConnection", e);
-            return ConnectionTestResult.failure(ExceptionUtils.getNonEmptyMessage(e));
-        }
-
-    }
-
 
     public List<Env> getEnvironments() {
         try {
@@ -227,13 +198,13 @@ public class AnalyticsService implements Disposable {
     }
 
 
-    public LinkUnlinkTicketResponse linkTicket(String insightId, String ticketLink) throws AnalyticsServiceException{
+    public LinkUnlinkTicketResponse linkTicket(String insightId, String ticketLink) throws AnalyticsServiceException {
         var env = getCurrentEnvironmentId();
         var linkRequest = new LinkTicketRequest(env, insightId, ticketLink);
         return executeCatching(() -> analyticsProviderProxy.linkTicket(linkRequest));
     }
 
-    public LinkUnlinkTicketResponse unlinkTicket(String insightId) throws AnalyticsServiceException{
+    public LinkUnlinkTicketResponse unlinkTicket(String insightId) throws AnalyticsServiceException {
         var env = getCurrentEnvironmentId();
         var unlinkRequest = new UnlinkTicketRequest(env, insightId);
         return executeCatching(() -> analyticsProviderProxy.unlinkTicket(unlinkRequest));
@@ -265,7 +236,6 @@ public class AnalyticsService implements Disposable {
     public String getErrorDetails(String errorUid) throws AnalyticsServiceException {
         return executeCatching(() -> analyticsProviderProxy.getErrorDetails(errorUid));
     }
-
 
 
     public void setInsightCustomStartTime(String insightId) throws AnalyticsServiceException {
@@ -354,30 +324,11 @@ public class AnalyticsService implements Disposable {
     }
 
 
-    public String getNotifications(String notificationsStartDate, String userId, int pageNumber, int pageSize, boolean isRead) throws AnalyticsServiceException {
-        var env = getCurrentEnvironmentId();
-        return executeCatching(() ->
-                analyticsProviderProxy.getNotifications(new NotificationsRequest(env, userId, notificationsStartDate, pageNumber, pageSize, isRead)));
-    }
-
-    public void setReadNotificationsTime(String upToDateTime, String userId) throws AnalyticsServiceException {
-        var env = getCurrentEnvironmentId();
-        executeCatching(() -> {
-            analyticsProviderProxy.setReadNotificationsTime(new SetReadNotificationsRequest(env, userId, upToDateTime));
-            return null;
-        });
-    }
-
     public void resetThrottlingStatus() throws AnalyticsServiceException {
         executeCatching(() -> {
             analyticsProviderProxy.resetThrottlingStatus();
             return null;
         });
-    }
-
-    public UnreadNotificationsCountResponse getUnreadNotificationsCount(String notificationsStartDate, String userId) throws AnalyticsServiceException {
-        var env = getCurrentEnvironmentId();
-        return executeCatching(() -> analyticsProviderProxy.getUnreadNotificationsCount(new GetUnreadNotificationsCountRequest(env, userId, notificationsStartDate)));
     }
 
 
@@ -506,7 +457,7 @@ public class AnalyticsService implements Disposable {
     }
 
     @NotNull
-    public InsightsStatsResult getInsightsStats(String spanCodeObjectId, String insightTypes) throws AnalyticsServiceException {
+    public InsightsStatsResult getInsightsStats(String spanCodeObjectId, String insightTypes) {
         try {
             var envId = getCurrentEnvironmentId();
             var params = new HashMap<String, Object>();
@@ -521,8 +472,6 @@ public class AnalyticsService implements Disposable {
             }
 
             return executeCatching(() -> analyticsProviderProxy.getInsightsStats(params));
-        } catch (NoSelectedEnvironmentException e) {
-            Log.debugWithException(LOGGER, project, e, "error calling  insights stats", e.getMessage());
         } catch (Exception e) {
             Log.debugWithException(LOGGER, project, e, "error calling  insights stats", e.getMessage());
         }
@@ -558,15 +507,32 @@ public class AnalyticsService implements Disposable {
     private <T> T executeCatching(Supplier<T> tSupplier) throws AnalyticsServiceException {
         try {
             return tSupplier.get();
-        } catch (AnalyticsProviderException e) {
-            throw new AnalyticsServiceException("An AnalyticsProviderException was caught", e);
-        } catch (UndeclaredThrowableException e) {
-            throw new AnalyticsServiceException("UndeclaredThrowableException caught " + e.getMessage(), e.getUndeclaredThrowable());
+
+            //Exception handling:
+            //The AnalyticsProvider interface does not declare any checked exceptions in any method, it always throws a AnalyticsProviderException
+            // which is an unchecked exception.
+            //our proxy catches InvocationTargetException and throws it, this exception will wrap the real AnalyticsProviderException, actually
+            // it will wrap UndeclaredThrowableException from the AuthProxy.
+            //thr proxy will always throw an UndeclaredThrowableException wrapping the InvocationTargetException.
+            //we should try to find the real AnalyticsProviderException,wrap it with AnalyticsServiceException and throw.
+            //the proxy
+        } catch (UndeclaredThrowableException undeclaredThrowableException) {
+            //we have two proxies, the AnalyticsService proxy and AuthManager proxy, so this could be an UndeclaredThrowableException
+            // wrapping InvocationTargetException wrapping UndeclaredThrowableException wrapping InvocationTargetException.
+            //there must be an AnalyticsProviderException as cause because all methods should go through the proxies.
+            var analyticsProviderException = ExceptionUtils.findCause(AnalyticsProviderException.class, undeclaredThrowableException);
+            if (analyticsProviderException != null) {
+                throw new AnalyticsServiceException(analyticsProviderException);
+            } else {
+                Throwable cause = ExceptionUtils.findFirstNonWrapperException(undeclaredThrowableException);
+                throw new AnalyticsServiceException(Objects.requireNonNullElse(cause, undeclaredThrowableException));
+            }
         } catch (RuntimeExceptionWithAttachments e) {
-            //this is a platform exception as a result of asserting non UI thread when calling backend API
+            //this is a platform exception that will be thrown as a result of asserting non UI thread when calling backend API,
+            // we want this exception to be thrown as is , it should be noticed during development and fixed.
             throw e;
         } catch (Throwable e) {
-            throw new AnalyticsServiceException("Unknown exception " + e.getMessage(), e);
+            throw new AnalyticsServiceException(e);
         }
     }
 
@@ -598,7 +564,7 @@ public class AnalyticsService implements Disposable {
         private final ReentrantLock myConnectionLostLock = new ReentrantLock();
 
 
-        private final Set<String> methodsToIgnoreExceptions = Set.of(new String[]{"getPerformanceMetrics", "getAbout", "getVersions"});
+        private final Set<String> methodsThatShouldNotChangeConnectionStatus = Set.of(new String[]{"getPerformanceMetrics", "getAbout", "getVersions"});
 
         //sometimes the connection lost is momentary or regaining is momentary, use the alarm to wait
         // before notifying listeners of connectionLost/ConnectionGained
@@ -680,22 +646,14 @@ public class AnalyticsService implements Disposable {
 
             } catch (InvocationTargetException e) {
 
-                //some methods may fail due to missing endpoint or some other technical issue that
-                // is known. these methods should not impact the connection status or mark connectionLost.
-                //so just throw an exception, code that calls these methods should be ready for AnalyticsServiceException.
-                if (methodsToIgnoreExceptions.contains(method.getName())) {
-                    Log.debugWithException(LOGGER, e, "failed executing method {}", method);
-                    throw new AnalyticsServiceException(e);
-                }
-
-
                 //this message should help us understand the logs when debugging issues. it will help
                 // understand that there are more and more exceptions.
                 //code below and in handleInvocationTargetException will log the exceptions but our Log class
                 // will not explode the logs, so we don't see all the exceptions in the log as they happen.
                 //this message will explode the idea.log if user has digma trace logging on and no backend running,
                 // which shouldn't happen, users should not have digma trace logging on all the time.
-                Log.log(LOGGER::trace,"got exception in AnalyticsService {}",ExceptionUtils.findFirstRealExceptionCause(e));
+                var realCause = ExceptionUtils.findFirstRealExceptionCause(e);
+                Log.log(LOGGER::trace, "got exception in AnalyticsService {}", Objects.requireNonNullElse(realCause, e));
 
 
                 //Note: when logging LOGGER.error idea will pop up a red message which we don't want, so only report warn messages.
@@ -704,17 +662,8 @@ public class AnalyticsService implements Disposable {
                 //log connection exceptions only the first time and show an error notification.
                 // while status is in error, following connection exceptions will not be logged, other exceptions
                 // will be logged only once.
-
-                //handleInvocationTargetException may rethrow an exception, if it didn't then always throw
-                // an AnalyticsServiceException.
                 handleInvocationTargetException(e, method, args);
-                if (e.getCause() != null) {
-                    //this is caught in executeCatching
-                    var analyticsProviderException = ExceptionUtils.findCause(AnalyticsProviderException.class, e);
-                    throw Objects.requireNonNullElse(analyticsProviderException, e.getCause());
-                } else {
-                    throw new AnalyticsServiceException(e);
-                }
+                throw e;
 
             } catch (Exception e) {
                 errorReportingHelper.addIfNewError(e);
@@ -734,7 +683,7 @@ public class AnalyticsService implements Disposable {
         }
 
 
-        private void handleInvocationTargetException(InvocationTargetException invocationTargetException, Method method, Object[] args) throws Throwable {
+        private void handleInvocationTargetException(InvocationTargetException invocationTargetException, Method method, Object[] args) {
             boolean isConnectionException = isAnyConnectionException(invocationTargetException);
             String message;
             if (isConnectionException(invocationTargetException)) {
@@ -750,12 +699,19 @@ public class AnalyticsService implements Disposable {
             }
 
 
+            ErrorReporter.getInstance().reportAnalyticsServiceError(project, "AnalyticsInvocationHandler.invoke." + message, method.getName(), invocationTargetException, isConnectionException);
+
+
             if (isConnectionOK()) {
                 //if more than one thread enter this section the worst that will happen is that we
                 // report the error more than once but connectionLost will be fired once because
                 // markConnectionLostAndNotify locks, marks and notifies only if connection ok.
                 if (isConnectionException) {
-                    markConnectionLostAndNotify();
+                    //some methods should not impact the connection status,
+                    // these are methods that are known to fail sometimes, and we don't want to mark the connection as lost.
+                    if (!methodsThatShouldNotChangeConnectionStatus.contains(method.getName())) {
+                        markConnectionLostAndNotify();
+                    }
                     errorReportingHelper.addIfNewError(invocationTargetException);
                     Log.warnWithException(LOGGER, project, invocationTargetException, "Connection exception: error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), message);
                     NotificationUtil.notifyWarning(project, "<html>Connection error with Digma backend api for method " + method.getName() + ".<br> "
@@ -773,9 +729,6 @@ public class AnalyticsService implements Disposable {
             } else if (errorReportingHelper.addIfNewError(invocationTargetException)) {
                 Log.warnWithException(LOGGER, project, invocationTargetException, "New Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), message);
             }
-
-            ErrorReporter.getInstance().reportAnalyticsServiceError(project, "AnalyticsInvocationHandler.invoke." + message, method.getName(), invocationTargetException, isConnectionException);
-
         }
 
 
@@ -893,24 +846,9 @@ public class AnalyticsService implements Disposable {
 
 
         public boolean addIfNewError(Exception e) {
-            var cause = findRealError(e);
-            var errorName = cause.getClass().getName();
+            var cause = findFirstRealExceptionCause(e);
+            var errorName = Objects.requireNonNullElse(cause, e).getClass().getName();
             return errors.add(errorName);
-        }
-
-        @NotNull
-        private Throwable findRealError(Exception e) {
-
-            Throwable cause = e.getCause();
-            while (cause != null && !cause.getClass().equals(AnalyticsProviderException.class)) {
-                cause = cause.getCause();
-            }
-
-            if (cause != null && cause.getCause() != null) {
-                return cause.getCause();
-            }
-
-            return cause == null ? e : cause;
         }
     }
 

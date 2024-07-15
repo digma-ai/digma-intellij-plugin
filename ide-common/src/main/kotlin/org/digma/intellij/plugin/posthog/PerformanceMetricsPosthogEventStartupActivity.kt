@@ -12,11 +12,11 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.analytics.AnalyticsService
-import org.digma.intellij.plugin.analytics.AnalyticsServiceException
-import org.digma.intellij.plugin.common.Retries
 import org.digma.intellij.plugin.common.findActiveProject
 import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import org.digma.intellij.plugin.errorreporting.SEVERITY_LOW
+import org.digma.intellij.plugin.errorreporting.SEVERITY_PROP_NAME
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.version.PerformanceMetricsResponse
 import org.digma.intellij.plugin.persistence.PersistenceService
@@ -87,19 +87,15 @@ class ContinuousPerformanceMetricsReporter : Disposable {
 
                 findActiveProject()?.takeIf { isProjectValid(it) }?.let { project ->
 
-                    getAnalyticsService(project).let { analyticsService ->
-                        val result: PerformanceMetricsResponse = Retries.retryWithResult({
-                            analyticsService.performanceMetrics
-                        }, AnalyticsServiceException::class.java, 30000, 20)
+                    val result: PerformanceMetricsResponse = AnalyticsService.getInstance(project).performanceMetrics
 
-                        if (result.metrics.isNotEmpty()) {
-                            filterMetrics(result)
-                            getActivityMonitor(project).let { activityMonitor ->
-                                Log.log(logger::info, "registering first time performance metrics")
-                                activityMonitor.registerPerformanceMetrics(result, true)
-                                if (!PersistenceService.getInstance().isFirstTimePerformanceMetrics()) {
-                                    PersistenceService.getInstance().setFirstTimePerformanceMetrics()
-                                }
+                    if (result.metrics.isNotEmpty()) {
+                        filterMetrics(result)
+                        getActivityMonitor(project).let { activityMonitor ->
+                            Log.log(logger::info, "registering first time performance metrics")
+                            activityMonitor.registerPerformanceMetrics(result, true)
+                            if (!PersistenceService.getInstance().isFirstTimePerformanceMetrics()) {
+                                PersistenceService.getInstance().setFirstTimePerformanceMetrics()
                             }
                         }
                     }
@@ -112,7 +108,11 @@ class ContinuousPerformanceMetricsReporter : Disposable {
             } catch (e: Exception) {
                 Log.warnWithException(logger, e, "failed in first time registerPerformanceMetrics")
                 ErrorReporter.getInstance()
-                    .reportError("PerformanceMetricsPosthogEventStartupActivity.firstTimePerformanceMetrics", e)
+                    .reportError(
+                        "PerformanceMetricsPosthogEventStartupActivity.firstTimePerformanceMetrics",
+                        e,
+                        mapOf(SEVERITY_PROP_NAME to SEVERITY_LOW)
+                    )
             }
         }
     }
@@ -150,7 +150,11 @@ class ContinuousPerformanceMetricsReporter : Disposable {
                 } catch (e: Exception) {
                     Log.warnWithException(logger, e, "failed in continuous registerPerformanceMetrics")
                     ErrorReporter.getInstance()
-                        .reportError("PerformanceMetricsPosthogEventStartupActivity.continuousPerformanceMetrics", e)
+                        .reportError(
+                            "PerformanceMetricsPosthogEventStartupActivity.continuousPerformanceMetrics",
+                            e,
+                            mapOf(SEVERITY_PROP_NAME to SEVERITY_LOW)
+                        )
                     delay(1.hours.inWholeMilliseconds)
                 }
             }

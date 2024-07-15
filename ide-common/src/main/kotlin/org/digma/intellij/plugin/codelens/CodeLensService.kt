@@ -58,7 +58,7 @@ class CodeLensService(private val project: Project) : Disposable {
                     Log.log(logger::trace, "codelensChanged called for files {}", psiFilesUrls)
                     refreshFiles(psiFilesUrls)
                 } catch (e: Throwable) {
-                    ErrorReporter.getInstance().reportError("CodeLensService.codelensChanged", e)
+                    ErrorReporter.getInstance().reportError(project, "CodeLensService.codelensChanged", e)
                 }
             }
 
@@ -67,7 +67,7 @@ class CodeLensService(private val project: Project) : Disposable {
                     Log.log(logger::trace, "codelensChanged called")
                     refreshAll()
                 } catch (e: Throwable) {
-                    ErrorReporter.getInstance().reportError("CodeLensService.codelensChanged", e)
+                    ErrorReporter.getInstance().reportError(project, "CodeLensService.codelensChanged", e)
                 }
             }
         })
@@ -194,7 +194,6 @@ class CodeLensService(private val project: Project) : Disposable {
     }
 
 
-
     private class CodeLensContainer {
         val codeLensList: MutableList<Pair<TextRange, CodeVisionEntry>> = mutableListOf()
     }
@@ -225,8 +224,8 @@ class CodeLensService(private val project: Project) : Disposable {
                 }
                 Backgroundable.ensurePooledThreadWithoutReadAccess {
                     val contextPayload = objectToJsonNode(ChangeScopeMessagePayload(lens))
-                    val scopeContext = ScopeContext("IDE/CODE_LENS_CLICKED",contextPayload)
-                    ScopeManager.getInstance(project).changeScope(SpanScope(lens.scopeCodeObjectId),false,null,scopeContext,null)
+                    val scopeContext = ScopeContext("IDE/CODE_LENS_CLICKED", contextPayload)
+                    ScopeManager.getInstance(project).changeScope(SpanScope(lens.scopeCodeObjectId), false, null, scopeContext, null)
                 }
 
             } catch (e: Exception) {

@@ -146,7 +146,7 @@ public class AnalyticsService implements Disposable {
             return envs;
         } catch (AnalyticsServiceException e) {
             if (!ExceptionUtils.isAnyConnectionException(e)) {
-                ErrorReporter.getInstance().reportError("AnalyticsService.getEnvironments", e);
+                ErrorReporter.getInstance().reportError(project, "AnalyticsService.getEnvironments", e);
             }
             return Collections.emptyList();
         }

@@ -5,7 +5,7 @@ import com.intellij.openapi.progress.EmptyProgressIndicator
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
-import org.digma.intellij.plugin.errorreporting.SEVERITY_MEDIUM_TRY_FIX
+import org.digma.intellij.plugin.errorreporting.SEVERITY_MEDIUM
 import org.digma.intellij.plugin.errorreporting.SEVERITY_PROP_NAME
 import org.digma.intellij.plugin.log.Log
 
@@ -51,9 +51,7 @@ open class ProcessContext(val processName: String) {
                 errors.forEach { err ->
                     Log.warnWithException(logger, err, "Exception in $processName")
                     ErrorReporter.getInstance().reportError(
-                        project, "$processName.$hint", err, mapOf(
-                            SEVERITY_PROP_NAME to SEVERITY_MEDIUM_TRY_FIX
-                        )
+                        project, "$processName.$hint", err, mapOf(SEVERITY_PROP_NAME to SEVERITY_MEDIUM)
                     )
                 }
             }

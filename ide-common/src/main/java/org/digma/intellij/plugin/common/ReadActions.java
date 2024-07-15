@@ -4,7 +4,6 @@ import com.intellij.openapi.application.*;
 import com.intellij.openapi.diagnostic.Logger;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 
-import java.util.Collections;
 import java.util.function.Supplier;
 
 public class ReadActions {
@@ -19,7 +18,7 @@ public class ReadActions {
         if (ApplicationManager.getApplication().isReadAccessAllowed()) {
             ReadAccessException readAccessException = new ReadAccessException("Must not run in read access");
             LOGGER.error("Must not run in read access", readAccessException);
-            ErrorReporter.getInstance().reportInternalFatalError("assertNotInReadAccess", readAccessException, Collections.emptyMap());
+            ErrorReporter.getInstance().reportError("assertNotInReadAccess", readAccessException);
             throw readAccessException;
         }
     }

@@ -188,7 +188,7 @@ class InsightsService(val project: Project) : InsightsServiceImpl(project) {
                 PersistenceService.getInstance().setFirstTimeInsightReceived()
             }
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("InsightsService.onInsightReceived", e)
+            ErrorReporter.getInstance().reportError(project, "InsightsService.onInsightReceived", e)
         }
     }
 

@@ -12,8 +12,6 @@ import org.digma.intellij.plugin.bulklistener.AbstractBulkFileChangeListener
 import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.common.runInReadAccessWithResult
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
-import org.digma.intellij.plugin.errorreporting.SEVERITY_LOW_NO_FIX
-import org.digma.intellij.plugin.errorreporting.SEVERITY_PROP_NAME
 import org.digma.intellij.plugin.idea.psi.isJvmSupportedFile
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.psi.PsiUtils
@@ -72,8 +70,7 @@ class BulkFileChangeListenerForJvmNavigationDiscovery : AbstractBulkFileChangeLi
                 ErrorReporter.getInstance().reportError(
                     project, "BulkFileChangeListenerForJvmNavigationDiscovery.processEvents", e,
                     mapOf(
-                        "fileEvent" to fileEvent.toString(),
-                        SEVERITY_PROP_NAME to SEVERITY_LOW_NO_FIX
+                        "fileEvent" to fileEvent.toString()
                     )
                 )
             }

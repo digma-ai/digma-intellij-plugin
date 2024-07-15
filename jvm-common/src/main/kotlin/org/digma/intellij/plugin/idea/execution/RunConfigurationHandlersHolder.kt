@@ -32,7 +32,7 @@ class RunConfigurationHandlersHolder {
                 Thread.currentThread().setContextClassLoader(this::class.java.classLoader)
                 ServiceLoader.load(RunConfigurationInstrumentationHandler::class.java).stream().map { it.get() }.toList()
             } catch (e: Throwable) {
-                ErrorReporter.getInstance().reportInternalFatalError("RunConfigurationHandlersHolder.init", e)
+                ErrorReporter.getInstance().reportError("RunConfigurationHandlersHolder.init", e)
                 emptyList()
             } finally {
                 Thread.currentThread().setContextClassLoader(currentClassLoader)

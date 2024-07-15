@@ -143,7 +143,7 @@ public class CodeLensProvider implements Disposable {
 
             } catch (Throwable e) {
                 Log.warnWithException(LOGGER, project, e, "error in code lens refresh");
-                ErrorReporter.getInstance().reportError("CodeLensProvider.refresh", e);
+                ErrorReporter.getInstance().reportError(project, "CodeLensProvider.refresh", e);
             }
         });
 

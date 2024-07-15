@@ -73,7 +73,7 @@ internal class CodeVisionRefresh(private val project: Project) {
     }.recoverCatching { throwable: Throwable ->
 
         if (ideVersion241OrAbove()) {
-            ErrorReporter.getInstance().reportInternalFatalError(
+            ErrorReporter.getInstance().reportError(
                 project, "CodeVisionRefresh.clearModificationStampMH",
                 throwable,
                 mapOf(
@@ -98,7 +98,7 @@ internal class CodeVisionRefresh(private val project: Project) {
         methodHandler
     }.onFailure { throwable: Throwable ->
 
-        ErrorReporter.getInstance().reportInternalFatalError(
+        ErrorReporter.getInstance().reportError(
             project, "CodeVisionRefresh.clearModificationStampMH",
             throwable,
             mapOf(
@@ -117,7 +117,7 @@ internal class CodeVisionRefresh(private val project: Project) {
             Log.log(logger::trace, "refreshForFile called for file {}", psiFile)
             restartDaemonCodeAnalyzer(project, setOf(psiFile.virtualFile))
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("CodeVisionRefresh.refreshForFile", e)
+            ErrorReporter.getInstance().reportError(project, "CodeVisionRefresh.refreshForFile", e)
         }
     }
 
@@ -136,7 +136,7 @@ internal class CodeVisionRefresh(private val project: Project) {
 
             restartDaemonCodeAnalyzer(project, files)
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("CodeVisionRefresh.refreshForFiles", e)
+            ErrorReporter.getInstance().reportError(project, "CodeVisionRefresh.refreshForFiles", e)
         }
     }
 
@@ -146,7 +146,7 @@ internal class CodeVisionRefresh(private val project: Project) {
             Log.log(logger::trace, "refreshAll called")
             restartDaemonCodeAnalyzer(project)
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("CodeVisionRefresh.refreshAll", e)
+            ErrorReporter.getInstance().reportError(project, "CodeVisionRefresh.refreshAll", e)
         }
     }
 

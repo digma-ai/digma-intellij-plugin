@@ -2,11 +2,11 @@ package org.digma.intellij.plugin.idea.psi.discovery.endpoint
 
 import com.intellij.psi.search.GlobalSearchScope
 import org.digma.intellij.plugin.common.SearchScopeProvider
+import org.digma.intellij.plugin.document.BuildDocumentInfoProcessContext
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.process.ProcessContext
-import org.digma.intellij.plugin.document.BuildDocumentInfoProcessContext
 import org.digma.intellij.plugin.psi.PsiFileCachedValueWithUri
 import org.digma.intellij.plugin.psi.PsiUtils
 import java.util.Objects

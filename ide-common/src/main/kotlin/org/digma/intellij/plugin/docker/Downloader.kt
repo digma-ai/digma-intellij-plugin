@@ -3,8 +3,6 @@ package org.digma.intellij.plugin.docker
 import com.intellij.openapi.diagnostic.Logger
 import org.digma.intellij.plugin.common.Retries
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
-import org.digma.intellij.plugin.errorreporting.SEVERITY_HIGH_TRY_FIX
-import org.digma.intellij.plugin.errorreporting.SEVERITY_PROP_NAME
 import org.digma.intellij.plugin.log.Log
 import java.io.File
 import java.io.FileOutputStream
@@ -57,10 +55,7 @@ class Downloader {
                 ErrorReporter.getInstance().reportError(
                     null, "Downloader.ensureDirectoryExist",
                     "ensureDirectoryExist,could not create directory for docker-compose.yml in $downloadDir",
-                    mapOf(
-                        SEVERITY_PROP_NAME to SEVERITY_HIGH_TRY_FIX,
-                        "error hint" to "could not create directory for docker-compose.yml in $downloadDir"
-                    )
+                    mapOf("error hint" to "could not create directory for docker-compose.yml in $downloadDir")
                 )
             }
         }
@@ -106,11 +101,8 @@ class Downloader {
                 if (responseCode != HttpURLConnection.HTTP_OK) {
                     ErrorReporter.getInstance().reportError(
                         null, "Downloader.downloadAndCopyFile",
-                        "download from ${url.toString()}",
-                        mapOf(
-                            SEVERITY_PROP_NAME to SEVERITY_HIGH_TRY_FIX,
-                            "responseCode" to responseCode.toString()
-                        )
+                        "download from $url",
+                        mapOf("responseCode" to responseCode.toString())
                     )
                 } else {
                     connection.inputStream.use {

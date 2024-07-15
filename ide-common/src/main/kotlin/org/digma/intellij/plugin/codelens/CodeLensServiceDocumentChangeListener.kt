@@ -57,7 +57,7 @@ class CodeLensServiceDocumentChangeListener(private val project: Project) : File
 
         } catch (e: Throwable) {
             Log.warnWithException(logger, e, "Exception in fileOpened")
-            ErrorReporter.getInstance().reportError(project, "${this::class.simpleName}.fileOpened", e)
+            ErrorReporter.getInstance().reportError(project, "CodeLensServiceDocumentChangeListener.fileOpened", e)
         }
     }
 
@@ -101,14 +101,15 @@ class CodeLensServiceDocumentChangeListener(private val project: Project) : File
                                     Log.warnWithException(logger, e, "Exception in documentChanged")
                                     ErrorReporter.getInstance().reportError(
                                         project,
-                                        "${this::class.simpleName}.DocumentListener.documentChanged", e
+                                        "CodeLensServiceDocumentChangeListener.DocumentListener.documentChanged", e
                                     )
                                 }
                             }, 5000)
 
                         } catch (e: Throwable) {
                             Log.warnWithException(logger, e, "Exception in documentChanged")
-                            ErrorReporter.getInstance().reportError(project, "${this::class.simpleName}.DocumentListener.documentChanged", e)
+                            ErrorReporter.getInstance()
+                                .reportError(project, "CodeLensServiceDocumentChangeListener.DocumentListener.documentChanged", e)
                         }
                     }
                 }, parentDisposable)

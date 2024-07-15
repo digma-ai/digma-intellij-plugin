@@ -27,7 +27,7 @@ public class CodeLensProviderDocumentInfoAndEnvironmentChangedListener implement
                     project.getMessageBus().syncPublisher(CodeLensChanged.CODELENS_CHANGED_TOPIC).codelensChanged(psiFile);
                 }
             } catch (Throwable e) {
-                ErrorReporter.getInstance().reportError("CodeLensProviderDocumentInfoAndEnvironmentChangedListener.documentInfoChanged", e);
+                ErrorReporter.getInstance().reportError(project, "CodeLensProviderDocumentInfoAndEnvironmentChangedListener.documentInfoChanged", e);
             }
         });
     }
@@ -41,7 +41,7 @@ public class CodeLensProviderDocumentInfoAndEnvironmentChangedListener implement
                     project.getMessageBus().syncPublisher(CodeLensChanged.CODELENS_CHANGED_TOPIC).codelensChanged(changedPsiFiles);
                 }
             } catch (Throwable e) {
-                ErrorReporter.getInstance().reportError("CodeLensProviderDocumentInfoAndEnvironmentChangedListener.environmentChanged", e);
+                ErrorReporter.getInstance().reportError(project, "CodeLensProviderDocumentInfoAndEnvironmentChangedListener.environmentChanged", e);
             }
         });
     }

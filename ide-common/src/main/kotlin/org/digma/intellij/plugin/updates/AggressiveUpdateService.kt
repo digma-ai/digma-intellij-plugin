@@ -161,7 +161,7 @@ class AggressiveUpdateService(val project: Project) : Disposable {
             return
         }
 
-        if (!isProjectValid(project)){
+        if (!isProjectValid(project)) {
             Log.log(logger::debug, "startMonitoring called but project is not valid, not starting monitoring")
             return
         }
@@ -187,7 +187,7 @@ class AggressiveUpdateService(val project: Project) : Disposable {
                     failures++
                     val message = ExceptionUtils.getNonEmptyMessage(e)
                     Log.debugWithException(logger, e, "error in startMonitoring {}", message)
-                    errorReporter.reportError("${this::class.simpleName}.startMonitoring", e)
+                    errorReporter.reportError("AggressiveUpdateService.startMonitoring", e)
                     try {
                         //maybe backend is down or had timeout, wait 10 seconds
                         delay(10.seconds.inWholeMilliseconds)

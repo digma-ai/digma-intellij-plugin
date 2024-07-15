@@ -6,8 +6,6 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collections;
-
 public class EDT {
 
     private static final Logger LOGGER = Logger.getInstance(EDT.class);
@@ -31,7 +29,7 @@ public class EDT {
     }
 
     public static void assertEDT(String message) {
-        if (ApplicationManager.getApplication().isDispatchThread()){
+        if (ApplicationManager.getApplication().isDispatchThread()) {
             return;
         }
         //log an error here, intellij will pop up an error message. usually we don't want an error message
@@ -40,20 +38,18 @@ public class EDT {
     }
 
 
-
-    public static void assertIsDispatchThread(){
+    public static void assertIsDispatchThread() {
         ApplicationManager.getApplication().assertIsDispatchThread();
     }
 
-    public static void assertNonDispatchThread(){
+    public static void assertNonDispatchThread() {
         if (ApplicationManager.getApplication().isDispatchThread()) {
             EDTAccessException edtAccessException = new EDTAccessException("Must not run on EDT");
             LOGGER.error("Must not run on EDT", edtAccessException);
-            ErrorReporter.getInstance().reportInternalFatalError("assertNonDispatchThread", edtAccessException, Collections.emptyMap());
+            ErrorReporter.getInstance().reportError("assertNonDispatchThread", edtAccessException);
             throw edtAccessException;
         }
     }
-
 
 
     public static boolean isEdt() {

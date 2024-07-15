@@ -1,17 +1,18 @@
 package org.digma.intellij.plugin.codelens
 
+import com.intellij.collaboration.async.disposingScope
 import com.intellij.openapi.project.Project
 import com.jetbrains.rd.util.ConcurrentHashMap
+import kotlinx.coroutines.launch
+import org.digma.intellij.plugin.common.DisposableAdaptor
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
-import org.digma.intellij.plugin.errorreporting.SEVERITY_HIGH_TRY_FIX
-import org.digma.intellij.plugin.errorreporting.SEVERITY_PROP_NAME
 import org.digma.intellij.plugin.model.lens.CodeLens
 
 private const val NUMBER_OF_PROVIDERS = 30
 
 //don't convert to light service because it will register on all IDEs, but we want it only on Idea and Pycharm
 @Suppress("LightServiceMigrationCode")
-class CodeVisionProviderToLensSelector(private val project: Project) {
+class CodeVisionProviderToLensSelector(private val project: Project) : DisposableAdaptor {
 
     private val providerToLensIds = ConcurrentHashMap(mutableMapOf<String, String>())
 
@@ -23,15 +24,16 @@ class CodeVisionProviderToLensSelector(private val project: Project) {
         // in that case just register more providers in CodeVisionProviders.kt and in org.digma.intellij-with-codevision.xml.
         if (providerToLensIds.size >= NUMBER_OF_PROVIDERS) {
 
-            //todo: maybe execute on background to free up this code quickly. although reportError should be very fast
-            ErrorReporter.getInstance().reportError(
-                project, "CodeVisionProviderToLensSelector.selectLensForProvider",
-                "selectLensForProvider,not enough code vision providers",
-                mapOf(
-                    SEVERITY_PROP_NAME to SEVERITY_HIGH_TRY_FIX,
-                    "error hint" to "not enough code vision providers"
+            //execute on background to free up this code quickly. although reportError should be very fast
+            @Suppress("UnstableApiUsage")
+            disposingScope().launch {
+                ErrorReporter.getInstance().reportError(
+                    project, "CodeVisionProviderToLensSelector.selectLensForProvider",
+                    "selectLensForProvider,not enough code vision providers",
+                    mapOf("error hint" to "not enough code vision providers")
                 )
-            )
+            }
+
             return null
         }
 

@@ -103,7 +103,7 @@ private constructor(
                             updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
                             sendBackendAboutInfo(jbCefBrowser.cefBrowser, project)
                         } catch (e: Throwable) {
-                            ErrorReporter.getInstance().reportError("JCefComponent.apiClientChanged", e)
+                            ErrorReporter.getInstance().reportError(project, "JCefComponent.apiClientChanged", e)
                         }
                     }
                 })
@@ -150,7 +150,7 @@ private constructor(
                 }
                 sendUserInfoMessage(jbCefBrowser.cefBrowser, authInfo.userId, project)
             } catch (e: Throwable) {
-                ErrorReporter.getInstance().reportError("JCefComponent.userChanged", e)
+                ErrorReporter.getInstance().reportError(project, "JCefComponent.userChanged", e)
             }
         }, parentDisposable)
 
@@ -202,7 +202,7 @@ private constructor(
                     val status = service<DockerService>().getActualRunningEngine(project)
                     updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
                 } catch (e: Throwable) {
-                    ErrorReporter.getInstance().reportError("JCefComponent.settingsChanged", e)
+                    ErrorReporter.getInstance().reportError(project, "JCefComponent.settingsChanged", e)
                 }
             }
         }, parentDisposable)
@@ -214,7 +214,7 @@ private constructor(
                     try {
                         sendUserEmail(jbCefBrowser.cefBrowser, email)
                     } catch (e: Throwable) {
-                        ErrorReporter.getInstance().reportError("JCefComponent.userRegistered", e)
+                        ErrorReporter.getInstance().reportError(project, "JCefComponent.userRegistered", e)
                     }
                 }
             })
@@ -228,7 +228,7 @@ private constructor(
                             sendCurrentEnvironment(jbCefBrowser.cefBrowser, it)
                         }
                     } catch (e: Throwable) {
-                        ErrorReporter.getInstance().reportError("JCefComponent.environmentChanged", e)
+                        ErrorReporter.getInstance().reportError(project, "JCefComponent.environmentChanged", e)
                     }
                 }
 
@@ -239,7 +239,7 @@ private constructor(
                             getAllEnvironments(project)
                         )
                     } catch (e: Throwable) {
-                        ErrorReporter.getInstance().reportError("JCefComponent.environmentsListChanged", e)
+                        ErrorReporter.getInstance().reportError(project, "JCefComponent.environmentsListChanged", e)
                     }
                 }
             })
@@ -253,7 +253,7 @@ private constructor(
                         isObservabilityEnabled
                     )
                 } catch (e: Throwable) {
-                    ErrorReporter.getInstance().reportError("JCefComponent.observabilityChanged", e)
+                    ErrorReporter.getInstance().reportError(project, "JCefComponent.observabilityChanged", e)
                 }
             }
         )
@@ -277,7 +277,7 @@ private constructor(
                             environmentId
                         )
                     } catch (e: Throwable) {
-                        ErrorReporter.getInstance().reportError("JCefComponent.scopeChanged", e)
+                        ErrorReporter.getInstance().reportError(project, "JCefComponent.scopeChanged", e)
                     }
                 }
             }
@@ -289,7 +289,7 @@ private constructor(
                     try {
                         sendJcefStateMessage(jbCefBrowser.cefBrowser, state)
                     } catch (e: Throwable) {
-                        ErrorReporter.getInstance().reportError("JCefComponent.stateChanged", e)
+                        ErrorReporter.getInstance().reportError(project, "JCefComponent.stateChanged", e)
                     }
                 }
             }
@@ -316,7 +316,7 @@ private constructor(
                             allIssuesCount
                         )
                     } catch (e: Throwable) {
-                        ErrorReporter.getInstance().reportError("JCefComponent.insightStatsChanged", e)
+                        ErrorReporter.getInstance().reportError(project, "JCefComponent.insightStatsChanged", e)
                     }
                 }
             }

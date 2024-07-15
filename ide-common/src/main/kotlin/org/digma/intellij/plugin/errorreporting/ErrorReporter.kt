@@ -21,9 +21,10 @@ import kotlin.time.toJavaDuration
 
 
 const val SEVERITY_PROP_NAME = "severity"
-const val SEVERITY_LOW_NO_FIX = "low, reporting only,no need to fix"
-const val SEVERITY_MEDIUM_TRY_FIX = "medium, try to fix"
-const val SEVERITY_HIGH_TRY_FIX = "high, try to fix"
+const val SEVERITY_LOW = "low"
+const val SEVERITY_MEDIUM = "medium"
+const val SEVERITY_HIGH = "high"
+const val SEVERITY_DEFAULT = SEVERITY_HIGH
 
 //class and all public methods should be open so that NoOpProxy will work
 open class ErrorReporter {
@@ -109,62 +110,56 @@ open class ErrorReporter {
         the event will contain the stack trace and exception message.
      */
     open fun reportError(project: Project?, message: String, throwable: Throwable) {
-        reportError(
-            project, message, throwable, mapOf(
-                SEVERITY_PROP_NAME to SEVERITY_HIGH_TRY_FIX
-            )
-        )
+        reportError(project, message, throwable, mapOf())
     }
 
-    private fun isTooFrequent(message: String, stackTrace: String?): Boolean {
-        if (!stackTrace.isNullOrEmpty()) {
-            return frequencyDetector.isTooFrequentStackTrace(message, stackTrace)
-        }
-        return frequencyDetector.isTooFrequentError(message, "")
-    }
 
-    open fun reportError(message: String, stackTrace: String?, details: Map<String, Any>, project: Project?, useFrequencyDetector: Boolean = true) {
-        if (message.isNullOrEmpty() && stackTrace.isNullOrEmpty()) {
-            reportError(
-                project, "At least one of the following properties must be set: [message] or [stackTrace].", "reportError",
-                mapOf(
-                    SEVERITY_PROP_NAME to SEVERITY_HIGH_TRY_FIX
+    open fun reportUIError(project: Project?, message: String, stackTrace: String?, details: Map<String, Any>, useFrequencyDetector: Boolean = true) {
+
+        try {
+            if (message.isEmpty() && stackTrace.isNullOrEmpty()) {
+                reportError(
+                    project, "At least one of the following properties must be set: [message] or [stackTrace].", "reportError",
+                    mapOf(SEVERITY_PROP_NAME to SEVERITY_HIGH)
                 )
-            )
-            return
-        }
-        if (useFrequencyDetector && isTooFrequent(message, stackTrace)) {
-            return
-        }
-        val projectToUse = project ?: findActiveProject()
+                return
+            }
 
-        projectToUse?.let {
-            if (it.isDisposed) return
-            ActivityMonitor.getInstance(it).registerError(null, message, details)
+            if (useFrequencyDetector && frequencyDetector.isTooFrequentStackTrace(message, stackTrace)) {
+                return
+            }
+
+            val projectToUse = project ?: findActiveProject()
+
+            projectToUse?.let {
+                if (it.isDisposed) return
+                ActivityMonitor.getInstance(it).registerError(null, message, ensureDetailsWithSeverity(details))
+            }
+        } catch (e: Exception) {
+            Log.warnWithException(logger, e, "error in error reporter")
         }
     }
 
     //this method is used to report an error that is not an exception. it should contain some details to say what the error is
     open fun reportError(project: Project?, message: String, action: String, details: Map<String, String>) {
 
-
-        if (frequencyDetector.isTooFrequentError(message, action)) {
-            return
-        }
-
-
-        val projectToUse = project ?: findActiveProject()
-
-        projectToUse?.let {
-            if (it.isDisposed) return
-
-            val detailsToSend = details.toMutableMap()
-            detailsToSend["action"] = action
-            if (!detailsToSend.containsKey(SEVERITY_PROP_NAME)) {
-                detailsToSend[SEVERITY_PROP_NAME] = SEVERITY_HIGH_TRY_FIX
+        try {
+            if (frequencyDetector.isTooFrequentError(message, action)) {
+                return
             }
 
-            ActivityMonitor.getInstance(it).registerError(null, message, detailsToSend)
+            val projectToUse = project ?: findActiveProject()
+
+            projectToUse?.let {
+                if (it.isDisposed) return
+
+                val detailsToSend = details.toMutableMap()
+                detailsToSend["action"] = action
+
+                ActivityMonitor.getInstance(it).registerError(null, message, ensureDetailsWithSeverity(detailsToSend))
+            }
+        } catch (e: Exception) {
+            Log.warnWithException(logger, e, "error in error reporter")
         }
     }
 
@@ -187,16 +182,7 @@ open class ErrorReporter {
 
             projectToUse?.let {
                 if (it.isDisposed) return
-
-                //add SEVERITY_HIGH_TRY_FIX if severity doesn't exist
-                val detailsToSend = if (details.containsKey(SEVERITY_PROP_NAME)) {
-                    details
-                } else {
-                    val mm = details.toMutableMap()
-                    mm[SEVERITY_PROP_NAME] = SEVERITY_HIGH_TRY_FIX
-                    mm
-                }
-                ActivityMonitor.getInstance(it).registerError(throwable, message, detailsToSend)
+                ActivityMonitor.getInstance(it).registerError(throwable, message, ensureDetailsWithSeverity(details))
             }
         } catch (e: Exception) {
             Log.warnWithException(logger, e, "error in error reporter")
@@ -229,10 +215,6 @@ open class ErrorReporter {
     }
 
 
-    open fun reportBackendError(message: String, action: String) {
-        reportBackendError(findActiveProject(), message, action)
-    }
-
     open fun reportBackendError(project: Project?, message: String, action: String) {
         if (frequencyDetector.isTooFrequentError(message, action)) {
             return
@@ -246,26 +228,14 @@ open class ErrorReporter {
     }
 
 
-    //better to use overloaded method that accepts project
-    open fun reportInternalFatalError(source: String, exception: Throwable, details: Map<String, String> = mapOf()) {
-        //todo: change ActivityMonitor to application service
-        val projectToUse = findActiveProject() ?: return
-        reportInternalFatalError(projectToUse, source, exception, details)
-    }
-
-    //this error should be reported only when it's a fatal error that we must fix quickly.
-    //don't use it for all errors.
-    //currently will be reported from EDT.assertNonDispatchThread and ReadActions.assertNotInReadAccess
-    // which usually should be caught in development but if not, are very urgent to fix.
-    // if the error is not a result of an exception create a new RuntimeException and send it, so we have the stack trace.
-    open fun reportInternalFatalError(project: Project, source: String, exception: Throwable, details: Map<String, String> = mapOf()) {
-
-        if (frequencyDetector.isTooFrequentException(source, exception)) {
-            return
+    private fun ensureDetailsWithSeverity(details: Map<String, Any>): Map<String, Any> {
+        return if (details.containsKey(SEVERITY_PROP_NAME)) {
+            details
+        } else {
+            val detailsWithSeverity = details.toMutableMap()
+            detailsWithSeverity[SEVERITY_PROP_NAME] = SEVERITY_DEFAULT
+            detailsWithSeverity
         }
-
-        ActivityMonitor.getInstance(project).registerInternalFatalError(source, exception, details)
-
     }
 
 }

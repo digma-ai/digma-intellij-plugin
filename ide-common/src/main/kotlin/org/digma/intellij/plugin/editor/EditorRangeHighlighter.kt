@@ -80,7 +80,7 @@ class EditorRangeHighlighter(private val project: Project) : Disposable {
 
             } catch (e: Throwable) {
                 Log.warnWithException(logger, project, e, "error adding highlighter {}", e)
-                ErrorReporter.getInstance().reportError("", e)
+                ErrorReporter.getInstance().reportError(project, "EditorRangeHighlighter.highlightMethod", e)
             } finally {
                 if (myLock.isHeldByCurrentThread) {
                     myLock.unlock()
@@ -102,7 +102,7 @@ class EditorRangeHighlighter(private val project: Project) : Disposable {
                 }
             } catch (e: Throwable) {
                 Log.warnWithException(logger, project, e, "error removing highlighter {}", e)
-                ErrorReporter.getInstance().reportError("", e)
+                ErrorReporter.getInstance().reportError(project, "EditorRangeHighlighter.clearHighlighter", e)
             } finally {
                 if (myLock.isHeldByCurrentThread) {
                     myLock.unlock()

@@ -18,7 +18,7 @@ import org.digma.intellij.plugin.common.DisposableAdaptor
 import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
-import org.digma.intellij.plugin.errorreporting.SEVERITY_MEDIUM_TRY_FIX
+import org.digma.intellij.plugin.errorreporting.SEVERITY_LOW
 import org.digma.intellij.plugin.errorreporting.SEVERITY_PROP_NAME
 import org.digma.intellij.plugin.log.Log
 import java.util.concurrent.Callable
@@ -80,12 +80,7 @@ class ProcessManager(private val project: Project) : Disposable {
         try {
             return runUnderProcess(task, context, maxRetries, myModificationTracker)
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError(
-                "ProcessManager.runUnderProcess", e, mapOf(
-                    "process.name" to context.processName,
-                    SEVERITY_PROP_NAME to SEVERITY_MEDIUM_TRY_FIX
-                )
-            )
+            ErrorReporter.getInstance().reportError("ProcessManager.runUnderProcess", e, mapOf("process.name" to context.processName))
             return ProcessResult(success = false, canceled = false, duration = Duration.ZERO, error = e)
         } finally {
             myModificationTracker?.let {
@@ -183,18 +178,12 @@ class ProcessManager(private val project: Project) : Disposable {
 
     private fun logPCE(e: ProcessCanceledException, context: ProcessContext) {
         ErrorReporter.getInstance().reportError(
-            "${context.processName}.onPCE", e, mapOf(
-                SEVERITY_PROP_NAME to SEVERITY_MEDIUM_TRY_FIX
-            )
+            "${context.processName}.onPCE", e, mapOf(SEVERITY_PROP_NAME to SEVERITY_LOW)
         )
     }
 
     private fun logError(e: Throwable, context: ProcessContext) {
-        ErrorReporter.getInstance().reportError(
-            "${context.processName}.onError", e, mapOf(
-                SEVERITY_PROP_NAME to SEVERITY_MEDIUM_TRY_FIX
-            )
-        )
+        ErrorReporter.getInstance().reportError("${context.processName}.onError", e)
     }
 
 

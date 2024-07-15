@@ -41,11 +41,10 @@ import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.common.isValidVirtualFile
 import org.digma.intellij.plugin.common.runInReadAccess
 import org.digma.intellij.plugin.common.runInReadAccessWithResult
+import org.digma.intellij.plugin.document.BuildDocumentInfoProcessContext
 import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.editor.CaretContextService
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
-import org.digma.intellij.plugin.errorreporting.SEVERITY_MEDIUM_TRY_FIX
-import org.digma.intellij.plugin.errorreporting.SEVERITY_PROP_NAME
 import org.digma.intellij.plugin.idea.buildsystem.JvmBuildSystemHelperService
 import org.digma.intellij.plugin.idea.deps.ModulesDepsService
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
@@ -60,7 +59,6 @@ import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret
 import org.digma.intellij.plugin.model.discovery.TextRange
 import org.digma.intellij.plugin.process.assertUnderProgress
-import org.digma.intellij.plugin.document.BuildDocumentInfoProcessContext
 import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.psi.PsiFileCachedValueWithUri
 import org.digma.intellij.plugin.psi.PsiFileNotFountException
@@ -139,22 +137,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
             }, { e ->
                 context.addError("buildDocumentInfo", e)
                 DocumentInfo(psiFileCachedValue.uri, mutableMapOf())
-            }) {
-                if (context.hasErrors()) {
-                    context.errorsList().forEach { entry ->
-                        val hint = entry.key
-                        val errors = entry.value
-                        errors.forEach { err ->
-                            Log.warnWithException(logger, project, err, "Exception in buildDocumentInfo")
-                            ErrorReporter.getInstance().reportError(
-                                project, "${this::class.simpleName}.buildDocumentInfo.$hint", err, mapOf(
-                                    SEVERITY_PROP_NAME to SEVERITY_MEDIUM_TRY_FIX
-                                )
-                            )
-                        }
-                    }
-                }
-            }
+            })
 
             return documentInfo
 
@@ -507,7 +490,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                         method?.sourcePsi
                     }
                 } catch (e: Exception) {
-                    ErrorReporter.getInstance().reportError(project, "AbstractJvmLanguageService.getPsiElementForMethod", e)
+                    ErrorReporter.getInstance().reportError(project, "${this::class.java.simpleName}.getPsiElementForMethod", e)
                     null
                 }
             }
@@ -543,7 +526,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                     val uClass = findClassByClassName(classNameToFind, GlobalSearchScope.allScope(project))
                     return@allowSlowOperation uClass?.sourcePsi
                 } catch (e: Exception) {
-                    ErrorReporter.getInstance().reportError(project, "AbstractJvmLanguageService.getPsiElementForClassByName", e)
+                    ErrorReporter.getInstance().reportError(project, "${this::class.java.simpleName}.getPsiElementForClassByName", e)
                     null
                 }
             }
@@ -634,7 +617,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                 } catch (e: ProcessCanceledException) {
                     throw e
                 } catch (e: Throwable) {
-                    ErrorReporter.getInstance().reportError(project, "AbstractJvmLanguageService.canInstrumentMethod", e)
+                    ErrorReporter.getInstance().reportError(project, "${this::class.java.simpleName}.canInstrumentMethod", e)
                 }
 
                 return MethodObservabilityInfo(methodId, hasMissingDependency = false, canInstrumentMethod = false, hasAnnotation = false)

@@ -18,18 +18,25 @@ class FrequencyDetector(cacheExpirationTime: java.time.Duration) {
         val occurrences = counter.incrementAndGet()
         return occurrences > 1
     }
-    fun isTooFrequentStackTrace(message: String, stacktrace: String): Boolean {
-        val hash = stacktrace.hashCode()
-        val counter = myCache.getOrCreate(message, hash.toString())
-        val occurrences = counter.incrementAndGet()
-        return occurrences > 1
+
+    fun isTooFrequentStackTrace(message: String, stackTrace: String?): Boolean {
+        //this method is meant to test stack trace which may be a long string.
+        //its better not to use a long string as key, so we use the stacktrace hash.
+        //if stacktrace is null just check isTooFrequentError
+
+        return stackTrace?.let {
+            val hash = it.hashCode()
+            val counter = myCache.getOrCreate(message, hash.toString())
+            val occurrences = counter.incrementAndGet()
+            occurrences > 1
+        } ?: isTooFrequentError(message, "")
     }
+
     fun isTooFrequentError(message: String, action: String): Boolean {
         val counter = myCache.getOrCreate(message, action)
         val occurrences = counter.incrementAndGet()
         return occurrences > 1
     }
-
 
     fun isTooFrequentException(message: String, t: Throwable): Boolean {
         val hash = computeAccurateTraceHashCode(t)
@@ -37,7 +44,6 @@ class FrequencyDetector(cacheExpirationTime: java.time.Duration) {
         val occurrences = counter.incrementAndGet()
         return occurrences > 1
     }
-
 
     private fun computeAccurateTraceHashCode(throwable: Throwable): Int {
         val backtrace = getBacktrace(throwable)

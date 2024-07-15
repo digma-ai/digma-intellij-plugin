@@ -70,7 +70,7 @@ class CodeLensHost(project: Project) : LifetimedProjectComponent(project) {
             installCodeLens(psiFile, codeLens)
         } catch (e: Throwable) {
             Log.warnWithException(logger, project, e, "error in refresh for {}", psiFile.virtualFile)
-            ErrorReporter.getInstance().reportError("CodeLensHost.refresh", e)
+            ErrorReporter.getInstance().reportError(project, "CodeLensHost.refresh", e)
         }
     }
 

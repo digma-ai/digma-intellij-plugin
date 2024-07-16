@@ -151,7 +151,7 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                                     pl.data?.let {
                                         val stackTrace = pl.data["exception.stack-trace"] as String?
                                         val message = pl.data["message"] as String
-                                        ErrorReporter.getInstance().reportError(message, stackTrace, pl.data, project, false)
+                                        ErrorReporter.getInstance().reportUIError(project, message, stackTrace, pl.data, false)
                                     }
                                 } else {
                                     if (pl.data == null) {

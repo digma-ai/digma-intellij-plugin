@@ -16,8 +16,7 @@ import git4idea.repo.GitRepository
 import git4idea.repo.GitRepositoryManager
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
-import org.digma.intellij.plugin.errorreporting.SEVERITY_HIGH_TRY_FIX
-import org.digma.intellij.plugin.errorreporting.SEVERITY_LOW_NO_FIX
+import org.digma.intellij.plugin.errorreporting.SEVERITY_LOW
 import org.digma.intellij.plugin.errorreporting.SEVERITY_PROP_NAME
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
@@ -90,18 +89,13 @@ class VcsService(project: Project) : BaseVcsService(project) {
             ErrorReporter.getInstance()
                 .reportError(
                     project, "VcsService.getCommitIdForCurrentProject.timeout", e, mapOf(
-                        SEVERITY_PROP_NAME to SEVERITY_LOW_NO_FIX
+                        SEVERITY_PROP_NAME to SEVERITY_LOW
                     )
                 )
             Log.warnWithException(LOGGER, project, e, "error in getCommitIdForCurrentProject")
             null
         } catch (e: java.lang.Exception) {
-            ErrorReporter.getInstance()
-                .reportError(
-                    project, "VcsService.getCommitIdForCurrentProject", e, mapOf(
-                        SEVERITY_PROP_NAME to SEVERITY_HIGH_TRY_FIX
-                    )
-                )
+            ErrorReporter.getInstance().reportError(project, "VcsService.getCommitIdForCurrentProject", e)
             Log.warnWithException(LOGGER, project, e, "error in getCommitIdForCurrentProject")
             null
         }

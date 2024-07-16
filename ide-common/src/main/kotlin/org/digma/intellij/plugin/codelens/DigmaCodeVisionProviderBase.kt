@@ -13,8 +13,6 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiFile
 import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
-import org.digma.intellij.plugin.errorreporting.SEVERITY_HIGH_TRY_FIX
-import org.digma.intellij.plugin.errorreporting.SEVERITY_PROP_NAME
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.psi.LanguageServiceLocator
 import org.digma.intellij.plugin.psi.PsiUtils
@@ -72,7 +70,6 @@ abstract class DigmaCodeVisionProviderBase : DaemonBoundCodeVisionProvider {
         } catch (e: Throwable) {
             ErrorReporter.getInstance().reportError(
                 "DigmaCodeVisionProviderBase.computeForEditor", e, mapOf(
-                    SEVERITY_PROP_NAME to SEVERITY_HIGH_TRY_FIX,
                     "provider id" to id
                 )
             )

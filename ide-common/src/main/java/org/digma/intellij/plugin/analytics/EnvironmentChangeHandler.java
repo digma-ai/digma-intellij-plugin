@@ -90,7 +90,7 @@ public class EnvironmentChangeHandler implements EnvironmentChanged {
                     }
                 }
             } catch (Throwable e) {
-                ErrorReporter.getInstance().reportError("EnvironmentChangeHandler.simulateContextChange", e);
+                ErrorReporter.getInstance().reportError(project, "EnvironmentChangeHandler.simulateContextChange", e);
             }
         });
     }

@@ -379,54 +379,6 @@ class ActivityMonitor(private val project: Project) : Disposable {
         )
     }
 
-    fun registerInternalFatalError(source: String, exception: Throwable, extraDetails: Map<String, String> = mapOf()) {
-
-        val details = mutableMapOf<String, String>()
-
-        details.putAll(extraDetails)
-
-        details["Note"] = "This is an internal reporting of urgent error caught by plugin code and should be fixed ASAP"
-
-        exception.let {
-            val exceptionStackTrace = it.let {
-                val stringWriter = StringWriter()
-                exception.printStackTrace(PrintWriter(stringWriter))
-                stringWriter.toString()
-            }
-
-            val exceptionMessage: String = ExceptionUtils.getNonEmptyMessage(it)
-
-            val causeExceptionType = ExceptionUtils.findFirstRealExceptionCauseTypeName(it)
-
-            details["exception.message"] = exceptionMessage
-            details["exception.stack-trace"] = exceptionStackTrace
-            details["cause.exception.type"] = causeExceptionType
-            details["exception.type"] = it.javaClass.name
-        }
-
-        val osType = System.getProperty("os.name")
-        val ideInfo = ApplicationInfo.getInstance()
-        val ideName = ideInfo.versionName
-        val ideVersion = ideInfo.fullVersion
-        val ideBuildNumber = ideInfo.build.asString()
-        val pluginVersion = SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("unknown")
-
-        details["ide.name"] = ideName
-        details["ide.version"] = ideVersion
-        details["ide.build"] = ideBuildNumber
-        details["os.type"] = osType
-        details["user.type"] = if (UniqueGeneratedUserId.isDevUser) "internal" else "external"
-        details["error source"] = source
-        details["plugin.version"] = pluginVersion
-        details["server.version"] = BackendInfoHolder.getInstance(project).getAbout()?.applicationVersion.toString()
-
-
-        capture(
-            "internal fatal error",
-            details
-        )
-    }
-
 
     fun registerAnalyticsServiceError(exception: Throwable, message: String, methodName: String, isConnectionException: Boolean) {
 

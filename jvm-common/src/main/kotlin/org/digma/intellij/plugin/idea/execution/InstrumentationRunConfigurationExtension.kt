@@ -74,7 +74,7 @@ class InstrumentationRunConfigurationExtension : RunConfigurationExtension() {
                 }
             }
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("${this::class.java.simpleName}.updateJavaParameters", e)
+            ErrorReporter.getInstance().reportError("InstrumentationRunConfigurationExtension.updateJavaParameters", e)
         }
     }
 
@@ -101,7 +101,7 @@ class InstrumentationRunConfigurationExtension : RunConfigurationExtension() {
 
 
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("${this::class.java.simpleName}.reportRunConfig", e)
+            ErrorReporter.getInstance().reportError("InstrumentationRunConfigurationExtension.reportRunConfig", e)
         }
     }
 
@@ -111,7 +111,7 @@ class InstrumentationRunConfigurationExtension : RunConfigurationExtension() {
             ActivityMonitor.getInstance(configuration.project)
                 .reportUnknownConfigurationType(configuration.javaClass.name, configuration.type.id, configuration.type.displayName)
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("${this::class.java.simpleName}.reportUnknownConfigurationType", e)
+            ErrorReporter.getInstance().reportError("InstrumentationRunConfigurationExtension.reportUnknownConfigurationType", e)
         }
     }
 
@@ -134,7 +134,7 @@ class InstrumentationRunConfigurationExtension : RunConfigurationExtension() {
             ActivityMonitor.getInstance(configuration.project)
                 .reportUnhandledConfiguration(desc, buildSystem.name, taskNames, configuration.javaClass.name, configuration.type.displayName)
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("${this::class.java.simpleName}.reportUnhandledConfiguration", e)
+            ErrorReporter.getInstance().reportError("InstrumentationRunConfigurationExtension.reportUnhandledConfiguration", e)
         }
     }
 
@@ -180,7 +180,7 @@ class InstrumentationRunConfigurationExtension : RunConfigurationExtension() {
                 })
             }
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("${this::class.java.simpleName}.attachToProcess", e)
+            ErrorReporter.getInstance().reportError("InstrumentationRunConfigurationExtension.attachToProcess", e)
         }
     }
 

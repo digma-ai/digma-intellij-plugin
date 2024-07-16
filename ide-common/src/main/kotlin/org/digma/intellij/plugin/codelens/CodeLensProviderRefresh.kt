@@ -35,7 +35,8 @@ class CodeLensProviderRefresh(
                             project.messageBus.syncPublisher(CodeLensChanged.CODELENS_CHANGED_TOPIC).codelensChanged(changedPsiFiles)
                         }
                     } catch (e: Throwable) {
-                        ErrorReporter.getInstance().reportError("CodeLensProviderRefresh.CodeLensProvider.refresh", e)
+                        ErrorReporter.getInstance()
+                            .reportError(project, "CodeLensProviderRefresh.CodeLensProvider.refresh", e)
                     }
                 }
             }

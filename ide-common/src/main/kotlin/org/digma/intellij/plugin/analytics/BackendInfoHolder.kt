@@ -90,7 +90,7 @@ class BackendInfoHolder(val project: Project) : DisposableAdaptor {
         } catch (e: Throwable) {
             val isConnectionException = ExceptionUtils.isAnyConnectionException(e)
             if (!isConnectionException) {
-                ErrorReporter.getInstance().reportError("BackendInfoHolder.update", e)
+                ErrorReporter.getInstance().reportError(project, "BackendInfoHolder.update", e)
             }
         }
     }

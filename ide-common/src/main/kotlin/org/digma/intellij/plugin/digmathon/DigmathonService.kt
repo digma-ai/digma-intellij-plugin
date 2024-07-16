@@ -167,7 +167,7 @@ class DigmathonService : Disposable {
             }
         } catch (e: InvalidProductKeyException) {
             reportEvent("product key invalid", mapOf("productKey" to e.productKey))
-            ErrorReporter.getInstance().reportError("${this::class.java.simpleName}.setProductKey", e)
+            ErrorReporter.getInstance().reportError("DigmathonService.setProductKey", e)
             findActiveProject()?.let {
                 NotificationUtil.showBalloonWarning(
                     it,
@@ -177,7 +177,7 @@ class DigmathonService : Disposable {
             }
 
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("${this::class.java.simpleName}.setProductKey", e)
+            ErrorReporter.getInstance().reportError("DigmathonService.setProductKey", e)
         } finally {
             fireProductKeyStateChanged()
         }
@@ -196,10 +196,10 @@ class DigmathonService : Disposable {
             })
         } catch (e: InvalidProductKeyException) {
             reportEvent("product key invalid", mapOf("productKey" to e.productKey))
-            ErrorReporter.getInstance().reportError("${this::class.java.simpleName}.setProductKey", e)
+            ErrorReporter.getInstance().reportError("DigmathonService.setProductKey", e)
             null
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("${this::class.java.simpleName}.setProductKey", e)
+            ErrorReporter.getInstance().reportError("DigmathonService.setProductKey", e)
             null
         }
     }
@@ -231,7 +231,8 @@ class DigmathonService : Disposable {
             val json = objectMapper.writeValueAsString(viewedInsights)
             PersistenceService.getInstance().setDigmathonInsightsViewed(json)
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("DigmathonService.flushInsightsViewedToPersistence", e)
+            ErrorReporter.getInstance()
+                .reportError("DigmathonService.flushInsightsViewedToPersistence", e)
         }
     }
 

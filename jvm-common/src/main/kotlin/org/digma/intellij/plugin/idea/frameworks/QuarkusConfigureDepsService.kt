@@ -168,7 +168,7 @@ class QuarkusConfigureDepsService(private val project: Project) : Disposable {
                 addDependenciesOfQuarkusOtelToRelevantModules()
             }
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("QuarkusConfigureDepsService.buttonClicked.writeAction", e)
+            ErrorReporter.getInstance().reportError(project, "QuarkusConfigureDepsService.buttonClicked.writeAction", e)
         }
 
         Backgroundable.executeOnPooledThread {

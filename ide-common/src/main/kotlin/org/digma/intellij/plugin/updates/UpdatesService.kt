@@ -72,7 +72,7 @@ class UpdatesService(private val project: Project) : Disposable {
                     Log.debugWithException(logger, e, "Exception in checkForNewerVersions")
                 } catch (e: Throwable) {
                     Log.debugWithException(logger, e, "Exception in checkForNewerVersions {}", ExceptionUtils.getNonEmptyMessage(e))
-                    ErrorReporter.getInstance().reportError("UpdatesService.timer", e)
+                    ErrorReporter.getInstance().reportError(project, "UpdatesService.timer", e)
                     try {
                         Log.log(logger::trace, "sleeping {}", delaySeconds)
                         delay(delaySeconds.inWholeMilliseconds)
@@ -100,7 +100,7 @@ class UpdatesService(private val project: Project) : Disposable {
                         Log.debugWithException(logger, e, "Exception in checkForNewerVersions")
                     } catch (e: Throwable) {
                         Log.debugWithException(logger, e, "Exception in checkForNewerVersions {}", ExceptionUtils.getNonEmptyMessage(e))
-                        ErrorReporter.getInstance().reportError("UpdatesService.connectionGained", e)
+                        ErrorReporter.getInstance().reportError(project, "UpdatesService.connectionGained", e)
                     }
                 }
             })
@@ -119,7 +119,7 @@ class UpdatesService(private val project: Project) : Disposable {
                         Log.debugWithException(logger, e, "Exception in checkForNewerVersions")
                     } catch (e: Throwable) {
                         Log.debugWithException(logger, e, "Exception in checkForNewerVersions {}", ExceptionUtils.getNonEmptyMessage(e))
-                        ErrorReporter.getInstance().reportError("UpdatesService.settingsChanged", e)
+                        ErrorReporter.getInstance().reportError(project, "UpdatesService.settingsChanged", e)
                     }
                 }
             })

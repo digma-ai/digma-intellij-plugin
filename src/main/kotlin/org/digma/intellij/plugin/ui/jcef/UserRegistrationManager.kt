@@ -3,8 +3,6 @@ package org.digma.intellij.plugin.ui.jcef
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
-import org.digma.intellij.plugin.errorreporting.SEVERITY_HIGH_TRY_FIX
-import org.digma.intellij.plugin.errorreporting.SEVERITY_PROP_NAME
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 
@@ -30,7 +28,6 @@ class UserRegistrationManager(private val project: Project) {
             project.messageBus.syncPublisher(UserRegistrationEvent.USER_REGISTRATION_TOPIC).userRegistered(userEmail)
         } ?: ErrorReporter.getInstance().reportError(
             project, "UserRegistrationManager.register", "register user email", mapOf(
-                SEVERITY_PROP_NAME to SEVERITY_HIGH_TRY_FIX,
                 "error" to "user registration request without email"
             )
         )

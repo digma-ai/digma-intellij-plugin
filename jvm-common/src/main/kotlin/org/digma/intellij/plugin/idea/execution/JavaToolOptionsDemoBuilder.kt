@@ -35,7 +35,7 @@ class JavaToolOptionsDemoBuilder {
             val instrumentationParams = handler.updateParameters(dummyConfig, SimpleProgramParameters(), null)
             return instrumentationParams?.first
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("SetRunConfigurationMessageBuilder.sendNotSupportedWithJavaToolOptions", e)
+            ErrorReporter.getInstance().reportError("JavaToolOptionsDemoBuilder.buildDemoJavaToolOptions", e)
             return null
         }
     }

@@ -55,7 +55,7 @@ class DocumentsChangeListenerForJvmNavigationDiscovery(private val project: Proj
 
         } catch (e: Throwable) {
             Log.warnWithException(logger, e, "Exception in fileOpened")
-            ErrorReporter.getInstance().reportError(project, "${this::class.simpleName}.fileOpened", e)
+            ErrorReporter.getInstance().reportError(project, "DocumentsChangeListenerForJvmNavigationDiscovery.fileOpened", e)
         }
     }
 
@@ -92,14 +92,15 @@ class DocumentsChangeListenerForJvmNavigationDiscovery(private val project: Proj
                                     Log.warnWithException(logger, e, "Exception in documentChanged")
                                     ErrorReporter.getInstance().reportError(
                                         project,
-                                        "${this::class.simpleName}.DocumentListener.documentChanged", e
+                                        "DocumentsChangeListenerForJvmNavigationDiscovery.DocumentListener.documentChanged", e
                                     )
                                 }
                             }, 5000)
 
                         } catch (e: Throwable) {
                             Log.warnWithException(logger, e, "Exception in documentChanged")
-                            ErrorReporter.getInstance().reportError(project, "${this::class.simpleName}.DocumentListener.documentChanged", e)
+                            ErrorReporter.getInstance()
+                                .reportError(project, "DocumentsChangeListenerForJvmNavigationDiscovery.DocumentListener.documentChanged", e)
                         }
                     }
                 }, parentDisposable)

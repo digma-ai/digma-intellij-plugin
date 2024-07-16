@@ -13,7 +13,7 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiManager
 import com.intellij.util.Alarm
-import com.intellij.util.AlarmFactory
+import org.digma.intellij.plugin.common.allowSlowOperation
 import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.common.isValidVirtualFile
 import org.digma.intellij.plugin.common.runInReadAccessWithResult
@@ -21,6 +21,7 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.psi.PsiUtils
+import java.util.function.Supplier
 
 //any change in the current editor needs a code lens refresh.
 //there is a listener for CodeLensChanged events, but its not enough. the file in the editor may change
@@ -46,7 +47,10 @@ class CodeLensServiceDocumentChangeListener(private val project: Project) : File
             }
 
 
-            val languageService = LanguageService.findLanguageServiceByFile(project, file)
+            val languageService = allowSlowOperation(Supplier {
+                LanguageService.findLanguageServiceByFile(project, file)
+            })
+
 
             //only some languages need code vision support
             if (!languageService.isCodeVisionSupported) {
@@ -64,9 +68,9 @@ class CodeLensServiceDocumentChangeListener(private val project: Project) : File
 
     private fun installDocumentListener(file: VirtualFile, languageService: LanguageService) {
 
-        val psiFile = PsiManager.getInstance(project).findFile(file)
-        if (PsiUtils.isValidPsiFile(psiFile) && languageService.isRelevant(file)) {
-            val document = PsiDocumentManager.getInstance(project).getDocument(psiFile!!)
+        val psiFile = allowSlowOperation(Supplier { PsiManager.getInstance(project).findFile(file) })
+        if (psiFile != null && PsiUtils.isValidPsiFile(psiFile) && languageService.isRelevant(file)) {
+            val document = PsiDocumentManager.getInstance(project).getDocument(psiFile)
             if (document != null) {
 
                 val parentDisposable = Disposer.newDisposable()
@@ -75,7 +79,7 @@ class CodeLensServiceDocumentChangeListener(private val project: Project) : File
 
                 document.addDocumentListener(object : DocumentListener {
 
-                    private val documentChangeAlarm = AlarmFactory.getInstance().create(
+                    private val documentChangeAlarm = Alarm(
                         Alarm.ThreadToUse.POOLED_THREAD, parentDisposable
                     )
 

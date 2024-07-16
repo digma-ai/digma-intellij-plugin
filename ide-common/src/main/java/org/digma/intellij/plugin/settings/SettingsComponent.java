@@ -4,7 +4,9 @@ import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.*;
 import com.intellij.ui.components.*;
 import com.intellij.util.ui.FormBuilder;
+import org.digma.intellij.plugin.analytics.BackendInfoHolder;
 import org.digma.intellij.plugin.auth.account.*;
+import org.digma.intellij.plugin.common.ProjectUtilsKt;
 import org.jetbrains.annotations.*;
 
 import javax.swing.*;
@@ -160,6 +162,15 @@ public class SettingsComponent {
         var userIdLabel = new JBLabel(userId);
         userIdLabel.setCopyable(true);
 
+        var backendVersionLabel = new JBLabel("Unknown");
+        var someProject = ProjectUtilsKt.findActiveProject();
+        if (someProject != null) {
+            var about = BackendInfoHolder.getInstance(someProject).getAbout();
+            if (about != null) {
+                backendVersionLabel.setText(about.getApplicationVersion());
+            }
+        }
+
         myMainPanel = FormBuilder.createFormBuilder()
                 .addLabeledComponent(myUrlLabel, myApiUrlText, 1, false)
                 .addLabeledComponent(new JBLabel("Api token:"), myApiToken, 1, false)
@@ -174,6 +185,7 @@ public class SettingsComponent {
                 .addLabeledComponent("Extended Observability Exclude (beta)", extendedObservabilityExcludeTextBox, 1, false)
                 .addComponent(resetButton)
                 .addLabeledComponent(new JBLabel("User Id"), userIdLabel)
+                .addLabeledComponent(new JBLabel("Backend version"), backendVersionLabel)
                 .addComponentFillVertically(new JPanel(), 0)
                 .getPanel();
     }

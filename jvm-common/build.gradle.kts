@@ -61,8 +61,10 @@ tasks {
             )
         )
 
-        withSilenceLogging {
-            logger.lifecycle("${project.name}: jars to download $properties")
+        doFirst {
+            withSilenceLogging {
+                logger.lifecycle("${project.name}: jars to download $properties")
+            }
         }
 
 

@@ -125,12 +125,30 @@ public class AnalyticsService implements Disposable {
         Log.log(LOGGER::debug, "AuthManager.withAuth successfully wrapped AnalyticsProvider for url {}", url);
         analyticsProviderProxy = newAnalyticsProviderProxy(analyticsProvider);
 
+        tryRegisterServerVersionEarly();
         environment.refreshNowOnBackground();
 
         project.getMessageBus().syncPublisher(ApiClientChangedEvent.getAPI_CLIENT_CHANGED_TOPIC()).apiClientChanged(url);
 
     }
 
+    //usually BackendInfoHolder registers the server version,but it depends on AnalyticsService.
+    // it may happen that getEnvironments will fail and register error but there will be no server version yet
+    // in ActivityMonitor.
+    // this is an attempt to register server version as early as possible before any errors occurs.
+    // BackendInfoHolder will continue monitoring the server info for changes.
+    private void tryRegisterServerVersionEarly() {
+        Backgroundable.executeOnPooledThread(() -> {
+            try {
+                var about = getAbout();
+                if (about != null) {
+                    ActivityMonitor.getInstance(project).registerServerInfo(about);
+                }
+            } catch (Throwable e) {
+                Log.debugWithException(LOGGER, project, e, "getAbout failed");
+            }
+        });
+    }
 
 
     public List<Env> getEnvironments() {
@@ -691,7 +709,7 @@ public class AnalyticsService implements Disposable {
             } else if (isSslConnectionException(invocationTargetException)) {
                 message = getSslExceptionMessage(invocationTargetException);
             } else {
-                message = invocationTargetException.getCause() != null ? invocationTargetException.getCause().getMessage() : invocationTargetException.getMessage();
+                message = ExceptionUtils.getNonEmptyMessage(invocationTargetException);
             }
 
             if (message == null) {
@@ -699,7 +717,7 @@ public class AnalyticsService implements Disposable {
             }
 
 
-            ErrorReporter.getInstance().reportAnalyticsServiceError(project, "AnalyticsInvocationHandler.invoke." + message, method.getName(), invocationTargetException, isConnectionException);
+            ErrorReporter.getInstance().reportAnalyticsServiceError(project, "AnalyticsInvocationHandler.invoke", method.getName(), invocationTargetException, isConnectionException);
 
 
             if (isConnectionOK()) {

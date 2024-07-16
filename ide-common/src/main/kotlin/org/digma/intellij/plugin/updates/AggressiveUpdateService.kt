@@ -8,14 +8,18 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import io.ktor.utils.io.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.apache.maven.artifact.versioning.ComparableVersion
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
 import org.digma.intellij.plugin.analytics.ApiClientChangedEvent
+import org.digma.intellij.plugin.analytics.BackendInfoHolder
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.common.buildVersionRequest
 import org.digma.intellij.plugin.common.getPluginVersion
@@ -24,6 +28,7 @@ import org.digma.intellij.plugin.common.newerThan
 import org.digma.intellij.plugin.common.runWIthRetry
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.model.rest.AboutResult
 import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
 import org.digma.intellij.plugin.model.rest.version.VersionResponse
 import org.digma.intellij.plugin.posthog.ActivityMonitor
@@ -45,10 +50,6 @@ enum class CurrentUpdateState { OK, UPDATE_BACKEND, UPDATE_PLUGIN, UPDATE_BOTH }
 class AggressiveUpdateService(val project: Project) : Disposable {
 
     private val logger: Logger = Logger.getInstance(AggressiveUpdateService::class.java)
-
-    //the service sends an event if state on startup is OK.
-    // this boolean is only used to help register the startup event only once.
-    private val isRegisteredFirstEventForIDESession = AtomicBoolean(false)
 
     private val isConnectionLost = AtomicBoolean(false)
 
@@ -86,6 +87,9 @@ class AggressiveUpdateService(val project: Project) : Disposable {
         if (InternalFileSettings.getAggressiveUpdateServiceEnabled()) {
 
             Log.log(logger::info, "starting...")
+
+            //update state now so that the state exists as part of the object instantiation
+            updateStateNow()
 
             startMonitoring()
 
@@ -150,6 +154,36 @@ class AggressiveUpdateService(val project: Project) : Disposable {
     }
 
 
+    private fun updateStateNow() {
+
+        @Suppress("UnstableApiUsage")
+        val deferred = disposingScope().async {
+            try {
+                Log.log(logger::trace, "loading versions and updating state on startup")
+                updateState()
+                Log.log(logger::trace, "updating state on startup completed successfully")
+            } catch (c: CancellationException) {
+                Log.debugWithException(logger, c, "updateStateNow canceled {}", c)
+            } catch (e: Throwable) {
+                val message = ExceptionUtils.getNonEmptyMessage(e)
+                Log.debugWithException(logger, e, "error in updateStateNow {}", message)
+                errorReporter.reportError("AggressiveUpdateService.updateStateNow", e)
+            }
+        }
+
+        runBlocking {
+            try {
+                withTimeout(2000) {
+                    deferred.await()
+                }
+            } catch (e: Throwable) {
+                ErrorReporter.getInstance().reportError("AggressiveUpdateService.updateStateNow", e)
+            }
+        }
+    }
+
+
+
     @Synchronized
     private fun startMonitoring() {
 
@@ -189,8 +223,8 @@ class AggressiveUpdateService(val project: Project) : Disposable {
                     Log.debugWithException(logger, e, "error in startMonitoring {}", message)
                     errorReporter.reportError("AggressiveUpdateService.startMonitoring", e)
                     try {
-                        //maybe backend is down or had timeout, wait 10 seconds
-                        delay(10.seconds.inWholeMilliseconds)
+                        //maybe backend is down or had timeout, wait a bit and retry
+                        delay(60.seconds.inWholeMilliseconds)
                     } catch (c: CancellationException) {
                         Log.debugWithException(logger, c, "startMonitoring canceled {}", c)
                     }
@@ -198,7 +232,7 @@ class AggressiveUpdateService(val project: Project) : Disposable {
 
                 //if we got 50 exceptions, cancel, something is wrong,maybe backend is down, and we didn't get connectionLost.
                 // hopefully connectionGained will resume monitoring
-                if (failures > 50) {
+                if (failures > 100) {
                     cancel(CancellationException("too many failures"))
                 }
             }
@@ -214,15 +248,12 @@ class AggressiveUpdateService(val project: Project) : Disposable {
             //todo: don't need the lock, only one thread is calling this method
             updateStateLock.lock()
             runWIthRetry({
-                Log.log(logger::debug, "loading version")
-                val versionsResponse = AnalyticsService.getInstance(project).getVersions(buildVersionRequest())
-                reportVersionsErrorsIfNecessary(versionsResponse.errors)
-                val versions = Versions.fromVersionsResponse(versionsResponse)
+                Log.log(logger::debug, "loading versions")
+                val versions = buildVersions()
                 Log.log(logger::debug, "loaded versions {}", versions)
                 Log.log(logger::debug, "updating state")
                 val prevUpdateState = updateStateRef.get().copy()
                 update(versions)
-                registerStartupEventIfStateOK(versions)
                 Log.log(logger::debug, "state updated. prev state: {}, new state: {}", prevUpdateState, updateStateRef)
             }, backOffMillis = 2000, maxRetries = 5)
 
@@ -232,6 +263,27 @@ class AggressiveUpdateService(val project: Project) : Disposable {
             }
         }
     }
+
+
+    private fun buildVersions(): Versions {
+        try {
+            val versionsResponse = AnalyticsService.getInstance(project).getVersions(buildVersionRequest())
+            reportVersionsErrorsIfNecessary(versionsResponse.errors)
+            return Versions.fromVersionsResponse(versionsResponse)
+        } catch (e: Throwable) {
+            val message = ExceptionUtils.getNonEmptyMessage(e)
+            Log.debugWithException(logger, e, "error in buildVersions {}", message)
+            errorReporter.reportError("AggressiveUpdateService.buildVersions", e)
+
+            //if getVersions failed try to get server version from getAbout
+            val about = BackendInfoHolder.getInstance(project).getAbout()
+            about?.let {
+                return Versions.fromAboutResponse(it)
+            } ?: throw RuntimeException("could not get backend info from getVersions or getAbout")
+        }
+    }
+
+
 
 
     private fun update(versions: Versions) {
@@ -352,6 +404,19 @@ class AggressiveUpdateService(val project: Project) : Disposable {
                     backendDeploymentType = versionsResponse.backend.deploymentType
                 )
             }
+
+            fun fromAboutResponse(about: AboutResult): Versions {
+                return Versions(
+                    currentPluginVersion = getPluginVersion(),
+                    latestRecommendedPluginVersion = null,
+                    forcePluginVersion = null,
+                    currentBackendVersion = about.applicationVersion,
+                    minimalRequiredBackendVersionInLocalSettings = InternalFileSettings.getAggressiveUpdateServiceMinimalBackendVersion(),
+                    latestRecommendedBackendVersion = null,
+                    forceBackendVersion = null,
+                    backendDeploymentType = about.deploymentType ?: BackendDeploymentType.Unknown
+                )
+            }
         }
     }
 
@@ -364,6 +429,10 @@ class AggressiveUpdateService(val project: Project) : Disposable {
 
     private fun registerPosthogEvent(currentState: CurrentUpdateState, versions: Versions) {
 
+        //no need for posthog event if OK
+        if (currentState == OK) {
+            return
+        }
 
         val details = mutableMapOf(
             "current backend version" to versions.currentBackendVersion.toString(),
@@ -374,29 +443,18 @@ class AggressiveUpdateService(val project: Project) : Disposable {
             "update mode" to currentState.name
         )
 
-        if (!isRegisteredFirstEventForIDESession.get()) {
-            isRegisteredFirstEventForIDESession.set(true)
-            details["first event for this IDE session"] = "true"
-        }
-
         Log.log(logger::info, "sending posthog event for {}", currentState)
         ActivityMonitor.getInstance(project).registerCustomEvent("ForceUpdate", details)
     }
 
 
-    //just an event on startup if the state is OK.
-    // so we know that the service is running. and if user had to update plugin we will see this event after
-    // IDE restart, and we know that the user updated the plugin.
-    private fun registerStartupEventIfStateOK(versions: Versions) {
-        if (updateStateRef.get().updateState == OK && !isRegisteredFirstEventForIDESession.get()) {
-            registerPosthogEvent(updateStateRef.get().updateState, versions)
-        }
-    }
-
-
     private fun reportVersionsErrorsIfNecessary(errors: List<String>) {
-        errors.forEach {
-            errorReporter.reportBackendError(null, it, "${this::class.simpleName}.getVersions")
+        try {
+            errors.forEach {
+                errorReporter.reportBackendError(null, it, "${this::class.simpleName}.getVersions")
+            }
+        } catch (e: Throwable) {
+            errorReporter.reportError("AggressiveUpdateService.reportVersionsErrorsIfNecessary", e)
         }
     }
 

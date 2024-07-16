@@ -12,7 +12,7 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiManager
 import com.intellij.util.Alarm
-import com.intellij.util.AlarmFactory
+import org.digma.intellij.plugin.common.allowSlowOperation
 import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.common.isValidVirtualFile
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
@@ -20,6 +20,7 @@ import org.digma.intellij.plugin.idea.psi.JvmLanguageService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.psi.PsiUtils
+import java.util.function.Supplier
 
 /**
  * a listener for document change that updates navigation discovery on document changed events.
@@ -44,7 +45,9 @@ class DocumentsChangeListenerForJvmNavigationDiscovery(private val project: Proj
                 return
             }
 
-            val languageService = LanguageService.findLanguageServiceByFile(project, file)
+            val languageService = allowSlowOperation(Supplier {
+                LanguageService.findLanguageServiceByFile(project, file)
+            })
 
             //only jvm languages are supported here
             if (!JvmLanguageService::class.java.isAssignableFrom(languageService.javaClass)) {
@@ -55,16 +58,16 @@ class DocumentsChangeListenerForJvmNavigationDiscovery(private val project: Proj
 
         } catch (e: Throwable) {
             Log.warnWithException(logger, e, "Exception in fileOpened")
-            ErrorReporter.getInstance().reportError(project, "${this::class.simpleName}.fileOpened", e)
+            ErrorReporter.getInstance().reportError(project, "DocumentsChangeListenerForJvmNavigationDiscovery.fileOpened", e)
         }
     }
 
 
     private fun installDocumentListener(file: VirtualFile, languageService: LanguageService) {
 
-        val psiFile = PsiManager.getInstance(project).findFile(file)
-        if (PsiUtils.isValidPsiFile(psiFile) && languageService.isRelevant(file)) {
-            val document = PsiDocumentManager.getInstance(project).getDocument(psiFile!!)
+        val psiFile = allowSlowOperation(Supplier { PsiManager.getInstance(project).findFile(file) })
+        if (psiFile != null && PsiUtils.isValidPsiFile(psiFile) && languageService.isRelevant(file)) {
+            val document = PsiDocumentManager.getInstance(project).getDocument(psiFile)
             if (document != null) {
 
                 val parentDisposable = Disposer.newDisposable()
@@ -73,7 +76,7 @@ class DocumentsChangeListenerForJvmNavigationDiscovery(private val project: Proj
 
                 document.addDocumentListener(object : DocumentListener {
 
-                    private val documentChangeAlarm = AlarmFactory.getInstance().create(
+                    private val documentChangeAlarm = Alarm(
                         Alarm.ThreadToUse.POOLED_THREAD, parentDisposable
                     )
 

@@ -4,7 +4,7 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
 import com.intellij.ui.AncestorListenerAdapter
-import com.intellij.util.AlarmFactory
+import com.intellij.util.Alarm
 import com.intellij.util.ui.JBUI.Borders.empty
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.posthog.ActivityMonitor
@@ -51,7 +51,7 @@ fun createAggressiveUpdatePanel(project: Project, parentDisposable: Disposable, 
 
     val updateButton = UpdateActionButton()
     updateButton.cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
-    val updateClickAlarm = AlarmFactory.getInstance().create()
+    val updateClickAlarm = Alarm()
     updateButton.addActionListener {
 
         //prevent double click

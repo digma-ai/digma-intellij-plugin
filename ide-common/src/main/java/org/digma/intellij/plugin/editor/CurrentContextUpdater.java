@@ -6,7 +6,7 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
-import com.intellij.util.*;
+import com.intellij.util.Alarm;
 import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
@@ -26,7 +26,7 @@ public class CurrentContextUpdater implements Disposable {
     private final CaretContextService caretContextService;
     private final LanguageServiceLocator languageServiceLocator;
 
-    private final Alarm caretEventAlarm = AlarmFactory.getInstance().create(Alarm.ThreadToUse.POOLED_THREAD,this);
+    private final Alarm caretEventAlarm = new Alarm(Alarm.ThreadToUse.POOLED_THREAD, this);
 
     /*
    keep the latest method under caret that was fired. it helps us to not call contextChange if the caret is on the same

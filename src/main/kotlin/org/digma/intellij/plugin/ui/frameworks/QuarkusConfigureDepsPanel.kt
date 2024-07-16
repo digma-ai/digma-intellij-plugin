@@ -5,7 +5,6 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
 import com.intellij.util.Alarm
-import com.intellij.util.AlarmFactory
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.idea.frameworks.QuarkusConfigureDepsService
 import org.digma.intellij.plugin.ui.common.Laf
@@ -95,7 +94,7 @@ private class QuarkusDependenciesButton(service: QuarkusConfigureDepsService) :
         autoHideOnDisable = false
         setText(asHtml(buildLinkTextWithUnderLine(text)))
 
-        clickAlarm = AlarmFactory.getInstance().create()
+        clickAlarm = Alarm()
 
         val actionDef: () -> Unit = {
             service.buttonClicked()

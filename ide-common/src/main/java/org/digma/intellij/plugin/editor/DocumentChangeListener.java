@@ -9,7 +9,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
-import com.intellij.util.*;
+import com.intellij.util.Alarm;
 import com.intellij.util.Alarm.ThreadToUse;
 import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.document.*;
@@ -74,7 +74,7 @@ class DocumentChangeListener {
 
         document.addDocumentListener(new DocumentListener() {
 
-            private final Alarm documentChangeAlarm = AlarmFactory.getInstance().create(ThreadToUse.POOLED_THREAD, parentDisposable);
+            private final Alarm documentChangeAlarm = new Alarm(ThreadToUse.POOLED_THREAD, parentDisposable);
 
             @Override
             public void documentChanged(@NotNull DocumentEvent event) {

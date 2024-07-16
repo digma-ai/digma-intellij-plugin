@@ -6,7 +6,7 @@ import com.intellij.openapi.fileEditor.*;
 import com.intellij.openapi.project.*;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
-import com.intellij.util.*;
+import com.intellij.util.Alarm;
 import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.document.*;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
@@ -47,7 +47,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
         currentContextUpdater = project.getService(CurrentContextUpdater.class);
         caretListener = new CaretListener(project, currentContextUpdater);
         documentChangeListener = new DocumentChangeListener(project, currentContextUpdater);
-        contextChangeAlarmAfterFileClosed = AlarmFactory.getInstance().create();
+        contextChangeAlarmAfterFileClosed = new Alarm();
     }
 
 

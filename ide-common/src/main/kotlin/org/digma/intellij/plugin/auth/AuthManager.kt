@@ -11,6 +11,7 @@ import org.digma.intellij.plugin.analytics.AuthenticationException
 import org.digma.intellij.plugin.analytics.AuthenticationProvider
 import org.digma.intellij.plugin.analytics.RestAnalyticsProvider
 import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
+import org.digma.intellij.plugin.common.DisposableAdaptor
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
@@ -21,18 +22,17 @@ import java.lang.reflect.InvocationHandler
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
-import java.util.concurrent.atomic.AtomicBoolean
 
 
 @Service(Service.Level.APP)
-class AuthManager : Disposable {
+class AuthManager : DisposableAdaptor {
 
     private val logger: Logger = Logger.getInstance(AuthManager::class.java)
 
     private val listeners: MutableList<AuthInfoChangeListener> = ArrayList()
-    private var myAnalyticsProvider: RestAnalyticsProvider = createMyAnalyticsProvider(SettingsState.getInstance().apiUrl)
 
-    private val isPaused: AtomicBoolean = AtomicBoolean(true)
+    var apiUrl = SettingsState.getInstance().apiUrl
+    private var myAnalyticsProvider: RestAnalyticsProvider = createMyAnalyticsProvider()
 
     private val fireChangeAlarm = Alarm(Alarm.ThreadToUse.POOLED_THREAD, this)
 
@@ -41,27 +41,18 @@ class AuthManager : Disposable {
         fun getInstance(): AuthManager {
             return service<AuthManager>()
         }
+    }
 
-        private fun createMyAnalyticsProvider(url: String): RestAnalyticsProvider {
-            return RestAnalyticsProvider(url, listOf(DigmaAccessTokenAuthenticationProvider(SettingsTokenProvider())))
+
+    private fun createMyAnalyticsProvider(): RestAnalyticsProvider {
+        return RestAnalyticsProvider(listOf(DigmaAccessTokenAuthenticationProvider(SettingsTokenProvider())),
             { message: String? ->
                 val apiLogger = Logger.getInstance(API_LOGGER_NAME)
                 Log.log(apiLogger::debug, "API:AuthManager: {}", message)
-            }
-        }
-
-    }
-
-    @Synchronized
-    fun replaceClient(url: String) {
-        Log.log(logger::info, "replacing myAnalyticsProvider to url {}", url)
-        this.myAnalyticsProvider = createMyAnalyticsProvider(url)
+            }, { apiUrl })
     }
 
 
-    override fun dispose() {
-        //nothing to do, used as parent disposable
-    }
 
     fun getAuthenticationProviders(): List<AuthenticationProvider> {
         return listOf(
@@ -72,7 +63,6 @@ class AuthManager : Disposable {
 
     fun addAuthInfoChangeListener(listener: AuthInfoChangeListener, parentDisposable: Disposable) {
         listeners.add(listener)
-
         Disposer.register(parentDisposable) { removeAuthInfoChangeListener(listener) }
     }
 
@@ -81,17 +71,17 @@ class AuthManager : Disposable {
         listeners.remove(listener)
     }
 
-    //withAuth should not be called concurrently by multiple threads. it is called only from AnalyticsService.replaceClient.
-    //AnalyticsService.replaceClient is called on startup, and when an api url in settings changed.
-    //AnalyticsService.replaceClient and is synchronized and thus withAuth should not be called concurrently.
-    //the analyticsProvider here will usually be a non proxied RestAnalyticsProvider
-    //method is also synchronized to prevent concurrent execution
+    //withAuth should not be called concurrently by multiple threads. it is called only from AnalyticsService.createClient.
+    //AnalyticsService.createClient is called on startup.
+    //the analyticsProvider here is the one to wrap with a proxy, it's a per project analyticsProvider.
+    //AuthManager uses its own local analyticsProvider for the login and refresh.
+    //the method is also synchronized to prevent concurrent execution.
     @Synchronized
     fun withAuth(analyticsProvider: RestAnalyticsProvider): AnalyticsProvider {
 
         Log.log(logger::info, "wrapping analyticsProvider with auth for url {}", analyticsProvider.apiUrl)
 
-        val loginHandler = LoginHandler.createLoginHandler(analyticsProvider)
+        val loginHandler = LoginHandler.createLoginHandler(myAnalyticsProvider)
 
         if (!loginHandler.loginOrRefresh()) {
             Log.log(logger::warn, "loginOrRefresh failed for url {}", this.myAnalyticsProvider.apiUrl)
@@ -105,9 +95,6 @@ class AuthManager : Disposable {
             DigmaDefaultAccountHolder.getInstance().account,
             analyticsProvider.apiUrl
         )
-
-        Log.log(logger::info, "resuming current proxy, analytics url {}", this.myAnalyticsProvider.apiUrl)
-        isPaused.set(false)
 
         fireChange()
 
@@ -156,11 +143,6 @@ class AuthManager : Disposable {
 
     private fun fireChange() {
 
-        if (isPaused.get()) {
-            fireChangeAlarm.cancelAllRequests()
-            return
-        }
-
         //don't fire immediately, wait a second.
         //maybe there was a logout and a login is going to happen just after that, so It's useless to fire twice,
         // it may cause the ui to show login screen for a second and then hide it.
@@ -191,14 +173,6 @@ class AuthManager : Disposable {
     }
 
 
-    //pause the AuthManager before replacing the analytics provider.
-    //can be resumed only from this class after a new client is set
-    fun pauseBeforeClientChange() {
-        Log.log(logger::info, "pausing current proxy, analytics url {}", myAnalyticsProvider.apiUrl)
-        isPaused.set(true)
-    }
-
-
     private fun proxy(analyticsProvider: RestAnalyticsProvider): AnalyticsProvider {
         return Proxy.newProxyInstance(
             this::class.java.classLoader,
@@ -226,11 +200,6 @@ class AuthManager : Disposable {
                     Log.warnWithException(logger, e, "Exception in auth proxy {}", ExceptionUtils.getNonEmptyMessage(e))
                 } else {
                     Log.debugWithException(logger, e, "AuthenticationException in auth proxy {}", ExceptionUtils.getNonEmptyMessage(e))
-                }
-
-                if (isPaused.get()) {
-                    Log.log(logger::trace, "got Exception in auth proxy but proxy is paused, rethrowing")
-                    throw e
                 }
 
                 //check if this is an AuthenticationException, if not rethrow the exception

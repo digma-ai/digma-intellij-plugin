@@ -44,7 +44,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Supplier;
+import java.util.function.*;
 import java.util.stream.Collectors;
 
 import static org.digma.intellij.plugin.analytics.EnvUtilsKt.getAllEnvironmentsIds;
@@ -85,7 +85,7 @@ public class AnalyticsService implements Disposable {
         MainToolWindowCardsController.getInstance(project);
         environment = new Environment(project, this);
         this.project = project;
-        replaceClient(SettingsState.getInstance().apiUrl);
+        createClient();
         scheduleEnvironmentRefresh(this, environment);
     }
 
@@ -100,35 +100,30 @@ public class AnalyticsService implements Disposable {
     }
 
 
-    //just replace the client and do not fire any events
-    //this method should be synchronized, and it shouldn't be a problem, it doesn't happen too often.
-    //package private, should not be called other than from AnalyticsServiceSettingsWatcher
-    synchronized void replaceClient(String url) {
+    //todo: not sure synchronized is necessary anymore, it is called from the constructor and intellij component manager makes sure to create singletons
+    synchronized private void createClient() {
 
-        Log.log(LOGGER::debug, "replacing AnalyticsProvider for url {}", url);
+        var baseUrlProvider = AnalyticsUrlProvider.getInstance(project);
 
-        if (analyticsProviderProxy != null) {
-            try {
-                analyticsProviderProxy.close();
-            } catch (IOException e) {
-                Log.log(LOGGER::warn, e.getMessage());
+        Log.log(LOGGER::info, "creating AnalyticsProvider for url {}", baseUrlProvider.baseUrl());
+
+        var logger = new Consumer<String>() {
+            @Override
+            public void accept(String message) {
+                var apiLogger = Logger.getInstance(API_LOGGER_NAME);
+                Log.log(apiLogger::debug, "API: {}", message);
             }
-        }
+        };
 
-        Log.log(LOGGER::debug, "calling AuthManager.withAuth for url {}", url);
-        AnalyticsProvider analyticsProvider =
-                AuthManager.getInstance().withAuth(new RestAnalyticsProvider(url, AuthManager.getInstance().getAuthenticationProviders(),
-                        message -> {
-                            var apiLogger = Logger.getInstance(API_LOGGER_NAME);
-                            Log.log(apiLogger::debug, "API: {}", message);
-                        }));
-        Log.log(LOGGER::debug, "AuthManager.withAuth successfully wrapped AnalyticsProvider for url {}", url);
+        var restAnalyticsProvider = new RestAnalyticsProvider(AuthManager.getInstance().getAuthenticationProviders(), logger, baseUrlProvider);
+
+        Log.log(LOGGER::debug, "calling AuthManager.withAuth for url {}", baseUrlProvider.baseUrl());
+        AnalyticsProvider analyticsProvider = AuthManager.getInstance().withAuth(restAnalyticsProvider);
+        Log.log(LOGGER::debug, "AuthManager.withAuth successfully wrapped AnalyticsProvider for url {}", baseUrlProvider.baseUrl());
         analyticsProviderProxy = newAnalyticsProviderProxy(analyticsProvider);
 
         tryRegisterServerVersionEarly();
         environment.refreshNowOnBackground();
-
-        project.getMessageBus().syncPublisher(ApiClientChangedEvent.getAPI_CLIENT_CHANGED_TOPIC()).apiClientChanged(url);
 
     }
 

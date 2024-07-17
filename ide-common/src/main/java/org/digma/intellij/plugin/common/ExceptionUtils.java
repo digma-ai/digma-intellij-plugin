@@ -8,7 +8,7 @@ import java.io.*;
 import java.lang.reflect.*;
 import java.net.*;
 import java.net.http.*;
-import java.util.Objects;
+import java.util.*;
 
 public class ExceptionUtils {
 
@@ -86,17 +86,35 @@ public class ExceptionUtils {
 
         //SocketTimeoutException and HttpTimeoutException are not considered connection unavailable.
         //but their derived classed may be. so compare equals and not instanceof
-        if (SocketTimeoutException.class.equals(exception.getClass()) ||
+        if ((SocketTimeoutException.class.equals(exception.getClass()) && !isConnectTimeout(exception)) ||
                 HttpTimeoutException.class.equals(exception.getClass()) ||
                 isIOExceptionTimeout(exception)) {
             return false;
         }
 
-        return exception instanceof SocketException ||
+        return isConnectTimeout(exception) ||
+                isConnectionIssueErrorCode(exception) ||
+                exception instanceof SocketException ||
                 exception instanceof UnknownHostException ||
                 exception instanceof HttpConnectTimeoutException ||
                 exception instanceof InterruptedIOException;
 
+    }
+
+
+    private static boolean isConnectionIssueErrorCode(@NotNull Throwable exception) {
+        var analyticsProviderException = findCause(AnalyticsProviderException.class, exception);
+
+        if (analyticsProviderException != null) {
+            var connectionIssueCodes = List.of(503, 504, 502);
+            return connectionIssueCodes.contains(analyticsProviderException.getResponseCode());
+        }
+
+        return false;
+    }
+
+    private static boolean isConnectTimeout(@NotNull Throwable exception) {
+        return SocketTimeoutException.class.equals(exception.getClass()) && "Connect timed out".equalsIgnoreCase(exception.getMessage());
     }
 
 

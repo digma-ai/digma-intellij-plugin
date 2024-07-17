@@ -92,6 +92,8 @@ public class SettingsState implements PersistentStateComponent<SettingsState>, D
     }
 
 
+    //todo: add ordering, so some listener can ask to be notified before all others, add an int order and keep in sorted map,
+    // for example AnalyticsUrlProvider should be the first to be notified
     public void addChangeListener(SettingsChangeListener listener, Disposable parentDisposable) {
         listeners.add(listener);
 

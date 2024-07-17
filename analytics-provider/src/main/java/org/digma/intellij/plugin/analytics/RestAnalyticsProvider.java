@@ -49,32 +49,33 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     public static final ThreadLocal<Long> PERFORMANCE = new ThreadLocal<>();
 
     private final Client client;
-    private final String apiUrl;
+    private final BaseUrlProvider baseUrlProvider;
 
     //this constructor is used only in tests
     RestAnalyticsProvider(String baseUrl) {
 
-        this(baseUrl, Collections.singletonList(new AuthenticationProvider() {
+        this(Collections.singletonList(new AuthenticationProvider() {
             @CheckForNull
             @Override
             public String getHeaderName() {
                 return null;
             }
+
             @CheckForNull
             @Override
             public String getHeaderValue() {
                 return null;
             }
-        }), System.out::println);
+        }), System.out::println, () -> baseUrl);
     }
 
-    public RestAnalyticsProvider(String baseUrl, List<AuthenticationProvider> authenticationProviders, Consumer<String> logger) {
-        this.client = createClient(baseUrl, authenticationProviders, logger);
-        this.apiUrl = baseUrl;
+    public RestAnalyticsProvider(List<AuthenticationProvider> authenticationProviders, Consumer<String> logger, BaseUrlProvider baseUrlProvider) {
+        this.client = createClient(authenticationProviders, logger, baseUrlProvider);
+        this.baseUrlProvider = baseUrlProvider;
     }
 
     public String getApiUrl() {
-        return apiUrl;
+        return baseUrlProvider.baseUrl();
     }
 
     @Override
@@ -459,8 +460,8 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
 
-    private Client createClient(String baseUrl, List<AuthenticationProvider> authenticationProviders, Consumer<String> logger) {
-        return new Client(baseUrl, authenticationProviders, logger);
+    private Client createClient(List<AuthenticationProvider> authenticationProviders, Consumer<String> logger, BaseUrlProvider baseUrlProvider) {
+        return new Client(authenticationProviders, logger, baseUrlProvider);
     }
 
 
@@ -478,15 +479,35 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         private final OkHttpClient okHttpClient;
 
         @SuppressWarnings("MoveFieldAssignmentToInitializer")
-        public Client(String baseUrl, List<AuthenticationProvider> authenticationProviders, Consumer<String> logger) {
+        public Client(List<AuthenticationProvider> authenticationProviders, Consumer<String> logger, BaseUrlProvider baseUrlProvider) {
 
             //configure okHttp here if necessary
             OkHttpClient.Builder builder = new OkHttpClient.Builder();
 
-            if (baseUrl.startsWith("https:")) {
+
+            builder.addInterceptor(chain -> {
+                HttpUrl myUrl = HttpUrl.parse(baseUrlProvider.baseUrl());
+                if (myUrl == null) {
+                    throw new NullPointerException("url must not be null");
+                }
+
+                var currentUrl = chain.request().url();
+                //should check schema ? or we can say we always use https ?
+                if (currentUrl.host().equals(myUrl.host()) && currentUrl.port() == myUrl.port()) {
+                    return chain.proceed(chain.request());
+                } else {
+                    HttpUrl newUrl = currentUrl.newBuilder().host(myUrl.host()).port(myUrl.port()).build();
+                    var request = chain.request().newBuilder().url(newUrl).build();
+                    return chain.proceed(request);
+                }
+            });
+
+
+            //if (baseUrlProvider.baseUrl().startsWith("https:")) {
                 // SSL
+            //we can always applyInsecureSsl even if the schema is http
                 applyInsecureSsl(builder);
-            }
+            //}
 
 
             authenticationProviders.forEach(authenticationProvider -> builder.addInterceptor(chain -> {
@@ -517,7 +538,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
             baseUrl = ensureEndsWithSlash(baseUrl);
 
             Retrofit retrofit = new Retrofit.Builder()
-                    .baseUrl(baseUrl)
+                    .baseUrl(baseUrlProvider.baseUrl())
                     .client(okHttpClient)
                     //ScalarsConverterFactory must be the first, it supports serializing to plain String, see getAssets
                     .addConverterFactory(ScalarsConverterFactory.create())

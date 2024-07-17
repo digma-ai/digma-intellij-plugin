@@ -161,5 +161,9 @@ class BackendInfoHolder(val project: Project) : DisposableAdaptor {
         Log.log(logger::trace, "backend info updated in background with timeout {}", aboutRef.get())
     }
 
+    fun refresh() {
+        updateInBackground()
+    }
+
 
 }

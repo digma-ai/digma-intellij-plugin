@@ -5,6 +5,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.io.CharStreams;
 import okhttp3.*;
 import okhttp3.logging.HttpLoggingInterceptor;
+import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.model.rest.AboutResult;
 import org.digma.intellij.plugin.model.rest.assets.AssetDisplayInfo;
 import org.digma.intellij.plugin.model.rest.codelens.*;
@@ -44,6 +45,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.*;
 
 public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
+
+    public static final ThreadLocal<Long> PERFORMANCE = new ThreadLocal<>();
 
     private final Client client;
     private final String apiUrl;
@@ -498,6 +501,8 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
             }));
 
 
+            addPerformanceInterceptor(builder);
+
             //always add the logging interceptor last, so it will log info from all other interceptors
             addLoggingInterceptor(builder, logger);
 
@@ -521,6 +526,20 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
             analyticsProvider = retrofit.create(AnalyticsProviderRetrofit.class);
         }
 
+        private void addPerformanceInterceptor(OkHttpClient.Builder builder) {
+            builder.addInterceptor(chain -> {
+                PERFORMANCE.remove();
+                var stopWatch = StopWatch.createStarted();
+                try {
+                    return chain.proceed(chain.request());
+                } finally {
+                    stopWatch.stop();
+                    var time = stopWatch.getTime(TimeUnit.MILLISECONDS);
+                    PERFORMANCE.set(time);
+                }
+            });
+        }
+
 
         private void addLoggingInterceptor(OkHttpClient.Builder builder, Consumer<String> logger) {
 
@@ -535,6 +554,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
             logging.setLevel(HttpLoggingInterceptor.Level.BODY);
             if (!logSensitive) {
                 logging.redactHeader("Authorization");
+                logging.redactHeader("Digma-Access-Token");
             }
             builder.addInterceptor(logging);
         }

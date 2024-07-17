@@ -29,6 +29,7 @@ dependencies {
     implementation(libs.retrofit.scalars)
     implementation(libs.jackson.datetime)
     implementation(libs.guava)
+    implementation(libs.commons.lang3)
     implementation(libs.okhttp.logging) {
         isTransitive = false
     }

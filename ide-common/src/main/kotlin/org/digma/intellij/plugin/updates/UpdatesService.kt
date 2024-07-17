@@ -112,8 +112,6 @@ class UpdatesService(private val project: Project) : Disposable {
                 @Suppress("UnstableApiUsage")
                 disposingScope().launch {
                     try {
-                        //update state immediately after settings change. we are interested in api url change, but it will
-                        // do no harm to call it on any settings change
                         checkForNewerVersions()
                     } catch (e: CancellationException) {
                         Log.debugWithException(logger, e, "Exception in checkForNewerVersions")
@@ -123,6 +121,34 @@ class UpdatesService(private val project: Project) : Disposable {
                     }
                 }
             })
+
+
+
+        project.messageBus.connect().subscribe(
+            AggressiveUpdateStateChangedEvent.UPDATE_STATE_CHANGED_TOPIC, object : AggressiveUpdateStateChangedEvent {
+                override fun stateChanged(updateState: PublicUpdateState) {
+                    @Suppress("UnstableApiUsage")
+                    disposingScope().launch {
+                        try {
+                            //UpdatesService and AggressiveUpdateService work independently.
+                            //it may happen that UpdatesService will change the panel to visible just before AggressiveUpdateService
+                            // enters update mode. when AggressiveUpdateService exits update mode it may take a while before UpdatesService
+                            // will hide the update panel, so user will see it.
+                            //acting on stateChanged when AggressiveUpdateService change to update mode OK will hide the
+                            // update panel immediately.
+                            if (updateState.updateState == CurrentUpdateState.OK) {
+                                checkForNewerVersions()
+                            }
+                        } catch (e: CancellationException) {
+                            Log.debugWithException(logger, e, "Exception in checkForNewerVersions")
+                        } catch (e: Throwable) {
+                            Log.debugWithException(logger, e, "Exception in checkForNewerVersions {}", ExceptionUtils.getNonEmptyMessage(e))
+                            ErrorReporter.getInstance().reportError(project, "UpdatesService.stateChanged", e)
+                        }
+                    }
+                }
+            })
+
     }
 
     override fun dispose() {

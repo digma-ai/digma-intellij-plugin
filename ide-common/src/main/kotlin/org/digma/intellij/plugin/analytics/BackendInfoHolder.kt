@@ -41,6 +41,18 @@ class BackendInfoHolder(val project: Project) : DisposableAdaptor {
 
 
     init {
+
+        //update now so that about exists as part of the object instantiation
+        updateAboutInBackgroundNowWithTimeout()
+
+        @Suppress("UnstableApiUsage")
+        disposingScope().launch {
+            while (isActive) {
+                update()
+                delay(1.minutes.inWholeMilliseconds)
+            }
+        }
+
         project.messageBus.connect(this)
             .subscribe(
                 AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC,
@@ -61,14 +73,6 @@ class BackendInfoHolder(val project: Project) : DisposableAdaptor {
                 updateInBackground()
             })
 
-
-        @Suppress("UnstableApiUsage")
-        disposingScope().launch {
-            while (isActive) {
-                update()
-                delay(1.minutes.inWholeMilliseconds)
-            }
-        }
     }
 
 
@@ -83,11 +87,14 @@ class BackendInfoHolder(val project: Project) : DisposableAdaptor {
     //must be called in background coroutine
     private fun update() {
         try {
+            Log.log(logger::trace, "updating backend info")
             aboutRef.set(AnalyticsService.getInstance(project).about)
             aboutRef.get()?.let {
                 ActivityMonitor.getInstance(project).registerServerInfo(it)
             }
+            Log.log(logger::trace, "backend info updated {}", aboutRef.get())
         } catch (e: Throwable) {
+            Log.warnWithException(logger, project, e, "error in update")
             val isConnectionException = ExceptionUtils.isAnyConnectionException(e)
             if (!isConnectionException) {
                 ErrorReporter.getInstance().reportError(project, "BackendInfoHolder.update", e)
@@ -126,22 +133,33 @@ class BackendInfoHolder(val project: Project) : DisposableAdaptor {
 
 
     private fun getAboutInBackgroundNowWithTimeout(): AboutResult? {
+        updateAboutInBackgroundNowWithTimeout()
+        return aboutRef.get()
+    }
+
+
+    private fun updateAboutInBackgroundNowWithTimeout() {
+
+        Log.log(logger::trace, "updating backend info in background with timeout")
 
         @Suppress("UnstableApiUsage")
         val deferred = disposingScope().async {
             update()
         }
 
-        return runBlocking {
+        runBlocking {
             try {
-                withTimeout(5000) {
+                withTimeout(2000) {
                     deferred.await()
                 }
-                aboutRef.get()
             } catch (e: Throwable) {
-                null
+                Log.warnWithException(logger, project, e, "error in updateAboutInBackgroundNowWithTimeout")
+                ErrorReporter.getInstance().reportError("BackendInfoHolder.updateAboutInBackgroundNowWithTimeout", e)
             }
         }
+
+        Log.log(logger::trace, "backend info updated in background with timeout {}", aboutRef.get())
     }
+
 
 }

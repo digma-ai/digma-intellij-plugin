@@ -13,7 +13,6 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.datetime.toJavaInstant
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
-import org.digma.intellij.plugin.analytics.BackendInfoHolder
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.common.UniqueGeneratedUserId
 import org.digma.intellij.plugin.common.objectToJson
@@ -71,6 +70,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
     }
 
 
+    private var serverInfo: AboutResult? = null
     private val simpleEventInterceptor = SimpleEventInterceptor(project)
 
     private val userId: String = UniqueGeneratedUserId.userId
@@ -333,7 +333,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
                 "ide.version" to ideVersion,
                 "ide.build" to ideBuildNumber,
                 "plugin.version" to pluginVersion,
-                "server.version" to BackendInfoHolder.getInstance(project).getAbout()?.applicationVersion.toString(),
+                "server.version" to serverInfo?.applicationVersion.toString(),
                 "user.type" to if (isDevUser) "internal" else "external"
             )
 
@@ -363,9 +363,16 @@ class ActivityMonitor(private val project: Project) : Disposable {
                 details
             )
         } catch (e: Exception) {
+            val exceptionStackTrace = e.let {
+                val stringWriter = StringWriter()
+                it.printStackTrace(PrintWriter(stringWriter))
+                stringWriter.toString()
+            }
             registerCustomEvent(
                 "error in registerError", mapOf(
-                    "message" to e.message.toString()
+                    "original message" to message,
+                    "exception type" to e.javaClass,
+                    "stack trace" to exceptionStackTrace
                 )
             )
         }
@@ -413,7 +420,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
                     "ide.version" to ideVersion,
                     "ide.build" to ideBuildNumber,
                     "plugin.version" to pluginVersion,
-                    "server.version" to BackendInfoHolder.getInstance(project).getAbout()?.applicationVersion.toString(),
+                    "server.version" to serverInfo?.applicationVersion.toString(),
                     "user.type" to if (isDevUser) "internal" else "external"
                 )
             )
@@ -656,13 +663,17 @@ class ActivityMonitor(private val project: Project) : Disposable {
 
 
     fun registerServerInfo(serverInfo: AboutResult) {
-        postHog?.set(
-            userId,
-            mapOf(
-                "server.version" to serverInfo.applicationVersion,
-                "server.deploymentType" to (serverInfo.deploymentType ?: BackendDeploymentType.Unknown)
+        //AboutResult is a data class and equals should work correctly
+        if (this.serverInfo != serverInfo) {
+            this.serverInfo = serverInfo
+            postHog?.set(
+                userId,
+                mapOf(
+                    "server.version" to serverInfo.applicationVersion,
+                    "server.deploymentType" to (serverInfo.deploymentType ?: BackendDeploymentType.Unknown)
+                )
             )
-        )
+        }
     }
 
 

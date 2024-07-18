@@ -82,17 +82,22 @@ public class ExceptionUtils {
 
     public static boolean isConnectionUnavailableException(@NotNull Throwable exception) {
 
-        //InterruptedIOException is thrown when the connection is dropped , for example by iptables
 
-        //SocketTimeoutException and HttpTimeoutException are not considered connection unavailable.
-        //but their derived classed may be. so compare equals and not instanceof
-        if ((SocketTimeoutException.class.equals(exception.getClass()) && !isConnectTimeout(exception)) ||
-                HttpTimeoutException.class.equals(exception.getClass()) ||
+        //this is a real timeout
+        if (exception instanceof SocketTimeoutException socketTimeoutException && socketTimeoutException.bytesTransferred > 0) {
+            return false;
+        }
+        if (exception instanceof InterruptedIOException interruptedIOException && interruptedIOException.bytesTransferred > 0) {
+            return false;
+        }
+
+        if (HttpTimeoutException.class.equals(exception.getClass()) ||
                 isIOExceptionTimeout(exception)) {
             return false;
         }
 
-        return isConnectTimeout(exception) ||
+        //this includes any SocketTimeoutException, it's derived from InterruptedIOException
+        return is404PageNotFound(exception) ||
                 isConnectionIssueErrorCode(exception) ||
                 exception instanceof SocketException ||
                 exception instanceof UnknownHostException ||
@@ -113,15 +118,24 @@ public class ExceptionUtils {
         return false;
     }
 
-    private static boolean isConnectTimeout(@NotNull Throwable exception) {
-        return SocketTimeoutException.class.equals(exception.getClass()) && "Connect timed out".equalsIgnoreCase(exception.getMessage());
+    //this is considered no connection
+    private static boolean isSocketTimeoutExceptionConnectTimeout(@NotNull Throwable exception) {
+        return SocketTimeoutException.class.equals(exception.getClass()) &&
+                exception.getMessage() != null &&
+                exception.getMessage().trim().toLowerCase().contains("connect timed out");
     }
 
 
     private static boolean isIOExceptionTimeout(@NotNull Throwable exception) {
         return IOException.class.equals(exception.getClass()) &&
                 exception.getMessage() != null &&
-                exception.getMessage().toLowerCase().contains("timeout");
+                exception.getMessage().trim().toLowerCase().contains("timeout");
+
+    }
+
+    private static boolean is404PageNotFound(@NotNull Throwable exception) {
+        return exception.getMessage() != null &&
+                exception.getMessage().trim().toLowerCase().contains("404 page not found");
 
     }
 

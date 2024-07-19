@@ -116,7 +116,9 @@ or if the task interval may change depending on some variables: use disposingSco
 
 
 /*
-to dispose a task using a local disposable, in case the task should be disposed early not related to project closing:
+how to dispose a task using a local disposable, in case the task should be disposed early not related to project closing:
+
+see example in ide-common/src/main/kotlin/org/digma/intellij/plugin/posthog/PerformanceMetricsPosthogEventStartupActivity.kt
 
 val disposable = Disposer.newDisposable()
 disposable.disposingPeriodicTask("task-name",2.minutes.inWholeMilliseconds,10.minutes.inWholeMilliseconds){

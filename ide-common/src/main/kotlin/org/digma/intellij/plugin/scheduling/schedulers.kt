@@ -160,12 +160,12 @@ class ThreadPoolProviderServiceStarter : ProjectActivity {
  */
 fun Disposable.disposingPeriodicTask(name: String, period: Long, block: () -> Unit): Boolean {
 
-    try {
+    val future = try {
         //catch and swallow all exceptions. there is no point in throwing them.
         // also some implementations will cancel the task if it throws an exception, we don't want that
         // because our tasks may throw exceptions. usually we handle exceptions in the task body,
         // but if not then exceptions will be caught here and logged.
-        val future = scheduler.scheduleWithFixedDelay({
+        scheduler.scheduleWithFixedDelay({
             val stopWatch = StopWatch.createStarted()
             try {
                 Log.log(logger::trace, "executing periodic task {}", name)
@@ -180,18 +180,19 @@ fun Disposable.disposingPeriodicTask(name: String, period: Long, block: () -> Un
             }
 
         }, 0, period, TimeUnit.MILLISECONDS)
-
-        Disposer.register(this) {
-            Log.log(logger::trace, "disposing periodic task {}", name)
-            future.cancel(true)
-        }
-        return true
-
     } catch (e: Throwable) {
         Log.warnWithException(logger, e, "could not schedule periodic task {}", name)
         ErrorReporter.getInstance().reportError("org.digma.scheduler.disposingPeriodicTask", e)
         return false
     }
+
+    Disposer.register(this) {
+        Log.log(logger::trace, "disposing periodic task {}", name)
+        future.cancel(true)
+    }
+    return true
+
+
 }
 
 
@@ -234,8 +235,8 @@ fun <T> oneShotTask(name: String, block: () -> T): Future<T>? {
  */
 fun oneShotTask(name: String, timeoutMillis: Long, block: () -> Unit): Boolean {
 
-    try {
-        val future = executor.submit {
+    val future = try {
+        executor.submit {
             val stopWatch = StopWatch.createStarted()
             try {
                 Log.log(logger::trace, "executing one-shot task {}", name)
@@ -246,20 +247,21 @@ fun oneShotTask(name: String, timeoutMillis: Long, block: () -> Unit): Boolean {
                 scheduledTasksPerformanceMonitor.reportPerformance(name, stopWatch.time)
             }
         }
-
-        try {
-            future.get(timeoutMillis, TimeUnit.MILLISECONDS)
-            return true
-        } catch (e: Throwable) {
-            Log.warnWithException(logger, e, "one-shot task {} failed", name)
-            ErrorReporter.getInstance().reportError("org.digma.scheduler.oneShotTask", e)
-            return false
-        }
     } catch (e: Throwable) {
         Log.warnWithException(logger, e, "could not submit one shot task {}", name)
         ErrorReporter.getInstance().reportError("org.digma.scheduler.oneShotTask", e)
         return false
     }
+
+    try {
+        future.get(timeoutMillis, TimeUnit.MILLISECONDS)
+        return true
+    } catch (e: Throwable) {
+        Log.warnWithException(logger, e, "one-shot task {} failed", name)
+        ErrorReporter.getInstance().reportError("org.digma.scheduler.oneShotTask", e)
+        return false
+    }
+
 }
 
 
@@ -267,12 +269,12 @@ fun oneShotTask(name: String, timeoutMillis: Long, block: () -> Unit): Boolean {
  * executes a task with result , waiting for the task to finish within timeout and return its result.
  * throws a RuntimeException wrapping the original exception if the task fails or the task could not be submitted.
  */
-@Throws(RuntimeException::class)
+@Throws(Exception::class)
 fun <T> oneShotTaskWithResult(name: String, timeoutMillis: Long, block: () -> T): T {
 
-    try {
+    val future = try {
 
-        val future = executor.submit(Callable {
+        executor.submit(Callable {
             val stopWatch = StopWatch.createStarted()
             try {
                 Log.log(logger::trace, "executing one-shot task with result {}", name)
@@ -284,19 +286,20 @@ fun <T> oneShotTaskWithResult(name: String, timeoutMillis: Long, block: () -> T)
                 scheduledTasksPerformanceMonitor.reportPerformance(name, stopWatch.time)
             }
         })
-
-        try {
-            return future.get(timeoutMillis, TimeUnit.MILLISECONDS)
-        } catch (e: Throwable) {
-            Log.warnWithException(logger, e, "one-shot task with result {} failed", name)
-            ErrorReporter.getInstance().reportError("org.digma.scheduler.oneShotTaskWithResult", e)
-            throw RuntimeException(e)
-        }
     } catch (e: Throwable) {
         Log.warnWithException(logger, e, "could not submit one shot task {}", name)
         ErrorReporter.getInstance().reportError("org.digma.scheduler.oneShotTaskWithResult", e)
-        throw RuntimeException(e)
+        throw e
     }
+
+    try {
+        return future.get(timeoutMillis, TimeUnit.MILLISECONDS)
+    } catch (e: Throwable) {
+        Log.warnWithException(logger, e, "one-shot task with result {} failed", name)
+        ErrorReporter.getInstance().reportError("org.digma.scheduler.oneShotTaskWithResult", e)
+        throw e
+    }
+
 }
 
 

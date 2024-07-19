@@ -1,22 +1,17 @@
 package org.digma.intellij.plugin.analytics
 
-import com.intellij.collaboration.async.disposingScope
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import kotlinx.coroutines.async
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeout
 import org.digma.intellij.plugin.common.DisposableAdaptor
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.AboutResult
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.scheduling.disposingPeriodicTask
+import org.digma.intellij.plugin.scheduling.oneShotTask
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.time.Duration.Companion.minutes
 
@@ -45,13 +40,18 @@ class BackendInfoHolder(val project: Project) : DisposableAdaptor {
         //update now so that about exists as part of the object instantiation
         updateAboutInBackgroundNowWithTimeout()
 
-        @Suppress("UnstableApiUsage")
-        disposingScope().launch {
-            while (isActive) {
-                update()
-                delay(1.minutes.inWholeMilliseconds)
-            }
+        val registered = disposingPeriodicTask("${project.name}:BackendInfoHolder.periodic", 1.minutes.inWholeMilliseconds) {
+            update()
         }
+
+        if (!registered) {
+            Log.log(logger::warn, "could not schedule periodic task for BackendInfoHolder")
+            ErrorReporter.getInstance().reportError(
+                project, "BackendInfoHolder.init", "could not schedule periodic task for BackendInfoHolder",
+                mapOf()
+            )
+        }
+
 
         project.messageBus.connect(this)
             .subscribe(
@@ -77,8 +77,8 @@ class BackendInfoHolder(val project: Project) : DisposableAdaptor {
 
 
     private fun updateInBackground() {
-        @Suppress("UnstableApiUsage")
-        disposingScope().launch {
+        //just let it finish without waiting for timeout and without blocking this thread
+        oneShotTask("${project.name}:BackendInfoHolder.updateInBackground") {
             update()
         }
     }
@@ -142,28 +142,18 @@ class BackendInfoHolder(val project: Project) : DisposableAdaptor {
 
         Log.log(logger::trace, "updating backend info in background with timeout")
 
-        @Suppress("UnstableApiUsage")
-        val deferred = disposingScope().async {
+        val result = oneShotTask("${project.name}:BackendInfoHolder.updateAboutInBackgroundNowWithTimeout", 2000) {
             update()
         }
 
-        runBlocking {
-            try {
-                withTimeout(2000) {
-                    deferred.await()
-                }
-            } catch (e: Throwable) {
-                Log.warnWithException(logger, project, e, "error in updateAboutInBackgroundNowWithTimeout")
-                ErrorReporter.getInstance().reportError("BackendInfoHolder.updateAboutInBackgroundNowWithTimeout", e)
-            }
+        if (result) {
+            Log.log(logger::trace, "backend info updated in background with timeout {}", aboutRef.get())
+        } else {
+            Log.log(logger::trace, "backend info updated in background failed")
         }
-
-        Log.log(logger::trace, "backend info updated in background with timeout {}", aboutRef.get())
     }
 
     fun refresh() {
         updateInBackground()
     }
-
-
 }

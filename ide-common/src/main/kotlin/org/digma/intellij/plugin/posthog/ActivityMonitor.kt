@@ -948,4 +948,10 @@ class ActivityMonitor(private val project: Project) : Disposable {
         )
     }
 
+    fun reportScheduledTaskPerformanceIssue(details: MutableMap<String, Any>) {
+        capture(
+            "scheduled-task-performance-issue", details
+        )
+    }
+
 }

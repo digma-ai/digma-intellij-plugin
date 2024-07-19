@@ -34,15 +34,70 @@ import kotlin.math.min
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.toJavaDuration
 
+/*
+ NOTE: important to remember: code that will call digma API must be executed with one of the schedulers in this file and not in a coroutine.
+    while it is possible and will work it can get into trouble in certain situations. and anyway has no advantage over using the schedulers
+    in this file.
+ */
 
 /**
  * Note: these schedulers are meant to serve a low number of short running tasks that take milliseconds or just a few seconds, period should
  * be 10 seconds or more.
  * long-running tasks will cause thread starvation. too many tasks will also cause thread starvation. too short period will also cause thread starvation.
- * we don't have a lot of these tasks, we have a few dozens. the management task limits it to SCHEDULER_MAX_REGISTERED_TASKS and reports an error if more are registered.
+ * we don't have a lot of these tasks, we have a few dozens per project. the management task limits it to SCHEDULER_MAX_REGISTERED_TASKS and reports
+ * an error if more are registered.
  * for long-running tasks please use org.digma.intellij.plugin.common.Backgroundable.
  * one-shot tasks support is also meant for low number of tasks that run very fast, not more than milliseconds. we don't have too many.
  */
+
+
+/*
+ When to use these schedulers vs kotlin coroutine disposingScope:
+ it is possible to implement a recurring task using kotlin coroutines patterns:
+ disposingScope().launch {
+    while(isActive){
+        do something
+        delay(10000)
+    }
+ }
+
+ we realized that using disposingScope coroutine has some disadvantages:
+ * the code runs in a scope of coroutine, this poses some limitations, for example if somewhere in the call stack
+    needs to call a suspending function and wait for it to finish the most useful way is using runBlocking, but runBlocking can not be called in a scope
+    of another coroutine. it makes it impossible to do that.
+ * there is no point in starting a coroutine if the executing code is not a suspending code.
+ * in the pattern shown above with disposingScope the code needs to manage a while loop, a delay, exception handling, and always consider
+    the fact that the code runs in a scope of a coroutine.
+ * there is no central management for the tasks, for example it's very difficult to report statistics about all running tasks.
+
+using the scheduler in this file is cleaner:
+ disposingPeriodicTask("test", 100) {
+       do something
+ }
+
+the scheduler is a central management point, it can handle timeouts, cancellation, error handling, statistics.
+the code doesn't need to maintain a while loop, delays, timeouts,and error handling.
+the scheduler can report statistics and performance of running tasks.
+
+
+How and when to use the schedulers in this file:
+
+if you need a recurring task that will run for the lifetime of the project or application, execute periodically in predefined
+intervals. use disposingPeriodicTask.
+disposingPeriodicTask is meant for short running tasks with intervals that are few seconds or more. don't use it for long-running tasks or
+with very short intervals, a 10 seconds or more interval is recommended. very short intervals will cause high load or thread starvation,
+this is not the facility for such requirements.
+
+if you need a one-shot very short running task that must run on a background thread use one of the oneShotXXX task methods.
+see org.digma.intellij.plugin.scheduling.SchedulingTests for examples.
+
+
+when to use disposingScope().launch :
+if you need ro execute suspending code, or a very short task that does not call digma backend, you can still use disposingScope().launch,
+but it has not real advantage on using a one shot task.
+
+ */
+
 
 /*
 to call from java , assuming a class implements Disposable, do that:

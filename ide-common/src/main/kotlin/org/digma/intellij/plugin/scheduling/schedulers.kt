@@ -97,21 +97,36 @@ if disposing of the recurring task has more complex conditions. the schedulers h
 the parent disposable is disposed. if stopping the task has more conditions that are known only to the executed code then probably
 the coroutine pattern can be used. or a regular java java.util.TimerTask.
 see for example org.digma.intellij.plugin.digmathon.DigmathonService, it starts the recurring task depending on dates, and  it stops the recurring
-task when digmathon is not active anymore. this can not be accomplished with the schedulers in this file.
+task when digmathon is not active anymore.
 
 if you need ro execute suspending code, or a very short task that does not call digma backend, you can still use disposingScope().launch,
 but it has not real advantage on using a one shot task.
 
 
 So a rule of thumb may be:
-if the task should run for the lifetime of a project or application, is very short, and should never stop before the project is closed: use a scheduler
-with a correct parent disposable, usually a project service.
+always prefer a scheduler when possible.
 
-if the task has stopping conditions that are known only to the executed code.
+if the task can be disposed by a parent disposable, is very short, use a scheduler
+with a correct parent disposable, usually a project service or a local disposable.
+
+if the task has stopping conditions that are known only to the executed code and can not be used with a disposable.
 or if the task interval may change depending on some variables: use disposingScope().launch
 
  */
 
+
+/*
+to dispose a task using a local disposable, in case the task should be disposed early not related to project closing:
+
+val disposable = Disposer.newDisposable()
+disposable.disposingPeriodicTask("task-name",2.minutes.inWholeMilliseconds,10.minutes.inWholeMilliseconds){
+    if (need to dispose the task) {
+        Disposer.dispose(disposable)
+    }else {
+        do something
+    }
+}
+ */
 
 /*
 to call from java , assuming a class implements Disposable, do that:
@@ -238,6 +253,8 @@ fun Disposable.disposingPeriodicTask(name: String, period: Long, block: () -> Un
  */
 fun Disposable.disposingPeriodicTask(name: String, startupDelay: Long, period: Long, block: () -> Unit): Boolean {
 
+    Log.log(logger::trace, "registering disposingPeriodicTask {}, startupDelay:{},period:{}", name, startupDelay, period)
+
     val future = try {
         //catch and swallow all exceptions. there is no point in throwing them.
         // also some implementations will cancel the task if it throws an exception, we don't want that
@@ -278,6 +295,9 @@ fun Disposable.disposingPeriodicTask(name: String, startupDelay: Long, period: L
  * returns true if the task was registered, false otherwise.
  */
 fun Disposable.disposingOneShotDelayedTask(name: String, delay: Long, block: () -> Unit): Boolean {
+
+    Log.log(logger::trace, "registering disposingOneShotDelayedTask {}, delay:{}", name, delay)
+
     val future = try {
         //catch and swallow all exceptions. there is no point in throwing them.
         // also some implementations will cancel the task if it throws an exception, we don't want that
@@ -319,6 +339,8 @@ fun Disposable.disposingOneShotDelayedTask(name: String, delay: Long, block: () 
  */
 fun <T> oneShotTask(name: String, block: () -> T): Future<T>? {
 
+    Log.log(logger::trace, "registering oneShotTask {}", name)
+
     try {
         return executor.submit(Callable {
             val stopWatch = StopWatch.createStarted()
@@ -349,6 +371,8 @@ fun <T> oneShotTask(name: String, block: () -> T): Future<T>? {
  * returns true if the task completed successfully.
  */
 fun oneShotTask(name: String, timeoutMillis: Long, block: () -> Unit): Boolean {
+
+    Log.log(logger::trace, "registering oneShotTask {}, timeoutMillis:{}", name, timeoutMillis)
 
     val future = try {
         executor.submit {
@@ -386,6 +410,8 @@ fun oneShotTask(name: String, timeoutMillis: Long, block: () -> Unit): Boolean {
  */
 @Throws(Exception::class)
 fun <T> oneShotTaskWithResult(name: String, timeoutMillis: Long, block: () -> T): T {
+
+    Log.log(logger::trace, "registering oneShotTaskWithResult {}, timeoutMillis:{}", name, timeoutMillis)
 
     val future = try {
 

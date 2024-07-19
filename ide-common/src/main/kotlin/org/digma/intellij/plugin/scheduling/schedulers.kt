@@ -18,9 +18,8 @@ import kotlin.time.toJavaDuration
 
 val logger = Logger.getInstance("org.digma.scheduler")
 
-private val scheduler = AppExecutorUtil.createBoundedScheduledExecutorService("Digma-scheduler", 3)
-
 //private val scheduler = com.intellij.concurrency.JobScheduler.getScheduler()
+private val scheduler = AppExecutorUtil.createBoundedScheduledExecutorService("Digma-scheduler", 3)
 private val executor = AppExecutorUtil.createBoundedApplicationPoolExecutor("Digma-one-shot", 3)
 private val scheduledTasksPerformanceMonitor = ScheduledTasksPerformanceMonitor()
 

@@ -85,7 +85,7 @@ public class AnalyticsService implements Disposable {
         environment = new Environment(project, this);
         this.project = project;
         createClient();
-        scheduleEnvironmentRefresh(this, environment, project.getName());
+        scheduleEnvironmentRefresh(this, environment);
     }
 
 

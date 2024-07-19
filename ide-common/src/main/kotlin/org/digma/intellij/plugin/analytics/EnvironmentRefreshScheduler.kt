@@ -6,9 +6,9 @@ import org.digma.intellij.plugin.scheduling.disposingPeriodicTask
 import org.digma.intellij.plugin.settings.SettingsState
 
 
-fun scheduleEnvironmentRefresh(parentDisposable: Disposable, environment: Environment, projectName: String) {
+fun scheduleEnvironmentRefresh(parentDisposable: Disposable, environment: Environment) {
     val period = service<SettingsState>().refreshDelay.toLong() * 1000
-    parentDisposable.disposingPeriodicTask("$projectName:EnvironmentRefresh", period) {
+    parentDisposable.disposingPeriodicTask("EnvironmentRefresh", period) {
         environment.refreshNowOnBackground()
     }
 }

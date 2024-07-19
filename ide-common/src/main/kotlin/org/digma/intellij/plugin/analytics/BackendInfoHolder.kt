@@ -40,7 +40,7 @@ class BackendInfoHolder(val project: Project) : DisposableAdaptor {
         //update now so that about exists as part of the object instantiation
         updateAboutInBackgroundNowWithTimeout()
 
-        val registered = disposingPeriodicTask("${project.name}:BackendInfoHolder.periodic", 1.minutes.inWholeMilliseconds) {
+        val registered = disposingPeriodicTask("BackendInfoHolder.periodic", 1.minutes.inWholeMilliseconds) {
             update()
         }
 
@@ -78,7 +78,7 @@ class BackendInfoHolder(val project: Project) : DisposableAdaptor {
 
     private fun updateInBackground() {
         //just let it finish without waiting for timeout and without blocking this thread
-        oneShotTask("${project.name}:BackendInfoHolder.updateInBackground") {
+        oneShotTask("BackendInfoHolder.updateInBackground") {
             update()
         }
     }
@@ -142,7 +142,7 @@ class BackendInfoHolder(val project: Project) : DisposableAdaptor {
 
         Log.log(logger::trace, "updating backend info in background with timeout")
 
-        val result = oneShotTask("${project.name}:BackendInfoHolder.updateAboutInBackgroundNowWithTimeout", 2000) {
+        val result = oneShotTask("BackendInfoHolder.updateAboutInBackgroundNowWithTimeout", 2000) {
             update()
         }
 

@@ -35,7 +35,7 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.toJavaDuration
 
 /*
- NOTE: important to remember: code that will call digma API must be executed with one of the schedulers in this file and not in a coroutine.
+ NOTE: important to remember: code that will call digma API should be executed with one of the schedulers in this file and not in a coroutine.
     while it is possible and will work it can get into trouble in certain situations. and anyway has no advantage over using the schedulers
     in this file.
  */
@@ -88,13 +88,27 @@ disposingPeriodicTask is meant for short running tasks with intervals that are f
 with very short intervals, a 10 seconds or more interval is recommended. very short intervals will cause high load or thread starvation,
 this is not the facility for such requirements.
 
-if you need a one-shot very short running task that must run on a background thread use one of the oneShotXXX task methods.
+if you need a one-shot very short running task that must run on a background thread, use one of the oneShotXXX task methods.
 see org.digma.intellij.plugin.scheduling.SchedulingTests for examples.
 
 
 when to use disposingScope().launch :
+if disposing of the recurring task has more complex conditions. the schedulers here have one option to stop the recurring task when
+the parent disposable is disposed. if stopping the task has more conditions that are known only to the executed code then probably
+the coroutine pattern can be used. or a regular java java.util.TimerTask.
+see for example org.digma.intellij.plugin.digmathon.DigmathonService, it starts the recurring task depending on dates, and  it stops the recurring
+task when digmathon is not active anymore. this can not be accomplished with the schedulers in this file.
+
 if you need ro execute suspending code, or a very short task that does not call digma backend, you can still use disposingScope().launch,
 but it has not real advantage on using a one shot task.
+
+
+So a rule of thumb may be:
+if the task should run for the lifetime of a project or application, is very short, and should never stop before the project is closed: use a scheduler
+with a correct parent disposable, usually a project service.
+
+if the task has stopping conditions that are known only to the executed code.
+or if the task interval may change depending on some variables: use disposingScope().launch
 
  */
 
@@ -214,6 +228,15 @@ class ThreadPoolProviderServiceStarter : ProjectActivity {
  * returns true if the task was registered, false otherwise.
  */
 fun Disposable.disposingPeriodicTask(name: String, period: Long, block: () -> Unit): Boolean {
+    return disposingPeriodicTask(name, 0, period, block)
+}
+
+/**
+ * starts a periodic task , canceling the task when Disposable is disposed.
+ * wait startupDelay before first execution.
+ * returns true if the task was registered, false otherwise.
+ */
+fun Disposable.disposingPeriodicTask(name: String, startupDelay: Long, period: Long, block: () -> Unit): Boolean {
 
     val future = try {
         //catch and swallow all exceptions. there is no point in throwing them.
@@ -234,7 +257,7 @@ fun Disposable.disposingPeriodicTask(name: String, period: Long, block: () -> Un
                 scheduledTasksPerformanceMonitor.reportPerformance(name, stopWatch.time)
             }
 
-        }, 0, period, TimeUnit.MILLISECONDS)
+        }, startupDelay, period, TimeUnit.MILLISECONDS)
     } catch (e: Throwable) {
         Log.warnWithException(logger, e, "could not schedule periodic task {}", name)
         ErrorReporter.getInstance().reportError("org.digma.scheduler.disposingPeriodicTask", e)
@@ -250,6 +273,43 @@ fun Disposable.disposingPeriodicTask(name: String, period: Long, block: () -> Un
 
 }
 
+/**
+ * executes a one-shot task that will run after the given delay.
+ * returns true if the task was registered, false otherwise.
+ */
+fun Disposable.disposingOneShotDelayedTask(name: String, delay: Long, block: () -> Unit): Boolean {
+    val future = try {
+        //catch and swallow all exceptions. there is no point in throwing them.
+        // also some implementations will cancel the task if it throws an exception, we don't want that
+        // because our tasks may throw exceptions. usually we handle exceptions in the task body,
+        // but if not then exceptions will be caught here and logged.
+        scheduler.schedule({
+            val stopWatch = StopWatch.createStarted()
+            try {
+                Log.log(logger::trace, "executing delayed task {}", name)
+                block.invoke()
+                Log.log(logger::trace, "delayed task {} completed", name)
+            } catch (e: Throwable) {
+                Log.warnWithException(logger, e, "delayed task {} failed", name)
+                ErrorReporter.getInstance().reportError("org.digma.scheduler.disposingOneShotDelayedTask", e)
+            } finally {
+                stopWatch.stop()
+                scheduledTasksPerformanceMonitor.reportPerformance(name, stopWatch.time)
+            }
+
+        }, delay, TimeUnit.MILLISECONDS)
+    } catch (e: Throwable) {
+        Log.warnWithException(logger, e, "could not schedule delayed task {}", name)
+        ErrorReporter.getInstance().reportError("org.digma.scheduler.disposingOneShotDelayedTask", e)
+        return false
+    }
+
+    Disposer.register(this) {
+        Log.log(logger::trace, "disposing delayed task {}", name)
+        future.cancel(true)
+    }
+    return true
+}
 
 /**
  * executes a task with possible result or Unit, not waiting for the task to finish ,

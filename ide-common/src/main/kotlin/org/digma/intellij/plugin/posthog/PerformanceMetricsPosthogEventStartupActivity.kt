@@ -20,6 +20,8 @@ import org.digma.intellij.plugin.errorreporting.SEVERITY_PROP_NAME
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.version.PerformanceMetricsResponse
 import org.digma.intellij.plugin.persistence.PersistenceService
+import org.digma.intellij.plugin.scheduling.disposingOneShotDelayedTask
+import org.digma.intellij.plugin.scheduling.disposingPeriodicTask
 import org.digma.intellij.plugin.startup.DigmaProjectActivity
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Duration
@@ -120,43 +122,40 @@ class ContinuousPerformanceMetricsReporter : Disposable {
 
     private fun launchContinuousReport(nextReport: Duration) {
 
-        @Suppress("UnstableApiUsage")
-        disposingScope().launch {
-
-            delay(nextReport.inWholeMilliseconds)
-
-            while (isActive) {
-                try {
-
-                    findActiveProject()?.takeIf { isProjectValid(it) }?.let { project ->
-
-                        val result = AnalyticsService.getInstance(project).performanceMetrics
-
-                        if (result.metrics.isNotEmpty()) {
-                            filterMetrics(result)
-                            Log.log(logger::info, "registering continuous performance metrics")
-                            getActivityMonitor(project).registerPerformanceMetrics(result, false)
-                        }
-
-                    }
-
-
-                    delay(6.hours.inWholeMilliseconds)
-
-                } catch (e: AlreadyDisposedException) {
-                    //ignore this exception.
-                    // it may happen when closing projects because this class uses any active project when it needs one on every iteration,
-                    // and sometimes the project will close before the current iteration ends.
-                } catch (e: Exception) {
-                    Log.warnWithException(logger, e, "failed in continuous registerPerformanceMetrics")
-                    ErrorReporter.getInstance()
-                        .reportError(
-                            "PerformanceMetricsPosthogEventStartupActivity.continuousPerformanceMetrics",
-                            e,
-                            mapOf(SEVERITY_PROP_NAME to SEVERITY_LOW)
-                        )
-                    delay(1.hours.inWholeMilliseconds)
+        val name = "PerformanceMetricsPosthogEventStartupActivity.continuousPerformanceMetrics"
+        disposingPeriodicTask(name, nextReport.inWholeMilliseconds, 6.hours.inWholeMilliseconds) {
+            try {
+                report()
+            } catch (e: AlreadyDisposedException) {
+                //ignore this exception.
+                // it may happen when closing projects because this class uses any active project when it needs one on every iteration,
+                // and sometimes the project will close before the current iteration ends.
+            } catch (e: Exception) {
+                Log.warnWithException(logger, e, "failed in continuous registerPerformanceMetrics")
+                ErrorReporter.getInstance()
+                    .reportError(
+                        "PerformanceMetricsPosthogEventStartupActivity.continuousPerformanceMetrics",
+                        e,
+                        mapOf(SEVERITY_PROP_NAME to SEVERITY_LOW)
+                    )
+                //if failed, run it again in 1 hour instead of waiting the 6 hours delay
+                disposingOneShotDelayedTask(name, 1.hours.inWholeMilliseconds) {
+                    report()
                 }
+            }
+        }
+    }
+
+
+    private fun report() {
+        findActiveProject()?.takeIf { isProjectValid(it) }?.let { project ->
+
+            val result = AnalyticsService.getInstance(project).performanceMetrics
+
+            if (result.metrics.isNotEmpty()) {
+                filterMetrics(result)
+                Log.log(logger::info, "registering continuous performance metrics")
+                getActivityMonitor(project).registerPerformanceMetrics(result, false)
             }
         }
     }
@@ -179,10 +178,6 @@ class ContinuousPerformanceMetricsReporter : Disposable {
 
     private fun getActivityMonitor(project: Project): ActivityMonitor {
         return ActivityMonitor.getInstance(project)
-    }
-
-    private fun getAnalyticsService(project: Project): AnalyticsService {
-        return AnalyticsService.getInstance(project)
     }
 
 }

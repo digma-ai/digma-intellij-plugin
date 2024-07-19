@@ -51,6 +51,47 @@ class SchedulingTests {
 
 
     @Test
+    fun testDisposingOneShotDelayedTask() {
+
+        //this test should execute once after the given delay.
+
+        val testList = mutableListOf<String>()
+        val disposable = Disposer.newDisposable()
+        disposable.disposingOneShotDelayedTask("test", 200) {
+            testList.add("test")
+        }
+
+        Thread.sleep(300)
+        Disposer.dispose(disposable)
+        //sleep some more to make sure the task was disposed and not executing anymore
+        Thread.sleep(500)
+
+        assertEquals(1, testList.size)
+    }
+
+
+    @Test
+    fun testDisposingOneShotDelayedTaskCanceled() {
+
+        val testList = mutableListOf<String>()
+        val disposable = Disposer.newDisposable()
+        disposable.disposingOneShotDelayedTask("test", 200) {
+            testList.add("test")
+        }
+
+        //dispose the task , it should not run
+        Disposer.dispose(disposable)
+        //sleep some more to make sure the task was disposed and not executing anymore
+        Thread.sleep(500)
+
+        assertEquals(0, testList.size)
+    }
+
+
+
+
+
+    @Test
     fun testOneShotTask() {
         val future = oneShotTask("test") {
             "test"

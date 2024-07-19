@@ -33,11 +33,10 @@ import org.digma.intellij.plugin.model.rest.version.*;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
-import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.*;
+import java.io.Closeable;
 import java.lang.reflect.*;
 import java.time.Instant;
 import java.util.*;
@@ -86,7 +85,7 @@ public class AnalyticsService implements Disposable {
         environment = new Environment(project, this);
         this.project = project;
         createClient();
-        scheduleEnvironmentRefresh(this, environment);
+        scheduleEnvironmentRefresh(this, environment, project.getName());
     }
 
 

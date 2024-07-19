@@ -8,12 +8,27 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import org.junit.jupiter.api.assertThrows
 import java.util.Collections
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class SchedulingTests {
+
+    //enable running this test in a non intellij test.
+    //ErrorReporter.pause() will cause ErrorReporter.getInstance return a no-op proxy instead of a plugin service
+    @BeforeTest
+    fun pauseErrorReporter() {
+        ErrorReporter.pause()
+    }
+
 
     @Test
     fun testDisposingTask() {
@@ -28,7 +43,7 @@ class SchedulingTests {
 
         Thread.sleep(250)
         Disposer.dispose(disposable)
-        //sleep more to make sure the task was disposed
+        //sleep some more to make sure the task was disposed and not executing anymore
         Thread.sleep(500)
 
         assertEquals(3, testList.size)
@@ -54,16 +69,6 @@ class SchedulingTests {
         assertTrue(result)
     }
 
-    //can't use ErrorReporter in  unit test, need to run an intellij test
-//    @Test
-//    fun testOneShotTaskWithTimeoutCanceled(){
-//        val result = oneShotTask("test",100){
-//            Thread.sleep(200)
-//        }
-//
-//        assertFalse(result)
-//
-//    }
 
     @Test
     fun testOneShotTaskWithResult() {
@@ -73,6 +78,39 @@ class SchedulingTests {
 
         assertEquals("test", result)
 
+    }
+
+
+    @Test
+    fun testOneShotTaskCanceledOnTimeout() {
+        val result = oneShotTask("test", 1000) {
+            Thread.sleep(5000)
+        }
+        assertFalse(result)
+    }
+
+
+    @Test
+    fun testOneShotTaskWithResultCanceledOnTimeout() {
+        assertThrows<TimeoutException> {
+            val result = oneShotTaskWithResult("test", 100) {
+                Thread.sleep(1000)
+                "test"
+            }
+        }
+    }
+
+    @Test
+    fun testOneShotTaskWithFutureCanceledOnTimeout() {
+        val future = oneShotTask("test") {
+            Thread.sleep(5000)
+            "test"
+        }
+
+        assertNotNull(future)
+        assertThrows<TimeoutException> {
+            future.get(100, TimeUnit.MILLISECONDS)
+        }
     }
 
 

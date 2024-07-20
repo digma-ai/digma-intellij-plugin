@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.ui.notificationcenter
 
-import com.intellij.collaboration.async.disposingScope
 import com.intellij.notification.Notification
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
@@ -9,9 +8,6 @@ import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.PluginId
 import org.digma.intellij.plugin.common.UniqueGeneratedUserId
 import org.digma.intellij.plugin.common.findActiveProject
@@ -21,8 +17,10 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.NotificationsPersistenceState
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.scheduling.disposingPeriodicTask
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+import kotlin.time.Duration.Companion.hours
 
 
 const val BACKEND_HASNT_BEEN_RUNNING_FORM = "BACKEND_HASNT_BEEN_RUNNING_FORM"
@@ -33,40 +31,34 @@ fun startIdleUserTimers(parentDisposable: Disposable) {
 
     Log.log(AppNotificationCenter.logger::info, "starting startIdleUserTimers")
 
-    @Suppress("UnstableApiUsage")
-    parentDisposable.disposingScope().launch {
+    parentDisposable.disposingPeriodicTask("IdleUserTimers", 1.hours.inWholeMilliseconds) {
 
-        while (isActive) {
+        try {
 
-            try {
-
-                delay(60 * 1000 * 60)
-
-                //only show one message at a time
-                if (PersistenceService.getInstance().isFirstTimeAssetsReceived() &&
-                    backendIdleDays() > 3 &&
-                    backendHasntBeenRunningLastNotified() > 7
-                ) {
-                    service<NotificationsPersistenceState>().state.backendHasntBeenRunningForAWhileLastNotified = Instant.now()
-                    showDigmaHasntBeenRunningForAWhile()
-                } else if (PersistenceService.getInstance().isFirstTimeAssetsReceived() &&
-                    backendIdleDays() <= 1 &&
-                    userActionIdleDays() > 3 &&
-                    hasntBeenOpenedForAWhileLastNotified() > 7
-                ) {
-                    service<NotificationsPersistenceState>().state.hasntBeenOpenedForAWhileLastNotified = Instant.now()
-                    showDigmaHasntBeenOpenedForAWhile()
-                } else if (PersistenceService.getInstance().isFirstTimeConnectionEstablished() &&
-                    !PersistenceService.getInstance().isFirstTimeAssetsReceived() &&
-                    pluginInstalledDays() > 7 &&
-                    hasntBeenActivatedLastNotified() > 7
-                ) {
-                    service<NotificationsPersistenceState>().state.hasntBeenActivatedLastNotified = Instant.now()
-                    showDigmaHasntBeenActivated()
-                }
-            } catch (e: Throwable) {
-                ErrorReporter.getInstance().reportError("AppNotificationCenter.startIdleUserTimers", e)
+            //only show one message at a time
+            if (PersistenceService.getInstance().isFirstTimeAssetsReceived() &&
+                backendIdleDays() > 3 &&
+                backendHasntBeenRunningLastNotified() > 7
+            ) {
+                service<NotificationsPersistenceState>().state.backendHasntBeenRunningForAWhileLastNotified = Instant.now()
+                showDigmaHasntBeenRunningForAWhile()
+            } else if (PersistenceService.getInstance().isFirstTimeAssetsReceived() &&
+                backendIdleDays() <= 1 &&
+                userActionIdleDays() > 3 &&
+                hasntBeenOpenedForAWhileLastNotified() > 7
+            ) {
+                service<NotificationsPersistenceState>().state.hasntBeenOpenedForAWhileLastNotified = Instant.now()
+                showDigmaHasntBeenOpenedForAWhile()
+            } else if (PersistenceService.getInstance().isFirstTimeConnectionEstablished() &&
+                !PersistenceService.getInstance().isFirstTimeAssetsReceived() &&
+                pluginInstalledDays() > 7 &&
+                hasntBeenActivatedLastNotified() > 7
+            ) {
+                service<NotificationsPersistenceState>().state.hasntBeenActivatedLastNotified = Instant.now()
+                showDigmaHasntBeenActivated()
             }
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError("AppNotificationCenter.startIdleUserTimers", e)
         }
     }
 

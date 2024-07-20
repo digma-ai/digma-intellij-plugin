@@ -22,6 +22,7 @@ import java.lang.reflect.InvocationHandler
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
+import java.util.concurrent.locks.ReentrantLock
 
 
 @Service(Service.Level.APP)
@@ -35,6 +36,8 @@ class AuthManager : DisposableAdaptor {
     private var myAnalyticsProvider: RestAnalyticsProvider = createMyAnalyticsProvider()
 
     private val fireChangeAlarm = Alarm(Alarm.ThreadToUse.POOLED_THREAD, this)
+
+    private val myLock = ReentrantLock()
 
     companion object {
         @JvmStatic
@@ -51,7 +54,6 @@ class AuthManager : DisposableAdaptor {
                 Log.log(apiLogger::debug, "API:AuthManager: {}", message)
             }, { apiUrl })
     }
-
 
 
     fun getAuthenticationProviders(): List<AuthenticationProvider> {
@@ -75,69 +77,115 @@ class AuthManager : DisposableAdaptor {
     //AnalyticsService.createClient is called on startup.
     //the analyticsProvider here is the one to wrap with a proxy, it's a per project analyticsProvider.
     //AuthManager uses its own local analyticsProvider for the login and refresh.
-    //the method is also synchronized to prevent concurrent execution.
-    @Synchronized
     fun withAuth(analyticsProvider: RestAnalyticsProvider): AnalyticsProvider {
 
-        Log.log(logger::info, "wrapping analyticsProvider with auth for url {}", analyticsProvider.apiUrl)
+        try {
 
-        val loginHandler = LoginHandler.createLoginHandler(myAnalyticsProvider)
+            myLock.lock()
 
-        if (!loginHandler.loginOrRefresh()) {
-            Log.log(logger::warn, "loginOrRefresh failed for url {}", this.myAnalyticsProvider.apiUrl)
+            Log.log(logger::info, "wrapping analyticsProvider with auth for url {}", analyticsProvider.apiUrl)
+
+            val loginHandler = LoginHandler.createLoginHandler(myAnalyticsProvider)
+
+            if (!loginHandler.loginOrRefresh()) {
+                Log.log(logger::warn, "loginOrRefresh failed for url {}", this.myAnalyticsProvider.apiUrl)
+            }
+
+            //always return a proxy. even if login failed. the proxy will try to loginOrRefresh on AuthenticationException
+            val proxy = proxy(analyticsProvider)
+
+            Log.log(
+                logger::info, "analyticsProvider wrapped with auth proxy, current account {},analytics url {}",
+                DigmaDefaultAccountHolder.getInstance().account,
+                analyticsProvider.apiUrl
+            )
+
+            fireChange()
+
+            return proxy
+
+        } finally {
+            if (myLock.isHeldByCurrentThread) {
+                myLock.unlock()
+            }
         }
-
-        //always return a proxy. even if login failed. the proxy will try to loginOrRefresh on AuthenticationException
-        val proxy = proxy(analyticsProvider)
-
-        Log.log(
-            logger::info, "analyticsProvider wrapped with auth proxy, current account {},analytics url {}",
-            DigmaDefaultAccountHolder.getInstance().account,
-            analyticsProvider.apiUrl
-        )
-
-        fireChange()
-
-        return proxy
     }
 
 
-    @Synchronized
     fun login(user: String, password: String): LoginResult {
 
-        Log.log(logger::info, "login called, analytics url {}", myAnalyticsProvider.apiUrl)
+        try {
 
-        val loginHandler = LoginHandler.createLoginHandler(myAnalyticsProvider)
-        val loginResult = loginHandler.login(user, password)
+            myLock.lock()
 
-        Log.log(logger::info, "login result {}", loginResult)
+            Log.log(logger::info, "login called, analytics url {}", myAnalyticsProvider.apiUrl)
 
-        fireChange()
-        return loginResult
+            val loginHandler = LoginHandler.createLoginHandler(myAnalyticsProvider)
+            val loginResult = loginHandler.login(user, password)
+
+            Log.log(logger::info, "login result {}", loginResult)
+
+            fireChange()
+
+            return loginResult
+
+        } catch (e: Throwable) {
+            Log.warnWithException(logger, e, "error in login {}", e)
+            ErrorReporter.getInstance().reportError("AuthManager.login", e)
+            return LoginResult(false, null, null)
+        } finally {
+            if (myLock.isHeldByCurrentThread) {
+                myLock.unlock()
+            }
+        }
     }
 
 
-    @Synchronized
     fun logout() {
 
-        Log.log(logger::info, "logout called, analytics url {}", myAnalyticsProvider.apiUrl)
+        try {
 
-        val loginHandler = LoginHandler.createLoginHandler(myAnalyticsProvider)
-        loginHandler.logout()
+            myLock.lock()
 
-        fireChange()
+            Log.log(logger::info, "logout called, analytics url {}", myAnalyticsProvider.apiUrl)
+
+            val loginHandler = LoginHandler.createLoginHandler(myAnalyticsProvider)
+            loginHandler.logout()
+
+            fireChange()
+
+        } catch (e: Throwable) {
+            Log.warnWithException(logger, e, "error in login {}", e)
+            ErrorReporter.getInstance().reportError("AuthManager.logout", e)
+        } finally {
+            if (myLock.isHeldByCurrentThread) {
+                myLock.unlock()
+            }
+        }
     }
 
 
-    @Synchronized
     private fun onAuthenticationException() {
 
-        Log.log(logger::trace, "onAuthenticationException called, analytics url {}", myAnalyticsProvider.apiUrl)
+        try {
 
-        val loginHandler = LoginHandler.createLoginHandler(myAnalyticsProvider)
-        loginHandler.loginOrRefresh(true)
+            myLock.lock()
 
-        fireChange()
+            Log.log(logger::trace, "onAuthenticationException called, analytics url {}", myAnalyticsProvider.apiUrl)
+
+            val loginHandler = LoginHandler.createLoginHandler(myAnalyticsProvider)
+            loginHandler.loginOrRefresh(true)
+
+            fireChange()
+
+        } catch (e: Throwable) {
+            Log.warnWithException(logger, e, "error in onAuthenticationException {}", e)
+            ErrorReporter.getInstance().reportError("AuthManager.onAuthenticationException", e)
+        } finally {
+            if (myLock.isHeldByCurrentThread) {
+                myLock.unlock()
+            }
+        }
     }
 
 

@@ -7,6 +7,7 @@ import org.digma.intellij.plugin.auth.account.DigmaAccountManager
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.scheduling.oneShotTaskWithResult
 import kotlin.time.Duration.Companion.seconds
 
 class CentralizedLoginHandler(analyticsProvider: RestAnalyticsProvider) : AbstractLoginHandler(analyticsProvider) {
@@ -39,8 +40,10 @@ class CentralizedLoginHandler(analyticsProvider: RestAnalyticsProvider) : Abstra
 
                 Log.log(logger::trace, "found account in loginOrRefresh, account: {}", digmaAccount)
 
-                val credentials = runBlocking {
-                    DigmaAccountManager.getInstance().findCredentials(digmaAccount)
+                val credentials = oneShotTaskWithResult("AuthManager.CentralizedLoginHandler.findCredentials", 2.seconds.inWholeMilliseconds) {
+                    runBlocking {
+                        DigmaAccountManager.getInstance().findCredentials(digmaAccount)
+                    }
                 }
 
                 //if digma account is not null and credentials is null then probably something corrupted,

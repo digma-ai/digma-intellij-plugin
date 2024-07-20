@@ -159,7 +159,7 @@ val logger = Logger.getInstance("org.digma.scheduler")
 
 private val scheduler: MyScheduledExecutorService = MyScheduledExecutorService("Digma-Scheduler", INITIAL_SCHEDULER_CORE_SIZE)
 
-//todo: implement like MyScheduledExecutorService,currently using intellij executor
+//todo: implement like MyScheduledExecutorService,currently using intellij executor, or use intellij's own thread pool which is unbounded
 private val executor: ExecutorService = AppExecutorUtil.createBoundedApplicationPoolExecutor("Digma-one-shot", 3)
 private val scheduledTasksPerformanceMonitor = ScheduledTasksPerformanceMonitor()
 

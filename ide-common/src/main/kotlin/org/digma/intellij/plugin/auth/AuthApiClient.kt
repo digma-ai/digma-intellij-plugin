@@ -7,52 +7,73 @@ import org.digma.intellij.plugin.auth.account.DigmaAccountManager
 import org.digma.intellij.plugin.auth.credentials.DigmaCredentials
 import org.digma.intellij.plugin.model.rest.login.LoginRequest
 import org.digma.intellij.plugin.model.rest.login.RefreshRequest
+import java.util.concurrent.locks.ReentrantLock
 
 
 class AuthApiClient(private val analyticsProvider: RestAnalyticsProvider) {
 
-    @Synchronized
+    private val myLock = ReentrantLock()
+
     fun login(user: String, password: String): LoginResult {
 
-        val loginResponse = analyticsProvider.login(LoginRequest(user, password))
+        try {
 
-        val digmaAccount = DigmaAccountManager.createAccount(analyticsProvider.apiUrl, loginResponse.userId)
+            myLock.lock()
 
-        val digmaCredentials = DigmaCredentials(
-            loginResponse.accessToken,
-            loginResponse.refreshToken,
-            analyticsProvider.apiUrl,
-            TokenType.Bearer.name,
-            loginResponse.expiration.time,
-            Clock.System.now().toEpochMilliseconds()
-        )
+            val loginResponse = analyticsProvider.login(LoginRequest(user, password))
 
-        updateAccount(digmaAccount, digmaCredentials)
+            val digmaAccount = DigmaAccountManager.createAccount(analyticsProvider.apiUrl, loginResponse.userId)
 
-        return LoginResult(true, loginResponse.userId, null)
+            val digmaCredentials = DigmaCredentials(
+                loginResponse.accessToken,
+                loginResponse.refreshToken,
+                analyticsProvider.apiUrl,
+                TokenType.Bearer.name,
+                loginResponse.expiration.time,
+                Clock.System.now().toEpochMilliseconds()
+            )
+
+            updateAccount(digmaAccount, digmaCredentials)
+
+            return LoginResult(true, loginResponse.userId, null)
+
+        } finally {
+            if (myLock.isHeldByCurrentThread) {
+                myLock.unlock()
+            }
+        }
     }
 
 
-    @Synchronized
     fun refreshToken(
         digmaAccount: DigmaAccount,
         credentials: DigmaCredentials
     ): Boolean {
 
-        val loginResponse = analyticsProvider.refreshToken(RefreshRequest(credentials.accessToken, credentials.refreshToken))
+        try {
 
-        val digmaCredentials = DigmaCredentials(
-            loginResponse.accessToken,
-            loginResponse.refreshToken,
-            digmaAccount.server.url,
-            TokenType.Bearer.name,
-            loginResponse.expiration.time,
-            Clock.System.now().toEpochMilliseconds()
-        )
+            myLock.lock()
 
-        updateAccount(digmaAccount, digmaCredentials)
+            val loginResponse = analyticsProvider.refreshToken(RefreshRequest(credentials.accessToken, credentials.refreshToken))
 
-        return true
+            val digmaCredentials = DigmaCredentials(
+                loginResponse.accessToken,
+                loginResponse.refreshToken,
+                digmaAccount.server.url,
+                TokenType.Bearer.name,
+                loginResponse.expiration.time,
+                Clock.System.now().toEpochMilliseconds()
+            )
+
+            updateAccount(digmaAccount, digmaCredentials)
+
+            return true
+
+        } finally {
+            if (myLock.isHeldByCurrentThread) {
+                myLock.unlock()
+            }
+        }
 
     }
 

@@ -186,7 +186,6 @@ class ThreadPoolProviderService : Disposable {
             //wait 2 minutes, let the pool start working before the first management
             delay(2.minutes.inWholeMilliseconds)
 
-            val delay = 2.minutes.inWholeMilliseconds
             while (isActive) {
                 try {
                     manage()
@@ -202,12 +201,12 @@ class ThreadPoolProviderService : Disposable {
                     }
 
                     //this scheduler can not be used for high load
-                    if (scheduler.registeredTasks.get() >= SCHEDULER_MAX_REGISTERED_TASKS) {
+                    if (scheduler.registeredRecurringTasks.get() >= SCHEDULER_MAX_REGISTERED_TASKS) {
                         ErrorReporter.getInstance().reportError(
                             "ThreadPoolProviderService.manage", "too many registered tasks in scheduler", mapOf(
                                 "core.pool.size" to scheduler.corePoolSize,
                                 "max.pool.size" to scheduler.maximumPoolSize,
-                                "registered.tasks" to scheduler.registeredTasks.get(),
+                                "registered.tasks" to scheduler.registeredRecurringTasks.get(),
                                 "max.registered.allowed" to SCHEDULER_MAX_REGISTERED_TASKS
                             )
                         )
@@ -215,11 +214,11 @@ class ThreadPoolProviderService : Disposable {
 
                     Log.log(
                         logger::trace,
-                        "scheduler statistics: core pool size:{},registered tasks:{}",
+                        "management: scheduler statistics: core pool size:{},registered tasks:{}",
                         scheduler.corePoolSize,
-                        scheduler.registeredTasks
+                        scheduler.registeredRecurringTasks
                     )
-                    delay(delay)
+                    delay(2.minutes.inWholeMilliseconds)
                 } catch (e: Throwable) {
                     ErrorReporter.getInstance().reportError("ThreadPoolProviderService.manage", e)
                 }
@@ -535,7 +534,7 @@ class MyScheduledExecutorService(
     threadsNames: String, corePoolSize: Int
 ) : ScheduledThreadPoolExecutor(corePoolSize, CountingThreadFactory(threadsNames)) {
 
-    var registeredTasks = AtomicInteger(0)
+    var registeredRecurringTasks = AtomicInteger(0)
     private var managementRound = 0
     private var exhaustedCount = AtomicInteger(0)
 
@@ -547,7 +546,7 @@ class MyScheduledExecutorService(
     }
 
     override fun scheduleWithFixedDelay(command: Runnable, initialDelay: Long, delay: Long, unit: TimeUnit): ScheduledFuture<*> {
-        registeredTasks.incrementAndGet()
+        registeredRecurringTasks.incrementAndGet()
         return super.scheduleWithFixedDelay(command, initialDelay, delay, unit)
     }
 
@@ -563,19 +562,24 @@ class MyScheduledExecutorService(
     fun manage() {
         managementRound++
 
+        Log.log(logger::trace, "running management on scheduler")
+
         val poolSize = scheduler.corePoolSize
         val maxPoolSize = scheduler.maximumPoolSize
         val activeCount = scheduler.activeCount
+
+        Log.log(logger::trace, "management: on scheduler poolSize:{},activeCount:{}", poolSize, activeCount)
 
         if (activeCount >= poolSize) exhaustedCount.incrementAndGet()
 
         //check every 5 rounds, if was always exhausted increase pool size
         if (managementRound % 5 == 0) {
-            val exhausted = exhaustedCount.incrementAndGet()
+            val exhausted = exhaustedCount.get()
+            Log.log(logger::trace, "management: on scheduler exhausted:{}", exhausted)
             exhaustedCount.set(0)
             if (exhausted >= 5) {
                 corePoolSize = min(maxPoolSize, poolSize + 1)
-                Log.log(logger::trace, "scheduler pool size increased to {}", corePoolSize)
+                Log.log(logger::trace, "management: on scheduler pool size increased to {}", corePoolSize)
             }
         }
     }

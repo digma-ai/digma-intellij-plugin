@@ -34,6 +34,7 @@ fun startAggressiveUpdateNotificationTimer(
     currentlyShowingAggressiveUpdateNotifications: MutableList<Notification>
 ): Job {
 
+    //todo: convert to scheduler, return a disposable instead of Job
     @Suppress("UnstableApiUsage")
     return parentDisposable.disposingScope().launch {
 

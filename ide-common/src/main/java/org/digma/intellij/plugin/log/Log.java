@@ -28,6 +28,9 @@ public class Log {
         consumer.accept(DIGMA_PROJECT + project.getName() + ": " + String.format(format.replace("{}", "%s"), args));
     }
 
+    public static void logWithThreadName(Consumer<String> consumer, String format, Object... args) {
+        consumer.accept(Thread.currentThread().getName() + ": " + DIGMA + String.format(format.replace("{}", "%s"), args));
+    }
     public static void log(Consumer<String> consumer, String format, Object... args) {
         consumer.accept(DIGMA + String.format(format.replace("{}", "%s"), args));
     }

@@ -1,13 +1,11 @@
 package org.digma.intellij.plugin.ui.common
 
-import com.intellij.collaboration.async.disposingScope
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.IconLoader
 import com.intellij.ui.components.ActionLink
 import com.intellij.util.ui.JBUI
-import kotlinx.coroutines.launch
 import org.apache.maven.artifact.versioning.ComparableVersion
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.BackendInfoHolder
@@ -19,6 +17,7 @@ import org.digma.intellij.plugin.loadstatus.LoadStatusService
 import org.digma.intellij.plugin.persistence.NotificationsPersistenceState
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.UserActionOrigin
+import org.digma.intellij.plugin.scheduling.oneShotTask
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import java.awt.BorderLayout
 import java.awt.Cursor
@@ -38,7 +37,7 @@ import javax.swing.SwingConstants
 
 class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
 
-    private var service = project.service<LoadStatusService>()
+    private var service = LoadStatusService.getInstance(project)
 
     val label = JLabel("We're processing less data to conserve resources, consider ", SwingConstants.LEFT)
     private var actionLink = ActionLink("deploying centrally") {
@@ -46,7 +45,7 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
         BrowserUtil.browse(Links.DIGMA_OVERLOAD_WARNING_DOCS_URL, project)
     }
 
-    val closeIcon = IconLoader.getIcon("/icons/close.svg", AppIcons::class.java.classLoader)
+    private val closeIcon = IconLoader.getIcon("/icons/close.svg", AppIcons::class.java.classLoader)
     private val closeButton = JButton(closeIcon)
 
     init {
@@ -124,7 +123,7 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
                 ActivityMonitor.getInstance(project).registerCloseThrottlingMessage(service.lastLoadStatus.throttlingType.toString())
                 if (service.lastLoadStatus.throttlingType == "ExtendedObservability")
                 {
-                    val analyticsService = project.service<AnalyticsService>()
+                    val analyticsService = AnalyticsService.getInstance(project)
                     analyticsService.resetThrottlingStatus()
                 }
             }
@@ -167,8 +166,7 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
                     service.lastLoadStatus.lastUpdated
                 )
 
-                @Suppress("UnstableApiUsage")
-                service.disposingScope().launch {
+                oneShotTask("LoadStatusPanel.shouldShowClose", 5000) {
                     val shouldShowClose = try {
                         shouldDisplayCloseButton()
                     } catch (e: Throwable) {

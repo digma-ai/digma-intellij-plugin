@@ -19,6 +19,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlin.test.fail
 
 class SchedulingTests {
 
@@ -37,7 +38,7 @@ class SchedulingTests {
 
         val testList = mutableListOf<String>()
         val disposable = Disposer.newDisposable()
-        disposable.disposingPeriodicTask("test", 100) {
+        disposable.disposingPeriodicTask("testDisposingTask", 100) {
             testList.add("test")
         }
 
@@ -57,7 +58,7 @@ class SchedulingTests {
 
         val testList = mutableListOf<String>()
         val disposable = Disposer.newDisposable()
-        disposable.disposingOneShotDelayedTask("test", 200) {
+        disposable.disposingOneShotDelayedTask("testDisposingOneShotDelayedTask", 200) {
             testList.add("test")
         }
 
@@ -75,11 +76,11 @@ class SchedulingTests {
 
         val testList = mutableListOf<String>()
         val disposable = Disposer.newDisposable()
-        disposable.disposingOneShotDelayedTask("test", 200) {
+        disposable.disposingOneShotDelayedTask("testDisposingOneShotDelayedTaskCanceled", 200) {
             testList.add("test")
         }
 
-        //dispose the task , it should not run
+        //dispose the task immediately, it should not run
         Disposer.dispose(disposable)
         //sleep some more to make sure the task was disposed and not executing anymore
         Thread.sleep(500)
@@ -88,12 +89,57 @@ class SchedulingTests {
     }
 
 
+    @Test
+    fun testDisposingOneShotDelayedTaskCanceledParentDisposableHasNoChildren() {
+
+        val testList = mutableListOf<String>()
+        val disposable = Disposer.newDisposable()
+        disposable.disposingOneShotDelayedTask("testDisposingOneShotDelayedTaskCanceledParentDisposableHasNoChildren", 300) {
+            testList.add("test")
+        }
+
+        //dispose the task , it should not run
+        Disposer.dispose(disposable)
+        //sleep some more to make sure the task was disposed and not executing anymore
+        Thread.sleep(500)
+
+        //the disposable is disposed and should have no children
+        @Suppress("UnstableApiUsage")
+        Disposer.disposeChildren(disposable) {
+            fail("this parent disposable should have no children")
+        }
+
+        assertEquals(0, testList.size)
+    }
+
+    @Test
+    fun testDisposingOneShotDelayedTaskParentDisposableHasNoChildren() {
+
+        val testList = mutableListOf<String>()
+        val disposable = Disposer.newDisposable()
+        disposable.disposingOneShotDelayedTask("testDisposingOneShotDelayedTaskParentDisposableHasNoChildren", 200) {
+            testList.add("test")
+        }
+
+        Thread.sleep(500)
+
+        //the task will run. but not disposing the disposable, it should have no children because the task
+        // itself removed its children when it finished executing
+        @Suppress("UnstableApiUsage")
+        Disposer.disposeChildren(disposable) {
+            fail("this parent disposable should have no children")
+        }
+
+        assertEquals(1, testList.size)
+    }
+
+
 
 
 
     @Test
     fun testOneShotTask() {
-        val future = oneShotTask("test") {
+        val future = oneShotTask("testOneShotTask") {
             "test"
         }
 
@@ -103,7 +149,7 @@ class SchedulingTests {
 
     @Test
     fun testOneShotTaskWithTimeout() {
-        val result = oneShotTask("test", 100) {
+        val result = oneShotTask("testOneShotTaskWithTimeout", 100) {
             println("test")
         }
 
@@ -113,7 +159,7 @@ class SchedulingTests {
 
     @Test
     fun testOneShotTaskWithResult() {
-        val result = oneShotTaskWithResult("test", 100) {
+        val result = oneShotTaskWithResult("testOneShotTaskWithResult", 100) {
             "test"
         }
 
@@ -124,8 +170,10 @@ class SchedulingTests {
 
     @Test
     fun testOneShotTaskCanceledOnTimeout() {
-        val result = oneShotTask("test", 1000) {
-            Thread.sleep(5000)
+        val result = oneShotTask("testOneShotTaskCanceledOnTimeout", 500) {
+            assertThrows<InterruptedException> {
+                Thread.sleep(2000)
+            }
         }
         assertFalse(result)
     }
@@ -134,8 +182,9 @@ class SchedulingTests {
     @Test
     fun testOneShotTaskWithResultCanceledOnTimeout() {
         assertThrows<TimeoutException> {
-            val result = oneShotTaskWithResult("test", 100) {
+            oneShotTaskWithResult("testOneShotTaskWithResultCanceledOnTimeout", 100) {
                 Thread.sleep(1000)
+                @Suppress("UNUSED_EXPRESSION")
                 "test"
             }
         }
@@ -143,14 +192,22 @@ class SchedulingTests {
 
     @Test
     fun testOneShotTaskWithFutureCanceledOnTimeout() {
-        val future = oneShotTask("test") {
-            Thread.sleep(5000)
+        val future = oneShotTask("testOneShotTaskWithFutureCanceledOnTimeout") {
+            assertThrows<InterruptedException> {
+                Thread.sleep(5000)
+            }
             "test"
         }
 
         assertNotNull(future)
         assertThrows<TimeoutException> {
-            future.get(100, TimeUnit.MILLISECONDS)
+            try {
+                future.get(100, TimeUnit.MILLISECONDS)
+            } catch (e: Throwable) {
+                future.cancel(true)
+                throw e
+            }
+
         }
     }
 
@@ -172,7 +229,7 @@ class SchedulingTests {
         val daemons = Collections.synchronizedMap(mutableMapOf<String, Boolean>())
         val disposable = Disposer.newDisposable()
         repeat((0..1000).count()) {
-            disposable.disposingPeriodicTask("test", 10) {
+            disposable.disposingPeriodicTask("testThreadsAreDaemon", 10) {
                 try {
                     daemons[Thread.currentThread().name] = Thread.currentThread().isDaemon
                     Thread.sleep(100)
@@ -208,7 +265,7 @@ class SchedulingTests {
         val threadNames = Collections.synchronizedSet(mutableSetOf<String>())
         val disposable = Disposer.newDisposable()
         repeat((0..1000).count()) {
-            disposable.disposingPeriodicTask("test", 10) {
+            disposable.disposingPeriodicTask("testCorePoolSizeIncreased", 10) {
                 try {
                     threadNames.add(Thread.currentThread().name)
                     Thread.sleep(100)

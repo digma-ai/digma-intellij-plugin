@@ -82,7 +82,7 @@ the scheduler can report statistics and performance of running tasks.
 
 How and when to use the schedulers in this file:
 
-if you need a recurring task that will run for the lifetime of the project or application, execute periodically in predefined
+if you need a recurring task that will run for the lifetime of the project or application or a local disposable, it should execute periodically in predefined
 intervals. use disposingPeriodicTask.
 disposingPeriodicTask is meant for short running tasks with intervals that are few seconds or more. don't use it for long-running tasks or
 with very short intervals, a 10 seconds or more interval is recommended. very short intervals will cause high load or thread starvation,
@@ -95,23 +95,31 @@ see org.digma.intellij.plugin.scheduling.SchedulingTests for examples.
 when to use disposingScope().launch :
 if disposing of the recurring task has more complex conditions. the schedulers here have one option to stop the recurring task when
 the parent disposable is disposed. if stopping the task has more conditions that are known only to the executed code then probably
-the coroutine pattern can be used. or a regular java java.util.TimerTask.
-see for example org.digma.intellij.plugin.digmathon.DigmathonService, it starts the recurring task depending on dates, and  it stops the recurring
-task when digmathon is not active anymore.
+the coroutine pattern is more conformable. or a regular java java.util.TimerTask.
+see for example org.digma.intellij.plugin.ui.recentactivity.RecentActivityService.openRegistrationDialog, it is waiting with a while loop
+for the app to initialize, with a scheduler we don't know how long it will take , a recurring task of 5 millis may create high load
+on the scheduler. this is a classic case where a local coroutine is more comfortable than a scheduler.
 
-if you need ro execute suspending code, or a very short task that does not call digma backend, you can still use disposingScope().launch,
-but it has not real advantage on using a one shot task.
+if you need to execute suspending code it's better to use a coroutine.
 
 
 So a rule of thumb may be:
 always prefer a scheduler when possible.
 
-if the task can be disposed by a parent disposable, is very short, use a scheduler
-with a correct parent disposable, usually a project service or a local disposable.
+if the task can be disposed by a parent disposable, is very short: use a scheduler with a correct parent disposable,
+usually a project service or a local disposable.
 
-if the task has stopping conditions that are known only to the executed code and can not be used with a disposable.
+if the task has more complex stopping conditions that are known only to the executed code and can not be used with a disposable.
 or if the task interval may change depending on some variables: use disposingScope().launch
 
+ */
+
+/*
+Cancellation:
+when a one-shot task fails on timeout it will be canceled. user code needs to check InterruptedException and the interrupted flag in order
+to quite the task.
+see java doc of InterruptedException.
+it is similar to cancellation exception in kotlin coroutines.
  */
 
 
@@ -265,9 +273,9 @@ fun Disposable.disposingPeriodicTask(name: String, startupDelay: Long, period: L
         scheduler.scheduleWithFixedDelay({
             val stopWatch = StopWatch.createStarted()
             try {
-                Log.log(logger::trace, "executing periodic task {}", name)
+                Log.logWithThreadName(logger::trace, "executing periodic task {}", name)
                 block.invoke()
-                Log.log(logger::trace, "periodic task {} completed", name)
+                Log.logWithThreadName(logger::trace, "periodic task {} completed", name)
             } catch (e: Throwable) {
                 Log.warnWithException(logger, e, "periodic task {} failed", name)
                 ErrorReporter.getInstance().reportError("org.digma.scheduler.disposingPeriodicTask", e)
@@ -298,6 +306,42 @@ fun Disposable.disposingPeriodicTask(name: String, startupDelay: Long, period: L
  */
 fun Disposable.disposingOneShotDelayedTask(name: String, delay: Long, block: () -> Unit): Boolean {
 
+    /*
+    This comes to avoid memory leaks.
+    consider this:
+    calling disposingOneShotDelayedTask on a Disposable ,lets say a project service. and we would just register
+    a child disposable on the project service to cancel the task.
+    if the project is closed before the task is executed the parent disposable, the service, will be disposed with all its children
+    and the task will be canceled.
+    but if the task did execute and the project service was not disposed yet, we are left with a disposable child that will be disposed
+    only when the service is disposed.
+    it's not such a big deal, its just another disposable in some map. but if many tasks are registered on the same project service
+    we end up with many children still registered while actually all the tasks were executed already.
+
+    the solution:
+    calling disposingOneShotDelayedTask on a Disposable project service. the parent.
+    we create here a new disposable,the child, register it as child of the parent.
+    register the task on the child disposable and in disposingOneShotDelayedTask0 we register a child for the child.
+    if the parent is disposed before the task is executed, the first child will be disposed, its child will be disposed and the task
+    will be canceled.
+    if the task executed and completed, the task itself disposes the first child, which will dispose its child. and now the parent
+    doesn't have a leftover child.
+
+    Notice that we execute disposingOneShotDelayedTask0 on the child disposable, its private and should only be used internally.
+    in disposingOneShotDelayedTask0 when the task completes it disposes this in the finally block.
+    see unit tests:
+    testDisposingOneShotDelayedTaskParentDisposableHasNoChildren
+    testDisposingOneShotDelayedTaskCanceledParentDisposableHasNoChildren
+
+     */
+
+    val disposable = Disposer.newDisposable()
+    Disposer.register(this, disposable)
+    return disposable.disposingOneShotDelayedTask0(name, delay, block)
+}
+
+private fun Disposable.disposingOneShotDelayedTask0(name: String, delay: Long, block: () -> Unit): Boolean {
+
     Log.log(logger::trace, "registering disposingOneShotDelayedTask {}, delay:{}", name, delay)
 
     val future = try {
@@ -306,17 +350,19 @@ fun Disposable.disposingOneShotDelayedTask(name: String, delay: Long, block: () 
         // because our tasks may throw exceptions. usually we handle exceptions in the task body,
         // but if not then exceptions will be caught here and logged.
         scheduler.schedule({
+
             val stopWatch = StopWatch.createStarted()
             try {
-                Log.log(logger::trace, "executing delayed task {}", name)
+                Log.logWithThreadName(logger::trace, "executing delayed task {}", name)
                 block.invoke()
-                Log.log(logger::trace, "delayed task {} completed", name)
+                Log.logWithThreadName(logger::trace, "delayed task {} completed", name)
             } catch (e: Throwable) {
                 Log.warnWithException(logger, e, "delayed task {} failed", name)
                 ErrorReporter.getInstance().reportError("org.digma.scheduler.disposingOneShotDelayedTask", e)
             } finally {
                 stopWatch.stop()
                 scheduledTasksPerformanceMonitor.reportPerformance(name, stopWatch.time)
+                Disposer.dispose(this)
             }
 
         }, delay, TimeUnit.MILLISECONDS)
@@ -326,10 +372,13 @@ fun Disposable.disposingOneShotDelayedTask(name: String, delay: Long, block: () 
         return false
     }
 
+
+    //this will run when parent disposable is disposed which will dispose this disposable and its children
     Disposer.register(this) {
         Log.log(logger::trace, "disposing delayed task {}", name)
         future.cancel(true)
     }
+
     return true
 }
 
@@ -347,9 +396,9 @@ fun <T> oneShotTask(name: String, block: () -> T): Future<T>? {
         return executor.submit(Callable {
             val stopWatch = StopWatch.createStarted()
             try {
-                Log.log(logger::trace, "executing one-shot task {}", name)
+                Log.logWithThreadName(logger::trace, "executing one-shot task {}", name)
                 val result = block.invoke()
-                Log.log(logger::trace, "one-shot task {} completed", name)
+                Log.logWithThreadName(logger::trace, "one-shot task {} completed", name)
                 return@Callable result
             } catch (e: Throwable) {
                 Log.warnWithException(logger, e, "one-shot task {} failed", name)
@@ -380,9 +429,9 @@ fun oneShotTask(name: String, timeoutMillis: Long, block: () -> Unit): Boolean {
         executor.submit {
             val stopWatch = StopWatch.createStarted()
             try {
-                Log.log(logger::trace, "executing one-shot task {}", name)
+                Log.logWithThreadName(logger::trace, "executing one-shot task {}", name)
                 block.invoke()
-                Log.log(logger::trace, "one-shot task {} completed", name)
+                Log.logWithThreadName(logger::trace, "one-shot task {} completed", name)
             } finally {
                 stopWatch.stop()
                 scheduledTasksPerformanceMonitor.reportPerformance(name, stopWatch.time)
@@ -398,6 +447,7 @@ fun oneShotTask(name: String, timeoutMillis: Long, block: () -> Unit): Boolean {
         future.get(timeoutMillis, TimeUnit.MILLISECONDS)
         return true
     } catch (e: Throwable) {
+        future.cancel(true)
         Log.warnWithException(logger, e, "one-shot task {} failed", name)
         ErrorReporter.getInstance().reportError("org.digma.scheduler.oneShotTask", e)
         return false
@@ -420,9 +470,9 @@ fun <T> oneShotTaskWithResult(name: String, timeoutMillis: Long, block: () -> T)
         executor.submit(Callable {
             val stopWatch = StopWatch.createStarted()
             try {
-                Log.log(logger::trace, "executing one-shot task with result {}", name)
+                Log.logWithThreadName(logger::trace, "executing one-shot task with result {}", name)
                 val result = block.invoke()
-                Log.log(logger::trace, "one-shot task with result {} completed", name)
+                Log.logWithThreadName(logger::trace, "one-shot task with result {} completed", name)
                 return@Callable result
             } finally {
                 stopWatch.stop()
@@ -438,6 +488,7 @@ fun <T> oneShotTaskWithResult(name: String, timeoutMillis: Long, block: () -> T)
     try {
         return future.get(timeoutMillis, TimeUnit.MILLISECONDS)
     } catch (e: Throwable) {
+        future.cancel(true)
         Log.warnWithException(logger, e, "one-shot task with result {} failed", name)
         ErrorReporter.getInstance().reportError("org.digma.scheduler.oneShotTaskWithResult", e)
         throw e

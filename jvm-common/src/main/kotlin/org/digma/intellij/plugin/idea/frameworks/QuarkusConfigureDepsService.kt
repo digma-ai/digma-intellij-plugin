@@ -141,9 +141,7 @@ class QuarkusConfigureDepsService(private val project: Project) : Disposable {
         blackoutStopTime = LocalDateTime.now().plusSeconds(blackoutDurationSeconds)
 
         // making the panel disappear
-        @Suppress("UnstableApiUsage")
-        disposingScope().launch {
-            delay(500)
+        disposingOneShotDelayedTask("QuarkusConfigureDepsService.resetPanel", 500) {
             affectedPanel?.reset()
         }
 

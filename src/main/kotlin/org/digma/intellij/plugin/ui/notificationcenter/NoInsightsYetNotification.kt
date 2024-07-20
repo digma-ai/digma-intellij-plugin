@@ -1,19 +1,19 @@
 package org.digma.intellij.plugin.ui.notificationcenter
 
-import com.intellij.collaboration.async.disposingScope
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.service
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import com.intellij.openapi.util.Disposer
 import org.digma.intellij.plugin.PluginId
 import org.digma.intellij.plugin.common.findActiveProject
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.scheduling.disposingOneShotDelayedTask
+import org.digma.intellij.plugin.scheduling.disposingPeriodicTask
 import java.time.Instant
-import java.time.temporal.ChronoUnit
+import kotlin.time.Duration.Companion.minutes
 
 
 fun startNoInsightsYetNotificationTimer(parentDisposable: Disposable) {
@@ -22,33 +22,31 @@ fun startNoInsightsYetNotificationTimer(parentDisposable: Disposable) {
         return
     }
 
-
-    @Suppress("UnstableApiUsage")
-    parentDisposable.disposingScope().launch {
-
-        Log.log(AppNotificationCenter.logger::info, "Starting tNoInsightsYetNotificationTimer")
-
-        var firstConnectionTime = service<PersistenceService>().getFirstTimeConnectionEstablishedTimestamp()
-        while (firstConnectionTime == null) {
-            delay(60000)
-            firstConnectionTime = service<PersistenceService>().getFirstTimeConnectionEstablishedTimestamp()
+    val disposable = Disposer.newDisposable()
+    Disposer.register(parentDisposable, disposable)
+    disposable.disposingPeriodicTask("NoInsightsYetNotificationTimer.waitForFirstConnection", 1.minutes.inWholeMilliseconds) {
+        Log.log(AppNotificationCenter.logger::info, "Starting NoInsightsYetNotificationTimer")
+        val firstConnectionTime = service<PersistenceService>().getFirstTimeConnectionEstablishedTimestamp()
+        if (firstConnectionTime != null) {
+            Log.log(AppNotificationCenter.logger::info, "in NoInsightsYetNotificationTimer, got firstConnectionTime {}", firstConnectionTime)
+            //will cancel this task
+            Disposer.dispose(disposable)
+            scheduleShowNotification(parentDisposable, firstConnectionTime)
         }
+    }
+}
 
+private fun scheduleShowNotification(parentDisposable: Disposable, firstConnectionTime: Instant) {
 
-        Log.log(AppNotificationCenter.logger::info, "in NoInsightsYetNotificationTimer, got firstConnectionTime {}", firstConnectionTime)
+    Log.log(
+        AppNotificationCenter.logger::info,
+        "in NoInsightsYetNotificationTimer, waiting 30 minutes after firstConnectionTime {}",
+        firstConnectionTime
+    )
 
-        val after30Minutes = firstConnectionTime.plus(30, ChronoUnit.MINUTES)
-
-        Log.log(
-            AppNotificationCenter.logger::info,
-            "in NoInsightsYetNotificationTimer, waiting 30 minutes after firstConnectionTime {}",
-            firstConnectionTime
-        )
-        while (Instant.now().isBefore(after30Minutes)) {
-            delay(60000)
-        }
-
-
+    val disposable = Disposer.newDisposable()
+    Disposer.register(parentDisposable, disposable)
+    disposable.disposingOneShotDelayedTask("NoInsightsYetNotificationTimer.showNoInsightsYetNotification", 30.minutes.inWholeMilliseconds) {
         if (!service<PersistenceService>().isFirstTimeInsightReceived()) {
             Log.log(AppNotificationCenter.logger::info, "in NoInsightsYetNotificationTimer, showing notification")
             showNoInsightsYetNotification()

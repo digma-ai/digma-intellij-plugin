@@ -543,7 +543,7 @@ public class AnalyticsService implements Disposable {
             //these are exceptions we throw intentionally if calling the API on EDT or in ReadAccess.
             //these may break the flow of the application because no one catches them.
             //before they are thrown an error is logged which should pop up a red error icon to the user.
-            //we must catch them during development
+            //we must catch them during development.
             throw e;
         } catch (Throwable e) {
             throw new AnalyticsServiceException(e);

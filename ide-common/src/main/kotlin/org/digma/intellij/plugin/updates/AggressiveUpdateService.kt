@@ -8,13 +8,10 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import io.ktor.utils.io.CancellationException
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeout
 import org.apache.maven.artifact.versioning.ComparableVersion
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
@@ -32,6 +29,7 @@ import org.digma.intellij.plugin.model.rest.AboutResult
 import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
 import org.digma.intellij.plugin.model.rest.version.VersionResponse
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.scheduling.oneShotTask
 import org.digma.intellij.plugin.settings.InternalFileSettings
 import org.digma.intellij.plugin.updates.CurrentUpdateState.OK
 import org.digma.intellij.plugin.updates.CurrentUpdateState.UPDATE_BACKEND
@@ -156,8 +154,7 @@ class AggressiveUpdateService(val project: Project) : Disposable {
 
     private fun updateStateNow() {
 
-        @Suppress("UnstableApiUsage")
-        val deferred = disposingScope().async {
+        val future = oneShotTask("AggressiveUpdateService.updateStateNow") {
             try {
                 Log.log(logger::trace, "loading versions and updating state on startup")
                 updateState()
@@ -171,17 +168,12 @@ class AggressiveUpdateService(val project: Project) : Disposable {
             }
         }
 
-        runBlocking {
-            try {
-                withTimeout(2000) {
-                    deferred.await()
-                }
-            } catch (e: Throwable) {
-                ErrorReporter.getInstance().reportError("AggressiveUpdateService.updateStateNow", e)
-            }
+        try {
+            future!!.get(2.seconds.inWholeMilliseconds, TimeUnit.MILLISECONDS)
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError("AggressiveUpdateService.updateStateNow", e)
         }
     }
-
 
 
     @Synchronized
@@ -282,8 +274,6 @@ class AggressiveUpdateService(val project: Project) : Disposable {
             } ?: throw RuntimeException("could not get backend info from getVersions or getAbout")
         }
     }
-
-
 
 
     private fun update(versions: Versions) {

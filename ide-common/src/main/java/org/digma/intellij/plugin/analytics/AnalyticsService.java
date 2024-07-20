@@ -539,9 +539,11 @@ public class AnalyticsService implements Disposable {
                 Throwable cause = ExceptionUtils.findFirstNonWrapperException(undeclaredThrowableException);
                 throw new AnalyticsServiceException(Objects.requireNonNullElse(cause, undeclaredThrowableException));
             }
-        } catch (RuntimeExceptionWithAttachments e) {
-            //this is a platform exception that will be thrown as a result of asserting non UI thread when calling backend API,
-            // we want this exception to be thrown as is , it should be noticed during development and fixed.
+        } catch (EDT.EDTAccessException | ReadActions.ReadAccessException e) {
+            //these are exceptions we throw intentionally if calling the API on EDT or in ReadAccess.
+            //these may break the flow of the application because no one catches them.
+            //before they are thrown an error is logged which should pop up a red error icon to the user.
+            //we must catch them during development
             throw e;
         } catch (Throwable e) {
             throw new AnalyticsServiceException(e);

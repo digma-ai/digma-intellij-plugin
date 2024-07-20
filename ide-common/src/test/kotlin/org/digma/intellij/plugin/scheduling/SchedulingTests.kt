@@ -134,6 +134,25 @@ class SchedulingTests {
     }
 
 
+    @Test
+    fun testTaskCancelsItself() {
+
+        val testList = mutableListOf<String>()
+        val disposable = Disposer.newDisposable()
+        disposable.disposingPeriodicTask("testTaskCancelsItself", 100) {
+            testList.add("test")
+            if (testList.size == 2) {
+                Disposer.dispose(disposable)
+            }
+        }
+
+        //the task will run twice and cancel itself, wait here some more to make sure it's not running anymore
+        Thread.sleep(600)
+
+        assertEquals(2, testList.size)
+    }
+
+
 
 
 

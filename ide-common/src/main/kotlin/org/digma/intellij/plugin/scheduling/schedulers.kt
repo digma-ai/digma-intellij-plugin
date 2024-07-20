@@ -152,7 +152,7 @@ to call from java , assuming a class implements Disposable, do that:
 
 const val INITIAL_SCHEDULER_CORE_SIZE = 2
 const val SCHEDULER_MAX_SIZE = 5 // 5 should be enough , we don't have too many tasks,if we reached this max we have thread starvation
-const val SCHEDULER_MAX_REGISTERED_TASKS = 100
+const val SCHEDULER_MAX_REGISTERED_TASKS = 200
 
 
 val logger = Logger.getInstance("org.digma.scheduler")

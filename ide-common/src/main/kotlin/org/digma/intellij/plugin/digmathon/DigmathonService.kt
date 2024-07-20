@@ -1,17 +1,13 @@
 package org.digma.intellij.plugin.digmathon
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.intellij.collaboration.async.disposingScope
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.util.Disposer
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.common.allowSlowOperation
 import org.digma.intellij.plugin.common.createObjectMapperWithJavaTimeModule
 import org.digma.intellij.plugin.common.findActiveProject
@@ -20,6 +16,7 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.notifications.NotificationUtil
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.scheduling.disposingPeriodicTask
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -69,13 +66,11 @@ class DigmathonService : Disposable {
             end()
         } else {
 
-            @Suppress("UnstableApiUsage")
-            disposingScope().launch {
+            val disposable = Disposer.newDisposable()
+            Disposer.register(this, disposable)
+            disposable.disposingPeriodicTask("DigmathonService", 1.minutes.inWholeMilliseconds, 1.minutes.inWholeMilliseconds) {
 
-                //let the project load and hopefully all jcef apps
-                delay(1.minutes.inWholeMilliseconds)
-
-                while (isActive && digmathonInfo.get().isActive()) {
+                if (digmathonInfo.get().isActive()) {
                     try {
 
                         if (!isDigmathonStartedForUser() && digmathonInfo.get().isActive()) {
@@ -84,22 +79,22 @@ class DigmathonService : Disposable {
 
                         if (isDigmathonStartedForUser() && digmathonInfo.get().isEnded()) {
                             end()
-                            cancel("digmathon ended")
+                            //digmathon ended,cancel this task
+                            Disposer.dispose(disposable)
                         }
-
-                        delay(1.minutes.inWholeMilliseconds)
-
                     } catch (ce: CancellationException) {
                         Log.log(logger::info, "digmathon timer canceled {}", ce)
                     } catch (e: Throwable) {
                         Log.warnWithException(logger, e, "error in digmathon timer {}", e)
                         ErrorReporter.getInstance().reportError("DigmathonService.timer", e)
                     }
-                }
-
-                //the job may be canceled by the system, do a last check
-                if (isDigmathonStartedForUser() && digmathonInfo.get().isEnded()) {
-                    end()
+                } else {
+                    //the job may be canceled by the system, do a last check
+                    if (isDigmathonStartedForUser() && digmathonInfo.get().isEnded()) {
+                        end()
+                    }
+                    //digmathon ended,cancel this task
+                    Disposer.dispose(disposable)
                 }
             }
         }

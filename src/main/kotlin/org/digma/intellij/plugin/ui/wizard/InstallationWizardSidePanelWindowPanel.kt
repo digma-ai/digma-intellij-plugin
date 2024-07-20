@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.ui.wizard
 
-import com.intellij.collaboration.async.disposingScope
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
@@ -11,10 +10,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.ui.jcef.JBCefApp
 import com.intellij.ui.jcef.JBCefBrowser
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.cef.CefApp
 import org.cef.browser.CefBrowser
@@ -43,6 +39,7 @@ import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.persistence.updateInstallationWizardFlag
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.recentactivity.RecentActivityToolWindowShower
+import org.digma.intellij.plugin.scheduling.disposingPeriodicTask
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import org.digma.intellij.plugin.ui.common.isJaegerButtonEnabled
@@ -90,6 +87,7 @@ import java.awt.BorderLayout
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 import javax.swing.JPanel
+import kotlin.time.Duration.Companion.seconds
 
 private const val RESOURCE_FOLDER_NAME = "installationwizard"
 private const val ENV_VARIABLE_IDE: String = "ide"
@@ -142,7 +140,6 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
         IS_LOGGING_ENABLED to getIsLoggingEnabledSystemProperty()
 
     )
-
 
 
     val lifeSpanHandler: CefLifeSpanHandlerAdapter = object : CefLifeSpanHandlerAdapter() {
@@ -258,10 +255,10 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
 
                 service<DockerService>().installEngine(project) { exitValue ->
 
-                    if (exitValue == DockerService.NO_DOCKER_COMPOSE_COMMAND){
+                    if (exitValue == DockerService.NO_DOCKER_COMPOSE_COMMAND) {
                         sendIsDockerInstalled(false, jbCefBrowser)
                         sendIsDockerComposeInstalled(false, jbCefBrowser)
-                    }else{
+                    } else {
                         sendIsDockerInstalled(true, jbCefBrowser)
                         sendIsDockerComposeInstalled(true, jbCefBrowser)
                     }
@@ -288,7 +285,8 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                             if (success) {
                                 val log = DockerService.getInstance().collectDigmaContainerLog()
                                 ActivityMonitor.getInstance(project)
-                                    .registerDigmaEngineEventError("installEngine", "No connection 2 minutes after successful engine install",
+                                    .registerDigmaEngineEventError(
+                                        "installEngine", "No connection 2 minutes after successful engine install",
                                         mapOf(
                                             "docker log" to log
                                         )
@@ -319,7 +317,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                             sendIsDigmaEngineInstalled(false, jbCefBrowser)
                             sendIsDigmaEngineRunning(false, jbCefBrowser)
 
-                            //start remove if install failed. wait a second to let the installEngine finish so it reports
+                            //start remove if install failed. wait a second to let the installEngine finish, so it reports
                             // the installEngine.end to posthog before removeEngine.start
                             Backgroundable.executeOnPooledThread {
                                 try {
@@ -348,10 +346,10 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                 localEngineOperationRunning.set(true)
                 service<DockerService>().removeEngine(project) { exitValue ->
 
-                    if (exitValue == DockerService.NO_DOCKER_COMPOSE_COMMAND){
+                    if (exitValue == DockerService.NO_DOCKER_COMPOSE_COMMAND) {
                         sendIsDockerInstalled(false, jbCefBrowser)
                         sendIsDockerComposeInstalled(false, jbCefBrowser)
-                    }else{
+                    } else {
                         sendIsDockerInstalled(true, jbCefBrowser)
                         sendIsDockerComposeInstalled(true, jbCefBrowser)
                     }
@@ -387,10 +385,10 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                 localEngineOperationRunning.set(true)
                 service<DockerService>().startEngine(project) { exitValue ->
 
-                    if (exitValue == DockerService.NO_DOCKER_COMPOSE_COMMAND){
+                    if (exitValue == DockerService.NO_DOCKER_COMPOSE_COMMAND) {
                         sendIsDockerInstalled(false, jbCefBrowser)
                         sendIsDockerComposeInstalled(false, jbCefBrowser)
-                    }else{
+                    } else {
                         sendIsDockerInstalled(true, jbCefBrowser)
                         sendIsDockerComposeInstalled(true, jbCefBrowser)
                     }
@@ -416,7 +414,8 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                             if (success) {
                                 val log = DockerService.getInstance().collectDigmaContainerLog()
                                 ActivityMonitor.getInstance(project)
-                                    .registerDigmaEngineEventError("startEngine", "No connection 2 minutes after successful engine start",
+                                    .registerDigmaEngineEventError(
+                                        "startEngine", "No connection 2 minutes after successful engine start",
                                         mapOf(
                                             "docker log" to log
                                         )
@@ -458,10 +457,10 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                 localEngineOperationRunning.set(true)
                 service<DockerService>().stopEngine(project) { exitValue ->
 
-                    if (exitValue == DockerService.NO_DOCKER_COMPOSE_COMMAND){
+                    if (exitValue == DockerService.NO_DOCKER_COMPOSE_COMMAND) {
                         sendIsDockerInstalled(false, jbCefBrowser)
                         sendIsDockerComposeInstalled(false, jbCefBrowser)
-                    }else{
+                    } else {
                         sendIsDockerInstalled(true, jbCefBrowser)
                         sendIsDockerComposeInstalled(true, jbCefBrowser)
                     }
@@ -504,7 +503,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
     browserPanel.add(jbCefBrowser.component, BorderLayout.CENTER)
 
 
-    val jcefDigmaPanel = object: DisposablePanel(){
+    val jcefDigmaPanel = object : DisposablePanel() {
         override fun dispose() {
             digmaStatusUpdater.stop()
             jbCefBrowser.dispose()
@@ -671,32 +670,21 @@ class DigmaStatusUpdater {
         digmaInstallationStatus.set(null)
 
         myDisposable?.let {
-            @Suppress("UnstableApiUsage")
-            it.disposingScope().launch {
+            it.disposingPeriodicTask("InstallationWizard.DigmaStatusUpdater", 2.seconds.inWholeMilliseconds) {
                 try {
-                    while (isActive) {
+                    val currentStatus = service<DockerService>().getActualRunningEngine(project)
 
-                        val currentStatus = service<DockerService>().getActualRunningEngine(project)
-
-                        if (!isActive) break
-
-                        //DigmaInstallationStatus is data class so we can rely on equals
-                        if (digmaInstallationStatus.get() == null || currentStatus != digmaInstallationStatus.get()) {
-                            Log.log(logger::trace, project, "status changed current:{}, previous:{}", currentStatus, digmaInstallationStatus)
-                            digmaInstallationStatus.set(currentStatus)
-                            Log.log(logger::trace, project, "updating wizard with digmaInstallationStatus {}", digmaInstallationStatus)
-                            digmaInstallationStatus.get()?.let { status ->
-                                updateDigmaEngineStatus(cefBrowser, status)
-                            }
-
+                    //DigmaInstallationStatus is data class so we can rely on equals
+                    if (digmaInstallationStatus.get() == null || currentStatus != digmaInstallationStatus.get()) {
+                        Log.log(logger::trace, project, "status changed current:{}, previous:{}", currentStatus, digmaInstallationStatus)
+                        digmaInstallationStatus.set(currentStatus)
+                        Log.log(logger::trace, project, "updating wizard with digmaInstallationStatus {}", digmaInstallationStatus)
+                        digmaInstallationStatus.get()?.let { status ->
+                            updateDigmaEngineStatus(cefBrowser, status)
                         }
-
-                        delay(2000)
                     }
-
-                } catch (e: CancellationException) {
-                    throw e
                 } catch (e: Exception) {
+                    Log.warnWithException(logger, project, e, "error in DigmaStatusUpdater {}", e)
                     ErrorReporter.getInstance().reportError(project, "DigmaStatusUpdater.loop", e)
                 }
             }

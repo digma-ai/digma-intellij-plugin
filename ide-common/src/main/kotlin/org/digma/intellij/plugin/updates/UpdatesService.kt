@@ -5,7 +5,6 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import kotlinx.coroutines.CancellationException
 import org.apache.maven.artifact.versioning.ComparableVersion
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
@@ -59,8 +58,6 @@ class UpdatesService(private val project: Project) : Disposable {
             try {
                 Log.log(logger::trace, "updating state")
                 checkForNewerVersions()
-            } catch (e: CancellationException) {
-                Log.debugWithException(logger, e, "Exception in checkForNewerVersions")
             } catch (e: Throwable) {
                 Log.debugWithException(logger, e, "Exception in checkForNewerVersions {}", ExceptionUtils.getNonEmptyMessage(e))
                 ErrorReporter.getInstance().reportError(project, "UpdatesService.timer", e)
@@ -79,8 +76,6 @@ class UpdatesService(private val project: Project) : Disposable {
                     try {
                         //update state immediately after connectionGained, so it will not wait the delay for checking the versions.
                         checkForNewerVersions()
-                    } catch (e: CancellationException) {
-                        Log.debugWithException(logger, e, "Exception in checkForNewerVersions")
                     } catch (e: Throwable) {
                         Log.debugWithException(logger, e, "Exception in checkForNewerVersions {}", ExceptionUtils.getNonEmptyMessage(e))
                         ErrorReporter.getInstance().reportError(project, "UpdatesService.connectionGained", e)
@@ -95,8 +90,6 @@ class UpdatesService(private val project: Project) : Disposable {
                 oneShotTask("UpdatesService.apiClientChanged", 3000) {
                     try {
                         checkForNewerVersions()
-                    } catch (e: CancellationException) {
-                        Log.debugWithException(logger, e, "Exception in checkForNewerVersions")
                     } catch (e: Throwable) {
                         Log.debugWithException(logger, e, "Exception in checkForNewerVersions {}", ExceptionUtils.getNonEmptyMessage(e))
                         ErrorReporter.getInstance().reportError(project, "UpdatesService.settingsChanged", e)
@@ -120,8 +113,6 @@ class UpdatesService(private val project: Project) : Disposable {
                             if (updateState.updateState == CurrentUpdateState.OK) {
                                 checkForNewerVersions()
                             }
-                        } catch (e: CancellationException) {
-                            Log.debugWithException(logger, e, "Exception in checkForNewerVersions")
                         } catch (e: Throwable) {
                             Log.debugWithException(logger, e, "Exception in checkForNewerVersions {}", ExceptionUtils.getNonEmptyMessage(e))
                             ErrorReporter.getInstance().reportError(project, "UpdatesService.stateChanged", e)

@@ -12,6 +12,7 @@ import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.recentactivity.RecentActivityToolWindowShower
+import org.digma.intellij.plugin.ui.RecentActivityToolWindowCardsController
 import org.digma.intellij.plugin.ui.common.statuspanels.createAggressiveUpdatePanel
 import org.digma.intellij.plugin.ui.common.statuspanels.createNoConnectionPanel
 import java.awt.CardLayout

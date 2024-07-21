@@ -8,16 +8,16 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.SmartPsiElementPointer
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
-import org.digma.intellij.plugin.common.StringUtils
 import org.digma.intellij.plugin.common.executeCatchingIgnorePCE
 import org.digma.intellij.plugin.common.executeCatchingWithRetryIgnorePCE
+import org.digma.intellij.plugin.common.firstPart
 import org.digma.intellij.plugin.common.runInReadAccessWithRetryIgnorePCE
+import org.digma.intellij.plugin.document.BuildDocumentInfoProcessContext
 import org.digma.intellij.plugin.idea.psi.PsiPointers
 import org.digma.intellij.plugin.idea.psi.createPsiMethodCodeObjectId
 import org.digma.intellij.plugin.idea.psi.findAnnotatedMethods
 import org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils
 import org.digma.intellij.plugin.model.discovery.SpanInfo
-import org.digma.intellij.plugin.document.BuildDocumentInfoProcessContext
 import org.digma.intellij.plugin.psi.PsiFileCachedValueWithUri
 import org.digma.intellij.plugin.psi.PsiUtils
 
@@ -80,7 +80,7 @@ class MicrometerTracingFramework {
         }
 
         private fun observedMaxSpanName(spanName: String): String {
-            return StringUtils.firstPart(spanName, OBSERVED_MAX_LEN_OF_SPAN_NAME)
+            return firstPart(spanName, OBSERVED_MAX_LEN_OF_SPAN_NAME)
         }
     }
 

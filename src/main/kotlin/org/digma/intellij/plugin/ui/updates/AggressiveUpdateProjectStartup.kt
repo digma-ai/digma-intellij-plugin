@@ -3,7 +3,7 @@ package org.digma.intellij.plugin.ui.updates
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.startup.DigmaProjectActivity
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
-import org.digma.intellij.plugin.ui.recentactivity.RecentActivityToolWindowCardsController
+import org.digma.intellij.plugin.ui.RecentActivityToolWindowCardsController
 import org.digma.intellij.plugin.updates.AggressiveUpdateService
 
 class AggressiveUpdateProjectStartup : DigmaProjectActivity() {

@@ -11,6 +11,15 @@ fun objectToJson(value: Any): String {
     return sharedObjectMapper.writeValueAsString(value)
 }
 
+
+fun objectToJsonNoException(value: Any): String {
+    return try {
+        sharedObjectMapper.writeValueAsString(value)
+    } catch (e: Exception) {
+        "Error parsing object " + e.message
+    }
+}
+
 @Throws(JsonProcessingException::class)
 fun objectToJsonNode(value: Any): JsonNode {
     return sharedObjectMapper.valueToTree(value)
@@ -31,6 +40,7 @@ fun objectNodeToMap(objectNode: ObjectNode): Map<String, Any> {
 //    }
 //    return result
 }
+
 
 @Throws(NullPointerException::class)
 fun getStringValueFromNode(jsonNode: JsonNode, name: String): String {

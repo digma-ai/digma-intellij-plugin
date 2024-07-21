@@ -1,7 +1,9 @@
 package org.digma.intellij.plugin.auth
 
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.project.Project
 import kotlinx.coroutines.runBlocking
+import org.digma.intellij.plugin.analytics.ApiErrorHandler
 import org.digma.intellij.plugin.analytics.RestAnalyticsProvider
 import org.digma.intellij.plugin.auth.account.DigmaAccountManager
 import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
@@ -19,21 +21,33 @@ interface LoginHandler {
         private val logger: Logger = Logger.getInstance(LoginHandler::class.java)
 
         fun createLoginHandler(analyticsProvider: RestAnalyticsProvider): LoginHandler {
+            return createLoginHandler(null, analyticsProvider)
+        }
 
-            return try {
+        fun createLoginHandler(project: Project?, analyticsProvider: RestAnalyticsProvider): LoginHandler {
 
-                when (analyticsProvider.about.isCentralize) {
+            try {
+
+                val loginHandler = when (analyticsProvider.about.isCentralize) {
                     true -> CentralizedLoginHandler(analyticsProvider)
                     false, null -> LocalLoginHandler(analyticsProvider)
                 }
 
+                ApiErrorHandler.getInstance().resetConnectionLostAndNotifyIfNecessary(project)
+
+                return loginHandler
+
             } catch (e: Throwable) {
+
+                //if we can't create a login handler we assume there is a connection issue, it may be a real no connection,
+                // or any other issue were we can't get analyticsProvider.about
+                ApiErrorHandler.getInstance().handleAuthManagerError(e, project)
 
                 Log.warnWithException(logger, e, "Exception in createLoginHandler {}, url {}", e, analyticsProvider.apiUrl)
                 ErrorReporter.getInstance().reportError("AuthManager.createLoginHandler", e)
 
                 Log.log(logger::trace, "Got exception in createLoginHandler , returning NoOpLoginHandler", analyticsProvider.apiUrl)
-                NoOpLoginHandler("error in createLoginHandler $e")
+                return NoOpLoginHandler("error in createLoginHandler $e")
             }
         }
     }

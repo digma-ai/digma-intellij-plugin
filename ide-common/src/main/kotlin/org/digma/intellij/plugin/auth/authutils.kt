@@ -36,7 +36,7 @@ fun updateAccount(digmaAccount: DigmaAccount, digmaCredentials: DigmaCredentials
             ErrorReporter.getInstance().reportError("AuthManager.updateAccount", "could not execute update account task", mapOf())
             throw RuntimeException("could not execute update account task")
         } else {
-            future.get(1.seconds.inWholeMilliseconds, TimeUnit.MILLISECONDS)
+            future.get(2.seconds.inWholeMilliseconds, TimeUnit.MILLISECONDS)
         }
     } catch (e: Throwable) {
         ErrorReporter.getInstance().reportError("AuthManager.updateAccount", e)

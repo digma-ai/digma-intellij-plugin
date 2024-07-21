@@ -4,6 +4,7 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.util.Alarm
 import org.digma.intellij.plugin.analytics.AnalyticsProvider
@@ -23,6 +24,7 @@ import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
 import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 
 @Service(Service.Level.APP)
@@ -77,15 +79,13 @@ class AuthManager : DisposableAdaptor {
     //AnalyticsService.createClient is called on startup.
     //the analyticsProvider here is the one to wrap with a proxy, it's a per project analyticsProvider.
     //AuthManager uses its own local analyticsProvider for the login and refresh.
-    fun withAuth(analyticsProvider: RestAnalyticsProvider): AnalyticsProvider {
+    fun withAuth(project: Project, analyticsProvider: RestAnalyticsProvider): AnalyticsProvider {
 
-        try {
-
-            myLock.lock()
+        return myLock.withLock {
 
             Log.log(logger::info, "wrapping analyticsProvider with auth for url {}", analyticsProvider.apiUrl)
 
-            val loginHandler = LoginHandler.createLoginHandler(myAnalyticsProvider)
+            val loginHandler = LoginHandler.createLoginHandler(project, myAnalyticsProvider)
 
             if (!loginHandler.loginOrRefresh()) {
                 Log.log(logger::warn, "loginOrRefresh failed for url {}", this.myAnalyticsProvider.apiUrl)
@@ -102,8 +102,36 @@ class AuthManager : DisposableAdaptor {
 
             fireChange()
 
-            return proxy
+            proxy
+        }
+    }
 
+
+    //this method is used to force login after changing the url.
+    //and when user clicks refresh on no connection screen, in that case it will login or refresh
+    // or do nothing if login already done. and will resume connection if connection is back.
+    fun loginOrRefresh(): Boolean {
+
+        try {
+
+            myLock.lockInterruptibly()
+
+            Log.log(logger::info, "loginOrRefresh called, analytics url {}", myAnalyticsProvider.apiUrl)
+
+            val loginHandler = LoginHandler.createLoginHandler(myAnalyticsProvider)
+            val result = loginHandler.loginOrRefresh()
+            if (!result) {
+                Log.log(logger::warn, "loginOrRefresh failed for url {}", this.myAnalyticsProvider.apiUrl)
+            }
+
+            fireChange()
+
+            return result
+
+        } catch (e: Throwable) {
+            Log.warnWithException(logger, e, "error in loginOrRefresh {}", e)
+            ErrorReporter.getInstance().reportError("AuthManager.loginOrRefresh", e)
+            return false
         } finally {
             if (myLock.isHeldByCurrentThread) {
                 myLock.unlock()
@@ -116,7 +144,7 @@ class AuthManager : DisposableAdaptor {
 
         try {
 
-            myLock.lock()
+            myLock.lockInterruptibly()
 
             Log.log(logger::info, "login called, analytics url {}", myAnalyticsProvider.apiUrl)
 
@@ -145,7 +173,7 @@ class AuthManager : DisposableAdaptor {
 
         try {
 
-            myLock.lock()
+            myLock.lockInterruptibly()
 
             Log.log(logger::info, "logout called, analytics url {}", myAnalyticsProvider.apiUrl)
 
@@ -169,7 +197,7 @@ class AuthManager : DisposableAdaptor {
 
         try {
 
-            myLock.lock()
+            myLock.lockInterruptibly()
 
             Log.log(logger::trace, "onAuthenticationException called, analytics url {}", myAnalyticsProvider.apiUrl)
 

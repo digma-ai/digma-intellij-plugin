@@ -1,6 +1,6 @@
 package org.digma.intellij.plugin.common;
 
-import org.digma.intellij.plugin.analytics.AnalyticsProviderException;
+import org.digma.intellij.plugin.analytics.*;
 import org.jetbrains.annotations.*;
 
 import javax.net.ssl.SSLException;
@@ -17,6 +17,22 @@ public class ExceptionUtils {
 
         Throwable cause = throwable;
         while (cause != null && !toFind.equals(cause.getClass())) {
+            cause = cause.getCause();
+        }
+
+        if (cause != null) {
+            return toFind.cast(cause);
+        }
+
+        return null;
+    }
+
+
+    @Nullable
+    public static <T extends Throwable> T findAssignableCause(@NotNull Class<T> toFind, @NotNull Throwable throwable) {
+
+        Throwable cause = throwable;
+        while (cause != null && !toFind.isAssignableFrom(cause.getClass())) {
             cause = cause.getCause();
         }
 
@@ -65,6 +81,29 @@ public class ExceptionUtils {
     public static String findFirstRealExceptionCauseTypeName(@NotNull Throwable throwable) {
         return findFirstRealExceptionCauseType(throwable).getName();
     }
+
+
+    @Nullable
+    public static Throwable findConnectException(@NotNull Throwable throwable) {
+        Throwable cause = throwable;
+        while (cause != null && !isConnectionUnavailableException(cause)) {
+            cause = cause.getCause();
+        }
+        return cause;
+    }
+
+    @Nullable
+    public static Throwable findSslException(@NotNull Throwable throwable) {
+        return findAssignableCause(SSLException.class, throwable);
+    }
+
+
+    @Nullable
+    public static Throwable findAuthenticationException(@NotNull Throwable throwable) {
+        return findCause(AuthenticationException.class, throwable);
+    }
+
+
 
 
     public static boolean isAnyConnectionException(@NotNull Throwable e) {
@@ -141,13 +180,13 @@ public class ExceptionUtils {
 
 
     public static boolean isSslConnectionException(@NotNull Throwable e) {
-        var cause = findCause(SSLException.class, e);
+        var cause = findAssignableCause(SSLException.class, e);
         return cause != null;
     }
 
     @Nullable
     public static String getSslExceptionMessage(@NotNull Throwable e) {
-        var cause = findCause(SSLException.class, e);
+        var cause = findAssignableCause(SSLException.class, e);
         if (cause != null) {
             return cause.getMessage();
         }

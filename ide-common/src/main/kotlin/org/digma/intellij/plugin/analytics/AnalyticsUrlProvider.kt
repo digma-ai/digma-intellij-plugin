@@ -8,6 +8,7 @@ import org.digma.intellij.plugin.auth.AuthManager
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.DisposableAdaptor
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.scheduling.ThreadPoolProviderService
 import org.digma.intellij.plugin.settings.SettingsState
 
 @Service(Service.Level.PROJECT)
@@ -36,10 +37,9 @@ class AnalyticsUrlProvider(private val project: Project) : DisposableAdaptor, Ba
                     AuthManager.getInstance().logout()
                     AuthManager.getInstance().apiUrl = state.apiUrl
                     myApiUrl = state.apiUrl
+                    ThreadPoolProviderService.getInstance().interruptAll()
+                    AuthManager.getInstance().loginOrRefresh()
                     project.messageBus.syncPublisher(ApiClientChangedEvent.API_CLIENT_CHANGED_TOPIC).apiClientChanged(myApiUrl);
-                    //todo: maybe force here try login , in case the new server is not responding and the errors don't
-                    // mark the connection lost, we need a way to inform the user that there is a problem. trying to login is a good way,
-                    // if we can't call getAbout to decide if centralized then show no connection to user
                 }
             }
         }, this)

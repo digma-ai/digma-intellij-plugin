@@ -18,7 +18,7 @@ class AuthApiClient(private val analyticsProvider: RestAnalyticsProvider) {
 
         try {
 
-            myLock.lock()
+            myLock.lockInterruptibly()
 
             val loginResponse = analyticsProvider.login(LoginRequest(user, password))
 
@@ -52,7 +52,7 @@ class AuthApiClient(private val analyticsProvider: RestAnalyticsProvider) {
 
         try {
 
-            myLock.lock()
+            myLock.lockInterruptibly()
 
             val loginResponse = analyticsProvider.refreshToken(RefreshRequest(credentials.accessToken, credentials.refreshToken))
 
@@ -74,7 +74,6 @@ class AuthApiClient(private val analyticsProvider: RestAnalyticsProvider) {
                 myLock.unlock()
             }
         }
-
     }
 
 }

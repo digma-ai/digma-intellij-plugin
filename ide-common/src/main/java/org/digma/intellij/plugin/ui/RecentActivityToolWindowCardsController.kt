@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.ui.recentactivity
+package org.digma.intellij.plugin.ui
 
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -35,6 +35,7 @@ class RecentActivityToolWindowCardsController(private val project: Project) {
 
 
     companion object {
+        @JvmStatic
         fun getInstance(project: Project): RecentActivityToolWindowCardsController {
             return project.service<RecentActivityToolWindowCardsController>()
         }

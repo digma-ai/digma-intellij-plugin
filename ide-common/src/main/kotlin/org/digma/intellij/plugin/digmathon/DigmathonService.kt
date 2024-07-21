@@ -7,7 +7,6 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.util.Disposer
-import kotlinx.coroutines.CancellationException
 import org.digma.intellij.plugin.common.allowSlowOperation
 import org.digma.intellij.plugin.common.createObjectMapperWithJavaTimeModule
 import org.digma.intellij.plugin.common.findActiveProject
@@ -82,8 +81,6 @@ class DigmathonService : Disposable {
                             //digmathon ended,cancel this task
                             Disposer.dispose(disposable)
                         }
-                    } catch (ce: CancellationException) {
-                        Log.log(logger::info, "digmathon timer canceled {}", ce)
                     } catch (e: Throwable) {
                         Log.warnWithException(logger, e, "error in digmathon timer {}", e)
                         ErrorReporter.getInstance().reportError("DigmathonService.timer", e)

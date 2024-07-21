@@ -21,6 +21,7 @@ import org.digma.intellij.plugin.common.findActiveProject
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import java.util.Collections
 import java.util.concurrent.Callable
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -29,6 +30,7 @@ import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.ThreadFactory
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.time.Duration.Companion.minutes
@@ -226,6 +228,12 @@ class ThreadPoolProviderService : Disposable {
         }
     }
 
+
+    fun interruptAll() {
+        scheduler.interruptAll()
+    }
+
+
     override fun dispose() {
         try {
             scheduler.shutdownNow()
@@ -277,7 +285,7 @@ fun Disposable.disposingPeriodicTask(name: String, startupDelay: Long, period: L
                 Log.logWithThreadName(logger::trace, "periodic task {} completed", name)
             } catch (e: Throwable) {
                 Log.warnWithException(logger, e, "periodic task {} failed", name)
-                ErrorReporter.getInstance().reportError("org.digma.scheduler.disposingPeriodicTask", e)
+                ErrorReporter.getInstance().reportError("org.digma.scheduler.disposingPeriodicTask", e, mapOf("task.name" to name))
             } finally {
                 stopWatch.stop()
                 scheduledTasksPerformanceMonitor.reportPerformance(name, stopWatch.time)
@@ -286,7 +294,7 @@ fun Disposable.disposingPeriodicTask(name: String, startupDelay: Long, period: L
         }, startupDelay, period, TimeUnit.MILLISECONDS)
     } catch (e: Throwable) {
         Log.warnWithException(logger, e, "could not schedule periodic task {}", name)
-        ErrorReporter.getInstance().reportError("org.digma.scheduler.disposingPeriodicTask", e)
+        ErrorReporter.getInstance().reportError("org.digma.scheduler.disposingPeriodicTask", e, mapOf("task.name" to name))
         return false
     }
 
@@ -357,7 +365,7 @@ private fun Disposable.disposingOneShotDelayedTask0(name: String, delay: Long, b
                 Log.logWithThreadName(logger::trace, "delayed task {} completed", name)
             } catch (e: Throwable) {
                 Log.warnWithException(logger, e, "delayed task {} failed", name)
-                ErrorReporter.getInstance().reportError("org.digma.scheduler.disposingOneShotDelayedTask", e)
+                ErrorReporter.getInstance().reportError("org.digma.scheduler.disposingOneShotDelayedTask", e, mapOf("task.name" to name))
             } finally {
                 stopWatch.stop()
                 scheduledTasksPerformanceMonitor.reportPerformance(name, stopWatch.time)
@@ -367,7 +375,7 @@ private fun Disposable.disposingOneShotDelayedTask0(name: String, delay: Long, b
         }, delay, TimeUnit.MILLISECONDS)
     } catch (e: Throwable) {
         Log.warnWithException(logger, e, "could not schedule delayed task {}", name)
-        ErrorReporter.getInstance().reportError("org.digma.scheduler.disposingOneShotDelayedTask", e)
+        ErrorReporter.getInstance().reportError("org.digma.scheduler.disposingOneShotDelayedTask", e, mapOf("task.name" to name))
         return false
     }
 
@@ -401,7 +409,7 @@ fun <T> oneShotTask(name: String, block: () -> T): Future<T>? {
                 return@Callable result
             } catch (e: Throwable) {
                 Log.warnWithException(logger, e, "one-shot task {} failed", name)
-                ErrorReporter.getInstance().reportError("org.digma.scheduler.oneShotTask", e)
+                ErrorReporter.getInstance().reportError("org.digma.scheduler.oneShotTask", e, mapOf("task.name" to name))
                 throw e
             } finally {
                 stopWatch.stop()
@@ -411,7 +419,7 @@ fun <T> oneShotTask(name: String, block: () -> T): Future<T>? {
 
     } catch (e: Throwable) {
         Log.warnWithException(logger, e, "could not submit one shot task {}", name)
-        ErrorReporter.getInstance().reportError("org.digma.scheduler.oneShotTask", e)
+        ErrorReporter.getInstance().reportError("org.digma.scheduler.oneShotTask", e, mapOf("task.name" to name))
         return null
     }
 }
@@ -438,7 +446,7 @@ fun oneShotTask(name: String, timeoutMillis: Long, block: () -> Unit): Boolean {
         }
     } catch (e: Throwable) {
         Log.warnWithException(logger, e, "could not submit one shot task {}", name)
-        ErrorReporter.getInstance().reportError("org.digma.scheduler.oneShotTask", e)
+        ErrorReporter.getInstance().reportError("org.digma.scheduler.oneShotTask", e, mapOf("task.name" to name))
         return false
     }
 
@@ -448,7 +456,7 @@ fun oneShotTask(name: String, timeoutMillis: Long, block: () -> Unit): Boolean {
     } catch (e: Throwable) {
         future.cancel(true)
         Log.warnWithException(logger, e, "one-shot task {} failed", name)
-        ErrorReporter.getInstance().reportError("org.digma.scheduler.oneShotTask", e)
+        ErrorReporter.getInstance().reportError("org.digma.scheduler.oneShotTask", e, mapOf("task.name" to name))
         return false
     }
 
@@ -480,7 +488,7 @@ fun <T> oneShotTaskWithResult(name: String, timeoutMillis: Long, block: () -> T)
         })
     } catch (e: Throwable) {
         Log.warnWithException(logger, e, "could not submit one shot task {}", name)
-        ErrorReporter.getInstance().reportError("org.digma.scheduler.oneShotTaskWithResult", e)
+        ErrorReporter.getInstance().reportError("org.digma.scheduler.oneShotTaskWithResult", e, mapOf("task.name" to name))
         throw e
     }
 
@@ -489,7 +497,7 @@ fun <T> oneShotTaskWithResult(name: String, timeoutMillis: Long, block: () -> T)
     } catch (e: Throwable) {
         future.cancel(true)
         Log.warnWithException(logger, e, "one-shot task with result {} failed", name)
-        ErrorReporter.getInstance().reportError("org.digma.scheduler.oneShotTaskWithResult", e)
+        ErrorReporter.getInstance().reportError("org.digma.scheduler.oneShotTaskWithResult", e, mapOf("task.name" to name))
         throw e
     }
 
@@ -516,7 +524,7 @@ class ScheduledTasksPerformanceMonitor {
 
             findActiveProject()?.let {
                 val details = mutableMapOf<String, Any>(
-                    "task name" to taskName,
+                    "task.name" to taskName,
                     "duration" to duration
                 )
 
@@ -537,6 +545,8 @@ class MyScheduledExecutorService(
     var registeredRecurringTasks = AtomicInteger(0)
     private var managementRound = 0
     private var exhaustedCount = AtomicInteger(0)
+    private val currentlyExecutingThreads = Collections.synchronizedMap(mutableMapOf<Runnable, Thread>())
+    private val interrupting = AtomicBoolean(false)
 
     init {
         continueExistingPeriodicTasksAfterShutdownPolicy = false
@@ -551,13 +561,22 @@ class MyScheduledExecutorService(
     }
 
 
-//    override fun beforeExecute(t: Thread?, r: Runnable?) {
-//        super.beforeExecute(t, r)
-//    }
-//
-//    override fun afterExecute(r: Runnable?, t: Throwable?) {
-//        super.afterExecute(r, t)
-//    }
+    override fun beforeExecute(t: Thread?, r: Runnable?) {
+        if (interrupting.get()) {
+            Log.log(logger::trace, "interrupting thread {}", t?.name)
+            t?.interrupt()
+        } else {
+            if (t != null && r != null) {
+                currentlyExecutingThreads[r] = t
+            }
+        }
+    }
+
+    override fun afterExecute(r: Runnable?, t: Throwable?) {
+        if (r != null) {
+            currentlyExecutingThreads.remove(r)
+        }
+    }
 
     fun manage() {
         managementRound++
@@ -581,6 +600,22 @@ class MyScheduledExecutorService(
                 corePoolSize = min(maxPoolSize, poolSize + 1)
                 Log.log(logger::trace, "management: on scheduler pool size increased to {}", corePoolSize)
             }
+        }
+    }
+
+    fun interruptAll() {
+        try {
+            interrupting.set(true)
+            currentlyExecutingThreads.forEach {
+                try {
+                    Log.log(logger::trace, "interrupting thread {}", it.value.name)
+                    it.value.interrupt()
+                } catch (e: Throwable) {
+                    Log.warnWithException(logger, e, "can't interrupt thread {}", it.value.name)
+                }
+            }
+        } finally {
+            interrupting.set(false)
         }
     }
 }

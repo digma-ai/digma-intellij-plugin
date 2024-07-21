@@ -14,6 +14,7 @@ import org.digma.intellij.plugin.scheduling.disposingPeriodicTask
 import org.digma.intellij.plugin.scheduling.oneShotTask
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * keep the backend info and tracks it on connection events.
@@ -78,7 +79,7 @@ class BackendInfoHolder(val project: Project) : DisposableAdaptor {
 
     private fun updateInBackground() {
         //just let it finish without waiting for timeout and without blocking this thread
-        oneShotTask("BackendInfoHolder.updateInBackground") {
+        oneShotTask("BackendInfoHolder.updateInBackground", 2.seconds.inWholeMilliseconds) {
             update()
         }
     }
@@ -142,7 +143,7 @@ class BackendInfoHolder(val project: Project) : DisposableAdaptor {
 
         Log.log(logger::trace, "updating backend info in background with timeout")
 
-        val result = oneShotTask("BackendInfoHolder.updateAboutInBackgroundNowWithTimeout", 2000) {
+        val result = oneShotTask("BackendInfoHolder.updateAboutInBackgroundNowWithTimeout", 2.seconds.inWholeMilliseconds) {
             update()
         }
 

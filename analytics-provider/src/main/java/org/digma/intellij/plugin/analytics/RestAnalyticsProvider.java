@@ -488,7 +488,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
             builder.addInterceptor(chain -> {
                 HttpUrl myUrl = HttpUrl.parse(baseUrlProvider.baseUrl());
                 if (myUrl == null) {
-                    throw new NullPointerException("url must not be null");
+                    throw new IllegalArgumentException("url must not be null");
                 }
 
                 var currentUrl = chain.request().url();

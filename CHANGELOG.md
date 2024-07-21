@@ -1,6 +1,21 @@
 # Changelog
 
-## [2.0.359] - 2024-07-10
+## [2.0.360] - 2024-07-21
+
+- Navigation discovery blackout Closes #1969 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2283
+- track server version, don't rely on connection gained Closes #2277 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2287
+- report-api-performance-only-when-connection-ok by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2289
+- analytics service exception handling Closes #2275 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2291
+- posthog error severity Closes #2274 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2293
+- unique user id Closes #2256 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2292
+- allow slow operations on EAP by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2294
+- alarm-factory-deprecated Closes #2295 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2296
+- fix force update Closes #2266 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2298
+- api performance neto http by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2300
+- ensure-url-end-with-slash Closes #2303 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2304
+- Relative api endpoints by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2305
+
+## 2.0.359 - 2024-07-10
 
 - api performance issue event Closes #2245 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2246
 - dispose some jcef components by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2247

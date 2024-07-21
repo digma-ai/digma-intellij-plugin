@@ -585,15 +585,7 @@ public class AnalyticsService implements Disposable {
                     Log.log(LOGGER::trace, "Sending request to {}: args '{}'", method.getName(), argsToString(args));
                 }
 
-                Object result;
-                try {
-                    result = method.invoke(analyticsProvider, args);
-                } catch (Exception e) {
-                    //this is a poor retry, we don't have a retry mechanism, but sometimes there is a momentary
-                    // connection issue and the next call will succeed, instead of going through the exception handling
-                    // and events , just try again once. the performance penalty is minor, we are in error state anyway.
-                    result = method.invoke(analyticsProvider, args);
-                }
+                Object result = method.invoke(analyticsProvider, args);
 
                 if (LOGGER.isTraceEnabled()) {
                     Log.log(LOGGER::trace, "Got response from {}: args '{}', -----------------" +

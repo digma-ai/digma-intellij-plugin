@@ -535,7 +535,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
             var jacksonFactory = JacksonConverterFactory.create(createObjectMapper());
 
-            baseUrl = ensureEndsWithSlash(baseUrl);
+//            baseUrl = ensureEndsWithSlash(baseUrl);
 
             Retrofit retrofit = new Retrofit.Builder()
                     .baseUrl(baseUrlProvider.baseUrl())

@@ -54,7 +54,7 @@ class UpdatesService(private val project: Project) : Disposable {
         statePluginVersion = PluginVersion(getPluginVersion())
 
         val delayMillis = getDefaultDelayBetweenUpdatesSeconds().inWholeMilliseconds
-        disposingPeriodicTask("UpdatesService.checkForNewerVersions", delayMillis) {
+        disposingPeriodicTask("UpdatesService.checkForNewerVersions", delayMillis, true) {
             try {
                 Log.log(logger::trace, "updating state")
                 checkForNewerVersions()
@@ -72,13 +72,14 @@ class UpdatesService(private val project: Project) : Disposable {
 
                 override fun connectionGained() {
                     Log.log(logger::debug, "got connectionGained")
-
-                    try {
-                        //update state immediately after connectionGained, so it will not wait the delay for checking the versions.
-                        checkForNewerVersions()
-                    } catch (e: Throwable) {
-                        Log.debugWithException(logger, e, "Exception in checkForNewerVersions {}", ExceptionUtils.getNonEmptyMessage(e))
-                        ErrorReporter.getInstance().reportError(project, "UpdatesService.connectionGained", e)
+                    oneShotTask("UpdatesService.apiClientChanged") {
+                        try {
+                            //update state immediately after connectionGained, so it will not wait the delay for checking the versions.
+                            checkForNewerVersions()
+                        } catch (e: Throwable) {
+                            Log.debugWithException(logger, e, "Exception in checkForNewerVersions {}", ExceptionUtils.getNonEmptyMessage(e))
+                            ErrorReporter.getInstance().reportError(project, "UpdatesService.connectionGained", e)
+                        }
                     }
                 }
             })
@@ -87,7 +88,7 @@ class UpdatesService(private val project: Project) : Disposable {
 
         project.messageBus.connect(this)
             .subscribe(ApiClientChangedEvent.API_CLIENT_CHANGED_TOPIC, ApiClientChangedEvent {
-                oneShotTask("UpdatesService.apiClientChanged", 3000) {
+                oneShotTask("UpdatesService.apiClientChanged") {
                     try {
                         checkForNewerVersions()
                     } catch (e: Throwable) {
@@ -102,7 +103,7 @@ class UpdatesService(private val project: Project) : Disposable {
         project.messageBus.connect().subscribe(
             AggressiveUpdateStateChangedEvent.UPDATE_STATE_CHANGED_TOPIC, object : AggressiveUpdateStateChangedEvent {
                 override fun stateChanged(updateState: PublicUpdateState) {
-                    oneShotTask("UpdatesService.aggressiveUpdateStateChanged", 3000) {
+                    oneShotTask("UpdatesService.aggressiveUpdateStateChanged") {
                         try {
                             //UpdatesService and AggressiveUpdateService work independently.
                             //it may happen that UpdatesService will change the panel to visible just before AggressiveUpdateService

@@ -9,7 +9,6 @@ import com.intellij.util.ui.JBUI
 import org.apache.maven.artifact.versioning.ComparableVersion
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.BackendInfoHolder
-import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.newerThan
 import org.digma.intellij.plugin.icons.AppIcons
@@ -119,7 +118,7 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
 
             service<NotificationsPersistenceState>().state.closeButtonLastClickedTime = Instant.now()
 
-            Backgroundable.ensurePooledThread {
+            oneShotTask("LoadStatusPanel.closeButtonClicked") {
                 ActivityMonitor.getInstance(project).registerCloseThrottlingMessage(service.lastLoadStatus.throttlingType.toString())
                 if (service.lastLoadStatus.throttlingType == "ExtendedObservability")
                 {
@@ -166,7 +165,7 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
                     service.lastLoadStatus.lastUpdated
                 )
 
-                oneShotTask("LoadStatusPanel.shouldShowClose", 5000) {
+                oneShotTask("LoadStatusPanel.shouldShowClose") {
                     val shouldShowClose = try {
                         shouldDisplayCloseButton()
                     } catch (e: Throwable) {

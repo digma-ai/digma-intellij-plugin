@@ -33,8 +33,32 @@ fun updateAccount(digmaAccount: DigmaAccount, digmaCredentials: DigmaCredentials
 
     try {
         if (future == null) {
-            ErrorReporter.getInstance().reportError("AuthManager.updateAccount", "could not execute update account task", mapOf())
-            throw RuntimeException("could not execute update account task")
+            ErrorReporter.getInstance().reportError("AuthManager.updateAccount", "could not execute updateAccount task", mapOf())
+            throw RuntimeException("could not execute updateAccount task")
+        } else {
+            future.get(2.seconds.inWholeMilliseconds, TimeUnit.MILLISECONDS)
+        }
+    } catch (e: Throwable) {
+        ErrorReporter.getInstance().reportError("AuthManager.updateAccount", e)
+        throw e
+    }
+}
+
+
+fun deleteAccount(account: DigmaAccount) {
+    //this is the only place we delete the account.
+    val future = oneShotTask("AuthManager.deleteAccount") {
+        runBlocking {
+            DigmaAccountManager.getInstance().removeAccount(account)
+            DigmaDefaultAccountHolder.getInstance().account = null
+            CredentialsHolder.digmaCredentials = null
+        }
+    }
+
+    try {
+        if (future == null) {
+            ErrorReporter.getInstance().reportError("AuthManager.deleteAccount", "could not execute deleteAccount account task", mapOf())
+            throw RuntimeException("could not execute deleteAccount task")
         } else {
             future.get(2.seconds.inWholeMilliseconds, TimeUnit.MILLISECONDS)
         }
@@ -44,3 +68,5 @@ fun updateAccount(digmaAccount: DigmaAccount, digmaCredentials: DigmaCredentials
     }
 
 }
+
+

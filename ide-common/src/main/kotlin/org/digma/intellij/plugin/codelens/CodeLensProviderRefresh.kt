@@ -21,7 +21,7 @@ class CodeLensProviderRefresh(
 
     fun start() {
 
-        parentDisposable.disposingPeriodicTask("CodeLensProvider.refresh", 20000) {
+        parentDisposable.disposingPeriodicTask("CodeLensProvider.refresh", 20000, true) {
             try {
                 val changedPsiFiles = CodeLensProvider.getInstance(project).refresh()
                 if (changedPsiFiles.isNotEmpty()) {

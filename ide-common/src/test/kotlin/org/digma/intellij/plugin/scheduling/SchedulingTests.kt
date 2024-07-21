@@ -1,18 +1,13 @@
-@file:OptIn(DelicateCoroutinesApi::class)
 
 package org.digma.intellij.plugin.scheduling
 
 import com.intellij.openapi.util.Disposer
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.junit.jupiter.api.assertThrows
 import java.util.Collections
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
+import kotlin.concurrent.timer
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -38,7 +33,7 @@ class SchedulingTests {
 
         val testList = mutableListOf<String>()
         val disposable = Disposer.newDisposable()
-        disposable.disposingPeriodicTask("testDisposingTask", 100) {
+        disposable.disposingPeriodicTask("testDisposingTask", 100, false) {
             testList.add("test")
         }
 
@@ -139,7 +134,7 @@ class SchedulingTests {
 
         val testList = mutableListOf<String>()
         val disposable = Disposer.newDisposable()
-        disposable.disposingPeriodicTask("testTaskCancelsItself", 100) {
+        disposable.disposingPeriodicTask("testTaskCancelsItself", 100, false) {
             testList.add("test")
             if (testList.size == 2) {
                 Disposer.dispose(disposable)
@@ -168,7 +163,7 @@ class SchedulingTests {
 
     @Test
     fun testOneShotTaskWithTimeout() {
-        val result = oneShotTask("testOneShotTaskWithTimeout", 100) {
+        val result = blockingOneShotTask("testOneShotTaskWithTimeout", 100) {
             println("test")
         }
 
@@ -178,7 +173,7 @@ class SchedulingTests {
 
     @Test
     fun testOneShotTaskWithResult() {
-        val result = oneShotTaskWithResult("testOneShotTaskWithResult", 100) {
+        val result = blockingOneShotTaskWithResult("testOneShotTaskWithResult", 100) {
             "test"
         }
 
@@ -189,7 +184,7 @@ class SchedulingTests {
 
     @Test
     fun testOneShotTaskCanceledOnTimeout() {
-        val result = oneShotTask("testOneShotTaskCanceledOnTimeout", 500) {
+        val result = blockingOneShotTask("testOneShotTaskCanceledOnTimeout", 500) {
             assertThrows<InterruptedException> {
                 Thread.sleep(2000)
             }
@@ -201,7 +196,7 @@ class SchedulingTests {
     @Test
     fun testOneShotTaskWithResultCanceledOnTimeout() {
         assertThrows<TimeoutException> {
-            oneShotTaskWithResult("testOneShotTaskWithResultCanceledOnTimeout", 100) {
+            blockingOneShotTaskWithResult("testOneShotTaskWithResultCanceledOnTimeout", 100) {
                 Thread.sleep(1000)
                 @Suppress("UNUSED_EXPRESSION")
                 "test"
@@ -234,21 +229,18 @@ class SchedulingTests {
     @Test
     fun testThreadsAreDaemon() {
 
-        GlobalScope.launch {
-            while (isActive) {
-                try {
-                    delay(50)
-                    manage()
-                } catch (e: Throwable) {
-                    e.printStackTrace()
-                }
+        val timer = timer("management", true, 0, 50) {
+            try {
+                manage()
+            } catch (e: Throwable) {
+                e.printStackTrace()
             }
         }
 
         val daemons = Collections.synchronizedMap(mutableMapOf<String, Boolean>())
         val disposable = Disposer.newDisposable()
         repeat((0..1000).count()) {
-            disposable.disposingPeriodicTask("testThreadsAreDaemon", 10) {
+            disposable.disposingPeriodicTask("testThreadsAreDaemon", 10, false) {
                 try {
                     daemons[Thread.currentThread().name] = Thread.currentThread().isDaemon
                     Thread.sleep(100)
@@ -264,27 +256,25 @@ class SchedulingTests {
         println("daemons: $daemons")
         assertEquals(SCHEDULER_MAX_SIZE, daemons.size)
         assertTrue(daemons.values.all { true })
+        timer.cancel()
     }
 
 
     @Test
     fun testCorePoolSizeIncreased() {
 
-        GlobalScope.launch {
-            while (isActive) {
-                try {
-                    delay(50)
-                    manage()
-                } catch (e: Throwable) {
-                    e.printStackTrace()
-                }
+        val timer = timer("management", true, 0, 50) {
+            try {
+                manage()
+            } catch (e: Throwable) {
+                e.printStackTrace()
             }
         }
 
         val threadNames = Collections.synchronizedSet(mutableSetOf<String>())
         val disposable = Disposer.newDisposable()
         repeat((0..1000).count()) {
-            disposable.disposingPeriodicTask("testCorePoolSizeIncreased", 10) {
+            disposable.disposingPeriodicTask("testCorePoolSizeIncreased", 10, false) {
                 try {
                     threadNames.add(Thread.currentThread().name)
                     Thread.sleep(100)
@@ -299,6 +289,7 @@ class SchedulingTests {
         Disposer.dispose(disposable)
         println("thread names: $threadNames")
         assertEquals(SCHEDULER_MAX_SIZE, threadNames.size)
+        timer.cancel()
     }
 
 

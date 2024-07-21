@@ -25,7 +25,6 @@ import java.awt.GridBagLayout
 import javax.swing.Icon
 import javax.swing.JPanel
 import javax.swing.SwingConstants
-import kotlin.time.Duration.Companion.seconds
 
 
 fun createNoConnectionPanel(project: Project, parentDisposable: Disposable):JPanel{
@@ -84,7 +83,7 @@ fun createNoConnectionPanel(project: Project, parentDisposable: Disposable):JPan
     buttonsPanel.add(refreshLink,BorderLayout.WEST)
 
     val setupLink = ActionLink("Set-up Digma"){
-        oneShotTask("", 2.seconds.inWholeMilliseconds) {
+        oneShotTask("SetupDigmaButtonClicked") {
             ActivityMonitor.getInstance(project).registerUserActionWithOrigin("setup digma button clicked", UserActionOrigin.NoConnectionPanel)
         }
 

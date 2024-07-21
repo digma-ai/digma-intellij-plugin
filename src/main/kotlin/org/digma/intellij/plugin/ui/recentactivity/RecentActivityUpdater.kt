@@ -11,7 +11,6 @@ import com.intellij.openapi.wm.ToolWindowManager
 import org.digma.intellij.plugin.PluginId
 import org.digma.intellij.plugin.analytics.EnvironmentChanged
 import org.digma.intellij.plugin.analytics.getAllEnvironments
-import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.icons.AppIcons
@@ -20,6 +19,7 @@ import org.digma.intellij.plugin.model.rest.environment.Env
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResponseEntry
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult
 import org.digma.intellij.plugin.scheduling.disposingPeriodicTask
+import org.digma.intellij.plugin.scheduling.oneShotTask
 import org.digma.intellij.plugin.ui.jcef.JCEFGlobalConstants
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
 import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
@@ -49,7 +49,9 @@ class RecentActivityUpdater(val project: Project) : Disposable {
     init {
         project.messageBus.connect(this).subscribe<EnvironmentChanged>(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC, object : EnvironmentChanged {
             override fun environmentChanged(newEnv: Env?) {
-                Backgroundable.ensurePooledThreadWithoutReadAccess { updateLatestActivities() }
+                oneShotTask("RecentActivityUpdater.environmentChanged.updateLatestActivities") {
+                    updateLatestActivities()
+                }
             }
 
             override fun environmentsListChanged(newEnvironments: List<Env>) {
@@ -58,7 +60,7 @@ class RecentActivityUpdater(val project: Project) : Disposable {
         })
 
 
-        disposingPeriodicTask("RecentActivityUpdater.updateLatestActivities", 10.seconds.inWholeMilliseconds) {
+        disposingPeriodicTask("RecentActivityUpdater.updateLatestActivities", 10.seconds.inWholeMilliseconds, true) {
             try {
                 Log.log(logger::trace, "calling updateLatestActivities")
                 updateLatestActivities()
@@ -76,7 +78,6 @@ class RecentActivityUpdater(val project: Project) : Disposable {
     }
 
 
-    @Synchronized
     fun updateLatestActivities() {
         Log.log(logger::trace, "updateLatestActivities called")
         val environments = getAllEnvironments(project)
@@ -90,7 +91,6 @@ class RecentActivityUpdater(val project: Project) : Disposable {
 
     }
 
-    @Synchronized
     fun updateLatestActivities(environments: List<Env>) {
 
         Log.log(logger::trace, "updateLatestActivities(List<String>) called")
@@ -167,7 +167,6 @@ class RecentActivityUpdater(val project: Project) : Disposable {
         Log.log(logger::trace, "sending recentActivitiesMessage to app {}", recentActivitiesMessage)
         serializeAndExecuteWindowPostMessageJavaScript(jCefComponent.jbCefBrowser.cefBrowser, recentActivitiesMessage)
     }
-
 
 
     private fun sendEmptyData() {

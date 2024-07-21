@@ -17,6 +17,10 @@ public class AnalyticsProviderException extends RuntimeException {
         super(cause);
     }
 
+    public AnalyticsProviderException(String message) {
+        super(message);
+    }
+
     public int getResponseCode() {
         return responseCode;
     }

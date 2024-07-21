@@ -1,8 +1,5 @@
-@file:Suppress("UnstableApiUsage")
-
 package org.digma.intellij.plugin.scheduling
 
-import com.intellij.collaboration.async.disposingScope
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -10,12 +7,10 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.ProjectActivity
 import com.intellij.openapi.util.Disposer
-import com.intellij.util.concurrency.AppExecutorUtil
 import com.jetbrains.rd.util.AtomicInteger
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import org.apache.commons.lang3.time.StopWatch
+import org.digma.intellij.plugin.analytics.ApiErrorHandler
+import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
 import org.digma.intellij.plugin.common.FrequencyDetector
 import org.digma.intellij.plugin.common.findActiveProject
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
@@ -23,7 +18,6 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import java.util.Collections
 import java.util.concurrent.Callable
-import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 import java.util.concurrent.ScheduledFuture
@@ -31,6 +25,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.ThreadFactory
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.concurrent.timer
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.time.Duration.Companion.minutes
@@ -152,20 +147,18 @@ to call from java , assuming a class implements Disposable, do that:
  */
 
 
-const val INITIAL_SCHEDULER_CORE_SIZE = 2
-const val SCHEDULER_MAX_SIZE = 5 // 5 should be enough , we don't have too many tasks,if we reached this max we have thread starvation
-const val SCHEDULER_MAX_REGISTERED_TASKS = 200
-
+const val INITIAL_SCHEDULER_CORE_SIZE = 3
+// this max size should be enough , we don't have too many tasks,if we reached this max we have thread starvation. it is reported to posthog when reached.
+const val SCHEDULER_MAX_SIZE = 8
+const val SCHEDULER_MAX_QUEUE_SIZE_ALLOWED = 200
 
 val logger = Logger.getInstance("org.digma.scheduler")
 
 private val scheduler: MyScheduledExecutorService = MyScheduledExecutorService("Digma-Scheduler", INITIAL_SCHEDULER_CORE_SIZE)
 
-//todo: implement like MyScheduledExecutorService,currently using intellij executor, or use intellij's own thread pool which is unbounded
-private val executor: ExecutorService = AppExecutorUtil.createBoundedApplicationPoolExecutor("Digma-one-shot", 3)
 private val scheduledTasksPerformanceMonitor = ScheduledTasksPerformanceMonitor()
 
-//it's not private so that it can be used in unit tests
+//this method is here and not private so that it can be used in unit tests
 fun manage() {
     scheduler.manage()
 }
@@ -176,55 +169,48 @@ fun manage() {
 //also used to run a management task.
 @Service(Service.Level.APP)
 class ThreadPoolProviderService : Disposable {
+
     companion object {
         fun getInstance(): ThreadPoolProviderService {
             return service<ThreadPoolProviderService>()
         }
     }
 
-    init {
-        disposingScope().launch {
 
-            //wait 2 minutes, let the pool start working before the first management
-            delay(2.minutes.inWholeMilliseconds)
+    private val managementTimer = timer("SchedulerManager", true, 2.minutes.inWholeMilliseconds, 2.minutes.inWholeMilliseconds) {
+        try {
+            //call the scheduler manage
+            manage()
 
-            while (isActive) {
-                try {
-                    manage()
-                    //the pool size was increased to SCHEDULER_MAX_SIZE, we have a problem, report an error
-                    if (scheduler.corePoolSize >= SCHEDULER_MAX_SIZE) {
-                        ErrorReporter.getInstance().reportError(
-                            "ThreadPoolProviderService.manage", "scheduler max size reached", mapOf(
-                                "core.pool.size" to scheduler.corePoolSize,
-                                "max.pool.size" to scheduler.maximumPoolSize,
-                                "max.pool.size.allowed" to SCHEDULER_MAX_SIZE
-                            )
-                        )
-                    }
-
-                    //this scheduler can not be used for high load
-                    if (scheduler.registeredRecurringTasks.get() >= SCHEDULER_MAX_REGISTERED_TASKS) {
-                        ErrorReporter.getInstance().reportError(
-                            "ThreadPoolProviderService.manage", "too many registered tasks in scheduler", mapOf(
-                                "core.pool.size" to scheduler.corePoolSize,
-                                "max.pool.size" to scheduler.maximumPoolSize,
-                                "registered.tasks" to scheduler.registeredRecurringTasks.get(),
-                                "max.registered.allowed" to SCHEDULER_MAX_REGISTERED_TASKS
-                            )
-                        )
-                    }
-
-                    Log.log(
-                        logger::trace,
-                        "management: scheduler statistics: core pool size:{},registered tasks:{}",
-                        scheduler.corePoolSize,
-                        scheduler.registeredRecurringTasks
+            //the pool size was increased to SCHEDULER_MAX_SIZE, we have a problem, report an error
+            if (scheduler.corePoolSize >= SCHEDULER_MAX_SIZE) {
+                ErrorReporter.getInstance().reportError(
+                    "ThreadPoolProviderService.manage", "scheduler max size reached", mapOf(
+                        "core.pool.size" to scheduler.corePoolSize,
+                        "max.pool.size" to scheduler.maximumPoolSize,
+                        "task.queue.size" to scheduler.queue.size,
+                        "all.registered.recurring (including canceled)" to scheduler.registeredRecurringTasks,
+                        "max.pool.size.allowed" to SCHEDULER_MAX_SIZE,
+                        "max.queue.size.allowed" to SCHEDULER_MAX_QUEUE_SIZE_ALLOWED
                     )
-                    delay(2.minutes.inWholeMilliseconds)
-                } catch (e: Throwable) {
-                    ErrorReporter.getInstance().reportError("ThreadPoolProviderService.manage", e)
-                }
+                )
             }
+
+            //this scheduler can not be used for high load
+            if (scheduler.queue.size >= SCHEDULER_MAX_QUEUE_SIZE_ALLOWED) {
+                ErrorReporter.getInstance().reportError(
+                    "ThreadPoolProviderService.manage", "too many registered tasks in scheduler", mapOf(
+                        "core.pool.size" to scheduler.corePoolSize,
+                        "max.pool.size" to scheduler.maximumPoolSize,
+                        "task.queue.size" to scheduler.queue.size,
+                        "all.registered.recurring (including canceled)" to scheduler.registeredRecurringTasks,
+                        "max.pool.size.allowed" to SCHEDULER_MAX_SIZE,
+                        "max.queue.size.allowed" to SCHEDULER_MAX_QUEUE_SIZE_ALLOWED
+                    )
+                )
+            }
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError("ThreadPoolProviderService.manage", e)
         }
     }
 
@@ -235,13 +221,11 @@ class ThreadPoolProviderService : Disposable {
 
 
     override fun dispose() {
+
+        managementTimer.cancel()
+
         try {
             scheduler.shutdownNow()
-        } catch (e: Throwable) {
-            Log.warnWithException(logger, e, "error in dispose")
-        }
-        try {
-            executor.shutdownNow()
         } catch (e: Throwable) {
             Log.warnWithException(logger, e, "error in dispose")
         }
@@ -254,13 +238,23 @@ class ThreadPoolProviderServiceStarter : ProjectActivity {
     }
 }
 
+//used to pause recurring tasks
+private fun paused(passable: Boolean): Boolean {
+    return try {
+        //will fail in tests
+        passable &&
+                (ApiErrorHandler.getInstance().isNoConnectionMode() || DigmaDefaultAccountHolder.getInstance().account == null)
+    } catch (e: Throwable) {
+        false
+    }
+}
 
 /**
  * starts a periodic task , canceling the task when Disposable is disposed.
  * returns true if the task was registered, false otherwise.
  */
-fun Disposable.disposingPeriodicTask(name: String, period: Long, block: () -> Unit): Boolean {
-    return disposingPeriodicTask(name, 0, period, block)
+fun Disposable.disposingPeriodicTask(name: String, period: Long, passable: Boolean, block: () -> Unit): Boolean {
+    return disposingPeriodicTask(name, 0, period, passable, block)
 }
 
 /**
@@ -268,30 +262,40 @@ fun Disposable.disposingPeriodicTask(name: String, period: Long, block: () -> Un
  * wait startupDelay before first execution.
  * returns true if the task was registered, false otherwise.
  */
-fun Disposable.disposingPeriodicTask(name: String, startupDelay: Long, period: Long, block: () -> Unit): Boolean {
+fun Disposable.disposingPeriodicTask(name: String, startupDelay: Long, period: Long, passable: Boolean, block: () -> Unit): Boolean {
 
     Log.log(logger::trace, "registering disposingPeriodicTask {}, startupDelay:{},period:{}", name, startupDelay, period)
 
     val future = try {
+
         //catch and swallow all exceptions. there is no point in throwing them.
         // also some implementations will cancel the task if it throws an exception, we don't want that
-        // because our tasks may throw exceptions. usually we handle exceptions in the task body,
-        // but if not then exceptions will be caught here and logged.
+        // because our tasks may throw exceptions, and we want them to keep recurring.
+        //usually we handle exceptions in the task body,but if not then exceptions will be caught here and logged.
         scheduler.scheduleWithFixedDelay({
+
+            if (paused(passable)) {
+                return@scheduleWithFixedDelay
+            }
+
             val stopWatch = StopWatch.createStarted()
             try {
                 Log.logWithThreadName(logger::trace, "executing periodic task {}", name)
                 block.invoke()
-                Log.logWithThreadName(logger::trace, "periodic task {} completed", name)
+            } catch (e: InterruptedException) {
+                Log.logWithThreadName(logger::trace, "periodic task {} interrupted", name)
+                //don't log InterruptedException to posthog, it doesn't help us
             } catch (e: Throwable) {
                 Log.warnWithException(logger, e, "periodic task {} failed", name)
                 ErrorReporter.getInstance().reportError("org.digma.scheduler.disposingPeriodicTask", e, mapOf("task.name" to name))
             } finally {
                 stopWatch.stop()
+                Log.logWithThreadName(logger::trace, "periodic task {} completed in {} millis", name, stopWatch.time)
                 scheduledTasksPerformanceMonitor.reportPerformance(name, stopWatch.time)
             }
 
         }, startupDelay, period, TimeUnit.MILLISECONDS)
+
     } catch (e: Throwable) {
         Log.warnWithException(logger, e, "could not schedule periodic task {}", name)
         ErrorReporter.getInstance().reportError("org.digma.scheduler.disposingPeriodicTask", e, mapOf("task.name" to name))
@@ -344,14 +348,15 @@ fun Disposable.disposingOneShotDelayedTask(name: String, delay: Long, block: () 
 
     val disposable = Disposer.newDisposable()
     Disposer.register(this, disposable)
-    return disposable.disposingOneShotDelayedTask0(name, delay, block)
+    return disposable.disposingOneShotDelayedTaskImpl(name, delay, block)
 }
 
-private fun Disposable.disposingOneShotDelayedTask0(name: String, delay: Long, block: () -> Unit): Boolean {
+private fun Disposable.disposingOneShotDelayedTaskImpl(name: String, delay: Long, block: () -> Unit): Boolean {
 
     Log.log(logger::trace, "registering disposingOneShotDelayedTask {}, delay:{}", name, delay)
 
     val future = try {
+
         //catch and swallow all exceptions. there is no point in throwing them.
         // also some implementations will cancel the task if it throws an exception, we don't want that
         // because our tasks may throw exceptions. usually we handle exceptions in the task body,
@@ -362,17 +367,22 @@ private fun Disposable.disposingOneShotDelayedTask0(name: String, delay: Long, b
             try {
                 Log.logWithThreadName(logger::trace, "executing delayed task {}", name)
                 block.invoke()
-                Log.logWithThreadName(logger::trace, "delayed task {} completed", name)
+
+            } catch (e: InterruptedException) {
+                Log.logWithThreadName(logger::trace, "delayed task {} interrupted", name)
+                //don't log InterruptedException to posthog, it doesn't help us
             } catch (e: Throwable) {
                 Log.warnWithException(logger, e, "delayed task {} failed", name)
                 ErrorReporter.getInstance().reportError("org.digma.scheduler.disposingOneShotDelayedTask", e, mapOf("task.name" to name))
             } finally {
                 stopWatch.stop()
+                Log.logWithThreadName(logger::trace, "delayed task {} completed in {} millis", name, stopWatch.time)
                 scheduledTasksPerformanceMonitor.reportPerformance(name, stopWatch.time)
                 Disposer.dispose(this)
             }
 
         }, delay, TimeUnit.MILLISECONDS)
+
     } catch (e: Throwable) {
         Log.warnWithException(logger, e, "could not schedule delayed task {}", name)
         ErrorReporter.getInstance().reportError("org.digma.scheduler.disposingOneShotDelayedTask", e, mapOf("task.name" to name))
@@ -380,7 +390,7 @@ private fun Disposable.disposingOneShotDelayedTask0(name: String, delay: Long, b
     }
 
 
-    //this will run when parent disposable is disposed which will dispose this disposable and its children
+    //this will run when parent disposable is disposed which will dispose this disposable and its children,if not disposed already.
     Disposer.register(this) {
         Log.log(logger::trace, "disposing delayed task {}", name)
         future.cancel(true)
@@ -400,25 +410,31 @@ fun <T> oneShotTask(name: String, block: () -> T): Future<T>? {
     Log.log(logger::trace, "registering oneShotTask {}", name)
 
     try {
-        return executor.submit(Callable {
+
+        return scheduler.submit(Callable {
             val stopWatch = StopWatch.createStarted()
             try {
                 Log.logWithThreadName(logger::trace, "executing one-shot task {}", name)
                 val result = block.invoke()
-                Log.logWithThreadName(logger::trace, "one-shot task {} completed", name)
+
                 return@Callable result
+            } catch (e: InterruptedException) {
+                Log.logWithThreadName(logger::trace, "one-shot task {} interrupted", name)
+                //don't log InterruptedException to posthog, it doesn't help us
+                throw e
             } catch (e: Throwable) {
                 Log.warnWithException(logger, e, "one-shot task {} failed", name)
                 ErrorReporter.getInstance().reportError("org.digma.scheduler.oneShotTask", e, mapOf("task.name" to name))
                 throw e
             } finally {
                 stopWatch.stop()
+                Log.logWithThreadName(logger::trace, "one-shot task {} completed in {} millis", name, stopWatch.time)
                 scheduledTasksPerformanceMonitor.reportPerformance(name, stopWatch.time)
             }
         })
 
     } catch (e: Throwable) {
-        Log.warnWithException(logger, e, "could not submit one shot task {}", name)
+        Log.warnWithException(logger, e, "could not submit one-shot task {}", name)
         ErrorReporter.getInstance().reportError("org.digma.scheduler.oneShotTask", e, mapOf("task.name" to name))
         return null
     }
@@ -428,35 +444,42 @@ fun <T> oneShotTask(name: String, block: () -> T): Future<T>? {
  * executes a task with no result , waiting for the task to finish within timeout,
  * returns true if the task completed successfully.
  */
-fun oneShotTask(name: String, timeoutMillis: Long, block: () -> Unit): Boolean {
+fun blockingOneShotTask(name: String, timeoutMillis: Long, block: () -> Unit): Boolean {
 
-    Log.log(logger::trace, "registering oneShotTask {}, timeoutMillis:{}", name, timeoutMillis)
+    Log.log(logger::trace, "registering blockingOneShotTask {}, timeoutMillis:{}", name, timeoutMillis)
 
     val future = try {
-        executor.submit {
+
+        scheduler.submit {
             val stopWatch = StopWatch.createStarted()
             try {
                 Log.logWithThreadName(logger::trace, "executing one-shot task {}", name)
                 block.invoke()
-                Log.logWithThreadName(logger::trace, "one-shot task {} completed", name)
+
             } finally {
                 stopWatch.stop()
+                Log.logWithThreadName(logger::trace, "one-shot task {} completed in {} millis", name, stopWatch.time)
                 scheduledTasksPerformanceMonitor.reportPerformance(name, stopWatch.time)
             }
         }
+
     } catch (e: Throwable) {
-        Log.warnWithException(logger, e, "could not submit one shot task {}", name)
-        ErrorReporter.getInstance().reportError("org.digma.scheduler.oneShotTask", e, mapOf("task.name" to name))
+        Log.warnWithException(logger, e, "could not submit one-shot task {}", name)
+        ErrorReporter.getInstance().reportError("org.digma.scheduler.blockingOneShotTask", e, mapOf("task.name" to name))
         return false
     }
 
     try {
         future.get(timeoutMillis, TimeUnit.MILLISECONDS)
         return true
+    } catch (e: InterruptedException) {
+        Log.logWithThreadName(logger::trace, "one-shot task {} interrupted", name)
+        //don't log InterruptedException to posthog, it doesn't help us
+        return false
     } catch (e: Throwable) {
         future.cancel(true)
-        Log.warnWithException(logger, e, "one-shot task {} failed", name)
-        ErrorReporter.getInstance().reportError("org.digma.scheduler.oneShotTask", e, mapOf("task.name" to name))
+        Log.warnWithException(logger, e, "one-shot task {} failed {}", name, e)
+        ErrorReporter.getInstance().reportError("org.digma.scheduler.blockingOneShotTask", e, mapOf("task.name" to name))
         return false
     }
 
@@ -465,39 +488,45 @@ fun oneShotTask(name: String, timeoutMillis: Long, block: () -> Unit): Boolean {
 
 /**
  * executes a task with result , waiting for the task to finish within timeout and return its result.
- * throws a RuntimeException wrapping the original exception if the task fails or the task could not be submitted.
+ * rethrows exceptions including InterruptedException
  */
-@Throws(Exception::class)
-fun <T> oneShotTaskWithResult(name: String, timeoutMillis: Long, block: () -> T): T {
+@Throws(InterruptedException::class, Exception::class)
+fun <T> blockingOneShotTaskWithResult(name: String, timeoutMillis: Long, block: () -> T): T {
 
-    Log.log(logger::trace, "registering oneShotTaskWithResult {}, timeoutMillis:{}", name, timeoutMillis)
+    Log.log(logger::trace, "registering blockingOneShotTaskWithResult {}, timeoutMillis:{}", name, timeoutMillis)
 
     val future = try {
 
-        executor.submit(Callable {
+        scheduler.submit(Callable {
             val stopWatch = StopWatch.createStarted()
             try {
                 Log.logWithThreadName(logger::trace, "executing one-shot task with result {}", name)
                 val result = block.invoke()
-                Log.logWithThreadName(logger::trace, "one-shot task with result {} completed", name)
+
                 return@Callable result
             } finally {
                 stopWatch.stop()
+                Log.logWithThreadName(logger::trace, "one-shot task with result {} completed in {} millis", name, stopWatch.time)
                 scheduledTasksPerformanceMonitor.reportPerformance(name, stopWatch.time)
             }
         })
+
     } catch (e: Throwable) {
-        Log.warnWithException(logger, e, "could not submit one shot task {}", name)
-        ErrorReporter.getInstance().reportError("org.digma.scheduler.oneShotTaskWithResult", e, mapOf("task.name" to name))
+        Log.warnWithException(logger, e, "could not submit one-shot task with result {}", name)
+        ErrorReporter.getInstance().reportError("org.digma.scheduler.blockingOneShotTaskWithResult", e, mapOf("task.name" to name))
         throw e
     }
 
     try {
         return future.get(timeoutMillis, TimeUnit.MILLISECONDS)
+    } catch (e: InterruptedException) {
+        Log.logWithThreadName(logger::trace, "one-shot task with result {} interrupted", name)
+        //don't log InterruptedException to posthog, it doesn't help us
+        throw e
     } catch (e: Throwable) {
         future.cancel(true)
-        Log.warnWithException(logger, e, "one-shot task with result {} failed", name)
-        ErrorReporter.getInstance().reportError("org.digma.scheduler.oneShotTaskWithResult", e, mapOf("task.name" to name))
+        Log.warnWithException(logger, e, "one-shot task with result {} failed {}", name, e)
+        ErrorReporter.getInstance().reportError("org.digma.scheduler.blockingOneShotTaskWithResult", e, mapOf("task.name" to name))
         throw e
     }
 
@@ -581,24 +610,51 @@ class MyScheduledExecutorService(
     fun manage() {
         managementRound++
 
-        Log.log(logger::trace, "running management on scheduler")
-
         val poolSize = scheduler.corePoolSize
         val maxPoolSize = scheduler.maximumPoolSize
         val activeCount = scheduler.activeCount
+        val taskQueueSize = scheduler.queue.size
 
-        Log.log(logger::trace, "management: on scheduler poolSize:{},activeCount:{}", poolSize, activeCount)
+        Log.logWithThreadName(
+            logger::trace,
+            "management snapshot: poolSize:{} , activeCount:{} , task queue:{} , registered recurring task(includes canceled):{}",
+            poolSize,
+            activeCount,
+            taskQueueSize,
+            registeredRecurringTasks
+        )
 
-        if (activeCount >= poolSize) exhaustedCount.incrementAndGet()
+        if (activeCount == poolSize) exhaustedCount.incrementAndGet()
 
         //check every 5 rounds, if was always exhausted increase pool size
         if (managementRound % 5 == 0) {
             val exhausted = exhaustedCount.get()
-            Log.log(logger::trace, "management: on scheduler exhausted:{}", exhausted)
             exhaustedCount.set(0)
             if (exhausted >= 5) {
-                corePoolSize = min(maxPoolSize, poolSize + 1)
-                Log.log(logger::trace, "management: on scheduler pool size increased to {}", corePoolSize)
+                Log.log(logger::trace, "management: had full capacity in the past 5 rounds")
+                if (poolSize < maxPoolSize) {
+                    val currentSize = corePoolSize
+                    corePoolSize = min(maxPoolSize, poolSize + 1)
+                    Log.logWithThreadName(logger::trace, "management: pool size increased from {} to {}", currentSize, corePoolSize)
+                } else {
+                    Log.logWithThreadName(logger::trace, "management: can't increase pool size because at max")
+                }
+            }
+        }
+
+        //send statistics every 2 hours
+        if (managementRound % 60 == 0) {
+            findActiveProject()?.let { project ->
+                ActivityMonitor.getInstance(project).registerSchedulerStatistics(
+                    mapOf(
+                        "core.pool.size" to scheduler.corePoolSize,
+                        "max.pool.size" to scheduler.maximumPoolSize,
+                        "task.queue.size" to scheduler.queue.size,
+                        "all.registered.recurring (including canceled)" to scheduler.registeredRecurringTasks,
+                        "max.pool.size.allowed" to SCHEDULER_MAX_SIZE,
+                        "max.queue.size.allowed" to SCHEDULER_MAX_QUEUE_SIZE_ALLOWED
+                    )
+                )
             }
         }
     }

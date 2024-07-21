@@ -36,7 +36,7 @@ fun startRequestRegisterTimers(parentDisposable: Disposable) {
     val disposable = Disposer.newDisposable()
     Disposer.register(parentDisposable, disposable)
     //wait one minute after project opens and before showing the message
-    disposable.disposingPeriodicTask(",", 1.minutes.inWholeMilliseconds, 6.hours.inWholeMilliseconds) {
+    disposable.disposingPeriodicTask("RequestUserRegister", 1.minutes.inWholeMilliseconds, 6.hours.inWholeMilliseconds, true) {
 
         if (isUserRegistered()) {
             //will cancel this task

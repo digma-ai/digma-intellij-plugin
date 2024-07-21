@@ -30,7 +30,7 @@ class LoadStatusService(private val project: Project) : Disposable {
     var lastLoadStatus = LoadStatusResponse("", Date(0), false, "")
 
     init {
-        disposingPeriodicTask("LoadStatusService.periodicAction", 1.minutes.inWholeMilliseconds, 1.minutes.inWholeMilliseconds) {
+        disposingPeriodicTask("LoadStatusService.periodicAction", 1.minutes.inWholeMilliseconds, 1.minutes.inWholeMilliseconds, true) {
             try {
                 periodicAction()
             } catch (e: Exception) {

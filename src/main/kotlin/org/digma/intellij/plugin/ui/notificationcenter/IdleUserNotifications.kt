@@ -31,7 +31,7 @@ fun startIdleUserTimers(parentDisposable: Disposable) {
 
     Log.log(AppNotificationCenter.logger::info, "starting startIdleUserTimers")
 
-    parentDisposable.disposingPeriodicTask("IdleUserTimers", 1.hours.inWholeMilliseconds) {
+    parentDisposable.disposingPeriodicTask("IdleUserTimers", 1.hours.inWholeMilliseconds, true) {
 
         try {
 

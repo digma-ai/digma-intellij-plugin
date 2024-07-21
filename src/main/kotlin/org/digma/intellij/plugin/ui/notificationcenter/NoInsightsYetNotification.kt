@@ -24,7 +24,7 @@ fun startNoInsightsYetNotificationTimer(parentDisposable: Disposable) {
 
     val disposable = Disposer.newDisposable()
     Disposer.register(parentDisposable, disposable)
-    disposable.disposingPeriodicTask("NoInsightsYetNotificationTimer.waitForFirstConnection", 1.minutes.inWholeMilliseconds) {
+    disposable.disposingPeriodicTask("NoInsightsYetNotificationTimer.waitForFirstConnection", 1.minutes.inWholeMilliseconds, true) {
         Log.log(AppNotificationCenter.logger::info, "Starting NoInsightsYetNotificationTimer")
         val firstConnectionTime = service<PersistenceService>().getFirstTimeConnectionEstablishedTimestamp()
         if (firstConnectionTime != null) {

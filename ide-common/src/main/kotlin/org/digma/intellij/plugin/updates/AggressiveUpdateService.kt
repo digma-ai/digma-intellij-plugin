@@ -1,22 +1,17 @@
 package org.digma.intellij.plugin.updates
 
-import com.intellij.collaboration.async.disposingScope
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import io.ktor.utils.io.CancellationException
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
+import com.intellij.openapi.util.Disposer
 import org.apache.maven.artifact.versioning.ComparableVersion
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
 import org.digma.intellij.plugin.analytics.ApiClientChangedEvent
 import org.digma.intellij.plugin.analytics.BackendInfoHolder
+import org.digma.intellij.plugin.common.DisposableAdaptor
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.common.buildVersionRequest
 import org.digma.intellij.plugin.common.getPluginVersion
@@ -29,6 +24,7 @@ import org.digma.intellij.plugin.model.rest.AboutResult
 import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
 import org.digma.intellij.plugin.model.rest.version.VersionResponse
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.scheduling.disposingPeriodicTask
 import org.digma.intellij.plugin.scheduling.oneShotTask
 import org.digma.intellij.plugin.settings.InternalFileSettings
 import org.digma.intellij.plugin.updates.CurrentUpdateState.OK
@@ -36,7 +32,6 @@ import org.digma.intellij.plugin.updates.CurrentUpdateState.UPDATE_BACKEND
 import org.digma.intellij.plugin.updates.CurrentUpdateState.UPDATE_BOTH
 import org.digma.intellij.plugin.updates.CurrentUpdateState.UPDATE_PLUGIN
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.time.Duration
@@ -45,19 +40,17 @@ import kotlin.time.Duration.Companion.seconds
 enum class CurrentUpdateState { OK, UPDATE_BACKEND, UPDATE_PLUGIN, UPDATE_BOTH }
 
 @Service(Service.Level.PROJECT)
-class AggressiveUpdateService(val project: Project) : Disposable {
+class AggressiveUpdateService(val project: Project) : DisposableAdaptor {
 
     private val logger: Logger = Logger.getInstance(AggressiveUpdateService::class.java)
 
-    private val isConnectionLost = AtomicBoolean(false)
-
     private var delayBetweenUpdatesSeconds = getDefaultDelayBetweenUpdatesSeconds()
+
+    private var myHighRateDisposable: Disposable? = null
 
     private val updateStateLock = ReentrantLock()
 
     private val updateStateRef: AtomicReference<PublicUpdateState> = AtomicReference(PublicUpdateState(OK, BackendDeploymentType.Unknown))
-
-    private var myJob: Job? = null
 
     //take the real ErrorReporter to use here. using ErrorReporter.getInstance() may return a
     // proxy when it's paused by this service.
@@ -68,7 +61,6 @@ class AggressiveUpdateService(val project: Project) : Disposable {
         fun getDefaultDelayBetweenUpdatesSeconds(): Duration {
             return InternalFileSettings.getAggressiveUpdateServiceMonitorDelaySeconds(300).seconds
         }
-
 
         @JvmStatic
         fun getInstance(project: Project): AggressiveUpdateService {
@@ -86,9 +78,6 @@ class AggressiveUpdateService(val project: Project) : Disposable {
 
             Log.log(logger::info, "starting...")
 
-            //update state now so that the state exists as part of the object instantiation
-            updateStateNow()
-
             startMonitoring()
 
             project.messageBus.connect(this)
@@ -96,41 +85,18 @@ class AggressiveUpdateService(val project: Project) : Disposable {
                     AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC,
                     object : AnalyticsServiceConnectionEvent {
                         override fun connectionLost() {
-                            Log.log(logger::debug, "got connectionLost")
-                            isConnectionLost.set(true)
-                            myJob?.cancel(CancellationException("connection lost"))
                         }
 
                         override fun connectionGained() {
                             Log.log(logger::debug, "got connectionGained")
-                            isConnectionLost.set(false)
-
-                            //startMonitoring is canceled on connection lost, resume it on connection gained.
-                            //connectionGained will be invoked for every open project because AnalyticsServiceConnectionEvent is currently not
-                            // a real application event. but startMonitoring is synchronized and protected against multiple threads.
-                            startMonitoring()
+                            updateStateNowInBackground()
                         }
                     })
 
 
             project.messageBus.connect(this)
                 .subscribe(ApiClientChangedEvent.API_CLIENT_CHANGED_TOPIC, ApiClientChangedEvent {
-                    @Suppress("UnstableApiUsage")
-                    disposingScope().launch {
-                        try {
-                            //update state immediately after client is replaced.
-                            updateState()
-                        } catch (c: CancellationException) {
-                            Log.debugWithException(logger, c, "apiClientChanged canceled {}", c)
-                        } catch (e: Throwable) {
-                            val message = ExceptionUtils.getNonEmptyMessage(e)
-                            Log.debugWithException(logger, e, "error in apiClientChanged {}", message)
-                            errorReporter.reportError("AggressiveUpdateService.apiClientChanged", e)
-                        }
-
-                        //and call startMonitoring just in case it is stopped by a previous connectionLost but there was no connection gained
-                        startMonitoring()
-                    }
+                    updateStateNowInBackground()
                 })
 
         } else {
@@ -138,10 +104,6 @@ class AggressiveUpdateService(val project: Project) : Disposable {
         }
     }
 
-
-    override fun dispose() {
-        //nothing to do, used as parent disposable
-    }
 
     fun getUpdateState(): PublicUpdateState {
         return updateStateRef.get()
@@ -152,26 +114,9 @@ class AggressiveUpdateService(val project: Project) : Disposable {
     }
 
 
-    private fun updateStateNow() {
-
-        val future = oneShotTask("AggressiveUpdateService.updateStateNow") {
-            try {
-                Log.log(logger::trace, "loading versions and updating state on startup")
-                updateState()
-                Log.log(logger::trace, "updating state on startup completed successfully")
-            } catch (c: CancellationException) {
-                Log.debugWithException(logger, c, "updateStateNow canceled {}", c)
-            } catch (e: Throwable) {
-                val message = ExceptionUtils.getNonEmptyMessage(e)
-                Log.debugWithException(logger, e, "error in updateStateNow {}", message)
-                errorReporter.reportError("AggressiveUpdateService.updateStateNow", e)
-            }
-        }
-
-        try {
-            future!!.get(2.seconds.inWholeMilliseconds, TimeUnit.MILLISECONDS)
-        } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("AggressiveUpdateService.updateStateNow", e)
+    private fun updateStateNowInBackground() {
+        oneShotTask("AggressiveUpdateService.updateStateNow") {
+            update()
         }
     }
 
@@ -181,55 +126,26 @@ class AggressiveUpdateService(val project: Project) : Disposable {
 
         Log.log(logger::debug, "startMonitoring called")
 
-
-        if (myJob?.isActive == true) {
-            Log.log(logger::debug, "startMonitoring called but already monitoring")
-            return
-        }
-
         if (!isProjectValid(project)) {
             Log.log(logger::debug, "startMonitoring called but project is not valid, not starting monitoring")
             return
         }
 
-        @Suppress("UnstableApiUsage")
-        myJob = disposingScope().launch {
+        disposingPeriodicTask("AggressiveUpdate.periodic", delayBetweenUpdatesSeconds.inWholeMilliseconds, true) {
+            update()
+        }
+    }
 
-            Log.log(logger::debug, "starting monitoring..")
-            var failures = 0
-            while (isActive) {
-
-                try {
-                    Log.log(logger::trace, "loading versions and updating state")
-                    updateState()
-                    failures = 0
-                    Log.log(logger::trace, "sleeping {}", delayBetweenUpdatesSeconds)
-                    //delay with Duration doesn't work
-                    delay(delayBetweenUpdatesSeconds.inWholeMilliseconds)
-
-                } catch (c: CancellationException) {
-                    Log.debugWithException(logger, c, "startMonitoring canceled {}", c)
-                } catch (e: Throwable) {
-                    failures++
-                    val message = ExceptionUtils.getNonEmptyMessage(e)
-                    Log.debugWithException(logger, e, "error in startMonitoring {}", message)
-                    errorReporter.reportError("AggressiveUpdateService.startMonitoring", e)
-                    try {
-                        //maybe backend is down or had timeout, wait a bit and retry
-                        delay(60.seconds.inWholeMilliseconds)
-                    } catch (c: CancellationException) {
-                        Log.debugWithException(logger, c, "startMonitoring canceled {}", c)
-                    }
-                }
-
-                //if we got 50 exceptions, cancel, something is wrong,maybe backend is down, and we didn't get connectionLost.
-                // hopefully connectionGained will resume monitoring
-                if (failures > 100) {
-                    cancel(CancellationException("too many failures"))
-                }
-            }
-
-            Log.log(logger::trace, "quiting monitoring")
+    //must be called on background
+    private fun update() {
+        try {
+            Log.log(logger::trace, "loading versions and updating state")
+            updateState()
+            Log.log(logger::trace, "updating state on startup completed successfully")
+        } catch (e: Throwable) {
+            val message = ExceptionUtils.getNonEmptyMessage(e)
+            Log.debugWithException(logger, e, "error in updateStateNow {}", message)
+            errorReporter.reportError("AggressiveUpdateService.updateStateNow", e)
         }
     }
 
@@ -317,15 +233,28 @@ class AggressiveUpdateService(val project: Project) : Disposable {
             fireStateChanged()
 
             if (listOf(UPDATE_BACKEND, UPDATE_PLUGIN, UPDATE_BOTH).any { it == updateTo }) {
-                //shorten the delay if in update mode
-                delayBetweenUpdatesSeconds = 10.seconds
-                Log.log(logger::trace, "changed monitoring delay to $delayBetweenUpdatesSeconds")
+                //if in update mode start a high rate recurring update task to catch the update quickly
+                Log.log(logger::trace, "entered update mode,starting high rate update")
                 ErrorReporter.pause()
+                //make sure its disposed
+                myHighRateDisposable?.let {
+                    Disposer.dispose(it)
+                }
+
+                myHighRateDisposable = Disposer.newDisposable()
+                myHighRateDisposable?.let {
+                    Disposer.register(this, it)
+                    it.disposingPeriodicTask("AggressiveUpdate.periodicHighRate", 10.seconds.inWholeMilliseconds, true) {
+                        update()
+                    }
+                }
+
             } else {
-                //longer the delay when not in update mode
-                delayBetweenUpdatesSeconds = getDefaultDelayBetweenUpdatesSeconds()
-                Log.log(logger::trace, "setting monitoring delay back to default $delayBetweenUpdatesSeconds")
+                Log.log(logger::trace, "exited update mode,stopping high rate update")
                 ErrorReporter.resume()
+                myHighRateDisposable?.let {
+                    Disposer.dispose(it)
+                }
             }
 
         } else {

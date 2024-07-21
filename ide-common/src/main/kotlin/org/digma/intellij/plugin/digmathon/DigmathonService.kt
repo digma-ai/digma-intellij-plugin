@@ -67,7 +67,7 @@ class DigmathonService : Disposable {
 
             val disposable = Disposer.newDisposable()
             Disposer.register(this, disposable)
-            disposable.disposingPeriodicTask("DigmathonService", 1.minutes.inWholeMilliseconds, 1.minutes.inWholeMilliseconds) {
+            disposable.disposingPeriodicTask("DigmathonService", 1.minutes.inWholeMilliseconds, 1.minutes.inWholeMilliseconds, false) {
 
                 if (digmathonInfo.get().isActive()) {
                     try {

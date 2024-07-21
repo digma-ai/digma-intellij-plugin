@@ -7,7 +7,7 @@ import org.digma.intellij.plugin.auth.account.DigmaAccountManager
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.scheduling.oneShotTaskWithResult
+import org.digma.intellij.plugin.scheduling.blockingOneShotTaskWithResult
 import kotlin.time.Duration.Companion.seconds
 
 
@@ -53,9 +53,11 @@ class LocalLoginHandler(analyticsProvider: RestAnalyticsProvider) : AbstractLogi
 
                 Log.log(logger::trace, "found account in loginOrRefresh, account: {}", digmaAccount)
 
-                val credentials = oneShotTaskWithResult("AuthManager.LocalLoginHandler.findCredentials", 2.seconds.inWholeMilliseconds) {
+                val credentials = blockingOneShotTaskWithResult("AuthManager.LocalLoginHandler.findCredentials", 2.seconds.inWholeMilliseconds) {
                     runBlocking {
-                        DigmaAccountManager.getInstance().findCredentials(digmaAccount)
+                        val creds = DigmaAccountManager.getInstance().findCredentials(digmaAccount)
+                        CredentialsHolder.digmaCredentials = creds
+                        creds
                     }
                 }
 
@@ -118,7 +120,7 @@ class LocalLoginHandler(analyticsProvider: RestAnalyticsProvider) : AbstractLogi
         } catch (e: Throwable) {
 
             Log.warnWithException(logger, e, "Exception in loginOrRefresh {}, url {}", e, analyticsProvider.apiUrl)
-            ErrorReporter.getInstance().reportError("AuthManager.loginOrRefresh", e)
+            ErrorReporter.getInstance().reportError("LocalLoginHandler.loginOrRefresh", e)
 
             //if got AuthenticationException here is may be from refresh or login, in both cases delete the current account,
             //and we'll do silent login on the next loginOrRefresh

@@ -9,7 +9,7 @@ import org.digma.intellij.plugin.auth.account.DigmaAccountManager
 import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.scheduling.oneShotTask
+import org.digma.intellij.plugin.scheduling.blockingOneShotTask
 import kotlin.time.Duration.Companion.seconds
 
 interface LoginHandler {
@@ -70,13 +70,7 @@ interface LoginHandler {
             Log.log(logger::trace, "logout: found account {}", digmaAccount)
 
             digmaAccount?.let { account ->
-                oneShotTask("LoginHandler.logout", 1.seconds.inWholeMilliseconds) {
-                    runBlocking {
-                        Log.log(logger::trace, "logout: deleting account {}", account)
-                        DigmaAccountManager.getInstance().removeAccount(account)
-                        DigmaDefaultAccountHolder.getInstance().account = null
-                    }
-                }
+                deleteAccount(account)
             }
 
             digmaAccount?.let {

@@ -86,7 +86,7 @@ public class AnalyticsService implements Disposable {
     //todo: not sure synchronized is necessary anymore, it is called from the constructor and intellij component manager makes sure to create singletons
     synchronized private void createClient() {
 
-        var baseUrlProvider = AnalyticsUrlProvider.getInstance(project);
+        var baseUrlProvider = AnalyticsUrlProvider.getInstance();
 
         Log.log(LOGGER::info, "creating AnalyticsProvider for url {}", baseUrlProvider.baseUrl());
 
@@ -98,7 +98,7 @@ public class AnalyticsService implements Disposable {
             }
         };
 
-        var restAnalyticsProvider = new RestAnalyticsProvider(AuthManager.getInstance().getAuthenticationProviders(), logger, baseUrlProvider);
+        var restAnalyticsProvider = new RestAnalyticsProvider(AuthManager.getInstance().getAuthenticationProviders(), logger, baseUrlProvider, 2);
 
         Log.log(LOGGER::debug, "calling AuthManager.withAuth for url {}", baseUrlProvider.baseUrl());
         AnalyticsProvider analyticsProvider = AuthManager.getInstance().withAuth(project, restAnalyticsProvider);
@@ -572,6 +572,7 @@ public class AnalyticsService implements Disposable {
             }
 
             var stopWatch = StopWatch.createStarted();
+            Throwable exception = null;
 
             try {
 
@@ -614,6 +615,7 @@ public class AnalyticsService implements Disposable {
                 //this message will explode the idea.log if user has digma trace logging on and no backend running,
                 // which shouldn't happen, users should not have digma trace logging on all the time.
                 var realCause = ExceptionUtils.findFirstRealExceptionCause(e);
+                exception = Objects.requireNonNullElse(realCause, e);
                 Log.log(LOGGER::trace, "got exception in AnalyticsService {}", Objects.requireNonNullElse(realCause, e));
 
 
@@ -628,6 +630,7 @@ public class AnalyticsService implements Disposable {
                 throw e;
 
             } catch (Exception e) {
+                exception = e;
                 Log.warnWithException(LOGGER, project, e, "Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e);
                 ErrorReporter.getInstance().reportAnalyticsServiceError(project, "AnalyticsInvocationHandler.invoke", method.getName(), e, false);
                 throw e;
@@ -637,7 +640,7 @@ public class AnalyticsService implements Disposable {
                     //httpNetoTime may be null, usually it will not but the ThreadLocal is nullable by default so need to check
                     var httpNetoTime = RestAnalyticsProvider.PERFORMANCE.get();
                     if (httpNetoTime != null) {
-                        project.getService(ApiPerformanceMonitor.class).addPerformance(method.getName(), stopWatch.getTime(TimeUnit.MILLISECONDS), httpNetoTime);
+                        project.getService(ApiPerformanceMonitor.class).addPerformance(method.getName(), stopWatch.getTime(TimeUnit.MILLISECONDS), httpNetoTime, exception);
                     }
                 }
                 if (LOGGER.isTraceEnabled()) {

@@ -105,7 +105,7 @@ class SpringBootMicrometerConfigureDepsService(private val project: Project) : D
     private var stateHasSpringBootModulesWithoutObservability = AtomicBoolean(false)
 
     init {
-        disposingPeriodicTask("SpringBootMicrometerConfigureDepsService.periodicAction", 1.minutes.inWholeMilliseconds) {
+        disposingPeriodicTask("SpringBootMicrometerConfigureDepsService.periodicAction", 1.minutes.inWholeMilliseconds, true) {
             try {
                 periodicAction()
             } catch (e: Exception) {
@@ -116,7 +116,7 @@ class SpringBootMicrometerConfigureDepsService(private val project: Project) : D
 
 
         SettingsState.getInstance().addChangeListener({
-            oneShotTask("SpringBootMicrometerConfigureDepsService.settingsChanged", 2000) {
+            oneShotTask("SpringBootMicrometerConfigureDepsService.settingsChanged") {
                 periodicAction()
             }
         }, this)

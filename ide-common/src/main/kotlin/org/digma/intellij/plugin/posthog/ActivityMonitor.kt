@@ -954,4 +954,8 @@ class ActivityMonitor(private val project: Project) : Disposable {
         )
     }
 
+    fun registerSchedulerStatistics(details: Map<String, Any>) {
+        capture("SchedulerStatistics", details)
+    }
+
 }

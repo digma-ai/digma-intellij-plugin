@@ -8,16 +8,15 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.util.Alarm
 import org.digma.intellij.plugin.analytics.AnalyticsProvider
+import org.digma.intellij.plugin.analytics.AnalyticsUrlProvider
 import org.digma.intellij.plugin.analytics.AuthenticationException
 import org.digma.intellij.plugin.analytics.AuthenticationProvider
 import org.digma.intellij.plugin.analytics.RestAnalyticsProvider
 import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
-import org.digma.intellij.plugin.common.DisposableAdaptor
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.log.Log.API_LOGGER_NAME
-import org.digma.intellij.plugin.settings.SettingsState
 import java.io.Closeable
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.InvocationTargetException
@@ -28,13 +27,12 @@ import kotlin.concurrent.withLock
 
 
 @Service(Service.Level.APP)
-class AuthManager : DisposableAdaptor {
+class AuthManager : Disposable {
 
     private val logger: Logger = Logger.getInstance(AuthManager::class.java)
 
     private val listeners: MutableList<AuthInfoChangeListener> = ArrayList()
 
-    var apiUrl = SettingsState.getInstance().apiUrl
     private var myAnalyticsProvider: RestAnalyticsProvider = createMyAnalyticsProvider()
 
     private val fireChangeAlarm = Alarm(Alarm.ThreadToUse.POOLED_THREAD, this)
@@ -48,13 +46,19 @@ class AuthManager : DisposableAdaptor {
         }
     }
 
+    override fun dispose() {
+        myAnalyticsProvider.close()
+    }
 
     private fun createMyAnalyticsProvider(): RestAnalyticsProvider {
+        //AuthManager sends higher order to receive url changed events, so it will replace
+        // api client before the AnalyticsService
         return RestAnalyticsProvider(listOf(DigmaAccessTokenAuthenticationProvider(SettingsTokenProvider())),
             { message: String? ->
                 val apiLogger = Logger.getInstance(API_LOGGER_NAME)
                 Log.log(apiLogger::debug, "API:AuthManager: {}", message)
-            }, { apiUrl })
+            }, AnalyticsUrlProvider.getInstance(), 1
+        )
     }
 
 

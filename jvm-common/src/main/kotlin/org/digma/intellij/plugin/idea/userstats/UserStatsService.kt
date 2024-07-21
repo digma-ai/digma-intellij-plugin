@@ -27,7 +27,7 @@ class UserStatsService(private val project: Project) : DisposableAdaptor {
 
     init {
 
-        disposingPeriodicTask("UserStatsService.periodicAction", 1.minutes.inWholeMilliseconds, 2.hours.inWholeMilliseconds) {
+        disposingPeriodicTask("UserStatsService.periodicAction", 1.minutes.inWholeMilliseconds, 2.hours.inWholeMilliseconds, true) {
             try {
                 periodicAction()
             } catch (e: Exception) {

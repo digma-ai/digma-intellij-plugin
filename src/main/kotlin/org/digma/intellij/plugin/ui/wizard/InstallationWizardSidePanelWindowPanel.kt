@@ -676,7 +676,7 @@ class DigmaStatusUpdater {
         digmaInstallationStatus.set(null)
 
         myDisposable?.let {
-            it.disposingPeriodicTask("InstallationWizard.DigmaStatusUpdater", 2.seconds.inWholeMilliseconds) {
+            it.disposingPeriodicTask("InstallationWizard.DigmaStatusUpdater", 2.seconds.inWholeMilliseconds, false) {
                 try {
                     val currentStatus = service<DockerService>().getActualRunningEngine(project)
 

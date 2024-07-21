@@ -67,7 +67,7 @@ class QuarkusConfigureDepsService(private val project: Project) : Disposable {
 
     init {
 
-        disposingPeriodicTask("QuarkusConfigureDepsService.periodicAction", 1.minutes.inWholeMilliseconds) {
+        disposingPeriodicTask("QuarkusConfigureDepsService.periodicAction", 1.minutes.inWholeMilliseconds, true) {
             try {
                 periodicAction()
             } catch (e: Exception) {

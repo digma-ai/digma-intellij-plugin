@@ -5,7 +5,6 @@ import com.jetbrains.rd.util.ConcurrentHashMap
 import org.digma.intellij.plugin.common.DisposableAdaptor
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.model.lens.CodeLens
-import org.digma.intellij.plugin.scheduling.oneShotTask
 
 private const val NUMBER_OF_PROVIDERS = 30
 
@@ -23,14 +22,11 @@ class CodeVisionProviderToLensSelector(private val project: Project) : Disposabl
         // in that case just register more providers in CodeVisionProviders.kt and in org.digma.intellij-with-codevision.xml.
         if (providerToLensIds.size >= NUMBER_OF_PROVIDERS) {
 
-            //execute on background to free up this code quickly. although reportError should be very fast
-            oneShotTask("CodeVisionProviderToLensSelector.reportError", 500) {
-                ErrorReporter.getInstance().reportError(
-                    project, "CodeVisionProviderToLensSelector.selectLensForProvider",
-                    "selectLensForProvider,not enough code vision providers",
-                    mapOf("error hint" to "not enough code vision providers")
-                )
-            }
+            ErrorReporter.getInstance().reportError(
+                project, "CodeVisionProviderToLensSelector.selectLensForProvider",
+                "selectLensForProvider,not enough code vision providers",
+                mapOf("error hint" to "not enough code vision providers")
+            )
 
             return null
         }

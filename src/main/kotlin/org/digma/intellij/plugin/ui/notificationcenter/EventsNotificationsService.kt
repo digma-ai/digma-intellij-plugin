@@ -51,7 +51,7 @@ class EventsNotificationsService(val project: Project) : Disposable {
 
         Log.log(logger::info, "starting insights notification service")
 
-        disposingPeriodicTask("EventsNotificationsService.waitForEvents", 1.minutes.inWholeMilliseconds) {
+        disposingPeriodicTask("EventsNotificationsService.waitForEvents", 1.minutes.inWholeMilliseconds, true) {
 
             try {
 

@@ -54,7 +54,7 @@ class ContinuousPerformanceMetricsReporter : DisposableAdaptor {
             disposable.disposingPeriodicTask(
                 "ContinuousPerformanceMetricsReporter.waitForFirstTime",
                 2.minutes.inWholeMilliseconds,
-                10.minutes.inWholeMilliseconds
+                10.minutes.inWholeMilliseconds, true
             ) {
                 if (!PersistenceService.getInstance().isFirstTimePerformanceMetrics()) {
                     checkForFirstTime()
@@ -112,7 +112,7 @@ class ContinuousPerformanceMetricsReporter : DisposableAdaptor {
     private fun launchContinuousReport(nextReport: Duration) {
 
         val name = "ContinuousPerformanceMetricsReporter.continuousPerformanceMetrics"
-        disposingPeriodicTask(name, nextReport.inWholeMilliseconds, 6.hours.inWholeMilliseconds) {
+        disposingPeriodicTask(name, nextReport.inWholeMilliseconds, 6.hours.inWholeMilliseconds, true) {
             try {
                 report()
             } catch (e: AlreadyDisposedException) {

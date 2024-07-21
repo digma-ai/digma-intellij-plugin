@@ -23,7 +23,7 @@ class ApiPerformanceMonitor(private val project: Project) {
     //but locking means that threads will wait for each other.
     //it's possible to execute this code in a coroutine, and then It's ok to lock, but the error is minor and doesn't
     // worth the complexity of a coroutine.
-    fun addPerformance(apiName: String, duration: Long, httpNetoTime: Long) {
+    fun addPerformance(apiName: String, duration: Long, httpNetoTime: Long, exception: Throwable?) {
         if (duration < 2000) {
             return
         }
@@ -39,10 +39,10 @@ class ApiPerformanceMonitor(private val project: Project) {
             latest
         }
 
-        report(apiName, toReport.first, toReport.second)
+        report(apiName, toReport.first, toReport.second, exception)
     }
 
-    private fun report(apiName: String, duration: Long, httpNetoTime: Long) {
+    private fun report(apiName: String, duration: Long, httpNetoTime: Long, exception: Throwable?) {
         if (frequencyDetector.isTooFrequentMessage(apiName)) {
             return
         }
@@ -53,7 +53,8 @@ class ApiPerformanceMonitor(private val project: Project) {
         val details = mutableMapOf<String, Any>(
             "api name" to apiName,
             "duration" to duration,
-            "http neto" to httpNetoTime
+            "http neto" to httpNetoTime,
+            "exception" to (exception?.message ?: exception?.toString() ?: "")
         )
 
         ActivityMonitor.getInstance(project).reportApiPerformanceIssue(details)

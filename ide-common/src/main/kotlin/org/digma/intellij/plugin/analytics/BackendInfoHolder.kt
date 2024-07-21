@@ -10,9 +10,11 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.AboutResult
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.scheduling.blockingOneShotTask
 import org.digma.intellij.plugin.scheduling.disposingPeriodicTask
 import org.digma.intellij.plugin.scheduling.oneShotTask
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
@@ -38,10 +40,7 @@ class BackendInfoHolder(val project: Project) : DisposableAdaptor {
 
     init {
 
-        //update now so that about exists as part of the object instantiation
-        updateAboutInBackgroundNowWithTimeout()
-
-        val registered = disposingPeriodicTask("BackendInfoHolder.periodic", 1.minutes.inWholeMilliseconds) {
+        val registered = disposingPeriodicTask("BackendInfoHolder.periodic", 1.minutes.inWholeMilliseconds, false) {
             update()
         }
 
@@ -78,8 +77,8 @@ class BackendInfoHolder(val project: Project) : DisposableAdaptor {
 
 
     private fun updateInBackground() {
-        //just let it finish without waiting for timeout and without blocking this thread
-        oneShotTask("BackendInfoHolder.updateInBackground", 2.seconds.inWholeMilliseconds) {
+        //let it finish without waiting for timeout and without blocking this thread
+        oneShotTask("BackendInfoHolder.updateInBackground") {
             update()
         }
     }
@@ -134,16 +133,16 @@ class BackendInfoHolder(val project: Project) : DisposableAdaptor {
 
 
     private fun getAboutInBackgroundNowWithTimeout(): AboutResult? {
-        updateAboutInBackgroundNowWithTimeout()
+        updateAboutInBackgroundNowWithTimeout(3.seconds)
         return aboutRef.get()
     }
 
 
-    private fun updateAboutInBackgroundNowWithTimeout() {
+    private fun updateAboutInBackgroundNowWithTimeout(timeout: Duration) {
 
         Log.log(logger::trace, "updating backend info in background with timeout")
 
-        val result = oneShotTask("BackendInfoHolder.updateAboutInBackgroundNowWithTimeout", 2.seconds.inWholeMilliseconds) {
+        val result = blockingOneShotTask("BackendInfoHolder.updateAboutInBackgroundNowWithTimeout", timeout.inWholeMilliseconds) {
             update()
         }
 

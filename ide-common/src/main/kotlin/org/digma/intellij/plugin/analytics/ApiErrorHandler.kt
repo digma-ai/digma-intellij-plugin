@@ -64,6 +64,12 @@ class ApiErrorHandler : DisposableAdaptor {
     // before notifying listeners of connectionLost/ConnectionGained
     private val myConnectionStatusNotifyAlarm = Alarm(Alarm.ThreadToUse.POOLED_THREAD, this)
 
+
+    fun isNoConnectionMode(): Boolean {
+        return myConnectionLostFlag.get()
+    }
+
+
     //log connection exceptions only the first time and show an error notification.
     // while status is in error, following connection exceptions will not be logged, other exceptions
     // will be logged only once.
@@ -88,11 +94,13 @@ class ApiErrorHandler : DisposableAdaptor {
 
 
     private fun handleInvocationTargetExceptionImpl(
-        project: Project,
+        callerProject: Project,
         invocationTargetException: InvocationTargetException,
         method: Method,
         args: Array<Any?>?
     ) {
+
+        //todo: maybe show no connection on CantConstructClientException
 
         val connectException =
             findConnectException(invocationTargetException) ?: findSslException(invocationTargetException)
@@ -101,15 +109,13 @@ class ApiErrorHandler : DisposableAdaptor {
         val message = connectException?.message ?: getNonEmptyMessage(invocationTargetException)
 
 
-        findActiveProject()?.let { project ->
-            ErrorReporter.getInstance().reportAnalyticsServiceError(
-                project,
-                "AnalyticsInvocationHandler.invoke",
-                method.name,
-                invocationTargetException,
-                isConnectionException
-            )
-        }
+        ErrorReporter.getInstance().reportAnalyticsServiceError(
+            callerProject,
+            "AnalyticsInvocationHandler.invoke",
+            method.name,
+            invocationTargetException,
+            isConnectionException
+        )
 
         if (isConnectionOK()) {
             //if more than one thread enter this section the worst that will happen is that we
@@ -165,15 +171,16 @@ class ApiErrorHandler : DisposableAdaptor {
             }
         } else {
 
+            //connection is not ok, marked lost
 
-            //a project is opened after connection is already marked lost and the project doesn't know about it.
+            //if the callerProject is opened after connection is already marked lost this project doesn't know about it.
             // notify the project that there is no connection
-            if (BackendConnectionMonitor.getInstance(project).isConnectionOk()) {
-                notifyBackendConnectionMonitorConnectionLost(project)
-                fireConnectionLost(project)
+            if (BackendConnectionMonitor.getInstance(callerProject).isConnectionOk()) {
+                notifyBackendConnectionMonitorConnectionLost(callerProject)
+                fireConnectionLost(callerProject)
             }
 
-            //connection is not ok, marked lost
+
             if (errorReportingHelper.addIfNewError(invocationTargetException)) {
                 Log.warnWithException(
                     logger,
@@ -216,7 +223,7 @@ class ApiErrorHandler : DisposableAdaptor {
         Log.log(logger::warn, "showing no connection on AuthManager error {}", throwable)
         markConnectionLostAndNotify()
 
-        //a project is opened after connection is already marked lost and the project doesn't know about it.
+        //if a project is opened after connection is already marked lost the project doesn't know about it.
         // notify the project that there is no connection
         project?.let {
             if (BackendConnectionMonitor.getInstance(it).isConnectionOk()) {

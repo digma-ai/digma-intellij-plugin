@@ -655,7 +655,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @POST("/CodeAnalytics/instrumentation/event")
+        @POST("CodeAnalytics/instrumentation/event")
         Call<Void> sendDebuggerEvent(@Body DebuggerEventRequest debuggerEventRequest);
 
 
@@ -663,14 +663,14 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @GET("/environments")
+        @GET("environments")
         Call<List<Env>> getEnvironments();
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @POST("/insights/typesForJaeger")
+        @POST("insights/typesForJaeger")
         Call<List<InsightTypesForJaegerResponse>> getInsightsForJaeger(@Body InsightTypesForJaegerRequest request);
 
 
@@ -678,27 +678,27 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @GET("/CodeAnalytics/codeObjects/insight")
+        @GET("CodeAnalytics/codeObjects/insight")
         Call<String> getInsightBySpan(@Query("environment") String environment, @Query("spanCodeObjectId") String spanCodeObjectId, @Query("insightType") String insightType);
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @POST("/CodeAnalytics/events/latest")
+        @POST("CodeAnalytics/events/latest")
         Call<LatestCodeObjectEventsResponse> getLatestEvents(@Body LatestCodeObjectEventsRequest latestCodeObjectEventsRequest);
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @GET("/CodeAnalytics/codeObjects/errors")
+        @GET("CodeAnalytics/codeObjects/errors")
         Call<String> getErrors(@Query("environment") String environment, @Query("codeObjectId") List<String> codeObjectIds);
 
         @Headers({
                 "Content-Type:application/json"
         })
-        @GET("/CodeAnalytics/codeObjects/errors/{errorSourceId}")
+        @GET("CodeAnalytics/codeObjects/errors/{errorSourceId}")
         Call<String> getErrorDetails(@Path("errorSourceId") String errorSourceId);
 
 
@@ -706,7 +706,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @POST("/Graphs/graphForSpanPercentiles")
+        @POST("Graphs/graphForSpanPercentiles")
         // @Streaming means ResponseBody as is, without conversion
         @Streaming
         Call<ResponseBody> getHtmlGraphForSpanPercentiles(@Body SpanHistogramQuery request);
@@ -716,7 +716,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @POST("/Graphs/graphForSpanScaling")
+        @POST("Graphs/graphForSpanScaling")
         // @Streaming means ResponseBody as is, without conversion
         @Streaming
         Call<ResponseBody> getHtmlGraphForSpanScaling(@Body SpanHistogramQuery request);
@@ -726,7 +726,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @PUT("/CodeAnalytics/insights/start-time")
+        @PUT("CodeAnalytics/insights/start-time")
         Call<ResponseBody> setInsightCustomStartTime(
                 @Body CustomStartTimeInsightRequest customStartTimeInsightRequest
         );
@@ -735,42 +735,42 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @POST("/CodeAnalytics/codeObjects/recent_activity")
+        @POST("CodeAnalytics/codeObjects/recent_activity")
         Call<RecentActivityResult> getRecentActivity(@Body RecentActivityRequest recentActivityRequest);
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @POST("/CodeAnalytics/user/usage_stats")
+        @POST("CodeAnalytics/user/usage_stats")
         Call<UserUsageStatsResponse> getUserUsageStats(@Body UserUsageStatsRequest request);
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @POST("/LiveData/liveData")
+        @POST("LiveData/liveData")
         Call<DurationLiveData> getDurationLiveData(@Body DurationLiveDataRequest durationLiveDataRequest);
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @POST("/CodeAnalytics/codeObjects/span_navigation")
+        @POST("CodeAnalytics/codeObjects/span_navigation")
         Call<CodeObjectNavigation> getCodeObjectNavigation(@Body CodeObjectNavigationRequest codeObjectNavigationRequest);
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @GET("/assets/get_categories")
+        @GET("assets/get_categories")
         Call<String> getAssetCategories(@QueryMap Map<String, Object> fields);
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @GET("/CodeAnalytics/codeObjects/insight_exists")
+        @GET("CodeAnalytics/codeObjects/insight_exists")
         Call<String> insightExists(@Query("environment") String environment);
 
 
@@ -778,73 +778,73 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @GET("/assets/get_assets")
+        @GET("assets/get_assets")
         Call<String> getAssets(@QueryMap Map<String, Object> fields);
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @GET("/assets/get_filter")
+        @GET("assets/get_filter")
         Call<String> getAssetFilters(@QueryMap Map<String, Object> fields);
 
-        @GET("/services/getServices")
+        @GET("services/getServices")
         Call<String> getServices(@Query("environment") String environment);
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @POST("/Notifications/get-all")
+        @POST("Notifications/get-all")
         Call<String> getNotifications(@Body NotificationsRequest notificationsRequest);
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @POST("/Notifications/read")
+        @POST("Notifications/read")
         Call<ResponseBody> setReadNotificationsTime(@Body SetReadNotificationsRequest setReadNotificationsRequest);
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @POST("/Notifications/counts")
+        @POST("Notifications/counts")
         Call<UnreadNotificationsCountResponse> getUnreadNotificationsCount(@Body GetUnreadNotificationsCountRequest getUnreadNotificationsCountRequest);
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @POST("/Testing/get_latest_tests_of_span")
+        @POST("Testing/get_latest_tests_of_span")
         Call<String> getLatestTestsOfSpan(@Body LatestTestsOfSpanRequest request);
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @POST("/Version/verifyVersion")
+        @POST("Version/verifyVersion")
         Call<VersionResponse> getVersions(@Body VersionRequest versionRequest);
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @GET("/about")
+        @GET("about")
         Call<AboutResult> getAbout();
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @GET("/performanceMetrics")
+        @GET("performanceMetrics")
         Call<PerformanceMetricsResponse> getPerformanceMetrics();
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @GET("/performanceMetrics/load-status")
+        @GET("performanceMetrics/load-status")
         Call<LoadStatusResponse> getLoadStatus();
 
 
@@ -852,178 +852,178 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Accept: text/plain",
                 "Content-Type:application/json"
         })
-        @POST("/CodeAnalytics/delete_environment")
+        @POST("CodeAnalytics/delete_environment")
         Call<DeleteEnvironmentResponse> deleteEnvironment(@Body DeleteEnvironmentRequest deleteEnvironmentRequest);
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @GET("/dashboard/getDashboard")
+        @GET("dashboard/getDashboard")
         Call<String> getDashboard(@QueryMap Map<String, String> fields);
 
         @Headers({
                 "Accept: text/plain",
                 "Content-Type:application/json"
         })
-        @PUT("/insightsActions/link-ticket")
+        @PUT("insightsActions/link-ticket")
         Call<LinkUnlinkTicketResponse> linkTicket(@Body LinkTicketRequest linkRequest);
 
         @Headers({
                 "Accept: text/plain",
                 "Content-Type:application/json"
         })
-        @PUT("/insightsActions/unlink-ticket")
+        @PUT("insightsActions/unlink-ticket")
         Call<LinkUnlinkTicketResponse> unlinkTicket(@Body UnlinkTicketRequest linkRequest);
 
         @Headers({
                 "Accept: text/plain",
                 "Content-Type:application/json"
         })
-        @POST("/CodeAnalytics/codeObjects/lens")
+        @POST("CodeAnalytics/codeObjects/lens")
         Call<CodeLensOfMethodsResponse> getCodeLensByMethods(@Body CodeLensOfMethodsRequest codeLensOfMethodsRequest);
 
         @Headers({
                 "Accept: text/plain",
                 "Content-Type:application/json"
         })
-        @GET("/CodeAnalytics/code/assets")
+        @GET("CodeAnalytics/code/assets")
         Call<CodeContextSpans> getSpansForCodeLocation(@Query("environment") String env, @Query("codeObjects") List<String> codeObjectIds);
 
         @Headers({
                 "Accept: text/plain",
                 "Content-Type:application/json"
         })
-        @GET("/assets/display_info")
+        @GET("assets/display_info")
         Call<AssetDisplayInfo> getAssetDisplayInfo(@Query("environment") String environment, @Query("codeObjectId") String codeObjectId);
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @GET("/insights/get_insights_view")
+        @GET("insights/get_insights_view")
         Call<String> getInsights(@QueryMap Map<String, Object> fields);
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @POST("/insights/issues")
+        @POST("insights/issues")
         Call<String> getIssues(@Body GetIssuesRequestPayload fields);
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @GET("/insights/issues/filters")
+        @GET("insights/issues/filters")
         Call<String> getIssuesFilters(@QueryMap Map<String, Object> fields);
 
         @Headers({
                 "Accept: text/plain",
                 "Content-Type:application/json"
         })
-        @GET("/assets/navigation")
+        @GET("assets/navigation")
         Call<AssetNavigationResponse> getAssetNavigation(@Query("environment") String environment, @Query("spanCodeObjectId") String spanCodeObjectId);
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @POST("/Insights/markRead")
+        @POST("Insights/markRead")
         Call<ResponseBody> markInsightsAsRead(@Body MarkInsightsAsReadRequest request);
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @POST("/Insights/markAllRead")
+        @POST("Insights/markAllRead")
         Call<ResponseBody> markAllInsightsAsRead(@Body MarkAllInsightsAsReadRequest request);
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @PUT("/InsightsActions/dismiss")
+        @PUT("InsightsActions/dismiss")
         Call<ResponseBody> dismissInsight(@Body DismissRequest insightId);
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @PUT("/InsightsActions/unDismiss")
+        @PUT("InsightsActions/unDismiss")
         Call<ResponseBody> undismissInsight(@Body UnDismissRequest insightId);
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @GET("/insights/statistics")
+        @GET("insights/statistics")
         Call<InsightsStatsResult> getInsightsStats(@QueryMap Map<String, Object> fields);
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @GET("/highlights/performance")
+        @GET("highlights/performance")
         Call<String> getHighlightsPerformance(@QueryMap Map<String, Object> fields);
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @GET("/highlights/topinsights")
+        @GET("highlights/topinsights")
         Call<String> getHighlightsTopInsights(@QueryMap Map<String, Object> fields);
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @POST("/highlights/performance")
+        @POST("highlights/performance")
         Call<String> getHighlightsPerformanceV2(@Body HighlightsRequest request);
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @POST("/highlights/topinsights")
+        @POST("highlights/topinsights")
         Call<String> getHighlightsTopInsightsV2(@Body HighlightsRequest request);
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @POST("/highlights/impact")
+        @POST("highlights/impact")
         Call<String> getHighlightsImpact(@Body HighlightsRequest request);
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @POST("/authentication/login")
+        @POST("authentication/login")
         Call<LoginResponse> login(@Body LoginRequest loginRequest);
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @POST("/authentication/refresh-token")
+        @POST("authentication/refresh-token")
         Call<LoginResponse> refreshToken(@Body RefreshRequest loginRequest);
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @POST("/environments")
+        @POST("environments")
         Call<String> createEnvironment(@Body Map<String, Object> request);
 
-        @DELETE("/environments/{envId}")
+        @DELETE("environments/{envId}")
         Call<Void> deleteEnvironment(@Path("envId") String envId);
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @POST("/authentication/register")
+        @POST("authentication/register")
         Call<String> register(@Body Map<String, Object> request);
 
         @Headers({
@@ -1031,7 +1031,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Content-Type:application/json"
         })
 
-        @POST("/highlights/scaling")
+        @POST("highlights/scaling")
         Call<String> getHighlightsScaling(@Body HighlightsRequest request);
 
         @Headers({
@@ -1039,13 +1039,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Content-Type:application/json"
         })
 
-        @GET("/spans/info")
+        @GET("spans/info")
         Call<String> getSpanInfo(@Query("SpanCodeObjectId") String spanCodeObjectId);
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @POST("/PerformanceMetrics/reset-throttling")
+        @POST("PerformanceMetrics/reset-throttling")
         Call<ResponseBody> resetThrottlingStatus();
     }
 }

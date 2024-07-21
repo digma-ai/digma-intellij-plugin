@@ -212,6 +212,13 @@ open class JavaToolOptionsBuilder(
     }
 
     open fun withOtelExporterOtlpProtocolGrpc(): JavaToolOptionsBuilder {
+
+        //in these cases we keep the default protocol which is http
+        val exporterUrl = getExporterUrl()
+        if (exporterUrl.trim().lowercase().endsWith("/v1/traces") || exporterUrl.trim().lowercase().endsWith("/v1/traces/")) {
+            return this
+        }
+
         javaToolOptions
             .append("-Dotel.exporter.otlp.protocol=grpc")
             .append(" ")

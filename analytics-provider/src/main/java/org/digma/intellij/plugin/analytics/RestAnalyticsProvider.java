@@ -514,6 +514,8 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
             var jacksonFactory = JacksonConverterFactory.create(createObjectMapper());
 
+            baseUrl = ensureEndsWithSlash(baseUrl);
+
             Retrofit retrofit = new Retrofit.Builder()
                     .baseUrl(baseUrl)
                     .client(okHttpClient)
@@ -524,6 +526,17 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                     .build();
 
             analyticsProvider = retrofit.create(AnalyticsProviderRetrofit.class);
+        }
+
+        private String ensureEndsWithSlash(String baseUrl) {
+            //if url contains path it must end with slash.
+            //retrofit will check that in retrofit2.Retrofit.Builder.baseUrl(okhttp3.HttpUrl)
+            var url = HttpUrl.get(baseUrl);
+            List<String> pathSegments = url.pathSegments();
+            if (!"".equals(pathSegments.get(pathSegments.size() - 1))) {
+                return baseUrl + "/";
+            }
+            return baseUrl;
         }
 
         private void addPerformanceInterceptor(OkHttpClient.Builder builder) {

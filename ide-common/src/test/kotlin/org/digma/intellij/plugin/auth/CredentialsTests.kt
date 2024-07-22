@@ -15,6 +15,7 @@ class CredentialsTests {
         val objectManager = ObjectMapper()
 
         val digmaCredentials = DigmaCredentials(
+            "userid",
             "myaccesstoken",
             "myrefreshtoken",
             "http://localhost5051",

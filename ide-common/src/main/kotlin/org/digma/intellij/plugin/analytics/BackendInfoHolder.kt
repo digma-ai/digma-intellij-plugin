@@ -4,6 +4,7 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import org.digma.intellij.plugin.auth.AuthManager
 import org.digma.intellij.plugin.common.DisposableAdaptor
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
@@ -53,6 +54,12 @@ class BackendInfoHolder(val project: Project) : DisposableAdaptor {
         }
 
 
+        AuthManager.getInstance().addAuthInfoChangeListener({
+            Log.log(logger::debug, "got authInfoChanged")
+            updateInBackground()
+        }, this)
+
+
         project.messageBus.connect(this)
             .subscribe(
                 AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC,
@@ -66,6 +73,7 @@ class BackendInfoHolder(val project: Project) : DisposableAdaptor {
                         updateInBackground()
                     }
                 })
+
 
         project.messageBus.connect(this)
             .subscribe(ApiClientChangedEvent.API_CLIENT_CHANGED_TOPIC, ApiClientChangedEvent {

@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.auth
 
 import com.intellij.openapi.diagnostic.Logger
+import org.digma.intellij.plugin.auth.account.CredentialsHolder
 import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log

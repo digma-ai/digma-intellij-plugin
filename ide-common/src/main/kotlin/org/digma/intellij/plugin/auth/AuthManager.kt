@@ -7,12 +7,19 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.util.Alarm
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.analytics.AnalyticsProvider
 import org.digma.intellij.plugin.analytics.AnalyticsUrlProvider
 import org.digma.intellij.plugin.analytics.AuthenticationException
 import org.digma.intellij.plugin.analytics.AuthenticationProvider
 import org.digma.intellij.plugin.analytics.RestAnalyticsProvider
 import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
+import org.digma.intellij.plugin.auth.account.LoginHandler
+import org.digma.intellij.plugin.auth.account.LoginResult
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
@@ -22,12 +29,11 @@ import java.lang.reflect.InvocationHandler
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
-import java.util.concurrent.locks.ReentrantLock
-import kotlin.concurrent.withLock
+import java.util.concurrent.Semaphore
 
 
 @Service(Service.Level.APP)
-class AuthManager : Disposable {
+class AuthManager(private val cs: CoroutineScope) : Disposable {
 
     private val logger: Logger = Logger.getInstance(AuthManager::class.java)
 
@@ -37,7 +43,9 @@ class AuthManager : Disposable {
 
     private val fireChangeAlarm = Alarm(Alarm.ThreadToUse.POOLED_THREAD, this)
 
-    private val myLock = ReentrantLock(true)
+    private var loginOrRefreshJob: Job? = null
+
+    private val loginLogoutSemaphore = Semaphore(1, true)
 
     companion object {
         @JvmStatic
@@ -53,7 +61,8 @@ class AuthManager : Disposable {
     private fun createMyAnalyticsProvider(): RestAnalyticsProvider {
         //AuthManager sends higher order to receive url changed events, so it will replace
         // api client before the AnalyticsService
-        return RestAnalyticsProvider(listOf(DigmaAccessTokenAuthenticationProvider(SettingsTokenProvider())),
+        return RestAnalyticsProvider(
+            listOf(DigmaAccessTokenAuthenticationProvider(SettingsTokenProvider())),
             { message: String? ->
                 val apiLogger = Logger.getInstance(API_LOGGER_NAME)
                 Log.log(apiLogger::debug, "API:AuthManager: {}", message)
@@ -79,145 +88,174 @@ class AuthManager : Disposable {
         listeners.remove(listener)
     }
 
-    //withAuth should not be called concurrently by multiple threads. it is called only from AnalyticsService.createClient.
-    //AnalyticsService.createClient is called on startup.
-    //the analyticsProvider here is the one to wrap with a proxy, it's a per project analyticsProvider.
-    //AuthManager uses its own local analyticsProvider for the login and refresh.
+    /**
+     * withAuth should not be called concurrently by multiple threads. it is called only from AnalyticsService.createClient,
+     * which is actually the AnalyticsService constructor. the platform makes sure to create singleton service, the AnalyticsService
+     * will not be called concurrently for the same project.
+     * this method will be called concurrently if multiple projects are opened at the same time.
+     * the analyticsProvider here is the one to wrap with a proxy, it's a per project analyticsProvider.
+     * AuthManager uses its own local analyticsProvider for the login and refresh.
+     */
     fun withAuth(project: Project, analyticsProvider: RestAnalyticsProvider): AnalyticsProvider {
 
-        return myLock.withLock {
+        Log.log(logger::info, "wrapping analyticsProvider with auth for url {}", analyticsProvider.apiUrl)
 
-            Log.log(logger::info, "wrapping analyticsProvider with auth for url {}", analyticsProvider.apiUrl)
+        //try loginOrRefresh on startup
+        loginOrRefresh(project)
 
-            val loginHandler = LoginHandler.createLoginHandler(project, myAnalyticsProvider)
+        //always return a proxy. even if login failed. the proxy will try to loginOrRefresh on AuthenticationException
+        val proxy = proxy(analyticsProvider)
 
-            if (!loginHandler.loginOrRefresh()) {
-                Log.log(logger::warn, "loginOrRefresh failed for url {}", this.myAnalyticsProvider.apiUrl)
+        Log.log(
+            logger::info, "analyticsProvider wrapped with auth proxy, current account {},analytics url {}",
+            DigmaDefaultAccountHolder.getInstance().account,
+            analyticsProvider.apiUrl
+        )
+
+        fireChange()
+
+        return proxy
+    }
+
+
+    /**
+     * this method is used to do best effort for login or refresh.
+     * when connection to the server is ok it will succeed either new login or refresh if necessary.
+     * it is non-blocking but does not allow more than one job at a time, if called concurrently and
+     * myAuthJob is active the method will just return doing nothing.
+     * it is mostly called when there is an AuthenticationException when the token is expired. if called by
+     * multiple threads only one will start a job, other threads will return and probably will have to deal with
+     * AuthenticationException at least until the refresh is complete.
+     * it is possible to let multiple threads start a loginOrRefresh, it will work and will probably do no harm,
+     * worst case a login or refresh will occur multiple times.
+     * it is also possible to block the method until refresh completes and only then release the threads, either
+     * by only one thread or multiple threads, but the current approaches is to launch an asynchronous, let threads deal
+     * with AuthenticationException until refresh completes. in a good running environment this will be very fast so only
+     * a few threads will deal with AuthenticationException.
+     * loginHandler.loginOrRefresh is smart enough to decide if a new login is required, or refresh or nothing.
+     */
+    fun loginOrRefresh(project: Project? = null) {
+
+        Log.log(logger::info, "loginOrRefresh called, analytics url {}", myAnalyticsProvider.apiUrl)
+
+        if (loginOrRefreshJob?.isActive == true) {
+            Log.log(logger::info, "auth job is active, analytics url {}", myAnalyticsProvider.apiUrl)
+            return
+        }
+
+        loginOrRefreshJob?.cancel()
+        loginOrRefreshJob = cs.launch {
+            try {
+                Log.log(logger::info, "starting loginOrRefresh job, analytics url {}", myAnalyticsProvider.apiUrl)
+                val loginHandler = LoginHandler.createLoginHandler(project, myAnalyticsProvider)
+                loginHandler.loginOrRefresh()
+            } catch (e: Throwable) {
+                Log.warnWithException(logger, e, "error in loginOrRefresh {}", e)
+                ErrorReporter.getInstance().reportError("AuthManager.loginOrRefresh", e)
+            } finally {
+                fireChange()
             }
-
-            //always return a proxy. even if login failed. the proxy will try to loginOrRefresh on AuthenticationException
-            val proxy = proxy(analyticsProvider)
-
-            Log.log(
-                logger::info, "analyticsProvider wrapped with auth proxy, current account {},analytics url {}",
-                DigmaDefaultAccountHolder.getInstance().account,
-                analyticsProvider.apiUrl
-            )
-
-            fireChange()
-
-            proxy
         }
     }
 
 
-    //this method is used to force login after changing the url.
-    //and when user clicks refresh on no connection screen, in that case it will login or refresh
-    // or do nothing if login already done. and will resume connection if connection is back.
-    fun loginOrRefresh(): Boolean {
+    /**
+     * blocking login. should not be called by concurrent threads, this method should be called from UI
+     * when a user clicks the login button.
+     * every call will do a new login, logging out if necessary.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    fun loginSynchronously(user: String, password: String): LoginResult {
 
-        try {
+        //prevent multiple thread doing login, shouldn't happen as this method is called by UI when user clicks
+        // a login button
+        loginLogoutSemaphore.acquire()
 
-            myLock.lockInterruptibly()
-
-            Log.log(logger::info, "loginOrRefresh called, analytics url {}", myAnalyticsProvider.apiUrl)
-
-            val loginHandler = LoginHandler.createLoginHandler(myAnalyticsProvider)
-            val result = loginHandler.loginOrRefresh()
-            if (!result) {
-                Log.log(logger::warn, "loginOrRefresh failed for url {}", this.myAnalyticsProvider.apiUrl)
-            }
-
-            fireChange()
-
-            return result
-
-        } catch (e: Throwable) {
-            Log.warnWithException(logger, e, "error in loginOrRefresh {}", e)
-            ErrorReporter.getInstance().reportError("AuthManager.loginOrRefresh", e)
-            return false
-        } finally {
-            if (myLock.isHeldByCurrentThread) {
-                myLock.unlock()
+        val waitingSemaphore = Semaphore(0, true)
+        val deferred = cs.async {
+            try {
+                val loginHandler = LoginHandler.createLoginHandler(myAnalyticsProvider)
+                loginHandler.login(user, password)
+            } catch (e: Throwable) {
+                Log.warnWithException(logger, e, "error in login {}", e)
+                ErrorReporter.getInstance().reportError("AuthManager.login", e)
+                LoginResult(false, null, null)
+            } finally {
+                waitingSemaphore.release()
+                loginLogoutSemaphore.release()
             }
         }
-    }
 
-
-    fun login(user: String, password: String): LoginResult {
-
-        try {
-
-            myLock.lockInterruptibly()
-
-            Log.log(logger::info, "login called, analytics url {}", myAnalyticsProvider.apiUrl)
-
-            val loginHandler = LoginHandler.createLoginHandler(myAnalyticsProvider)
-            val loginResult = loginHandler.login(user, password)
-
-            Log.log(logger::info, "login result {}", loginResult)
-
-            fireChange()
-
-            return loginResult
-
+        return try {
+            waitingSemaphore.acquire()
+            deferred.getCompleted()
         } catch (e: Throwable) {
             Log.warnWithException(logger, e, "error in login {}", e)
             ErrorReporter.getInstance().reportError("AuthManager.login", e)
             return LoginResult(false, null, null)
         } finally {
-            if (myLock.isHeldByCurrentThread) {
-                myLock.unlock()
+            fireChange()
+        }
+    }
+
+
+    /**
+     * non blocking logout
+     */
+    fun logout() {
+        cs.launch {
+            try {
+                val loginHandler = LoginHandler.createLoginHandler(myAnalyticsProvider)
+                loginHandler.logout()
+            } catch (e: Throwable) {
+                Log.warnWithException(logger, e, "error in logout {}", e)
+                ErrorReporter.getInstance().reportError("AuthManager.logout", e)
+            } finally {
+                fireChange()
             }
         }
     }
 
 
-    fun logout() {
+    /**
+     * blocking logout. should not be called by concurrent threads, this method should be called as
+     * result of user clicking logout.
+     * every call will do log out if necessary.
+     */
+    fun logoutSynchronously() {
 
-        try {
+        //prevent multiple thread doing logout or login at the same time, shouldn't happen as this method is called by UI when user clicks
+        // a logout button
+        loginLogoutSemaphore.acquire()
 
-            myLock.lockInterruptibly()
-
-            Log.log(logger::info, "logout called, analytics url {}", myAnalyticsProvider.apiUrl)
-
-            val loginHandler = LoginHandler.createLoginHandler(myAnalyticsProvider)
-            loginHandler.logout()
-
-            fireChange()
-
-        } catch (e: Throwable) {
-            Log.warnWithException(logger, e, "error in login {}", e)
-            ErrorReporter.getInstance().reportError("AuthManager.logout", e)
-        } finally {
-            if (myLock.isHeldByCurrentThread) {
-                myLock.unlock()
+        val waitingSemaphore = Semaphore(0, true)
+        val job = cs.launch {
+            try {
+                val loginHandler = LoginHandler.createLoginHandler(myAnalyticsProvider)
+                loginHandler.logout()
+            } catch (e: Throwable) {
+                Log.warnWithException(logger, e, "error in logoutSynchronously {}", e)
+                ErrorReporter.getInstance().reportError("AuthManager.logoutSynchronously", e)
+            } finally {
+                waitingSemaphore.release()
+                loginLogoutSemaphore.release()
             }
+        }
+
+        return try {
+            waitingSemaphore.acquire()
+        } catch (e: Throwable) {
+            Log.warnWithException(logger, e, "error in logoutSynchronously {}", e)
+            ErrorReporter.getInstance().reportError("AuthManager.logoutSynchronously", e)
+        } finally {
+            job.cancel()
+            fireChange()
         }
     }
 
 
     private fun onAuthenticationException() {
-
-        try {
-
-            myLock.lockInterruptibly()
-
-            Log.log(logger::trace, "onAuthenticationException called, analytics url {}", myAnalyticsProvider.apiUrl)
-
-            val loginHandler = LoginHandler.createLoginHandler(myAnalyticsProvider)
-            loginHandler.loginOrRefresh(true)
-
-            fireChange()
-
-        } catch (e: Throwable) {
-            Log.warnWithException(logger, e, "error in onAuthenticationException {}", e)
-            ErrorReporter.getInstance().reportError("AuthManager.onAuthenticationException", e)
-        } finally {
-            if (myLock.isHeldByCurrentThread) {
-                myLock.unlock()
-            }
-        }
+        loginOrRefresh()
     }
 
 

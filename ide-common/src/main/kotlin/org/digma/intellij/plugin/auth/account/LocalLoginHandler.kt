@@ -1,23 +1,19 @@
-package org.digma.intellij.plugin.auth
+package org.digma.intellij.plugin.auth.account
 
-import kotlinx.coroutines.runBlocking
-import org.digma.intellij.plugin.analytics.AuthenticationException
 import org.digma.intellij.plugin.analytics.RestAnalyticsProvider
-import org.digma.intellij.plugin.auth.account.DigmaAccountManager
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.scheduling.blockingOneShotTaskWithResult
 import kotlin.time.Duration.Companion.seconds
-
 
 private const val SILENT_LOGIN_USER = "admin@digma.ai"
 private const val SILENT_LOGIN_PASSWORD = "admin!"
 
+
 class LocalLoginHandler(analyticsProvider: RestAnalyticsProvider) : AbstractLoginHandler(analyticsProvider) {
 
-
-    override fun loginOrRefresh(onAuthenticationError: Boolean): Boolean {
+    //make sure CredentialsHolder.digmaCredentials is always updated correctly
+    override suspend fun loginOrRefresh(onAuthenticationError: Boolean): Boolean {
 
         return try {
 
@@ -53,14 +49,13 @@ class LocalLoginHandler(analyticsProvider: RestAnalyticsProvider) : AbstractLogi
 
                 Log.log(logger::trace, "found account in loginOrRefresh, account: {}", digmaAccount)
 
-                val credentials = blockingOneShotTaskWithResult("AuthManager.LocalLoginHandler.findCredentials", 2.seconds.inWholeMilliseconds) {
-                    runBlocking {
-                        val creds = DigmaAccountManager.getInstance().findCredentials(digmaAccount)
-                        CredentialsHolder.digmaCredentials = creds
-                        creds
-                    }
+                val credentials = try {
+                    //exception here may happen if we change the credentials structure,which doesn't happen too much,
+                    // we'll do a silent login again
+                    DigmaAccountManager.getInstance().findCredentials(digmaAccount)
+                } catch (_: Throwable) {
+                    null
                 }
-
 
                 //if digma account is not null and credentials is null then probably something corrupted,
                 // it may be that the credentials deleted from the password safe
@@ -87,9 +82,9 @@ class LocalLoginHandler(analyticsProvider: RestAnalyticsProvider) : AbstractLogi
 
                     if (!credentials.isAccessTokenValid()) {
                         Log.log(logger::trace, "access token for account expired, refreshing token. account {}", digmaAccount)
-                        val result = authApiClient.refreshToken(digmaAccount, credentials)
+                        val refreshResult = refresh(digmaAccount, credentials)
                         Log.log(logger::trace, "refresh token success for account {}", digmaAccount)
-                        result
+                        refreshResult
                     } else if (onAuthenticationError && credentials.isOlderThen(30.seconds)) {
 
                         //why check isOlderThen(30.seconds)?
@@ -108,11 +103,13 @@ class LocalLoginHandler(analyticsProvider: RestAnalyticsProvider) : AbstractLogi
                             "onAuthenticationError is true and credentials older then 30 seconds, refreshing token for account {}",
                             digmaAccount
                         )
-                        val result = authApiClient.refreshToken(digmaAccount, credentials)
+                        val refreshResult = refresh(digmaAccount, credentials)
                         Log.log(logger::trace, "refresh token success for account {}", digmaAccount)
-                        result
+                        refreshResult
                     } else {
                         Log.log(logger::trace, "no need to refresh token for account {}", digmaAccount)
+                        //found credentials and its valid, probably on startup, update CredentialsHolder
+                        CredentialsHolder.digmaCredentials = credentials
                         true
                     }
                 }
@@ -121,14 +118,12 @@ class LocalLoginHandler(analyticsProvider: RestAnalyticsProvider) : AbstractLogi
 
             Log.warnWithException(logger, e, "Exception in loginOrRefresh {}, url {}", e, analyticsProvider.apiUrl)
             ErrorReporter.getInstance().reportError("LocalLoginHandler.loginOrRefresh", e)
+            val errorMessage = ExceptionUtils.getNonEmptyMessage(e)
+            reportPosthogEvent("loginOrRefresh failed", mapOf("error" to errorMessage))
 
-            //if got AuthenticationException here is may be from refresh or login, in both cases delete the current account,
-            //and we'll do silent login on the next loginOrRefresh
-            if (e is AuthenticationException) {
-                val errorMessage = ExceptionUtils.getNonEmptyMessage(e)
-                reportPosthogEvent("loginOrRefresh failed", mapOf("error" to errorMessage))
-                logout()
-            }
+            //if got exception here it may be from refresh or login, in both cases delete the current account,
+            //we'll do a silent login again
+            logout()
 
             false
         }

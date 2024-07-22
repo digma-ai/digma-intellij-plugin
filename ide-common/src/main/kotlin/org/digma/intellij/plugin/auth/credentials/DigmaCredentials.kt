@@ -17,6 +17,7 @@ import kotlin.time.Duration
 class DigmaCredentials
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 @ConstructorProperties(
+    "userId",
     "accessToken",
     "refreshToken",
     "url",
@@ -24,6 +25,7 @@ class DigmaCredentials
     "expirationTime",
     "creationTime"
 ) constructor(
+    val userId: String,
     override val accessToken: String,
     override val refreshToken: String,
     //this url is api url.

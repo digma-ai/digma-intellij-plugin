@@ -1,19 +1,16 @@
-package org.digma.intellij.plugin.auth
+package org.digma.intellij.plugin.auth.account
 
-import kotlinx.coroutines.runBlocking
-import org.digma.intellij.plugin.analytics.AuthenticationException
 import org.digma.intellij.plugin.analytics.RestAnalyticsProvider
-import org.digma.intellij.plugin.auth.account.DigmaAccountManager
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.scheduling.blockingOneShotTaskWithResult
 import kotlin.time.Duration.Companion.seconds
 
 class CentralizedLoginHandler(analyticsProvider: RestAnalyticsProvider) : AbstractLoginHandler(analyticsProvider) {
 
 
-    override fun loginOrRefresh(onAuthenticationError: Boolean): Boolean {
+    //make sure CredentialsHolder.digmaCredentials is always updated correctly
+    override suspend fun loginOrRefresh(onAuthenticationError: Boolean): Boolean {
 
         return try {
 
@@ -22,6 +19,7 @@ class CentralizedLoginHandler(analyticsProvider: RestAnalyticsProvider) : Abstra
             val digmaAccount = getDefaultAccount()
 
             if (digmaAccount == null) {
+                CredentialsHolder.digmaCredentials = null
                 Log.log(
                     logger::trace,
                     "no account found in loginOrRefresh, account is not logged in for centralized env url: {}",
@@ -40,14 +38,13 @@ class CentralizedLoginHandler(analyticsProvider: RestAnalyticsProvider) : Abstra
 
                 Log.log(logger::trace, "found account in loginOrRefresh, account: {}", digmaAccount)
 
-                val credentials =
-                    blockingOneShotTaskWithResult("AuthManager.CentralizedLoginHandler.findCredentials", 5.seconds.inWholeMilliseconds) {
-                        runBlocking {
-                            val creds = DigmaAccountManager.getInstance().findCredentials(digmaAccount)
-                            CredentialsHolder.digmaCredentials = creds
-                            creds
-                        }
-                    }
+                val credentials = try {
+                    //exception here may happen if we change the credentials structure,which doesn't happen too much,
+                    // user will be redirected to log in again
+                    DigmaAccountManager.getInstance().findCredentials(digmaAccount)
+                } catch (_: Throwable) {
+                    null
+                }
 
                 //if digma account is not null and credentials is null then probably something corrupted,
                 // it may be that the credentials deleted from the password safe
@@ -67,32 +64,32 @@ class CentralizedLoginHandler(analyticsProvider: RestAnalyticsProvider) : Abstra
 
                     if (!credentials.isAccessTokenValid()) {
                         Log.log(logger::trace, "access token for account expired, refreshing token. account {}", digmaAccount)
-                        val result = authApiClient.refreshToken(digmaAccount, credentials)
+                        val refreshResult = refresh(digmaAccount, credentials)
                         Log.log(logger::trace, "refresh token success for account {}", digmaAccount)
-                        result
+                        refreshResult
                     } else if (onAuthenticationError && credentials.isOlderThen(30.seconds)) {
 
                         //why check isOlderThen(30.seconds)?
                         //to prevent multiple unnecessary refresh token.
                         //when credentials expired multiple threads will fail on authentication error.
-                        //all these threads will try to refresh the token.
-                        //see: AuthManager.onAuthenticationException
+                        //maybe few threads will try to refresh the token.
                         //but of course only one refresh is necessary.
-                        //if these threads try to refresh on the same time, they will wait in turn because
-                        //AuthManager.onAuthenticationException is synchronized.
-                        //and then when this code is executed it will not refresh again if the credentials are valid
-                        //and were refresh in the past 30 seconds
+                        //if these threads try to refresh one after the other than when this code is
+                        // executed it will not refresh again if the credentials are valid and were refreshed
+                        // in the past 30 seconds
 
                         Log.log(
                             logger::trace,
                             "onAuthenticationError is true and credentials older then 30 seconds, refreshing token. account {}",
                             digmaAccount
                         )
-                        val result = authApiClient.refreshToken(digmaAccount, credentials)
+                        val refreshResult = refresh(digmaAccount, credentials)
                         Log.log(logger::trace, "refresh token success for account {}", digmaAccount)
-                        result
+                        refreshResult
                     } else {
                         Log.log(logger::trace, "no need to refresh token for account {}", digmaAccount)
+                        //found credentials and its valid, probably on startup, update CredentialsHolder
+                        CredentialsHolder.digmaCredentials = credentials
                         true
                     }
                 }
@@ -101,14 +98,12 @@ class CentralizedLoginHandler(analyticsProvider: RestAnalyticsProvider) : Abstra
 
             Log.warnWithException(logger, e, "Exception in loginOrRefresh {}, url {}", e, analyticsProvider.apiUrl)
             ErrorReporter.getInstance().reportError("CentralizedLoginHandler.loginOrRefresh", e)
+            val errorMessage = ExceptionUtils.getNonEmptyMessage(e)
+            reportPosthogEvent("loginOrRefresh failed", mapOf("error" to errorMessage))
 
-            //if got AuthenticationException here is may be from refresh or login, in both cases delete the current account,
+            //if got exception here it may be from refresh or login, in both cases delete the current account,
             //and user will be redirected to log in again
-            if (e is AuthenticationException) {
-                val errorMessage = ExceptionUtils.getNonEmptyMessage(e)
-                reportPosthogEvent("loginOrRefresh failed", mapOf("error" to errorMessage))
-                logout()
-            }
+            logout()
 
             false
         }

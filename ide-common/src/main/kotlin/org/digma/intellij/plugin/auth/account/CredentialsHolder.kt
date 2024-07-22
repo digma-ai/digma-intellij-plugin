@@ -1,9 +1,8 @@
-package org.digma.intellij.plugin.auth
+package org.digma.intellij.plugin.auth.account
 
 import org.digma.intellij.plugin.auth.credentials.DigmaCredentials
 
 //credentials holder is always updated when updating the account and credentials
-//see org.digma.intellij.plugin.auth.AuthutilsKt.updateAccount
 //we need it in DefaultAccountTokenProvider.
 //without it, we need to call DigmaAccountManager.getInstance().findCredentials(digmaAccount) which is a suspending function
 // and needs to be called in a coroutine like runBlocking, but we don't want to do that in DefaultAccountTokenProvider because it is part

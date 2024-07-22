@@ -1,12 +1,12 @@
 package org.digma.intellij.plugin.ui.recentactivity
 
-import com.intellij.collaboration.async.disposingScope
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -27,7 +27,7 @@ private const val RECENT_ACTIVITY_SET_LIVE_DATA = "RECENT_ACTIVITY/SET_LIVE_DATA
 
 
 @Service(Service.Level.PROJECT)
-class LiveViewUpdater(val project: Project) : Disposable {
+class LiveViewUpdater(val project: Project, private val cs: CoroutineScope) : Disposable {
 
     private val logger = Logger.getInstance(this::class.java)
 
@@ -61,16 +61,9 @@ class LiveViewUpdater(val project: Project) : Disposable {
 
         Log.log(logger::trace, project, "Got sendLiveData request for: {}", codeObjectId)
 
-        myDisposable?.let {
-            Disposer.dispose(it)
-        }
-
-        myDisposable = Disposer.newDisposable()
-
         myJob?.cancel()
 
-        @Suppress("UnstableApiUsage")
-        myJob = myDisposable!!.disposingScope().launch {
+        myJob = cs.launch {
 
             Log.log(logger::trace, project, "live view timer started for: {}", codeObjectId)
 
@@ -143,11 +136,7 @@ class LiveViewUpdater(val project: Project) : Disposable {
 
 
     @Synchronized
-    fun stopLiveView(codeObjectId: String?) {
-        //in the future we may have multiple live views, in that case we will recognize them by codeObjectId
-        myDisposable?.let {
-            Disposer.dispose(it)
-        }
+    fun stopLiveView() {
         myJob?.cancel()
     }
 

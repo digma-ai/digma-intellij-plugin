@@ -128,7 +128,7 @@ class RecentActivityService(val project: Project) : Disposable {
     }
 
     fun liveViewClosed(closeLiveViewMessage: CloseLiveViewMessage?) {
-        project.service<LiveViewUpdater>().stopLiveView(closeLiveViewMessage?.payload?.codeObjectId)
+        project.service<LiveViewUpdater>().stopLiveView()
         if (closeLiveViewMessage == null) {
             ActivityMonitor.getInstance(project).registerCustomEvent("live view closed without message", emptyMap())
         } else {

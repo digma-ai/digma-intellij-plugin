@@ -12,9 +12,11 @@ fun objectToJson(value: Any): String {
 }
 
 
-fun objectToJsonNoException(value: Any): String {
+fun objectToJsonNoException(value: Any?): String {
     return try {
-        sharedObjectMapper.writeValueAsString(value)
+        value?.let {
+            sharedObjectMapper.writeValueAsString(value)
+        } ?: ""
     } catch (e: Exception) {
         "Error parsing object " + e.message
     }

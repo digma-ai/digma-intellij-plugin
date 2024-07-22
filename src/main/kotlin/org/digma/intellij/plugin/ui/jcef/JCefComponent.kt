@@ -430,7 +430,7 @@ object LifeSpanHandle : CefLifeSpanHandlerAdapter() {
 
     val registered = AtomicBoolean(false)
 
-    private val registrationLock = ReentrantLock()
+    private val registrationLock = ReentrantLock(true)
 
     override fun onAfterCreated(browser: CefBrowser?) {
 

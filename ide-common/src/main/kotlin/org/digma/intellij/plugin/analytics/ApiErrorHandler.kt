@@ -56,7 +56,7 @@ class ApiErrorHandler : DisposableAdaptor {
     // and keep the log and intellij notification panel clean
     private val errorReportingHelper = ErrorReportingHelper()
 
-    private val myLock = ReentrantLock()
+    private val myLock = ReentrantLock(true)
 
     private val myConnectionLostFlag = AtomicBoolean(false)
 

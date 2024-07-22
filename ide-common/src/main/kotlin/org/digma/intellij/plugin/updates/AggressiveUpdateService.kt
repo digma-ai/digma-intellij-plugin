@@ -33,7 +33,6 @@ import org.digma.intellij.plugin.updates.CurrentUpdateState.UPDATE_BOTH
 import org.digma.intellij.plugin.updates.CurrentUpdateState.UPDATE_PLUGIN
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
-import java.util.concurrent.locks.ReentrantLock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -47,8 +46,6 @@ class AggressiveUpdateService(val project: Project) : DisposableAdaptor {
     private var delayBetweenUpdatesSeconds = getDefaultDelayBetweenUpdatesSeconds()
 
     private var myHighRateDisposable: Disposable? = null
-
-    private val updateStateLock = ReentrantLock()
 
     private val updateStateRef: AtomicReference<PublicUpdateState> = AtomicReference(PublicUpdateState(OK, BackendDeploymentType.Unknown))
 
@@ -152,24 +149,15 @@ class AggressiveUpdateService(val project: Project) : DisposableAdaptor {
 
     private fun updateState() {
 
-        try {
-            //todo: don't need the lock, only one thread is calling this method
-            updateStateLock.lock()
-            runWIthRetry({
-                Log.log(logger::debug, "loading versions")
-                val versions = buildVersions()
-                Log.log(logger::debug, "loaded versions {}", versions)
-                Log.log(logger::debug, "updating state")
-                val prevUpdateState = updateStateRef.get().copy()
-                update(versions)
-                Log.log(logger::debug, "state updated. prev state: {}, new state: {}", prevUpdateState, updateStateRef)
-            }, backOffMillis = 2000, maxRetries = 5)
-
-        } finally {
-            if (updateStateLock.isHeldByCurrentThread) {
-                updateStateLock.unlock()
-            }
-        }
+        runWIthRetry({
+            Log.log(logger::debug, "loading versions")
+            val versions = buildVersions()
+            Log.log(logger::debug, "loaded versions {}", versions)
+            Log.log(logger::debug, "updating state")
+            val prevUpdateState = updateStateRef.get().copy()
+            update(versions)
+            Log.log(logger::debug, "state updated. prev state: {}, new state: {}", prevUpdateState, updateStateRef)
+        }, backOffMillis = 2000, maxRetries = 5)
     }
 
 

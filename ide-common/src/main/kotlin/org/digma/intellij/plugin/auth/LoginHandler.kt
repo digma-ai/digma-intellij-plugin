@@ -2,15 +2,11 @@ package org.digma.intellij.plugin.auth
 
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import kotlinx.coroutines.runBlocking
 import org.digma.intellij.plugin.analytics.ApiErrorHandler
 import org.digma.intellij.plugin.analytics.RestAnalyticsProvider
-import org.digma.intellij.plugin.auth.account.DigmaAccountManager
 import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.scheduling.blockingOneShotTask
-import kotlin.time.Duration.Companion.seconds
 
 interface LoginHandler {
 
@@ -28,6 +24,8 @@ interface LoginHandler {
 
             try {
 
+                Log.log(logger::trace, "createLoginHandler called for url {}", analyticsProvider.apiUrl)
+
                 val loginHandler = when (analyticsProvider.about.isCentralize) {
                     true -> CentralizedLoginHandler(analyticsProvider)
                     false, null -> LocalLoginHandler(analyticsProvider)
@@ -35,6 +33,7 @@ interface LoginHandler {
 
                 ApiErrorHandler.getInstance().resetConnectionLostAndNotifyIfNecessary(project)
 
+                Log.log(logger::trace, "created {} for url {}", loginHandler, analyticsProvider.apiUrl)
                 return loginHandler
 
             } catch (e: Throwable) {

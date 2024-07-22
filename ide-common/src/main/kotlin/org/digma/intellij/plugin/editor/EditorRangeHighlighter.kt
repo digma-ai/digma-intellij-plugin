@@ -28,7 +28,7 @@ class EditorRangeHighlighter(private val project: Project) : Disposable {
 
     private val highlighters = mutableMapOf<String, Pair<Editor, RangeHighlighter>>()
 
-    private val myLock = ReentrantLock()
+    private val myLock = ReentrantLock(true)
 
     companion object {
         @JvmStatic

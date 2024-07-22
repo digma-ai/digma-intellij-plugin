@@ -37,7 +37,7 @@ class AuthManager : Disposable {
 
     private val fireChangeAlarm = Alarm(Alarm.ThreadToUse.POOLED_THREAD, this)
 
-    private val myLock = ReentrantLock()
+    private val myLock = ReentrantLock(true)
 
     companion object {
         @JvmStatic

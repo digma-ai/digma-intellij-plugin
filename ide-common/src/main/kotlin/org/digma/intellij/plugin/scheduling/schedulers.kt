@@ -13,6 +13,9 @@ import org.digma.intellij.plugin.analytics.ApiErrorHandler
 import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
 import org.digma.intellij.plugin.common.FrequencyDetector
 import org.digma.intellij.plugin.common.findActiveProject
+import org.digma.intellij.plugin.common.generateDeadlockedThreadDump
+import org.digma.intellij.plugin.common.generateMonitorDeadlockedThreadDump
+import org.digma.intellij.plugin.common.generateThreadDump
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
@@ -148,6 +151,7 @@ to call from java , assuming a class implements Disposable, do that:
 
 
 const val INITIAL_SCHEDULER_CORE_SIZE = 3
+
 // this max size should be enough , we don't have too many tasks,if we reached this max we have thread starvation. it is reported to posthog when reached.
 const val SCHEDULER_MAX_SIZE = 8
 const val SCHEDULER_MAX_QUEUE_SIZE_ALLOWED = 200
@@ -185,13 +189,16 @@ class ThreadPoolProviderService : Disposable {
             //the pool size was increased to SCHEDULER_MAX_SIZE, we have a problem, report an error
             if (scheduler.corePoolSize >= SCHEDULER_MAX_SIZE) {
                 ErrorReporter.getInstance().reportError(
-                    "ThreadPoolProviderService.manage", "scheduler max size reached", mapOf(
+                    "ThreadPoolProviderService.schedulerMaxSize", "scheduler max size reached", mapOf(
                         "core.pool.size" to scheduler.corePoolSize,
                         "max.pool.size" to scheduler.maximumPoolSize,
                         "task.queue.size" to scheduler.queue.size,
                         "all.registered.recurring (including canceled)" to scheduler.registeredRecurringTasks,
                         "max.pool.size.allowed" to SCHEDULER_MAX_SIZE,
-                        "max.queue.size.allowed" to SCHEDULER_MAX_QUEUE_SIZE_ALLOWED
+                        "max.queue.size.allowed" to SCHEDULER_MAX_QUEUE_SIZE_ALLOWED,
+                        "ThreadDump" to generateThreadDump(),
+                        "DeadLockThreadDump" to generateDeadlockedThreadDump(),
+                        "MonitorDeadlockedThreadDump" to generateMonitorDeadlockedThreadDump(),
                     )
                 )
             }
@@ -199,7 +206,7 @@ class ThreadPoolProviderService : Disposable {
             //this scheduler can not be used for high load
             if (scheduler.queue.size >= SCHEDULER_MAX_QUEUE_SIZE_ALLOWED) {
                 ErrorReporter.getInstance().reportError(
-                    "ThreadPoolProviderService.manage", "too many registered tasks in scheduler", mapOf(
+                    "ThreadPoolProviderService.schedulerMaxRegisteredReached", "too many registered tasks in scheduler", mapOf(
                         "core.pool.size" to scheduler.corePoolSize,
                         "max.pool.size" to scheduler.maximumPoolSize,
                         "task.queue.size" to scheduler.queue.size,

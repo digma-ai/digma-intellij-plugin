@@ -663,14 +663,15 @@ class ActivityMonitor(private val project: Project) : Disposable {
 
 
     fun registerServerInfo(serverInfo: AboutResult) {
-        //AboutResult is a data class and equals should work correctly
+        //AboutResult is a data class , equals should work correctly
         if (this.serverInfo != serverInfo) {
             this.serverInfo = serverInfo
             postHog?.set(
                 userId,
                 mapOf(
                     "server.version" to serverInfo.applicationVersion,
-                    "server.deploymentType" to (serverInfo.deploymentType ?: BackendDeploymentType.Unknown)
+                    "server.deploymentType" to (serverInfo.deploymentType ?: BackendDeploymentType.Unknown),
+                    "site" to (serverInfo.site ?: "")
                 )
             )
         }

@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.auth.account
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.analytics.ApiErrorHandler
+import org.digma.intellij.plugin.analytics.ReplacingClientException
 import org.digma.intellij.plugin.analytics.RestAnalyticsProvider
 import org.digma.intellij.plugin.auth.NoOpLoginHandler
 import org.digma.intellij.plugin.auth.credentials.DigmaCredentials
@@ -41,6 +42,9 @@ interface LoginHandler {
                 Log.log(logger::trace, "created {} for url {}", loginHandler, analyticsProvider.apiUrl)
                 return loginHandler
 
+            } catch (e: ReplacingClientException) {
+                //ignore,its momentary
+                return NoOpLoginHandler("error in createLoginHandler $e")
             } catch (e: Throwable) {
 
                 //if we can't create a login handler we assume there is a connection issue, it may be a real connect issue,

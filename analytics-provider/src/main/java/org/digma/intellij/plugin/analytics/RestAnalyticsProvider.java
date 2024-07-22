@@ -481,7 +481,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable, Base
         //don't want to use locks, just throw calling threads if currently replacing the client as a result of url changed.
         //caller should always catch and handle AnalyticsProviderException
         if (replacingClient.get()) {
-            throw new AnalyticsProviderException("can't serve requests, currently replacing clients");
+            throw new ReplacingClientException("can't serve requests, currently replacing clients");
         }
 
         Response<T> response;

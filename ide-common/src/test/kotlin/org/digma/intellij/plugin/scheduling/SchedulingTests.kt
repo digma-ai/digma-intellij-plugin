@@ -273,7 +273,7 @@ class SchedulingTests {
 
         val threadNames = Collections.synchronizedSet(mutableSetOf<String>())
         val disposable = Disposer.newDisposable()
-        repeat((0..1000).count()) {
+        repeat((0..10000).count()) {
             disposable.disposingPeriodicTask("testCorePoolSizeIncreased", 10, false) {
                 try {
                     threadNames.add(Thread.currentThread().name)
@@ -285,7 +285,7 @@ class SchedulingTests {
         }
 
 
-        Thread.sleep(5000)
+        Thread.sleep(10000)
         Disposer.dispose(disposable)
         println("thread names: $threadNames")
         assertEquals(SCHEDULER_MAX_SIZE, threadNames.size)

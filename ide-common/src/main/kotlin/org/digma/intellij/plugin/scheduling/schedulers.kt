@@ -180,6 +180,9 @@ class ThreadPoolProviderService : Disposable {
         }
     }
 
+    private val alreadySentSchedulerMaxSize = AtomicBoolean(false)
+    private val alreadySentSchedulerMaxRegisteredSize = AtomicBoolean(false)
+
 
     private val managementTimer = timer("SchedulerManager", true, 2.minutes.inWholeMilliseconds, 2.minutes.inWholeMilliseconds) {
         try {
@@ -187,7 +190,8 @@ class ThreadPoolProviderService : Disposable {
             manage()
 
             //the pool size was increased to SCHEDULER_MAX_SIZE, we have a problem, report an error
-            if (scheduler.corePoolSize >= SCHEDULER_MAX_SIZE) {
+            if (scheduler.corePoolSize >= SCHEDULER_MAX_SIZE && !alreadySentSchedulerMaxSize.get()) {
+                alreadySentSchedulerMaxSize.set(true)
                 ErrorReporter.getInstance().reportError(
                     "ThreadPoolProviderService.schedulerMaxSize", "scheduler max size reached", mapOf(
                         "core.pool.size" to scheduler.corePoolSize,
@@ -204,7 +208,8 @@ class ThreadPoolProviderService : Disposable {
             }
 
             //this scheduler can not be used for high load
-            if (scheduler.queue.size >= SCHEDULER_MAX_QUEUE_SIZE_ALLOWED) {
+            if (scheduler.queue.size >= SCHEDULER_MAX_QUEUE_SIZE_ALLOWED && !alreadySentSchedulerMaxRegisteredSize.get()) {
+                alreadySentSchedulerMaxRegisteredSize.set(true)
                 ErrorReporter.getInstance().reportError(
                     "ThreadPoolProviderService.schedulerMaxRegisteredReached", "too many registered tasks in scheduler", mapOf(
                         "core.pool.size" to scheduler.corePoolSize,

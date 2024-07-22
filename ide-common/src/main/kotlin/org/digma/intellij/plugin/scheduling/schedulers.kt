@@ -150,10 +150,10 @@ to call from java , assuming a class implements Disposable, do that:
  */
 
 
-const val INITIAL_SCHEDULER_CORE_SIZE = 3
+const val INITIAL_SCHEDULER_CORE_SIZE = 10
 
 // this max size should be enough , we don't have too many tasks,if we reached this max we have thread starvation. it is reported to posthog when reached.
-const val SCHEDULER_MAX_SIZE = 8
+const val SCHEDULER_MAX_SIZE = 20
 const val SCHEDULER_MAX_QUEUE_SIZE_ALLOWED = 200
 
 val logger = Logger.getInstance("org.digma.scheduler")

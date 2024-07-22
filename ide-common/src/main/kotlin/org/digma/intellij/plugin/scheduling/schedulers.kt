@@ -150,7 +150,7 @@ to call from java , assuming a class implements Disposable, do that:
  */
 
 
-const val INITIAL_SCHEDULER_CORE_SIZE = 10
+const val INITIAL_SCHEDULER_CORE_SIZE = 5
 
 // this max size should be enough , we don't have too many tasks,if we reached this max we have thread starvation. it is reported to posthog when reached.
 const val SCHEDULER_MAX_SIZE = 20
@@ -588,6 +588,7 @@ class MyScheduledExecutorService(
     private var exhaustedCount = AtomicInteger(0)
     private val currentlyExecutingThreads = Collections.synchronizedMap(mutableMapOf<Runnable, Thread>())
     private val interrupting = AtomicBoolean(false)
+    private val checkCapacityEveryRound = 3
 
     init {
         continueExistingPeriodicTasksAfterShutdownPolicy = false
@@ -639,10 +640,10 @@ class MyScheduledExecutorService(
         if (activeCount == poolSize) exhaustedCount.incrementAndGet()
 
         //check every 5 rounds, if was always exhausted increase pool size
-        if (managementRound % 5 == 0) {
+        if (managementRound % checkCapacityEveryRound == 0) {
             val exhausted = exhaustedCount.get()
             exhaustedCount.set(0)
-            if (exhausted >= 5) {
+            if (exhausted >= checkCapacityEveryRound) {
                 Log.log(logger::trace, "management: had full capacity in the past 5 rounds")
                 if (poolSize < maxPoolSize) {
                     val currentSize = corePoolSize

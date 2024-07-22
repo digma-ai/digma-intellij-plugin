@@ -8,9 +8,10 @@ import java.beans.ConstructorProperties
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class AboutResult @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-@ConstructorProperties("applicationVersion", "deploymentType", "isCentralize")
+@ConstructorProperties("applicationVersion", "deploymentType", "isCentralize","site")
 constructor(
     val applicationVersion: String,
     val deploymentType: BackendDeploymentType? = BackendDeploymentType.Unknown,
     val isCentralize: Boolean?,
+    val site: String?
 )

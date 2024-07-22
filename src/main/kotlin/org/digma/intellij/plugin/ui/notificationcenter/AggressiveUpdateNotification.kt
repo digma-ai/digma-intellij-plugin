@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.ui.notificationcenter
 
-import com.intellij.collaboration.async.disposingScope
 import com.intellij.notification.Notification
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
@@ -9,16 +8,13 @@ import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import org.digma.intellij.plugin.PluginId
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.NotificationsPersistenceState
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.scheduling.disposingPeriodicTask
 import org.digma.intellij.plugin.settings.InternalFileSettings
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import org.digma.intellij.plugin.updates.AggressiveUpdateService
@@ -29,17 +25,15 @@ import kotlin.time.toJavaDuration
 
 
 fun startAggressiveUpdateNotificationTimer(
+    disposable: Disposable,
     project: Project,
-    parentDisposable: Disposable,
     currentlyShowingAggressiveUpdateNotifications: MutableList<Notification>
-): Job {
+) {
 
-    //todo: convert to scheduler, return a disposable instead of Job
-    @Suppress("UnstableApiUsage")
-    return parentDisposable.disposingScope().launch {
+    //this disposable is disposed by the calling function when the state changes again
+    disposable.disposingPeriodicTask("AggressiveUpdateNotification", 30.minutes.inWholeMilliseconds, true) {
 
-        while (isActive && AggressiveUpdateService.getInstance(project).isInUpdateMode()) {
-
+        if (AggressiveUpdateService.getInstance(project).isInUpdateMode()) {
             val nextTime = if (service<NotificationsPersistenceState>().state.aggressiveUpdateLastNotified == null) {
                 service<NotificationsPersistenceState>().state.aggressiveUpdateLastNotified = Instant.now()
                 service<NotificationsPersistenceState>().state.aggressiveUpdateLastNotified!!
@@ -49,15 +43,14 @@ fun startAggressiveUpdateNotificationTimer(
                 last.plus(delayMinutes.minutes.toJavaDuration())
             }
 
-            var delay = nextTime.minusMillis(Clock.System.now().toEpochMilliseconds()).toEpochMilli()
-            if (delay < 0) delay = 0
-
-            delay(delay)
-
-            if (isActive && AggressiveUpdateService.getInstance(project).isInUpdateMode()) {
-                AppNotificationCenter.getInstance().clearCurrentlyShowingAggressiveUpdateNotifications()
-                service<NotificationsPersistenceState>().state.aggressiveUpdateLastNotified = Instant.now()
-                showAggressiveUpdateNotification(project, currentlyShowingAggressiveUpdateNotifications)
+            val delay = nextTime.minusMillis(Clock.System.now().toEpochMilliseconds()).toEpochMilli()
+            //it's time to show the notification
+            if (delay <= 0L) {
+                if (AggressiveUpdateService.getInstance(project).isInUpdateMode()) {
+                    AppNotificationCenter.getInstance().clearCurrentlyShowingAggressiveUpdateNotifications()
+                    service<NotificationsPersistenceState>().state.aggressiveUpdateLastNotified = Instant.now()
+                    showAggressiveUpdateNotification(project, currentlyShowingAggressiveUpdateNotifications)
+                }
             }
         }
     }

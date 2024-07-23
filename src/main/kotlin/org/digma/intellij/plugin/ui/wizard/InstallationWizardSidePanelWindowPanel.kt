@@ -109,6 +109,8 @@ private val logger: Logger =
 
 fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipInstallationStep: Boolean): DisposablePanel? {
 
+    PersistenceService.getInstance().firstWizardLaunchDone()
+
     val objectMapper = createObjectMapper()
 
     val digmaStatusUpdater = DigmaStatusUpdater()

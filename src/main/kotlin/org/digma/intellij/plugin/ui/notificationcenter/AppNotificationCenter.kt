@@ -8,7 +8,7 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import kotlinx.coroutines.Job
+import com.intellij.openapi.util.Disposer
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
@@ -27,7 +27,7 @@ class AppNotificationCenter : Disposable {
     //need to keep them in order to expire them when exiting update mode
     private val currentlyShowingAggressiveUpdateNotifications = mutableListOf<Notification>()
 
-    private var aggressiveUpdateTimerJob: Job? = null
+    private var aggressiveUpdateTimerDisposable: Disposable? = null
 
     companion object {
         val logger = Logger.getInstance(this::class.java)
@@ -56,19 +56,24 @@ class AppNotificationCenter : Disposable {
     //this listener is registered in plugin.xml, so it will receive the event early if an event will be fired.
     class AggressiveUpdateStateChangedEventListener(val project: Project) : AggressiveUpdateStateChangedEvent {
         override fun stateChanged(updateState: PublicUpdateState) {
-            //cancel previous job. the job will exit anyway when
-            // AggressiveUpdateService is not in update mode. but it may change from backend update to
-            // plugin update and this listener will start a new job, so just cancel previous job anyway.
-            // in every case it's ok.
-            getInstance().aggressiveUpdateTimerJob?.cancel()
+            //cancel previous task by disposing the aggressiveUpdateTimerDisposable.
+            getInstance().aggressiveUpdateTimerDisposable?.let {
+                Disposer.dispose(it)
+            }
+
             if (updateState.updateState == CurrentUpdateState.OK) {
                 getInstance().clearCurrentlyShowingAggressiveUpdateNotifications()
             } else {
-                getInstance().aggressiveUpdateTimerJob = startAggressiveUpdateNotificationTimer(
-                    project,
-                    getInstance(),
-                    getInstance().currentlyShowingAggressiveUpdateNotifications
-                )
+                getInstance().aggressiveUpdateTimerDisposable = Disposer.newDisposable()
+                getInstance().aggressiveUpdateTimerDisposable?.let {
+                    //also register as child of this service, so it is disposed with service
+                    Disposer.register(getInstance(), it)
+                    startAggressiveUpdateNotificationTimer(
+                        getInstance().aggressiveUpdateTimerDisposable!!,
+                        project,
+                        getInstance().currentlyShowingAggressiveUpdateNotifications
+                    )
+                }
             }
         }
     }

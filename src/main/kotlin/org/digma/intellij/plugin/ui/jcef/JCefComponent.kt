@@ -103,6 +103,7 @@ private constructor(
                             updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
                             sendBackendAboutInfo(jbCefBrowser.cefBrowser, project)
                         } catch (e: Throwable) {
+                            Log.warnWithException(logger, project, e, "error in ApiClientChangedEvent")
                             ErrorReporter.getInstance().reportError(project, "JCefComponent.apiClientChanged", e)
                         }
                     }
@@ -149,8 +150,10 @@ private constructor(
                     Log.log(logger::trace, "got authInfoChanged for app {}, project {}, user id {}", name, project.name, authInfo.userId)
                 }
                 sendUserInfoMessage(jbCefBrowser.cefBrowser, authInfo.userId, project)
+                sendBackendAboutInfo(jbCefBrowser.cefBrowser, project)
             } catch (e: Throwable) {
-                ErrorReporter.getInstance().reportError(project, "JCefComponent.userChanged", e)
+                Log.warnWithException(logger, project, e, "error in AuthInfoChange")
+                ErrorReporter.getInstance().reportError(project, "JCefComponent.AuthInfoChange", e)
             }
         }, parentDisposable)
 
@@ -165,6 +168,7 @@ private constructor(
                             val status = service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionLost()
                             updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
                         } catch (e: Exception) {
+                            Log.warnWithException(logger, project, e, "error in connectionLost")
                             ErrorReporter.getInstance().reportError(project, "JCefComponent.connectionLost", e)
                         }
                     }, 2000)
@@ -177,10 +181,9 @@ private constructor(
                         try {
                             val status = service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionGained()
                             updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
-
                             sendBackendAboutInfo(jbCefBrowser.cefBrowser, project)
-
                         } catch (e: Exception) {
+                            Log.warnWithException(logger, project, e, "error in connectionGained")
                             ErrorReporter.getInstance().reportError(project, "JCefComponent.connectionGained", e)
                         }
                     }, 2000)
@@ -202,7 +205,8 @@ private constructor(
                     val status = service<DockerService>().getActualRunningEngine(project)
                     updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
                 } catch (e: Throwable) {
-                    ErrorReporter.getInstance().reportError(project, "JCefComponent.settingsChanged", e)
+                    Log.warnWithException(logger, project, e, "error in SettingsState")
+                    ErrorReporter.getInstance().reportError(project, "JCefComponent.SettingsState", e)
                 }
             }
         }, parentDisposable)
@@ -214,6 +218,7 @@ private constructor(
                     try {
                         sendUserEmail(jbCefBrowser.cefBrowser, email)
                     } catch (e: Throwable) {
+                        Log.warnWithException(logger, project, e, "error in userRegistered")
                         ErrorReporter.getInstance().reportError(project, "JCefComponent.userRegistered", e)
                     }
                 }
@@ -228,6 +233,7 @@ private constructor(
                             sendCurrentEnvironment(jbCefBrowser.cefBrowser, it)
                         }
                     } catch (e: Throwable) {
+                        Log.warnWithException(logger, project, e, "error in environmentChanged")
                         ErrorReporter.getInstance().reportError(project, "JCefComponent.environmentChanged", e)
                     }
                 }
@@ -239,6 +245,7 @@ private constructor(
                             getAllEnvironments(project)
                         )
                     } catch (e: Throwable) {
+                        Log.warnWithException(logger, project, e, "error in environmentsListChanged")
                         ErrorReporter.getInstance().reportError(project, "JCefComponent.environmentsListChanged", e)
                     }
                 }
@@ -253,6 +260,7 @@ private constructor(
                         isObservabilityEnabled
                     )
                 } catch (e: Throwable) {
+                    Log.warnWithException(logger, project, e, "error in observabilityChanged")
                     ErrorReporter.getInstance().reportError(project, "JCefComponent.observabilityChanged", e)
                 }
             }
@@ -277,6 +285,7 @@ private constructor(
                             environmentId
                         )
                     } catch (e: Throwable) {
+                        Log.warnWithException(logger, project, e, "error in scopeChanged")
                         ErrorReporter.getInstance().reportError(project, "JCefComponent.scopeChanged", e)
                     }
                 }
@@ -289,6 +298,7 @@ private constructor(
                     try {
                         sendJcefStateMessage(jbCefBrowser.cefBrowser, state)
                     } catch (e: Throwable) {
+                        Log.warnWithException(logger, project, e, "error in stateChanged")
                         ErrorReporter.getInstance().reportError(project, "JCefComponent.stateChanged", e)
                     }
                 }
@@ -316,6 +326,7 @@ private constructor(
                             allIssuesCount
                         )
                     } catch (e: Throwable) {
+                        Log.warnWithException(logger, project, e, "error in insightStatsChanged")
                         ErrorReporter.getInstance().reportError(project, "JCefComponent.insightStatsChanged", e)
                     }
                 }
@@ -430,7 +441,7 @@ object LifeSpanHandle : CefLifeSpanHandlerAdapter() {
 
     val registered = AtomicBoolean(false)
 
-    private val registrationLock = ReentrantLock()
+    private val registrationLock = ReentrantLock(true)
 
     override fun onAfterCreated(browser: CefBrowser?) {
 

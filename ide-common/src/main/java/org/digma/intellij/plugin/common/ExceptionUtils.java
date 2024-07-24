@@ -1,6 +1,6 @@
 package org.digma.intellij.plugin.common;
 
-import org.digma.intellij.plugin.analytics.AnalyticsProviderException;
+import org.digma.intellij.plugin.analytics.*;
 import org.jetbrains.annotations.*;
 
 import javax.net.ssl.SSLException;
@@ -8,7 +8,7 @@ import java.io.*;
 import java.lang.reflect.*;
 import java.net.*;
 import java.net.http.*;
-import java.util.Objects;
+import java.util.*;
 
 public class ExceptionUtils {
 
@@ -17,6 +17,22 @@ public class ExceptionUtils {
 
         Throwable cause = throwable;
         while (cause != null && !toFind.equals(cause.getClass())) {
+            cause = cause.getCause();
+        }
+
+        if (cause != null) {
+            return toFind.cast(cause);
+        }
+
+        return null;
+    }
+
+
+    @Nullable
+    public static <T extends Throwable> T findAssignableCause(@NotNull Class<T> toFind, @NotNull Throwable throwable) {
+
+        Throwable cause = throwable;
+        while (cause != null && !toFind.isAssignableFrom(cause.getClass())) {
             cause = cause.getCause();
         }
 
@@ -67,6 +83,29 @@ public class ExceptionUtils {
     }
 
 
+    @Nullable
+    public static Throwable findConnectException(@NotNull Throwable throwable) {
+        Throwable cause = throwable;
+        while (cause != null && !isConnectionUnavailableException(cause)) {
+            cause = cause.getCause();
+        }
+        return cause;
+    }
+
+    @Nullable
+    public static Throwable findSslException(@NotNull Throwable throwable) {
+        return findAssignableCause(SSLException.class, throwable);
+    }
+
+
+    @Nullable
+    public static Throwable findAuthenticationException(@NotNull Throwable throwable) {
+        return findCause(AuthenticationException.class, throwable);
+    }
+
+
+
+
     public static boolean isAnyConnectionException(@NotNull Throwable e) {
         return isConnectionException(e) || isSslConnectionException(e);
     }
@@ -82,17 +121,24 @@ public class ExceptionUtils {
 
     public static boolean isConnectionUnavailableException(@NotNull Throwable exception) {
 
-        //InterruptedIOException is thrown when the connection is dropped , for example by iptables
 
-        //SocketTimeoutException and HttpTimeoutException are not considered connection unavailable.
-        //but their derived classed may be. so compare equals and not instanceof
-        if (SocketTimeoutException.class.equals(exception.getClass()) ||
-                HttpTimeoutException.class.equals(exception.getClass()) ||
+        //this is a real timeout
+        if (exception instanceof SocketTimeoutException socketTimeoutException && socketTimeoutException.bytesTransferred > 0) {
+            return false;
+        }
+        if (exception instanceof InterruptedIOException interruptedIOException && interruptedIOException.bytesTransferred > 0) {
+            return false;
+        }
+
+        if (HttpTimeoutException.class.equals(exception.getClass()) ||
                 isIOExceptionTimeout(exception)) {
             return false;
         }
 
-        return exception instanceof SocketException ||
+        //this includes any SocketTimeoutException, it's derived from InterruptedIOException
+        return is404PageNotFound(exception) ||
+                isConnectionIssueErrorCode(exception) ||
+                exception instanceof SocketException ||
                 exception instanceof UnknownHostException ||
                 exception instanceof HttpConnectTimeoutException ||
                 exception instanceof InterruptedIOException;
@@ -100,22 +146,47 @@ public class ExceptionUtils {
     }
 
 
+    private static boolean isConnectionIssueErrorCode(@NotNull Throwable exception) {
+        var analyticsProviderException = findCause(AnalyticsProviderException.class, exception);
+
+        if (analyticsProviderException != null) {
+            var connectionIssueCodes = List.of(503, 504, 502);
+            return connectionIssueCodes.contains(analyticsProviderException.getResponseCode());
+        }
+
+        return false;
+    }
+
+    //this is considered no connection
+    private static boolean isSocketTimeoutExceptionConnectTimeout(@NotNull Throwable exception) {
+        return SocketTimeoutException.class.equals(exception.getClass()) &&
+                exception.getMessage() != null &&
+                exception.getMessage().trim().toLowerCase().contains("connect timed out");
+    }
+
+
     private static boolean isIOExceptionTimeout(@NotNull Throwable exception) {
         return IOException.class.equals(exception.getClass()) &&
                 exception.getMessage() != null &&
-                exception.getMessage().toLowerCase().contains("timeout");
+                exception.getMessage().trim().toLowerCase().contains("timeout");
+
+    }
+
+    private static boolean is404PageNotFound(@NotNull Throwable exception) {
+        return exception.getMessage() != null &&
+                exception.getMessage().trim().toLowerCase().contains("404 page not found");
 
     }
 
 
     public static boolean isSslConnectionException(@NotNull Throwable e) {
-        var cause = findCause(SSLException.class, e);
+        var cause = findAssignableCause(SSLException.class, e);
         return cause != null;
     }
 
     @Nullable
     public static String getSslExceptionMessage(@NotNull Throwable e) {
-        var cause = findCause(SSLException.class, e);
+        var cause = findAssignableCause(SSLException.class, e);
         if (cause != null) {
             return cause.getMessage();
         }

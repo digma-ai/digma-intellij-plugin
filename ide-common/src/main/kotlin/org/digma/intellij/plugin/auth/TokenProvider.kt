@@ -1,8 +1,7 @@
 package org.digma.intellij.plugin.auth
 
 import com.intellij.openapi.diagnostic.Logger
-import kotlinx.coroutines.runBlocking
-import org.digma.intellij.plugin.auth.account.DigmaAccountManager
+import org.digma.intellij.plugin.auth.account.CredentialsHolder
 import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
@@ -32,13 +31,11 @@ class DefaultAccountTokenProvider : TokenProvider {
 
     override fun provideToken(): String? {
         return try {
-            runBlocking {
-                val account = DigmaDefaultAccountHolder.getInstance().account
-                account?.let {
-                    val credentials = DigmaAccountManager.getInstance().findCredentials(account)
-                    credentials?.let { creds ->
-                        "${creds.tokenType} ${creds.accessToken}"
-                    }
+            val account = DigmaDefaultAccountHolder.getInstance().account
+            account?.let {
+                val credentials = CredentialsHolder.digmaCredentials
+                credentials?.let { creds ->
+                    "${creds.tokenType} ${creds.accessToken}"
                 }
             }
         } catch (e: Throwable) {

@@ -1,9 +1,7 @@
 package org.digma.intellij.plugin.codelens
 
-import com.intellij.collaboration.async.disposingScope
 import com.intellij.openapi.project.Project
 import com.jetbrains.rd.util.ConcurrentHashMap
-import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.common.DisposableAdaptor
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.model.lens.CodeLens
@@ -24,15 +22,11 @@ class CodeVisionProviderToLensSelector(private val project: Project) : Disposabl
         // in that case just register more providers in CodeVisionProviders.kt and in org.digma.intellij-with-codevision.xml.
         if (providerToLensIds.size >= NUMBER_OF_PROVIDERS) {
 
-            //execute on background to free up this code quickly. although reportError should be very fast
-            @Suppress("UnstableApiUsage")
-            disposingScope().launch {
-                ErrorReporter.getInstance().reportError(
-                    project, "CodeVisionProviderToLensSelector.selectLensForProvider",
-                    "selectLensForProvider,not enough code vision providers",
-                    mapOf("error hint" to "not enough code vision providers")
-                )
-            }
+            ErrorReporter.getInstance().reportError(
+                project, "CodeVisionProviderToLensSelector.selectLensForProvider",
+                "selectLensForProvider,not enough code vision providers",
+                mapOf("error hint" to "not enough code vision providers")
+            )
 
             return null
         }

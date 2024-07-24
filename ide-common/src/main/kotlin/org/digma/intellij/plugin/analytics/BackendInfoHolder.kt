@@ -1,24 +1,23 @@
 package org.digma.intellij.plugin.analytics
 
-import com.intellij.collaboration.async.disposingScope
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import kotlinx.coroutines.async
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeout
+import org.digma.intellij.plugin.auth.AuthManager
 import org.digma.intellij.plugin.common.DisposableAdaptor
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.AboutResult
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.scheduling.blockingOneShotTask
+import org.digma.intellij.plugin.scheduling.disposingPeriodicTask
+import org.digma.intellij.plugin.scheduling.oneShotTask
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * keep the backend info and tracks it on connection events.
@@ -42,16 +41,24 @@ class BackendInfoHolder(val project: Project) : DisposableAdaptor {
 
     init {
 
-        //update now so that about exists as part of the object instantiation
-        updateAboutInBackgroundNowWithTimeout()
-
-        @Suppress("UnstableApiUsage")
-        disposingScope().launch {
-            while (isActive) {
-                update()
-                delay(1.minutes.inWholeMilliseconds)
-            }
+        val registered = disposingPeriodicTask("BackendInfoHolder.periodic", 1.minutes.inWholeMilliseconds, false) {
+            update()
         }
+
+        if (!registered) {
+            Log.log(logger::warn, "could not schedule periodic task for BackendInfoHolder")
+            ErrorReporter.getInstance().reportError(
+                project, "BackendInfoHolder.init", "could not schedule periodic task for BackendInfoHolder",
+                mapOf()
+            )
+        }
+
+
+        AuthManager.getInstance().addAuthInfoChangeListener({
+            Log.log(logger::debug, "got authInfoChanged")
+            updateInBackground()
+        }, this)
+
 
         project.messageBus.connect(this)
             .subscribe(
@@ -67,6 +74,7 @@ class BackendInfoHolder(val project: Project) : DisposableAdaptor {
                     }
                 })
 
+
         project.messageBus.connect(this)
             .subscribe(ApiClientChangedEvent.API_CLIENT_CHANGED_TOPIC, ApiClientChangedEvent {
                 Log.log(logger::debug, "got apiClientChanged")
@@ -77,8 +85,8 @@ class BackendInfoHolder(val project: Project) : DisposableAdaptor {
 
 
     private fun updateInBackground() {
-        @Suppress("UnstableApiUsage")
-        disposingScope().launch {
+        //let it finish without waiting for timeout and without blocking this thread
+        oneShotTask("BackendInfoHolder.updateInBackground") {
             update()
         }
     }
@@ -133,33 +141,27 @@ class BackendInfoHolder(val project: Project) : DisposableAdaptor {
 
 
     private fun getAboutInBackgroundNowWithTimeout(): AboutResult? {
-        updateAboutInBackgroundNowWithTimeout()
+        updateAboutInBackgroundNowWithTimeout(3.seconds)
         return aboutRef.get()
     }
 
 
-    private fun updateAboutInBackgroundNowWithTimeout() {
+    private fun updateAboutInBackgroundNowWithTimeout(timeout: Duration) {
 
         Log.log(logger::trace, "updating backend info in background with timeout")
 
-        @Suppress("UnstableApiUsage")
-        val deferred = disposingScope().async {
+        val result = blockingOneShotTask("BackendInfoHolder.updateAboutInBackgroundNowWithTimeout", timeout.inWholeMilliseconds) {
             update()
         }
 
-        runBlocking {
-            try {
-                withTimeout(2000) {
-                    deferred.await()
-                }
-            } catch (e: Throwable) {
-                Log.warnWithException(logger, project, e, "error in updateAboutInBackgroundNowWithTimeout")
-                ErrorReporter.getInstance().reportError("BackendInfoHolder.updateAboutInBackgroundNowWithTimeout", e)
-            }
+        if (result) {
+            Log.log(logger::trace, "backend info updated in background with timeout {}", aboutRef.get())
+        } else {
+            Log.log(logger::trace, "backend info updated in background failed")
         }
-
-        Log.log(logger::trace, "backend info updated in background with timeout {}", aboutRef.get())
     }
 
-
+    fun refresh() {
+        updateInBackground()
+    }
 }

@@ -130,6 +130,8 @@
 
         <postStartupActivity implementation="org.digma.intellij.plugin.digmathon.DigmathonStartup"/>
 
+        <postStartupActivity implementation="org.digma.intellij.plugin.scheduling.ThreadPoolProviderServiceStarter"/>
+
 
     </extensions>
 

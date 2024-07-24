@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.ui.notificationcenter
 
-import com.intellij.collaboration.async.disposingScope
 import com.intellij.notification.Notification
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
@@ -9,10 +8,7 @@ import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
+import com.intellij.openapi.util.Disposer
 import org.digma.intellij.plugin.PluginId
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.findActiveProject
@@ -21,10 +17,12 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.NotificationsPersistenceState
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.scheduling.disposingPeriodicTask
 import org.digma.intellij.plugin.ui.recentactivity.RecentActivityService
-import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
 
 
 fun startRequestRegisterTimers(parentDisposable: Disposable) {
@@ -35,13 +33,15 @@ fun startRequestRegisterTimers(parentDisposable: Disposable) {
 
     Log.log(AppNotificationCenter.logger::info, "starting startRequestRegisterTimers")
 
-    @Suppress("UnstableApiUsage")
-    parentDisposable.disposingScope().launch {
+    val disposable = Disposer.newDisposable()
+    Disposer.register(parentDisposable, disposable)
+    //wait one minute after project opens and before showing the message
+    disposable.disposingPeriodicTask("RequestUserRegister", 1.minutes.inWholeMilliseconds, 6.hours.inWholeMilliseconds, true) {
 
-        //wait one minute after project opens and before showing the message
-        delay(60000)
-
-        while (isActive && !isUserRegistered()) {
+        if (isUserRegistered()) {
+            //will cancel this task
+            Disposer.dispose(disposable)
+        } else {
 
             try {
                 if (PersistenceService.getInstance().isFirstTimeAssetsReceived() &&
@@ -53,11 +53,6 @@ fun startRequestRegisterTimers(parentDisposable: Disposable) {
                     showRequestRegistrationNotification()
                 }
 
-                delay(Duration.of(6, ChronoUnit.HOURS).toMillis())
-
-            } catch (e: CancellationException) {
-                //job may be canceled by framework or when project closes
-                throw e
             } catch (e: Throwable) {
                 ErrorReporter.getInstance().reportError("AppNotificationCenter.startRequestRegisterTimers", e)
             }

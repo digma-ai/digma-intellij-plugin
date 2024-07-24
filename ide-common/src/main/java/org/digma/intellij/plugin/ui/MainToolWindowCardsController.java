@@ -5,8 +5,9 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.ui.content.*;
+import kotlin.jvm.functions.Function0;
 import org.digma.intellij.plugin.analytics.*;
-import org.digma.intellij.plugin.common.*;
+import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.recentactivity.RecentActivityToolWindowShower;
@@ -21,6 +22,7 @@ import java.util.function.*;
 
 import static org.digma.intellij.plugin.analytics.EnvUtilsKt.refreshEnvironmentsNowOnBackground;
 import static org.digma.intellij.plugin.persistence.PersistenceUtilsKt.updateInstallationWizardFlag;
+import static org.digma.intellij.plugin.scheduling.SchedulersKt.oneShotTask;
 
 /**
  * Controls the current view in digma tool window.
@@ -89,7 +91,7 @@ public class MainToolWindowCardsController implements Disposable {
                 (AggressiveUpdateStateChangedEvent) this::updateStateChanged);
 
 
-        project.getMessageBus().connect().subscribe(ApiClientChangedEvent.getAPI_CLIENT_CHANGED_TOPIC(), (ApiClientChangedEvent) newUrl -> Backgroundable.ensurePooledThread(() -> {
+        project.getMessageBus().connect().subscribe(ApiClientChangedEvent.getAPI_CLIENT_CHANGED_TOPIC(), (ApiClientChangedEvent) newUrl -> oneShotTask("MainToolWindowCardsController.apiClientChanged", (Function0<Void>) () -> {
             //on new install the wizard opens and lets user install digma backend.
             //if the user doesn't have docker and wants to change to centralized deployment,
             // user will change the url in settings, the plugin will connect to the centralized deployment,
@@ -100,8 +102,8 @@ public class MainToolWindowCardsController implements Disposable {
             // isFirstWizardLaunch should be true.
             //if user had a working local deployment and then decides to change to centralized, if the wizard is open
             // in that stage the wizard should have a close button.
-            if (wizard.isOn() && PersistenceService.getInstance().isFirstWizardLaunch()){
-                if(isCentralized()){
+            if (wizard.isOn() && PersistenceService.getInstance().isFirstWizardLaunch()) {
+                if (isCentralized()) {
                     //do here everything that happens on INSTALLATION_WIZARD/FINISH message
                     PersistenceService.getInstance().firstWizardLaunchDone();
                     updateInstallationWizardFlag();
@@ -112,19 +114,19 @@ public class MainToolWindowCardsController implements Disposable {
                     });
                 }
             }
+            return null;
         }));
     }
 
 
-    private boolean isCentralized(){
-        try{
+    private boolean isCentralized() {
+        try {
             var about = AnalyticsService.getInstance(project).getAbout();
             return Boolean.TRUE.equals(about.isCentralize());
-        }catch (Throwable e){
+        } catch (Throwable e) {
             return false;
         }
     }
-
 
 
     public static MainToolWindowCardsController getInstance(@NotNull Project project) {
@@ -183,7 +185,6 @@ public class MainToolWindowCardsController implements Disposable {
             showUpdateBackendPanel();
         }
     }
-
 
 
     public void showWizard(Boolean wizardSkipInstallationStep) {

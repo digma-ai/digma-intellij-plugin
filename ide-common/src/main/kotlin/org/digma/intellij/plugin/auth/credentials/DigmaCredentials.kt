@@ -7,6 +7,7 @@ import com.intellij.collaboration.auth.credentials.CredentialsWithRefresh
 import kotlinx.datetime.Clock
 import java.beans.ConstructorProperties
 import java.util.Date
+import kotlin.math.max
 import kotlin.time.Duration
 
 
@@ -17,6 +18,7 @@ import kotlin.time.Duration
 class DigmaCredentials
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 @ConstructorProperties(
+    "userId",
     "accessToken",
     "refreshToken",
     "url",
@@ -24,23 +26,24 @@ class DigmaCredentials
     "expirationTime",
     "creationTime"
 ) constructor(
+    val userId: String,
     override val accessToken: String,
     override val refreshToken: String,
-    //this url is api url.
+    //this url is the api url.
     val url: String,
     val tokenType: String,
     val expirationTime: Long,
-    //creationTime is added to this class after users already have credentials,
-    // so it should be nullable for backwards compatibility.
-    //todo: can be made non-nullable after few releases
-    val creationTime: Long?
+    private val creationTime: Long
 ) : CredentialsWithRefresh {
 
 
-    //expiresIn and expirationTime are the same. the name expiresIn is not so clear, sounds like
-    // the time left until expiration. must be implemented coz it's an interface var.
+    //expiresIn is the time left for expiration, it is not accurate because it is assigned some time after
+    // the server created the expirationTime. it should actually be
+    // (expirationTime - network time - now) but we can't calculate it.
+    // we don't use it , it must be implemented.
+    // we could just use it for the expirationTime but the name will be confusing, our server sends expirationTime.
     @JsonIgnore
-    override val expiresIn: Long = expirationTime
+    override val expiresIn: Long = max(0, expirationTime - Clock.System.now().toEpochMilliseconds())
 
     /**
      * @return true if the token has not expired yet;
@@ -61,11 +64,12 @@ class DigmaCredentials
 
     //check if these credentials was created earlier than seconds ago
     @JsonIgnore
-    fun isOlderThen(seconds: Duration): Boolean {
-        if (creationTime == null) {
-            return true
-        }
+    fun isOlderThen(duration: Duration): Boolean {
+        return (creationTime + duration.inWholeMilliseconds) < Clock.System.now().toEpochMilliseconds()
+    }
 
-        return (creationTime + seconds.inWholeMilliseconds) < Clock.System.now().toEpochMilliseconds()
+    @JsonIgnore
+    fun isYoungerThen(seconds: Duration): Boolean {
+        return !isOlderThen(seconds)
     }
 }

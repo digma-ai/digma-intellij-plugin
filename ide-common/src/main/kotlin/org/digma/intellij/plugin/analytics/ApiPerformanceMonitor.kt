@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.analytics
 
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.common.FrequencyDetector
 import org.digma.intellij.plugin.posthog.ActivityMonitor
@@ -16,6 +17,14 @@ class ApiPerformanceMonitor(private val project: Project) {
 
     private val durations = Collections.synchronizedMap(mutableMapOf<String, Pair<Long, Long>>())
 
+
+    companion object {
+        @JvmStatic
+        fun getInstance(project: Project): ApiPerformanceMonitor {
+            return project.service<ApiPerformanceMonitor>()
+        }
+    }
+
     //this method is not thread safe. max duration for apiName may not be the real max if two threads for
     // the same apiName run concurrently, and they have different durations.
     //it's not a bug just not completely accurate reporting.
@@ -23,7 +32,7 @@ class ApiPerformanceMonitor(private val project: Project) {
     //but locking means that threads will wait for each other.
     //it's possible to execute this code in a coroutine, and then It's ok to lock, but the error is minor and doesn't
     // worth the complexity of a coroutine.
-    fun addPerformance(apiName: String, duration: Long, httpNetoTime: Long) {
+    fun addPerformance(apiName: String, duration: Long, httpNetoTime: Long, exception: Throwable?) {
         if (duration < 2000) {
             return
         }
@@ -39,10 +48,10 @@ class ApiPerformanceMonitor(private val project: Project) {
             latest
         }
 
-        report(apiName, toReport.first, toReport.second)
+        report(apiName, toReport.first, toReport.second, exception)
     }
 
-    private fun report(apiName: String, duration: Long, httpNetoTime: Long) {
+    private fun report(apiName: String, duration: Long, httpNetoTime: Long, exception: Throwable?) {
         if (frequencyDetector.isTooFrequentMessage(apiName)) {
             return
         }
@@ -53,7 +62,8 @@ class ApiPerformanceMonitor(private val project: Project) {
         val details = mutableMapOf<String, Any>(
             "api name" to apiName,
             "duration" to duration,
-            "http neto" to httpNetoTime
+            "http neto" to httpNetoTime,
+            "exception" to (exception?.message ?: exception?.toString() ?: "")
         )
 
         ActivityMonitor.getInstance(project).reportApiPerformanceIssue(details)

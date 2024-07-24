@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.ui.wizard
 
-import com.intellij.collaboration.async.disposingScope
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
@@ -11,11 +10,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.ui.jcef.JBCefApp
 import com.intellij.ui.jcef.JBCefBrowser
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.cef.CefApp
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
@@ -43,6 +37,7 @@ import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.persistence.updateInstallationWizardFlag
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.recentactivity.RecentActivityToolWindowShower
+import org.digma.intellij.plugin.scheduling.disposingPeriodicTask
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import org.digma.intellij.plugin.ui.common.isJaegerButtonEnabled
@@ -90,6 +85,7 @@ import java.awt.BorderLayout
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 import javax.swing.JPanel
+import kotlin.time.Duration.Companion.seconds
 
 private const val RESOURCE_FOLDER_NAME = "installationwizard"
 private const val ENV_VARIABLE_IDE: String = "ide"
@@ -142,7 +138,6 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
         IS_LOGGING_ENABLED to getIsLoggingEnabledSystemProperty()
 
     )
-
 
 
     val lifeSpanHandler: CefLifeSpanHandlerAdapter = object : CefLifeSpanHandlerAdapter() {
@@ -258,85 +253,90 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
 
                 service<DockerService>().installEngine(project) { exitValue ->
 
-                    if (exitValue == DockerService.NO_DOCKER_COMPOSE_COMMAND){
+                    EDT.assertNonDispatchThread()
+
+                    if (exitValue == DockerService.NO_DOCKER_COMPOSE_COMMAND) {
                         sendIsDockerInstalled(false, jbCefBrowser)
                         sendIsDockerComposeInstalled(false, jbCefBrowser)
-                    }else{
+                    } else {
                         sendIsDockerInstalled(true, jbCefBrowser)
                         sendIsDockerComposeInstalled(true, jbCefBrowser)
                     }
 
-                    runBlocking {
 
-                        val success = exitValue == "0"
+                    val success = exitValue == "0"
 
+                    if (success) {
+                        //wait up to two minutes for connection, sometimes it takes more than a minute before connection is available
+                        var i = 0
+                        while (!BackendConnectionMonitor.getInstance(project).isConnectionOk() && i < 24) {
+                            Log.log(logger::warn, "waiting for connection")
+                            refreshEnvironmentsNowOnBackground(project)
+                            try {
+                                Thread.sleep(5000)
+                            } catch (e: InterruptedException) {
+                                //ignore
+                            }
+                            i++
+                        }
+                    }
+
+
+                    val connectionOk = BackendConnectionMonitor.getInstance(project).isConnectionOk()
+                    if (!connectionOk) {
+                        Log.log(logger::warn, "no connection after engine installation")
                         if (success) {
-                            //wait up to two minutes for connection, sometimes it takes more than a minute before connection is available
-                            var i = 0
-                            while (!BackendConnectionMonitor.getInstance(project).isConnectionOk() && i < 24) {
-                                Log.log(logger::warn, "waiting for connection")
-                                refreshEnvironmentsNowOnBackground(project)
-                                delay(5000)
-                                i++
-                            }
-                        }
-
-
-                        val connectionOk = BackendConnectionMonitor.getInstance(project).isConnectionOk()
-                        if (!connectionOk) {
-                            Log.log(logger::warn, "no connection after engine installation")
-                            if (success) {
-                                val log = DockerService.getInstance().collectDigmaContainerLog()
-                                ActivityMonitor.getInstance(project)
-                                    .registerDigmaEngineEventError("installEngine", "No connection 2 minutes after successful engine install",
-                                        mapOf(
-                                            "docker log" to log
-                                        )
+                            val log = DockerService.getInstance().collectDigmaContainerLog()
+                            ActivityMonitor.getInstance(project)
+                                .registerDigmaEngineEventError(
+                                    "installEngine", "No connection 2 minutes after successful engine install",
+                                    mapOf(
+                                        "docker log" to log
                                     )
+                                )
+                        }
+                    }
+                    val isEngineUp = connectionOk && success
+                    if (isEngineUp) {
+                        sendDockerResult(
+                            ConnectionCheckResult.SUCCESS.value,
+                            "",
+                            jbCefBrowser,
+                            JCEFGlobalConstants.INSTALLATION_WIZARD_SET_INSTALL_DIGMA_ENGINE_RESULT
+                        )
+                        sendIsDigmaEngineInstalled(true, jbCefBrowser)
+                        sendIsDigmaEngineRunning(true, jbCefBrowser)
+
+                        service<AppNotificationCenter>().showInstallationFinishedNotification(project)
+                    } else {
+                        Log.log(logger::warn, "error installing engine, {}", exitValue)
+
+                        sendDockerResult(
+                            ConnectionCheckResult.FAILURE.value,
+                            "Could not install engine",
+                            jbCefBrowser,
+                            JCEFGlobalConstants.INSTALLATION_WIZARD_SET_INSTALL_DIGMA_ENGINE_RESULT
+                        )
+                        sendIsDigmaEngineInstalled(false, jbCefBrowser)
+                        sendIsDigmaEngineRunning(false, jbCefBrowser)
+
+                        //start remove if install failed. wait a second to let the installEngine finish, so it reports
+                        // the installEngine.end to posthog before removeEngine.start
+                        Backgroundable.executeOnPooledThread {
+                            try {
+                                Thread.sleep(2000)
+                            } catch (e: Exception) {
+                                //ignore
+                            }
+                            Log.log(logger::warn, "removing engine after installation failed")
+                            service<DockerService>().removeEngine(project) { exitValue ->
+                                updateDigmaEngineStatus(project, jbCefBrowser.cefBrowser)
+                                if (exitValue != "0") {
+                                    Log.log(logger::warn, "error removing engine after failure {}", exitValue)
+                                }
                             }
                         }
-                        val isEngineUp = connectionOk && success
-                        if (isEngineUp) {
-                            sendDockerResult(
-                                ConnectionCheckResult.SUCCESS.value,
-                                "",
-                                jbCefBrowser,
-                                JCEFGlobalConstants.INSTALLATION_WIZARD_SET_INSTALL_DIGMA_ENGINE_RESULT
-                            )
-                            sendIsDigmaEngineInstalled(true, jbCefBrowser)
-                            sendIsDigmaEngineRunning(true, jbCefBrowser)
 
-                            service<AppNotificationCenter>().showInstallationFinishedNotification(project)
-                        } else {
-                            Log.log(logger::warn, "error installing engine, {}", exitValue)
-
-                            sendDockerResult(
-                                ConnectionCheckResult.FAILURE.value,
-                                "Could not install engine",
-                                jbCefBrowser,
-                                JCEFGlobalConstants.INSTALLATION_WIZARD_SET_INSTALL_DIGMA_ENGINE_RESULT
-                            )
-                            sendIsDigmaEngineInstalled(false, jbCefBrowser)
-                            sendIsDigmaEngineRunning(false, jbCefBrowser)
-
-                            //start remove if install failed. wait a second to let the installEngine finish so it reports
-                            // the installEngine.end to posthog before removeEngine.start
-                            Backgroundable.executeOnPooledThread {
-                                try {
-                                    Thread.sleep(2000)
-                                } catch (e: Exception) {
-                                    //ignore
-                                }
-                                Log.log(logger::warn, "removing engine after installation failed")
-                                service<DockerService>().removeEngine(project) { exitValue ->
-                                    updateDigmaEngineStatus(project, jbCefBrowser.cefBrowser)
-                                    if (exitValue != "0") {
-                                        Log.log(logger::warn, "error removing engine after failure {}", exitValue)
-                                    }
-                                }
-                            }
-
-                        }
                     }
 
                     updateDigmaEngineStatus(project, jbCefBrowser.cefBrowser)
@@ -348,35 +348,35 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                 localEngineOperationRunning.set(true)
                 service<DockerService>().removeEngine(project) { exitValue ->
 
-                    if (exitValue == DockerService.NO_DOCKER_COMPOSE_COMMAND){
+                    EDT.assertNonDispatchThread()
+
+                    if (exitValue == DockerService.NO_DOCKER_COMPOSE_COMMAND) {
                         sendIsDockerInstalled(false, jbCefBrowser)
                         sendIsDockerComposeInstalled(false, jbCefBrowser)
-                    }else{
+                    } else {
                         sendIsDockerInstalled(true, jbCefBrowser)
                         sendIsDockerComposeInstalled(true, jbCefBrowser)
                     }
 
-                    runBlocking {
-                        val success = exitValue == "0"
-                        if (success) {
-                            sendDockerResult(
-                                ConnectionCheckResult.SUCCESS.value,
-                                "",
-                                jbCefBrowser,
-                                JCEFGlobalConstants.INSTALLATION_WIZARD_SET_UNINSTALL_DIGMA_ENGINE_RESULT
-                            )
-                            sendIsDigmaEngineRunning(false, jbCefBrowser)
-                            sendIsDigmaEngineInstalled(false, jbCefBrowser)
+                    val success = exitValue == "0"
+                    if (success) {
+                        sendDockerResult(
+                            ConnectionCheckResult.SUCCESS.value,
+                            "",
+                            jbCefBrowser,
+                            JCEFGlobalConstants.INSTALLATION_WIZARD_SET_UNINSTALL_DIGMA_ENGINE_RESULT
+                        )
+                        sendIsDigmaEngineRunning(false, jbCefBrowser)
+                        sendIsDigmaEngineInstalled(false, jbCefBrowser)
 
-                        } else {
-                            Log.log(logger::warn, "error uninstalling engine {}", exitValue)
-                            sendDockerResult(
-                                ConnectionCheckResult.FAILURE.value,
-                                "Could not uninstall engine",
-                                jbCefBrowser,
-                                JCEFGlobalConstants.INSTALLATION_WIZARD_SET_UNINSTALL_DIGMA_ENGINE_RESULT
-                            )
-                        }
+                    } else {
+                        Log.log(logger::warn, "error uninstalling engine {}", exitValue)
+                        sendDockerResult(
+                            ConnectionCheckResult.FAILURE.value,
+                            "Could not uninstall engine",
+                            jbCefBrowser,
+                            JCEFGlobalConstants.INSTALLATION_WIZARD_SET_UNINSTALL_DIGMA_ENGINE_RESULT
+                        )
                     }
 
                     updateDigmaEngineStatus(project, jbCefBrowser.cefBrowser)
@@ -387,67 +387,72 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                 localEngineOperationRunning.set(true)
                 service<DockerService>().startEngine(project) { exitValue ->
 
-                    if (exitValue == DockerService.NO_DOCKER_COMPOSE_COMMAND){
+                    EDT.assertNonDispatchThread()
+
+                    if (exitValue == DockerService.NO_DOCKER_COMPOSE_COMMAND) {
                         sendIsDockerInstalled(false, jbCefBrowser)
                         sendIsDockerComposeInstalled(false, jbCefBrowser)
-                    }else{
+                    } else {
                         sendIsDockerInstalled(true, jbCefBrowser)
                         sendIsDockerComposeInstalled(true, jbCefBrowser)
                     }
 
-                    runBlocking {
 
-                        val success = exitValue == "0"
+                    val success = exitValue == "0"
 
-                        if (success) {
-                            //wait up to two minutes for connection, sometimes it takes more than a minute before connection is available
-                            var i = 0
-                            while (!BackendConnectionMonitor.getInstance(project).isConnectionOk() && i < 24) {
-                                Log.log(logger::warn, "waiting for connection")
-                                refreshEnvironmentsNowOnBackground(project)
-                                delay(5000)
-                                i++
+                    if (success) {
+                        //wait up to two minutes for connection, sometimes it takes more than a minute before connection is available
+                        var i = 0
+                        while (!BackendConnectionMonitor.getInstance(project).isConnectionOk() && i < 24) {
+                            Log.log(logger::warn, "waiting for connection")
+                            refreshEnvironmentsNowOnBackground(project)
+                            try {
+                                Thread.sleep(5000)
+                            } catch (e: InterruptedException) {
+                                //ignore
                             }
+                            i++
                         }
-
-                        val connectionOk = BackendConnectionMonitor.getInstance(project).isConnectionOk()
-                        if (!connectionOk) {
-                            Log.log(logger::warn, "no connection after engine start")
-                            if (success) {
-                                val log = DockerService.getInstance().collectDigmaContainerLog()
-                                ActivityMonitor.getInstance(project)
-                                    .registerDigmaEngineEventError("startEngine", "No connection 2 minutes after successful engine start",
-                                        mapOf(
-                                            "docker log" to log
-                                        )
-                                    )
-                            }
-                        }
-
-                        val isEngineUp = connectionOk && success
-                        if (isEngineUp) {
-                            sendDockerResult(
-                                ConnectionCheckResult.SUCCESS.value,
-                                "",
-                                jbCefBrowser,
-                                JCEFGlobalConstants.INSTALLATION_WIZARD_SET_START_DIGMA_ENGINE_RESULT
-                            )
-                            sendIsDigmaEngineInstalled(true, jbCefBrowser)
-                            sendIsDigmaEngineRunning(true, jbCefBrowser)
-                        } else {
-                            Log.log(logger::warn, "error starting engine {}", exitValue)
-
-                            sendDockerResult(
-                                ConnectionCheckResult.FAILURE.value,
-                                "Could not start engine",
-                                jbCefBrowser,
-                                JCEFGlobalConstants.INSTALLATION_WIZARD_SET_START_DIGMA_ENGINE_RESULT
-                            )
-                            sendIsDigmaEngineInstalled(true, jbCefBrowser)
-                            sendIsDigmaEngineRunning(false, jbCefBrowser)
-                        }
-
                     }
+
+                    val connectionOk = BackendConnectionMonitor.getInstance(project).isConnectionOk()
+                    if (!connectionOk) {
+                        Log.log(logger::warn, "no connection after engine start")
+                        if (success) {
+                            val log = DockerService.getInstance().collectDigmaContainerLog()
+                            ActivityMonitor.getInstance(project)
+                                .registerDigmaEngineEventError(
+                                    "startEngine", "No connection 2 minutes after successful engine start",
+                                    mapOf(
+                                        "docker log" to log
+                                    )
+                                )
+                        }
+                    }
+
+                    val isEngineUp = connectionOk && success
+                    if (isEngineUp) {
+                        sendDockerResult(
+                            ConnectionCheckResult.SUCCESS.value,
+                            "",
+                            jbCefBrowser,
+                            JCEFGlobalConstants.INSTALLATION_WIZARD_SET_START_DIGMA_ENGINE_RESULT
+                        )
+                        sendIsDigmaEngineInstalled(true, jbCefBrowser)
+                        sendIsDigmaEngineRunning(true, jbCefBrowser)
+                    } else {
+                        Log.log(logger::warn, "error starting engine {}", exitValue)
+
+                        sendDockerResult(
+                            ConnectionCheckResult.FAILURE.value,
+                            "Could not start engine",
+                            jbCefBrowser,
+                            JCEFGlobalConstants.INSTALLATION_WIZARD_SET_START_DIGMA_ENGINE_RESULT
+                        )
+                        sendIsDigmaEngineInstalled(true, jbCefBrowser)
+                        sendIsDigmaEngineRunning(false, jbCefBrowser)
+                    }
+
 
                     updateDigmaEngineStatus(project, jbCefBrowser.cefBrowser)
                     localEngineOperationRunning.set(false)
@@ -458,33 +463,33 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                 localEngineOperationRunning.set(true)
                 service<DockerService>().stopEngine(project) { exitValue ->
 
-                    if (exitValue == DockerService.NO_DOCKER_COMPOSE_COMMAND){
+                    EDT.assertNonDispatchThread()
+
+                    if (exitValue == DockerService.NO_DOCKER_COMPOSE_COMMAND) {
                         sendIsDockerInstalled(false, jbCefBrowser)
                         sendIsDockerComposeInstalled(false, jbCefBrowser)
-                    }else{
+                    } else {
                         sendIsDockerInstalled(true, jbCefBrowser)
                         sendIsDockerComposeInstalled(true, jbCefBrowser)
                     }
 
-                    runBlocking {
-                        val success = exitValue == "0"
-                        if (success) {
-                            sendDockerResult(
-                                ConnectionCheckResult.SUCCESS.value,
-                                "",
-                                jbCefBrowser,
-                                JCEFGlobalConstants.INSTALLATION_WIZARD_SET_STOP_DIGMA_ENGINE_RESULT
-                            )
-                            sendIsDigmaEngineRunning(false, jbCefBrowser)
-                        } else {
-                            Log.log(logger::warn, "error stopping engine {}", exitValue)
-                            sendDockerResult(
-                                ConnectionCheckResult.FAILURE.value,
-                                "Could not stop engine",
-                                jbCefBrowser,
-                                JCEFGlobalConstants.INSTALLATION_WIZARD_SET_STOP_DIGMA_ENGINE_RESULT
-                            )
-                        }
+                    val success = exitValue == "0"
+                    if (success) {
+                        sendDockerResult(
+                            ConnectionCheckResult.SUCCESS.value,
+                            "",
+                            jbCefBrowser,
+                            JCEFGlobalConstants.INSTALLATION_WIZARD_SET_STOP_DIGMA_ENGINE_RESULT
+                        )
+                        sendIsDigmaEngineRunning(false, jbCefBrowser)
+                    } else {
+                        Log.log(logger::warn, "error stopping engine {}", exitValue)
+                        sendDockerResult(
+                            ConnectionCheckResult.FAILURE.value,
+                            "Could not stop engine",
+                            jbCefBrowser,
+                            JCEFGlobalConstants.INSTALLATION_WIZARD_SET_STOP_DIGMA_ENGINE_RESULT
+                        )
                     }
 
                     updateDigmaEngineStatus(project, jbCefBrowser.cefBrowser)
@@ -504,7 +509,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
     browserPanel.add(jbCefBrowser.component, BorderLayout.CENTER)
 
 
-    val jcefDigmaPanel = object: DisposablePanel(){
+    val jcefDigmaPanel = object : DisposablePanel() {
         override fun dispose() {
             digmaStatusUpdater.stop()
             jbCefBrowser.dispose()
@@ -671,32 +676,21 @@ class DigmaStatusUpdater {
         digmaInstallationStatus.set(null)
 
         myDisposable?.let {
-            @Suppress("UnstableApiUsage")
-            it.disposingScope().launch {
+            it.disposingPeriodicTask("InstallationWizard.DigmaStatusUpdater", 2.seconds.inWholeMilliseconds, false) {
                 try {
-                    while (isActive) {
+                    val currentStatus = service<DockerService>().getActualRunningEngine(project)
 
-                        val currentStatus = service<DockerService>().getActualRunningEngine(project)
-
-                        if (!isActive) break
-
-                        //DigmaInstallationStatus is data class so we can rely on equals
-                        if (digmaInstallationStatus.get() == null || currentStatus != digmaInstallationStatus.get()) {
-                            Log.log(logger::trace, project, "status changed current:{}, previous:{}", currentStatus, digmaInstallationStatus)
-                            digmaInstallationStatus.set(currentStatus)
-                            Log.log(logger::trace, project, "updating wizard with digmaInstallationStatus {}", digmaInstallationStatus)
-                            digmaInstallationStatus.get()?.let { status ->
-                                updateDigmaEngineStatus(cefBrowser, status)
-                            }
-
+                    //DigmaInstallationStatus is data class so we can rely on equals
+                    if (digmaInstallationStatus.get() == null || currentStatus != digmaInstallationStatus.get()) {
+                        Log.log(logger::trace, project, "status changed current:{}, previous:{}", currentStatus, digmaInstallationStatus)
+                        digmaInstallationStatus.set(currentStatus)
+                        Log.log(logger::trace, project, "updating wizard with digmaInstallationStatus {}", digmaInstallationStatus)
+                        digmaInstallationStatus.get()?.let { status ->
+                            updateDigmaEngineStatus(cefBrowser, status)
                         }
-
-                        delay(2000)
                     }
-
-                } catch (e: CancellationException) {
-                    throw e
                 } catch (e: Exception) {
+                    Log.warnWithException(logger, project, e, "error in DigmaStatusUpdater {}", e)
                     ErrorReporter.getInstance().reportError(project, "DigmaStatusUpdater.loop", e)
                 }
             }

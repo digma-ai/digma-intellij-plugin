@@ -281,7 +281,7 @@ tasks {
 
 //        jvmArgs("-XX:ReservedCodeCacheSize=512M")
 
-        maxHeapSize = "2g"
+        maxHeapSize = "6g"
 
         systemProperties(
             "idea.log.trace.categories" to "#org.digma",

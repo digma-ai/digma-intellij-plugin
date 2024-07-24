@@ -2,7 +2,6 @@ package org.digma.intellij.plugin.idea.frameworks
 
 import com.intellij.buildsystem.model.unified.UnifiedCoordinates
 import com.intellij.buildsystem.model.unified.UnifiedDependency
-import com.intellij.collaboration.async.disposingScope
 import com.intellij.externalSystem.DependencyModifierService
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.WriteAction
@@ -10,9 +9,6 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.externalSystem.autoimport.ProjectRefreshAction
 import com.intellij.openapi.project.Project
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.buildsystem.BuildSystem
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
@@ -21,11 +17,14 @@ import org.digma.intellij.plugin.idea.buildsystem.JvmBuildSystemHelperService
 import org.digma.intellij.plugin.idea.deps.ModuleExt
 import org.digma.intellij.plugin.idea.deps.ModulesDepsService
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.scheduling.disposingOneShotDelayedTask
+import org.digma.intellij.plugin.scheduling.disposingPeriodicTask
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import org.jetbrains.annotations.VisibleForTesting
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.time.Duration.Companion.minutes
 
 //Do not change to light service because it will always register.
 // we want it to register only in Idea.
@@ -68,20 +67,12 @@ class QuarkusConfigureDepsService(private val project: Project) : Disposable {
 
     init {
 
-        @Suppress("UnstableApiUsage")
-        disposingScope().launch {
-            while (isActive) {
-                try {
-
-                    delay(TimeUnit.MINUTES.toMillis(1))
-                    if (isActive) {
-                        periodicAction()
-                    }
-
-                } catch (e: Exception) {
-                    Log.warnWithException(logger, e, "Exception in periodicAction")
-                    ErrorReporter.getInstance().reportError(project, "QuarkusConfigureDepsService.periodicAction", e)
-                }
+        disposingPeriodicTask("QuarkusConfigureDepsService.periodicAction", 1.minutes.inWholeMilliseconds, true) {
+            try {
+                periodicAction()
+            } catch (e: Exception) {
+                Log.warnWithException(logger, e, "Exception in periodicAction")
+                ErrorReporter.getInstance().reportError(project, "QuarkusConfigureDepsService.periodicAction", e)
             }
         }
 
@@ -124,7 +115,9 @@ class QuarkusConfigureDepsService(private val project: Project) : Disposable {
         val moduleBuildSystem = project.service<JvmBuildSystemHelperService>().determineBuildSystem(module)
         val dependencyLib = getQuarkusOtelDependency(moduleBuildSystem, moduleExt.metadata.quarkusVersion!!)
 
+        @Suppress("UnstableApiUsage")
         val dependencyModifierService = DependencyModifierService.getInstance(project)
+        @Suppress("UnstableApiUsage")
         dependencyModifierService.addDependency(module, dependencyLib)
     }
 
@@ -145,16 +138,13 @@ class QuarkusConfigureDepsService(private val project: Project) : Disposable {
         blackoutStopTime = LocalDateTime.now().plusSeconds(blackoutDurationSeconds)
 
         // making the panel disappear
-        @Suppress("UnstableApiUsage")
-        disposingScope().launch {
-            delay(500)
+        disposingOneShotDelayedTask("QuarkusConfigureDepsService.resetPanel", 500) {
             affectedPanel?.reset()
         }
 
         // give some time for the user/system to make the desired update, and only then run the periodicAction
-        @Suppress("UnstableApiUsage")
-        disposingScope().launch {
-            delay(TimeUnit.SECONDS.toMillis(blackoutDurationSeconds) + 500)
+        val delay = TimeUnit.SECONDS.toMillis(blackoutDurationSeconds) + 500
+        disposingOneShotDelayedTask("QuarkusConfigureDepsService.periodicAction", delay) {
             try {
                 periodicAction()
             } catch (e: Exception) {

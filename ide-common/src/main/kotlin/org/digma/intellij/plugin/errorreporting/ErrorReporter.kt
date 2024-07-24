@@ -104,11 +104,6 @@ open class ErrorReporter {
         reportError(findActiveProject(), message, t, extraDetails)
     }
 
-    /*
-        message is actually more a hint of where the error happened for quickly understanding that from the error event.
-        see usage examples.
-        the event will contain the stack trace and exception message.
-     */
     open fun reportError(project: Project?, message: String, throwable: Throwable) {
         reportError(project, message, throwable, mapOf())
     }
@@ -141,7 +136,12 @@ open class ErrorReporter {
     }
 
     //this method is used to report an error that is not an exception. it should contain some details to say what the error is
-    open fun reportError(project: Project?, message: String, action: String, details: Map<String, String>) {
+    open fun reportError(message: String, action: String, details: Map<String, Any>) {
+        reportError(null, message, action, details)
+    }
+
+    //this method is used to report an error that is not an exception. it should contain some details to say what the error is
+    open fun reportError(project: Project?, message: String, action: String, details: Map<String, Any>) {
 
         try {
             if (frequencyDetector.isTooFrequentError(message, action)) {

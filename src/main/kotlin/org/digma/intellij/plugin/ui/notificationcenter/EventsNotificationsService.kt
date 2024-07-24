@@ -1,7 +1,6 @@
 package org.digma.intellij.plugin.ui.notificationcenter
 
 import com.fasterxml.jackson.databind.node.ObjectNode
-import com.intellij.collaboration.async.disposingScope
 import com.intellij.notification.Notification
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
@@ -14,8 +13,6 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.JBPopupListener
 import com.intellij.openapi.ui.popup.LightweightWindowEvent
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.PluginId
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
@@ -29,12 +26,14 @@ import org.digma.intellij.plugin.model.rest.event.FirstImportantInsightEvent
 import org.digma.intellij.plugin.model.rest.event.LatestCodeObjectEventsResponse
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.scheduling.disposingPeriodicTask
 import org.digma.intellij.plugin.scope.ScopeContext
 import org.digma.intellij.plugin.scope.ScopeManager
 import org.digma.intellij.plugin.scope.SpanScope
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
+import kotlin.time.Duration.Companion.minutes
 
 
 const val EVENTS_NOTIFICATION_GROUP = "Digma Events Group"
@@ -52,41 +51,35 @@ class EventsNotificationsService(val project: Project) : Disposable {
 
         Log.log(logger::info, "starting insights notification service")
 
-        @Suppress("UnstableApiUsage")
-        disposingScope().launch {
+        disposingPeriodicTask("EventsNotificationsService.waitForEvents", 1.minutes.inWholeMilliseconds, true) {
 
-            while (true) {
+            try {
 
-                delay(60000)
-
-                try {
-
-                    var lastEventTime = service<PersistenceService>().getLastInsightsEventTime()
-                    if (lastEventTime == null) {
-                        lastEventTime = ZonedDateTime.now().minus(7, ChronoUnit.DAYS).withZoneSameInstant(ZoneOffset.UTC).toString()
-                    }
-
-                    Log.log(logger::trace, "sending getLatestEvents query with lastEventTime={}", lastEventTime)
-                    val events = AnalyticsService.getInstance(project).getLatestEvents(lastEventTime)
-                    Log.log(logger::trace, "got latest events {}", events)
-
-                    events.events.forEach {
-                        when (it) {
-                            is FirstImportantInsightEvent -> showNotificationForFirstImportantInsight(it)
-                            ////is CodeObjectDurationChangeEvent -> showNotificationForDurationChangeEvent(it)
-                        }
-                    }
-
-                    updateLastEventTime(events)
-
-                } catch (e: AnalyticsServiceException) {
-                    Log.debugWithException(logger, e, "could not get latest events {}", e)
-                    ErrorReporter.getInstance().reportError(project, "EventsNotificationsService.waitForEvents", e)
-                } catch (e: Exception) {
-                    Log.log(logger::trace, "could not get latest events {}", e.message)
-                    Log.warnWithException(logger, e, "could not get latest events {}", e.message)
-                    ErrorReporter.getInstance().reportError(project, "EventsNotificationsService.waitForEvents", e)
+                var lastEventTime = service<PersistenceService>().getLastInsightsEventTime()
+                if (lastEventTime == null) {
+                    lastEventTime = ZonedDateTime.now().minus(7, ChronoUnit.DAYS).withZoneSameInstant(ZoneOffset.UTC).toString()
                 }
+
+                Log.log(logger::trace, "sending getLatestEvents query with lastEventTime={}", lastEventTime)
+                val events = AnalyticsService.getInstance(project).getLatestEvents(lastEventTime)
+                Log.log(logger::trace, "got latest events {}", events)
+
+                events.events.forEach {
+                    when (it) {
+                        is FirstImportantInsightEvent -> showNotificationForFirstImportantInsight(it)
+                        ////is CodeObjectDurationChangeEvent -> showNotificationForDurationChangeEvent(it)
+                    }
+                }
+
+                updateLastEventTime(events)
+
+            } catch (e: AnalyticsServiceException) {
+                Log.debugWithException(logger, e, "could not get latest events {}", e)
+                ErrorReporter.getInstance().reportError(project, "EventsNotificationsService.waitForEvents", e)
+            } catch (e: Exception) {
+                Log.log(logger::trace, "could not get latest events {}", e.message)
+                Log.warnWithException(logger, e, "could not get latest events {}", e.message)
+                ErrorReporter.getInstance().reportError(project, "EventsNotificationsService.waitForEvents", e)
             }
         }
     }
@@ -209,8 +202,8 @@ class GoToCodeObjectInsightsAction(
         ActivityMonitor.getInstance(project).registerNotificationCenterEvent("$notificationName.clicked", mapOf())
 
         Backgroundable.ensurePooledThreadWithoutReadAccess {
-            val scopeContext = ScopeContext("IDE/NOTIFICATION_LINK_CLICKED",null)
-            ScopeManager.getInstance(project).changeScope(SpanScope(codeObjectId),false,null,scopeContext,environmentId)
+            val scopeContext = ScopeContext("IDE/NOTIFICATION_LINK_CLICKED", null)
+            ScopeManager.getInstance(project).changeScope(SpanScope(codeObjectId), false, null, scopeContext, environmentId)
         }
 
         notification.expire()

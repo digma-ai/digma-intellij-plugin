@@ -51,7 +51,7 @@ class OTELJarProvider {
 
     private val jarsUrls = Properties()
 
-    private val lock = ReentrantLock()
+    private val lock = ReentrantLock(true)
 
 
     init {

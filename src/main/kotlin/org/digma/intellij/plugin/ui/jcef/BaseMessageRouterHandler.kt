@@ -19,8 +19,8 @@ import org.digma.intellij.plugin.analytics.getAllEnvironments
 import org.digma.intellij.plugin.analytics.getEnvironmentById
 import org.digma.intellij.plugin.analytics.setCurrentEnvironmentById
 import org.digma.intellij.plugin.auth.AuthManager
-import org.digma.intellij.plugin.auth.LoginResult
 import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
+import org.digma.intellij.plugin.auth.account.LoginResult
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.createObjectMapper
@@ -233,7 +233,7 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                     }
 
                     JCEFGlobalConstants.GLOBAL_LOGOUT -> {
-                        AuthManager.getInstance().logout()
+                        AuthManager.getInstance().logoutAsync()
                     }
 
                     JCEFGlobalConstants.GLOBAL_LOGIN -> {
@@ -429,8 +429,8 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
         val payload = getPayloadFromRequest(requestJsonNode)
         val result = payload?.let {
             try {
-                AuthManager.getInstance().logout()
-                AuthManager.getInstance().login(it.get("email").asText(), it.get("password").asText())
+                AuthManager.getInstance().logoutSynchronously()
+                AuthManager.getInstance().loginSynchronously(it.get("email").asText(), it.get("password").asText())
             } catch (e: Exception) {
                 return@let LoginResult(false, null, null)
             }

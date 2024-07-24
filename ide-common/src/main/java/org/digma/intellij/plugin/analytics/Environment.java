@@ -32,7 +32,7 @@ public class Environment {
     private final Project project;
     private final AnalyticsService analyticsService;
 
-    private final ReentrantLock envChangeLock = new ReentrantLock();
+    private final ReentrantLock envChangeLock = new ReentrantLock(true);
 
     public Environment(@NotNull Project project, @NotNull AnalyticsService analyticsService) {
         this.project = project;

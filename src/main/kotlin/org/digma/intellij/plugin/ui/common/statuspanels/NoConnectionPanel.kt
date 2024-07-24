@@ -6,10 +6,13 @@ import com.intellij.openapi.project.Project
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.ActionLink
 import com.intellij.util.ui.JBUI.Borders.empty
-import org.digma.intellij.plugin.analytics.refreshEnvironmentsNowOnBackground
+import org.digma.intellij.plugin.analytics.BackendInfoHolder
+import org.digma.intellij.plugin.auth.AuthManager
+import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.UserActionOrigin
+import org.digma.intellij.plugin.scheduling.oneShotTask
 import org.digma.intellij.plugin.settings.ProjectSettings
 import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
@@ -71,13 +74,19 @@ fun createNoConnectionPanel(project: Project, parentDisposable: Disposable):JPan
     val buttonsPanel = JPanel(BorderLayout(20,10))
     buttonsPanel.background = listBackground()
     val refreshLink = ActionLink("Refresh"){
-        ActivityMonitor.getInstance(project).registerUserActionWithOrigin("refresh link clicked", UserActionOrigin.NoConnectionPanel)
-        refreshEnvironmentsNowOnBackground(project)
+        Backgroundable.executeOnPooledThread {
+            ActivityMonitor.getInstance(project).registerUserActionWithOrigin("refresh link clicked", UserActionOrigin.NoConnectionPanel)
+            AuthManager.getInstance().loginOrRefreshAsync()
+            BackendInfoHolder.getInstance(project).refresh()
+        }
     }
     buttonsPanel.add(refreshLink,BorderLayout.WEST)
 
     val setupLink = ActionLink("Set-up Digma"){
-        ActivityMonitor.getInstance(project).registerUserActionWithOrigin("setup digma button clicked", UserActionOrigin.NoConnectionPanel)
+        oneShotTask("SetupDigmaButtonClicked") {
+            ActivityMonitor.getInstance(project).registerUserActionWithOrigin("setup digma button clicked", UserActionOrigin.NoConnectionPanel)
+        }
+
         EDT.ensureEDT{
             MainToolWindowCardsController.getInstance(project).showWizard(false)
             ToolWindowShower.getInstance(project).showToolWindow()

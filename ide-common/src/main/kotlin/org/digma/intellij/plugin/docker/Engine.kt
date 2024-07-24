@@ -18,7 +18,7 @@ internal class Engine {
 
     private val streamExecutor = Executors.newFixedThreadPool(2)
 
-    private val engineLock = ReentrantLock()
+    private val engineLock = ReentrantLock(true)
 
     //this message is used to identify timeout of the process
     private val timeoutMessage = "process exited with timeout"

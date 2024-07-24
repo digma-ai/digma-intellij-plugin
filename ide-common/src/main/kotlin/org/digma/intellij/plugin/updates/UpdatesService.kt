@@ -1,15 +1,10 @@
 package org.digma.intellij.plugin.updates
 
-import com.intellij.collaboration.async.disposingScope
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import org.apache.maven.artifact.versioning.ComparableVersion
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
@@ -24,6 +19,8 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
 import org.digma.intellij.plugin.model.rest.version.BackendVersionResponse
 import org.digma.intellij.plugin.model.rest.version.VersionResponse
+import org.digma.intellij.plugin.scheduling.disposingPeriodicTask
+import org.digma.intellij.plugin.scheduling.oneShotTask
 import org.digma.intellij.plugin.settings.InternalFileSettings
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import java.util.concurrent.TimeUnit
@@ -56,31 +53,14 @@ class UpdatesService(private val project: Project) : Disposable {
         stateBackendVersion = BackendVersionResponse(false, "0.0.1", "0.0.1", BackendDeploymentType.Unknown)
         statePluginVersion = PluginVersion(getPluginVersion())
 
-        @Suppress("UnstableApiUsage")
-        disposingScope().launch {
-
-            val delaySeconds = getDefaultDelayBetweenUpdatesSeconds()
-
-            while (isActive) {
-
-                try {
-                    Log.log(logger::trace, "updating state")
-                    checkForNewerVersions()
-                    Log.log(logger::trace, "sleeping {}", delaySeconds)
-                    delay(delaySeconds.inWholeMilliseconds)
-                } catch (e: CancellationException) {
-                    Log.debugWithException(logger, e, "Exception in checkForNewerVersions")
-                } catch (e: Throwable) {
-                    Log.debugWithException(logger, e, "Exception in checkForNewerVersions {}", ExceptionUtils.getNonEmptyMessage(e))
-                    ErrorReporter.getInstance().reportError(project, "UpdatesService.timer", e)
-                    try {
-                        Log.log(logger::trace, "sleeping {}", delaySeconds)
-                        delay(delaySeconds.inWholeMilliseconds)
-                    } catch (_: Throwable) {
-                        //ignore
-                    }
-                }
-
+        val delayMillis = getDefaultDelayBetweenUpdatesSeconds().inWholeMilliseconds
+        disposingPeriodicTask("UpdatesService.checkForNewerVersions", delayMillis, true) {
+            try {
+                Log.log(logger::trace, "updating state")
+                checkForNewerVersions()
+            } catch (e: Throwable) {
+                Log.debugWithException(logger, e, "Exception in checkForNewerVersions {}", ExceptionUtils.getNonEmptyMessage(e))
+                ErrorReporter.getInstance().reportError(project, "UpdatesService.timer", e)
             }
         }
 
@@ -92,15 +72,14 @@ class UpdatesService(private val project: Project) : Disposable {
 
                 override fun connectionGained() {
                     Log.log(logger::debug, "got connectionGained")
-
-                    try {
-                        //update state immediately after connectionGained, so it will not wait the delay for checking the versions.
-                        checkForNewerVersions()
-                    } catch (e: CancellationException) {
-                        Log.debugWithException(logger, e, "Exception in checkForNewerVersions")
-                    } catch (e: Throwable) {
-                        Log.debugWithException(logger, e, "Exception in checkForNewerVersions {}", ExceptionUtils.getNonEmptyMessage(e))
-                        ErrorReporter.getInstance().reportError(project, "UpdatesService.connectionGained", e)
+                    oneShotTask("UpdatesService.apiClientChanged") {
+                        try {
+                            //update state immediately after connectionGained, so it will not wait the delay for checking the versions.
+                            checkForNewerVersions()
+                        } catch (e: Throwable) {
+                            Log.debugWithException(logger, e, "Exception in checkForNewerVersions {}", ExceptionUtils.getNonEmptyMessage(e))
+                            ErrorReporter.getInstance().reportError(project, "UpdatesService.connectionGained", e)
+                        }
                     }
                 }
             })
@@ -109,12 +88,9 @@ class UpdatesService(private val project: Project) : Disposable {
 
         project.messageBus.connect(this)
             .subscribe(ApiClientChangedEvent.API_CLIENT_CHANGED_TOPIC, ApiClientChangedEvent {
-                @Suppress("UnstableApiUsage")
-                disposingScope().launch {
+                oneShotTask("UpdatesService.apiClientChanged") {
                     try {
                         checkForNewerVersions()
-                    } catch (e: CancellationException) {
-                        Log.debugWithException(logger, e, "Exception in checkForNewerVersions")
                     } catch (e: Throwable) {
                         Log.debugWithException(logger, e, "Exception in checkForNewerVersions {}", ExceptionUtils.getNonEmptyMessage(e))
                         ErrorReporter.getInstance().reportError(project, "UpdatesService.settingsChanged", e)
@@ -127,8 +103,7 @@ class UpdatesService(private val project: Project) : Disposable {
         project.messageBus.connect().subscribe(
             AggressiveUpdateStateChangedEvent.UPDATE_STATE_CHANGED_TOPIC, object : AggressiveUpdateStateChangedEvent {
                 override fun stateChanged(updateState: PublicUpdateState) {
-                    @Suppress("UnstableApiUsage")
-                    disposingScope().launch {
+                    oneShotTask("UpdatesService.aggressiveUpdateStateChanged") {
                         try {
                             //UpdatesService and AggressiveUpdateService work independently.
                             //it may happen that UpdatesService will change the panel to visible just before AggressiveUpdateService
@@ -139,8 +114,6 @@ class UpdatesService(private val project: Project) : Disposable {
                             if (updateState.updateState == CurrentUpdateState.OK) {
                                 checkForNewerVersions()
                             }
-                        } catch (e: CancellationException) {
-                            Log.debugWithException(logger, e, "Exception in checkForNewerVersions")
                         } catch (e: Throwable) {
                             Log.debugWithException(logger, e, "Exception in checkForNewerVersions {}", ExceptionUtils.getNonEmptyMessage(e))
                             ErrorReporter.getInstance().reportError(project, "UpdatesService.stateChanged", e)

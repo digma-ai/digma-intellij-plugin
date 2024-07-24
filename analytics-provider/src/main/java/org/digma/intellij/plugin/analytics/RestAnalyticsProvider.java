@@ -35,46 +35,95 @@ import retrofit2.converter.scalars.ScalarsConverterFactory;
 import retrofit2.http.Headers;
 import retrofit2.http.*;
 
-import javax.annotation.CheckForNull;
+import javax.annotation.*;
 import javax.net.ssl.*;
 import java.io.*;
 import java.security.*;
 import java.security.cert.X509Certificate;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.*;
 
-public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
+public class RestAnalyticsProvider implements AnalyticsProvider, Closeable, BaseUrlProvider.UrlChangedListener {
 
     public static final ThreadLocal<Long> PERFORMANCE = new ThreadLocal<>();
+    private final List<AuthenticationProvider> authenticationProviders;
+    private final Consumer<String> logger;
 
-    private final Client client;
-    private final String apiUrl;
+    private Client client;
+    private final BaseUrlProvider baseUrlProvider;
+    private final AtomicBoolean replacingClient = new AtomicBoolean(false);
+    private final Object replacingClientLock = new Object();
 
     //this constructor is used only in tests
     RestAnalyticsProvider(String baseUrl) {
 
-        this(baseUrl, Collections.singletonList(new AuthenticationProvider() {
+        this(Collections.singletonList(new AuthenticationProvider() {
             @CheckForNull
             @Override
             public String getHeaderName() {
                 return null;
             }
+
             @CheckForNull
             @Override
             public String getHeaderValue() {
                 return null;
             }
-        }), System.out::println);
+        }), System.out::println, new BaseUrlProvider() {
+            @Nonnull
+            @Override
+            public String baseUrl() {
+                return baseUrl;
+            }
+
+            @Override
+            public void addUrlChangedListener(UrlChangedListener urlChangedListener, int order) {
+
+            }
+
+            @Override
+            public void removeUrlChangedListener(UrlChangedListener urlChangedListener) {
+
+            }
+        }, 1);
     }
 
-    public RestAnalyticsProvider(String baseUrl, List<AuthenticationProvider> authenticationProviders, Consumer<String> logger) {
-        this.client = createClient(baseUrl, authenticationProviders, logger);
-        this.apiUrl = baseUrl;
+    public RestAnalyticsProvider(List<AuthenticationProvider> authenticationProviders, Consumer<String> logger, BaseUrlProvider baseUrlProvider, int urlChangeOrder) {
+        this.authenticationProviders = authenticationProviders;
+        this.logger = logger;
+        this.baseUrlProvider = baseUrlProvider;
+        this.client = constructClient(authenticationProviders, logger, baseUrlProvider);
+        baseUrlProvider.addUrlChangedListener(this, urlChangeOrder);
     }
+
+
+    private Client constructClient(List<AuthenticationProvider> authenticationProviders, Consumer<String> logger, BaseUrlProvider baseUrlProvider) {
+        try {
+            return createClient(authenticationProviders, logger, baseUrlProvider);
+        } catch (Throwable e) {
+            throw new CantConstructClientException(e);
+        }
+    }
+
+
+    @Override
+    public void urlChanged(BaseUrlProvider.UrlChangedEvent urlChangedEvent) {
+        synchronized (replacingClientLock) {
+            try {
+                replacingClient.set(true);
+                client.close();
+                client = constructClient(authenticationProviders, logger, baseUrlProvider);
+            } finally {
+                replacingClient.set(false);
+            }
+        }
+    }
+
 
     public String getApiUrl() {
-        return apiUrl;
+        return baseUrlProvider.baseUrl();
     }
 
     @Override
@@ -360,7 +409,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
     @Override
     public void resetThrottlingStatus() {
-        execute(() -> client.analyticsProvider.resetThrottlingStatus());
+        execute(client.analyticsProvider::resetThrottlingStatus);
     }
 
     @Override
@@ -400,9 +449,10 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         var body = response.body();
         var headers = response.headers().toMultimap().entrySet().stream()
                 .filter(i -> !i.getValue().isEmpty())
-                .collect(HashMap<String, String>::new, (m,i) -> m.put(i.getKey(), i.getValue().get(0)), Map::putAll);
+                .collect(HashMap<String, String>::new, (m, i) -> m.put(i.getKey(), i.getValue().get(0)), Map::putAll);
         var contentLength = body != null ? body.contentLength() : null;
-        var contentType = body != null && body.contentType() != null ? body.contentType().toString() : null;
+        MediaType mediaType = body != null ? body.contentType() : null;
+        var contentType = mediaType != null ? mediaType.toString() : null;
         var contentStream = body != null ? body.byteStream() : null;
 
         return new HttpResponse(
@@ -428,6 +478,12 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
     public <T> T execute(Supplier<Call<T>> supplier) {
 
+        //don't want to use locks, just throw calling threads if currently replacing the client as a result of url changed.
+        //caller should always catch and handle AnalyticsProviderException
+        if (replacingClient.get()) {
+            throw new ReplacingClientException("can't serve requests, currently replacing clients");
+        }
+
         Response<T> response;
         try {
             Call<T> call = supplier.get();
@@ -450,7 +506,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     private AnalyticsProviderException createUnsuccessfulResponseException(int code, ResponseBody errorBody) throws IOException {
         var errorMessage = errorBody == null ? null : errorBody.string();
         if (code == HTTPConstants.UNAUTHORIZED) {
-            var message = errorMessage != null && !errorMessage.isEmpty() ? errorMessage: "Unauthorized " + code;
+            var message = errorMessage != null && !errorMessage.isEmpty() ? errorMessage : "Unauthorized " + code;
             return new AuthenticationException(code, message);
         }
 
@@ -459,14 +515,15 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
 
-    private Client createClient(String baseUrl, List<AuthenticationProvider> authenticationProviders, Consumer<String> logger) {
-        return new Client(baseUrl, authenticationProviders, logger);
+    private Client createClient(List<AuthenticationProvider> authenticationProviders, Consumer<String> logger, BaseUrlProvider baseUrlProvider) {
+        return new Client(authenticationProviders, logger, baseUrlProvider);
     }
 
 
     @Override
     public void close() throws IOException {
         client.close();
+        baseUrlProvider.removeUrlChangedListener(this);
     }
 
 
@@ -478,15 +535,17 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         private final OkHttpClient okHttpClient;
 
         @SuppressWarnings("MoveFieldAssignmentToInitializer")
-        public Client(String baseUrl, List<AuthenticationProvider> authenticationProviders, Consumer<String> logger) {
+        public Client(List<AuthenticationProvider> authenticationProviders, Consumer<String> logger, BaseUrlProvider baseUrlProvider) {
 
             //configure okHttp here if necessary
             OkHttpClient.Builder builder = new OkHttpClient.Builder();
 
-            if (baseUrl.startsWith("https:")) {
-                // SSL
-                applyInsecureSsl(builder);
-            }
+
+            //if (baseUrlProvider.baseUrl().startsWith("https:")) {
+            // SSL
+            //we can always applyInsecureSsl even if the schema is http
+            applyInsecureSsl(builder);
+            //}
 
 
             authenticationProviders.forEach(authenticationProvider -> builder.addInterceptor(chain -> {
@@ -506,18 +565,16 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
             //always add the logging interceptor last, so it will log info from all other interceptors
             addLoggingInterceptor(builder, logger);
 
-            builder.callTimeout(10, TimeUnit.SECONDS)
-                    .connectTimeout(5, TimeUnit.SECONDS)
-                    .readTimeout(5, TimeUnit.SECONDS);
+            builder.callTimeout(20, TimeUnit.SECONDS)
+                    .connectTimeout(10, TimeUnit.SECONDS)
+                    .readTimeout(10, TimeUnit.SECONDS);
 
             okHttpClient = builder.build();
 
             var jacksonFactory = JacksonConverterFactory.create(createObjectMapper());
 
-            baseUrl = ensureEndsWithSlash(baseUrl);
-
             Retrofit retrofit = new Retrofit.Builder()
-                    .baseUrl(baseUrl)
+                    .baseUrl(ensureEndsWithSlash(baseUrlProvider.baseUrl()))
                     .client(okHttpClient)
                     //ScalarsConverterFactory must be the first, it supports serializing to plain String, see getAssets
                     .addConverterFactory(ScalarsConverterFactory.create())
@@ -528,16 +585,18 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
             analyticsProvider = retrofit.create(AnalyticsProviderRetrofit.class);
         }
 
+
         private String ensureEndsWithSlash(String baseUrl) {
             //if url contains path it must end with slash.
             //retrofit will check that in retrofit2.Retrofit.Builder.baseUrl(okhttp3.HttpUrl)
             var url = HttpUrl.get(baseUrl);
             List<String> pathSegments = url.pathSegments();
-            if (!"".equals(pathSegments.get(pathSegments.size() - 1))) {
+            if (!pathSegments.isEmpty() && !"".equals(pathSegments.get(pathSegments.size() - 1))) {
                 return baseUrl + "/";
             }
             return baseUrl;
         }
+
 
         private void addPerformanceInterceptor(OkHttpClient.Builder builder) {
             builder.addInterceptor(chain -> {
@@ -727,7 +786,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Content-Type:application/json"
         })
         @PUT("CodeAnalytics/insights/start-time")
-        Call<ResponseBody> setInsightCustomStartTime(
+        Call<Void> setInsightCustomStartTime(
                 @Body CustomStartTimeInsightRequest customStartTimeInsightRequest
         );
 
@@ -803,7 +862,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Content-Type:application/json"
         })
         @POST("Notifications/read")
-        Call<ResponseBody> setReadNotificationsTime(@Body SetReadNotificationsRequest setReadNotificationsRequest);
+        Call<Void> setReadNotificationsTime(@Body SetReadNotificationsRequest setReadNotificationsRequest);
 
         @Headers({
                 "Accept: application/+json",
@@ -930,28 +989,28 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Content-Type:application/json"
         })
         @POST("Insights/markRead")
-        Call<ResponseBody> markInsightsAsRead(@Body MarkInsightsAsReadRequest request);
+        Call<Void> markInsightsAsRead(@Body MarkInsightsAsReadRequest request);
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
         @POST("Insights/markAllRead")
-        Call<ResponseBody> markAllInsightsAsRead(@Body MarkAllInsightsAsReadRequest request);
+        Call<Void> markAllInsightsAsRead(@Body MarkAllInsightsAsReadRequest request);
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
         @PUT("InsightsActions/dismiss")
-        Call<ResponseBody> dismissInsight(@Body DismissRequest insightId);
+        Call<Void> dismissInsight(@Body DismissRequest insightId);
 
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
         @PUT("InsightsActions/unDismiss")
-        Call<ResponseBody> undismissInsight(@Body UnDismissRequest insightId);
+        Call<Void> undismissInsight(@Body UnDismissRequest insightId);
 
         @Headers({
                 "Accept: application/+json",
@@ -1041,11 +1100,12 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
         @GET("spans/info")
         Call<String> getSpanInfo(@Query("SpanCodeObjectId") String spanCodeObjectId);
+
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
         @POST("PerformanceMetrics/reset-throttling")
-        Call<ResponseBody> resetThrottlingStatus();
+        Call<Void> resetThrottlingStatus();
     }
 }

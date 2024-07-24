@@ -1,11 +1,11 @@
 package org.digma.intellij.plugin.ui.recentactivity
 
-import com.intellij.collaboration.async.disposingScope
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -41,7 +41,7 @@ import java.time.temporal.ChronoUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 @Service(Service.Level.PROJECT)
-class RecentActivityService(val project: Project) : Disposable {
+class RecentActivityService(val project: Project, private val cs: CoroutineScope) : Disposable {
 
     private val logger = Logger.getInstance(this::class.java)
 
@@ -128,31 +128,12 @@ class RecentActivityService(val project: Project) : Disposable {
     }
 
     fun liveViewClosed(closeLiveViewMessage: CloseLiveViewMessage?) {
-        project.service<LiveViewUpdater>().stopLiveView(closeLiveViewMessage?.payload?.codeObjectId)
+        project.service<LiveViewUpdater>().stopLiveView()
         if (closeLiveViewMessage == null) {
             ActivityMonitor.getInstance(project).registerCustomEvent("live view closed without message", emptyMap())
         } else {
             ActivityMonitor.getInstance(project)
                 .registerUserAction("live view closed", mapOf("code object id" to closeLiveViewMessage.payload.codeObjectId))
-        }
-    }
-
-    fun deleteEnvironment(environment: String) {
-        try {
-
-            Log.log(logger::trace, project, "deleteEnvironment called with {}", environment)
-
-            val response = AnalyticsService.getInstance(project).deleteEnvironment(environment)
-            if (response.success) {
-                Log.log(logger::trace, project, "deleteEnvironment {} finished successfully", environment)
-            } else {
-                Log.log(logger::trace, project, "deleteEnvironment {} faled", environment)
-            }
-            refreshEnvironmentsNowOnBackground(project)
-
-        } catch (e: Exception) {
-            Log.debugWithException(logger, project, e, "error deleting environment")
-            ErrorReporter.getInstance().reportError(project, "RecentActivityService.deleteEnvironment", e)
         }
     }
 
@@ -201,8 +182,6 @@ class RecentActivityService(val project: Project) : Disposable {
     }
 
 
-
-
     fun openRegistrationDialog() {
 
         project.service<RecentActivityToolWindowShower>().showToolWindow()
@@ -210,8 +189,7 @@ class RecentActivityService(val project: Project) : Disposable {
         //maybe the recent activity is not open yet. it will be opened as a result of calling
         // showToolWindow, but takes some time before the app is ready to accept messages.
         // so wait here until the app is initialized
-        @Suppress("UnstableApiUsage")
-        disposingScope().launch {
+        cs.launch {
 
             val startTime = Instant.now()
 

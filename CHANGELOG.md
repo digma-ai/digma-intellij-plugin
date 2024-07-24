@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.360] - 2024-07-21
+## [2.0.361] - 2024-07-24
+
+- person site Closes #2309 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2310
+- Support timeout in login handler by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2306
+
+## 2.0.360 - 2024-07-21
 
 - Navigation discovery blackout Closes #1969 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2283
 - track server version, don't rely on connection gained Closes #2277 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2287

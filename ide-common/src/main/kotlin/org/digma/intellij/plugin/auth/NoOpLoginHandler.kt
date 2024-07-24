@@ -1,8 +1,10 @@
 package org.digma.intellij.plugin.auth
 
 import com.intellij.openapi.diagnostic.Logger
+import org.digma.intellij.plugin.auth.account.DigmaAccount
 import org.digma.intellij.plugin.auth.account.LoginHandler
 import org.digma.intellij.plugin.auth.account.LoginResult
+import org.digma.intellij.plugin.auth.credentials.DigmaCredentials
 import org.digma.intellij.plugin.log.Log
 
 
@@ -20,5 +22,10 @@ class NoOpLoginHandler(private val errorMessage: String) : LoginHandler {
     override suspend fun login(user: String, password: String): LoginResult {
         Log.log(logger::trace, "login called, error message {}", errorMessage)
         return LoginResult(false, null, errorMessage)
+    }
+
+    override suspend fun refresh(account: DigmaAccount, credentials: DigmaCredentials): Boolean {
+        Log.log(logger::trace, "refresh called, error message {}", errorMessage)
+        return false
     }
 }

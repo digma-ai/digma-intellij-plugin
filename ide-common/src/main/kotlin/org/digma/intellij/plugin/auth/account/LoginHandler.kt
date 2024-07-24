@@ -68,7 +68,10 @@ interface LoginHandler {
     //does login or refresh if necessary, return true if did successful login or successful refresh,
     // or when no need to do anything. return false if failed.
     //we don't really rely on the returned value, mostly for logging
+    //todo: can be true always because its called only from onAuthenticationException
     suspend fun loginOrRefresh(onAuthenticationError: Boolean = false): Boolean
+
+    suspend fun refresh(account: DigmaAccount, credentials: DigmaCredentials): Boolean
 
 
     suspend fun logout(): Boolean {
@@ -132,11 +135,11 @@ interface LoginHandler {
 //    }
 
     suspend fun trace(format: String, vararg args: Any?) {
-        Log.log(logger::trace, "${coroutineContext[CoroutineName]}: $format", args)
+        Log.log(logger::trace, "${coroutineContext[CoroutineName]}: $format", *args)
     }
 
     suspend fun warnWithException(e: Throwable, format: String, vararg args: Any?) {
-        Log.warnWithException(logger, e, "${coroutineContext[CoroutineName]}: $format", args)
+        Log.warnWithException(logger, e, "${coroutineContext[CoroutineName]}: $format", *args)
     }
 
 

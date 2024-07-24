@@ -7,18 +7,24 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.util.Alarm
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.datetime.Clock
 import org.digma.intellij.plugin.analytics.AnalyticsProvider
 import org.digma.intellij.plugin.analytics.AnalyticsUrlProvider
 import org.digma.intellij.plugin.analytics.AuthenticationException
 import org.digma.intellij.plugin.analytics.AuthenticationProvider
 import org.digma.intellij.plugin.analytics.RestAnalyticsProvider
 import org.digma.intellij.plugin.auth.account.CredentialsHolder
+import org.digma.intellij.plugin.auth.account.DigmaAccountManager
 import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
 import org.digma.intellij.plugin.auth.account.LoginHandler
 import org.digma.intellij.plugin.auth.account.LoginResult
@@ -33,7 +39,12 @@ import java.lang.reflect.Method
 import java.lang.reflect.Proxy
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.Semaphore
+import kotlin.math.max
+import kotlin.time.Duration.Companion.ZERO
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.DurationUnit
+import kotlin.time.toDuration
 
 
 @Service(Service.Level.APP)
@@ -57,6 +68,9 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
     private val refreshTokenStrategy = AuthManagerLockingRefreshStrategy(cs)
 //    private val refreshTokenStrategy = AuthManagerNonLockingRefreshStrategy(cs)
 
+//    private val autoRefreshJob: Job
+//    private var autoRefreshWaitingJob: Job? = null
+
     companion object {
         @JvmStatic
         fun getInstance(): AuthManager {
@@ -64,9 +78,16 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
         }
     }
 
+
+    init {
+//        autoRefreshJob = autoRefreshJob(cs)
+    }
+
     override fun dispose() {
         myAnalyticsProvider.close()
         loginOrRefreshAsyncJob?.cancel()
+//        autoRefreshWaitingJob?.cancel()
+//        autoRefreshJob.cancel()
     }
 
     private fun createMyAnalyticsProvider(): RestAnalyticsProvider {
@@ -133,7 +154,7 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
 
 
     /**
-     * this method is used for best effort to do login or refresh early on startup.
+     * this method is used for best effort to do log in or refresh early on startup.
      * when connection to the server is ok it will succeed either new login or refresh if necessary.
      * it is non-blocking but does not allow more than one job at a time, if called concurrently and
      * myAuthJob is active the method will just return doing nothing.
@@ -156,6 +177,8 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
                 Log.log(logger::trace, "starting loginOrRefreshAsync job, analytics url {}", myAnalyticsProvider.apiUrl)
                 val loginHandler = LoginHandler.createLoginHandler(project, myAnalyticsProvider)
                 loginHandler.loginOrRefresh()
+                //wake up the auto refresh to check the next auto refresh time
+//                autoRefreshWaitingJob?.cancel()
             } catch (e: Throwable) {
                 Log.warnWithException(logger, e, "error in loginOrRefreshAsync {}", e)
                 ErrorReporter.getInstance().reportError("AuthManager.loginOrRefresh", e)
@@ -188,7 +211,10 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
                 try {
                     Log.log(logger::trace, "starting job loginSynchronously, analytics url {}", myAnalyticsProvider.apiUrl)
                     val loginHandler = LoginHandler.createLoginHandler(myAnalyticsProvider)
-                    loginHandler.login(user, password)
+                    val loginResult = loginHandler.login(user, password)
+                    //wake up the auto refresh to check the next auto refresh time
+//                    autoRefreshWaitingJob?.cancel()
+                    loginResult
                 } catch (e: Throwable) {
                     Log.warnWithException(logger, e, "error in loginSynchronously {}", e)
                     ErrorReporter.getInstance().reportError("AuthManager.login", e)
@@ -349,6 +375,86 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
     }
 
 
+    //auto refresh one minute before expiration
+    //Experimental
+    private fun autoRefreshJob(cs: CoroutineScope): Job {
+
+        Log.log(logger::trace, "launching autoRefreshJob")
+        return cs.launch(CoroutineName("autoRefreshJob")) {
+
+            Log.log(logger::trace, "${coroutineContext[CoroutineName]} auto refresh job started")
+            var delay = 1.minutes
+            while (isActive) {
+
+                try {
+                    Log.log(logger::trace, "${coroutineContext[CoroutineName]} looking for account")
+
+                    val account = DigmaDefaultAccountHolder.getInstance().account
+                    if (account != null) {
+                        Log.log(logger::trace, "${coroutineContext[CoroutineName]} found account {}", account)
+
+                        val credentials = try {
+                            //exception here may happen if we change the credentials structure,which doesn't happen too much,
+                            // user will be redirected to log in again
+                            DigmaAccountManager.getInstance().findCredentials(account)
+                        } catch (_: Throwable) {
+                            null
+                        }
+
+                        if (credentials != null) {
+
+                            Log.log(logger::trace, "${coroutineContext[CoroutineName]} found credentials for account {}", account)
+
+                            val expireIn =
+                                max(0, (credentials.expirationTime - Clock.System.now().toEpochMilliseconds())).toDuration(DurationUnit.MILLISECONDS)
+                            Log.log(logger::trace, "${coroutineContext[CoroutineName]} credentials for account expires in {}", expireIn)
+                            if (expireIn <= 1.minutes) {
+                                Log.log(logger::trace, "${coroutineContext[CoroutineName]} refreshing credentials for account {}", account)
+                                val loginHandler = LoginHandler.createLoginHandler(null, myAnalyticsProvider)
+                                loginHandler.refresh(account, credentials)
+                                Log.log(logger::trace, "${coroutineContext[CoroutineName]} credentials for account refreshed {}", account)
+                                //immediately loop again and compute the next delay
+                                delay = ZERO
+                            } else {
+                                delay = expireIn - 1.minutes
+                                Log.log(
+                                    logger::trace,
+                                    "${coroutineContext[CoroutineName]} credentials for account expires in more then 1 minute, waiting {}",
+                                    delay
+                                )
+                            }
+                        } else {
+                            Log.log(logger::trace, "${coroutineContext[CoroutineName]} credentials for account not found, waiting 1 minute")
+                            delay = 1.minutes
+                        }
+                    } else {
+                        Log.log(logger::trace, "${coroutineContext[CoroutineName]} account not found, waiting 10 minutes")
+                        delay = 10.minutes
+                    }
+
+
+//                    autoRefreshWaitingJob = launch {
+//                        Log.log(logger::trace, "${coroutineContext[CoroutineName]} in autoRefreshJob.autoRefreshWaitingJob waiting {}",delay)
+//                        delay(delay.inWholeMilliseconds)
+//                        Log.log(logger::trace, "${coroutineContext[CoroutineName]} in autoRefreshJob.autoRefreshWaitingJob done")
+//                    }
+//                    try {
+//                        withTimeoutOrNull(delay.inWholeMilliseconds) {
+//                            autoRefreshWaitingJob?.join()
+//                        }
+//                    } catch (e: CancellationException) {
+//                        Log.log(logger::trace, "${coroutineContext[CoroutineName]} autoRefreshJob.autoRefreshWaitingJob woke up")
+//                    }
+
+
+                } catch (e: Throwable) {
+                    Log.warnWithException(logger, e, "${coroutineContext[CoroutineName]} error in auto refresh job")
+                }
+            }
+        }
+    }
+
+
     private inner class MyAuthInvocationHandler(private val analyticsProvider: RestAnalyticsProvider) : InvocationHandler {
 
         override fun invoke(proxy: Any, method: Method, args: Array<out Any>?): Any? {
@@ -426,6 +532,8 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
                         Log.log(logger::trace, "starting lockingLoginOrRefresh job, analytics url {}", myAnalyticsProvider.apiUrl)
                         val loginHandler = LoginHandler.createLoginHandler(null, myAnalyticsProvider)
                         loginHandler.loginOrRefresh(onAuthenticationError)
+                        //wake up the auto refresh to check the next auto refresh time
+//                        autoRefreshWaitingJob?.cancel()
                     } catch (e: Throwable) {
                         Log.warnWithException(logger, e, "error in lockingLoginOrRefresh job {}", e)
                         ErrorReporter.getInstance().reportError("AuthManager.loginOrRefresh", e)
@@ -462,6 +570,8 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
 
 
     //this strategy may do multiple refresh one after the other
+    //this class was an experiment, it has been tested to work, but we don't use it
+    @Suppress("unused")
     private inner class AuthManagerNonLockingRefreshStrategy(private val cs: CoroutineScope) : RefreshStrategy {
 
         private val logger: Logger = Logger.getInstance(AuthManagerNonLockingRefreshStrategy::class.java)
@@ -480,6 +590,8 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
                     Log.log(logger::trace, "starting nonLockingLoginOrRefresh job, analytics url {}", myAnalyticsProvider.apiUrl)
                     val loginHandler = LoginHandler.createLoginHandler(myAnalyticsProvider)
                     loginHandler.loginOrRefresh(onAuthenticationError)
+                    //wake up the auto refresh to check the next auto refresh time
+//                    autoRefreshWaitingJob?.cancel()
                 } catch (e: Throwable) {
                     Log.warnWithException(logger, e, "error in nonLockingLoginOrRefresh job {}", e)
                     ErrorReporter.getInstance().reportError("AuthManager.loginOrRefresh", e)

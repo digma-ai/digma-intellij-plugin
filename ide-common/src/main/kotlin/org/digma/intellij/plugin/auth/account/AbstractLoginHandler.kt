@@ -68,7 +68,7 @@ abstract class AbstractLoginHandler(protected val analyticsProvider: RestAnalyti
     }
 
 
-    suspend fun refresh(account: DigmaAccount, credentials: DigmaCredentials): Boolean {
+    override suspend fun refresh(account: DigmaAccount, credentials: DigmaCredentials): Boolean {
 
         return try {
 

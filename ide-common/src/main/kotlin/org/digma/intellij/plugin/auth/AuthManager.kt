@@ -69,7 +69,7 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
 //    private val refreshTokenStrategy = AuthManagerNonLockingRefreshStrategy(cs)
 
 //    private val autoRefreshJob: Job
-//    private var autoRefreshWaitingJob: Job? = null
+private var autoRefreshWaitingJob: Job? = null
 
     companion object {
         @JvmStatic

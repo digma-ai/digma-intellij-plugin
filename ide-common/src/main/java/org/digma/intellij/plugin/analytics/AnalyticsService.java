@@ -60,6 +60,8 @@ public class AnalyticsService implements Disposable {
     private AnalyticsProvider analyticsProviderProxy;
 
     public AnalyticsService(@NotNull Project project) {
+        //make sure its created early, sometimes we get InterruptedException if two threads call getService at the same time.
+        ApiPerformanceMonitor.getInstance(project);
         //initialize BackendConnectionMonitor when starting, so it is aware early on connection statuses
         BackendConnectionMonitor.getInstance(project);
         //initialize MainToolWindowCardsController and RecentActivityToolWindowCardsController when starting,

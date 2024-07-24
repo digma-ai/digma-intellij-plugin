@@ -76,7 +76,7 @@ fun createNoConnectionPanel(project: Project, parentDisposable: Disposable):JPan
     val refreshLink = ActionLink("Refresh"){
         Backgroundable.executeOnPooledThread {
             ActivityMonitor.getInstance(project).registerUserActionWithOrigin("refresh link clicked", UserActionOrigin.NoConnectionPanel)
-            AuthManager.getInstance().loginOrRefresh()
+            AuthManager.getInstance().loginOrRefreshAsync()
             BackendInfoHolder.getInstance(project).refresh()
         }
     }

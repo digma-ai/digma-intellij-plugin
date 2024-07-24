@@ -7,7 +7,6 @@ import org.digma.intellij.plugin.auth.AuthApiClient
 import org.digma.intellij.plugin.auth.credentials.DigmaCredentials
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
-import org.digma.intellij.plugin.log.Log
 
 abstract class AbstractLoginHandler(protected val analyticsProvider: RestAnalyticsProvider) : LoginHandler {
 
@@ -30,21 +29,21 @@ abstract class AbstractLoginHandler(protected val analyticsProvider: RestAnalyti
 
             reportPosthogEvent("login", mapOf("user" to user))
 
-            Log.log(logger::trace, "login called for url {}, user {}", analyticsProvider.apiUrl, user)
+            trace("login called for url {}, user {}", analyticsProvider.apiUrl, user)
 
             if (defaultAccountExists()) {
-                Log.log(logger::trace, "default account exists, deleting before login, {}", getDefaultAccount())
+                trace("default account exists, deleting before login, {}", getDefaultAccount())
                 logout()
             }
 
-            Log.log(logger::trace, "doing login for url {}, user {}", analyticsProvider.apiUrl, user)
+            trace("doing login for url {}, user {}", analyticsProvider.apiUrl, user)
 
             val credentials = authApiClient.login(user, password)
 
             val account = DigmaAccountManager.createAccount(analyticsProvider.apiUrl, credentials.userId)
             updateAccount(account, credentials)
 
-            Log.log(logger::trace, "login success for url {}, user {}, created account {}", analyticsProvider.apiUrl, user, getDefaultAccount())
+            trace("login success for url {}, user {}, created account {}", analyticsProvider.apiUrl, user, getDefaultAccount())
 
             reportPosthogEvent("login success", mapOf("user" to user))
 
@@ -52,11 +51,11 @@ abstract class AbstractLoginHandler(protected val analyticsProvider: RestAnalyti
 
         } catch (e: Throwable) {
 
-            Log.warnWithException(logger, e, "Exception in login {}, url {}", e, analyticsProvider.apiUrl)
+            warnWithException(e, "Exception in login {}, url {}", e, analyticsProvider.apiUrl)
             ErrorReporter.getInstance().reportError("AuthManager.login", e)
 
             if (e is AuthenticationException) {
-                Log.warnWithException(logger, e, "Exception in login, url {}", analyticsProvider.apiUrl)
+                warnWithException(e, "Exception in login, url {}", analyticsProvider.apiUrl)
                 ErrorReporter.getInstance().reportError("AuthManager.login", e)
                 val errorMessage = ExceptionUtils.getNonEmptyMessage(e)
                 reportPosthogEvent("login failed", mapOf("user" to user, "error" to errorMessage))
@@ -73,21 +72,21 @@ abstract class AbstractLoginHandler(protected val analyticsProvider: RestAnalyti
 
         return try {
 
-            Log.log(logger::trace, "refresh called for url {}", analyticsProvider.apiUrl)
+            trace("refresh called for url {}", analyticsProvider.apiUrl)
 
             val newCredentials = authApiClient.refreshToken(account, credentials)
             updateAccount(account, newCredentials)
 
-            Log.log(logger::trace, "refresh success for url {}, updated account {}", analyticsProvider.apiUrl, getDefaultAccount())
+            trace("refresh success for url {}, updated account {}", analyticsProvider.apiUrl, getDefaultAccount())
 
             true
 
         } catch (e: Throwable) {
-            Log.warnWithException(logger, e, "Exception in refresh {}", e)
+            warnWithException(e, "Exception in refresh {}", e)
             ErrorReporter.getInstance().reportError("AuthManager.refresh", e)
 
             if (e is AuthenticationException) {
-                Log.warnWithException(logger, e, "Exception in refresh, url {}", analyticsProvider.apiUrl)
+                warnWithException(e, "Exception in refresh, url {}", analyticsProvider.apiUrl)
                 ErrorReporter.getInstance().reportError("AuthManager.refresh", e)
                 val errorMessage = ExceptionUtils.getNonEmptyMessage(e)
                 reportPosthogEvent("refresh failed", mapOf("error" to errorMessage))

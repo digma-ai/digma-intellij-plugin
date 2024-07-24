@@ -565,9 +565,9 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable, Base
             //always add the logging interceptor last, so it will log info from all other interceptors
             addLoggingInterceptor(builder, logger);
 
-            builder.callTimeout(10, TimeUnit.SECONDS)
-                    .connectTimeout(5, TimeUnit.SECONDS)
-                    .readTimeout(5, TimeUnit.SECONDS);
+            builder.callTimeout(20, TimeUnit.SECONDS)
+                    .connectTimeout(10, TimeUnit.SECONDS)
+                    .readTimeout(10, TimeUnit.SECONDS);
 
             okHttpClient = builder.build();
 

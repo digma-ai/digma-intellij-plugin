@@ -7,6 +7,7 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.ProjectActivity
 import com.intellij.openapi.util.Disposer
+import com.intellij.util.concurrency.AppExecutorUtil
 import com.jetbrains.rd.util.AtomicInteger
 import org.apache.commons.lang3.time.StopWatch
 import org.digma.intellij.plugin.analytics.ApiErrorHandler
@@ -34,10 +35,12 @@ import kotlin.math.min
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.toJavaDuration
 
-/*
- NOTE: important to remember: code that will call digma API should be executed with one of the schedulers in this file and not in a coroutine.
-    while it is possible and will work it can get into trouble in certain situations. and anyway has no advantage over using the schedulers
-    in this file.
+/**
+Important things to remember:
+ * the threads in the scheduler are daemon threads, they are suitable for background tasks that are not critical, they have low priority in terms of
+resource allocation by the jvm, they will be low priority in cpu allocation.
+for example, they don't suite tasks that need to serve the UI, if UI calls the plugin to do something it should be a regular thread and not daemon.
+
  */
 
 /**
@@ -157,8 +160,12 @@ const val SCHEDULER_MAX_SIZE = 20
 const val SCHEDULER_MAX_QUEUE_SIZE_ALLOWED = 200
 
 val logger = Logger.getInstance("org.digma.scheduler")
-
 private val scheduler: MyScheduledExecutorService = MyScheduledExecutorService("Digma-Scheduler", INITIAL_SCHEDULER_CORE_SIZE)
+
+//blocking one shot tasks are executed on intellij executor which is unbounded and non daemon. the reason is that these tasks probably need immediate attention.
+// our own scheduler has daemon threads, its more suitable for tasks that don't need immediate attention because daemon threads have lower priority in
+// resource allocation.
+private val executor = AppExecutorUtil.getAppExecutorService()
 
 private val scheduledTasksPerformanceMonitor = ScheduledTasksPerformanceMonitor()
 
@@ -184,7 +191,7 @@ class ThreadPoolProviderService : Disposable {
     private val alreadySentSchedulerMaxRegisteredSize = AtomicBoolean(false)
 
 
-    private val managementTimer = timer("SchedulerManager", true, 2.minutes.inWholeMilliseconds, 2.minutes.inWholeMilliseconds) {
+    private val managementTimer = timer("DigmaSchedulerManager", true, 2.minutes.inWholeMilliseconds, 2.minutes.inWholeMilliseconds) {
         try {
             //call the scheduler manage
             manage()
@@ -423,7 +430,7 @@ fun <T> oneShotTask(name: String, block: () -> T): Future<T>? {
 
     try {
 
-        return scheduler.submit(Callable {
+        return executor.submit(Callable {
             val stopWatch = StopWatch.createStarted()
             try {
                 Log.logWithThreadName(logger::trace, "executing one-shot task {}", name)
@@ -462,7 +469,7 @@ fun blockingOneShotTask(name: String, timeoutMillis: Long, block: () -> Unit): B
 
     val future = try {
 
-        scheduler.submit {
+        executor.submit {
             val stopWatch = StopWatch.createStarted()
             try {
                 Log.logWithThreadName(logger::trace, "executing one-shot task {}", name)
@@ -509,7 +516,7 @@ fun <T> blockingOneShotTaskWithResult(name: String, timeoutMillis: Long, block: 
 
     val future = try {
 
-        scheduler.submit(Callable {
+        executor.submit(Callable {
             val stopWatch = StopWatch.createStarted()
             try {
                 Log.logWithThreadName(logger::trace, "executing one-shot task with result {}", name)

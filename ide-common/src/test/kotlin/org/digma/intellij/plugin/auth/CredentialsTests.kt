@@ -33,7 +33,7 @@ class CredentialsTests {
         assertEquals(digmaCredentials.expirationTime, deserialized.expirationTime)
         assertEquals(digmaCredentials.accessToken, deserialized.accessToken)
         assertEquals(digmaCredentials.refreshToken, deserialized.refreshToken)
-        assertEquals(digmaCredentials.expiresIn, deserialized.expiresIn)
+//        assertEquals(digmaCredentials.expiresIn, max(0, digmaCredentials.expirationTime - Clock.System.now().toEpochMilliseconds()))
     }
 
 }

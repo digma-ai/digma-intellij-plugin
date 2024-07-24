@@ -1,13 +1,14 @@
 package org.digma.intellij.plugin.posthog
 
 import com.fasterxml.jackson.core.JsonProcessingException
-import com.intellij.collaboration.async.disposingScope
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.ui.jcef.JBCefApp
 import com.posthog.java.PostHog
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -17,6 +18,7 @@ import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.common.UniqueGeneratedUserId
 import org.digma.intellij.plugin.common.objectToJson
 import org.digma.intellij.plugin.execution.DIGMA_INSTRUMENTATION_ERROR
+import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.AboutResult
 import org.digma.intellij.plugin.model.rest.user.UserUsageStatsResponse
 import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
@@ -36,6 +38,7 @@ import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.Date
+import kotlin.math.min
 import kotlin.time.Duration.Companion.minutes
 
 private const val INSTALL_STATUS_PROPERTY_NAME = "install_status"
@@ -46,7 +49,10 @@ private const val JIRA_FIELD_COPIED_PROPERTY_NAME = "jira_field_copied"
 enum class InstallStatus { Active, Uninstalled, Disabled }
 
 @Service(Service.Level.PROJECT)
-class ActivityMonitor(private val project: Project) : Disposable {
+class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Disposable {
+
+
+    private val logger: Logger = Logger.getInstance(ActivityMonitor::class.java)
 
     companion object {
 
@@ -102,24 +108,30 @@ class ActivityMonitor(private val project: Project) : Disposable {
         //once we succeed connection and posthog is not null we stop trying because we have a posthog client.
         //don't care if there are network issues later, the only reason for all this is to identify users that
         // can never connect to posthog and prevent the unnecessary errors to idea.log.
+        //another reason is if user started the IDE when there was no network and network started after some time, in that case
+        // also we don't want posthog to explode the logs while it can not connect.
 
         //if posthog is not null don't even start the coroutine.
-        //try to keep connecting to posthog every 5 minutes but give up after 1 hour, if we couldn't connect for
-        // 1 hour it probably means we can't connect. this is meant to prevent endless trying when in fact there is
-        // no way to connect, usually it will be the users mentioned above were connection to posthog is impossible.
         if (postHog == null) {
-            val startTime = Instant.now()
-            @Suppress("UnstableApiUsage")
-            disposingScope().launch {
+            cs.launch {
                 //once we have a non-null posthog stop this coroutine.
-                //give up 1 hour after startTime.
-                while (isActive &&
-                    postHog == null &&
-                    startTime.plus(1, ChronoUnit.HOURS).isAfter(Instant.now())
-                ) {
-                    delay(5.minutes.inWholeMilliseconds)
-                    if (isActive) {
-                        postHog = checkAndConnect()
+                //increase the delay on every iteration, but not more than 30 minutes. probably there is no connection.
+                var delay = 1
+                while (isActive && postHog == null) {
+                    delay(delay.minutes.inWholeMilliseconds)
+                    try {
+                        delay = min(30, delay + 1)
+                        if (isActive) {
+                            Log.log(logger::trace, "checking posthog connection")
+                            postHog = checkAndConnect()
+                            if (postHog == null) {
+                                Log.log(logger::trace, "can't connect to posthog")
+                            } else {
+                                Log.log(logger::trace, "posthog connection OK")
+                            }
+                        }
+                    } catch (e: Throwable) {
+                        Log.warnWithException(logger, e, "error while checking posthog connection")
                     }
                 }
             }

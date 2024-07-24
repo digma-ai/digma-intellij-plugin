@@ -7,6 +7,7 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.util.Alarm
+import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -17,6 +18,7 @@ import org.digma.intellij.plugin.analytics.AnalyticsUrlProvider
 import org.digma.intellij.plugin.analytics.AuthenticationException
 import org.digma.intellij.plugin.analytics.AuthenticationProvider
 import org.digma.intellij.plugin.analytics.RestAnalyticsProvider
+import org.digma.intellij.plugin.auth.account.CredentialsHolder
 import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
 import org.digma.intellij.plugin.auth.account.LoginHandler
 import org.digma.intellij.plugin.auth.account.LoginResult
@@ -29,7 +31,9 @@ import java.lang.reflect.InvocationHandler
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.Semaphore
+import kotlin.time.Duration.Companion.seconds
 
 
 @Service(Service.Level.APP)
@@ -37,15 +41,21 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
 
     private val logger: Logger = Logger.getInstance(AuthManager::class.java)
 
-    private val listeners: MutableList<AuthInfoChangeListener> = ArrayList()
+    //using CopyOnWriteArrayList to avoid ConcurrentModificationException.
+    // a new opened project may try to add a listener while fireChange is iterating
+    private val listeners = CopyOnWriteArrayList<AuthInfoChangeListener>()
 
     private var myAnalyticsProvider: RestAnalyticsProvider = createMyAnalyticsProvider()
 
     private val fireChangeAlarm = Alarm(Alarm.ThreadToUse.POOLED_THREAD, this)
 
-    private var loginOrRefreshJob: Job? = null
+    private var loginOrRefreshAsyncJob: Job? = null
 
     private val loginLogoutSemaphore = Semaphore(1, true)
+
+    //refreshTokenStrategy should be used only from onAuthenticationException
+    private val refreshTokenStrategy = AuthManagerLockingRefreshStrategy(cs)
+//    private val refreshTokenStrategy = AuthManagerNonLockingRefreshStrategy(cs)
 
     companion object {
         @JvmStatic
@@ -56,6 +66,7 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
 
     override fun dispose() {
         myAnalyticsProvider.close()
+        loginOrRefreshAsyncJob?.cancel()
     }
 
     private fun createMyAnalyticsProvider(): RestAnalyticsProvider {
@@ -100,8 +111,11 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
 
         Log.log(logger::info, "wrapping analyticsProvider with auth for url {}", analyticsProvider.apiUrl)
 
-        //try loginOrRefresh on startup
-        loginOrRefresh(project)
+        //try loginOrRefresh on startup, use loginOrRefreshAsync here because this code is called from
+        // AnalyticsService constructor, and we don't want to block it, it's an attempt to complete the loginOrRefresh
+        // before any api call is made. if it didn't succeed than the first api call will also do loginOrRefresh.
+        //it may happen that eventually loginOrRefresh will be invoked more than once, it's ok, the server can deal with that.
+        loginOrRefreshAsync(project)
 
         //always return a proxy. even if login failed. the proxy will try to loginOrRefresh on AuthenticationException
         val proxy = proxy(analyticsProvider)
@@ -119,40 +133,34 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
 
 
     /**
-     * this method is used to do best effort for login or refresh.
+     * this method is used for best effort to do login or refresh early on startup.
      * when connection to the server is ok it will succeed either new login or refresh if necessary.
      * it is non-blocking but does not allow more than one job at a time, if called concurrently and
      * myAuthJob is active the method will just return doing nothing.
-     * it is mostly called when there is an AuthenticationException when the token is expired. if called by
-     * multiple threads only one will start a job, other threads will return and probably will have to deal with
-     * AuthenticationException at least until the refresh is complete.
-     * it is possible to let multiple threads start a loginOrRefresh, it will work and will probably do no harm,
-     * worst case a login or refresh will occur multiple times.
-     * it is also possible to block the method until refresh completes and only then release the threads, either
-     * by only one thread or multiple threads, but the current approaches is to launch an asynchronous, let threads deal
-     * with AuthenticationException until refresh completes. in a good running environment this will be very fast so only
-     * a few threads will deal with AuthenticationException.
-     * loginHandler.loginOrRefresh is smart enough to decide if a new login is required, or refresh or nothing.
+     * it may be called concurrently if multiple projects open at the same time, worst case a login or refresh will
+     * happen more than once, our server can deal with it.
      */
-    fun loginOrRefresh(project: Project? = null) {
+    fun loginOrRefreshAsync(project: Project? = null) {
 
-        Log.log(logger::info, "loginOrRefresh called, analytics url {}", myAnalyticsProvider.apiUrl)
+        Log.log(logger::trace, "loginOrRefreshAsync called, analytics url {}", myAnalyticsProvider.apiUrl)
 
-        if (loginOrRefreshJob?.isActive == true) {
-            Log.log(logger::info, "auth job is active, analytics url {}", myAnalyticsProvider.apiUrl)
+        if (loginOrRefreshAsyncJob?.isActive == true) {
+            Log.log(logger::trace, "loginOrRefreshAsync job is active,aborting. analytics url {}", myAnalyticsProvider.apiUrl)
             return
         }
 
-        loginOrRefreshJob?.cancel()
-        loginOrRefreshJob = cs.launch {
+        loginOrRefreshAsyncJob?.cancel()
+        Log.log(logger::trace, "launching loginOrRefreshAsync job, analytics url {}", myAnalyticsProvider.apiUrl)
+        loginOrRefreshAsyncJob = cs.launch(CoroutineName("loginOrRefreshAsync")) {
             try {
-                Log.log(logger::info, "starting loginOrRefresh job, analytics url {}", myAnalyticsProvider.apiUrl)
+                Log.log(logger::trace, "starting loginOrRefreshAsync job, analytics url {}", myAnalyticsProvider.apiUrl)
                 val loginHandler = LoginHandler.createLoginHandler(project, myAnalyticsProvider)
                 loginHandler.loginOrRefresh()
             } catch (e: Throwable) {
-                Log.warnWithException(logger, e, "error in loginOrRefresh {}", e)
+                Log.warnWithException(logger, e, "error in loginOrRefreshAsync {}", e)
                 ErrorReporter.getInstance().reportError("AuthManager.loginOrRefresh", e)
             } finally {
+                Log.log(logger::trace, "loginOrRefreshAsync job completed, analytics url {}", myAnalyticsProvider.apiUrl)
                 fireChange()
             }
         }
@@ -169,31 +177,51 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
 
         //prevent multiple thread doing login, shouldn't happen as this method is called by UI when user clicks
         // a login button
-        loginLogoutSemaphore.acquire()
+        try {
 
-        val waitingSemaphore = Semaphore(0, true)
-        val deferred = cs.async {
-            try {
-                val loginHandler = LoginHandler.createLoginHandler(myAnalyticsProvider)
-                loginHandler.login(user, password)
-            } catch (e: Throwable) {
-                Log.warnWithException(logger, e, "error in login {}", e)
-                ErrorReporter.getInstance().reportError("AuthManager.login", e)
-                LoginResult(false, null, null)
-            } finally {
-                waitingSemaphore.release()
-                loginLogoutSemaphore.release()
+            Log.log(logger::trace, "acquire lock in loginSynchronously, analytics url {}", myAnalyticsProvider.apiUrl)
+            loginLogoutSemaphore.acquire()
+
+            val waitingSemaphore = Semaphore(0, true)
+            Log.log(logger::trace, "launching loginSynchronously job, analytics url {}", myAnalyticsProvider.apiUrl)
+            val deferred = cs.async(CoroutineName("loginSynchronously")) {
+                try {
+                    Log.log(logger::trace, "starting job loginSynchronously, analytics url {}", myAnalyticsProvider.apiUrl)
+                    val loginHandler = LoginHandler.createLoginHandler(myAnalyticsProvider)
+                    loginHandler.login(user, password)
+                } catch (e: Throwable) {
+                    Log.warnWithException(logger, e, "error in loginSynchronously {}", e)
+                    ErrorReporter.getInstance().reportError("AuthManager.login", e)
+                    LoginResult(false, null, e.message)
+                } finally {
+                    Log.log(logger::trace, "job loginSynchronously completed, releasing wait lock, analytics url {}", myAnalyticsProvider.apiUrl)
+                    waitingSemaphore.release()
+                }
             }
-        }
 
-        return try {
-            waitingSemaphore.acquire()
-            deferred.getCompleted()
+            try {
+                Log.log(logger::trace, "waiting for loginSynchronously job to complete, analytics url {}", myAnalyticsProvider.apiUrl)
+                waitingSemaphore.acquire()
+                Log.log(
+                    logger::trace,
+                    "done waiting for loginSynchronously job, completed successfully, analytics url {}",
+                    myAnalyticsProvider.apiUrl
+                )
+                return deferred.getCompleted()
+            } catch (e: Throwable) {
+                deferred.cancel()
+                Log.warnWithException(logger, e, "error in loginSynchronously {}", e)
+                ErrorReporter.getInstance().reportError("AuthManager.login", e)
+                return LoginResult(false, null, e.message)
+            }
+
         } catch (e: Throwable) {
-            Log.warnWithException(logger, e, "error in login {}", e)
+            Log.warnWithException(logger, e, "error in loginSynchronously {}", e)
             ErrorReporter.getInstance().reportError("AuthManager.login", e)
-            return LoginResult(false, null, null)
+            return LoginResult(false, null, e.message)
         } finally {
+            Log.log(logger::trace, "releasing lock in loginSynchronously")
+            loginLogoutSemaphore.release()
             fireChange()
         }
     }
@@ -202,15 +230,18 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
     /**
      * non blocking logout
      */
-    fun logout() {
-        cs.launch {
+    fun logoutAsync() {
+        Log.log(logger::trace, "launching logoutAsync job, analytics url {}", myAnalyticsProvider.apiUrl)
+        cs.launch(CoroutineName("logoutAsync")) {
             try {
+                Log.log(logger::trace, "starting job logoutAsync, analytics url {}", myAnalyticsProvider.apiUrl)
                 val loginHandler = LoginHandler.createLoginHandler(myAnalyticsProvider)
                 loginHandler.logout()
             } catch (e: Throwable) {
-                Log.warnWithException(logger, e, "error in logout {}", e)
+                Log.warnWithException(logger, e, "error in logoutAsync {}", e)
                 ErrorReporter.getInstance().reportError("AuthManager.logout", e)
             } finally {
+                Log.log(logger::trace, "job logoutAsync completed, analytics url {}", myAnalyticsProvider.apiUrl)
                 fireChange()
             }
         }
@@ -226,39 +257,57 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
 
         //prevent multiple thread doing logout or login at the same time, shouldn't happen as this method is called by UI when user clicks
         // a logout button
-        loginLogoutSemaphore.acquire()
+        try {
+            Log.log(logger::trace, "acquire lock in logoutSynchronously, analytics url {}", myAnalyticsProvider.apiUrl)
+            loginLogoutSemaphore.acquire()
 
-        val waitingSemaphore = Semaphore(0, true)
-        val job = cs.launch {
-            try {
-                val loginHandler = LoginHandler.createLoginHandler(myAnalyticsProvider)
-                loginHandler.logout()
-            } catch (e: Throwable) {
-                Log.warnWithException(logger, e, "error in logoutSynchronously {}", e)
-                ErrorReporter.getInstance().reportError("AuthManager.logoutSynchronously", e)
-            } finally {
-                waitingSemaphore.release()
-                loginLogoutSemaphore.release()
+            val waitingSemaphore = Semaphore(0, true)
+            Log.log(logger::trace, "launching logoutSynchronously job, analytics url {}", myAnalyticsProvider.apiUrl)
+            val job = cs.launch(CoroutineName("logoutSynchronously")) {
+                try {
+                    Log.log(logger::trace, "starting job logoutSynchronously, analytics url {}", myAnalyticsProvider.apiUrl)
+                    val loginHandler = LoginHandler.createLoginHandler(myAnalyticsProvider)
+                    loginHandler.logout()
+                } catch (e: Throwable) {
+                    Log.warnWithException(logger, e, "error in logoutSynchronously {}", e)
+                    ErrorReporter.getInstance().reportError("AuthManager.logout", e)
+                } finally {
+                    Log.log(logger::trace, "job logoutSynchronously completed,releasing wait lock, analytics url {}", myAnalyticsProvider.apiUrl)
+                    waitingSemaphore.release()
+                }
             }
-        }
 
-        return try {
-            waitingSemaphore.acquire()
+            try {
+                Log.log(logger::trace, "waiting for logoutSynchronously job to complete, analytics url {}", myAnalyticsProvider.apiUrl)
+                waitingSemaphore.acquire()
+                Log.log(logger::trace, "done waiting for logoutSynchronously, completed successfully, analytics url {}", myAnalyticsProvider.apiUrl)
+            } catch (e: Throwable) {
+                job.cancel()
+                Log.warnWithException(logger, e, "error in logoutSynchronously {}", e)
+                ErrorReporter.getInstance().reportError("AuthManager.logout", e)
+            }
+
         } catch (e: Throwable) {
             Log.warnWithException(logger, e, "error in logoutSynchronously {}", e)
-            ErrorReporter.getInstance().reportError("AuthManager.logoutSynchronously", e)
+            ErrorReporter.getInstance().reportError("AuthManager.logout", e)
         } finally {
-            job.cancel()
+            Log.log(logger::trace, "releasing lock in logoutSynchronously")
+            loginLogoutSemaphore.release()
             fireChange()
         }
     }
 
 
     private fun onAuthenticationException() {
-        loginOrRefresh()
+        Log.log(logger::trace, "onAuthenticationException called, analytics url {}", myAnalyticsProvider.apiUrl)
+        refreshTokenStrategy.loginOrRefresh(true)
+        Log.log(logger::trace, "onAuthenticationException completed, analytics url {}", myAnalyticsProvider.apiUrl)
     }
 
 
+    //todo: don't fire too much, if there is no login,when user got the login page but didn't yet login, many threads will
+    // fail on 401 and we fire the event every time, listener will act on every event, for example BackendInfoHolder,
+    // its probably not necessary to fire when there is no real change.
     private fun fireChange() {
 
         //don't fire immediately, wait a second.
@@ -339,4 +388,140 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
             }
         }
     }
+
+
+    private interface RefreshStrategy {
+        fun loginOrRefresh(onAuthenticationError: Boolean = false)
+    }
+
+
+    private inner class AuthManagerLockingRefreshStrategy(private val cs: CoroutineScope) : RefreshStrategy {
+
+        private val logger: Logger = Logger.getInstance(AuthManagerLockingRefreshStrategy::class.java)
+
+        private val loginOrRefreshSemaphore = Semaphore(1, true)
+
+        override fun loginOrRefresh(onAuthenticationError: Boolean) {
+
+            if (tokenValid()) {
+                Log.log(logger::trace, "loginOrRefresh called, credentials is valid, aborting")
+                return
+            }
+
+
+            try {
+                Log.log(logger::trace, "acquiring lock in loginOrRefresh")
+                loginOrRefreshSemaphore.acquire()
+                if (tokenValid()) {
+                    Log.log(logger::trace, "loginOrRefresh called, credentials is valid, releasing lock and aborting")
+                    loginOrRefreshSemaphore.release()
+                    return
+                }
+
+
+                val waitingSemaphore = Semaphore(0, true)
+                Log.log(logger::trace, "launching loginOrRefresh job, analytics url {}", myAnalyticsProvider.apiUrl)
+                val job = cs.launch(CoroutineName("lockingLoginOrRefresh")) {
+                    try {
+                        Log.log(logger::trace, "starting lockingLoginOrRefresh job, analytics url {}", myAnalyticsProvider.apiUrl)
+                        val loginHandler = LoginHandler.createLoginHandler(null, myAnalyticsProvider)
+                        loginHandler.loginOrRefresh(onAuthenticationError)
+                    } catch (e: Throwable) {
+                        Log.warnWithException(logger, e, "error in lockingLoginOrRefresh job {}", e)
+                        ErrorReporter.getInstance().reportError("AuthManager.loginOrRefresh", e)
+                    } finally {
+                        Log.log(
+                            logger::trace,
+                            "lockingLoginOrRefresh job completed, releasing wait lock, analytics url {}",
+                            myAnalyticsProvider.apiUrl
+                        )
+                        waitingSemaphore.release()
+                    }
+                }
+
+                try {
+                    Log.log(logger::trace, "waiting for loginOrRefresh job to complete, analytics url {}", myAnalyticsProvider.apiUrl)
+                    waitingSemaphore.acquire()
+                    Log.log(logger::trace, "done waiting for loginOrRefresh, completed successfully, analytics url {}", myAnalyticsProvider.apiUrl)
+                } catch (e: Throwable) {
+                    job.cancel()
+                    Log.warnWithException(logger, e, "error while waiting for loginOrRefresh {}", e)
+                    ErrorReporter.getInstance().reportError("AuthManager.loginOrRefresh", e)
+                }
+
+            } catch (e: Throwable) {
+                Log.warnWithException(logger, e, "error in loginOrRefresh {}", e)
+                ErrorReporter.getInstance().reportError("AuthManager.loginOrRefresh", e)
+            } finally {
+                Log.log(logger::trace, "releasing lock in loginOrRefresh")
+                loginOrRefreshSemaphore.release()
+                fireChange()
+            }
+        }
+    }
+
+
+    //this strategy may do multiple refresh one after the other
+    private inner class AuthManagerNonLockingRefreshStrategy(private val cs: CoroutineScope) : RefreshStrategy {
+
+        private val logger: Logger = Logger.getInstance(AuthManagerNonLockingRefreshStrategy::class.java)
+
+        override fun loginOrRefresh(onAuthenticationError: Boolean) {
+
+            if (tokenValid()) {
+                Log.log(logger::trace, "loginOrRefresh called, credentials is valid, aborting")
+                return
+            }
+
+            val waitingSemaphore = Semaphore(0, true)
+            Log.log(logger::trace, "launching loginOrRefresh job, analytics url {}", myAnalyticsProvider.apiUrl)
+            val job = cs.launch(CoroutineName("nonLockingLoginOrRefresh")) {
+                try {
+                    Log.log(logger::trace, "starting nonLockingLoginOrRefresh job, analytics url {}", myAnalyticsProvider.apiUrl)
+                    val loginHandler = LoginHandler.createLoginHandler(myAnalyticsProvider)
+                    loginHandler.loginOrRefresh(onAuthenticationError)
+                } catch (e: Throwable) {
+                    Log.warnWithException(logger, e, "error in nonLockingLoginOrRefresh job {}", e)
+                    ErrorReporter.getInstance().reportError("AuthManager.loginOrRefresh", e)
+                } finally {
+                    Log.log(
+                        logger::trace,
+                        "nonLockingLoginOrRefresh job completed, releasing wait lock, analytics url {}",
+                        myAnalyticsProvider.apiUrl
+                    )
+                    waitingSemaphore.release()
+                }
+            }
+
+            try {
+                Log.log(logger::trace, "waiting for loginOrRefresh job to complete, analytics url {}", myAnalyticsProvider.apiUrl)
+                waitingSemaphore.acquire()
+                Log.log(logger::trace, "done waiting for loginOrRefresh, completed successfully, analytics url {}", myAnalyticsProvider.apiUrl)
+            } catch (e: Throwable) {
+                job.cancel()
+                Log.warnWithException(logger, e, "error while waiting for loginOrRefresh {}", e)
+                ErrorReporter.getInstance().reportError("AuthManager.loginOrRefresh", e)
+            } finally {
+                fireChange()
+            }
+        }
+    }
+
+
+    private fun tokenValid(): Boolean {
+        //luckily we have the CredentialsHolder that was born for other needs, we can use it to test
+        // if refresh is necessary before locking.
+        //in this context the token is valid if created in the past 30 seconds, we can than assume
+        // that it was created lately probably by a preceding thread, and we don't need to refresh again.
+        //if the token is not expired, but is older than 30 than we can't be sure It's still really valid, because
+        // we are in the context of authentication exception, there is a reason we got the exception, it could be
+        // this is a thread that waited for a preceding thread to do the refresh, i that case surely the token is very young,
+        // if the token was refreshed 2 minutes ago then why did we get the exception?
+        //these are assumptions that will probably work all the time.
+        //we can not completely rely on the expiration time alone.
+        return CredentialsHolder.digmaCredentials?.isAccessTokenValid() == true
+                && CredentialsHolder.digmaCredentials?.isYoungerThen(30.seconds) == true
+    }
+
+
 }

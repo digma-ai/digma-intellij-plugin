@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.auth.account
 
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import kotlinx.coroutines.CoroutineName
 import org.digma.intellij.plugin.analytics.ApiErrorHandler
 import org.digma.intellij.plugin.analytics.ReplacingClientException
 import org.digma.intellij.plugin.analytics.RestAnalyticsProvider
@@ -11,6 +12,7 @@ import org.digma.intellij.plugin.common.findActiveProject
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import kotlin.coroutines.coroutineContext
 
 interface LoginHandler {
 
@@ -71,25 +73,25 @@ interface LoginHandler {
 
     suspend fun logout(): Boolean {
         return try {
-            Log.log(logger::trace, "logout called")
+            trace("logout called")
 
             val digmaAccount = DigmaDefaultAccountHolder.getInstance().account
 
-            Log.log(logger::trace, "logout: found account {}", digmaAccount)
+            trace("logout: found account {}", digmaAccount)
 
             digmaAccount?.let { account ->
                 deleteAccount(account)
             }
 
             digmaAccount?.let {
-                Log.log(logger::trace, "logout: account deleted {} ", digmaAccount)
+                trace("logout: account deleted {} ", digmaAccount)
             }
 
             //return true only if an account was really deleted
             digmaAccount != null
 
         } catch (e: Throwable) {
-            Log.warnWithException(logger, e, "Exception in logout {}", e)
+            warnWithException(e, "Exception in logout {}", e)
             ErrorReporter.getInstance().reportError("AuthManager.logout", e)
             false
         }
@@ -97,6 +99,7 @@ interface LoginHandler {
 
 
     suspend fun updateAccount(digmaAccount: DigmaAccount, digmaCredentials: DigmaCredentials) {
+        trace("updating account {}", digmaAccount)
         //this is the only place we update the account and credentials.
         DigmaAccountManager.getInstance().updateAccount(digmaAccount, digmaCredentials)
         DigmaDefaultAccountHolder.getInstance().account = digmaAccount
@@ -104,13 +107,13 @@ interface LoginHandler {
     }
 
 
-    suspend fun deleteAccount(account: DigmaAccount) {
+    suspend fun deleteAccount(digmaAccount: DigmaAccount) {
+        trace("deleting account {}", digmaAccount)
         //this is the only place we delete the account.
         try {
-            DigmaAccountManager.getInstance().removeAccount(account)
-        } catch (e: Throwable) {
-            throw e
+            DigmaAccountManager.getInstance().removeAccount(digmaAccount)
         } finally {
+            //it's in finally because even if removeAccount failed we want to delete the account and nullify CredentialsHolder.digmaCredentials
             DigmaDefaultAccountHolder.getInstance().account = null
             CredentialsHolder.digmaCredentials = null
         }
@@ -122,5 +125,19 @@ interface LoginHandler {
             ActivityMonitor.getInstance(project).registerCustomEvent(evenName, details)
         }
     }
+
+
+//    suspend fun warn(format: String, vararg args: Any?) {
+//        Log.log(logger::warn, "${coroutineContext[CoroutineName]}: $format", args)
+//    }
+
+    suspend fun trace(format: String, vararg args: Any?) {
+        Log.log(logger::trace, "${coroutineContext[CoroutineName]}: $format", args)
+    }
+
+    suspend fun warnWithException(e: Throwable, format: String, vararg args: Any?) {
+        Log.warnWithException(logger, e, "${coroutineContext[CoroutineName]}: $format", args)
+    }
+
 
 }

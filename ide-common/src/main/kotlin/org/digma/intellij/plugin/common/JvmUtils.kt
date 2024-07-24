@@ -85,7 +85,7 @@ fun generateThreadDump(threadInfos: Array<ThreadInfo>): String {
                     }
 
                     Thread.State.WAITING -> {
-                        dump.append("\t-  waiting on " + threadInfo.lockInfo)
+                        dump.append("\t-  waiting on " + threadInfo.lockInfo.className + "," + threadInfo.lockInfo.identityHashCode)
                         dump.append('\n')
                     }
 

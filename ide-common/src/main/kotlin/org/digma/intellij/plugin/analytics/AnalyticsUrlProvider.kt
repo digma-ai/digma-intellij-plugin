@@ -47,7 +47,7 @@ class AnalyticsUrlProvider : DisposableAdaptor, BaseUrlProvider {
                     // listeners replaced their client
                     fireUrlChangedEvent(oldUrl, myApiUrl)
                     //after clients replaced do loginOrRefresh
-                    AuthManager.getInstance().loginOrRefresh()
+                    AuthManager.getInstance().loginOrRefreshAsync()
                     doForAllProjects { project ->
                         project.messageBus.syncPublisher(ApiClientChangedEvent.API_CLIENT_CHANGED_TOPIC).apiClientChanged(myApiUrl)
                     }

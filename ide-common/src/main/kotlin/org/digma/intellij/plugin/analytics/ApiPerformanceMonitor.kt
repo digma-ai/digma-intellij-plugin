@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.analytics
 
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.common.FrequencyDetector
 import org.digma.intellij.plugin.posthog.ActivityMonitor
@@ -15,6 +16,14 @@ class ApiPerformanceMonitor(private val project: Project) {
     private val frequencyDetector = FrequencyDetector(10.minutes.toJavaDuration())
 
     private val durations = Collections.synchronizedMap(mutableMapOf<String, Pair<Long, Long>>())
+
+
+    companion object {
+        @JvmStatic
+        fun getInstance(project: Project): ApiPerformanceMonitor {
+            return project.service<ApiPerformanceMonitor>()
+        }
+    }
 
     //this method is not thread safe. max duration for apiName may not be the real max if two threads for
     // the same apiName run concurrently, and they have different durations.

@@ -233,7 +233,7 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                     }
 
                     JCEFGlobalConstants.GLOBAL_LOGOUT -> {
-                        AuthManager.getInstance().logout()
+                        AuthManager.getInstance().logoutAsync()
                     }
 
                     JCEFGlobalConstants.GLOBAL_LOGIN -> {

@@ -9,6 +9,7 @@ import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.idea.navigation.model.NavigationProcessContext
 import org.digma.intellij.plugin.idea.navigation.model.SpanLocation
 import org.digma.intellij.plugin.log.Log
+import java.net.URISyntaxException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.function.Consumer
 
@@ -90,8 +91,13 @@ internal class JvmSpanNavigationProvider(project: Project) : AbstractNavigationD
 
 
     override fun removeDiscoveryForPath(path: String) {
-        val url = Urls.newUri("file", path).toString()
-        removeDiscoveryForUrl(url)
+        try {
+            val url = Urls.newUri("file", path).toString()
+            removeDiscoveryForUrl(url)
+        } catch (e: URISyntaxException) {
+            //catch this error and log, no need to report to posthog
+            Log.warnWithException(logger, e, "error removing path")
+        }
     }
 
     private fun removeDiscoveryForUrl(url: String) {

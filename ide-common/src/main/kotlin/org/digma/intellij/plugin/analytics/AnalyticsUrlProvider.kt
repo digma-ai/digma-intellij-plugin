@@ -12,6 +12,7 @@ import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.scheduling.ThreadPoolProviderService
 import org.digma.intellij.plugin.settings.SettingsState
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.function.Consumer
 
 @Service(Service.Level.APP)
@@ -35,7 +36,7 @@ class AnalyticsUrlProvider : DisposableAdaptor, BaseUrlProvider {
      */
     private var myApiToken = SettingsState.getInstance().apiToken
 
-    private val myListeners = mutableListOf<Pair<Int, BaseUrlProvider.UrlChangedListener>>()
+    private val myListeners = CopyOnWriteArrayList<Pair<Int, BaseUrlProvider.UrlChangedListener>>()
 
 
     companion object {

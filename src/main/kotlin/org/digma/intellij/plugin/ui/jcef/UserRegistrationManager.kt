@@ -15,22 +15,32 @@ class UserRegistrationManager(private val project: Project) {
         }
     }
 
-    fun register(registrationMap: Map<String, String>) {
+    fun register(registrationMap: Map<String, String>, trigger: String) {
 
-        ActivityMonitor.getInstance(project).registerCustomEvent("register local user", registrationMap)
-        ActivityMonitor.getInstance(project).registerUserAction("local user registered", registrationMap)
-        val courseRequested = registrationMap["scope"] == "promotion"
+        val email = registrationMap["email"]
 
-
-        registrationMap["email"]?.let { userEmail ->
-            PersistenceService.getInstance().setUserRegistrationEmail(userEmail)
-            ActivityMonitor.getInstance(project).registerEmail(userEmail, courseRequested)//override the onboarding email
-            project.messageBus.syncPublisher(UserRegistrationEvent.USER_REGISTRATION_TOPIC).userRegistered(userEmail)
-        } ?: ErrorReporter.getInstance().reportError(
-            project, "UserRegistrationManager.register", "register user email", mapOf(
-                "error" to "user registration request without email"
+        if (email.isNullOrBlank()) {
+            ErrorReporter.getInstance().reportError(
+                project, "UserRegistrationManager.register", "register user email", mapOf(
+                    "error" to "user registration request without email",
+                    "registration trigger" to trigger
+                )
             )
-        )
+            return
+        }
+
+
+        if (PersistenceService.getInstance().getUserRegistrationEmail().isNullOrBlank() ||
+            PersistenceService.getInstance().getUserRegistrationEmail() != email
+        ) {
+
+            ActivityMonitor.getInstance(project).registerCustomEvent("register local user", registrationMap)
+            ActivityMonitor.getInstance(project).registerUserAction("local user registered", registrationMap)
+            val courseRequested = registrationMap["scope"] == "promotion"
+            PersistenceService.getInstance().setUserRegistrationEmail(email)
+            ActivityMonitor.getInstance(project).registerEmail(email, courseRequested)//override the onboarding email
+            project.messageBus.syncPublisher(UserRegistrationEvent.USER_REGISTRATION_TOPIC).userRegistered(email)
+        }
     }
 
 }

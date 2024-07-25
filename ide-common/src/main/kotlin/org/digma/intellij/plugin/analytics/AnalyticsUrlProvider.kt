@@ -39,6 +39,7 @@ class AnalyticsUrlProvider : DisposableAdaptor, BaseUrlProvider {
 
                 if (state.apiUrl != myApiUrl) {
                     Log.log(logger::trace, "api url changed to {}, replacing myApiUrl", state.apiUrl)
+                    AuthManager.getInstance().stopAutoRefresh("on api url changed")
                     AuthManager.getInstance().logoutSynchronously()
                     ThreadPoolProviderService.getInstance().interruptAll()
                     val oldUrl = myApiUrl
@@ -48,6 +49,7 @@ class AnalyticsUrlProvider : DisposableAdaptor, BaseUrlProvider {
                     fireUrlChangedEvent(oldUrl, myApiUrl)
                     //after clients replaced do loginOrRefresh
                     AuthManager.getInstance().loginOrRefreshAsync()
+                    AuthManager.getInstance().startAutoRefresh()
                     doForAllProjects { project ->
                         project.messageBus.syncPublisher(ApiClientChangedEvent.API_CLIENT_CHANGED_TOPIC).apiClientChanged(myApiUrl)
                     }

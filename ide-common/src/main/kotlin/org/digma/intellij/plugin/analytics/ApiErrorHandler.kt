@@ -8,6 +8,7 @@ import com.intellij.openapi.project.ProjectManager
 import com.intellij.util.Alarm
 import org.digma.intellij.plugin.common.DisposableAdaptor
 import org.digma.intellij.plugin.common.EDT
+import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.common.ExceptionUtils.findConnectException
 import org.digma.intellij.plugin.common.ExceptionUtils.findFirstRealExceptionCause
 import org.digma.intellij.plugin.common.ExceptionUtils.findSslException
@@ -196,7 +197,7 @@ class ApiErrorHandler : DisposableAdaptor {
 
 
     //AuthManager doesn't always have a project, only on startup when calling withAuth
-    fun handleAuthManagerError(throwable: Throwable, project: Project?) {
+    fun handleAuthManagerCantConnectError(throwable: Throwable, project: Project?) {
         try {
             myLock.lock()
             handleAuthManagerErrorImpl(throwable, project)
@@ -206,6 +207,26 @@ class ApiErrorHandler : DisposableAdaptor {
         } finally {
             if (myLock.isHeldByCurrentThread) {
                 myLock.unlock()
+            }
+        }
+    }
+
+    fun handleAuthManagerCantRefreshError(throwable: Throwable, project: Project?) {
+        //todo: currently only reporting
+        Log.warnWithException(logger, throwable, "error in AuthManager {}", throwable)
+
+        val message = if (throwable is AuthenticationException) {
+            throwable.message
+        } else {
+            ExceptionUtils.getNonEmptyMessage(throwable)
+        }
+
+        doForAllProjects { p ->
+            EDT.ensureEDT {
+                NotificationUtil.notifyWarning(
+                    project, "<html>Error with Digma backend " + message + ".<br> "
+                            + message + ".<br> See logs for details."
+                )
             }
         }
     }

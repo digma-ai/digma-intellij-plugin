@@ -116,9 +116,10 @@ class LocalLoginHandler(analyticsProvider: RestAnalyticsProvider) : AbstractLogi
             val errorMessage = ExceptionUtils.getNonEmptyMessage(e)
             reportPosthogEvent("loginOrRefresh failed", mapOf("error" to errorMessage))
 
-            //if got exception here it may be from refresh or login, in both cases delete the current account,
-            //we'll do a silent login again
+            //if got exception here it may be from refresh or login, in both cases delete the current account
+            //and login again
             logout()
+            login(SILENT_LOGIN_USER, SILENT_LOGIN_PASSWORD)
 
             false
         }

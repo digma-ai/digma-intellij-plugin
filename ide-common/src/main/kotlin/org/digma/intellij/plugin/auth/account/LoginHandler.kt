@@ -51,7 +51,7 @@ interface LoginHandler {
 
                 //if we can't create a login handler we assume there is a connection issue, it may be a real connect issue,
                 // or any other issue were we can't get analyticsProvider.about
-                ApiErrorHandler.getInstance().handleAuthManagerError(e, project)
+                ApiErrorHandler.getInstance().handleAuthManagerCantConnectError(e, project)
 
                 Log.warnWithException(logger, e, "Exception in createLoginHandler {}, url {}", e, analyticsProvider.apiUrl)
                 ErrorReporter.getInstance().reportError("AuthManager.createLoginHandler", e)
@@ -65,15 +65,22 @@ interface LoginHandler {
 
     suspend fun login(user: String, password: String): LoginResult
 
-    //does login or refresh if necessary, return true if did successful login or successful refresh,
-    // or when no need to do anything. return false if failed.
-    //we don't really rely on the returned value, mostly for logging
-    //todo: can be true always because its called only from onAuthenticationException
+    /**
+     * does login or refresh if necessary, return true if did successful login or successful refresh,or did nothing because credentials are valid.
+     * false otherwise.
+     * don't rely on the result for authentication purposes, its mainly for logging
+     */
     suspend fun loginOrRefresh(onAuthenticationError: Boolean = false): Boolean
 
+    /**
+     * return true if refresh was successful
+     */
     suspend fun refresh(account: DigmaAccount, credentials: DigmaCredentials): Boolean
 
 
+    /**
+     * return true only if an account was really deleted
+     */
     suspend fun logout(): Boolean {
         return try {
             trace("logout called")

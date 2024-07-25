@@ -90,11 +90,10 @@ class CentralizedLoginHandler(analyticsProvider: RestAnalyticsProvider) : Abstra
             val errorMessage = ExceptionUtils.getNonEmptyMessage(e)
             reportPosthogEvent("loginOrRefresh failed", mapOf("error" to errorMessage))
 
-            //if got exception here it may be from refresh or login, in both cases delete the current account,
-            //and user will be redirected to log in again
+            //if got exception here then we probably can't refresh,logout, user will be redirected to login,
+            // throw the exception to report it
             logout()
-
-            false
+            throw e
         }
 
     }

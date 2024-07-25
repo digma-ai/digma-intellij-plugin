@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.361] - 2024-07-24
+## [2.0.362] - 2024-07-25
+
+- auth improvements by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2315
+
+## 2.0.361 - 2024-07-24
 
 - person site Closes #2309 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2310
 - Support timeout in login handler by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2306

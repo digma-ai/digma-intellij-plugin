@@ -1,11 +1,11 @@
 package org.digma.intellij.plugin.auth
 
 import com.intellij.openapi.diagnostic.Logger
+import org.digma.intellij.plugin.analytics.AnalyticsUrlProvider
 import org.digma.intellij.plugin.auth.account.CredentialsHolder
 import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.settings.SettingsState
 
 
 enum class TokenType { Bearer, Token }
@@ -17,7 +17,7 @@ interface TokenProvider {
 //always takes the token from settings
 class SettingsTokenProvider : TokenProvider {
     override fun provideToken(): String? {
-        return SettingsState.getInstance().apiToken?.let {
+        return AnalyticsUrlProvider.getInstance().apiToken()?.let {
             "${TokenType.Token.name} $it"
         }
     }

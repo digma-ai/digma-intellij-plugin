@@ -94,7 +94,7 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                                         mutableEntry.value.asText()
                                     )
                                 }
-                        UserRegistrationManager.getInstance(project).register(registrationMap)
+                        UserRegistrationManager.getInstance(project).register(registrationMap, JCEFGlobalConstants.GLOBAL_PERSONALIZE_REGISTER)
                     }
 
                     JCEFGlobalConstants.GLOBAL_OPEN_TROUBLESHOOTING_GUIDE -> {
@@ -430,7 +430,12 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
         val result = payload?.let {
             try {
                 AuthManager.getInstance().logoutSynchronously()
-                AuthManager.getInstance().loginSynchronously(it.get("email").asText(), it.get("password").asText())
+                val result = AuthManager.getInstance().loginSynchronously(it.get("email").asText(), it.get("password").asText())
+                if (result.isSuccess) {
+                    UserRegistrationManager.getInstance(project)
+                        .register(mapOf("email" to it.get("email").asText()), JCEFGlobalConstants.GLOBAL_LOGIN)
+                }
+                result
             } catch (e: Exception) {
                 return@let LoginResult(false, null, null)
             }

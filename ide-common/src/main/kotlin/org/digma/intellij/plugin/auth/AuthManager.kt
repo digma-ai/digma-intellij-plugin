@@ -444,7 +444,7 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
                                     account
                                 )
                                 val loginHandler = LoginHandler.createLoginHandler(null, myAnalyticsProvider)
-                                loginHandler.loginOrRefresh()
+                                loginHandler.refresh(account, credentials)
                                 Log.log(logger::trace, "${coroutineContext[CoroutineName]} credentials for account refreshed {}", account)
                                 //immediately loop again and compute the next delay
                                 delay = ZERO

@@ -536,6 +536,7 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
     }
 
 
+    //RefreshStrategy is designed to be called only from onAuthenticationException
     private interface RefreshStrategy {
         fun loginOrRefresh(onAuthenticationError: Boolean = false)
     }

@@ -157,6 +157,7 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
         mutableDetails["firstTimeInsightReceived"] = PersistenceService.getInstance().isFirstTimeInsightReceived()
         mutableDetails["firstTimeAssetsReceived"] = PersistenceService.getInstance().isFirstTimeAssetsReceived()
         mutableDetails["firstTimeRecentActivityReceived"] = PersistenceService.getInstance().isFirstTimeRecentActivityReceived()
+        mutableDetails["plugin.version"] = SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("unknown")
 
         postHog?.capture(
             userId,

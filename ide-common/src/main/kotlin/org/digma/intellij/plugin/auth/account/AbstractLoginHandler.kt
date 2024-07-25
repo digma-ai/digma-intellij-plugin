@@ -92,7 +92,7 @@ abstract class AbstractLoginHandler(protected val analyticsProvider: RestAnalyti
                 reportPosthogEvent("refresh failed", mapOf("error" to errorMessage))
             }
 
-            false
+            throw e
         }
     }
 

@@ -290,6 +290,7 @@ tasks {
             "idea.log.limit" to "999999999",
             "idea.trace.stub.index.update" to "true",
             "org.digma.plugin.enable.devtools" to "true",
+            "kotlinx.coroutines.debug" to "",
 
 //            "idea.ProcessCanceledException" to "disabled"
 

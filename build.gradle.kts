@@ -291,6 +291,7 @@ tasks {
             "idea.trace.stub.index.update" to "true",
             "org.digma.plugin.enable.devtools" to "true",
             "kotlinx.coroutines.debug" to "",
+            "org.digma.plugin.report.pce" to "true"
 
 //            "idea.ProcessCanceledException" to "disabled"
 

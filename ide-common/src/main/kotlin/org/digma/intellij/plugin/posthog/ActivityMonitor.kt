@@ -327,6 +327,14 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
 
     fun registerError(exception: Throwable?, message: String, extraDetails: Map<String, Any> = mapOf()) {
 
+        //there may be many ProcessCanceledException , our code must deal correctly with that,
+        // but we do have code that sends it to error reporting, it's useless.
+        //it's enabled in development, in task runIde this property is set to true, we still want to see that in development.
+        if (System.getProperty("org.digma.plugin.report.pce") == null) {
+            return
+        }
+
+
         try {
             val osType = System.getProperty("os.name")
             val ideInfo = ApplicationInfo.getInstance()

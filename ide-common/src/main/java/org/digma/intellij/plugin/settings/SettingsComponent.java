@@ -49,6 +49,7 @@ public class SettingsComponent {
 
         var defaultLabelForeground = JBColor.foreground();
 
+
         var myUrlLabel = new JBLabel("Digma API URL: ");
         myApiUrlText.setInputVerifier(new InputVerifier() {
             @Override

@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.settings;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.*;
 import com.intellij.ui.components.*;
+import com.intellij.ui.components.fields.ExpandableTextField;
 import com.intellij.util.ui.FormBuilder;
 import org.digma.intellij.plugin.analytics.BackendInfoHolder;
 import org.digma.intellij.plugin.auth.account.*;
@@ -32,16 +33,22 @@ public class SettingsComponent {
     private final ComboBox<SpringBootObservabilityMode> mySpringBootObservabilityModeComboBox = new ComboBox<>(new EnumComboBoxModel<>(SpringBootObservabilityMode.class));
     private final JBLabel myRuntimeObservabilityBackendUrlLabel = new JBLabel("Runtime observability backend URL:");
     private final JBTextField myRuntimeObservabilityBackendUrlText = new JBTextField();
-    private final JBTextField extendedObservabilityTextBox = new JBTextField();
-    private final JBTextField extendedObservabilityExcludeTextBox = new JBTextField();
+    private final JBTextField extendedObservabilityTextBox = new ExpandableTextField();
+    private final JBTextField extendedObservabilityExcludeTextBox = new ExpandableTextField();
 
     public SettingsComponent() {
 
-        extendedObservabilityTextBox.setToolTipText("packages names in format 'my.pkg1;my.pkg2");
+        extendedObservabilityTextBox.setToolTipText("package names in format 'my.pkg1;my.pkg2");
         extendedObservabilityExcludeTextBox.setToolTipText("class/method names to exclude in format 'MyClass;MyOtherClass.myOtherMethod;*get");
-
+        var extendedObservabilityTextBoxPanel = new JBPanel<JBPanel<?>>();
+        extendedObservabilityTextBoxPanel.setLayout(new BorderLayout());
+        extendedObservabilityTextBoxPanel.add(extendedObservabilityTextBox, BorderLayout.CENTER);
+        var extendedObservabilityExcludeTextBoxPanel = new JBPanel<JBPanel<?>>();
+        extendedObservabilityExcludeTextBoxPanel.setLayout(new BorderLayout());
+        extendedObservabilityExcludeTextBoxPanel.add(extendedObservabilityExcludeTextBox, BorderLayout.CENTER);
 
         var defaultLabelForeground = JBColor.foreground();
+
 
         var myUrlLabel = new JBLabel("Digma API URL: ");
         myApiUrlText.setInputVerifier(new InputVerifier() {
@@ -181,8 +188,8 @@ public class SettingsComponent {
                 .addLabeledComponent(myJaegerQueryUrlLabel, myJaegerQueryUrlText, 1, false)
                 .addLabeledComponent(mySpringBootObservabilityModeLabel, mySpringBootObservabilityModeComboBox, 1, false)
                 .addLabeledComponent(myRuntimeObservabilityBackendUrlLabel, myRuntimeObservabilityBackendUrlText, 1, false)
-                .addLabeledComponent("Extended Observability (beta)", extendedObservabilityTextBox, 1, false)
-                .addLabeledComponent("Extended Observability Exclude (beta)", extendedObservabilityExcludeTextBox, 1, false)
+                .addLabeledComponent("Extended Observability (beta)", extendedObservabilityTextBoxPanel, 1, false)
+                .addLabeledComponent("Extended Observability Exclude (beta)", extendedObservabilityExcludeTextBoxPanel, 1, false)
                 .addComponent(resetButton)
                 .addLabeledComponent(new JBLabel("User Id"), userIdLabel)
                 .addLabeledComponent(new JBLabel("Backend version"), backendVersionLabel)
@@ -213,7 +220,6 @@ public class SettingsComponent {
             }
         }
     }
-
 
 
     public JPanel getPanel() {

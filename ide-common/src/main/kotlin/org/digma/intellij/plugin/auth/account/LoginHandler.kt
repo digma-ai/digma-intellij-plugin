@@ -3,6 +3,8 @@ package org.digma.intellij.plugin.auth.account
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.digma.intellij.plugin.analytics.ApiErrorHandler
 import org.digma.intellij.plugin.analytics.ReplacingClientException
 import org.digma.intellij.plugin.analytics.RestAnalyticsProvider
@@ -21,6 +23,8 @@ interface LoginHandler {
     companion object {
 
         private val logger: Logger = Logger.getInstance(this::class.java)
+
+        private val mutex = Mutex()
 
         fun createLoginHandler(analyticsProvider: RestAnalyticsProvider): LoginHandler {
             return createLoginHandler(null, analyticsProvider)
@@ -111,21 +115,25 @@ interface LoginHandler {
     suspend fun updateAccount(digmaAccount: DigmaAccount, digmaCredentials: DigmaCredentials) {
         trace("updating account {}", digmaAccount)
         //this is the only place we update the account and credentials.
-        DigmaAccountManager.getInstance().updateAccount(digmaAccount, digmaCredentials)
-        DigmaDefaultAccountHolder.getInstance().account = digmaAccount
-        CredentialsHolder.digmaCredentials = digmaCredentials
+        mutex.withLock {
+            DigmaAccountManager.getInstance().updateAccount(digmaAccount, digmaCredentials)
+            DigmaDefaultAccountHolder.getInstance().account = digmaAccount
+            CredentialsHolder.digmaCredentials = digmaCredentials
+        }
     }
 
 
     suspend fun deleteAccount(digmaAccount: DigmaAccount) {
         trace("deleting account {}", digmaAccount)
         //this is the only place we delete the account.
-        try {
-            DigmaAccountManager.getInstance().removeAccount(digmaAccount)
-        } finally {
-            //it's in finally because even if removeAccount failed we want to delete the account and nullify CredentialsHolder.digmaCredentials
-            DigmaDefaultAccountHolder.getInstance().account = null
-            CredentialsHolder.digmaCredentials = null
+        mutex.withLock {
+            try {
+                DigmaAccountManager.getInstance().removeAccount(digmaAccount)
+            } finally {
+                //it's in finally because even if removeAccount failed we want to delete the account and nullify CredentialsHolder.digmaCredentials
+                DigmaDefaultAccountHolder.getInstance().account = null
+                CredentialsHolder.digmaCredentials = null
+            }
         }
     }
 

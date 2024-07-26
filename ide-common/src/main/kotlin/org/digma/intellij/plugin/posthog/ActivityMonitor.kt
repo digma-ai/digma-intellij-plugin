@@ -5,6 +5,7 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.project.Project
 import com.intellij.ui.jcef.JBCefApp
 import com.posthog.java.PostHog
@@ -157,6 +158,7 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
         mutableDetails["firstTimeInsightReceived"] = PersistenceService.getInstance().isFirstTimeInsightReceived()
         mutableDetails["firstTimeAssetsReceived"] = PersistenceService.getInstance().isFirstTimeAssetsReceived()
         mutableDetails["firstTimeRecentActivityReceived"] = PersistenceService.getInstance().isFirstTimeRecentActivityReceived()
+        mutableDetails["plugin.version"] = SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("unknown")
 
         postHog?.capture(
             userId,
@@ -326,6 +328,19 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
 
 
     fun registerError(exception: Throwable?, message: String, extraDetails: Map<String, Any> = mapOf()) {
+
+        //there may be many ProcessCanceledException , our code must deal correctly with that,
+        // but we do have code that sends it to error reporting, it's useless.
+        //this is the easiest and most central point to ignore PCE.
+        //it's enabled in development, in task runIde this property is set to true, we still want to see that in development.
+        //need to check isAssignableFrom because there are inheritors like CeProcessCanceledException
+        if (exception != null &&
+            ProcessCanceledException::class.java.isAssignableFrom(exception::class.java) &&
+            System.getProperty("org.digma.plugin.report.pce") == null
+        ) {
+            return
+        }
+
 
         try {
             val osType = System.getProperty("os.name")

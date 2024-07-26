@@ -152,19 +152,14 @@ class ApiErrorHandler : DisposableAdaptor {
                     message
                 )
                 if (errorReportingHelper.addIfNewError(invocationTargetException)) {
-                    doForAllProjects { project ->
-                        EDT.ensureEDT {
-                            NotificationUtil.notifyWarning(
-                                project, "<html>Error with Digma backend api for method " + method.name + ".<br> "
-                                        + message + ".<br> See logs for details."
-                            )
-                        }
-                    }
 
-                    if (isEOFException(invocationTargetException)) {
+                    if (!isErrorToExcludeFromNotifications(invocationTargetException)) {
                         doForAllProjects { project ->
                             EDT.ensureEDT {
-                                NotificationUtil.showBalloonWarning(project, "Digma API EOF error: $message")
+                                NotificationUtil.notifyWarning(
+                                    project, "<html>Error with Digma backend api for method " + method.name + ".<br> "
+                                            + message + ".<br> See logs for details."
+                                )
                             }
                         }
                     }
@@ -193,6 +188,11 @@ class ApiErrorHandler : DisposableAdaptor {
                 )
             }
         }
+    }
+
+    private fun isErrorToExcludeFromNotifications(invocationTargetException: InvocationTargetException): Boolean {
+        //add more errors to exclude
+        return isEOFException(invocationTargetException)
     }
 
 

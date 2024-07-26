@@ -642,7 +642,7 @@ public class AnalyticsService implements Disposable {
                     //httpNetoTime may be null, usually it will not but the ThreadLocal is nullable by default so need to check
                     var httpNetoTime = RestAnalyticsProvider.PERFORMANCE.get();
                     if (httpNetoTime != null) {
-                        project.getService(ApiPerformanceMonitor.class).addPerformance(method.getName(), stopWatch.getTime(TimeUnit.MILLISECONDS), httpNetoTime, exception);
+                        ApiPerformanceMonitor.getInstance(project).addPerformance(method.getName(), stopWatch.getTime(TimeUnit.MILLISECONDS), httpNetoTime, exception);
                     }
                 }
                 if (LOGGER.isTraceEnabled()) {

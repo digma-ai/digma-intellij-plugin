@@ -11,6 +11,7 @@ import org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscovery
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscoveryService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
+import java.net.URISyntaxException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArraySet
 import java.util.function.Predicate
@@ -95,8 +96,13 @@ internal class JvmEndpointNavigationProvider(project: Project) : AbstractNavigat
 
 
     override fun removeDiscoveryForPath(path: String) {
-        val url = Urls.newUri("file", path).toString()
-        removeDiscoveryForUrl(url)
+        try {
+            val url = Urls.newUri("file", path).toString()
+            removeDiscoveryForUrl(url)
+        } catch (e: URISyntaxException) {
+            //catch this error and log, no need to report to posthog
+            Log.warnWithException(logger, e, "error removing path")
+        }
     }
 
     private fun removeDiscoveryForUrl(url: String) {

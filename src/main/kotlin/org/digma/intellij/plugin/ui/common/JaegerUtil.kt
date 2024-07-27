@@ -9,7 +9,7 @@ import org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider
 import org.digma.intellij.plugin.jaegerui.JaegerUIService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.UserActionOrigin
-import org.digma.intellij.plugin.settings.LinkMode
+import org.digma.intellij.plugin.settings.JaegerLinkMode
 import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.ui.model.TraceSample
 import java.io.InputStreamReader
@@ -25,7 +25,7 @@ fun openJaegerFromRecentActivity(
     spanCodeObjectId: String?,
 ) {
 
-    if (!isJaegerButtonEnabled() || traceId.isBlank()){
+    if (!isJaegerButtonEnabled() || traceId.isBlank()) {
         return
     }
 
@@ -34,10 +34,9 @@ fun openJaegerFromRecentActivity(
     val jaegerUrlEmbedPart = "&uiEmbed=v0"
     var jaegerUrl: String
     val jaegerBaseUrl = settingsState.jaegerUrl?.trim()?.trimEnd('/')
-    if (settingsState.jaegerLinkMode==LinkMode.External && jaegerBaseUrl!=null && jaegerBaseUrl.contains("\${TRACE_ID}")){
-        jaegerUrl=jaegerBaseUrl.replace("\${TRACE_ID}",traceId.lowercase())
-    }
-    else{
+    if (settingsState.jaegerLinkMode == JaegerLinkMode.External && jaegerBaseUrl != null && jaegerBaseUrl.contains("\${TRACE_ID}")) {
+        jaegerUrl = jaegerBaseUrl.replace("\${TRACE_ID}", traceId.lowercase())
+    } else {
         jaegerUrl = "${jaegerBaseUrl}/trace/${traceId.lowercase()}?cohort=${traceId.lowercase()}${jaegerUrlEmbedPart}"
         spanCodeObjectId?.let {
             jaegerUrl = jaegerUrl.plus("&uiFind=").plus(URLEncoder.encode(spanCodeObjectId, StandardCharsets.UTF_8))
@@ -45,9 +44,9 @@ fun openJaegerFromRecentActivity(
     }
 
 
-    when(settingsState.jaegerLinkMode){
+    when (settingsState.jaegerLinkMode) {
 
-        LinkMode.Internal -> {
+        JaegerLinkMode.Internal -> {
             val caption = "A sample $spanName trace"
             val htmlContent = JaegerEmbeddedHtmlTemplate.JAEGER_EMBEDDED_HTML_TEMPLATE
                 .replace("__JAEGER_EMBEDDED_URL__", jaegerUrl)
@@ -57,13 +56,14 @@ fun openJaegerFromRecentActivity(
                 DigmaHTMLEditorProvider.openEditor(project, editorTitle, htmlContent)
             }
         }
-        LinkMode.External -> {
-            EDT.ensureEDT{
+
+        JaegerLinkMode.External -> {
+            EDT.ensureEDT {
                 BrowserUtil.browse(jaegerUrl, project)
             }
         }
 
-        LinkMode.Embedded -> {
+        JaegerLinkMode.Embedded -> {
             val traceSample = TraceSample(spanName, traceId)
             JaegerUIService.getInstance(project).openEmbeddedJaeger(Collections.singletonList(traceSample), spanName, spanCodeObjectId, true)
         }
@@ -88,10 +88,9 @@ fun openJaegerFromInsight(
     val embedPart = "&uiEmbed=v0"
 
     val trace1 = traceId.lowercase()
-    if (settingsState.jaegerLinkMode==LinkMode.External && jaegerBaseUrl!=null && jaegerBaseUrl.contains("\${TRACE_ID}")){
+    if (settingsState.jaegerLinkMode == JaegerLinkMode.External && jaegerBaseUrl != null && jaegerBaseUrl.contains("\${TRACE_ID}")) {
         jaegerUrl = jaegerBaseUrl.replace("\${TRACE_ID}", trace1)
-    }
-    else{
+    } else {
         jaegerUrl = "${jaegerBaseUrl}/trace/${trace1}?cohort=${trace1}${embedPart}"
         spanCodeObjectId?.let {
             jaegerUrl = jaegerUrl.plus("&uiFind=").plus(URLEncoder.encode(spanCodeObjectId, StandardCharsets.UTF_8))
@@ -101,7 +100,7 @@ fun openJaegerFromInsight(
 
     when (settingsState.jaegerLinkMode) {
 
-        LinkMode.Internal -> {
+        JaegerLinkMode.Internal -> {
 
             val caption = "A sample $traceName trace"
 
@@ -114,13 +113,13 @@ fun openJaegerFromInsight(
             }
         }
 
-        LinkMode.External -> {
+        JaegerLinkMode.External -> {
             EDT.ensureEDT {
                 BrowserUtil.browse(jaegerUrl, project)
             }
         }
 
-        LinkMode.Embedded -> {
+        JaegerLinkMode.Embedded -> {
             val traceSample = TraceSample(traceName, traceId)
             JaegerUIService.getInstance(project).openEmbeddedJaeger(Collections.singletonList(traceSample), traceName, spanCodeObjectId, true)
         }
@@ -149,7 +148,7 @@ fun openJaegerComparisonFromInsight(
 
     when (settingsState.jaegerLinkMode) {
 
-        LinkMode.Internal -> {
+        JaegerLinkMode.Internal -> {
 
             val caption = "Comparing: A sample $traceName1 trace with a $traceName2 trace"
 
@@ -162,13 +161,13 @@ fun openJaegerComparisonFromInsight(
             }
         }
 
-        LinkMode.External -> {
+        JaegerLinkMode.External -> {
             EDT.ensureEDT {
                 BrowserUtil.browse(jaegerUrl, project)
             }
         }
 
-        LinkMode.Embedded -> {
+        JaegerLinkMode.Embedded -> {
             val traceSample1 = TraceSample(traceName1, traceId1)
             val traceSample2 = TraceSample(traceName2, traceId2)
             val traces = listOf(traceSample1, traceSample2)
@@ -180,7 +179,7 @@ fun openJaegerComparisonFromInsight(
 
 fun isJaegerButtonEnabled(): Boolean {
     val settingsState = SettingsState.getInstance()
-    return settingsState.jaegerLinkMode == LinkMode.Embedded ||
+    return settingsState.jaegerLinkMode == JaegerLinkMode.Embedded ||
             (!settingsState.jaegerUrl.isNullOrBlank() && CommonUtils.isWelFormedUrl(settingsState.jaegerUrl))
 }
 
@@ -191,13 +190,15 @@ fun getJaegerUrl(): String? {
 
     return when (settingsState.jaegerLinkMode) {
 
-        LinkMode.Internal -> {
+        JaegerLinkMode.Internal -> {
             jaegerBaseUrl
         }
-        LinkMode.External -> {
+
+        JaegerLinkMode.External -> {
             jaegerBaseUrl
         }
-        LinkMode.Embedded -> {
+
+        JaegerLinkMode.Embedded -> {
             jaegerQueryUrl
         }
     }

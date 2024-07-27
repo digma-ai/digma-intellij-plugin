@@ -19,6 +19,7 @@ dependencies {
     api(libs.threeten)
     api(libs.commons.lang3)
     api(libs.commons.collections4)
+    api(libs.commons.validator)
     api(libs.posthog)
     api(libs.maven.artifact)
     api(libs.glovoapp.versioning) {
@@ -31,6 +32,7 @@ dependencies {
 
     implementation(project(":model"))
     implementation(project(":analytics-provider"))
+
 
     intellijPlatform {
         create(platformType, project.platformVersion())

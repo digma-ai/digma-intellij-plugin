@@ -1,6 +1,6 @@
 package org.digma.intellij.plugin.settings;
 
-public enum LinkMode {
+public enum JaegerLinkMode {
     Internal,
     External,
     Embedded

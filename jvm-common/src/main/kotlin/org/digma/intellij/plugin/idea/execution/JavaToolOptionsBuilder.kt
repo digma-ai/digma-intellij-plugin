@@ -176,26 +176,17 @@ open class JavaToolOptionsBuilder(
         if (isExtendedObservabilityConfigured()) {
 
             javaToolOptions
-                .append("-Ddigma.autoinstrument.packages=${normalizeExtendedObservabilityValue(SettingsState.getInstance().extendedObservability)}")
+                .append("-Ddigma.autoinstrument.packages=${SettingsState.getInstance().normalizedExtendedObservability}")
                 .append(" ")
 
             if (!SettingsState.getInstance().extendedObservabilityExcludes.isNullOrBlank()) {
                 javaToolOptions
-                    .append("-Ddigma.autoinstrument.packages.exclude.names=${normalizeExtendedObservabilityValue(SettingsState.getInstance().extendedObservabilityExcludes)}")
+                    .append("-Ddigma.autoinstrument.packages.exclude.names=${SettingsState.getInstance().normalizedExtendedObservabilityExcludes}")
                     .append(" ")
             }
         }
 
         return this
-    }
-
-
-    private fun normalizeExtendedObservabilityValue(value: String?): String {
-        return value?.let { nonNullVal ->
-            val withoutNewLine = nonNullVal.replace(Regex("\n", RegexOption.LITERAL), "").replace(Regex("\t", RegexOption.LITERAL), "")
-            val parts = withoutNewLine.split(';').map { it.trim() }.filter { it.isNotBlank() }
-            parts.joinToString(";")
-        } ?: ""
     }
 
 

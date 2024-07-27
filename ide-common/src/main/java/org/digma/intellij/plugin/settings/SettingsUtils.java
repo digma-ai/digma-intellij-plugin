@@ -22,7 +22,7 @@ public class SettingsUtils {
 //        }
 
         try {
-            return !Objects.equals(Objects.requireNonNull(SettingsState.getInstance().getState()).apiUrl, SettingsState.DEFAULT_API_URL);
+            return !Objects.equals(Objects.requireNonNull(SettingsState.getInstance().getState()).getApiUrl(), SettingsState.DEFAULT_API_URL);
         } catch (NullPointerException e) {
             return false;
         }

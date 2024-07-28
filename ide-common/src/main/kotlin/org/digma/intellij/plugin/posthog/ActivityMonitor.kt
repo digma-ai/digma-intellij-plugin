@@ -6,6 +6,7 @@ import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.progress.ProcessCanceledException
+import com.intellij.openapi.project.IndexNotReadyException
 import com.intellij.openapi.project.Project
 import com.intellij.ui.jcef.JBCefApp
 import com.posthog.java.PostHog
@@ -56,6 +57,14 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
     private val logger: Logger = Logger.getInstance(ActivityMonitor::class.java)
 
     companion object {
+
+        //using class names because some exceptions may not be available in development classpath so we can use the name
+        private val EXCEPTIONS_TO_EXCLUDE_FROM_ERROR_REPORTING = setOf(
+            ProcessCanceledException::class.qualifiedName,
+            "com.intellij.openapi.progress.CeProcessCanceledException",
+            IndexNotReadyException::class.qualifiedName,
+        )
+
 
         private const val TOKEN = "phc_5sy6Kuv1EYJ9GAdWPeGl7gx31RAw7BR7NHnOuLCUQZK"
 
@@ -329,15 +338,7 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
 
     fun registerError(exception: Throwable?, message: String, extraDetails: Map<String, Any> = mapOf()) {
 
-        //there may be many ProcessCanceledException , our code must deal correctly with that,
-        // but we do have code that sends it to error reporting, it's useless.
-        //this is the easiest and most central point to ignore PCE.
-        //it's enabled in development, in task runIde this property is set to true, we still want to see that in development.
-        //need to check isAssignableFrom because there are inheritors like CeProcessCanceledException
-        if (exception != null &&
-            ProcessCanceledException::class.java.isAssignableFrom(exception::class.java) &&
-            System.getProperty("org.digma.plugin.report.pce") == null
-        ) {
+        if (excludedExceptionFromErrorReporting(exception)) {
             return
         }
 
@@ -403,6 +404,18 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
                 )
             )
         }
+    }
+
+    private fun excludedExceptionFromErrorReporting(exception: Throwable?): Boolean {
+
+        //always report in development. this property is set to true in gradle task runIde. it helps to see these errors during development.
+        if (System.getProperty("org.digma.plugin.report.all.errors") != null && System.getProperty("org.digma.plugin.report.all.errors") == "true") {
+            return false
+        }
+
+        return exception?.let {
+            return EXCEPTIONS_TO_EXCLUDE_FROM_ERROR_REPORTING.contains(it::class.qualifiedName)
+        } ?: false
     }
 
 

@@ -59,15 +59,11 @@ abstract class AbstractLoginHandler(protected val analyticsProvider: RestAnalyti
         } catch (e: Throwable) {
 
             warnWithException(e, "Exception in login {}, url {}", e, analyticsProvider.apiUrl)
-            ErrorReporter.getInstance().reportError("AuthManager.login", e)
+            ErrorReporter.getInstance().reportError("${javaClass.simpleName}.login", e)
 
             if (e is AuthenticationException) {
-                warnWithException(e, "Exception in login, url {}", analyticsProvider.apiUrl)
-                ErrorReporter.getInstance().reportError("AuthManager.login", e)
                 val errorMessage = ExceptionUtils.getNonEmptyMessage(e)
                 reportPosthogEvent("login failed", mapOf("user" to user, "error" to errorMessage))
-                //return no success LoginResult
-                LoginResult(false, null, e.detailedMessage)
             }
 
             LoginResult(false, null, ExceptionUtils.getNonEmptyMessage(e))
@@ -90,11 +86,9 @@ abstract class AbstractLoginHandler(protected val analyticsProvider: RestAnalyti
 
         } catch (e: Throwable) {
             warnWithException(e, "Exception in refresh {}", e)
-            ErrorReporter.getInstance().reportError("AuthManager.refresh", e)
+            ErrorReporter.getInstance().reportError("${javaClass.simpleName}.refresh", e)
 
             if (e is AuthenticationException) {
-                warnWithException(e, "Exception in refresh, url {}", analyticsProvider.apiUrl)
-                ErrorReporter.getInstance().reportError("AuthManager.refresh", e)
                 val errorMessage = ExceptionUtils.getNonEmptyMessage(e)
                 reportPosthogEvent("refresh failed", mapOf("error" to errorMessage))
             }

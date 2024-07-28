@@ -25,7 +25,13 @@ class DigmaAccount(
     @Property(style = Property.Style.ATTRIBUTE, surroundWithTag = false)
     override val server: MyServerPath = MyServerPath(),
     @Attribute("userId")
-    val userId: String = DEFAULT_LOGIN_ID
+    val userId: String = DEFAULT_LOGIN_ID,
+    //createdBy used for information and debugging, never used for comparison or things like that. nullable for backward compatibility.
+    @Attribute("createdBy")
+    val createdBy: String? = null,
+    //creationDate used for information and debugging, never used for comparison or things like that. nullable for backward compatibility.
+    @Attribute("creationDate")
+    val creationDate: String? = null
 ) : ServerAccount() {
 
     override fun toString(): String {

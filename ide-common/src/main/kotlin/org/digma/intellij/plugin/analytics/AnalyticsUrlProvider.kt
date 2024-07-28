@@ -63,10 +63,10 @@ class AnalyticsUrlProvider : DisposableAdaptor, BaseUrlProvider {
                     //clients should be replaced now, this is a synchronous call that will return only after all
                     // listeners replaced their client
                     fireUrlChangedEvent(oldUrl, myApiUrl)
-                    //after clients replaced do loginOrRefresh
-                    AuthManager.getInstance().loginOrRefreshAsync()
                     AuthManager.getInstance().startAutoRefresh()
+                    //this will trigger authentication exception and a login or refresh if necessary
                     doForAllProjects { project ->
+                        refreshEnvironmentsNowOnBackground(project)
                         project.messageBus.syncPublisher(ApiClientChangedEvent.API_CLIENT_CHANGED_TOPIC).apiClientChanged(myApiUrl)
                     }
                 }

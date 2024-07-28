@@ -198,6 +198,7 @@ class ApiErrorHandler : DisposableAdaptor {
 
     //AuthManager doesn't always have a project, only on startup when calling withAuth
     fun handleAuthManagerCantConnectError(throwable: Throwable, project: Project?) {
+        Log.log(logger::trace, "handleAuthManagerCantConnectError called with exception {}", throwable)
         try {
             myLock.lock()
             handleAuthManagerErrorImpl(throwable, project)

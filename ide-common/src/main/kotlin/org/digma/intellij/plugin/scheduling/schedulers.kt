@@ -189,6 +189,7 @@ class ThreadPoolProviderService : Disposable {
             //call the scheduler manage
             manage()
 
+            //these reporting will fail in unit tests but its ok because the manage already run
             //the pool size was increased to SCHEDULER_MAX_SIZE, we have a problem, report an error
             if (scheduler.corePoolSize >= SCHEDULER_MAX_SIZE && !alreadySentSchedulerMaxSize.get()) {
                 alreadySentSchedulerMaxSize.set(true)
@@ -650,18 +651,23 @@ class MyScheduledExecutorService(
                     corePoolSize = min(maxPoolSize, poolSize + 1)
                     Log.logWithThreadName(logger::trace, "management: pool size increased from {} to {}", currentSize, corePoolSize)
 
-                    findActiveProject()?.let { project ->
-                        ActivityMonitor.getInstance(project).registerSchedulerSizeIncreased(
-                            mapOf(
-                                "prev.core.pool.size" to currentSize,
-                                "core.pool.size" to scheduler.corePoolSize,
-                                "max.pool.size" to scheduler.maximumPoolSize,
-                                "task.queue.size" to scheduler.queue.size,
-                                "all.registered.recurring (including canceled)" to scheduler.registeredRecurringTasks,
-                                "max.pool.size.allowed" to SCHEDULER_MAX_SIZE,
-                                "max.queue.size.allowed" to SCHEDULER_MAX_QUEUE_SIZE_ALLOWED
+                    try {
+                        //need this try catch only in unit tests because findActiveProject will fail
+                        findActiveProject()?.let { project ->
+                            ActivityMonitor.getInstance(project).registerSchedulerSizeIncreased(
+                                mapOf(
+                                    "prev.core.pool.size" to currentSize,
+                                    "core.pool.size" to scheduler.corePoolSize,
+                                    "max.pool.size" to scheduler.maximumPoolSize,
+                                    "task.queue.size" to scheduler.queue.size,
+                                    "all.registered.recurring (including canceled)" to scheduler.registeredRecurringTasks,
+                                    "max.pool.size.allowed" to SCHEDULER_MAX_SIZE,
+                                    "max.queue.size.allowed" to SCHEDULER_MAX_QUEUE_SIZE_ALLOWED
+                                )
                             )
-                        )
+                        }
+                    } catch (e: Throwable) {
+                        Log.warnWithException(logger, e, "error reporting event {}", e)
                     }
 
                 } else {

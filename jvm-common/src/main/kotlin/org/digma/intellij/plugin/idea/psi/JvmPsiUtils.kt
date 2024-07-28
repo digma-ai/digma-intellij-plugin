@@ -4,12 +4,15 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiIdentifier
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.impl.source.PsiExtensibleClass
 import org.digma.intellij.plugin.common.isReadAccessAllowed
 import org.digma.intellij.plugin.common.runInReadAccessWithResult
 import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.psi.PsiUtils
+import org.jetbrains.kotlin.asJava.namedUnwrappedElement
+import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.UMethod
@@ -36,14 +39,37 @@ fun isJvmSupportedFile(project: Project, psiFile: PsiFile): Boolean {
 
 fun getClassSimpleName(uClass: UClass): String {
 
-    val packageName = uClass.getParentOfType<UFile>()?.packageName ?: ""
-    val packageNameLength = if (packageName.isBlank()) {
-        0
-    } else {
-        packageName.length + 1
+    //try few methods to get the class simple name
+    try {
+        val simpleName = if (uClass.sourcePsi is PsiClass) {
+            (uClass.sourcePsi as PsiClass).name
+        } else {
+            uClass.getChildOfType<PsiIdentifier>()?.text ?: uClass.namedUnwrappedElement?.name
+        }
+
+        if (simpleName != null) {
+            return simpleName
+        }
+    } catch (e: Throwable) {
+        //ignore
     }
 
-    return uClass.qualifiedName?.substring(packageNameLength) ?: uClass.name ?: ""
+    try {
+
+        val packageName = uClass.getParentOfType<UFile>()?.packageName ?: ""
+        val packageNameLength = if (packageName.isBlank()) {
+            0
+        } else {
+            packageName.length + 1
+        }
+
+        //for some reason sometimes this throws StringIndexOutOfBoundsException.not clear why, the computation of the
+        // package name length above is correct. maybe it happens when indexes are not fully ready or if PSI parsing is not complete.
+        return uClass.qualifiedName?.substring(packageNameLength) ?: uClass.qualifiedName ?: ""
+    } catch (e: IndexOutOfBoundsException) {
+        return uClass.name ?: uClass.qualifiedName ?: ""
+    }
+
 }
 
 

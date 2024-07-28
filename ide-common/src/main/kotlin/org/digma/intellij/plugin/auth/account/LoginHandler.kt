@@ -53,7 +53,7 @@ interface LoginHandler {
                 }
 
                 Log.warnWithException(logger, e, "Exception in createLoginHandler {}, url {}", e, analyticsProvider.apiUrl)
-                ErrorReporter.getInstance().reportError("AuthManager.createLoginHandler", e)
+                ErrorReporter.getInstance().reportError("LoginHandler.createLoginHandler", e)
 
                 Log.log(logger::trace, "Got exception in createLoginHandler , returning NoOpLoginHandler", analyticsProvider.apiUrl)
                 return NoOpLoginHandler("error in createLoginHandler $e")
@@ -101,7 +101,7 @@ interface LoginHandler {
 
         } catch (e: Throwable) {
             warnWithException(e, "Exception in logout {}", e)
-            ErrorReporter.getInstance().reportError("AuthManager.logout", e)
+            ErrorReporter.getInstance().reportError("${javaClass.simpleName}.logout", e)
             false
         }
     }

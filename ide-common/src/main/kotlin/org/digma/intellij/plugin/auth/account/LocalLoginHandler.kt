@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.auth.account
 
 import kotlinx.coroutines.CoroutineName
+import org.digma.intellij.plugin.analytics.AuthenticationException
 import org.digma.intellij.plugin.analytics.RestAnalyticsProvider
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
@@ -112,9 +113,12 @@ class LocalLoginHandler(analyticsProvider: RestAnalyticsProvider) : AbstractLogi
         } catch (e: Throwable) {
 
             warnWithException(e, "Exception in loginOrRefresh {}, url {}", e, analyticsProvider.apiUrl)
-            ErrorReporter.getInstance().reportError("LocalLoginHandler.loginOrRefresh", e)
-            val errorMessage = ExceptionUtils.getNonEmptyMessage(e)
-            reportPosthogEvent("loginOrRefresh failed", mapOf("error" to errorMessage))
+            ErrorReporter.getInstance().reportError("${javaClass.simpleName}.loginOrRefresh", e)
+
+            if (e is AuthenticationException) {
+                val errorMessage = ExceptionUtils.getNonEmptyMessage(e)
+                reportPosthogEvent("loginOrRefresh failed", mapOf("error" to errorMessage))
+            }
 
             //if got exception here it may be from refresh or login, in both cases delete the current account
             //and login again

@@ -125,7 +125,7 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
     /**
      * withAuth should not be called concurrently by multiple threads. it is called only from AnalyticsService.createClient,
      * which is actually the AnalyticsService constructor. the platform makes sure to create singleton service, the AnalyticsService
-     * will not be called concurrently for the same project.
+     * constructor will not be called concurrently for the same project.
      * this method will be called concurrently if multiple projects are opened at the same time.
      * the analyticsProvider here is the one to wrap with a proxy, it's a per project analyticsProvider.
      * AuthManager uses its own local analyticsProvider for the login and refresh.
@@ -134,13 +134,16 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
 
         Log.log(logger::info, "wrapping analyticsProvider with auth for url {}", analyticsProvider.apiUrl)
 
-        //try loginOrRefresh on startup, use loginOrRefreshAsync here because this code is called from
-        // AnalyticsService constructor, and we don't want to block it, it's an attempt to complete the loginOrRefresh
-        // before any api call is made. if it didn't succeed than the first api call will also do loginOrRefresh.
-        //it may happen that eventually loginOrRefresh will be invoked more than once, it's ok, the server can deal with that.
-        loginOrRefreshAsync(project)
+        //try to update the CredentialsHolder as early as possible. if there is an account and credentials then after updating CredentialsHolder
+        // api calls will already have authentication. this is necessary only on startup of the IDE when there are possibly
+        // running tasks already, for example refresh environments starts very early.
+        // after startup CredentialsHolder is always updated.
+        updateCredentialsHolder()
 
-        //always return a proxy. even if login failed. the proxy will try to loginOrRefresh on AuthenticationException
+        //try if there is connection to the api and mark connection lost/gained very early on startup of the project
+        tryConnection(project)
+
+        //always return a proxy. even if there is no connection. the proxy will try to loginOrRefresh on AuthenticationException
         val proxy = proxy(analyticsProvider)
 
         Log.log(
@@ -155,38 +158,66 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
     }
 
 
-    /**
-     * this method is used for best effort to do log in or refresh early on startup.
-     * when connection to the server is ok it will succeed either new login or refresh if necessary.
-     * it is non-blocking but does not allow more than one job at a time, if called concurrently and
-     * myAuthJob is active the method will just return doing nothing.
-     * it may be called concurrently if multiple projects open at the same time, worst case a login or refresh will
-     * happen more than once, our server can deal with it.
-     */
-    fun loginOrRefreshAsync(project: Project? = null) {
+    private fun tryConnection(project: Project) {
 
-        Log.log(logger::trace, "loginOrRefreshAsync called, analytics url {}", myAnalyticsProvider.apiUrl)
+        Log.log(logger::trace, "launching tryConnection job")
 
-        if (loginOrRefreshAsyncJob?.isActive == true) {
-            Log.log(logger::trace, "loginOrRefreshAsync job is active,aborting. analytics url {}", myAnalyticsProvider.apiUrl)
+        cs.launch(CoroutineName("tryConnection")) {
+            try {
+                Log.log(logger::trace, "${coroutineContext[CoroutineName]}: trying to call getAbout")
+                //just call getAbout, if it succeeds then connection is ok.
+                //if getAbout fails nothing will work because we need it to decide which authentication to do,local or centralized.
+                myAnalyticsProvider.about
+                Log.log(logger::trace, "${coroutineContext[CoroutineName]}: getAbout succeeded")
+
+                //if there is connection then reset the connection status is necessary.
+                //in extreme cases where many projects are opened on startup. it may happen that a project got
+                // connection lost event, and if connection gained very quickly maybe some listeners where not active yet and did not
+                // get the connection gained event. this call will fix it. if connection is ok this will be a very fast call and will do
+                // no harm if there is nothing to do. it happens only on startup, called from withAuth which is called only once on project startup.
+                ApiErrorHandler.getInstance().resetConnectionLostAndNotifyIfNecessary(project)
+
+            } catch (e: Throwable) {
+
+                Log.warnWithException(logger, e, "${coroutineContext[CoroutineName]}: getAbout failed with exception {}", e)
+                //if we can't call getAbout we assume there is a connection issue, it may be a real connect issue,
+                // or any other issue were we can't get analyticsProvider.about
+                ApiErrorHandler.getInstance().handleAuthManagerCantConnectError(e, project)
+            }
+        }
+    }
+
+
+    private fun updateCredentialsHolder() {
+
+        Log.log(logger::trace, "updateCredentialsHolder called")
+
+        //if CredentialsHolder already has credentials return, this is the usual case.
+        //if there is no account yet return, there is nothing to do
+        if (CredentialsHolder.digmaCredentials != null || DigmaDefaultAccountHolder.getInstance().account == null) {
+            Log.log(logger::trace, "not updating credentials because already updated")
             return
         }
 
-        loginOrRefreshAsyncJob?.cancel()
-        Log.log(logger::trace, "launching loginOrRefreshAsync job, analytics url {}", myAnalyticsProvider.apiUrl)
-        loginOrRefreshAsyncJob = cs.launch(CoroutineName("loginOrRefreshAsync")) {
+        Log.log(logger::trace, "launching updateCredentialsHolder job")
+        cs.launch(CoroutineName("updateCredentialsHolder")) {
             try {
-                Log.log(logger::trace, "starting loginOrRefreshAsync job, analytics url {}", myAnalyticsProvider.apiUrl)
-                val loginHandler = LoginHandler.createLoginHandler(project, myAnalyticsProvider)
-                loginHandler.loginOrRefresh()
-                //wake up the auto refresh to check the next auto refresh time
-                cancelAutoRefreshWaitingJob("from loginOrRefreshAsync")
+                val account = DigmaDefaultAccountHolder.getInstance().account
+                account?.let { acc ->
+                    Log.log(logger::trace, "${coroutineContext[CoroutineName]}: found account {}", acc)
+                    val credentials = DigmaAccountManager.getInstance().findCredentials(acc)
+                    credentials?.let { creds ->
+                        Log.log(
+                            logger::trace,
+                            "${coroutineContext[CoroutineName]}: found credentials, updating CredentialsHolder with account {}",
+                            acc
+                        )
+                        CredentialsHolder.digmaCredentials = creds
+                    }
+                }
+
             } catch (e: Throwable) {
-                Log.warnWithException(logger, e, "error in loginOrRefreshAsync {}", e)
-                ErrorReporter.getInstance().reportError("AuthManager.loginOrRefresh", e)
-            } finally {
-                Log.log(logger::trace, "loginOrRefreshAsync job completed, analytics url {}", myAnalyticsProvider.apiUrl)
-                fireChange()
+                Log.warnWithException(logger, e, "${coroutineContext[CoroutineName]}: error in updateCredentialsHolder {}", e)
             }
         }
     }
@@ -214,7 +245,7 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
             val deferred = cs.async(CoroutineName("loginSynchronously")) {
                 try {
                     Log.log(logger::trace, "starting job loginSynchronously, analytics url {}", myAnalyticsProvider.apiUrl)
-                    val loginHandler = LoginHandler.createLoginHandler(myAnalyticsProvider)
+                    val loginHandler = LoginHandler.createLoginHandler(myAnalyticsProvider, true)
                     val loginResult = loginHandler.login(user, password)
                     //wake up the auto refresh to check the next auto refresh time
                     cancelAutoRefreshWaitingJob("from loginSynchronously")
@@ -443,7 +474,7 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
                                     expireIn,
                                     account
                                 )
-                                val loginHandler = LoginHandler.createLoginHandler(null, myAnalyticsProvider)
+                                val loginHandler = LoginHandler.createLoginHandler(myAnalyticsProvider)
                                 loginHandler.refresh(account, credentials)
                                 Log.log(logger::trace, "${coroutineContext[CoroutineName]} credentials for account refreshed {}", account)
                                 //immediately loop again and compute the next delay
@@ -579,7 +610,7 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
                 val job = cs.launch(CoroutineName("lockingLoginOrRefresh") + errorHandler) {
                     try {
                         Log.log(logger::trace, "starting lockingLoginOrRefresh job, analytics url {}", myAnalyticsProvider.apiUrl)
-                        val loginHandler = LoginHandler.createLoginHandler(null, myAnalyticsProvider)
+                        val loginHandler = LoginHandler.createLoginHandler(myAnalyticsProvider, true)
                         loginHandler.loginOrRefresh(onAuthenticationError)
                         //wake up the auto refresh to check the next auto refresh time
                         cancelAutoRefreshWaitingJob("from lockingLoginOrRefresh")
@@ -643,7 +674,7 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
             val job = cs.launch(CoroutineName("nonLockingLoginOrRefresh")) {
                 try {
                     Log.log(logger::trace, "starting nonLockingLoginOrRefresh job, analytics url {}", myAnalyticsProvider.apiUrl)
-                    val loginHandler = LoginHandler.createLoginHandler(myAnalyticsProvider)
+                    val loginHandler = LoginHandler.createLoginHandler(myAnalyticsProvider, true)
                     loginHandler.loginOrRefresh(onAuthenticationError)
                     //wake up the auto refresh to check the next auto refresh time
                     cancelAutoRefreshWaitingJob("from nonLockingLoginOrRefresh")

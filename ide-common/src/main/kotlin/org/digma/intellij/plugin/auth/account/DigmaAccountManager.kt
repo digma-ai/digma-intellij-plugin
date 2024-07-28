@@ -42,10 +42,10 @@ class DigmaAccountManager
         }
 
         private val logger: Logger = Logger.getInstance(this::class.java)
-        fun createAccount(url: String, userId: String): DigmaAccount {
+        fun createAccount(url: String, userId: String, createdBy: String, creationDate: String): DigmaAccount {
             Log.log(logger::trace, "creating new DigmaAccount for {}", url)
             val name = Urls.newFromEncoded(url).authority.toString()
-            return DigmaAccount(Account.generateId(), name, MyServerPath(url), userId)
+            return DigmaAccount(Account.generateId(), name, MyServerPath(url), userId, createdBy, creationDate)
         }
     }
 

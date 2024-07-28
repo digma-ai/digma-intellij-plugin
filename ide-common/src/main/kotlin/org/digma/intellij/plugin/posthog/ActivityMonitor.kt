@@ -986,4 +986,8 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
         capture("SchedulerStatistics", details)
     }
 
+    fun registerSchedulerSizeIncreased(details: Map<String, Any>) {
+        capture("SchedulerSizeIncreased", details)
+    }
+
 }

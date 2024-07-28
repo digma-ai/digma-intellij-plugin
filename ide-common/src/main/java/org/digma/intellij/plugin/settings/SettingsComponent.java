@@ -3,120 +3,145 @@ package org.digma.intellij.plugin.settings;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.*;
 import com.intellij.ui.components.*;
-import com.intellij.ui.components.fields.ExpandableTextField;
+import com.intellij.ui.components.fields.*;
 import com.intellij.util.ui.FormBuilder;
 import org.digma.intellij.plugin.analytics.BackendInfoHolder;
 import org.digma.intellij.plugin.auth.account.*;
-import org.digma.intellij.plugin.common.ProjectUtilsKt;
+import org.digma.intellij.plugin.common.*;
 import org.jetbrains.annotations.*;
 
 import javax.swing.*;
 import java.awt.*;
 import java.net.*;
-import java.util.Objects;
+import java.util.List;
+import java.util.*;
+
+import static org.digma.intellij.plugin.settings.SettingsState.*;
 
 /**
  * Supports creating and managing a {@link JPanel} for the Settings Dialog.
  */
-public class SettingsComponent {
+class SettingsComponent {
+
+
+    private static final List<String> ALLOW_HTTPS = Collections.singletonList("https");
+    private static final List<String> ALLOW_HTTP_AND_HTTPS = Arrays.asList("http", "https");
+
 
     private final JPanel myMainPanel;
-    private final JBTextField myApiUrlText = new JBTextField();
-    private final JBTextField myApiToken = new JBTextField();
-    private final JBTextField myRefreshDelay = new JBTextField();
-    private final JBTextField myJaegerUrlText = new JBTextField();
+    private final JBTextField myApiUrlTextField = new JBTextField();
+    private final JBTextField myApiTokenTestField = new JBTextField();
+    private final IntegerField myRefreshDelayTextField = new IntegerField();
+    private final JBTextField myJaegerUrlTextField = new JBTextField();
     private final JBLabel myJaegerUrlLabel = new JBLabel("Jaeger URL: (For internal/external mode)");
-    private final JBTextField myJaegerQueryUrlText = new JBTextField();
+    private final JBTextField myJaegerQueryUrlTextField = new JBTextField();
     private final JBLabel myJaegerQueryUrlLabel = new JBLabel("Jaeger Query URL (For embedded mode): ");
-    private final ComboBox<LinkMode> myJaegerLinkModeComboBox = new ComboBox<>(new EnumComboBoxModel<>(LinkMode.class));
+    private final ComboBox<JaegerLinkMode> myJaegerLinkModeComboBox = new ComboBox<>(new EnumComboBoxModel<>(JaegerLinkMode.class));
     private final JBLabel myEmbeddedJaegerMessage = new JBLabel("<html><body><span style=\"color:\"" + JBColor.BLUE + "\"\"><b>Jaeger embedded is only supported for deployment on a local environment.</b></span></body>");
     private final ComboBox<SpringBootObservabilityMode> mySpringBootObservabilityModeComboBox = new ComboBox<>(new EnumComboBoxModel<>(SpringBootObservabilityMode.class));
     private final JBLabel myRuntimeObservabilityBackendUrlLabel = new JBLabel("Runtime observability backend URL:");
-    private final JBTextField myRuntimeObservabilityBackendUrlText = new JBTextField();
-    private final JBTextField extendedObservabilityTextBox = new ExpandableTextField();
-    private final JBTextField extendedObservabilityExcludeTextBox = new ExpandableTextField();
+    private final JBTextField myRuntimeObservabilityBackendUrlTextField = new JBTextField();
+    private final ExpandableTextField extendedObservabilityTextFiled = new ExpandableTextField();
+    private final ExpandableTextField extendedObservabilityExcludeTextField = new ExpandableTextField();
 
     public SettingsComponent() {
 
-        extendedObservabilityTextBox.setToolTipText("package names in format 'my.pkg1;my.pkg2");
-        extendedObservabilityExcludeTextBox.setToolTipText("class/method names to exclude in format 'MyClass;MyOtherClass.myOtherMethod;*get");
+        myRefreshDelayTextField.setMinValue(10);
+        myRefreshDelayTextField.setMaxValue(100);
+
+
+        extendedObservabilityTextFiled.setToolTipText("package names in format 'my.pkg1;my.pkg2");
+        extendedObservabilityExcludeTextField.setToolTipText("class/method names to exclude in format 'MyClass;MyOtherClass.myOtherMethod;*get");
         var extendedObservabilityTextBoxPanel = new JBPanel<JBPanel<?>>();
         extendedObservabilityTextBoxPanel.setLayout(new BorderLayout());
-        extendedObservabilityTextBoxPanel.add(extendedObservabilityTextBox, BorderLayout.CENTER);
+        extendedObservabilityTextBoxPanel.add(extendedObservabilityTextFiled, BorderLayout.CENTER);
         var extendedObservabilityExcludeTextBoxPanel = new JBPanel<JBPanel<?>>();
         extendedObservabilityExcludeTextBoxPanel.setLayout(new BorderLayout());
-        extendedObservabilityExcludeTextBoxPanel.add(extendedObservabilityExcludeTextBox, BorderLayout.CENTER);
+        extendedObservabilityExcludeTextBoxPanel.add(extendedObservabilityExcludeTextField, BorderLayout.CENTER);
 
         var defaultLabelForeground = JBColor.foreground();
 
 
         var myUrlLabel = new JBLabel("Digma API URL: ");
-        myApiUrlText.setInputVerifier(new InputVerifier() {
+        myApiUrlTextField.setInputVerifier(new InputVerifier() {
             @Override
             public boolean verify(JComponent input) {
                 try {
-                    var url = new URL(myApiUrlText.getText().trim());
-                    if (Objects.equals(url.getProtocol(), "http")) {
-                        myUrlLabel.setForeground(JBColor.RED);
-                        return false;
-                    }
+                    URLValidator.create(myApiUrlTextField.getText().trim(), ALLOW_HTTPS).validate();
                     myUrlLabel.setForeground(defaultLabelForeground);
+                    myApiUrlTextField.setToolTipText(null);
                     return true;
-                } catch (MalformedURLException e) {
+                } catch (MalformedURLException | URISyntaxException | URLValidator.InvalidUrlException | URLValidator.QueryNotAllowedException |
+                         URLValidator.IncorrectSchemaException e) {
                     myUrlLabel.setForeground(JBColor.RED);
+                    myApiUrlTextField.setToolTipText(e.getMessage());
                     return false;
                 }
             }
         });
 
         var myRefreshLabel = new JBLabel("Refresh every (sec.): ");
-        myRefreshDelay.setInputVerifier(new InputVerifier() {
+        myRefreshDelayTextField.setInputVerifier(new InputVerifier() {
             @Override
             public boolean verify(JComponent input) {
                 try {
-                    Integer.parseInt(myRefreshDelay.getText().trim());
-                    myRefreshLabel.setForeground(defaultLabelForeground);
-                    return true;
+                    int refreshDelay = Integer.parseInt(myRefreshDelayTextField.getText().trim());
+                    if (refreshDelay < MINIMUM_DEFAULT_REFRESH_DELAY) {
+                        myRefreshLabel.setForeground(JBColor.RED);
+                        myRefreshDelayTextField.setToolTipText("Must not be lower then " + MINIMUM_DEFAULT_REFRESH_DELAY);
+                        return false;
+                    } else if (refreshDelay > MAXIMUM_DEFAULT_REFRESH_DELAY) {
+                        myRefreshLabel.setForeground(JBColor.RED);
+                        myRefreshDelayTextField.setToolTipText("Must not be higher then " + MAXIMUM_DEFAULT_REFRESH_DELAY);
+                        return false;
+                    } else {
+                        myRefreshLabel.setForeground(defaultLabelForeground);
+                        myRefreshDelayTextField.setToolTipText(null);
+                        return true;
+                    }
                 } catch (NumberFormatException e) {
                     myRefreshLabel.setForeground(JBColor.RED);
+                    myRefreshDelayTextField.setToolTipText("Refresh delay is not a number: " + e.getMessage());
                     return false;
                 }
             }
         });
 
 
-        myJaegerUrlText.setInputVerifier(new InputVerifier() {
+        myJaegerUrlTextField.setInputVerifier(new InputVerifier() {
             @Override
             public boolean verify(JComponent input) {
-                if (myJaegerUrlText.getText().isBlank()) {
+                if (myJaegerUrlTextField.getText() == null || myJaegerUrlTextField.getText().isBlank()) {
                     myJaegerUrlLabel.setForeground(defaultLabelForeground);
+                    myJaegerUrlTextField.setToolTipText(null);
                     return true;
                 }
                 try {
-                    new URL(myJaegerUrlText.getText().trim());
+                    URLValidator.create(myJaegerUrlTextField.getText().trim(), ALLOW_HTTP_AND_HTTPS).validate();
                     myJaegerUrlLabel.setForeground(defaultLabelForeground);
                     return true;
-                } catch (MalformedURLException e) {
+                } catch (MalformedURLException | URISyntaxException | URLValidator.InvalidUrlException | URLValidator.QueryNotAllowedException |
+                         URLValidator.IncorrectSchemaException e) {
                     myJaegerUrlLabel.setForeground(JBColor.RED);
+                    myJaegerUrlTextField.setToolTipText(e.getMessage());
                     return false;
                 }
             }
         });
 
 
-        myJaegerQueryUrlText.setInputVerifier(new InputVerifier() {
+        myJaegerQueryUrlTextField.setInputVerifier(new InputVerifier() {
             @Override
             public boolean verify(JComponent input) {
-                if (myJaegerQueryUrlText.getText().isBlank()) {
-                    myJaegerQueryUrlLabel.setForeground(defaultLabelForeground);
-                    return true;
-                }
                 try {
-                    new URL(myJaegerQueryUrlText.getText().trim());
+                    URLValidator.create(myJaegerQueryUrlTextField.getText().trim(), ALLOW_HTTP_AND_HTTPS).validate();
                     myJaegerQueryUrlLabel.setForeground(defaultLabelForeground);
+                    myJaegerQueryUrlTextField.setToolTipText(null);
                     return true;
-                } catch (MalformedURLException e) {
+                } catch (MalformedURLException | URISyntaxException | URLValidator.InvalidUrlException | URLValidator.QueryNotAllowedException |
+                         URLValidator.IncorrectSchemaException e) {
                     myJaegerQueryUrlLabel.setForeground(JBColor.RED);
+                    myJaegerQueryUrlTextField.setToolTipText(e.getMessage());
                     return false;
                 }
             }
@@ -125,15 +150,18 @@ public class SettingsComponent {
 
         myRuntimeObservabilityBackendUrlLabel.setToolTipText("Where should observability data be sent from the IDE? This would be the Digma collector URL typically listening to port 5050");
 
-        myRuntimeObservabilityBackendUrlText.setInputVerifier(new InputVerifier() {
+        myRuntimeObservabilityBackendUrlTextField.setInputVerifier(new InputVerifier() {
             @Override
             public boolean verify(JComponent input) {
                 try {
-                    new URL(myRuntimeObservabilityBackendUrlText.getText().trim());
+                    URLValidator.create(myRuntimeObservabilityBackendUrlTextField.getText().trim(), ALLOW_HTTP_AND_HTTPS).validate();
                     myRuntimeObservabilityBackendUrlLabel.setForeground(defaultLabelForeground);
+                    myRuntimeObservabilityBackendUrlTextField.setToolTipText(null);
                     return true;
-                } catch (MalformedURLException e) {
+                } catch (MalformedURLException | URISyntaxException | URLValidator.InvalidUrlException | URLValidator.QueryNotAllowedException |
+                         URLValidator.IncorrectSchemaException e) {
                     myRuntimeObservabilityBackendUrlLabel.setForeground(JBColor.RED);
+                    myRuntimeObservabilityBackendUrlTextField.setToolTipText(e.getMessage());
                     return false;
                 }
             }
@@ -148,7 +176,7 @@ public class SettingsComponent {
                 + "Embedded mode will open embedded Jaeger UI in the editor area. "
         );
         myJaegerLinkModeComboBox.addItemListener(e -> {
-            LinkMode selected = (LinkMode) myJaegerLinkModeComboBox.getSelectedItem();
+            JaegerLinkMode selected = (JaegerLinkMode) myJaegerLinkModeComboBox.getSelectedItem();
             linkModeSelected(defaultLabelForeground, selected);
         });
 
@@ -179,43 +207,43 @@ public class SettingsComponent {
         }
 
         myMainPanel = FormBuilder.createFormBuilder()
-                .addLabeledComponent(myUrlLabel, myApiUrlText, 1, false)
-                .addLabeledComponent(new JBLabel("Api token:"), myApiToken, 1, false)
-                .addLabeledComponent(myRefreshLabel, myRefreshDelay, 1, false)
+                .addLabeledComponent(myUrlLabel, myApiUrlTextField, 1, false)
+                .addLabeledComponent(new JBLabel("Api token:"), myApiTokenTestField, 1, false)
+                .addLabeledComponent(myRefreshLabel, myRefreshDelayTextField, 1, false)
                 .addLabeledComponent(myJaegerLinkModeLabel, myJaegerLinkModeComboBox, 1, false)
                 .addComponent(myEmbeddedJaegerMessage, 1)
-                .addLabeledComponent(myJaegerUrlLabel, myJaegerUrlText, 1, false)
-                .addLabeledComponent(myJaegerQueryUrlLabel, myJaegerQueryUrlText, 1, false)
+                .addLabeledComponent(myJaegerUrlLabel, myJaegerUrlTextField, 1, false)
+                .addLabeledComponent(myJaegerQueryUrlLabel, myJaegerQueryUrlTextField, 1, false)
                 .addLabeledComponent(mySpringBootObservabilityModeLabel, mySpringBootObservabilityModeComboBox, 1, false)
-                .addLabeledComponent(myRuntimeObservabilityBackendUrlLabel, myRuntimeObservabilityBackendUrlText, 1, false)
-                .addLabeledComponent("Extended Observability (beta)", extendedObservabilityTextBoxPanel, 1, false)
-                .addLabeledComponent("Extended Observability Exclude (beta)", extendedObservabilityExcludeTextBoxPanel, 1, false)
+                .addLabeledComponent(myRuntimeObservabilityBackendUrlLabel, myRuntimeObservabilityBackendUrlTextField, 1, false)
+                .addLabeledComponent("Extended observability (beta)", extendedObservabilityTextBoxPanel, 1, false)
+                .addLabeledComponent("Extended observability exclude (beta)", extendedObservabilityExcludeTextBoxPanel, 1, false)
                 .addComponent(resetButton)
-                .addLabeledComponent(new JBLabel("User Id"), userIdLabel)
+                .addLabeledComponent(new JBLabel("User id"), userIdLabel)
                 .addLabeledComponent(new JBLabel("Backend version"), backendVersionLabel)
                 .addComponentFillVertically(new JPanel(), 0)
                 .getPanel();
     }
 
 
-    private void linkModeSelected(Color defaultLabelForeground, LinkMode selected) {
+    private void linkModeSelected(Color defaultLabelForeground, JaegerLinkMode selected) {
         switch (Objects.requireNonNull(selected)) {
             case External, Internal -> {
                 myJaegerQueryUrlLabel.setEnabled(false);
                 myJaegerQueryUrlLabel.setForeground(JBColor.GRAY);
-                myJaegerQueryUrlText.setEnabled(false);
+                myJaegerQueryUrlTextField.setEnabled(false);
                 myEmbeddedJaegerMessage.setVisible(false);
-                myJaegerUrlText.setEnabled(true);
+                myJaegerUrlTextField.setEnabled(true);
                 myJaegerUrlLabel.setEnabled(true);
                 myJaegerUrlLabel.setForeground(defaultLabelForeground);
             }
             case Embedded -> {
-                myJaegerUrlText.setEnabled(false);
+                myJaegerUrlTextField.setEnabled(false);
                 myJaegerUrlLabel.setEnabled(false);
                 myJaegerUrlLabel.setForeground(JBColor.GRAY);
                 myJaegerQueryUrlLabel.setEnabled(true);
                 myJaegerQueryUrlLabel.setForeground(defaultLabelForeground);
-                myJaegerQueryUrlText.setEnabled(true);
+                myJaegerQueryUrlTextField.setEnabled(true);
                 myEmbeddedJaegerMessage.setVisible(true);
             }
         }
@@ -227,113 +255,120 @@ public class SettingsComponent {
     }
 
     public JComponent getPreferredFocusedComponent() {
-        return myApiUrlText;
+        return myApiUrlTextField;
     }
 
     @NotNull
-    public String getApiUrlText() {
-        return myApiUrlText.getText().trim();
+    public String getApiUrl() {
+        return myApiUrlTextField.getText().trim();
     }
 
-    public void setApiUrlText(@NotNull String newText) {
-        myApiUrlText.setText(newText.trim());
+    public void setApiUrl(@NotNull String newText) {
+        myApiUrlTextField.setText(newText.trim());
     }
 
     @Nullable
     public String getApiToken() {
-        return myApiToken.getText().trim();
+        return myApiTokenTestField.getText() == null || myApiTokenTestField.getText().trim().isBlank() ? null : myApiTokenTestField.getText().trim();
     }
 
     public void setApiToken(@Nullable String newText) {
-        if (newText == null) {
-            myApiToken.setText("");
-        } else {
-            myApiToken.setText(newText.trim());
-        }
+        myApiTokenTestField.setText(newText == null ? null : newText.trim());
     }
 
+    @Nullable
     public String getJaegerUrl() {
-        return myJaegerUrlText.getText().trim();
-    }
-
-    public String getJaegerQueryUrl() {
-        return myJaegerQueryUrlText.getText().trim();
+        return myJaegerUrlTextField.getText() == null || myJaegerUrlTextField.getText().trim().isBlank() ? null : myJaegerUrlTextField.getText().trim();
     }
 
     public void setJaegerUrl(@Nullable String newText) {
-        myJaegerUrlText.setText(newText == null ? "" : newText);
+        myJaegerUrlTextField.setText(newText == null ? null : newText.trim());
     }
 
-    public void setJaegerQueryUrl(String newText) {
-        myJaegerQueryUrlText.setText(newText.trim());
+    @Nullable
+    public String getJaegerQueryUrl() {
+        return myJaegerQueryUrlTextField.getText() == null || myJaegerQueryUrlTextField.getText().trim().isBlank() ? null : myJaegerQueryUrlTextField.getText().trim();
     }
 
-    public LinkMode getJaegerLinkMode() {
-        return (LinkMode) myJaegerLinkModeComboBox.getSelectedItem();
+    public void setJaegerQueryUrl(@Nullable String newText) {
+        myJaegerQueryUrlTextField.setText(newText == null ? null : newText.trim());
     }
 
-    public void setJaegerLinkMode(LinkMode linkMode) {
+    @NotNull
+    public JaegerLinkMode getJaegerLinkMode() {
+        return myJaegerLinkModeComboBox.getSelectedItem() == null ? DEFAULT_JAEGER_LINK_MODE : (JaegerLinkMode) myJaegerLinkModeComboBox.getSelectedItem();
+    }
+
+    public void setJaegerLinkMode(@NotNull JaegerLinkMode jaegerLinkMode) {
         //for some reason the combo doesn't always fire an event here so need to emulate it
-        myJaegerLinkModeComboBox.setSelectedItem(linkMode);
-        linkModeSelected(JBColor.foreground(), linkMode);
+        myJaegerLinkModeComboBox.setSelectedItem(jaegerLinkMode);
+        linkModeSelected(JBColor.foreground(), jaegerLinkMode);
     }
 
+    @NotNull
     public SpringBootObservabilityMode getSpringBootObservabilityMode() {
-        return (SpringBootObservabilityMode) mySpringBootObservabilityModeComboBox.getSelectedItem();
+        return mySpringBootObservabilityModeComboBox.getSelectedItem() == null ? DEFAULT_SPRING_BOOT_OBSERVABILITY_MODE : (SpringBootObservabilityMode) mySpringBootObservabilityModeComboBox.getSelectedItem();
     }
 
-    public void setSpringBootObservabilityMode(SpringBootObservabilityMode mode) {
+    public void setSpringBootObservabilityMode(@NotNull SpringBootObservabilityMode mode) {
         mySpringBootObservabilityModeComboBox.setSelectedItem(mode);
     }
 
     @NotNull
     public String getRuntimeObservabilityBackendUrl() {
-        return myRuntimeObservabilityBackendUrlText.getText().trim();
+        return myRuntimeObservabilityBackendUrlTextField.getText().trim();
     }
 
     public void setRuntimeObservabilityBackendUrl(@NotNull String newText) {
-        myRuntimeObservabilityBackendUrlText.setText(newText.trim());
+        myRuntimeObservabilityBackendUrlTextField.setText(newText.trim());
     }
 
     @NotNull
-    public String getRefreshDelayText() {
-        return myRefreshDelay.getText().trim();
+    public String getRefreshDelay() {
+        return myRefreshDelayTextField.getText().trim();
     }
 
-    public void setRefreshDelayText(@NotNull String newText) {
-        myRefreshDelay.setText(newText.trim());
-    }
-
-    public void setExtendedObservability(@Nullable String extendedObservability) {
-        extendedObservabilityTextBox.setText(extendedObservability);
+    public void setRefreshDelay(@NotNull String newText) {
+        myRefreshDelayTextField.setText(newText.trim());
     }
 
     @Nullable
     public String getExtendedObservability() {
-        return extendedObservabilityTextBox.getText();
+        //remove only the tab character
+        return extendedObservabilityTextFiled.getText() == null || extendedObservabilityTextFiled.getText().trim().isBlank()
+                ? null : extendedObservabilityTextFiled.getText().trim().replaceAll("\t", "");
     }
 
-    public void setExtendedObservabilityExclude(@Nullable String extendedObservabilityExclude) {
-        extendedObservabilityExcludeTextBox.setText(extendedObservabilityExclude);
+    public void setExtendedObservability(@Nullable String extendedObservability) {
+        extendedObservabilityTextFiled.setText(extendedObservability);
     }
 
     @Nullable
     public String getExtendedObservabilityExclude() {
-        return extendedObservabilityExcludeTextBox.getText();
+        //remove only the tab character
+        return extendedObservabilityExcludeTextField.getText() == null || extendedObservabilityExcludeTextField.getText().trim().isBlank()
+                ? null : extendedObservabilityExcludeTextField.getText().trim().replaceAll("\t", "");
+    }
+
+    public void setExtendedObservabilityExclude(@Nullable String extendedObservabilityExclude) {
+        extendedObservabilityExcludeTextField.setText(extendedObservabilityExclude);
     }
 
 
     private void resetToDefaults() {
-        this.setApiUrlText(SettingsState.DEFAULT_API_URL);
-        this.setApiToken(null);
-        this.setRefreshDelayText(String.valueOf(SettingsState.DEFAULT_REFRESH_DELAY));
-        this.setJaegerUrl("");
-        this.setJaegerQueryUrl(SettingsState.DEFAULT_JAEGER_QUERY_URL);
-        this.setJaegerLinkMode(SettingsState.DEFAULT_JAEGER_LINK_MODE);
+        //create a new SettingsState object and use it for default startup values
+        SettingsState settingsState = new SettingsState();
+        this.setApiUrl(settingsState.getApiUrl());
+        this.setApiToken(settingsState.getApiToken());
+        this.setRefreshDelay(String.valueOf(settingsState.getRefreshDelay()));
+        this.setJaegerUrl(settingsState.getJaegerUrl());
+        this.setJaegerQueryUrl(settingsState.getJaegerQueryUrl());
+        this.setJaegerLinkMode(settingsState.getJaegerLinkMode());
+        this.setSpringBootObservabilityMode(settingsState.getSpringBootObservabilityMode());
+        this.setRuntimeObservabilityBackendUrl(settingsState.getRuntimeObservabilityBackendUrl());
+        this.setExtendedObservability(settingsState.getExtendedObservability());
+        this.setExtendedObservabilityExclude(settingsState.getExtendedObservabilityExcludes());
+
         this.myEmbeddedJaegerMessage.setVisible(true);
-        this.setSpringBootObservabilityMode(SettingsState.DEFAULT_SPRING_BOOT_OBSERVABILITY_MODE);
-        this.setRuntimeObservabilityBackendUrl(SettingsState.DEFAULT_RUNTIME_OBSERVABILITY_BACKEND_URL);
-        this.setExtendedObservability(null);
-        this.setExtendedObservabilityExclude(null);
     }
 }

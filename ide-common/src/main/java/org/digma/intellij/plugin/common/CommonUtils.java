@@ -6,10 +6,7 @@ import org.digma.intellij.plugin.log.Log;
 import org.jetbrains.annotations.Nullable;
 import org.ocpsoft.prettytime.PrettyTime;
 
-import java.net.InetAddress;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.util.Date;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -82,14 +79,15 @@ public final class CommonUtils {
     }
 
 
-    public static boolean isWelFormedUrl(String url){
+    public static boolean isWelFormedUrl(@Nullable String url) {
         if (url == null || url.isBlank()){
             return false;
         }
         try {
-            new URL(url);
+            URLValidator.create(url).validate();
             return true;
-        } catch (MalformedURLException e) {
+        } catch (MalformedURLException | URISyntaxException | URLValidator.InvalidUrlException | URLValidator.QueryNotAllowedException |
+                 URLValidator.IncorrectSchemaException e) {
             return false;
         }
     }

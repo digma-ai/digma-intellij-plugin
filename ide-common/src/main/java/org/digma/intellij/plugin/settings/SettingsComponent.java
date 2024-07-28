@@ -3,7 +3,7 @@ package org.digma.intellij.plugin.settings;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.*;
 import com.intellij.ui.components.*;
-import com.intellij.ui.components.fields.*;
+import com.intellij.ui.components.fields.ExpandableTextField;
 import com.intellij.util.ui.FormBuilder;
 import org.digma.intellij.plugin.analytics.BackendInfoHolder;
 import org.digma.intellij.plugin.auth.account.*;
@@ -31,7 +31,6 @@ class SettingsComponent {
     private final JPanel myMainPanel;
     private final JBTextField myApiUrlTextField = new JBTextField();
     private final JBTextField myApiTokenTestField = new JBTextField();
-    private final IntegerField myRefreshDelayTextField = new IntegerField();
     private final JBTextField myJaegerUrlTextField = new JBTextField();
     private final JBLabel myJaegerUrlLabel = new JBLabel("Jaeger URL: (For internal/external mode)");
     private final JBTextField myJaegerQueryUrlTextField = new JBTextField();
@@ -45,10 +44,6 @@ class SettingsComponent {
     private final ExpandableTextField extendedObservabilityExcludeTextField = new ExpandableTextField();
 
     public SettingsComponent() {
-
-        myRefreshDelayTextField.setMinValue(10);
-        myRefreshDelayTextField.setMaxValue(100);
-
 
         extendedObservabilityTextFiled.setToolTipText("package names in format 'my.pkg1;my.pkg2");
         extendedObservabilityExcludeTextField.setToolTipText("class/method names to exclude in format 'MyClass;MyOtherClass.myOtherMethod;*get");
@@ -75,33 +70,6 @@ class SettingsComponent {
                          URLValidator.IncorrectSchemaException e) {
                     myUrlLabel.setForeground(JBColor.RED);
                     myApiUrlTextField.setToolTipText(e.getMessage());
-                    return false;
-                }
-            }
-        });
-
-        var myRefreshLabel = new JBLabel("Refresh every (sec.): ");
-        myRefreshDelayTextField.setInputVerifier(new InputVerifier() {
-            @Override
-            public boolean verify(JComponent input) {
-                try {
-                    int refreshDelay = Integer.parseInt(myRefreshDelayTextField.getText().trim());
-                    if (refreshDelay < MINIMUM_DEFAULT_REFRESH_DELAY) {
-                        myRefreshLabel.setForeground(JBColor.RED);
-                        myRefreshDelayTextField.setToolTipText("Must not be lower then " + MINIMUM_DEFAULT_REFRESH_DELAY);
-                        return false;
-                    } else if (refreshDelay > MAXIMUM_DEFAULT_REFRESH_DELAY) {
-                        myRefreshLabel.setForeground(JBColor.RED);
-                        myRefreshDelayTextField.setToolTipText("Must not be higher then " + MAXIMUM_DEFAULT_REFRESH_DELAY);
-                        return false;
-                    } else {
-                        myRefreshLabel.setForeground(defaultLabelForeground);
-                        myRefreshDelayTextField.setToolTipText(null);
-                        return true;
-                    }
-                } catch (NumberFormatException e) {
-                    myRefreshLabel.setForeground(JBColor.RED);
-                    myRefreshDelayTextField.setToolTipText("Refresh delay is not a number: " + e.getMessage());
                     return false;
                 }
             }
@@ -209,7 +177,6 @@ class SettingsComponent {
         myMainPanel = FormBuilder.createFormBuilder()
                 .addLabeledComponent(myUrlLabel, myApiUrlTextField, 1, false)
                 .addLabeledComponent(new JBLabel("Api token:"), myApiTokenTestField, 1, false)
-                .addLabeledComponent(myRefreshLabel, myRefreshDelayTextField, 1, false)
                 .addLabeledComponent(myJaegerLinkModeLabel, myJaegerLinkModeComboBox, 1, false)
                 .addComponent(myEmbeddedJaegerMessage, 1)
                 .addLabeledComponent(myJaegerUrlLabel, myJaegerUrlTextField, 1, false)
@@ -323,15 +290,6 @@ class SettingsComponent {
         myRuntimeObservabilityBackendUrlTextField.setText(newText.trim());
     }
 
-    @NotNull
-    public String getRefreshDelay() {
-        return myRefreshDelayTextField.getText().trim();
-    }
-
-    public void setRefreshDelay(@NotNull String newText) {
-        myRefreshDelayTextField.setText(newText.trim());
-    }
-
     @Nullable
     public String getExtendedObservability() {
         //remove only the tab character
@@ -360,7 +318,6 @@ class SettingsComponent {
         SettingsState settingsState = new SettingsState();
         this.setApiUrl(settingsState.getApiUrl());
         this.setApiToken(settingsState.getApiToken());
-        this.setRefreshDelay(String.valueOf(settingsState.getRefreshDelay()));
         this.setJaegerUrl(settingsState.getJaegerUrl());
         this.setJaegerQueryUrl(settingsState.getJaegerQueryUrl());
         this.setJaegerLinkMode(settingsState.getJaegerLinkMode());

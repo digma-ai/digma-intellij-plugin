@@ -9,8 +9,6 @@ import javax.swing.*;
 import java.net.*;
 import java.util.Objects;
 
-import static org.digma.intellij.plugin.settings.SettingsState.*;
-
 public class ProjectSettings implements Configurable {
 
     public static final String DISPLAY_NAME = "Digma Plugin";
@@ -42,7 +40,6 @@ public class ProjectSettings implements Configurable {
         SettingsState settings = SettingsState.getInstance();
         return isApiUrlChanged(settings) ||
                 isApiTokenChanged(settings) ||
-                isRefreshDelayChanged(settings) ||
                 isJaegerUrlChanged(settings) ||
                 isJaegerQueryUrlChanged(settings) ||
                 isJaegerLinkModeChanged(settings) ||
@@ -50,10 +47,6 @@ public class ProjectSettings implements Configurable {
                 isRuntimeObservabilityBackendUrlChanged(settings) ||
                 isExtendedObservabilityChanged(settings) ||
                 isExtendedObservabilityExcludeChanged(settings);
-    }
-
-    private boolean isRefreshDelayChanged(SettingsState settings) {
-        return !Objects.equals(String.valueOf(settings.getRefreshDelay()), mySettingsComponent.getRefreshDelay());
     }
 
     private boolean isApiUrlChanged(SettingsState settings) {
@@ -101,7 +94,6 @@ public class ProjectSettings implements Configurable {
         try {
             Objects.requireNonNull(mySettingsComponent.getApiUrl(), "Api url can not be null");
             Objects.requireNonNull(mySettingsComponent.getRuntimeObservabilityBackendUrl(), "Runtime observability url can not be null");
-            Objects.requireNonNull(mySettingsComponent.getRefreshDelay(), "Refresh delay can not be null");
         } catch (Exception e) {
             throw new ConfigurationException(e.getMessage());
         }
@@ -155,18 +147,6 @@ public class ProjectSettings implements Configurable {
         }
 
 
-        try {
-            int refreshDelay = Integer.parseInt(mySettingsComponent.getRefreshDelay());
-            if (refreshDelay < MINIMUM_DEFAULT_REFRESH_DELAY) {
-                throw new ConfigurationException("Refresh delay can not be lower then " + MINIMUM_DEFAULT_REFRESH_DELAY);
-            }
-            if (refreshDelay > MAXIMUM_DEFAULT_REFRESH_DELAY) {
-                throw new ConfigurationException("Refresh delay can not be higher then " + MAXIMUM_DEFAULT_REFRESH_DELAY);
-            }
-        } catch (IllegalArgumentException e) {
-            throw new ConfigurationException(e.getMessage() != null ? e.getMessage() : "Refresh delay is not a number");
-        }
-
         updateSettingsAndFireChange();
     }
 
@@ -180,7 +160,6 @@ public class ProjectSettings implements Configurable {
         }
         settingsState.setApiToken(theApiToken);
 
-        settingsState.setRefreshDelay(Integer.parseInt(mySettingsComponent.getRefreshDelay()));
         settingsState.setJaegerUrl(mySettingsComponent.getJaegerUrl());
         settingsState.setJaegerQueryUrl(mySettingsComponent.getJaegerQueryUrl());
         settingsState.setJaegerLinkMode(mySettingsComponent.getJaegerLinkMode());
@@ -198,7 +177,6 @@ public class ProjectSettings implements Configurable {
         SettingsState settings = SettingsState.getInstance();
         mySettingsComponent.setApiUrl(settings.getApiUrl());
         mySettingsComponent.setApiToken(settings.getApiToken());
-        mySettingsComponent.setRefreshDelay(String.valueOf(settings.getRefreshDelay()));
         mySettingsComponent.setJaegerUrl(settings.getJaegerUrl());
         mySettingsComponent.setJaegerQueryUrl(settings.getJaegerQueryUrl());
         mySettingsComponent.setJaegerLinkMode(settings.getJaegerLinkMode());

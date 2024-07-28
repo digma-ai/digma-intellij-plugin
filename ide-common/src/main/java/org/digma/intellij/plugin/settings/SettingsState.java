@@ -25,9 +25,6 @@ import static org.digma.intellij.plugin.common.SettingsUtilsKt.normalizeExtended
 public class SettingsState implements PersistentStateComponent<SettingsState>, Disposable {
 
     public static final String DEFAULT_API_URL = "https://localhost:5051";
-    public static final int DEFAULT_REFRESH_DELAY = 10;
-    public static final int MINIMUM_DEFAULT_REFRESH_DELAY = 10;
-    public static final int MAXIMUM_DEFAULT_REFRESH_DELAY = 100;
     public static final String DEFAULT_JAEGER_URL = "http://localhost:16686";
     public static final String DEFAULT_JAEGER_QUERY_URL = "http://localhost:17686";
     public static final JaegerLinkMode DEFAULT_JAEGER_LINK_MODE = JaegerLinkMode.Embedded;
@@ -41,7 +38,7 @@ public class SettingsState implements PersistentStateComponent<SettingsState>, D
 
     @NotNull
     private String apiUrl = DEFAULT_API_URL;
-    private int refreshDelay = DEFAULT_REFRESH_DELAY;
+
     @Nullable
     private String apiToken = null;
     @Nullable
@@ -152,14 +149,6 @@ public class SettingsState implements PersistentStateComponent<SettingsState>, D
 
     public void setRuntimeObservabilityBackendUrl(@NotNull String newRuntimeObservabilityBackendUrl) {
         this.runtimeObservabilityBackendUrl = newRuntimeObservabilityBackendUrl;
-    }
-
-    public int getRefreshDelay() {
-        return refreshDelay;
-    }
-
-    public void setRefreshDelay(int refreshDelay) {
-        this.refreshDelay = refreshDelay;
     }
 
     @Nullable

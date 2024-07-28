@@ -74,12 +74,10 @@ class SettingsChangeTracker {
         } ?: ""
 
         myTrackedSettings["jaegerLinkMode"] = SettingsState.getInstance().jaegerLinkMode.name
-        myTrackedSettings["refreshDelay"] = SettingsState.getInstance().refreshDelay.toString()
         myTrackedSettings["springBootObservabilityMode"] = SettingsState.getInstance().springBootObservabilityMode.name
         myTrackedSettings["extendedObservability"] = SettingsState.getInstance().extendedObservability.toString()
         myTrackedSettings["extendedObservabilityExcludes"] = SettingsState.getInstance().extendedObservabilityExcludes.toString()
     }
-
 
 }
 

@@ -49,8 +49,8 @@ public class JaegerUIService implements Disposable {
             return;
         }
 
-        var jaegerQueryUrl = SettingsState.getInstance().jaegerQueryUrl;
-        if (jaegerQueryUrl.isBlank()) {
+        var jaegerQueryUrl = SettingsState.getInstance().getJaegerQueryUrl();
+        if (jaegerQueryUrl == null || jaegerQueryUrl.isBlank()) {
             return;
         }
 
@@ -68,8 +68,8 @@ public class JaegerUIService implements Disposable {
             return;
         }
 
-        var jaegerQueryUrl = SettingsState.getInstance().jaegerQueryUrl;
-        if (jaegerQueryUrl.isBlank()) {
+        var jaegerQueryUrl = SettingsState.getInstance().getJaegerQueryUrl();
+        if (jaegerQueryUrl == null || jaegerQueryUrl.isBlank()) {
             return;
         }
 

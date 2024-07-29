@@ -2,10 +2,11 @@ package org.digma.intellij.plugin.settings;
 
 import com.intellij.openapi.options.*;
 import com.intellij.openapi.util.NlsContexts;
-import org.digma.intellij.plugin.common.CommonUtils;
+import org.digma.intellij.plugin.common.*;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import java.net.*;
 import java.util.Objects;
 
 public class ProjectSettings implements Configurable {
@@ -18,7 +19,6 @@ public class ProjectSettings implements Configurable {
         super();
     }
 
-    @SuppressWarnings("UnstableApiUsage")
     @Override
     public @NlsContexts.ConfigurableName String getDisplayName() {
         return DISPLAY_NAME;
@@ -38,9 +38,8 @@ public class ProjectSettings implements Configurable {
     @Override
     public boolean isModified() {
         SettingsState settings = SettingsState.getInstance();
-        return isUrlChanged(settings) ||
+        return isApiUrlChanged(settings) ||
                 isApiTokenChanged(settings) ||
-                isRefreshDelayChanged(settings) ||
                 isJaegerUrlChanged(settings) ||
                 isJaegerQueryUrlChanged(settings) ||
                 isJaegerLinkModeChanged(settings) ||
@@ -50,127 +49,141 @@ public class ProjectSettings implements Configurable {
                 isExtendedObservabilityExcludeChanged(settings);
     }
 
-    private boolean isRefreshDelayChanged(SettingsState settings) {
-        return !Objects.equals(String.valueOf(settings.refreshDelay), mySettingsComponent.getRefreshDelayText());
-    }
-
-    private boolean isUrlChanged(SettingsState settings) {
-        return !Objects.equals(settings.apiUrl, mySettingsComponent.getApiUrlText());
+    private boolean isApiUrlChanged(SettingsState settings) {
+        return !Objects.equals(settings.getApiUrl(), mySettingsComponent.getApiUrl());
     }
 
     private boolean isApiTokenChanged(SettingsState settings) {
-        return !Objects.equals(settings.apiToken, mySettingsComponent.getApiToken());
+        return !Objects.equals(settings.getApiToken(), mySettingsComponent.getApiToken());
     }
 
     private boolean isJaegerUrlChanged(SettingsState settings) {
-        return !Objects.equals(settings.jaegerUrl, mySettingsComponent.getJaegerUrl());
+        return !Objects.equals(settings.getJaegerUrl(), mySettingsComponent.getJaegerUrl());
     }
 
     private boolean isJaegerQueryUrlChanged(SettingsState settings) {
-        return !Objects.equals(settings.jaegerQueryUrl, mySettingsComponent.getJaegerQueryUrl());
+        return !Objects.equals(settings.getJaegerQueryUrl(), mySettingsComponent.getJaegerQueryUrl());
     }
 
     private boolean isJaegerLinkModeChanged(SettingsState settings) {
-        return !Objects.equals(settings.jaegerLinkMode, mySettingsComponent.getJaegerLinkMode());
+        return !Objects.equals(settings.getJaegerLinkMode(), mySettingsComponent.getJaegerLinkMode());
     }
 
     private boolean isSpringBootObservabilityModeChanged(SettingsState settings) {
-        return !Objects.equals(settings.springBootObservabilityMode, mySettingsComponent.getSpringBootObservabilityMode());
+        return !Objects.equals(settings.getSpringBootObservabilityMode(), mySettingsComponent.getSpringBootObservabilityMode());
     }
 
     private boolean isRuntimeObservabilityBackendUrlChanged(SettingsState settings) {
-        return !Objects.equals(settings.runtimeObservabilityBackendUrl, mySettingsComponent.getRuntimeObservabilityBackendUrl());
+        return !Objects.equals(settings.getRuntimeObservabilityBackendUrl(), mySettingsComponent.getRuntimeObservabilityBackendUrl());
     }
 
     private boolean isExtendedObservabilityChanged(SettingsState settings) {
-        return !Objects.equals(settings.extendedObservability, mySettingsComponent.getExtendedObservability());
+        return !Objects.equals(settings.getExtendedObservability(), mySettingsComponent.getExtendedObservability());
     }
 
     private boolean isExtendedObservabilityExcludeChanged(SettingsState settings) {
-        return !Objects.equals(settings.extendedObservabilityExcludes, mySettingsComponent.getExtendedObservabilityExclude());
+        return !Objects.equals(settings.getExtendedObservabilityExcludes(), mySettingsComponent.getExtendedObservabilityExclude());
     }
 
     @Override
     public void apply() throws ConfigurationException {
-        SettingsState settings = SettingsState.getInstance();
+
+        //run all checks and only then update the settings.
+        //never update the settings before checks are complete because then the settings will have incorrect data
+
         try {
-            Objects.requireNonNull(mySettingsComponent.getApiUrlText(), "api url can not be null");
+            Objects.requireNonNull(mySettingsComponent.getApiUrl(), "Api url can not be null");
             Objects.requireNonNull(mySettingsComponent.getRuntimeObservabilityBackendUrl(), "Runtime observability url can not be null");
         } catch (Exception e) {
-            throw new ConfigurationException(e.getMessage(), e, e.getClass().getSimpleName());
+            throw new ConfigurationException(e.getMessage());
         }
 
-        if (mySettingsComponent.getApiUrlText().isBlank()) {
+        if (mySettingsComponent.getApiUrl().isBlank()) {
             throw new ConfigurationException("Api url can not be empty");
+        }
+        if (!CommonUtils.isHttpsUrl(mySettingsComponent.getApiUrl())) {
+            throw new ConfigurationException("Api url schema must be https");
+        }
+        try {
+            URLValidator.create(mySettingsComponent.getApiUrl()).validate();
+        } catch (MalformedURLException | URISyntaxException | URLValidator.InvalidUrlException | URLValidator.QueryNotAllowedException |
+                 URLValidator.IncorrectSchemaException e) {
+            throw new ConfigurationException("Api url is not a well formed: " + e.getMessage());
         }
 
         if (mySettingsComponent.getRuntimeObservabilityBackendUrl().isBlank()) {
             throw new ConfigurationException("Runtime observability url can not be empty");
         }
-
-
-        if (!CommonUtils.isWelFormedUrl(mySettingsComponent.getApiUrlText())) {
-            throw new ConfigurationException("Api url is not a well formed url");
-        }
-
-        if (!CommonUtils.isHttpsUrl(mySettingsComponent.getApiUrlText())) {
-            throw new ConfigurationException("Api url schema must be https");
-        }
-
-        if (!CommonUtils.isWelFormedUrl(mySettingsComponent.getRuntimeObservabilityBackendUrl())) {
-            throw new ConfigurationException("Runtime observability is not a well formed url");
-        }
-
-        if (mySettingsComponent.getJaegerUrl() != null &&
-                !mySettingsComponent.getJaegerUrl().isBlank() &&
-                !CommonUtils.isWelFormedUrl(mySettingsComponent.getJaegerUrl())) {
-            throw new ConfigurationException("Jaeger url is not a well formed url");
+        try {
+            URLValidator.create(mySettingsComponent.getRuntimeObservabilityBackendUrl()).validate();
+        } catch (MalformedURLException | URISyntaxException | URLValidator.InvalidUrlException | URLValidator.QueryNotAllowedException |
+                 URLValidator.IncorrectSchemaException e) {
+            throw new ConfigurationException("Backend observability url is not a well formed: " + e.getMessage());
         }
 
 
-        if (mySettingsComponent.getJaegerLinkMode() == LinkMode.Embedded) {
-            if (!CommonUtils.isWelFormedUrl(mySettingsComponent.getJaegerQueryUrl())) {
-                throw new ConfigurationException("Jaeger query url must be well formed in Embedded mode");
+        if (mySettingsComponent.getJaegerLinkMode() == JaegerLinkMode.Embedded) {
+            if (mySettingsComponent.getJaegerQueryUrl() == null || mySettingsComponent.getJaegerQueryUrl().trim().isBlank()) {
+                throw new ConfigurationException("Jaeger query url can not be empty in mode " + mySettingsComponent.getJaegerLinkMode());
+            }
+            try {
+                URLValidator.create(mySettingsComponent.getJaegerQueryUrl()).validate();
+            } catch (MalformedURLException | URISyntaxException | URLValidator.InvalidUrlException | URLValidator.QueryNotAllowedException |
+                     URLValidator.IncorrectSchemaException e) {
+                throw new ConfigurationException("Jaeger query url is not a well formed: " + e.getMessage());
             }
         } else {
-            if (mySettingsComponent.getJaegerQueryUrl() != null &&
-                    !mySettingsComponent.getJaegerQueryUrl().isBlank() &&
-                    !CommonUtils.isWelFormedUrl(mySettingsComponent.getJaegerQueryUrl())) {
-                throw new ConfigurationException("Jaeger query url is not a well formed url");
+            if (mySettingsComponent.getJaegerUrl() == null || mySettingsComponent.getJaegerUrl().trim().isBlank()) {
+                throw new ConfigurationException("Jaeger url can not be empty in mode " + mySettingsComponent.getJaegerLinkMode());
+            }
+            try {
+                if (mySettingsComponent.getJaegerUrl() != null) {
+                    URLValidator.create(mySettingsComponent.getJaegerUrl()).validate();
+                }
+            } catch (MalformedURLException | URISyntaxException | URLValidator.InvalidUrlException | URLValidator.QueryNotAllowedException |
+                     URLValidator.IncorrectSchemaException e) {
+                throw new ConfigurationException("Jaeger url is not a well formed: " + e.getMessage());
             }
         }
 
+
+        updateSettingsAndFireChange();
+    }
+
+
+    private void updateSettingsAndFireChange() {
+        SettingsState settingsState = SettingsState.getInstance();
+        settingsState.setApiUrl(mySettingsComponent.getApiUrl());
         var theApiToken = mySettingsComponent.getApiToken();
         if (theApiToken != null && theApiToken.isBlank()) {
             theApiToken = null;
         }
+        settingsState.setApiToken(theApiToken);
 
-        settings.apiUrl = mySettingsComponent.getApiUrlText();
-        settings.apiToken = theApiToken;
-        settings.refreshDelay = Integer.parseInt(mySettingsComponent.getRefreshDelayText());
-        settings.jaegerUrl = mySettingsComponent.getJaegerUrl();
-        settings.jaegerQueryUrl = mySettingsComponent.getJaegerQueryUrl();
-        settings.jaegerLinkMode = mySettingsComponent.getJaegerLinkMode();
-        settings.springBootObservabilityMode = mySettingsComponent.getSpringBootObservabilityMode();
-        settings.runtimeObservabilityBackendUrl = mySettingsComponent.getRuntimeObservabilityBackendUrl();
-        settings.extendedObservability = mySettingsComponent.getExtendedObservability();
-        settings.extendedObservabilityExcludes = mySettingsComponent.getExtendedObservabilityExclude();
-        settings.fireChanged();
+        settingsState.setJaegerUrl(mySettingsComponent.getJaegerUrl());
+        settingsState.setJaegerQueryUrl(mySettingsComponent.getJaegerQueryUrl());
+        settingsState.setJaegerLinkMode(mySettingsComponent.getJaegerLinkMode());
+        settingsState.setSpringBootObservabilityMode(mySettingsComponent.getSpringBootObservabilityMode());
+        settingsState.setRuntimeObservabilityBackendUrl(mySettingsComponent.getRuntimeObservabilityBackendUrl());
+        settingsState.setExtendedObservability(mySettingsComponent.getExtendedObservability());
+        settingsState.setExtendedObservabilityExcludes(mySettingsComponent.getExtendedObservabilityExclude());
+
+        settingsState.fireChanged();
     }
+
 
     @Override
     public void reset() {
         SettingsState settings = SettingsState.getInstance();
-        mySettingsComponent.setApiUrlText(settings.apiUrl);
-        mySettingsComponent.setApiToken(settings.apiToken);
-        mySettingsComponent.setRefreshDelayText(String.valueOf(settings.refreshDelay));
-        mySettingsComponent.setJaegerUrl(settings.jaegerUrl);
-        mySettingsComponent.setJaegerQueryUrl(settings.jaegerQueryUrl);
-        mySettingsComponent.setJaegerLinkMode(settings.jaegerLinkMode);
-        mySettingsComponent.setSpringBootObservabilityMode(settings.springBootObservabilityMode);
-        mySettingsComponent.setRuntimeObservabilityBackendUrl(settings.runtimeObservabilityBackendUrl);
-        mySettingsComponent.setExtendedObservability(settings.extendedObservability);
-        mySettingsComponent.setExtendedObservabilityExclude(settings.extendedObservabilityExcludes);
+        mySettingsComponent.setApiUrl(settings.getApiUrl());
+        mySettingsComponent.setApiToken(settings.getApiToken());
+        mySettingsComponent.setJaegerUrl(settings.getJaegerUrl());
+        mySettingsComponent.setJaegerQueryUrl(settings.getJaegerQueryUrl());
+        mySettingsComponent.setJaegerLinkMode(settings.getJaegerLinkMode());
+        mySettingsComponent.setSpringBootObservabilityMode(settings.getSpringBootObservabilityMode());
+        mySettingsComponent.setRuntimeObservabilityBackendUrl(settings.getRuntimeObservabilityBackendUrl());
+        mySettingsComponent.setExtendedObservability(settings.getExtendedObservability());
+        mySettingsComponent.setExtendedObservabilityExclude(settings.getExtendedObservabilityExcludes());
     }
 
 

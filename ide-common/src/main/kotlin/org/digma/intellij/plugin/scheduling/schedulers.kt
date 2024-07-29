@@ -95,27 +95,21 @@ if you need a one-shot very short running task that must run on a background thr
 see org.digma.intellij.plugin.scheduling.SchedulingTests for examples.
 
 
-when to use disposingScope().launch :
+when to use coroutines :
 if disposing of the recurring task has more complex conditions. the schedulers here have one option to stop the recurring task when
 the parent disposable is disposed. if stopping the task has more conditions that are known only to the executed code then probably
-the coroutine pattern is more conformable. or a regular java java.util.TimerTask.
-see for example org.digma.intellij.plugin.ui.recentactivity.RecentActivityService.openRegistrationDialog, it is waiting with a while loop
-for the app to initialize, with a scheduler we don't know how long it will take , a recurring task of 5 millis may create high load
-on the scheduler. this is a classic case where a local coroutine is more comfortable than a scheduler.
+then coroutine is more conformable. or a regular java java.util.TimerTask.
 
 if you need to execute suspending code it's better to use a coroutine.
 
-
 So a rule of thumb may be:
 always prefer a scheduler when possible.
-
 if the task can be disposed by a parent disposable, is very short: use a scheduler with a correct parent disposable,
 usually a project service or a local disposable.
 
 if the task has more complex stopping conditions that are known only to the executed code and can not be used with a disposable.
 or if the task interval may change depending on some variables: use disposingScope().launch
-
- */
+*/
 
 /*
 Cancellation:
@@ -128,7 +122,6 @@ it is similar to cancellation exception in kotlin coroutines.
 
 /*
 how to dispose a task using a local disposable, in case the task should be disposed early not related to project closing:
-
 see example in ide-common/src/main/kotlin/org/digma/intellij/plugin/posthog/PerformanceMetricsPosthogEventStartupActivity.kt
 
 val disposable = Disposer.newDisposable()
@@ -139,7 +132,7 @@ disposable.disposingPeriodicTask("task-name",2.minutes.inWholeMilliseconds,10.mi
         do something
     }
 }
- */
+*/
 
 /*
 to call from java , assuming a class implements Disposable, do that:
@@ -196,6 +189,7 @@ class ThreadPoolProviderService : Disposable {
             //call the scheduler manage
             manage()
 
+            //these reporting will fail in unit tests but its ok because the manage already run
             //the pool size was increased to SCHEDULER_MAX_SIZE, we have a problem, report an error
             if (scheduler.corePoolSize >= SCHEDULER_MAX_SIZE && !alreadySentSchedulerMaxSize.get()) {
                 alreadySentSchedulerMaxSize.set(true)
@@ -656,6 +650,26 @@ class MyScheduledExecutorService(
                     val currentSize = corePoolSize
                     corePoolSize = min(maxPoolSize, poolSize + 1)
                     Log.logWithThreadName(logger::trace, "management: pool size increased from {} to {}", currentSize, corePoolSize)
+
+                    try {
+                        //need this try catch only in unit tests because findActiveProject will fail
+                        findActiveProject()?.let { project ->
+                            ActivityMonitor.getInstance(project).registerSchedulerSizeIncreased(
+                                mapOf(
+                                    "prev.core.pool.size" to currentSize,
+                                    "core.pool.size" to scheduler.corePoolSize,
+                                    "max.pool.size" to scheduler.maximumPoolSize,
+                                    "task.queue.size" to scheduler.queue.size,
+                                    "all.registered.recurring (including canceled)" to scheduler.registeredRecurringTasks,
+                                    "max.pool.size.allowed" to SCHEDULER_MAX_SIZE,
+                                    "max.queue.size.allowed" to SCHEDULER_MAX_QUEUE_SIZE_ALLOWED
+                                )
+                            )
+                        }
+                    } catch (e: Throwable) {
+                        Log.warnWithException(logger, e, "error reporting event {}", e)
+                    }
+
                 } else {
                     Log.logWithThreadName(logger::trace, "management: can't increase pool size because at max")
                 }

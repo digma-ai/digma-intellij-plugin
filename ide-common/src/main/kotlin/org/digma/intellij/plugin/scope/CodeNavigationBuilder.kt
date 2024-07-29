@@ -38,7 +38,7 @@ fun buildCodeLocation(
     val assetNavigation = try {
         AnalyticsService.getInstance(project).getAssetNavigation(spanCodeObjectId)
     } catch (e: Throwable) {
-        ErrorReporter.getInstance().reportError(project, "ScopeManager.changeToSpanScope", e)
+        ErrorReporter.getInstance().reportError(project, "CodeNavigationBuilder.buildCodeLocation", e)
         null
     }
 
@@ -60,7 +60,7 @@ private fun buildCodeLocationFromAssetNavigation(
     } ?: listOf()
 
 
-    //if has code locations no need to continue
+    //if code locations found no need to continue
     if (codeDetailsList.isNotEmpty()) {
         return CodeLocation(codeDetailsList, listOf())
     }
@@ -79,7 +79,7 @@ private fun buildFromCodeLocation(project: Project, codeLocation: AssetCodeLocat
 
     val codeDetailsList = mutableListOf<CodeDetails>()
 
-    //its actually the same span as the original and we checked it already
+    //it's actually the same span as the original, and we checked it already
 //    if (codeNavigator.canNavigateToSpan(assetNavigation.codeLocation.spanCodeObjectId)) {
 //        codeDetailsList.add(
 //            CodeDetails(

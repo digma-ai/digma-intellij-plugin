@@ -7,7 +7,7 @@ import com.intellij.ui.JBColor
 import com.intellij.ui.components.ActionLink
 import com.intellij.util.ui.JBUI.Borders.empty
 import org.digma.intellij.plugin.analytics.BackendInfoHolder
-import org.digma.intellij.plugin.auth.AuthManager
+import org.digma.intellij.plugin.analytics.refreshEnvironmentsNowOnBackground
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.posthog.ActivityMonitor
@@ -76,8 +76,9 @@ fun createNoConnectionPanel(project: Project, parentDisposable: Disposable):JPan
     val refreshLink = ActionLink("Refresh"){
         Backgroundable.executeOnPooledThread {
             ActivityMonitor.getInstance(project).registerUserActionWithOrigin("refresh link clicked", UserActionOrigin.NoConnectionPanel)
-            AuthManager.getInstance().loginOrRefreshAsync()
             BackendInfoHolder.getInstance(project).refresh()
+            //this will trigger authentication exception and login or refresh if necessary
+            refreshEnvironmentsNowOnBackground(project)
         }
     }
     buttonsPanel.add(refreshLink,BorderLayout.WEST)

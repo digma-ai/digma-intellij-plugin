@@ -18,7 +18,9 @@ internal class Engine {
 
     private val streamExecutor = Executors.newFixedThreadPool(2)
 
-    private val engineLock = ReentrantLock(true)
+    //executeCommandLock should be used only in method executeCommand which is not recursive, other methods here may call each other
+    // especially if there is doBetweenRetries in executeCommandWithRetry
+    private val executeCommandLock = ReentrantLock(true)
 
     //this message is used to identify timeout of the process
     private val timeoutMessage = "process exited with timeout"
@@ -36,7 +38,21 @@ internal class Engine {
             .withRedirectErrorStream(true)
             .toProcessBuilder()
 
-        return executeCommandWithRetry(project, "up", composeFile, processBuilder, reportToPosthog = true, ignoreNonRealErrors = true)
+        //if up failed do down before retrying, in many cases it will fix the problem
+        val actionBetweenRetry = Runnable {
+            remove(project, composeFile, dockerComposeCmd, reportToPosthog = false)
+        }
+
+
+        return executeCommandWithRetry(
+            project,
+            "up",
+            composeFile,
+            processBuilder,
+            reportToPosthog = true,
+            ignoreNonRealErrors = true,
+            doBetweenRetries = actionBetweenRetry
+        )
     }
 
 
@@ -67,7 +83,12 @@ internal class Engine {
             .withRedirectErrorStream(true)
             .toProcessBuilder()
 
-        return executeCommandWithRetry(project, "up", composeFile, processBuilder)
+        //if up failed do down before retrying, in many cases it will fix the problem
+        val actionBetweenRetry = Runnable {
+            remove(project, composeFile, dockerComposeCmd, reportToPosthog = false)
+        }
+
+        return executeCommandWithRetry(project, "up", composeFile, processBuilder, doBetweenRetries = actionBetweenRetry)
 
     }
 
@@ -88,7 +109,7 @@ internal class Engine {
     }
 
 
-    fun remove(project: Project, composeFile: File, dockerComposeCmd: List<String>): String {
+    fun remove(project: Project, composeFile: File, dockerComposeCmd: List<String>, reportToPosthog: Boolean = true): String {
 
         Log.log(logger::info, "starting uninstall")
 
@@ -102,7 +123,7 @@ internal class Engine {
             .withRedirectErrorStream(true)
             .toProcessBuilder()
 
-        return executeCommandWithRetry(project, "down", composeFile, processBuilder)
+        return executeCommandWithRetry(project, "down", composeFile, processBuilder, reportToPosthog = reportToPosthog)
 
     }
 
@@ -114,6 +135,7 @@ internal class Engine {
         processBuilder: ProcessBuilder,
         reportToPosthog: Boolean = true,
         ignoreNonRealErrors: Boolean = false,
+        doBetweenRetries: Runnable? = null
     ): String {
 
         //try 3 times in case of failure
@@ -133,12 +155,18 @@ internal class Engine {
                     )
                 )
             }
+
             Log.log(logger::info, "docker command {} failed with exit value {}, retrying..", name, exitValue)
+
+            doBetweenRetries?.let {
+                Log.log(logger::info, "executing doBetweenRetries action before next retry")
+                it.run()
+            }
         }
 
         //last chance
         Log.log(logger::info, "executing command {}, last chance after 3 failures", name)
-        return executeCommand(project, "down", composeFile, processBuilder)
+        return executeCommand(project, name, composeFile, processBuilder)
     }
 
     private fun shouldExit(exitValue: String): Boolean {
@@ -154,8 +182,9 @@ internal class Engine {
     private fun isRetryTriggerExitValue(exitValue: String): Boolean {
 
         //"process exited with timeout" is the message set in buildExitValue
-        return exitValue.startsWith(timeoutMessage) ||
-                exitValue.contains("unexpected EOF")
+        return exitValue.startsWith(timeoutMessage, true) ||
+                exitValue.contains("unexpected EOF", true) ||
+                exitValue.contains("pod already exists", true)
 
     }
 
@@ -170,7 +199,7 @@ internal class Engine {
     ): String {
 
         try {
-            engineLock.lock()
+            executeCommandLock.lock()
 
             Log.log(logger::info, "executing {}, compose file {}, command {}", name, composeFile, processBuilder.command())
 
@@ -265,8 +294,8 @@ internal class Engine {
             Log.warnWithException(logger, e, "error running docker command {}", processBuilder.command())
             return e.message ?: e.toString()
         } finally {
-            if (engineLock.isHeldByCurrentThread) {
-                engineLock.unlock()
+            if (executeCommandLock.isHeldByCurrentThread) {
+                executeCommandLock.unlock()
             }
         }
     }

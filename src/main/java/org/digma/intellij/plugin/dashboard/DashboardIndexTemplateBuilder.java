@@ -58,7 +58,7 @@ public class DashboardIndexTemplateBuilder {
             data.put(IS_DIGMA_ENGINE_RUNNING, ApplicationManager.getApplication().getService(DockerService.class).isEngineRunning(project));
             data.put(IS_DOCKER_INSTALLED, ApplicationManager.getApplication().getService(DockerService.class).isDockerInstalled());
             data.put(IS_DOCKER_COMPOSE_INSTALLED, ApplicationManager.getApplication().getService(DockerService.class).isDockerInstalled());
-            data.put(DIGMA_API_URL, SettingsState.getInstance().apiUrl);
+            data.put(DIGMA_API_URL, SettingsState.getInstance().getApiUrl());
 
             data.put(DASHBOARD_ENVIRONMENT, getCurrentEnvironmentId(project));
             data.put(IS_LOGGING_ENABLED,getIsLoggingEnabledSystemProperty());

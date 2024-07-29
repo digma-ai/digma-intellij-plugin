@@ -9,8 +9,6 @@ import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.observable.properties.AtomicProperty
-import com.intellij.util.Urls
 import org.digma.intellij.plugin.auth.credentials.DigmaCredentials
 import org.digma.intellij.plugin.log.Log
 
@@ -40,8 +38,6 @@ class DigmaDefaultAccountHolder :
 
     private var fireNotification = true
 
-    val accountName: AtomicProperty<String> = AtomicProperty("Not logged in")
-
     private val accountManager: AccountManager<DigmaAccount, DigmaCredentials> = DigmaAccountManager.getInstance()
 
     override var account: DigmaAccount? = null
@@ -51,13 +47,6 @@ class DigmaDefaultAccountHolder :
             val oldAccount = this.account
 
             field = value
-
-            if (value == null) {
-                accountName.set("Not logged in")
-            } else {
-                val name = Urls.newFromEncoded(value.server.url).authority
-                accountName.set("Using account $name")
-            }
 
             if (oldAccount != this.account && fireNotification) {
                 notifyDefaultAccountChanged()
@@ -98,7 +87,6 @@ class DigmaDefaultAccountHolder :
         } finally {
             fireNotification = true
         }
-
     }
 
 

@@ -52,12 +52,12 @@ class SettingsChangeTracker {
         }
 
 
-        myTrackedSettings["jaegerQueryUrl"] = SettingsState.getInstance().jaegerQueryUrl.let {
+        myTrackedSettings["jaegerQueryUrl"] = SettingsState.getInstance().jaegerQueryUrl?.let {
             if (it.contains("localhost") || it.contains("127.0.0.1"))
                 "localhost"
             else
                 "non-localhost"
-        }
+        } ?: ""
 
         myTrackedSettings["runtimeObservabilityBackendUrl"] = SettingsState.getInstance().runtimeObservabilityBackendUrl.let {
             if (it.contains("localhost") || it.contains("127.0.0.1"))
@@ -74,12 +74,10 @@ class SettingsChangeTracker {
         } ?: ""
 
         myTrackedSettings["jaegerLinkMode"] = SettingsState.getInstance().jaegerLinkMode.name
-        myTrackedSettings["refreshDelay"] = SettingsState.getInstance().refreshDelay.toString()
         myTrackedSettings["springBootObservabilityMode"] = SettingsState.getInstance().springBootObservabilityMode.name
         myTrackedSettings["extendedObservability"] = SettingsState.getInstance().extendedObservability.toString()
         myTrackedSettings["extendedObservabilityExcludes"] = SettingsState.getInstance().extendedObservabilityExcludes.toString()
     }
-
 
 }
 

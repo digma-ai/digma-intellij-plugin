@@ -52,6 +52,7 @@ class JavaLanguageService(project: Project) : AbstractJvmLanguageService(project
         return JavaLanguage::class.java == language.javaClass
     }
 
+    //this method may throw IndexNotReadyException , calling code should expect it and retry if necessary
     override fun findClassByClassName(className: String, scope: GlobalSearchScope): UClass? {
         return JavaPsiFacade.getInstance(project).findClass(className, scope)?.toUElementOfType<UClass>()
 //        val classes:Collection<PsiClass> = JavaFullClassNameIndex.getInstance().get(className, project, GlobalSearchScope.projectScope(project))

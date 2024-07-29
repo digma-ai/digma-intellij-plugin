@@ -1,12 +1,14 @@
 package org.digma.intellij.plugin.auth.account
 
 import com.intellij.openapi.diagnostic.Logger
+import kotlinx.coroutines.CoroutineName
 import org.digma.intellij.plugin.analytics.AuthenticationException
 import org.digma.intellij.plugin.analytics.RestAnalyticsProvider
 import org.digma.intellij.plugin.auth.AuthApiClient
 import org.digma.intellij.plugin.auth.credentials.DigmaCredentials
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import kotlin.coroutines.coroutineContext
 
 abstract class AbstractLoginHandler(protected val analyticsProvider: RestAnalyticsProvider) : LoginHandler {
 
@@ -40,8 +42,13 @@ abstract class AbstractLoginHandler(protected val analyticsProvider: RestAnalyti
 
             val credentials = authApiClient.login(user, password)
 
-            val account = DigmaAccountManager.createAccount(analyticsProvider.apiUrl, credentials.userId)
-            updateAccount(account, credentials)
+            val account = DigmaAccountManager.createAccount(
+                analyticsProvider.apiUrl,
+                credentials.userId,
+                coroutineContext[CoroutineName].toString(),
+                java.time.Instant.now().toString()
+            )
+            SingletonAccountUpdater.updateNewAccount(account, credentials)
 
             trace("login success for url {}, user {}, created account {}", analyticsProvider.apiUrl, user, getDefaultAccount())
 
@@ -52,15 +59,11 @@ abstract class AbstractLoginHandler(protected val analyticsProvider: RestAnalyti
         } catch (e: Throwable) {
 
             warnWithException(e, "Exception in login {}, url {}", e, analyticsProvider.apiUrl)
-            ErrorReporter.getInstance().reportError("AuthManager.login", e)
+            ErrorReporter.getInstance().reportError("${javaClass.simpleName}.login", e)
 
             if (e is AuthenticationException) {
-                warnWithException(e, "Exception in login, url {}", analyticsProvider.apiUrl)
-                ErrorReporter.getInstance().reportError("AuthManager.login", e)
                 val errorMessage = ExceptionUtils.getNonEmptyMessage(e)
                 reportPosthogEvent("login failed", mapOf("user" to user, "error" to errorMessage))
-                //return no success LoginResult
-                LoginResult(false, null, e.detailedMessage)
             }
 
             LoginResult(false, null, ExceptionUtils.getNonEmptyMessage(e))
@@ -75,7 +78,7 @@ abstract class AbstractLoginHandler(protected val analyticsProvider: RestAnalyti
             trace("refresh called for url {}", analyticsProvider.apiUrl)
 
             val newCredentials = authApiClient.refreshToken(account, credentials)
-            updateAccount(account, newCredentials)
+            SingletonAccountUpdater.updateAccount(account, newCredentials)
 
             trace("refresh success for url {}, updated account {}", analyticsProvider.apiUrl, getDefaultAccount())
 
@@ -83,11 +86,9 @@ abstract class AbstractLoginHandler(protected val analyticsProvider: RestAnalyti
 
         } catch (e: Throwable) {
             warnWithException(e, "Exception in refresh {}", e)
-            ErrorReporter.getInstance().reportError("AuthManager.refresh", e)
+            ErrorReporter.getInstance().reportError("${javaClass.simpleName}.refresh", e)
 
             if (e is AuthenticationException) {
-                warnWithException(e, "Exception in refresh, url {}", analyticsProvider.apiUrl)
-                ErrorReporter.getInstance().reportError("AuthManager.refresh", e)
                 val errorMessage = ExceptionUtils.getNonEmptyMessage(e)
                 reportPosthogEvent("refresh failed", mapOf("error" to errorMessage))
             }
@@ -95,9 +96,6 @@ abstract class AbstractLoginHandler(protected val analyticsProvider: RestAnalyti
             throw e
         }
     }
-
-
-
 
 
 }

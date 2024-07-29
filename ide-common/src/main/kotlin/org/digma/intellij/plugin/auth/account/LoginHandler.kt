@@ -1,10 +1,7 @@
 package org.digma.intellij.plugin.auth.account
 
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.project.Project
 import kotlinx.coroutines.CoroutineName
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import org.digma.intellij.plugin.analytics.ApiErrorHandler
 import org.digma.intellij.plugin.analytics.ReplacingClientException
 import org.digma.intellij.plugin.analytics.RestAnalyticsProvider
@@ -24,13 +21,9 @@ interface LoginHandler {
 
         private val logger: Logger = Logger.getInstance(this::class.java)
 
-        private val mutex = Mutex()
 
-        fun createLoginHandler(analyticsProvider: RestAnalyticsProvider): LoginHandler {
-            return createLoginHandler(null, analyticsProvider)
-        }
-
-        fun createLoginHandler(project: Project?, analyticsProvider: RestAnalyticsProvider): LoginHandler {
+        //markConnectionLostOnErrors should be true only in some callers. for example we don't want the auto refresh to mark connection lost,
+        fun createLoginHandler(analyticsProvider: RestAnalyticsProvider, markConnectionLostOnErrors: Boolean = false): LoginHandler {
 
             try {
 
@@ -43,7 +36,7 @@ interface LoginHandler {
 
                 //reset connection status in case it's in no connection mode,
                 //resetConnectionLostAndNotifyIfNecessary is a fast method when the connection is ok
-                ApiErrorHandler.getInstance().resetConnectionLostAndNotifyIfNecessary(project)
+                ApiErrorHandler.getInstance().resetConnectionLostAndNotifyIfNecessary(null)
 
                 Log.log(logger::trace, "created {} for url {}", loginHandler, analyticsProvider.apiUrl)
                 return loginHandler
@@ -54,11 +47,13 @@ interface LoginHandler {
             } catch (e: Throwable) {
 
                 //if we can't create a login handler we assume there is a connection issue, it may be a real connect issue,
-                // or any other issue were we can't get analyticsProvider.about
-                ApiErrorHandler.getInstance().handleAuthManagerCantConnectError(e, project)
+                // or any other issue were we can't call analyticsProvider.about
+                if (markConnectionLostOnErrors) {
+                    ApiErrorHandler.getInstance().handleAuthManagerCantConnectError(e, null)
+                }
 
                 Log.warnWithException(logger, e, "Exception in createLoginHandler {}, url {}", e, analyticsProvider.apiUrl)
-                ErrorReporter.getInstance().reportError("AuthManager.createLoginHandler", e)
+                ErrorReporter.getInstance().reportError("LoginHandler.createLoginHandler", e)
 
                 Log.log(logger::trace, "Got exception in createLoginHandler , returning NoOpLoginHandler", analyticsProvider.apiUrl)
                 return NoOpLoginHandler("error in createLoginHandler $e")
@@ -94,7 +89,7 @@ interface LoginHandler {
             trace("logout: found account {}", digmaAccount)
 
             digmaAccount?.let { account ->
-                deleteAccount(account)
+                SingletonAccountUpdater.deleteAccount(account)
             }
 
             digmaAccount?.let {
@@ -106,34 +101,8 @@ interface LoginHandler {
 
         } catch (e: Throwable) {
             warnWithException(e, "Exception in logout {}", e)
-            ErrorReporter.getInstance().reportError("AuthManager.logout", e)
+            ErrorReporter.getInstance().reportError("${javaClass.simpleName}.logout", e)
             false
-        }
-    }
-
-
-    suspend fun updateAccount(digmaAccount: DigmaAccount, digmaCredentials: DigmaCredentials) {
-        trace("updating account {}", digmaAccount)
-        //this is the only place we update the account and credentials.
-        mutex.withLock {
-            DigmaAccountManager.getInstance().updateAccount(digmaAccount, digmaCredentials)
-            DigmaDefaultAccountHolder.getInstance().account = digmaAccount
-            CredentialsHolder.digmaCredentials = digmaCredentials
-        }
-    }
-
-
-    suspend fun deleteAccount(digmaAccount: DigmaAccount) {
-        trace("deleting account {}", digmaAccount)
-        //this is the only place we delete the account.
-        mutex.withLock {
-            try {
-                DigmaAccountManager.getInstance().removeAccount(digmaAccount)
-            } finally {
-                //it's in finally because even if removeAccount failed we want to delete the account and nullify CredentialsHolder.digmaCredentials
-                DigmaDefaultAccountHolder.getInstance().account = null
-                CredentialsHolder.digmaCredentials = null
-            }
         }
     }
 

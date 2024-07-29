@@ -12,6 +12,7 @@ import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.scheduling.ThreadPoolProviderService
 import org.digma.intellij.plugin.settings.SettingsState
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.function.Consumer
 
 @Service(Service.Level.APP)
@@ -21,7 +22,21 @@ class AnalyticsUrlProvider : DisposableAdaptor, BaseUrlProvider {
 
     private var myApiUrl = SettingsState.getInstance().apiUrl
 
-    private val myListeners = mutableListOf<Pair<Int, BaseUrlProvider.UrlChangedListener>>()
+    /*
+    AnalyticsUrlProvider also provides the api token to org.digma.intellij.plugin.auth.SettingsTokenProvider.
+    the reason SettingsTokenProvider doesn't take the token directly from SettingsState:
+    when user changes the api url, lets say from centralized to local, they will also remove the token.
+    but when changing url here in settingsChanged the first thing we want to do is logout from the old
+    server. but if the token doesn't exist in SettingsState then AuthManager.logoutSynchronously will fail
+    to create a LoginHandler. to create a LoginHandler we need to know if its centralized or local,and for that we need
+    to call analyticsProvider.about, that will fail without a token and the logout will fail to create a LoginHandler and
+    will return a NoOpLoginHandler. luckily NoOpLoginHandler knows how to logout because our logout is only deleting the account.
+    but for the good order and for future needs it's better that we succeed to create LoginHandler.
+    So the token is provided by AnalyticsUrlProvider and it is synced with the settings every time the settings change.
+     */
+    private var myApiToken = SettingsState.getInstance().apiToken
+
+    private val myListeners = CopyOnWriteArrayList<Pair<Int, BaseUrlProvider.UrlChangedListener>>()
 
 
     companion object {
@@ -44,13 +59,14 @@ class AnalyticsUrlProvider : DisposableAdaptor, BaseUrlProvider {
                     ThreadPoolProviderService.getInstance().interruptAll()
                     val oldUrl = myApiUrl
                     myApiUrl = state.apiUrl
+                    myApiToken = state.apiToken
                     //clients should be replaced now, this is a synchronous call that will return only after all
                     // listeners replaced their client
                     fireUrlChangedEvent(oldUrl, myApiUrl)
-                    //after clients replaced do loginOrRefresh
-                    AuthManager.getInstance().loginOrRefreshAsync()
                     AuthManager.getInstance().startAutoRefresh()
+                    //this will trigger authentication exception and a login or refresh if necessary
                     doForAllProjects { project ->
+                        refreshEnvironmentsNowOnBackground(project)
                         project.messageBus.syncPublisher(ApiClientChangedEvent.API_CLIENT_CHANGED_TOPIC).apiClientChanged(myApiUrl)
                     }
                 }
@@ -59,9 +75,12 @@ class AnalyticsUrlProvider : DisposableAdaptor, BaseUrlProvider {
     }
 
 
-
     override fun baseUrl(): String {
         return myApiUrl
+    }
+
+    fun apiToken(): String? {
+        return myApiToken
     }
 
 

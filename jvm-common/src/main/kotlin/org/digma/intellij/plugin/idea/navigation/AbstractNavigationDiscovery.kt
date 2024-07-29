@@ -169,7 +169,7 @@ abstract class AbstractNavigationDiscovery(protected val project: Project) : Dis
             Log.log(logger::trace, "Navigation discovery process completed successfully {}", processResult)
         }
 
-        context.logErrors(logger, project)
+        context.logErrors(logger, project, true)
 
     }
 

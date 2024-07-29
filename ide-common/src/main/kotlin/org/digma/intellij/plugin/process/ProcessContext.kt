@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.process
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.progress.EmptyProgressIndicator
 import com.intellij.openapi.progress.ProgressIndicator
+import com.intellij.openapi.project.IndexNotReadyException
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.errorreporting.SEVERITY_MEDIUM
@@ -43,12 +44,16 @@ open class ProcessContext(val processName: String) {
     }
 
 
-    fun logErrors(logger: Logger, project: Project) {
+    //set skipIndexNotReadyException to true in processes were we know that IndexNotReadyException is handled correctly,
+    // for example in navigation discovery.
+    //in other processes we want to know about it, for example when building document info, it may indicate the rate of unsuccessful
+    // document info
+    fun logErrors(logger: Logger, project: Project, skipIndexNotReadyException: Boolean = false) {
         if (hasErrors()) {
             errorsList().forEach { entry ->
                 val hint = entry.key
                 val errors = entry.value
-                errors.forEach { err ->
+                errors.filter { !(skipIndexNotReadyException && it is IndexNotReadyException) }.forEach { err ->
                     Log.warnWithException(logger, err, "Exception in $processName")
                     ErrorReporter.getInstance().reportError(
                         project, "$processName.$hint", err, mapOf(SEVERITY_PROP_NAME to SEVERITY_MEDIUM)

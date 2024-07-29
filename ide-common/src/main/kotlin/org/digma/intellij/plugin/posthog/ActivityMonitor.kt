@@ -6,7 +6,6 @@ import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.progress.ProcessCanceledException
-import com.intellij.openapi.project.IndexNotReadyException
 import com.intellij.openapi.project.Project
 import com.intellij.ui.jcef.JBCefApp
 import com.posthog.java.PostHog
@@ -61,8 +60,7 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
         //using class names because some exceptions may not be available in development classpath so we can use the name
         private val EXCEPTIONS_TO_EXCLUDE_FROM_ERROR_REPORTING = setOf(
             ProcessCanceledException::class.qualifiedName,
-            "com.intellij.openapi.progress.CeProcessCanceledException",
-            IndexNotReadyException::class.qualifiedName,
+            "com.intellij.openapi.progress.CeProcessCanceledException"
         )
 
 

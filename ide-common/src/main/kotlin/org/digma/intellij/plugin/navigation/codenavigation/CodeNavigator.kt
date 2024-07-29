@@ -3,12 +3,16 @@ package org.digma.intellij.plugin.navigation.codenavigation
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.project.IndexNotReadyException
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFileManager
 import org.digma.intellij.plugin.common.CodeObjectsUtil
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.common.runInReadAccessWithResult
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import org.digma.intellij.plugin.errorreporting.SEVERITY_LOW
+import org.digma.intellij.plugin.errorreporting.SEVERITY_PROP_NAME
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigation
@@ -113,8 +117,14 @@ class CodeNavigator(val project: Project) {
         SupportedLanguages.values().forEach { language ->
             val languageService = LanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
             if (languageService != null) {
-                val methodWorkspaceUris = ReadActions.ensureReadAction<Map<String, Pair<String, Int>>> {
-                    languageService.findWorkspaceUrisForMethodCodeObjectIds(listOf(methodIdWithoutType))
+                val methodWorkspaceUris = try {
+                    ReadActions.ensureReadAction<Map<String, Pair<String, Int>>> {
+                        languageService.findWorkspaceUrisForMethodCodeObjectIds(listOf(methodIdWithoutType))
+                    }
+                } catch (e: IndexNotReadyException) {
+                    //this error will happen sometimes, especially on startup when indexing still in process, severity is low because we can't do anything about it but retry
+                    ErrorReporter.getInstance().reportError("CodeNavigator.canNavigateToMethod", e, mapOf(SEVERITY_PROP_NAME to SEVERITY_LOW))
+                    mapOf()
                 }
                 //if code location was found return. no need to check the other language services
                 if (methodWorkspaceUris.containsKey(methodIdWithoutType)) {
@@ -149,6 +159,7 @@ class CodeNavigator(val project: Project) {
 
         return false
     }
+
     fun findMethodCodeObjectId(spanCodeObjectId: String): String? {
         SupportedLanguages.values().forEach { language ->
             val languageService = LanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
@@ -311,7 +322,6 @@ class CodeNavigator(val project: Project) {
         }
         return null
     }
-
 
 
     companion object {

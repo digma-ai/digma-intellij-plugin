@@ -153,7 +153,7 @@ class DocumentChangeListener {
         };
         var processResult = project.getService(ProcessManager.class).runTaskUnderProcess(runnable, context, true, 2, false);
         Log.log(LOGGER::trace, "buildDocumentInfo completed {}", processResult);
-        context.logErrors(LOGGER, project);
+        context.logErrors(LOGGER, project, false);
     }
 
 

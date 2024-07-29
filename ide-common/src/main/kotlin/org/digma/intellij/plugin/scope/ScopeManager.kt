@@ -118,7 +118,7 @@ class ScopeManager(private val project: Project) {
         val spanScopeInfo = try {
             AnalyticsService.getInstance(project).getAssetDisplayInfo(scope.spanCodeObjectId)
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError(project, "ScopeManager.changeToSpanScope", e)
+            ErrorReporter.getInstance().reportError(project, "ScopeManager.changeToSpanScope.getAssetDisplayInfo", e)
             null
         }
 
@@ -130,14 +130,18 @@ class ScopeManager(private val project: Project) {
         scope.role = spanScopeInfo?.role
 
 
-        val codeLocation: CodeLocation =
+        //never let buildCodeLocation fail this method, this method must finish
+        val codeLocation: CodeLocation = try {
             buildCodeLocation(project, scope.spanCodeObjectId, scope.displayName ?: "", scope.methodId)
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError(project, "ScopeManager.changeToSpanScope.buildCodeLocation", e)
+            CodeLocation()
+        }
 
 
         //todo: this is temporary, the plugin loads the errors just so that the UI can show a red dot.
         // it should be removed at some point
         val hasErrors = checkIfHasErrors(scope)
-
 
 
         fireScopeChangedEvent(scope, codeLocation, hasErrors, scopeContext, environmentId)
@@ -154,9 +158,13 @@ class ScopeManager(private val project: Project) {
     }
 
     private fun checkIfHasErrors(scope: SpanScope): Boolean {
-        val objectIds = listOfNotNull(scope.spanCodeObjectId, scope.methodId)
-        val errors = AnalyticsService.getInstance(project).getErrors(objectIds)
-        return !errors.isNullOrBlank() && errors != "[]"
+        return try {
+            val objectIds = listOfNotNull(scope.spanCodeObjectId, scope.methodId)
+            val errors = AnalyticsService.getInstance(project).getErrors(objectIds)
+            !errors.isNullOrBlank() && errors != "[]"
+        } catch (e: Throwable) {
+            false
+        }
     }
 
 

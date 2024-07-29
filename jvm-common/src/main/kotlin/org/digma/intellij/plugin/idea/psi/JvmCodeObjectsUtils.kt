@@ -40,7 +40,7 @@ fun createMethodCodeObjectId(uMethod: UMethod): String {
     val packageName = uMethod.getParentOfType<UFile>()?.packageName ?: ""
 
     //considering inner class, for example qualified name can be a.b.c.MyClass.MyInnerClass, the code object id should be
-    // a $ sign between the inner classes
+    // a $ sign between the inner classes, that's why we need the simple name.
     val className = getClassSimpleName(uClass).replace('.', '$')
 
     return packageName + "." + className + "\$_$" + uMethod.name

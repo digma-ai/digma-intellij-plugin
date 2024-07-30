@@ -511,10 +511,9 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
                         )
                     }
 
-                } catch (ce: CancellationException) {
-                    throw ce
                 } catch (e: Throwable) {
                     Log.warnWithException(logger, e, "${coroutineContext[CoroutineName]} error in autoRefreshJob")
+                    ErrorReporter.getInstance().reportError("AuthManager.autoRefreshJob", e)
                 }
             }
 

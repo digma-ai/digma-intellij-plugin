@@ -7,6 +7,7 @@ import org.digma.intellij.plugin.analytics.ReplacingClientException
 import org.digma.intellij.plugin.analytics.RestAnalyticsProvider
 import org.digma.intellij.plugin.auth.NoOpLoginHandler
 import org.digma.intellij.plugin.auth.credentials.DigmaCredentials
+import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.common.findActiveProject
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
@@ -84,6 +85,8 @@ interface LoginHandler {
         return try {
             trace("logout called")
 
+            reportPosthogEvent("logout")
+
             val digmaAccount = DigmaDefaultAccountHolder.getInstance().account
 
             trace("logout: found account {}", digmaAccount)
@@ -96,12 +99,15 @@ interface LoginHandler {
                 trace("logout: account deleted {} ", digmaAccount)
             }
 
+            reportPosthogEvent("logout success")
             //return true only if an account was really deleted
             digmaAccount != null
 
         } catch (e: Throwable) {
             warnWithException(e, "Exception in logout {}", e)
             ErrorReporter.getInstance().reportError("${javaClass.simpleName}.logout", e)
+            val errorMessage = ExceptionUtils.getNonEmptyMessage(e)
+            reportPosthogEvent("logout failed", mapOf("error" to errorMessage))
             false
         }
     }
@@ -109,7 +115,10 @@ interface LoginHandler {
 
     fun reportPosthogEvent(evenName: String, details: Map<String, String> = mapOf()) {
         findActiveProject()?.let { project ->
-            ActivityMonitor.getInstance(project).registerCustomEvent(evenName, details)
+            val detailsToSend = details.toMutableMap()
+            detailsToSend["handler"] = this.javaClass.simpleName
+            detailsToSend["auth"] = "true" //a property for filtering auth events ,filter auth isSet
+            ActivityMonitor.getInstance(project).registerAuthEvent(evenName, detailsToSend)
         }
     }
 

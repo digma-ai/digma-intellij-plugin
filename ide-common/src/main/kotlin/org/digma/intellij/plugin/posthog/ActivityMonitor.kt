@@ -1001,4 +1001,8 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
         capture("SchedulerSizeIncreased", details)
     }
 
+    fun registerAuthEvent(action: String, details: Map<String, Any>) {
+        capture(action, details)
+    }
+
 }

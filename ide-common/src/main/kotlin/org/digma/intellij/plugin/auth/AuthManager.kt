@@ -62,8 +62,6 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
 
     private val fireChangeAlarm = Alarm(Alarm.ThreadToUse.POOLED_THREAD, this)
 
-    private var loginOrRefreshAsyncJob: Job? = null
-
     private val loginLogoutSemaphore = Semaphore(1, true)
 
     //refreshTokenStrategy should be used only from onAuthenticationException
@@ -87,7 +85,6 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
 
     override fun dispose() {
         myAnalyticsProvider.close()
-        loginOrRefreshAsyncJob?.cancel()
         autoRefreshWaitingJob?.cancel()
         autoRefreshJob?.cancel()
     }

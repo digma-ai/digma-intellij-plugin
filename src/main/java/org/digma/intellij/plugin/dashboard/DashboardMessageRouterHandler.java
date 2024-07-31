@@ -93,7 +93,7 @@ public class DashboardMessageRouterHandler extends BaseMessageRouterHandler {
         var project = getProject();
         var requestPayload = getPayloadFromRequestNonNull(requestJsonNode);
         var backendQueryParams = getMapFromNode(requestPayload, getObjectMapper());
-        Log.log(logger::trace, project, "pushIssuesReportStats called");
+        Log.log(logger::trace, project, "pushAssetsReportStats called");
         try {
             var payload = AnalyticsService.getInstance(project).getAssetsReportStats(backendQueryParams);
             var message = new SetAssetsReportStatsMessage(payload);
@@ -103,7 +103,6 @@ public class DashboardMessageRouterHandler extends BaseMessageRouterHandler {
             Log.log(logger::trace, getProject(), "sending DASHBOARD/GET_REPORT_ASSETS_STATS message with error");
         }
     }
-
 
     private void pushIssuesReportStats(CefBrowser browser, JsonNode requestJsonNode) {
         var project = getProject();

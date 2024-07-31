@@ -10,12 +10,13 @@ import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.common.JaegerUtilKt;
 import org.digma.intellij.plugin.ui.jcef.BaseIndexTemplateBuilderKt;
-import static org.digma.intellij.plugin.ui.jcef.BaseIndexTemplateBuilderKt.IS_LOGGING_ENABLED;
+
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 
 import static org.digma.intellij.plugin.analytics.EnvUtilsKt.getCurrentEnvironmentId;
+import static org.digma.intellij.plugin.ui.jcef.BaseIndexTemplateBuilderKt.IS_LOGGING_ENABLED;
 import static org.digma.intellij.plugin.ui.jcef.JCEFUtilsKt.getIsLoggingEnabledSystemProperty;
 
 public class DashboardIndexTemplateBuilder {
@@ -32,6 +33,7 @@ public class DashboardIndexTemplateBuilder {
     private static final String IS_JAEGER_ENABLED = "isJaegerEnabled";
     private static final String DASHBOARD_ENVIRONMENT = "dashboardEnvironment";
     private static final String DIGMA_API_URL = "digmaApiUrl";
+    private static final String INITIAL_ROUTE_PARAM_NAME = "initial_route";
 
     private final Configuration freemarketConfiguration = new Configuration(Configuration.VERSION_2_3_30);
 
@@ -62,7 +64,7 @@ public class DashboardIndexTemplateBuilder {
 
             data.put(DASHBOARD_ENVIRONMENT, getCurrentEnvironmentId(project));
             data.put(IS_LOGGING_ENABLED,getIsLoggingEnabledSystemProperty());
-
+            data.put(INITIAL_ROUTE_PARAM_NAME, dashboardVirtualFile.getPath());
             Template template = freemarketConfiguration.getTemplate(INDEX_TEMPLATE_NAME);
             StringWriter stringWriter = new StringWriter();
             template.process(data, stringWriter);

@@ -29,6 +29,7 @@
         window.isDockerComposeInstalled = ${isDockerComposeInstalled?string('true', 'false')};
         window.digmaApiUrl = "${digmaApiUrl}";
         window.isLoggingEnabled = ${isLoggingEnabled?string('true', 'false')};
+        window.initialRoutePath = "${initial_route}";
 
         window.dashboardEnvironment = "${dashboardEnvironment}";
     </script>

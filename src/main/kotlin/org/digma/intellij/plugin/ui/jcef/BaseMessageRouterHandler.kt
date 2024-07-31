@@ -184,6 +184,10 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                         }
                     }
 
+                    JCEFGlobalConstants.GLOBAL_OPEN_REPORT -> {
+                        DashboardService.getInstance(project).openReport("Report")
+                    }
+
                     JCEFGlobalConstants.GLOBAL_OPEN_DOCUMENTATION -> {
                         val payload = getPayloadFromRequest(requestJsonNode)
                         payload?.takeIf { payload.get("page") != null }?.let { pl ->

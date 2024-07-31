@@ -11,9 +11,12 @@ public class DashboardVirtualFile extends LightVirtualFile implements DigmaVirtu
 
     public static final Key<String> DASHBOARD_EDITOR_KEY = Key.create("Digma.DASHBOARD_EDITOR_KEY");
     private String dashboardName;
+    private String path;
+
     public DashboardVirtualFile(String myTitle) {
         super(myTitle);
         setFileType(DashboardFileType.INSTANCE);
+        setPath("");
         setWritable(false);
         putUserData(FileEditorManagerImpl.FORBID_PREVIEW_TAB, true);
     }
@@ -23,7 +26,7 @@ public class DashboardVirtualFile extends LightVirtualFile implements DigmaVirtu
     }
 
     @NotNull
-    public static VirtualFile createVirtualFile(@NotNull String dashboardName) {
+    public static DashboardVirtualFile createVirtualFile(@NotNull String dashboardName) {
         var file = new DashboardVirtualFile(dashboardName);
         file.setDashboardName(dashboardName);
         DASHBOARD_EDITOR_KEY.set(file, DashboardFileEditorProvider.DASHBOARD_EDITOR_TYPE);
@@ -36,5 +39,14 @@ public class DashboardVirtualFile extends LightVirtualFile implements DigmaVirtu
 
     public String getDashboardName() {
         return dashboardName;
+    }
+
+    public void setPath(String newPath) {
+        this.path = newPath;
+    }
+
+    @NotNull
+    public String getPath() {
+        return path;
     }
 }

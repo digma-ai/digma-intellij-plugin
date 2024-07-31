@@ -321,6 +321,15 @@ public class AnalyticsService implements Disposable {
                 analyticsProviderProxy.getServices(env));
     }
 
+    public String getAssetsReportStats(@NotNull Map<String, Object> queryParams) throws AnalyticsServiceException {
+        return executeCatching(() ->
+                analyticsProviderProxy.getAssetsReportStats(queryParams));
+    }
+
+    public String getIssuesReportStats(@NotNull Map<String, Object> queryParams) throws AnalyticsServiceException {
+        return executeCatching(() ->
+                analyticsProviderProxy.getIssuesReportStats(queryParams));
+    }
 
     public void resetThrottlingStatus() throws AnalyticsServiceException {
         executeCatching(() -> {

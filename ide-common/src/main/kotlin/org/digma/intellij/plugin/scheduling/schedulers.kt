@@ -560,12 +560,15 @@ class ScheduledTasksPerformanceMonitor {
                 return
             }
 
-            if (frequencyDetector.isTooFrequentMessage(taskName)) {
+            val frequency = frequencyDetector.getMessageFrequency(taskName)
+            if (frequency.isTooFrequent()) {
                 return
             }
 
             findActiveProject()?.let {
                 val details = mutableMapOf<String, Any>(
+                    "frequency" to frequency.frequencySinceStart,
+                    "frequency.since.minutes" to frequency.formatDurationToMinutes(),
                     "task.name" to taskName,
                     "duration" to duration
                 )

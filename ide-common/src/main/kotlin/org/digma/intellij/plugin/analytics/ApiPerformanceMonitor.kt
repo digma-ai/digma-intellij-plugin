@@ -52,7 +52,9 @@ class ApiPerformanceMonitor(private val project: Project) {
     }
 
     private fun report(apiName: String, duration: Long, httpNetoTime: Long, exception: Throwable?) {
-        if (frequencyDetector.isTooFrequentMessage(apiName)) {
+
+        val frequency = frequencyDetector.getMessageFrequency(apiName)
+        if (frequency.isTooFrequent()) {
             return
         }
 
@@ -60,9 +62,11 @@ class ApiPerformanceMonitor(private val project: Project) {
         durations[apiName] = Pair(0L, 0L)
 
         val details = mutableMapOf<String, Any>(
-            "api name" to apiName,
+            "frequency" to frequency.frequencySinceStart,
+            "frequency.since.minutes" to frequency.formatDurationToMinutes(),
+            "api.name" to apiName,
             "duration" to duration,
-            "http neto" to httpNetoTime,
+            "http.neto" to httpNetoTime,
             "exception" to (exception?.message ?: exception?.toString() ?: "")
         )
 

@@ -16,6 +16,7 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.toJavaInstant
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.common.ExceptionUtils
+import org.digma.intellij.plugin.common.Frequency
 import org.digma.intellij.plugin.common.UniqueGeneratedUserId
 import org.digma.intellij.plugin.common.objectToJson
 import org.digma.intellij.plugin.execution.DIGMA_INSTRUMENTATION_ERROR
@@ -425,7 +426,13 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
     }
 
 
-    fun registerAnalyticsServiceError(exception: Throwable, message: String, methodName: String, isConnectionException: Boolean) {
+    fun registerAnalyticsServiceError(
+        exception: Throwable,
+        message: String,
+        methodName: String,
+        isConnectionException: Boolean,
+        frequency: Frequency
+    ) {
 
         try {
 
@@ -459,7 +466,9 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
                     "ide.build" to ideBuildNumber,
                     "plugin.version" to pluginVersion,
                     "server.version" to serverInfo?.applicationVersion.toString(),
-                    "user.type" to if (isDevUser) "internal" else "external"
+                    "user.type" to if (isDevUser) "internal" else "external",
+                    "frequency" to frequency.frequencySinceStart,
+                    "frequency.since.minutes" to frequency.formatDurationToMinutes()
                 )
             )
         } catch (e: Exception) {
@@ -999,6 +1008,10 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
 
     fun registerSchedulerSizeIncreased(details: Map<String, Any>) {
         capture("SchedulerSizeIncreased", details)
+    }
+
+    fun registerAuthEvent(action: String, details: Map<String, Any>) {
+        capture(action, details)
     }
 
 }

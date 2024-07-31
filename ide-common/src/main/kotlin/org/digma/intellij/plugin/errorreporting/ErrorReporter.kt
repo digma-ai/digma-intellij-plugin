@@ -100,7 +100,7 @@ open class ErrorReporter {
     /*
         try not to use this method and always send the project reference if available.
      */
-    open fun reportError(message: String, t: Throwable, extraDetails: Map<String, String>) {
+    open fun reportError(message: String, t: Throwable, extraDetails: Map<String, Any>) {
         reportError(findActiveProject(), message, t, extraDetails)
     }
 
@@ -109,7 +109,7 @@ open class ErrorReporter {
     }
 
 
-    open fun reportUIError(project: Project?, message: String, stackTrace: String?, details: Map<String, Any>, useFrequencyDetector: Boolean = true) {
+    open fun reportUIError(project: Project?, message: String, stackTrace: String?, details: Map<String, Any>) {
 
         try {
             if (message.isEmpty() && stackTrace.isNullOrEmpty()) {
@@ -120,7 +120,8 @@ open class ErrorReporter {
                 return
             }
 
-            if (useFrequencyDetector && frequencyDetector.isTooFrequentStackTrace(message, stackTrace)) {
+            val frequency = frequencyDetector.getStackTraceFrequency(message, stackTrace)
+            if (frequency.isTooFrequent()) {
                 return
             }
 
@@ -128,7 +129,12 @@ open class ErrorReporter {
 
             projectToUse?.let {
                 if (it.isDisposed) return
-                ActivityMonitor.getInstance(it).registerError(null, message, ensureDetailsWithSeverity(details))
+
+                val detailsWithFrequency = details.toMutableMap()
+                detailsWithFrequency["frequency"] = frequency.frequencySinceStart
+                detailsWithFrequency["frequency.since.minutes"] = frequency.formatDurationToMinutes()
+
+                ActivityMonitor.getInstance(it).registerError(null, message, ensureDetailsWithSeverity(detailsWithFrequency))
             }
         } catch (e: Exception) {
             Log.warnWithException(logger, e, "error in error reporter")
@@ -144,7 +150,8 @@ open class ErrorReporter {
     open fun reportError(project: Project?, message: String, action: String, details: Map<String, Any>) {
 
         try {
-            if (frequencyDetector.isTooFrequentError(message, action)) {
+            val frequency = frequencyDetector.getErrorFrequency(message, action)
+            if (frequency.isTooFrequent()) {
                 return
             }
 
@@ -155,6 +162,8 @@ open class ErrorReporter {
 
                 val detailsToSend = details.toMutableMap()
                 detailsToSend["action"] = action
+                detailsToSend["frequency"] = frequency.frequencySinceStart
+                detailsToSend["frequency.since.minutes"] = frequency.formatDurationToMinutes()
 
                 ActivityMonitor.getInstance(it).registerError(null, message, ensureDetailsWithSeverity(detailsToSend))
             }
@@ -164,7 +173,7 @@ open class ErrorReporter {
     }
 
 
-    open fun reportError(project: Project?, message: String, throwable: Throwable, details: Map<String, String>) {
+    open fun reportError(project: Project?, message: String, throwable: Throwable, details: Map<String, Any>) {
 
         try {
             //many times the exception is no-connection exception, and that may happen too many times.
@@ -174,15 +183,22 @@ open class ErrorReporter {
                 return
             }
 
-            if (frequencyDetector.isTooFrequentException(message, throwable)) {
+            val frequency = frequencyDetector.getExceptionFrequency(message, throwable)
+            if (frequency.isTooFrequent()) {
                 return
             }
+
 
             val projectToUse = project ?: findActiveProject()
 
             projectToUse?.let {
                 if (it.isDisposed) return
-                ActivityMonitor.getInstance(it).registerError(throwable, message, ensureDetailsWithSeverity(details))
+
+                val detailsWithFrequency = details.toMutableMap()
+                detailsWithFrequency["frequency"] = frequency.frequencySinceStart
+                detailsWithFrequency["frequency.since.minutes"] = frequency.formatDurationToMinutes()
+
+                ActivityMonitor.getInstance(it).registerError(throwable, message, ensureDetailsWithSeverity(detailsWithFrequency))
             }
         } catch (e: Exception) {
             Log.warnWithException(logger, e, "error in error reporter")
@@ -199,7 +215,8 @@ open class ErrorReporter {
     ) {
 
         try {
-            if (frequencyDetector.isTooFrequentException(message, exception)) {
+            val frequency = frequencyDetector.getExceptionFrequency(message, exception)
+            if (frequency.isTooFrequent()) {
                 return
             }
 
@@ -207,7 +224,7 @@ open class ErrorReporter {
                 return
             }
 
-            ActivityMonitor.getInstance(project).registerAnalyticsServiceError(exception, message, methodName, isConnectionException)
+            ActivityMonitor.getInstance(project).registerAnalyticsServiceError(exception, message, methodName, isConnectionException, frequency)
 
         } catch (e: Exception) {
             Log.warnWithException(logger, e, "error in error reporter")
@@ -216,6 +233,7 @@ open class ErrorReporter {
 
 
     open fun reportBackendError(project: Project?, message: String, action: String) {
+
         if (frequencyDetector.isTooFrequentError(message, action)) {
             return
         }

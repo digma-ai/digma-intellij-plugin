@@ -379,8 +379,6 @@ private constructor(
                 .setUrl(url)
                 .build()
 
-            jbCefBrowser.openDevtools();
-
             //set properties that are used by resource handlers.
             setProject(jbCefBrowser, project)
             arguments.forEach {

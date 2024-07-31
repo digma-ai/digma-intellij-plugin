@@ -7,10 +7,6 @@ plugins {
 group = "org.digma.plugins.rider.protocol"
 version = "0.0.3"
 
-repositories {
-    mavenCentral()
-}
-
 dependencies {
     implementation(libs.kotlin.stdlib.jdk8)
     implementation(libs.rdGen)

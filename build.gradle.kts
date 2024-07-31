@@ -3,6 +3,7 @@ import common.currentProfile
 import common.dynamicPlatformType
 import common.platformVersion
 import common.properties
+import common.useBinaryInstaller
 import common.withCurrentProfile
 import org.apache.tools.ant.filters.ReplaceTokens
 import org.jetbrains.changelog.date
@@ -74,7 +75,7 @@ dependencies {
 
         val version = project.platformVersion()
         //the intellij product. we use the create method because it may be Idea,Rider,Pycharm etc.
-        create(platformType, version)
+        create(platformType, version, project.useBinaryInstaller())
 
         pluginModule(implementation(project(":ide-common")))
         pluginModule(implementation(project(":jvm-common")))
@@ -180,7 +181,7 @@ intellijPlatform {
 
 
     //todo: run plugin verifier for resharper: https://blog.jetbrains.com/dotnet/2023/05/26/the-api-verifier/
-    verifyPlugin {
+    pluginVerification {
         //our plugin id is "org.digma.intellij", lately jetbrains added a check that
         // plugin id doesn't contain the word intellij and treats it as error. so we need
         // '-mute TemplateWordInPluginId' to silence this error.
@@ -190,16 +191,23 @@ intellijPlatform {
             //use the same platformType and version as in intellijPlatform dependencies
             //Note: recommended() doesn't work well, sometimes tries to resolve a wrong IDE and fails in GitHub
             withCurrentProfile { buildProfile ->
-                ide(platformType,buildProfile.platformVersion)
+                //ide doesn't work with EAP that needs to be downloaded from maven and not CDN
+                //there is a feature request: https://github.com/JetBrains/intellij-platform-gradle-plugin/issues/1715
+                //ide(platformType, buildProfile.platformVersion)
+                //use recommended() and hope it doesn't fail too much because sometimes it does fail for unknown reasons
+                recommended()
 
-                if (!buildProfile.isEAP) {
-                    select {
-                        types =
-                            listOf(IntelliJPlatformType.IntellijIdeaCommunity, IntelliJPlatformType.IntellijIdeaUltimate)
-                        channels = listOf(ProductRelease.Channel.RELEASE)
-                        sinceBuild = project.currentProfile().pluginSinceBuild
-                        untilBuild = project.currentProfile().pluginUntilBuild
-                    }
+                val channel = if (buildProfile.isEAP) {
+                    ProductRelease.Channel.EAP
+                } else {
+                    ProductRelease.Channel.RELEASE
+                }
+                select {
+                    types =
+                        listOf(IntelliJPlatformType.IntellijIdeaCommunity, IntelliJPlatformType.IntellijIdeaUltimate)
+                    channels = listOf(channel)
+                    sinceBuild = project.currentProfile().pluginSinceBuild
+                    untilBuild = project.currentProfile().pluginUntilBuild
                 }
             }
         }
@@ -260,9 +268,9 @@ tasks {
 
     val deleteLog by registering(Delete::class) {
         outputs.upToDateWhen { false }
-        val ideFolderName = if(platformType == IntelliJPlatformType.Rider){
+        val ideFolderName = if (platformType == IntelliJPlatformType.Rider) {
             "${platformType.code}-${project.currentProfile().riderVersion}"
-        }else{
+        } else {
             "${platformType.code}-${project.currentProfile().platformVersion}"
         }
         project.layout.buildDirectory.dir("idea-sandbox/$ideFolderName/log").get().asFile.walk().forEach {
@@ -310,27 +318,7 @@ tasks {
     }
 
 
-    val posthogTokenUrlFile = file("${project.sourceSets.main.get().output.resourcesDir?.absolutePath}/posthog-token-url.txt")
-    val injectPosthogTokenUrlTask by registering {
-
-        inputs.property("token",System.getenv("POSTHOG_TOKEN_URL") ?: "")
-        outputs.files(posthogTokenUrlFile)
-
-        doLast {
-            logger.lifecycle("injecting posthog token url")
-            val url = System.getenv("POSTHOG_TOKEN_URL") ?: ""
-            posthogTokenUrlFile.writeText(url)
-        }
-    }
-
-
-    jar{
-        inputs.files(injectPosthogTokenUrlTask)
-    }
-
-
     processResources {
-        finalizedBy(injectPosthogTokenUrlTask)
 
         exclude("**/webview/global-env-vars.txt")
 

@@ -547,10 +547,16 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
                     throw e
                 }
 
-                Log.log(logger::trace, "got AuthenticationException {}, calling onAuthenticationException", ExceptionUtils.getNonEmptyMessage(e))
+                Log.log(
+                    logger::trace,
+                    "got AuthenticationException {} for method {}, calling onAuthenticationException",
+                    authenticationException.message,
+                    method.name
+                )
                 //call onAuthenticationException to refresh or login
                 onAuthenticationException()
 
+                Log.log(logger::trace, "after AuthenticationException, retrying method {}", method.name)
                 //retry the method. if token was refreshed it should succeed , otherwise it will throw
                 //AuthenticationException again that will be caught by plugin code
                 if (args == null) {

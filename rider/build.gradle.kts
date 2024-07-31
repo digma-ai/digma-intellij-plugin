@@ -40,8 +40,6 @@ fun deleteOutputs() {
 }
 
 
-
-
 //rider module should always build with RD
 val platformType: IntelliJPlatformType by extra(IntelliJPlatformType.Rider)
 
@@ -53,7 +51,12 @@ dependencies {
     compileOnly(project(":model"))
 
     intellijPlatform {
-        rider(project.currentProfile().riderVersion)
+        //can't use binary installer for rider because we need the maven artifact that contains resharper sdk.
+        //when building with rider two artifacts will be downloaded, a maven artifact for this project, and a binary release
+        // for the other projects like ide-common. ide-common doesn't need the maven artifact so it can build with binary artifact.
+        //when running Rider with runIde it will use a binary installer because the main root project uses installer.
+        //only this module needs the maven artifact for the resharper SDK.
+        rider(project.currentProfile().riderVersion, false)
 //        bundledPlugin("rider-plugins-appender")
     }
 }

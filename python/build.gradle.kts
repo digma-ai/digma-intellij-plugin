@@ -36,9 +36,9 @@ dependencies {
         //this module can only build with PC or PY, so only support replacing to PY when
         // we build with PY , otherwise build with PC even if platformType is something else like RD or IC
         if (platformType == IntelliJPlatformType.PyCharmProfessional) {
-            pycharmProfessional(project.currentProfile().pycharmVersion)
+            pycharmProfessional(project.currentProfile().pycharmVersion, project.useBinaryInstaller())
         } else {
-            pycharmCommunity(project.currentProfile().pycharmVersion)
+            pycharmCommunity(project.currentProfile().pycharmVersion, project.useBinaryInstaller())
         }
 
         //load plugin based on IDE PY or PC

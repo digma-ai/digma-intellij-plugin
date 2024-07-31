@@ -68,6 +68,9 @@ fun Project.withCurrentProfile(consumer: (BuildProfile) -> Unit) {
 
 fun Project.currentProfile(): BuildProfile = BuildProfiles.currentProfile(this)
 
+//we can use binary installers but not for EAP because EAP is not published to jetbrains CDN
+fun Project.useBinaryInstaller(): Boolean = !this.currentProfile().isEAP
+
 
 object BuildProfiles {
 
@@ -154,7 +157,6 @@ object BuildProfiles {
 
 
         Profile.p233 to BuildProfile(
-
             profile = Profile.p233,
             platformVersion = "2023.3.7",
             riderVersion = "2023.3.6",
@@ -170,7 +172,6 @@ object BuildProfiles {
 
 
         Profile.p241 to BuildProfile(
-
             profile = Profile.p241,
             platformVersion = "2024.1.4",
             riderVersion = "2024.1.4",
@@ -187,7 +188,6 @@ object BuildProfiles {
 
 
         Profile.p242 to BuildProfile(
-
             isEAP = true,
             profile = Profile.p242,
             platformVersion = "242-EAP-SNAPSHOT",

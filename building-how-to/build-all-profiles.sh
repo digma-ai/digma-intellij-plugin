@@ -8,56 +8,93 @@ set -e
 
 # there is no need to send the oldest profile, its the default if not sent. its here just as example
 
-# todo: add 242
-
 ## check that profile aliases work
+echo "############ building with lowest ################"
 ./gradlew clean buildPlugin -PbuildProfile=lowest
+for i in {1..5}; do echo; done
+
+echo "############ building with latest ################"
 ./gradlew clean buildPlugin -PbuildProfile=latest
+for i in {1..5}; do echo; done
+
+echo "############ building with eap ################"
 ./gradlew clean buildPlugin -PbuildProfile=eap
+for i in {1..5}; do echo; done
 
+echo "############ building with default ################"
+./gradlew clean buildPlugin
+for i in {1..5}; do echo; done
 
+echo "############ building with 231 ################"
 ./gradlew clean buildPlugin -PbuildProfile=p231
-./gradlew clean buildPlugin -PbuildProfile=p232
-./gradlew clean buildPlugin -PbuildProfile=p233
-./gradlew clean buildPlugin -PbuildProfile=p241
-./gradlew clean buildPlugin -PbuildProfile=p242
+for i in {1..5}; do echo; done
 
+echo "############ building with 232 ################"
+./gradlew clean buildPlugin -PbuildProfile=p232
+for i in {1..5}; do echo; done
+
+echo "############ building with 233 ################"
+./gradlew clean buildPlugin -PbuildProfile=p233
+for i in {1..5}; do echo; done
+
+echo "############ building with 241 ################"
+./gradlew clean buildPlugin -PbuildProfile=p241
+for i in {1..5}; do echo; done
+
+echo "############ building with 232 ################"
+./gradlew clean buildPlugin -PbuildProfile=p242
+for i in {1..5}; do echo; done
 
 ###################### idea ultimate
 
+echo "############ building with ultimate default ################"
 ./gradlew clean buildPlugin -PbuildWIthUltimate=true
+for i in {1..5}; do echo; done
+
+echo "############ building with ultimate 231 ################"
 ./gradlew clean buildPlugin -PbuildWIthUltimate=true -PbuildProfile=p231
+for i in {1..5}; do echo; done
+
+echo "############ building with ultimate 232 ################"
 ./gradlew clean buildPlugin -PbuildWIthUltimate=true -PbuildProfile=p232
+for i in {1..5}; do echo; done
+
+echo "############ building with ultimate 233 ################"
 ./gradlew clean buildPlugin -PbuildWIthUltimate=true -PbuildProfile=p233
+for i in {1..5}; do echo; done
+
+echo "############ building with ultimate 241 ################"
 ./gradlew clean buildPlugin -PbuildWIthUltimate=true -PbuildProfile=p241
+for i in {1..5}; do echo; done
+
+echo "############ building with ultimate 242 ################"
 ./gradlew clean buildPlugin -PbuildWIthUltimate=true -PbuildProfile=p242
+for i in {1..5}; do echo; done
+
 
 
 
 #################  rider
+echo "############ building with rider default ################"
 ./gradlew clean buildPlugin -PbuildWithRider=true
+for i in {1..5}; do echo; done
+
+echo "############ building with rider 231 ################"
 ./gradlew clean buildPlugin -PbuildWithRider=true -PbuildProfile=p231
+for i in {1..5}; do echo; done
+
+echo "############ building with rider 232 ################"
 ./gradlew clean buildPlugin -PbuildWithRider=true -PbuildProfile=p232
+for i in {1..5}; do echo; done
+
+echo "############ building with rider 233 ################"
 ./gradlew clean buildPlugin -PbuildWithRider=true -PbuildProfile=p233
+for i in {1..5}; do echo; done
+
+echo "############ building with rider 241 ################"
 ./gradlew clean buildPlugin -PbuildWithRider=true -PbuildProfile=p241
+for i in {1..5}; do echo; done
+
+echo "############ building with rider 242 ################"
 ./gradlew clean buildPlugin -PbuildWithRider=true -PbuildProfile=p242
-
-######################  pycharm
-
-#./gradlew clean buildPlugin -PbuildWithPycharm=true
-#./gradlew clean buildPlugin -PbuildWithPycharm=true -PbuildProfile=p231
-#./gradlew clean buildPlugin -PbuildWithPycharm=true -PbuildProfile=p232
-#./gradlew clean buildPlugin -PbuildWithPycharm=true -PbuildProfile=p233
-#./gradlew clean buildPlugin -PbuildWithPycharm=true -PbuildProfile=p241
-#./gradlew clean buildPlugin -PbuildWithPycharm=true -PbuildProfile=p242
-
-
-######################  pycharm pro
-
-#./gradlew clean buildPlugin -PbuildWithPycharmPro=true
-#./gradlew clean buildPlugin -PbuildWithPycharmPro=true -PbuildProfile=p231
-#./gradlew clean buildPlugin -PbuildWithPycharmPro=true -PbuildProfile=p232
-#./gradlew clean buildPlugin -PbuildWithPycharmPro=true -PbuildProfile=p233
-#./gradlew clean buildPlugin -PbuildWithPycharmPro=true -PbuildProfile=p241
-#./gradlew clean buildPlugin -PbuildWithPycharmPro=true -PbuildProfile=p242
-
+for i in {1..5}; do echo; done

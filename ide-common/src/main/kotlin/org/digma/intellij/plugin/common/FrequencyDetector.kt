@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.common
 
 import com.github.benmanes.caffeine.cache.Caffeine
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.diagnostic.UntraceableException
 import kotlinx.datetime.Clock
 import java.lang.reflect.Field
@@ -15,15 +16,16 @@ class FrequencyDetector(cacheExpirationTime: java.time.Duration) {
 
 
     companion object {
+
+        val logger = Logger.getInstance(FrequencyDetector::class.java)
+
         private val BACKTRACE_FIELD: Field? = try {
             val field = Throwable::class.java.getDeclaredField("backtrace")
             field.isAccessible = true
             field
         } catch (e: Throwable) {
-            //don't mind its e.printStackTrace, it will just go to idea.log or to console in development, so we know about it.
-            //but it should never happen.
             //never use ErrorReporter here , it will cause an endless recursion
-            e.printStackTrace()
+            logger.warn(e)
             null
         }
 
@@ -32,10 +34,8 @@ class FrequencyDetector(cacheExpirationTime: java.time.Duration) {
             val backtrace = try {
                 BACKTRACE_FIELD?.get(throwable)
             } catch (e: Throwable) {
-                //don't mind its e.printStackTrace, it will just go to idea.log or to console in development, so we know about it.
-                //but it should never happen.
                 //never use ErrorReporter here , it will cause an endless recursion
-                e.printStackTrace()
+                logger.warn(e)
                 return null
             }
             return if (backtrace is Array<*>) backtrace else null

@@ -52,7 +52,7 @@ public class DashboardMessageRouterHandler extends BaseMessageRouterHandler {
                 DashboardService.getInstance(project).goToSpan(goToSpan);
             }
             case "DASHBOARD/GET_SERVICES" -> {
-                pushServices(browser);
+                pushServices(browser, requestJsonNode);
             }
             case "DASHBOARD/GET_REPORT_ISSUES_STATS" -> {
                 pushIssuesReportStats(browser, requestJsonNode);
@@ -76,11 +76,13 @@ public class DashboardMessageRouterHandler extends BaseMessageRouterHandler {
     }
 
 
-    private void pushServices(CefBrowser browser) {
+    private void pushServices(CefBrowser browser, JsonNode requestJsonNode) {
         var project = getProject();
         Log.log(logger::trace, project, "pushServices called");
+        var requestPayload = getPayloadFromRequestNonNull(requestJsonNode);
+        var env = requestPayload.get("environment").asText();
         try {
-            var payload = AnalyticsService.getInstance(project).getServices();
+            var payload = AnalyticsService.getInstance(project).getServices(env);
             var message = new SetServicesMessage(payload);
             Log.log(logger::trace, project, "sending DASHBOARD/GET_SERVICES message");
             serializeAndExecuteWindowPostMessageJavaScript(browser, message);

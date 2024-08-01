@@ -1,3 +1,5 @@
+import org.jetbrains.intellij.platform.gradle.extensions.intellijPlatform
+
 pluginManagement {
 
     includeBuild("common-build-logic")
@@ -10,12 +12,14 @@ pluginManagement {
         maven(url = "https://packages.jetbrains.team/maven/p/ij/intellij-dependencies")
         gradlePluginPortal()
     }
+
 }
 
 
 plugins {
     id("rdgen-version-settings")
-    id("org.gradle.toolchains.foojay-resolver-convention") version ("0.8.0")
+    id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
+    id("org.jetbrains.intellij.platform.settings") version "2.0.0"
 }
 
 /*
@@ -23,6 +27,22 @@ kotlin-stdlib: the kotlin-stdlib must be compatible with the intellij platform v
  see: https://plugins.jetbrains.com/docs/intellij/kotlin.html#kotlin-standard-library
  */
 dependencyResolutionManagement {
+
+    //configure repositories for all projects
+    @Suppress("UnstableApiUsage")
+    repositoriesMode = RepositoriesMode.FAIL_ON_PROJECT_REPOS
+    @Suppress("UnstableApiUsage")
+    repositories {
+        mavenCentral()
+        intellijPlatform {
+            defaultRepositories()
+            jetbrainsRuntime()
+            intellijDependencies()
+        }
+    }
+
+
+
     versionCatalogs {
         create("libs") {
             //rdgen version is independent of rider version.

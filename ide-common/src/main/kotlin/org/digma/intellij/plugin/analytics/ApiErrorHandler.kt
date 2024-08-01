@@ -8,9 +8,8 @@ import com.intellij.openapi.project.ProjectManager
 import com.intellij.util.Alarm
 import org.digma.intellij.plugin.common.DisposableAdaptor
 import org.digma.intellij.plugin.common.EDT
-import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.common.ExceptionUtils.findConnectException
-import org.digma.intellij.plugin.common.ExceptionUtils.findFirstRealExceptionCause
+import org.digma.intellij.plugin.common.ExceptionUtils.findRootCause
 import org.digma.intellij.plugin.common.ExceptionUtils.findSslException
 import org.digma.intellij.plugin.common.ExceptionUtils.getNonEmptyMessage
 import org.digma.intellij.plugin.common.ExceptionUtils.isEOFException
@@ -212,20 +211,20 @@ class ApiErrorHandler : DisposableAdaptor {
         }
     }
 
-    fun handleAuthManagerCantRefreshError(throwable: Throwable, project: Project?) {
+    fun handleAuthManagerCantRefreshError(throwable: Throwable) {
         //todo: currently only reporting
         Log.warnWithException(logger, throwable, "error in AuthManager {}", throwable)
 
         val message = if (throwable is AuthenticationException) {
             throwable.message
         } else {
-            ExceptionUtils.getNonEmptyMessage(throwable)
+            getNonEmptyMessage(throwable)
         }
 
         doForAllProjects { p ->
             EDT.ensureEDT {
                 NotificationUtil.notifyWarning(
-                    project, "<html>Error with Digma backend " + message + ".<br> "
+                    p, "<html>Error with Digma backend " + message + ".<br> "
                             + message + ".<br> See logs for details."
                 )
             }
@@ -441,7 +440,7 @@ class ApiErrorHandler : DisposableAdaptor {
 
 
         fun addIfNewError(e: Exception): Boolean {
-            val cause = findFirstRealExceptionCause(e)
+            val cause = findRootCause(e)
             val errorName = Objects.requireNonNullElse(cause, e)?.javaClass?.name.toString()
             return errors.add(errorName)
         }

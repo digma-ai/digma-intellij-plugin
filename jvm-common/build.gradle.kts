@@ -1,7 +1,6 @@
-import common.BuildProfiles
-import common.currentProfile
 import common.dynamicPlatformType
 import common.platformVersion
+import common.useBinaryInstaller
 import common.withSilenceLogging
 import de.undercouch.gradle.tasks.download.Download
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
@@ -17,9 +16,9 @@ plugins {
 // it should use the dynamic type only when building with buildWIthUltimate=true
 //platformType impacts project.platformVersion() so it must be accurate.
 val platformType: IntelliJPlatformType by extra {
-    if (dynamicPlatformType(project) == IntelliJPlatformType.IntellijIdeaUltimate){
+    if (dynamicPlatformType(project) == IntelliJPlatformType.IntellijIdeaUltimate) {
         IntelliJPlatformType.IntellijIdeaUltimate
-    }else{
+    } else {
         IntelliJPlatformType.IntellijIdeaCommunity
     }
 }
@@ -35,9 +34,9 @@ dependencies {
         //this module can only build with IC or IU, so only support replacing to IU when
         // we build with IU , otherwise build with IC even if platformType is something else like RD or PY
         if (platformType == IntelliJPlatformType.IntellijIdeaUltimate) {
-            intellijIdeaUltimate(project.platformVersion())
+            intellijIdeaUltimate(project.platformVersion(), project.useBinaryInstaller())
         } else {
-            intellijIdeaCommunity(project.platformVersion())
+            intellijIdeaCommunity(project.platformVersion(), project.useBinaryInstaller())
         }
 
         bundledPlugin("com.intellij.java")

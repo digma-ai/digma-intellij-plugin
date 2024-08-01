@@ -52,20 +52,11 @@ jobs:
 
       - name: Build Plugin
         if: ${{ inputs.build-with-rider != 'true' }}
-        env:
-          POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL }}
         run: ./gradlew clean test buildPlugin --no-configuration-cache -PbuildProfile=${{ inputs.build-profile }} -PbuildSearchableOptions=true
 
       - name: Build Plugin with Rider
         if: ${{ inputs.build-with-rider == 'true' }}
-        env:
-          POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL }}
         run: ./gradlew clean test buildPlugin --no-configuration-cache -PbuildWithRider=true -PbuildProfile=${{ inputs.build-profile }} -PbuildSearchableOptions=true
-
-      - name: Validate posthog url
-        uses: ./github-actions/validate-posthog-url
-        with:
-          build-profile: ${{ inputs.build-profile }}
 
       - name: Prepare Plugin Artifact
         if: ${{ inputs.build-with-rider != 'true' }}

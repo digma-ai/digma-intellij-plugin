@@ -127,6 +127,7 @@ public interface LanguageService extends Disposable {
         for (SupportedLanguages value : SupportedLanguages.values()) {
 
             try {
+                //noinspection unchecked
                 Class<? extends LanguageService> clazz = (Class<? extends LanguageService>) Class.forName(value.getLanguageServiceClassName());
                 LanguageService languageService = project.getService(clazz);
                 var isSupported = languageService.isSupportedFile(project, virtualFile);
@@ -266,6 +267,7 @@ public interface LanguageService extends Disposable {
         for (SupportedLanguages value : SupportedLanguages.values()) {
 
             try {
+                //noinspection unchecked
                 Class<? extends LanguageService> clazz = (Class<? extends LanguageService>) Class.forName(value.getLanguageServiceClassName());
                 LanguageService languageService = project.getService(clazz);
                 Language language = languageService.getLanguageForClass(className);
@@ -291,6 +293,7 @@ public interface LanguageService extends Disposable {
         for (SupportedLanguages value : SupportedLanguages.values()) {
 
             try {
+                //noinspection unchecked
                 Class<? extends LanguageService> clazz = (Class<? extends LanguageService>) Class.forName(value.getLanguageServiceClassName());
                 LanguageService languageService = project.getService(clazz);
                 var endpointInfos = languageService.lookForDiscoveredEndpoints(endpointCodeObjectId);
@@ -322,6 +325,7 @@ public interface LanguageService extends Disposable {
         for (SupportedLanguages value : SupportedLanguages.values()) {
 
             try {
+                //noinspection unchecked
                 Class<? extends LanguageService> clazz = (Class<? extends LanguageService>) Class.forName(value.getLanguageServiceClassName());
                 LanguageService languageService = project.getService(clazz);
                 var workspaceUris = languageService.findWorkspaceUrisForCodeObjectIdsForErrorStackTrace(methodCodeObjectIds);

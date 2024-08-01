@@ -1,3 +1,4 @@
+import common.currentProfile
 import common.logBuildProfile
 import common.logIntellijPlatformPlugin
 import common.withSilenceLogging
@@ -11,19 +12,15 @@ plugins {
 }
 
 
-repositories {
-    intellijPlatform {
-        defaultRepositories()
-        jetbrainsRuntime()
-    }
-}
-
 dependencies {
     intellijPlatform {
         instrumentationTools()
         pluginVerifier()
-        //we need to supply a jetbrains runtime to runIde because we use maven artifacts for IDEs
-        jetbrainsRuntime()
+        //todo: not necessary for plugin library because it doesn't runIde, but maybe necessary for intellij tests
+        if (project.currentProfile().isEAP) {
+            //we need to supply a jetbrains runtime to runIde when using EAP because we use maven artifacts for EAP and not binary installers
+            jetbrainsRuntime()
+        }
     }
 }
 
@@ -47,7 +44,8 @@ tasks {
     //this dependency ensures that also the test task will be executed for these modules.
     //this is instead of specifically calling build or test in the command line.
     //it may increase build time and runIde time, but we want the tests to run on every buildPlugin.
-    create("buildPlugin").dependsOn(build)
+    //Don't depend on build, it will cause circular dependency between tasks
+    create("buildPlugin").dependsOn(test)
 
     instrumentCode {
         instrumentationLogs = true

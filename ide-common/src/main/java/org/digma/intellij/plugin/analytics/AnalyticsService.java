@@ -518,7 +518,7 @@ public class AnalyticsService implements Disposable {
             //we have two proxies, the AnalyticsService proxy and AuthManager proxy, so this could be an UndeclaredThrowableException
             // wrapping InvocationTargetException wrapping UndeclaredThrowableException wrapping InvocationTargetException.
             //there must be an AnalyticsProviderException as cause because all methods should go through the proxies.
-            var analyticsProviderException = ExceptionUtils.findCause(AnalyticsProviderException.class, undeclaredThrowableException);
+            var analyticsProviderException = ExceptionUtils.findAssignableCause(AnalyticsProviderException.class, undeclaredThrowableException);
             if (analyticsProviderException != null) {
                 throw new AnalyticsServiceException(analyticsProviderException);
             } else {

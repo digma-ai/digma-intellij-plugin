@@ -61,7 +61,7 @@ class CentralizedLoginHandler(analyticsProvider: RestAnalyticsProvider) : Abstra
                     if (!credentials.isAccessTokenValid()) {
                         trace("access token for account expired, refreshing token. account {}", digmaAccount)
                         val refreshResult = refresh(digmaAccount, credentials, "${this.javaClass.simpleName} token expired")
-                        trace("refresh token success for account {}", digmaAccount)
+                        trace("refresh token completed for account {}, result {}", digmaAccount, refreshResult)
                         refreshResult
                     } else if (onAuthenticationError && credentials.isOlderThen(30.seconds)) {
 
@@ -77,7 +77,7 @@ class CentralizedLoginHandler(analyticsProvider: RestAnalyticsProvider) : Abstra
                         trace("onAuthenticationError is true and credentials older then 30 seconds, refreshing token. account {}", digmaAccount)
                         val refreshResult =
                             refresh(digmaAccount, credentials, "${this.javaClass.simpleName} on onAuthenticationError and token is old")
-                        trace("refresh token success for account {}", digmaAccount)
+                        trace("refresh token completed for account {}, result {}", digmaAccount, refreshResult)
                         refreshResult
                     } else {
                         trace("no need to refresh token for account {}", digmaAccount)

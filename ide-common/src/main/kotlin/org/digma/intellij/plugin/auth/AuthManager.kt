@@ -483,7 +483,7 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
                     Log.log(logger::trace, "${coroutineContext[CoroutineName]} looking for account")
 
                     val account = DigmaDefaultAccountHolder.getInstance().account
-                    if (account != null) {
+                    if (account != null && ApiErrorHandler.getInstance().isConnectionOK()) {
                         Log.log(logger::trace, "${coroutineContext[CoroutineName]} found account {}", account)
 
                         val credentials = try {
@@ -508,11 +508,16 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
                                     account
                                 )
                                 val loginHandler = LoginHandler.createLoginHandler(myAnalyticsProvider)
-                                loginHandler.refresh(account, credentials, "auto refresh job")
-                                fireChange()
-                                Log.log(logger::trace, "${coroutineContext[CoroutineName]} credentials for account refreshed {}", account)
-                                //immediately loop again and compute the next delay
-                                delay = ZERO
+                                val refreshSuccess = loginHandler.refresh(account, credentials, "auto refresh job")
+                                if (refreshSuccess) {
+                                    fireChange()
+                                    Log.log(logger::trace, "${coroutineContext[CoroutineName]} credentials for account refreshed {}", account)
+                                    //immediately loop again and compute the next delay
+                                    delay = ZERO
+                                } else {
+                                    Log.log(logger::trace, "${coroutineContext[CoroutineName]} refresh failed, waiting 5 minutes")
+                                    delay = 5.minutes
+                                }
                             } else {
                                 delay = max(0L, (expireIn.inWholeMilliseconds - 1.minutes.inWholeMilliseconds)).toDuration(DurationUnit.MILLISECONDS)
                                 Log.log(
@@ -526,6 +531,9 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
                             Log.log(logger::trace, "${coroutineContext[CoroutineName]} credentials for account not found, waiting 1 minute")
                             delay = 1.minutes
                         }
+                    } else if (ApiErrorHandler.getInstance().isNoConnectionMode()) {
+                        Log.log(logger::trace, "${coroutineContext[CoroutineName]} No connection, waiting 10 minutes")
+                        delay = 10.minutes
                     } else {
                         Log.log(logger::trace, "${coroutineContext[CoroutineName]} account not found, waiting 10 minutes")
                         delay = 10.minutes
@@ -553,6 +561,8 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
                 } catch (e: Throwable) {
                     Log.warnWithException(logger, e, "${coroutineContext[CoroutineName]} error in autoRefreshJob")
                     ErrorReporter.getInstance().reportError("AuthManager.autoRefreshJob", e)
+                    Log.log(logger::trace, "${coroutineContext[CoroutineName]} error from refresh, waiting 5 minutes")
+                    delay = 5.minutes
                 }
             }
 

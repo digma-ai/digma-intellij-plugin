@@ -69,6 +69,9 @@ class ApiErrorHandler : DisposableAdaptor {
         return myConnectionLostFlag.get()
     }
 
+    fun isConnectionOK(): Boolean {
+        return !myConnectionLostFlag.get()
+    }
 
     //log connection exceptions only the first time and show an error notification.
     // while status is in error, following connection exceptions will not be logged, other exceptions
@@ -354,11 +357,6 @@ class ApiErrorHandler : DisposableAdaptor {
                 )
             }
         }
-    }
-
-
-    private fun isConnectionOK(): Boolean {
-        return !myConnectionLostFlag.get()
     }
 
 

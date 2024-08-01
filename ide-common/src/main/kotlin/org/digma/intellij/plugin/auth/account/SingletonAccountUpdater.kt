@@ -17,27 +17,32 @@ object SingletonAccountUpdater {
     private val mutex = Mutex()
 
     suspend fun updateNewAccount(digmaAccount: DigmaAccount, digmaCredentials: DigmaCredentials) {
-        trace("updating account {}", digmaAccount)
+        trace("updating new account {}", digmaAccount)
         mutex.withLock {
+            trace("updating new account with lock {}", digmaAccount)
             DigmaAccountManager.getInstance().updateAccount(digmaAccount, digmaCredentials)
             DigmaDefaultAccountHolder.getInstance().account = digmaAccount
             CredentialsHolder.digmaCredentials = digmaCredentials
         }
+        trace("new account updated {}", digmaAccount)
     }
 
     suspend fun updateAccount(digmaAccount: DigmaAccount, digmaCredentials: DigmaCredentials) {
         trace("updating account {}", digmaAccount)
         mutex.withLock {
+            trace("updating account with lock {}", digmaAccount)
             DigmaAccountManager.getInstance().updateAccount(digmaAccount, digmaCredentials)
             DigmaDefaultAccountHolder.getInstance().account = digmaAccount
             CredentialsHolder.digmaCredentials = digmaCredentials
         }
+        trace("account updated {}", digmaAccount)
     }
 
 
     suspend fun deleteAccount(digmaAccount: DigmaAccount) {
         trace("deleting account {}", digmaAccount)
         mutex.withLock {
+            trace("deleting account with lock {}", digmaAccount)
             try {
                 DigmaAccountManager.getInstance().removeAccount(digmaAccount)
             } finally {
@@ -46,6 +51,7 @@ object SingletonAccountUpdater {
                 CredentialsHolder.digmaCredentials = null
             }
         }
+        trace("account deleted {}", digmaAccount)
     }
 
 

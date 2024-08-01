@@ -1,5 +1,6 @@
 import common.dynamicPlatformType
 import common.platformVersion
+import common.useBinaryInstaller
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 
 plugins {
@@ -12,9 +13,9 @@ plugins {
 // it should use the dynamic type only when building with buildWIthUltimate=true
 //platformType impacts project.platformVersion() so it must be accurate.
 val platformType: IntelliJPlatformType by extra {
-    if (dynamicPlatformType(project) == IntelliJPlatformType.IntellijIdeaUltimate){
+    if (dynamicPlatformType(project) == IntelliJPlatformType.IntellijIdeaUltimate) {
         IntelliJPlatformType.IntellijIdeaUltimate
-    }else{
+    } else {
         IntelliJPlatformType.IntellijIdeaCommunity
     }
 }
@@ -32,9 +33,9 @@ dependencies {
         //although this module can always build with IC because it's the same gradle plugin, but just to be
         // sure to build with the gradle plugin that ships with the current IDE.
         if (platformType == IntelliJPlatformType.IntellijIdeaUltimate) {
-            intellijIdeaUltimate(project.platformVersion())
+            intellijIdeaUltimate(project.platformVersion(), project.useBinaryInstaller())
         } else {
-            intellijIdeaCommunity(project.platformVersion())
+            intellijIdeaCommunity(project.platformVersion(), project.useBinaryInstaller())
         }
 
         bundledPlugin("com.intellij.java")

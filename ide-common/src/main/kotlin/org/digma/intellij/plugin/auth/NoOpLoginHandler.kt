@@ -14,18 +14,18 @@ class NoOpLoginHandler(private val errorMessage: String) : LoginHandler {
 
     override val logger: Logger = Logger.getInstance(this::class.java)
 
-    override suspend fun loginOrRefresh(onAuthenticationError: Boolean): Boolean {
-        Log.log(logger::trace, "loginOrRefresh called, error message {}", errorMessage)
+    override suspend fun loginOrRefresh(onAuthenticationError: Boolean, trigger: String): Boolean {
+        Log.log(logger::trace, "loginOrRefresh called, error message {}, trigger {}", errorMessage, trigger)
         return false
     }
 
-    override suspend fun login(user: String, password: String): LoginResult {
-        Log.log(logger::trace, "login called, error message {}", errorMessage)
+    override suspend fun login(user: String, password: String, trigger: String): LoginResult {
+        Log.log(logger::trace, "login called, error message {}, trigger {}", errorMessage, trigger)
         return LoginResult(false, null, errorMessage)
     }
 
-    override suspend fun refresh(account: DigmaAccount, credentials: DigmaCredentials): Boolean {
-        Log.log(logger::trace, "refresh called, error message {}", errorMessage)
+    override suspend fun refresh(account: DigmaAccount, credentials: DigmaCredentials, trigger: String): Boolean {
+        Log.log(logger::trace, "refresh called, error message {}, trigger {}", errorMessage, trigger)
         return false
     }
 }

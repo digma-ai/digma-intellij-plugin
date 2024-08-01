@@ -64,7 +64,13 @@ class ProcessManager(private val project: Project) : Disposable {
             })
         }
 
-        return future.get()
+
+        return try {
+            return future.get()
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError("ProcessManager.runUnderProcess", e, mapOf("process.name" to context.processName))
+            ProcessResult(success = false, canceled = false, duration = Duration.ZERO, error = e)
+        }
 
     }
 

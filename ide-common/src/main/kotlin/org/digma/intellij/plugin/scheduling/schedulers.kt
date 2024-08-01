@@ -152,7 +152,9 @@ const val INITIAL_SCHEDULER_CORE_SIZE = 5
 const val SCHEDULER_MAX_SIZE = 20
 const val SCHEDULER_MAX_QUEUE_SIZE_ALLOWED = 200
 
-val logger = Logger.getInstance("org.digma.scheduler")
+const val SCHEDULING_LOGGER_NAME = "org.digma.scheduler"
+
+val logger = Logger.getInstance(SCHEDULING_LOGGER_NAME)
 private val scheduler: MyScheduledExecutorService = MyScheduledExecutorService("Digma-Scheduler", INITIAL_SCHEDULER_CORE_SIZE)
 
 //blocking one shot tasks are executed on intellij executor which is unbounded and non daemon. the reason is that these tasks probably need immediate attention.
@@ -163,8 +165,8 @@ private val executor = AppExecutorUtil.getAppExecutorService()
 private val scheduledTasksPerformanceMonitor = ScheduledTasksPerformanceMonitor()
 
 //this method is here and not private so that it can be used in unit tests
-fun manage() {
-    scheduler.manage()
+fun manage(isUnitTest: Boolean = false) {
+    scheduler.manage(isUnitTest)
 }
 
 
@@ -624,7 +626,7 @@ class MyScheduledExecutorService(
         }
     }
 
-    fun manage() {
+    fun manage(isUnitTest: Boolean = false) {
         managementRound++
 
         val poolSize = scheduler.corePoolSize
@@ -654,23 +656,26 @@ class MyScheduledExecutorService(
                     corePoolSize = min(maxPoolSize, poolSize + 1)
                     Log.logWithThreadName(logger::trace, "management: pool size increased from {} to {}", currentSize, corePoolSize)
 
-                    try {
-                        //need this try catch only in unit tests because findActiveProject will fail
-                        findActiveProject()?.let { project ->
-                            ActivityMonitor.getInstance(project).registerSchedulerSizeIncreased(
-                                mapOf(
-                                    "prev.core.pool.size" to currentSize,
-                                    "core.pool.size" to scheduler.corePoolSize,
-                                    "max.pool.size" to scheduler.maximumPoolSize,
-                                    "task.queue.size" to scheduler.queue.size,
-                                    "all.registered.recurring (including canceled)" to scheduler.registeredRecurringTasks,
-                                    "max.pool.size.allowed" to SCHEDULER_MAX_SIZE,
-                                    "max.queue.size.allowed" to SCHEDULER_MAX_QUEUE_SIZE_ALLOWED
+                    if (!isUnitTest) {
+                        try {
+
+                            //need this try catch only in unit tests because findActiveProject will fail
+                            findActiveProject()?.let { project ->
+                                ActivityMonitor.getInstance(project).registerSchedulerSizeIncreased(
+                                    mapOf(
+                                        "prev.core.pool.size" to currentSize,
+                                        "core.pool.size" to scheduler.corePoolSize,
+                                        "max.pool.size" to scheduler.maximumPoolSize,
+                                        "task.queue.size" to scheduler.queue.size,
+                                        "all.registered.recurring (including canceled)" to scheduler.registeredRecurringTasks,
+                                        "max.pool.size.allowed" to SCHEDULER_MAX_SIZE,
+                                        "max.queue.size.allowed" to SCHEDULER_MAX_QUEUE_SIZE_ALLOWED
+                                    )
                                 )
-                            )
+                            }
+                        } catch (e: Throwable) {
+                            Log.warnWithException(logger, e, "error reporting event {}", e)
                         }
-                    } catch (e: Throwable) {
-                        Log.warnWithException(logger, e, "error reporting event {}", e)
                     }
 
                 } else {
@@ -680,7 +685,7 @@ class MyScheduledExecutorService(
         }
 
         //send statistics every 2 hours
-        if (managementRound % 60 == 0) {
+        if (managementRound % 60 == 0 && !isUnitTest) {
             findActiveProject()?.let { project ->
                 ActivityMonitor.getInstance(project).registerSchedulerStatistics(
                     mapOf(

@@ -7,7 +7,7 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.util.Alarm
-import io.ktor.utils.io.CancellationException
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -436,19 +436,31 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
 
 
     fun stopAutoRefresh(message: String) {
-        Log.log(logger::trace, "stopping autoRefreshJob {}", message)
-        autoRefreshWaitingJob?.cancel(CancellationException(message))
-        autoRefreshJob?.cancel(CancellationException(message))
+        try {
+            Log.log(logger::trace, "stopping autoRefreshJob {}", message)
+            autoRefreshWaitingJob?.cancel(CancellationException(message, null))
+            autoRefreshJob?.cancel(CancellationException(message, null))
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError("AuthManager.stopAutoRefresh", e)
+        }
     }
 
     fun startAutoRefresh() {
-        Log.log(logger::trace, "starting autoRefreshJob")
-        autoRefreshJob = startAutoRefreshJob(cs)
+        try {
+            Log.log(logger::trace, "starting autoRefreshJob")
+            autoRefreshJob = startAutoRefreshJob(cs)
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError("AuthManager.startAutoRefresh", e)
+        }
     }
 
     private fun cancelAutoRefreshWaitingJob(message: String) {
-        Log.log(logger::trace, "canceling autoRefreshJob.autoRefreshWaitingJob {}", message)
-        autoRefreshWaitingJob?.cancel(CancellationException(message))
+        try {
+            Log.log(logger::trace, "canceling autoRefreshJob.autoRefreshWaitingJob {}", message)
+            autoRefreshWaitingJob?.cancel(CancellationException(message, null))
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError("AuthManager.cancelAutoRefreshWaitingJob", e)
+        }
     }
 
 
@@ -536,6 +548,8 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
                         )
                     }
 
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (e: Throwable) {
                     Log.warnWithException(logger, e, "${coroutineContext[CoroutineName]} error in autoRefreshJob")
                     ErrorReporter.getInstance().reportError("AuthManager.autoRefreshJob", e)

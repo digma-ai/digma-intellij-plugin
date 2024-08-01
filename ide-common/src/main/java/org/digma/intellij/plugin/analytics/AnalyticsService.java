@@ -616,9 +616,9 @@ public class AnalyticsService implements Disposable {
                 // will not explode the logs, so we don't see all the exceptions in the log as they happen.
                 //this message will explode the idea.log if user has digma trace logging on and no backend running,
                 // which shouldn't happen, users should not have digma trace logging on all the time.
-                var realCause = ExceptionUtils.findFirstRealExceptionCause(e);
-                exception = Objects.requireNonNullElse(realCause, e);
-                Log.log(LOGGER::trace, "got exception in AnalyticsService {}", Objects.requireNonNullElse(realCause, e));
+                var realCause = ExceptionUtils.findRootCause(e);
+                exception = realCause;
+                Log.log(LOGGER::trace, "got exception in AnalyticsService {}", realCause);
 
 
                 if (methodsThatShouldNotChangeConnectionStatus.contains(method.getName())) {

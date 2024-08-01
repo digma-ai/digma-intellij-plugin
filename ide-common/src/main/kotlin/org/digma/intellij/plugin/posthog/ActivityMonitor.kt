@@ -374,7 +374,7 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
 
                 val exceptionMessage: String = ExceptionUtils.getNonEmptyMessage(it)
 
-                val causeExceptionType = ExceptionUtils.findFirstRealExceptionCauseTypeName(it)
+                val causeExceptionType = ExceptionUtils.findRootCauseTypeName(it)
 
                 details["exception.message"] = exceptionMessage
                 details["exception.stack-trace"] = exceptionStackTrace
@@ -457,7 +457,7 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
                     "apiMethodName" to methodName,
                     "message" to message,
                     "exception.type" to exception.javaClass.name,
-                    "cause.exception.type" to ExceptionUtils.findFirstRealExceptionCauseTypeName(exception),
+                    "cause.exception.type" to ExceptionUtils.findRootCauseTypeName(exception),
                     "exception.message" to exceptionMessage,
                     "exception.stack-trace" to stringWriter.toString(),
                     "os.type" to osType,

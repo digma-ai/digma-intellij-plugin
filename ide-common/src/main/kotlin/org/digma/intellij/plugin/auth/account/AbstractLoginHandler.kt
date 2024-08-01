@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.auth.account
 
 import com.intellij.openapi.diagnostic.Logger
 import kotlinx.coroutines.CoroutineName
+import org.digma.intellij.plugin.analytics.AuthenticationException
 import org.digma.intellij.plugin.analytics.RestAnalyticsProvider
 import org.digma.intellij.plugin.auth.AuthApiClient
 import org.digma.intellij.plugin.auth.credentials.DigmaCredentials
@@ -100,7 +101,12 @@ abstract class AbstractLoginHandler(protected val analyticsProvider: RestAnalyti
             val errorMessage = ExceptionUtils.getNonEmptyMessage(e)
             reportAuthPosthogEvent("refresh token failed", this.javaClass.simpleName, mapOf("error" to errorMessage, "refresh trigger" to trigger))
 
-            throw e
+            val authenticationException = ExceptionUtils.findCause(AuthenticationException::class.java, e)
+            if (authenticationException != null) {
+                throw e
+            } else {
+                false
+            }
         }
     }
 

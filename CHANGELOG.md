@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.364] - 2024-08-01
+## [2.0.365] - 2024-08-02
+
+- support no connection in auto refresh by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2363
+
+## 2.0.364 - 2024-08-01
 
 - remove-unused-var by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2351
 - report error from autoRefreshJob by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2352

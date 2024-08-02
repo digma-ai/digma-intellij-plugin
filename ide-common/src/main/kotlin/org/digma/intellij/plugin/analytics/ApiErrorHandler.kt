@@ -262,7 +262,7 @@ class ApiErrorHandler : DisposableAdaptor {
     // refreshEnvironments that should refresh the connection mode and trigger loginOrRefresh if the connection is.
     private fun handleAuthManagerErrorImpl(throwable: Throwable, project: Project?) {
         Log.warnWithException(logger, throwable, "got AuthManager error {}", throwable)
-        Log.log(logger::warn, "calling markConnectionLostAndNotify on AuthManager error {}", throwable)
+        Log.log(logger::trace, "calling markConnectionLostAndNotify on AuthManager error {}", throwable)
         markConnectionLostAndNotify()
 
         //if a project is opened after connection is already marked lost the project doesn't know about it.
@@ -279,7 +279,7 @@ class ApiErrorHandler : DisposableAdaptor {
     //must run in a lock
     private fun markConnectionLostAndNotify() {
 
-        Log.log(logger::warn, "markConnectionLostAndNotify called")
+        Log.log(logger::trace, "markConnectionLostAndNotify called")
 
         //this is the second critical section of the race condition,
         // we are in error state so the performance penalty of locking is insignificant.
@@ -298,11 +298,11 @@ class ApiErrorHandler : DisposableAdaptor {
             myConnectionStatusNotifyAlarm.cancelAllRequests()
             myConnectionStatusNotifyAlarm
                 .addRequest({
-                    Log.log(logger::warn, "notifying connectionLost")
+                    Log.log(logger::trace, "notifying connectionLost")
                     fireConnectionLost()
                 }, 2000)
         } else {
-            Log.log(logger::warn, "already in no connection mode")
+            Log.log(logger::trace, "already in no connection mode")
         }
 
     }
@@ -336,6 +336,7 @@ class ApiErrorHandler : DisposableAdaptor {
             // if marked but never reset and to make sure that if we notified connectionLost we will also notify when its gained back.
 
             myLock.lock()
+            Log.log(logger::trace, "resetting connection mode after connection lost")
             resetConnectionLostAndNotifyIfNecessaryImpl()
 
         } catch (e: Throwable) {

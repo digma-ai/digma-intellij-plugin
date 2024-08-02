@@ -258,11 +258,11 @@ class ApiErrorHandler : DisposableAdaptor {
     // us out of it so user must know about it.
     //it's not like handleInvocationTargetException from AnalyticsService which may or may not be a connection issue and next call
     // may succeed. without login we can't do anything.
-    //the user will see the no connection screen and can click refresh, on refresh we call AuthManager to try
-    // login or refresh again and if it will succeed the connection will be refreshed.
+    //the user will see the no connection screen and can click refresh, on refresh we call BackendInfoHolder..refresh() and
+    // refreshEnvironments that should refresh the connection mode and trigger loginOrRefresh if the connection is.
     private fun handleAuthManagerErrorImpl(throwable: Throwable, project: Project?) {
         Log.warnWithException(logger, throwable, "got AuthManager error {}", throwable)
-        Log.log(logger::warn, "showing no connection on AuthManager error {}", throwable)
+        Log.log(logger::warn, "calling markConnectionLostAndNotify on AuthManager error {}", throwable)
         markConnectionLostAndNotify()
 
         //if a project is opened after connection is already marked lost the project doesn't know about it.
@@ -301,6 +301,8 @@ class ApiErrorHandler : DisposableAdaptor {
                     Log.log(logger::warn, "notifying connectionLost")
                     fireConnectionLost()
                 }, 2000)
+        } else {
+            Log.log(logger::warn, "already in no connection mode")
         }
 
     }

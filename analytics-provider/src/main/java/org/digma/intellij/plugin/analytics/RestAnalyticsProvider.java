@@ -408,6 +408,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable, Base
     }
 
     @Override
+    public List<SpanEnvironment> getSpanEnvironmentsStats(String spanCodeObjectId) {
+        return execute(() -> client.analyticsProvider.getSpanEnvironmentsStats(spanCodeObjectId));
+    }
+
+    @Override
     public void resetThrottlingStatus() {
         execute(client.analyticsProvider::resetThrottlingStatus);
     }
@@ -1107,5 +1112,8 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable, Base
         })
         @POST("PerformanceMetrics/reset-throttling")
         Call<Void> resetThrottlingStatus();
+
+        @GET("spans/environments")
+        Call<List<SpanEnvironment>> getSpanEnvironmentsStats(@Query("SpanCodeObjectId") String spanCodeObjectId);
     }
 }

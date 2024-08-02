@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.ui.jcef.model
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
+import org.digma.intellij.plugin.model.rest.insights.SpanEnvironment
 import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
 import org.digma.intellij.plugin.scope.ScopeContext
 import org.digma.intellij.plugin.scope.SpanScope
@@ -50,6 +51,7 @@ data class SetScopeMessagePayload(
     val issuesInsightsCount: Number,
     val unreadInsightsCount: Number,
     val context: ScopeContext? = null,
-    val environmentId: String? = null
+    val environmentId: String? = null,
+    val spanEnvironments: List<SpanEnvironment> = listOf()
 )
 

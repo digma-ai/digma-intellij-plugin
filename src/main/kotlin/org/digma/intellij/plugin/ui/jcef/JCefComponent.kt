@@ -273,6 +273,13 @@ private constructor(
                 ) {
                     try {
                         val insightsStats = AnalyticsService.getInstance(project).getInsightsStats(scope?.spanCodeObjectId, null)
+
+                        val spanEnvironments = if (scope?.spanCodeObjectId != null) {
+                            AnalyticsService.getInstance(project).getSpanEnvironmentsStats(scope.spanCodeObjectId)
+                        } else {
+                            listOf()
+                        }
+
                         sendScopeChangedMessage(
                             jbCefBrowser.cefBrowser,
                             scope,
@@ -282,7 +289,8 @@ private constructor(
                             insightsStats.issuesInsightsCount,
                             insightsStats.unreadInsightsCount,
                             scopeContext,
-                            environmentId
+                            environmentId,
+                            spanEnvironments
                         )
                     } catch (e: Throwable) {
                         Log.warnWithException(logger, project, e, "error in scopeChanged")

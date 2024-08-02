@@ -10,6 +10,7 @@ import org.digma.intellij.plugin.docker.DigmaInstallationStatus
 import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.model.rest.environment.Env
+import org.digma.intellij.plugin.model.rest.insights.SpanEnvironment
 import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
 import org.digma.intellij.plugin.navigation.View
 import org.digma.intellij.plugin.scope.ScopeContext
@@ -203,7 +204,8 @@ fun sendScopeChangedMessage(
     issuesInsightsCount: Number,
     unreadInsightsCount: Number,
     scopeContext: ScopeContext?,
-    environmentId: String?
+    environmentId: String?,
+    spanEnvironments: List<SpanEnvironment> = listOf()
 ) {
     serializeAndExecuteWindowPostMessageJavaScript(
         cefBrowser,
@@ -216,7 +218,8 @@ fun sendScopeChangedMessage(
                 issuesInsightsCount,
                 unreadInsightsCount,
                 scopeContext,
-                environmentId
+                environmentId,
+                spanEnvironments
             )
         )
     )

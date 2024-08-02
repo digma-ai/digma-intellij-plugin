@@ -69,6 +69,9 @@ class ApiErrorHandler : DisposableAdaptor {
         return myConnectionLostFlag.get()
     }
 
+    fun isConnectionOK(): Boolean {
+        return !myConnectionLostFlag.get()
+    }
 
     //log connection exceptions only the first time and show an error notification.
     // while status is in error, following connection exceptions will not be logged, other exceptions
@@ -79,6 +82,7 @@ class ApiErrorHandler : DisposableAdaptor {
         method: Method,
         args: Array<Any?>?
     ) {
+        Log.log(logger::trace, "handleInvocationTargetException called with exception {}", findRootCause(invocationTargetException))
         try {
             myLock.lock()
             handleInvocationTargetExceptionImpl(project, invocationTargetException, method, args)
@@ -89,6 +93,7 @@ class ApiErrorHandler : DisposableAdaptor {
             if (myLock.isHeldByCurrentThread) {
                 myLock.unlock()
             }
+            Log.log(logger::trace, "handleInvocationTargetException completed")
         }
     }
 
@@ -101,6 +106,8 @@ class ApiErrorHandler : DisposableAdaptor {
     ) {
 
         //todo: maybe show no connection on CantConstructClientException
+
+        Log.log(logger::trace, "handleInvocationTargetExceptionImpl called with exception {}", findRootCause(invocationTargetException))
 
         val connectException =
             findConnectException(invocationTargetException) ?: findSslException(invocationTargetException)
@@ -118,10 +125,15 @@ class ApiErrorHandler : DisposableAdaptor {
         )
 
         if (isConnectionOK()) {
+            Log.log(logger::trace, "connection ok, checking if need to mark connection lost")
+
             //if more than one thread enter this section the worst that will happen is that we
             // report the error more than once but connectionLost will be fired once because
-            // markConnectionLostAndNotify locks, marks and notifies only if connection ok.
+            // markConnectionLostAndNotify is under lock, marks and notifies only if connection ok.
             if (isConnectionException) {
+
+                Log.log(logger::trace, "error is connection exception, calling markConnectionLostAndNotify")
+
                 markConnectionLostAndNotify()
                 errorReportingHelper.addIfNewError(invocationTargetException)
                 Log.warnWithException(
@@ -142,6 +154,9 @@ class ApiErrorHandler : DisposableAdaptor {
                 }
 
             } else {
+
+                Log.log(logger::trace, "error is not a connection exception,doing nothing")
+
                 Log.warnWithException(
                     logger,
                     invocationTargetException,
@@ -167,6 +182,7 @@ class ApiErrorHandler : DisposableAdaptor {
         } else {
 
             //connection is not ok, marked lost
+            Log.log(logger::trace, "already in no connection mode")
 
             //if the callerProject is opened after connection is already marked lost this project doesn't know about it.
             // notify the project that there is no connection
@@ -208,10 +224,14 @@ class ApiErrorHandler : DisposableAdaptor {
             if (myLock.isHeldByCurrentThread) {
                 myLock.unlock()
             }
+            Log.log(logger::trace, "handleAuthManagerCantConnectError completed")
         }
     }
 
     fun handleAuthManagerCantRefreshError(throwable: Throwable) {
+
+        Log.log(logger::trace, "handleAuthManagerCantRefreshError called with exception {}", throwable)
+
         //todo: currently only reporting
         Log.warnWithException(logger, throwable, "error in AuthManager {}", throwable)
 
@@ -229,6 +249,7 @@ class ApiErrorHandler : DisposableAdaptor {
                 )
             }
         }
+        Log.log(logger::trace, "handleAuthManagerCantRefreshError completed")
     }
 
 
@@ -237,11 +258,11 @@ class ApiErrorHandler : DisposableAdaptor {
     // us out of it so user must know about it.
     //it's not like handleInvocationTargetException from AnalyticsService which may or may not be a connection issue and next call
     // may succeed. without login we can't do anything.
-    //the user will see the no connection screen and can click refresh, on refresh we call AuthManager to try
-    // login or refresh again and if it will succeed the connection will be refreshed.
+    //the user will see the no connection screen and can click refresh, on refresh we call BackendInfoHolder..refresh() and
+    // refreshEnvironments that should refresh the connection mode and trigger loginOrRefresh if the connection is.
     private fun handleAuthManagerErrorImpl(throwable: Throwable, project: Project?) {
         Log.warnWithException(logger, throwable, "got AuthManager error {}", throwable)
-        Log.log(logger::warn, "showing no connection on AuthManager error {}", throwable)
+        Log.log(logger::trace, "calling markConnectionLostAndNotify on AuthManager error {}", throwable)
         markConnectionLostAndNotify()
 
         //if a project is opened after connection is already marked lost the project doesn't know about it.
@@ -258,7 +279,7 @@ class ApiErrorHandler : DisposableAdaptor {
     //must run in a lock
     private fun markConnectionLostAndNotify() {
 
-        Log.log(logger::warn, "markConnectionLostAndNotify called")
+        Log.log(logger::trace, "markConnectionLostAndNotify called")
 
         //this is the second critical section of the race condition,
         // we are in error state so the performance penalty of locking is insignificant.
@@ -277,9 +298,11 @@ class ApiErrorHandler : DisposableAdaptor {
             myConnectionStatusNotifyAlarm.cancelAllRequests()
             myConnectionStatusNotifyAlarm
                 .addRequest({
-                    Log.log(logger::warn, "notifying connectionLost")
+                    Log.log(logger::trace, "notifying connectionLost")
                     fireConnectionLost()
                 }, 2000)
+        } else {
+            Log.log(logger::trace, "already in no connection mode")
         }
 
     }
@@ -313,6 +336,7 @@ class ApiErrorHandler : DisposableAdaptor {
             // if marked but never reset and to make sure that if we notified connectionLost we will also notify when its gained back.
 
             myLock.lock()
+            Log.log(logger::trace, "resetting connection mode after connection lost")
             resetConnectionLostAndNotifyIfNecessaryImpl()
 
         } catch (e: Throwable) {
@@ -354,11 +378,6 @@ class ApiErrorHandler : DisposableAdaptor {
                 )
             }
         }
-    }
-
-
-    private fun isConnectionOK(): Boolean {
-        return !myConnectionLostFlag.get()
     }
 
 

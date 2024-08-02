@@ -82,6 +82,7 @@ class ApiErrorHandler : DisposableAdaptor {
         method: Method,
         args: Array<Any?>?
     ) {
+        Log.log(logger::trace, "handleInvocationTargetException called with exception {}", invocationTargetException)
         try {
             myLock.lock()
             handleInvocationTargetExceptionImpl(project, invocationTargetException, method, args)
@@ -92,6 +93,7 @@ class ApiErrorHandler : DisposableAdaptor {
             if (myLock.isHeldByCurrentThread) {
                 myLock.unlock()
             }
+            Log.log(logger::trace, "handleInvocationTargetException completed")
         }
     }
 
@@ -104,6 +106,8 @@ class ApiErrorHandler : DisposableAdaptor {
     ) {
 
         //todo: maybe show no connection on CantConstructClientException
+
+        Log.log(logger::trace, "handleInvocationTargetExceptionImpl called with exception {}", invocationTargetException)
 
         val connectException =
             findConnectException(invocationTargetException) ?: findSslException(invocationTargetException)
@@ -121,10 +125,15 @@ class ApiErrorHandler : DisposableAdaptor {
         )
 
         if (isConnectionOK()) {
+            Log.log(logger::trace, "connection ok, checking if need to mark connection lost")
+
             //if more than one thread enter this section the worst that will happen is that we
             // report the error more than once but connectionLost will be fired once because
-            // markConnectionLostAndNotify locks, marks and notifies only if connection ok.
+            // markConnectionLostAndNotify is under lock, marks and notifies only if connection ok.
             if (isConnectionException) {
+
+                Log.log(logger::trace, "error is connection exception, calling markConnectionLostAndNotify")
+
                 markConnectionLostAndNotify()
                 errorReportingHelper.addIfNewError(invocationTargetException)
                 Log.warnWithException(
@@ -145,6 +154,9 @@ class ApiErrorHandler : DisposableAdaptor {
                 }
 
             } else {
+
+                Log.log(logger::trace, "error is not a connection exception,doing nothing")
+
                 Log.warnWithException(
                     logger,
                     invocationTargetException,
@@ -170,6 +182,7 @@ class ApiErrorHandler : DisposableAdaptor {
         } else {
 
             //connection is not ok, marked lost
+            Log.log(logger::trace, "already in no connection mode")
 
             //if the callerProject is opened after connection is already marked lost this project doesn't know about it.
             // notify the project that there is no connection
@@ -211,10 +224,14 @@ class ApiErrorHandler : DisposableAdaptor {
             if (myLock.isHeldByCurrentThread) {
                 myLock.unlock()
             }
+            Log.log(logger::trace, "handleAuthManagerCantConnectError completed")
         }
     }
 
     fun handleAuthManagerCantRefreshError(throwable: Throwable) {
+
+        Log.log(logger::trace, "handleAuthManagerCantRefreshError called with exception {}", throwable)
+
         //todo: currently only reporting
         Log.warnWithException(logger, throwable, "error in AuthManager {}", throwable)
 
@@ -232,6 +249,7 @@ class ApiErrorHandler : DisposableAdaptor {
                 )
             }
         }
+        Log.log(logger::trace, "handleAuthManagerCantRefreshError completed")
     }
 
 

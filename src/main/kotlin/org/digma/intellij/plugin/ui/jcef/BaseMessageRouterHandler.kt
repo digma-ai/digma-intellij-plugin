@@ -386,8 +386,7 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
             insightsStats.issuesInsightsCount,
             insightsStats.unreadInsightsCount,
             null,
-            null,
-            listOf()
+            null
         )
 
         val setRunConfigurationMessageBuilder =

@@ -12,6 +12,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.ui.jcef.JBCefBrowser
 import com.intellij.util.Alarm
+import org.apache.maven.artifact.versioning.ComparableVersion
 import org.cef.CefApp
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefMessageRouter
@@ -20,12 +21,14 @@ import org.cef.handler.CefLifeSpanHandlerAdapter
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
 import org.digma.intellij.plugin.analytics.ApiClientChangedEvent
+import org.digma.intellij.plugin.analytics.BackendInfoHolder
 import org.digma.intellij.plugin.analytics.EnvironmentChanged
 import org.digma.intellij.plugin.analytics.InsightStatsChangedEvent
 import org.digma.intellij.plugin.analytics.getAllEnvironments
 import org.digma.intellij.plugin.auth.AuthManager
 import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
 import org.digma.intellij.plugin.common.Backgroundable
+import org.digma.intellij.plugin.common.newerThan
 import org.digma.intellij.plugin.digmathon.DigmathonActivationEvent
 import org.digma.intellij.plugin.digmathon.DigmathonProductKeyStateChangedEvent
 import org.digma.intellij.plugin.digmathon.UserFinishedDigmathonEvent
@@ -274,12 +277,6 @@ private constructor(
                     try {
                         val insightsStats = AnalyticsService.getInstance(project).getInsightsStats(scope?.spanCodeObjectId, null)
 
-                        val spanEnvironments = if (scope?.spanCodeObjectId != null) {
-                            AnalyticsService.getInstance(project).getSpanEnvironmentsStats(scope.spanCodeObjectId)
-                        } else {
-                            listOf()
-                        }
-
                         sendScopeChangedMessage(
                             jbCefBrowser.cefBrowser,
                             scope,
@@ -289,8 +286,7 @@ private constructor(
                             insightsStats.issuesInsightsCount,
                             insightsStats.unreadInsightsCount,
                             scopeContext,
-                            environmentId,
-                            spanEnvironments
+                            environmentId
                         )
                     } catch (e: Throwable) {
                         Log.warnWithException(logger, project, e, "error in scopeChanged")
@@ -324,6 +320,21 @@ private constructor(
                     allIssuesCount: Int
                 ) {
                     try {
+
+                        val spanEnvironments = if (scope != null && scope["span"] != null && scope["span"]["spanCodeObjectId"] != null) {
+                            val version = BackendInfoHolder.getInstance(project).getAbout()?.applicationVersion
+
+                            val currentBackendVersion = ComparableVersion(version)
+                            val spanEnvironmentsVersion = ComparableVersion("0.3.94")
+                            if (currentBackendVersion.newerThan(spanEnvironmentsVersion)) {
+                                AnalyticsService.getInstance(project).getSpanEnvironmentsStats(scope["span"]["spanCodeObjectId"].asText())
+                            } else {
+                                listOf()
+                            }
+                        } else {
+                            listOf()
+                        }
+
                         sendSetInsightStatsMessage(
                             jbCefBrowser.cefBrowser,
                             scope,
@@ -331,7 +342,8 @@ private constructor(
                             issuesInsightsCount,
                             unreadInsightsCount,
                             criticalInsightsCount,
-                            allIssuesCount
+                            allIssuesCount,
+                            spanEnvironments
                         )
                     } catch (e: Throwable) {
                         Log.warnWithException(logger, project, e, "error in insightStatsChanged")

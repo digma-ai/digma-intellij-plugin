@@ -204,8 +204,7 @@ fun sendScopeChangedMessage(
     issuesInsightsCount: Number,
     unreadInsightsCount: Number,
     scopeContext: ScopeContext?,
-    environmentId: String?,
-    spanEnvironments: List<SpanEnvironment> = listOf()
+    environmentId: String?
 ) {
     serializeAndExecuteWindowPostMessageJavaScript(
         cefBrowser,
@@ -218,8 +217,7 @@ fun sendScopeChangedMessage(
                 issuesInsightsCount,
                 unreadInsightsCount,
                 scopeContext,
-                environmentId,
-                spanEnvironments
+                environmentId
             )
         )
     )
@@ -252,7 +250,8 @@ fun sendSetInsightStatsMessage(
     issuesInsightsCount: Number,
     unreadInsightsCount: Number,
     criticalInsightsCount: Number,
-    allIssuesCount: Number
+    allIssuesCount: Number,
+    spanEnvironments: List<SpanEnvironment> = listOf()
 ) {
     serializeAndExecuteWindowPostMessageJavaScript(
         cefBrowser,
@@ -263,7 +262,8 @@ fun sendSetInsightStatsMessage(
                 issuesInsightsCount,
                 unreadInsightsCount,
                 criticalInsightsCount,
-                allIssuesCount
+                allIssuesCount,
+                spanEnvironments
             )
         )
     )

@@ -82,7 +82,7 @@ class ApiErrorHandler : DisposableAdaptor {
         method: Method,
         args: Array<Any?>?
     ) {
-        Log.log(logger::trace, "handleInvocationTargetException called with exception {}", invocationTargetException)
+        Log.log(logger::trace, "handleInvocationTargetException called with exception {}", findRootCause(invocationTargetException))
         try {
             myLock.lock()
             handleInvocationTargetExceptionImpl(project, invocationTargetException, method, args)
@@ -107,7 +107,7 @@ class ApiErrorHandler : DisposableAdaptor {
 
         //todo: maybe show no connection on CantConstructClientException
 
-        Log.log(logger::trace, "handleInvocationTargetExceptionImpl called with exception {}", invocationTargetException)
+        Log.log(logger::trace, "handleInvocationTargetExceptionImpl called with exception {}", findRootCause(invocationTargetException))
 
         val connectException =
             findConnectException(invocationTargetException) ?: findSslException(invocationTargetException)

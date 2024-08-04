@@ -160,13 +160,17 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
 
     private fun capture(eventName: String, details: Map<String, Any>) {
 
-        val mutableDetails: MutableMap<String, Any> = mutableMapOf()
-        mutableDetails.putAll(details)
+        val mutableDetails = details.toMutableMap()
 
         mutableDetails["firstTimeInsightReceived"] = PersistenceService.getInstance().isFirstTimeInsightReceived()
         mutableDetails["firstTimeAssetsReceived"] = PersistenceService.getInstance().isFirstTimeAssetsReceived()
         mutableDetails["firstTimeRecentActivityReceived"] = PersistenceService.getInstance().isFirstTimeRecentActivityReceived()
         mutableDetails["plugin.version"] = SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("unknown")
+        mutableDetails["ide.version"] = ApplicationInfo.getInstance().fullVersion
+        mutableDetails["ide.name"] = ApplicationInfo.getInstance().versionName
+        mutableDetails["ide.build"] = ApplicationInfo.getInstance().build.asString()
+        mutableDetails["server.version"] = serverInfo?.applicationVersion.toString()
+        mutableDetails["server.deploymentType"] = serverInfo?.deploymentType.toString()
 
         postHog?.capture(
             userId,

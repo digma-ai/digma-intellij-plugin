@@ -321,13 +321,13 @@ private constructor(
                 ) {
                     try {
 
-                        val spanEnvironments = if (scope != null && scope["span"] != null && scope["span"]["spanCodeObjectId"] != null) {
+                        val spanEnvironments = if (scope?.at("/span/spanCodeObjectId")?.asText(null) != null) {
                             val version = BackendInfoHolder.getInstance(project).getAbout()?.applicationVersion
 
                             val currentBackendVersion = ComparableVersion(version)
                             val spanEnvironmentsVersion = ComparableVersion("0.3.94")
                             if (currentBackendVersion.newerThan(spanEnvironmentsVersion)) {
-                                AnalyticsService.getInstance(project).getSpanEnvironmentsStats(scope["span"]["spanCodeObjectId"].asText())
+                                AnalyticsService.getInstance(project).getSpanEnvironmentsStats(scope.at("/span/spanCodeObjectId").asText())
                             } else {
                                 listOf()
                             }

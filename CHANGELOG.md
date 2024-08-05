@@ -1,6 +1,19 @@
 # Changelog
 
-## [2.0.363] - 2024-07-30
+## [2.0.364] - 2024-08-01
+
+- remove-unused-var by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2351
+- report error from autoRefreshJob by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2352
+- register-centralized-logout-event by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2353
+- enable-frequency-detector-for-ui-error Closes #2349 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2350
+- update eap to latest by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2357
+- upgrade to intellij platform gradle plugin 2.0.0 release Closes #2286 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2359
+- Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2361
+- treat unknown as latest in add env by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2354
+- more info in auth events by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2362
+- Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2360
+
+## 2.0.363 - 2024-07-30
 
 - register user on successful login Closes #2317 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2320
 - expandable-text-fieldfor-ext-obs Closes #2312 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2321

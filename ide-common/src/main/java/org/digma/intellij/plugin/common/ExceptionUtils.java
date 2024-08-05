@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.common;
 
+import com.google.common.base.Throwables;
 import org.digma.intellij.plugin.analytics.*;
 import org.jetbrains.annotations.*;
 
@@ -8,7 +9,7 @@ import java.io.*;
 import java.lang.reflect.*;
 import java.net.*;
 import java.net.http.*;
-import java.util.*;
+import java.util.List;
 
 public class ExceptionUtils {
 
@@ -55,31 +56,38 @@ public class ExceptionUtils {
         return cause;
     }
 
-    @Nullable
-    public static Throwable findFirstRealExceptionCause(@NotNull Throwable throwable) {
-        Throwable cause = throwable;
-        while (cause instanceof InvocationTargetException || cause instanceof UndeclaredThrowableException) {
 
-            cause = cause.getCause();
-            //special treatment for AnalyticsProviderException, AnalyticsProviderException.cause may be null
-            if (cause instanceof AnalyticsProviderException analyticsProviderException && analyticsProviderException.getCause() != null) {
-                cause = analyticsProviderException.getCause();
-            }
+    @NotNull
+    public static Throwable findRootCause(@NotNull Throwable throwable) {
+
+        try {
+            return Throwables.getRootCause(throwable);
+        } catch (Throwable e) {
+            return throwable;
         }
 
-        return cause;
+        //this code finds root cause without throwing exception in loop like guava does
+//        Throwable cause = throwable;
+//        Throwable latestNonNullCause = null;
+//        while (cause != null && cause != latestNonNullCause) {
+//            latestNonNullCause = cause;
+//            cause = cause.getCause();
+//        }
+//
+//        return latestNonNullCause;
     }
 
+
     @NotNull
-    public static Class<? extends Throwable> findFirstRealExceptionCauseType(@NotNull Throwable throwable) {
-        var realCause = findFirstRealExceptionCause(throwable);
-        return Objects.requireNonNullElse(realCause, throwable).getClass();
+    public static Class<? extends Throwable> findRootCauseType(@NotNull Throwable throwable) {
+        var realCause = findRootCause(throwable);
+        return realCause.getClass();
     }
 
 
     @NotNull
-    public static String findFirstRealExceptionCauseTypeName(@NotNull Throwable throwable) {
-        return findFirstRealExceptionCauseType(throwable).getName();
+    public static String findRootCauseTypeName(@NotNull Throwable throwable) {
+        return findRootCauseType(throwable).getName();
     }
 
 
@@ -102,8 +110,6 @@ public class ExceptionUtils {
     public static Throwable findAuthenticationException(@NotNull Throwable throwable) {
         return findCause(AuthenticationException.class, throwable);
     }
-
-
 
 
     public static boolean isAnyConnectionException(@NotNull Throwable e) {
@@ -217,8 +223,8 @@ public class ExceptionUtils {
     @NotNull
     public static String getNonEmptyMessage(@NotNull Throwable exception) {
 
-        var realCause = findFirstRealExceptionCause(exception);
-        if (realCause != null && realCause.getMessage() != null) {
+        var realCause = findRootCause(exception);
+        if (realCause.getMessage() != null) {
             return realCause.getMessage();
         }
 

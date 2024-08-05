@@ -35,7 +35,7 @@ class DigmaAccount(
 ) : ServerAccount() {
 
     override fun toString(): String {
-        return "DigmaAccount(id=$id, name=$name, url=${server.url}), id=$userId"
+        return "DigmaAccount(id=$id, name=$name, url=${server.url}), user id=$userId)"
     }
 }
 

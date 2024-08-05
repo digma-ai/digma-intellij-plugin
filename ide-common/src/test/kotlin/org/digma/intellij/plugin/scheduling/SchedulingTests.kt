@@ -1,8 +1,10 @@
 
 package org.digma.intellij.plugin.scheduling
 
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.util.Disposer
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import org.digma.intellij.plugin.testlogger.NoOpLoggerFactory
 import org.junit.jupiter.api.assertThrows
 import java.util.Collections
 import java.util.concurrent.TimeUnit
@@ -22,6 +24,7 @@ class SchedulingTests {
     //ErrorReporter.pause() will cause ErrorReporter.getInstance return a no-op proxy instead of a plugin service
     @BeforeTest
     fun pauseErrorReporter() {
+        Logger.setFactory(NoOpLoggerFactory())
         ErrorReporter.pause()
     }
 
@@ -231,7 +234,7 @@ class SchedulingTests {
 
         val timer = timer("management", true, 0, 50) {
             try {
-                manage()
+                manage(true)
             } catch (e: Throwable) {
                 e.printStackTrace()
             }
@@ -265,7 +268,7 @@ class SchedulingTests {
 
         val timer = timer("management", true, 0, 50) {
             try {
-                manage()
+                manage(true)
             } catch (e: Throwable) {
                 e.printStackTrace()
             }
@@ -301,7 +304,7 @@ class SchedulingTests {
 //            while (isActive) {
 //                try {
 //                    delay(100)
-//                    manage()
+//                    manage(true)
 //                }catch (e:Throwable){
 //                    e.printStackTrace()
 //                }

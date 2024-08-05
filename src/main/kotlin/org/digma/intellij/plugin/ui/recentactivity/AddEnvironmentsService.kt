@@ -80,6 +80,9 @@ class AddEnvironmentsService {
         }
 
         val backendVersionIs0315OrHigher = backendVersion.let {
+            if ("unknown".equals(it, true)) {
+                return@let true
+            }
             val backendVersionComparableVersion = ComparableVersion(it)
             val featureComparableVersion = ComparableVersion("0.3.16")
             backendVersionComparableVersion.newerThan(featureComparableVersion) ||

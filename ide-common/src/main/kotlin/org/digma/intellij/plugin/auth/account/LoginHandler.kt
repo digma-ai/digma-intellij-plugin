@@ -7,11 +7,10 @@ import org.digma.intellij.plugin.analytics.ReplacingClientException
 import org.digma.intellij.plugin.analytics.RestAnalyticsProvider
 import org.digma.intellij.plugin.auth.NoOpLoginHandler
 import org.digma.intellij.plugin.auth.credentials.DigmaCredentials
+import org.digma.intellij.plugin.auth.reportAuthPosthogEvent
 import org.digma.intellij.plugin.common.ExceptionUtils
-import org.digma.intellij.plugin.common.findActiveProject
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.posthog.ActivityMonitor
 import kotlin.coroutines.coroutineContext
 
 interface LoginHandler {
@@ -63,29 +62,30 @@ interface LoginHandler {
     }
 
 
-    suspend fun login(user: String, password: String): LoginResult
+    suspend fun login(user: String, password: String, trigger: String): LoginResult
 
     /**
      * does login or refresh if necessary, return true if did successful login or successful refresh,or did nothing because credentials are valid.
      * false otherwise.
      * don't rely on the result for authentication purposes, its mainly for logging
      */
-    suspend fun loginOrRefresh(onAuthenticationError: Boolean = false): Boolean
+    suspend fun loginOrRefresh(onAuthenticationError: Boolean = false, trigger: String): Boolean
 
     /**
      * return true if refresh was successful
      */
-    suspend fun refresh(account: DigmaAccount, credentials: DigmaCredentials): Boolean
+    suspend fun refresh(account: DigmaAccount, credentials: DigmaCredentials, trigger: String): Boolean
 
 
     /**
      * return true only if an account was really deleted
      */
-    suspend fun logout(): Boolean {
+    suspend fun logout(trigger: String): Boolean {
         return try {
-            trace("logout called")
 
-            reportPosthogEvent("logout")
+            trace("logout called, trigger {}", trigger)
+
+            reportAuthPosthogEvent("logout", this.javaClass.simpleName, mapOf("logout trigger" to trigger))
 
             val digmaAccount = DigmaDefaultAccountHolder.getInstance().account
 
@@ -99,26 +99,21 @@ interface LoginHandler {
                 trace("logout: account deleted {} ", digmaAccount)
             }
 
-            reportPosthogEvent("logout success")
+            reportAuthPosthogEvent(
+                "logout success",
+                this.javaClass.simpleName,
+                mapOf("logout trigger" to trigger, "account found" to (digmaAccount != null))
+            )
+
             //return true only if an account was really deleted
             digmaAccount != null
 
         } catch (e: Throwable) {
-            warnWithException(e, "Exception in logout {}", e)
-            ErrorReporter.getInstance().reportError("${javaClass.simpleName}.logout", e)
+            warnWithException(e, "Exception in logout {}, trigger {}", e, trigger)
+            ErrorReporter.getInstance().reportError("${javaClass.simpleName}.logout", e, mapOf("logout trigger" to trigger))
             val errorMessage = ExceptionUtils.getNonEmptyMessage(e)
-            reportPosthogEvent("logout failed", mapOf("error" to errorMessage))
+            reportAuthPosthogEvent("logout failed", this.javaClass.simpleName, mapOf("error" to errorMessage, "logout trigger" to trigger))
             false
-        }
-    }
-
-
-    fun reportPosthogEvent(evenName: String, details: Map<String, String> = mapOf()) {
-        findActiveProject()?.let { project ->
-            val detailsToSend = details.toMutableMap()
-            detailsToSend["handler"] = this.javaClass.simpleName
-            detailsToSend["auth"] = "true" //a property for filtering auth events ,filter auth isSet
-            ActivityMonitor.getInstance(project).registerAuthEvent(evenName, detailsToSend)
         }
     }
 

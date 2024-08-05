@@ -54,7 +54,7 @@ class AnalyticsUrlProvider : DisposableAdaptor, BaseUrlProvider {
 
                 if (state.apiUrl != myApiUrl) {
                     Log.log(logger::trace, "api url changed to {}, replacing myApiUrl", state.apiUrl)
-                    AuthManager.getInstance().stopAutoRefresh("on api url changed")
+                    AuthManager.getInstance().stopAutoRefresh("cancel on api url changed")
                     AuthManager.getInstance().logoutSynchronously()
                     ThreadPoolProviderService.getInstance().interruptAll()
                     val oldUrl = myApiUrl

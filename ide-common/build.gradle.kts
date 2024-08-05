@@ -1,5 +1,6 @@
 import common.dynamicPlatformType
 import common.platformVersion
+import common.useBinaryInstaller
 import de.undercouch.gradle.tasks.download.Download
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 
@@ -35,7 +36,8 @@ dependencies {
 
 
     intellijPlatform {
-        create(platformType, project.platformVersion())
+        //this module uses create because it may be Idea,Rider,Pycharm etc.
+        create(platformType, project.platformVersion(), project.useBinaryInstaller())
         bundledPlugin("Git4Idea")
     }
 }

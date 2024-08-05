@@ -523,7 +523,7 @@ public class AnalyticsService implements Disposable {
             //we have two proxies, the AnalyticsService proxy and AuthManager proxy, so this could be an UndeclaredThrowableException
             // wrapping InvocationTargetException wrapping UndeclaredThrowableException wrapping InvocationTargetException.
             //there must be an AnalyticsProviderException as cause because all methods should go through the proxies.
-            var analyticsProviderException = ExceptionUtils.findCause(AnalyticsProviderException.class, undeclaredThrowableException);
+            var analyticsProviderException = ExceptionUtils.findAssignableCause(AnalyticsProviderException.class, undeclaredThrowableException);
             if (analyticsProviderException != null) {
                 throw new AnalyticsServiceException(analyticsProviderException);
             } else {
@@ -621,9 +621,9 @@ public class AnalyticsService implements Disposable {
                 // will not explode the logs, so we don't see all the exceptions in the log as they happen.
                 //this message will explode the idea.log if user has digma trace logging on and no backend running,
                 // which shouldn't happen, users should not have digma trace logging on all the time.
-                var realCause = ExceptionUtils.findFirstRealExceptionCause(e);
-                exception = Objects.requireNonNullElse(realCause, e);
-                Log.log(LOGGER::trace, "got exception in AnalyticsService {}", Objects.requireNonNullElse(realCause, e));
+                var realCause = ExceptionUtils.findRootCause(e);
+                exception = realCause;
+                Log.log(LOGGER::trace, "got exception in AnalyticsService {}", realCause);
 
 
                 if (methodsThatShouldNotChangeConnectionStatus.contains(method.getName())) {

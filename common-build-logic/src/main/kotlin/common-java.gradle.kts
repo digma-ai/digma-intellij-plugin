@@ -93,6 +93,7 @@ tasks {
         })
 
         testLogging {
+            showStandardStreams = false
             lifecycle {
                 events = mutableSetOf(TestLogEvent.FAILED)
                 exceptionFormat = TestExceptionFormat.SHORT
@@ -111,8 +112,6 @@ tasks {
             }
             info.events = debug.events
             info.exceptionFormat = debug.exceptionFormat
-
-
         }
 
         addTestOutputListener { testDescriptor, outputEvent ->

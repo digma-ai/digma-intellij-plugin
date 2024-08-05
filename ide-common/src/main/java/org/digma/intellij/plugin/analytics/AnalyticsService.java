@@ -476,6 +476,11 @@ public class AnalyticsService implements Disposable {
         return new InsightsStatsResult(0, 0, 0, 0, 0, 0);
     }
 
+    @NotNull
+    public List<SpanEnvironment> getSpanEnvironmentsStats(String spanCodeObjectId) throws AnalyticsServiceException  {
+        return executeCatching(() -> analyticsProviderProxy.getSpanEnvironmentsStats(spanCodeObjectId));
+    }
+
     public HttpResponse lowLevelCall(HttpRequest request) throws AnalyticsServiceException {
         return executeCatching(() -> analyticsProviderProxy.lowLevelCall(request));
     }

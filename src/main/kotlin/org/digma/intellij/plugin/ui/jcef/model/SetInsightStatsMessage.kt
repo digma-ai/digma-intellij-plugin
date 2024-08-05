@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.ui.jcef.model
 
 import com.fasterxml.jackson.databind.JsonNode
+import org.digma.intellij.plugin.model.rest.insights.SpanEnvironment
 import org.digma.intellij.plugin.ui.jcef.JCEFGlobalConstants
 
 
@@ -15,5 +16,6 @@ data class SetInsightStatsMessagePayload(
     val issuesInsightsCount: Number,
     val unreadInsightsCount: Number,
     val criticalInsightsCount: Number,
-    val allIssuesCount: Number
+    val allIssuesCount: Number,
+    val spanEnvironments: List<SpanEnvironment>
 )

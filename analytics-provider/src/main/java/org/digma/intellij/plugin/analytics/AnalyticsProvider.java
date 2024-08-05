@@ -141,4 +141,6 @@ public interface AnalyticsProvider extends Closeable {
     String getSpanInfo(String spanCodeObjectId);
 
     String getHighlightsImpact(HighlightsRequest request);
+
+    List<SpanEnvironment> getSpanEnvironmentsStats(String spanCodeObjectId);
 }

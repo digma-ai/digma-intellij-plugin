@@ -314,13 +314,20 @@ public class AnalyticsService implements Disposable {
                 analyticsProviderProxy.getAssets(queryParams));
     }
 
-    public String getServices() throws AnalyticsServiceException {
-
-        var env = getCurrentEnvironmentId();
+    public String getServices(String environment) throws AnalyticsServiceException {
         return executeCatching(() ->
-                analyticsProviderProxy.getServices(env));
+                analyticsProviderProxy.getServices(environment));
     }
 
+    public String getAssetsReportStats(@NotNull Map<String, Object> queryParams) throws AnalyticsServiceException {
+        return executeCatching(() ->
+                analyticsProviderProxy.getAssetsReportStats(queryParams));
+    }
+
+    public String getIssuesReportStats(@NotNull Map<String, Object> queryParams) throws AnalyticsServiceException {
+        return executeCatching(() ->
+                analyticsProviderProxy.getIssuesReportStats(queryParams));
+    }
 
     public void resetThrottlingStatus() throws AnalyticsServiceException {
         executeCatching(() -> {

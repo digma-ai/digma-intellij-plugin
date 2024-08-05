@@ -1,4 +1,4 @@
-  NOT IN USE
+NOT IN USE
 name: 'Validate posthog url'
 description: 'Validate posthog url'
 inputs:

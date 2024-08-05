@@ -9,9 +9,11 @@
 - remove-unused-var by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2351
 - report error from autoRefreshJob by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2352
 - register-centralized-logout-event by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2353
-- enable-frequency-detector-for-ui-error Closes #2349 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2350
+- enable-frequency-detector-for-ui-error Closes #2349 by @shalom938
+  in https://github.com/digma-ai/digma-intellij-plugin/pull/2350
 - update eap to latest by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2357
-- upgrade to intellij platform gradle plugin 2.0.0 release Closes #2286 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2359
+- upgrade to intellij platform gradle plugin 2.0.0 release Closes #2286 by @shalom938
+  in https://github.com/digma-ai/digma-intellij-plugin/pull/2359
 - Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2361
 - treat unknown as latest in add env by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2354
 - more info in auth events by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2362
@@ -19,23 +21,35 @@
 
 ## 2.0.363 - 2024-07-30
 
-- register user on successful login Closes #2317 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2320
-- expandable-text-fieldfor-ext-obs Closes #2312 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2321
-- don't show eof error in notifications Closes #2319 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2322
-- stop reporting ProcessCanceledException to posthog by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2324
+- register user on successful login Closes #2317 by @shalom938
+  in https://github.com/digma-ai/digma-intellij-plugin/pull/2320
+- expandable-text-fieldfor-ext-obs Closes #2312 by @shalom938
+  in https://github.com/digma-ai/digma-intellij-plugin/pull/2321
+- don't show eof error in notifications Closes #2319 by @shalom938
+  in https://github.com/digma-ai/digma-intellij-plugin/pull/2322
+- stop reporting ProcessCanceledException to posthog by @shalom938
+  in https://github.com/digma-ai/digma-intellij-plugin/pull/2324
 - dont-report-URISyntaxException by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2328
-- add-plugin-version-to-all-events-for-easy-filtering by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2325
+- add-plugin-version-to-all-events-for-easy-filtering by @shalom938
+  in https://github.com/digma-ai/digma-intellij-plugin/pull/2325
 - dont-report-URISyntaxException by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2326
-- keep-api-token-for-logout-when-changing-api-url Closes #2329 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2330
+- keep-api-token-for-logout-when-changing-api-url Closes #2329 by @shalom938
+  in https://github.com/digma-ai/digma-intellij-plugin/pull/2330
 - better settings validation Closes #2334 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2335
-- better locking on new account creation Closes #2336 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2337
+- better locking on new account creation Closes #2336 by @shalom938
+  in https://github.com/digma-ai/digma-intellij-plugin/pull/2337
 - remove refresh delay from settings by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2339
-- remove-duplicate-error-report Closes #2262 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2341
+- remove-duplicate-error-report Closes #2262 by @shalom938
+  in https://github.com/digma-ai/digma-intellij-plugin/pull/2341
 - stop-reporting-index-not-ready-exception by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2344
-- send event when scheduler size increased Closes #2333 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2342
-- fix-StringIndexOutOfBoundsException Closes #2338 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2340
-- handle index not ready in ScopeManager Closes #2331 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2346
-- retry docker engine if the error is pod already exists Closes #2276 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2348
+- send event when scheduler size increased Closes #2333 by @shalom938
+  in https://github.com/digma-ai/digma-intellij-plugin/pull/2342
+- fix-StringIndexOutOfBoundsException Closes #2338 by @shalom938
+  in https://github.com/digma-ai/digma-intellij-plugin/pull/2340
+- handle index not ready in ScopeManager Closes #2331 by @shalom938
+  in https://github.com/digma-ai/digma-intellij-plugin/pull/2346
+- retry docker engine if the error is pod already exists Closes #2276 by @shalom938
+  in https://github.com/digma-ai/digma-intellij-plugin/pull/2348
 - Feature/new nav by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2311
 
 ## 2.0.362 - 2024-07-25

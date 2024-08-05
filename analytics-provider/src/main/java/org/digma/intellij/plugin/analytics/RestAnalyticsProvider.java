@@ -233,6 +233,16 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable, Base
     }
 
     @Override
+    public String getIssuesReportStats(Map<String, Object> queryParams) {
+        return execute(() -> client.analyticsProvider.getIssuesReportStats(queryParams));
+    }
+
+    @Override
+    public String getAssetsReportStats(Map<String, Object> queryParams) {
+        return execute(() -> client.analyticsProvider.getAssetsReportStats(queryParams));
+    }
+
+    @Override
     public String getNotifications(NotificationsRequest notificationsRequest) {
         return execute(() -> client.analyticsProvider.getNotifications(notificationsRequest));
     }
@@ -851,6 +861,22 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable, Base
         })
         @GET("assets/get_filter")
         Call<String> getAssetFilters(@QueryMap Map<String, Object> fields);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @GET("reports/issues/statistics")
+        Call<String> getIssuesReportStats(@QueryMap Map<String, Object> fields);
+
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @GET("reports/assets/statistics")
+        Call<String> getAssetsReportStats(@QueryMap Map<String, Object> fields);
+
 
         @GET("services/getServices")
         Call<String> getServices(@Query("environment") String environment);

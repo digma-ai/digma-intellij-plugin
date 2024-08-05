@@ -69,6 +69,10 @@ public interface AnalyticsProvider extends Closeable {
 
     String getServices(String environment);
 
+    String getAssetsReportStats(Map<String, Object> queryParams);
+
+    String getIssuesReportStats(Map<String, Object> queryParams);
+
     String getNotifications(NotificationsRequest notificationsRequest);
 
     void setReadNotificationsTime(SetReadNotificationsRequest setReadNotificationsRequest);

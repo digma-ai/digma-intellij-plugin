@@ -57,6 +57,20 @@ public final class DashboardService {
 
     }
 
+    public void openReport(@NotNull String reportName) {
+
+        if (showExisting(reportName)) {
+            return;
+        }
+
+        EDT.ensureEDT(() -> {
+            var file = DashboardVirtualFile.createVirtualFile(reportName);
+            file.setPath("report");
+            FileEditorManager.getInstance(project).openFile(file, true, true);
+        });
+
+    }
+
     private boolean showExisting(@NotNull String dashboardName) {
         for (var editor : FileEditorManager.getInstance(project).getAllEditors()) {
             var file = editor.getFile();

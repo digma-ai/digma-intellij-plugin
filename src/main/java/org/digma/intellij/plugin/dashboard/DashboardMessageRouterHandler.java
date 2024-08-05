@@ -6,12 +6,13 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import org.cef.browser.*;
-import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
+import org.digma.intellij.plugin.analytics.*;
 import org.digma.intellij.plugin.dashboard.incoming.GoToSpan;
 import org.digma.intellij.plugin.dashboard.outgoing.*;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
+import org.digma.intellij.plugin.ui.dashboard.reports.model.*;
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler;
 import org.digma.intellij.plugin.ui.jcef.model.ErrorPayload;
 import org.jetbrains.annotations.NotNull;
@@ -19,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 
 import static org.digma.intellij.plugin.common.JsonUtilsKt.objectNodeToMap;
+import static org.digma.intellij.plugin.ui.jcef.JCEFUtilsKt.getMapFromNode;
 import static org.digma.intellij.plugin.ui.jcef.JCefBrowserUtilsKt.*;
 
 public class DashboardMessageRouterHandler extends BaseMessageRouterHandler {
@@ -49,6 +51,15 @@ public class DashboardMessageRouterHandler extends BaseMessageRouterHandler {
                 GoToSpan goToSpan = jsonToObject(requestJsonNode, GoToSpan.class);
                 DashboardService.getInstance(project).goToSpan(goToSpan);
             }
+            case "DASHBOARD/GET_SERVICES" -> {
+                pushServices(browser, requestJsonNode);
+            }
+            case "DASHBOARD/GET_REPORT_ISSUES_STATS" -> {
+                pushIssuesReportStats(browser, requestJsonNode);
+            }
+            case "DASHBOARD/GET_REPORT_ASSETS_STATS" -> {
+                pushAssetsReportStats(browser, requestJsonNode);
+            }
             case "GLOBAL/GET_BACKEND_INFO" -> {
                 //do nothing, dashboard app sends that for some reason, but it's not necessary
             }
@@ -64,6 +75,51 @@ public class DashboardMessageRouterHandler extends BaseMessageRouterHandler {
         return true;
     }
 
+
+    private void pushServices(CefBrowser browser, JsonNode requestJsonNode) {
+        var project = getProject();
+        Log.log(logger::trace, project, "pushServices called");
+        var requestPayload = getPayloadFromRequestNonNull(requestJsonNode);
+        var env = requestPayload.get("environment").asText();
+        try {
+            var payload = AnalyticsService.getInstance(project).getServices(env);
+            var message = new SetServicesMessage(payload);
+            Log.log(logger::trace, project, "sending DASHBOARD/GET_SERVICES message");
+            serializeAndExecuteWindowPostMessageJavaScript(browser, message);
+        } catch (AnalyticsServiceException ex) {
+            Log.log(logger::trace, getProject(), "sending DASHBOARD/GET_SERVICES message with error");
+        }
+    }
+
+    private void pushAssetsReportStats(CefBrowser browser, JsonNode requestJsonNode) {
+        var project = getProject();
+        var requestPayload = getPayloadFromRequestNonNull(requestJsonNode);
+        var backendQueryParams = getMapFromNode(requestPayload, getObjectMapper());
+        Log.log(logger::trace, project, "pushAssetsReportStats called");
+        try {
+            var payload = AnalyticsService.getInstance(project).getAssetsReportStats(backendQueryParams);
+            var message = new SetAssetsReportStatsMessage(payload);
+            Log.log(logger::trace, project, "sending DASHBOARD/GET_REPORT_ASSETS_STATS message");
+            serializeAndExecuteWindowPostMessageJavaScript(browser, message);
+        } catch (AnalyticsServiceException ex) {
+            Log.log(logger::trace, getProject(), "sending DASHBOARD/GET_REPORT_ASSETS_STATS message with error");
+        }
+    }
+
+    private void pushIssuesReportStats(CefBrowser browser, JsonNode requestJsonNode) {
+        var project = getProject();
+        var requestPayload = getPayloadFromRequestNonNull(requestJsonNode);
+        var backendQueryParams = getMapFromNode(requestPayload, getObjectMapper());
+        Log.log(logger::trace, project, "pushIssuesReportStats called");
+        try {
+            var payload = AnalyticsService.getInstance(project).getIssuesReportStats(backendQueryParams);
+            var message = new SetIssuesReportStatsMessage(payload);
+            Log.log(logger::trace, project, "sending DASHBOARD/GET_REPORT_ISSUES_STATS message");
+            serializeAndExecuteWindowPostMessageJavaScript(browser, message);
+        } catch (AnalyticsServiceException ex) {
+            Log.log(logger::trace, getProject(), "sending DASHBOARD/GET_REPORT_ISSUES_STATS message with error");
+        }
+    }
 
     private void getData(CefBrowser browser, JsonNode requestJsonNode) throws JsonProcessingException {
 
@@ -110,8 +166,6 @@ public class DashboardMessageRouterHandler extends BaseMessageRouterHandler {
         Log.log(logger::trace, getProject(), "sending DASHBOARD/SET_DATA message with error");
         serializeAndExecuteWindowPostMessageJavaScript(browser, message);
     }
-
-
 
 
     private void onInitialize(CefBrowser browser) {

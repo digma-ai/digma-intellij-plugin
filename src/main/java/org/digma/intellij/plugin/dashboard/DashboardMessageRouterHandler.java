@@ -80,7 +80,7 @@ public class DashboardMessageRouterHandler extends BaseMessageRouterHandler {
         var project = getProject();
         Log.log(logger::trace, project, "pushServices called");
         var requestPayload = getPayloadFromRequestNonNull(requestJsonNode);
-        var env = requestPayload.get("environment").asText();
+        var env = requestPayload.get("environment").textValue();
         try {
             var payload = AnalyticsService.getInstance(project).getServices(env);
             var message = new SetServicesMessage(payload);

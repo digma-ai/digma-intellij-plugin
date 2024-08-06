@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.366] - 2024-08-05
+## [2.0.367] - 2024-08-06
+
+- Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2369
+
+## 2.0.366 - 2024-08-05
 
 - common properties to all events Closes #2366 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2367
 - Added spans environments api by @ohrebeniuk in https://github.com/digma-ai/digma-intellij-plugin/pull/2364

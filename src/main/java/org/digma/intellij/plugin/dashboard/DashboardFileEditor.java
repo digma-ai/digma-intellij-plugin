@@ -9,10 +9,13 @@ import org.cef.CefApp;
 import org.cef.browser.*;
 import org.cef.handler.CefLifeSpanHandlerAdapter;
 import org.digma.intellij.plugin.ui.jcef.JBCefBrowserBuilderCreator;
+import org.digma.intellij.plugin.ui.settings.*;
 import org.jetbrains.annotations.*;
 
 import javax.swing.*;
 import java.beans.PropertyChangeListener;
+
+import static org.digma.intellij.plugin.ui.jcef.JCefMessagesUtilsKt.*;
 
 public class DashboardFileEditor extends UserDataHolderBase implements FileEditor {
 
@@ -23,6 +26,8 @@ public class DashboardFileEditor extends UserDataHolderBase implements FileEdito
     private final VirtualFile file;
     private final JBCefBrowser jbCefBrowser;
     private final CefMessageRouter cefMessageRouter;
+    private final SettingsChangeListener listener;
+    private final ApplicationUISettingsChangeNotifier uiSettingsChangeNotifier;
 
     public DashboardFileEditor(Project project, VirtualFile file) {
         this.file = file;
@@ -34,6 +39,26 @@ public class DashboardFileEditor extends UserDataHolderBase implements FileEdito
         cefMessageRouter = CefMessageRouter.create();
         cefMessageRouter.addHandler(new DashboardMessageRouterHandler(project), true);
         jbCefClient.getCefClient().addMessageRouter(cefMessageRouter);
+
+        listener = new SettingsChangeListener() {
+            @Override
+            public void systemFontChange(@NotNull String fontName) {
+                sendRequestToChangeFont(fontName, jbCefBrowser);
+            }
+
+            @Override
+            public void systemThemeChange(@NotNull Theme theme) {
+                sendRequestToChangeUiTheme(theme, jbCefBrowser);
+            }
+
+            @Override
+            public void editorFontChange(@NotNull String fontName) {
+                sendRequestToChangeCodeFont(fontName, jbCefBrowser);
+            }
+        };
+
+        uiSettingsChangeNotifier = ApplicationUISettingsChangeNotifier.getInstance(project);
+        uiSettingsChangeNotifier.addSettingsChangeListener(listener);
 
         var lifeSpanHandler = new CefLifeSpanHandlerAdapter() {
             @Override
@@ -101,6 +126,7 @@ public class DashboardFileEditor extends UserDataHolderBase implements FileEdito
     public void dispose() {
         jbCefBrowser.dispose();
         cefMessageRouter.dispose();
+        uiSettingsChangeNotifier.removeSettingsChangeListener(listener);
     }
 
 }

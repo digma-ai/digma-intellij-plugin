@@ -221,6 +221,10 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                         changeScope(requestJsonNode)
                     }
 
+                    JCEFGlobalConstants.GLOBAL_GET_ENVIRONMENTS -> {
+                        sendEnvironmentsList(browser, getAllEnvironments(project))
+                    }
+
                     JCEFGlobalConstants.GLOBAL_REGISTER -> {
                         val payload = getPayloadFromRequest(requestJsonNode)
                         payload?.let {

@@ -158,6 +158,7 @@ class SettingsComponent {
         );
 
         var resetButton = new JButton("Reset to defaults");
+        resetButton.setToolTipText("<html><body>Reset the settings to initial defaults</body>");
         resetButton.addActionListener(e -> resetToDefaults());
 
 
@@ -182,6 +183,7 @@ class SettingsComponent {
         pluginResetWarning.setForeground(JBColor.RED);
         pluginResetWarning.setVisible(false);
         var resetPluginButton = new JButton("Reset plugin");
+        resetPluginButton.setToolTipText("<html><body>Reset plugin persistent properties to initial values to simulate fresh start</body>");
         resetPluginButton.setVisible("true".equalsIgnoreCase(System.getProperty("org.digma.plugin.resetPlugin.enabled")));
         resetPluginButton.addActionListener(e -> {
             var confirmation = Messages.showYesNoDialog("Are you sure?\n(Plugin will reset and IDE will restart when the settings window is closed)", "Reset Confirmation", AllIcons.General.WarningDialog);

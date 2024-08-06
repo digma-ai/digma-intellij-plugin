@@ -315,6 +315,12 @@ tasks {
             //"org.digma.otel.digmaAgentUrl" to "some url
 
         )
+
+        //to simulate external user
+//        environment(
+//            "devenv" to "notdigma"
+//        )
+
     }
 
 

@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.settings;
 import com.intellij.openapi.options.*;
 import com.intellij.openapi.util.NlsContexts;
 import org.digma.intellij.plugin.common.*;
+import org.digma.intellij.plugin.reset.ResetService;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
@@ -38,7 +39,8 @@ public class ProjectSettings implements Configurable {
     @Override
     public boolean isModified() {
         SettingsState settings = SettingsState.getInstance();
-        return isApiUrlChanged(settings) ||
+        return mySettingsComponent.isResetPluginRequested() ||
+                isApiUrlChanged(settings) ||
                 isApiTokenChanged(settings) ||
                 isJaegerUrlChanged(settings) ||
                 isJaegerQueryUrlChanged(settings) ||
@@ -148,6 +150,10 @@ public class ProjectSettings implements Configurable {
 
 
         updateSettingsAndFireChange();
+
+        if (mySettingsComponent.isResetPluginRequested()) {
+            ResetService.getInstance().resetUserId();
+        }
     }
 
 
@@ -175,6 +181,8 @@ public class ProjectSettings implements Configurable {
     @Override
     public void reset() {
         SettingsState settings = SettingsState.getInstance();
+        mySettingsComponent.resetResetPluginRequested();
+        mySettingsComponent.hidePluginResetWarning();
         mySettingsComponent.setApiUrl(settings.getApiUrl());
         mySettingsComponent.setApiToken(settings.getApiToken());
         mySettingsComponent.setJaegerUrl(settings.getJaegerUrl());
@@ -190,5 +198,12 @@ public class ProjectSettings implements Configurable {
     @Override
     public void disposeUIResources() {
         mySettingsComponent = null;
+    }
+
+    @Override
+    public void cancel() {
+        if (mySettingsComponent != null) {
+            mySettingsComponent.resetResetPluginRequested();
+        }
     }
 }

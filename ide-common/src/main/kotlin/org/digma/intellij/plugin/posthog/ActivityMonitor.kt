@@ -88,8 +88,6 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
     private var serverInfo: AboutResult? = null
     private val simpleEventInterceptor = SimpleEventInterceptor(project)
 
-    private val userId: String = UniqueGeneratedUserId.userId
-    private val isDevUser: Boolean = UniqueGeneratedUserId.isDevUser
     private var postHog: PostHog? = null
     private val settingsChangeTracker = SettingsChangeTracker()
 
@@ -173,7 +171,7 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
         mutableDetails["server.deploymentType"] = serverInfo?.deploymentType.toString()
 
         postHog?.capture(
-            userId,
+            UniqueGeneratedUserId.userId,
             eventName,
             mutableDetails
         )
@@ -183,7 +181,7 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
     fun registerFramework(framework: MonitoredFramework) {
         capture("framework detected", mapOf("framework.name" to framework.name))
         postHog?.set(
-            userId, mapOf(
+            UniqueGeneratedUserId.userId, mapOf(
                 "framework.last" to framework.name,
                 "framework.${framework.name}.last-seen" to Instant.now().toString()
             )
@@ -192,13 +190,13 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
 
     fun registerEmail(email: String, courseRequested: Boolean) {
         postHog?.identify(
-            userId, mapOf(
+            UniqueGeneratedUserId.userId, mapOf(
                 "email" to getEmailForEvent(),
                 INSTALL_STATUS_PROPERTY_NAME to getCurrentInstallStatus(),
                 "user_requested_course" to courseRequested.toString()
             )
         )
-        postHog?.alias(userId, email)
+        postHog?.alias(UniqueGeneratedUserId.userId, email)
     }
 
     fun registerCustomEvent(eventName: String, tags: Map<String, Any> = mapOf()) {
@@ -243,7 +241,7 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
             detailsToSend
         )
         postHog?.set(
-            userId, mapOf(
+            UniqueGeneratedUserId.userId, mapOf(
                 "last-user-action" to action,
                 "last-user-action-timestamp" to lastUserActionTimestamp.toString()
             )
@@ -320,7 +318,7 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
     fun registerFirstAssetsReceived() {
         capture("plugin first-assets")
         postHog?.set(
-            userId, mapOf(
+            UniqueGeneratedUserId.userId, mapOf(
                 "first-assets-timestamp" to Instant.now().toString()
             )
         )
@@ -365,7 +363,7 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
                 "ide.build" to ideBuildNumber,
                 "plugin.version" to pluginVersion,
                 "server.version" to serverInfo?.applicationVersion.toString(),
-                "user.type" to if (isDevUser) "internal" else "external"
+                "user.type" to if (UniqueGeneratedUserId.isDevUser) "internal" else "external"
             )
 
 
@@ -470,7 +468,7 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
                     "ide.build" to ideBuildNumber,
                     "plugin.version" to pluginVersion,
                     "server.version" to serverInfo?.applicationVersion.toString(),
-                    "user.type" to if (isDevUser) "internal" else "external",
+                    "user.type" to if (UniqueGeneratedUserId.isDevUser) "internal" else "external",
                     "frequency" to frequency.frequencySinceStart,
                     "frequency.since.minutes" to frequency.formatDurationToMinutes()
                 )
@@ -649,15 +647,15 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
 
     //todo: remove at some point
     fun registerFirstTimePluginLoaded() {
-        postHog?.capture(userId, "plugin first-loaded")
+        postHog?.capture(UniqueGeneratedUserId.userId, "plugin first-loaded")
     }
 
     fun registerFirstTimePluginLoadedNew() {
-        postHog?.capture(userId, "plugin first-init")
+        postHog?.capture(UniqueGeneratedUserId.userId, "plugin first-init")
     }
 
     fun registerPluginLoaded() {
-        postHog?.capture(userId, "plugin loaded")
+        postHog?.capture(UniqueGeneratedUserId.userId, "plugin loaded")
     }
 
     fun registerPluginUninstalled(): String {
@@ -678,12 +676,12 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
             )
         }
         postHog?.set(
-            userId, mapOf(
+            UniqueGeneratedUserId.userId, mapOf(
                 INSTALL_STATUS_PROPERTY_NAME to getCurrentInstallStatus(),
                 INSTALL_STATUS_PROPERTY_NAME + "_timestamp" to SessionMetadataProperties.getInstance().getCreatedAsString(CURRENT_INSTALL_STATUS_KEY)
             )
         )
-        return userId
+        return UniqueGeneratedUserId.userId
     }
 
     fun registerPluginDisabled(): String {
@@ -704,12 +702,12 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
             )
         }
         postHog?.set(
-            userId, mapOf(
+            UniqueGeneratedUserId.userId, mapOf(
                 INSTALL_STATUS_PROPERTY_NAME to getCurrentInstallStatus(),
                 INSTALL_STATUS_PROPERTY_NAME + "_timestamp" to SessionMetadataProperties.getInstance().getCreatedAsString(CURRENT_INSTALL_STATUS_KEY)
             )
         )
-        return userId
+        return UniqueGeneratedUserId.userId
     }
 
 
@@ -718,7 +716,7 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
         if (this.serverInfo != serverInfo) {
             this.serverInfo = serverInfo
             postHog?.set(
-                userId,
+                UniqueGeneratedUserId.userId,
                 mapOf(
                     "server.version" to serverInfo.applicationVersion,
                     "server.deploymentType" to (serverInfo.deploymentType ?: BackendDeploymentType.Unknown),
@@ -768,7 +766,7 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
 
     fun registerContainerEngine(containerPlatform: String) {
         postHog?.set(
-            userId,
+            UniqueGeneratedUserId.userId,
             mapOf("user.container-engine" to containerPlatform)
         )
     }
@@ -841,14 +839,14 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
         val isJcefSupported = JBCefApp.isSupported()
 
         postHog?.set(
-            userId,
+            UniqueGeneratedUserId.userId,
             mapOf(
                 "os.type" to osType,
                 "ide.name" to ideName,
                 "ide.version" to ideVersion,
                 "ide.build" to ideBuildNumber,
                 "plugin.version" to pluginVersion,
-                "user.type" to if (isDevUser) "internal" else "external",
+                "user.type" to if (UniqueGeneratedUserId.isDevUser) "internal" else "external",
                 "jcef.supported" to isJcefSupported,
                 INSTALL_STATUS_PROPERTY_NAME to getCurrentInstallStatus()
             )
@@ -887,7 +885,7 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
         )
 
         postHog?.identify(
-            userId,
+            UniqueGeneratedUserId.userId,
             mapOf(
                 LOAD_WARNING_APPEARED_PROPERTY_NAME + "_timestamp" to PersistenceService.getInstance().getLoadWarningAppearedTimestamp(),
                 "user_requested_course" to "false"
@@ -919,7 +917,7 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
         registerUserAction(eventName, eventDetails)
 
         postHog?.identify(
-            userId,
+            UniqueGeneratedUserId.userId,
             mapOf(
                 ENVIRONMENT_ADDED_PROPERTY_NAME + "_timestamp" to PersistenceService.getInstance().getEnvironmentAddedTimestamp(),
                 "user_requested_course" to "false"
@@ -951,7 +949,7 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
         )
 
         postHog?.identify(
-            userId,
+            UniqueGeneratedUserId.userId,
             mapOf(
                 JIRA_FIELD_COPIED_PROPERTY_NAME + "_timestamp" to PersistenceService.getInstance().getJiraFieldCopiedTimestamp(),
                 "user_requested_course" to "false"

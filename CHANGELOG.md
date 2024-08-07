@@ -1,6 +1,12 @@
 # Changelog
 
-## [2.0.367] - 2024-08-06
+## [2.0.368] - 2024-08-07
+
+- reset user id Closes #2372 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2373
+- Feature/report fix by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2371
+- remove scope changed event Closes #2376 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2377
+
+## 2.0.367 - 2024-08-06
 
 - Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2369
 

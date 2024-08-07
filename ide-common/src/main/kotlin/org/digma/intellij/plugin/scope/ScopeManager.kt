@@ -14,7 +14,6 @@ import org.digma.intellij.plugin.navigation.MainContentViewSwitcher
 import org.digma.intellij.plugin.navigation.View
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator
 import org.digma.intellij.plugin.persistence.PersistenceService
-import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
 
@@ -38,8 +37,6 @@ class ScopeManager(private val project: Project) {
     ) {
 
         EDT.assertNonDispatchThread()
-
-        ActivityMonitor.getInstance(project).registerScopeChanged("home")
 
         //must happen before firing the event
         if (!environmentId.isNullOrBlank()){
@@ -80,8 +77,6 @@ class ScopeManager(private val project: Project) {
     ) {
 
         EDT.assertNonDispatchThread()
-
-        ActivityMonitor.getInstance(project).registerScopeChanged(scope.toString())
 
 
         try {

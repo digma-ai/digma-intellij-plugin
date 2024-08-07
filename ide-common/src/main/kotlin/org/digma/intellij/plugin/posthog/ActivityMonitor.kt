@@ -961,13 +961,6 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
 
     }
 
-    fun registerScopeChanged(scope: String) {
-        capture(
-            "scope changed",
-            mapOf("scope" to scope)
-        )
-    }
-
 
     fun reportDigmathonEvent(eventType: String, details: Map<String, String>) {
 

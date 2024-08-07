@@ -9,10 +9,13 @@ import org.cef.CefApp;
 import org.cef.browser.*;
 import org.cef.handler.CefLifeSpanHandlerAdapter;
 import org.digma.intellij.plugin.ui.jcef.JBCefBrowserBuilderCreator;
+import org.digma.intellij.plugin.ui.settings.*;
 import org.jetbrains.annotations.*;
 
 import javax.swing.*;
 import java.beans.PropertyChangeListener;
+
+import static org.digma.intellij.plugin.ui.jcef.JCefMessagesUtilsKt.*;
 
 public class DashboardFileEditor extends UserDataHolderBase implements FileEditor {
 
@@ -34,6 +37,24 @@ public class DashboardFileEditor extends UserDataHolderBase implements FileEdito
         cefMessageRouter = CefMessageRouter.create();
         cefMessageRouter.addHandler(new DashboardMessageRouterHandler(project), true);
         jbCefClient.getCefClient().addMessageRouter(cefMessageRouter);
+
+
+        ApplicationUISettingsChangeNotifier.getInstance(project).addSettingsChangeListener(new SettingsChangeListener() {
+            @Override
+            public void systemFontChange(@NotNull String fontName) {
+                sendRequestToChangeFont(fontName, jbCefBrowser);
+            }
+
+            @Override
+            public void systemThemeChange(@NotNull Theme theme) {
+                sendRequestToChangeUiTheme(theme, jbCefBrowser);
+            }
+
+            @Override
+            public void editorFontChange(@NotNull String fontName) {
+                sendRequestToChangeCodeFont(fontName, jbCefBrowser);
+            }
+        }, this);
 
         var lifeSpanHandler = new CefLifeSpanHandlerAdapter() {
             @Override

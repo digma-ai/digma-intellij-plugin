@@ -9,6 +9,7 @@ import com.intellij.openapi.editor.colors.EditorColorsListener
 import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.openapi.editor.colors.impl.AppEditorFontOptions
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Disposer
 import com.intellij.ui.JBColor
 import com.intellij.util.Alarm
 import com.intellij.util.ui.UIUtil
@@ -65,13 +66,15 @@ class ApplicationUISettingsChangeNotifier : Disposable{
         }
     }
 
-
-    fun addSettingsChangeListener(listener: SettingsChangeListener){
-        listeners.add(listener)
-    }
-
     fun removeSettingsChangeListener(listener: SettingsChangeListener){
         listeners.remove(listener)
+    }
+
+    fun addSettingsChangeListener(listener: SettingsChangeListener, parentDisposable: Disposable) {
+        listeners.add(listener)
+        Disposer.register(parentDisposable) {
+            removeSettingsChangeListener(listener)
+        }
     }
 
     override fun dispose() {

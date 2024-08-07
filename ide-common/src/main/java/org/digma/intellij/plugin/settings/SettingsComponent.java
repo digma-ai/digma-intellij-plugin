@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.settings;
 
-import com.intellij.openapi.ui.ComboBox;
+import com.intellij.icons.AllIcons;
+import com.intellij.openapi.ui.*;
 import com.intellij.ui.*;
 import com.intellij.ui.components.*;
 import com.intellij.ui.components.fields.ExpandableTextField;
@@ -27,6 +28,7 @@ class SettingsComponent {
     private static final List<String> ALLOW_HTTPS = Collections.singletonList("https");
     private static final List<String> ALLOW_HTTP_AND_HTTPS = Arrays.asList("http", "https");
 
+    private boolean resetPluginRequested = false;
 
     private final JPanel myMainPanel;
     private final JBTextField myApiUrlTextField = new JBTextField();
@@ -42,6 +44,8 @@ class SettingsComponent {
     private final JBTextField myRuntimeObservabilityBackendUrlTextField = new JBTextField();
     private final ExpandableTextField extendedObservabilityTextFiled = new ExpandableTextField();
     private final ExpandableTextField extendedObservabilityExcludeTextField = new ExpandableTextField();
+
+    private final JBLabel pluginResetWarning = new JBLabel("Plugin will reset and IDE will restart when this dialog is confirmed. click cancel to cancel reset.");
 
     public SettingsComponent() {
 
@@ -154,6 +158,7 @@ class SettingsComponent {
         );
 
         var resetButton = new JButton("Reset to defaults");
+        resetButton.setToolTipText("<html><body>Reset the settings to initial defaults</body>");
         resetButton.addActionListener(e -> resetToDefaults());
 
 
@@ -174,6 +179,25 @@ class SettingsComponent {
             }
         }
 
+
+        pluginResetWarning.setForeground(JBColor.RED);
+        pluginResetWarning.setVisible(false);
+        var resetPluginButton = new JButton("Reset plugin");
+        resetPluginButton.setToolTipText("<html><body>Reset plugin persistent properties to initial values to simulate fresh start</body>");
+        resetPluginButton.setVisible("true".equalsIgnoreCase(System.getProperty("org.digma.plugin.resetPlugin.enabled")));
+        resetPluginButton.addActionListener(e -> {
+            var confirmation = Messages.showYesNoDialog("Are you sure?\n(Plugin will reset and IDE will restart when the settings window is closed)", "Reset Confirmation", AllIcons.General.WarningDialog);
+            if (confirmation == 0) {
+                resetPluginRequested = true;
+                pluginResetWarning.setVisible(true);
+            } else {
+                resetPluginRequested = false;
+                pluginResetWarning.setVisible(false);
+            }
+        });
+
+
+
         myMainPanel = FormBuilder.createFormBuilder()
                 .addLabeledComponent(myUrlLabel, myApiUrlTextField, 1, false)
                 .addLabeledComponent(new JBLabel("Api token:"), myApiTokenTestField, 1, false)
@@ -188,6 +212,8 @@ class SettingsComponent {
                 .addComponent(resetButton)
                 .addLabeledComponent(new JBLabel("User id"), userIdLabel)
                 .addLabeledComponent(new JBLabel("Backend version"), backendVersionLabel)
+                .addComponent(resetPluginButton)
+                .addComponent(pluginResetWarning)
                 .addComponentFillVertically(new JPanel(), 0)
                 .getPanel();
     }
@@ -313,9 +339,21 @@ class SettingsComponent {
     }
 
 
+    public boolean isResetPluginRequested() {
+        return resetPluginRequested;
+    }
+
+    public void resetResetPluginRequested() {
+        resetPluginRequested = false;
+    }
+
+
+
     private void resetToDefaults() {
         //create a new SettingsState object and use it for default startup values
         SettingsState settingsState = new SettingsState();
+        resetResetPluginRequested();
+        hidePluginResetWarning();
         this.setApiUrl(settingsState.getApiUrl());
         this.setApiToken(settingsState.getApiToken());
         this.setJaegerUrl(settingsState.getJaegerUrl());
@@ -327,5 +365,9 @@ class SettingsComponent {
         this.setExtendedObservabilityExclude(settingsState.getExtendedObservabilityExcludes());
 
         this.myEmbeddedJaegerMessage.setVisible(true);
+    }
+
+    public void hidePluginResetWarning() {
+        this.pluginResetWarning.setVisible(false);
     }
 }

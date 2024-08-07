@@ -203,6 +203,10 @@ class PersistenceService {
         state.userEmail = userEmail
     }
 
+    fun nullifyUserEmail() {
+        state.userEmail = null
+    }
+
 
     fun getUserRegistrationEmail(): String? {
         return state.userRegistrationEmail
@@ -212,12 +216,20 @@ class PersistenceService {
         state.userRegistrationEmail = userRegistrationEmail
     }
 
+    fun nullifyUserRegistrationEmail() {
+        state.userRegistrationEmail = null
+    }
+
     fun getUserId(): String? {
         return state.userId
     }
 
     fun setUserId(userId: String) {
         state.userId = userId
+    }
+
+    fun nullifyUserId() {
+        state.userId = null
     }
 
     fun getLastInsightsEventTime(): String? {

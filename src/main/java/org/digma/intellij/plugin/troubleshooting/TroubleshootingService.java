@@ -76,7 +76,7 @@ public final class TroubleshootingService implements Disposable {
                 public void editorFontChange(@NotNull String fontName) {
                     messageHandler.sendRequestToChangeCodeFont(fontName);
                 }
-            });
+            }, this);
 
             return jbCefBrowser.getComponent();
 

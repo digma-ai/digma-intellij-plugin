@@ -65,9 +65,6 @@ private constructor(
 
     private val logger: Logger = Logger.getInstance(JCefComponent::class.java)
 
-    private val settingsChangeListener: SettingsChangeListener
-
-
     init {
         val connectionEventAlarm = Alarm(Alarm.ThreadToUse.POOLED_THREAD, parentDisposable)
 
@@ -130,8 +127,7 @@ private constructor(
             .subscribe(DigmathonActivationEvent.DIGMATHON_ACTIVATION_TOPIC,
                 DigmathonActivationEvent { isActive -> sendDigmathonState(isActive, jbCefBrowser.cefBrowser) })
 
-
-        settingsChangeListener = object : SettingsChangeListener {
+        ApplicationUISettingsChangeNotifier.getInstance(project).addSettingsChangeListener(object : SettingsChangeListener {
             override fun systemFontChange(fontName: String) {
                 sendRequestToChangeFont(fontName, jbCefBrowser)
             }
@@ -143,9 +139,7 @@ private constructor(
             override fun editorFontChange(fontName: String) {
                 sendRequestToChangeCodeFont(fontName, jbCefBrowser)
             }
-        }
-
-        ApplicationUISettingsChangeNotifier.getInstance(project).addSettingsChangeListener(settingsChangeListener)
+        }, this)
 
         AuthManager.getInstance().addAuthInfoChangeListener({ authInfo ->
             try {
@@ -358,7 +352,6 @@ private constructor(
         try {
             jbCefBrowser.jbCefClient.dispose()
             jbCefBrowser.dispose()
-            ApplicationUISettingsChangeNotifier.getInstance(project).removeSettingsChangeListener(settingsChangeListener)
         } catch (e: Exception) {
             ErrorReporter.getInstance().reportError(project, "JCefComponent.dispose", e)
         }

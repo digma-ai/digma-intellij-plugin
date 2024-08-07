@@ -521,7 +521,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
     jcefDigmaPanel.add(browserPanel, BorderLayout.CENTER)
 
 
-    val settingsChangeListener = object : SettingsChangeListener {
+    ApplicationUISettingsChangeNotifier.getInstance(project).addSettingsChangeListener(object : SettingsChangeListener {
         override fun systemFontChange(fontName: String) {
             sendRequestToChangeFont(fontName, jbCefBrowser)
         }
@@ -533,14 +533,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
         override fun editorFontChange(fontName: String) {
             sendRequestToChangeCodeFont(fontName, jbCefBrowser)
         }
-    }
-    ApplicationUISettingsChangeNotifier.getInstance(project).addSettingsChangeListener(settingsChangeListener)
-    Disposer.register(jbCefBrowser) {
-        ApplicationUISettingsChangeNotifier.getInstance(project).removeSettingsChangeListener(settingsChangeListener)
-    }
-
-
-
+    }, jbCefBrowser)
 
     project.messageBus.connect(jbCefBrowser)
         .subscribe(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC, object : AnalyticsServiceConnectionEvent {

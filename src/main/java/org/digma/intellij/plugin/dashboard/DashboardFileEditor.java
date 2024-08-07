@@ -26,8 +26,6 @@ public class DashboardFileEditor extends UserDataHolderBase implements FileEdito
     private final VirtualFile file;
     private final JBCefBrowser jbCefBrowser;
     private final CefMessageRouter cefMessageRouter;
-    private final SettingsChangeListener listener;
-    private final ApplicationUISettingsChangeNotifier uiSettingsChangeNotifier;
 
     public DashboardFileEditor(Project project, VirtualFile file) {
         this.file = file;
@@ -40,7 +38,8 @@ public class DashboardFileEditor extends UserDataHolderBase implements FileEdito
         cefMessageRouter.addHandler(new DashboardMessageRouterHandler(project), true);
         jbCefClient.getCefClient().addMessageRouter(cefMessageRouter);
 
-        listener = new SettingsChangeListener() {
+
+        ApplicationUISettingsChangeNotifier.getInstance(project).addSettingsChangeListener(new SettingsChangeListener() {
             @Override
             public void systemFontChange(@NotNull String fontName) {
                 sendRequestToChangeFont(fontName, jbCefBrowser);
@@ -55,10 +54,7 @@ public class DashboardFileEditor extends UserDataHolderBase implements FileEdito
             public void editorFontChange(@NotNull String fontName) {
                 sendRequestToChangeCodeFont(fontName, jbCefBrowser);
             }
-        };
-
-        uiSettingsChangeNotifier = ApplicationUISettingsChangeNotifier.getInstance(project);
-        uiSettingsChangeNotifier.addSettingsChangeListener(listener);
+        }, this);
 
         var lifeSpanHandler = new CefLifeSpanHandlerAdapter() {
             @Override
@@ -126,7 +122,6 @@ public class DashboardFileEditor extends UserDataHolderBase implements FileEdito
     public void dispose() {
         jbCefBrowser.dispose();
         cefMessageRouter.dispose();
-        uiSettingsChangeNotifier.removeSettingsChangeListener(listener);
     }
 
 }

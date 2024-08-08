@@ -38,7 +38,6 @@ public class SettingsState implements PersistentStateComponent<SettingsState>, D
 
     @NotNull
     private String apiUrl = DEFAULT_API_URL;
-
     @Nullable
     private String apiToken = null;
     @Nullable
@@ -207,5 +206,43 @@ public class SettingsState implements PersistentStateComponent<SettingsState>, D
     }
 
 
+    public Properties asProperties() {
+        Properties properties = new Properties();
+        properties.put("apiUrl", apiUrl);
+        if (apiToken != null) {
+            properties.put("apiToken", apiToken);
+        }
+        if (jaegerUrl != null) {
+            properties.put("jaegerUrl", jaegerUrl);
+        }
+        if (jaegerQueryUrl != null) {
+            properties.put("jaegerQueryUrl", jaegerQueryUrl);
+        }
+        properties.put("jaegerLinkMode", jaegerLinkMode.name());
+        properties.put("springBootObservabilityMode", springBootObservabilityMode.name());
+        properties.put("runtimeObservabilityBackendUrl", runtimeObservabilityBackendUrl);
+        if (extendedObservability != null) {
+            properties.put("extendedObservability", extendedObservability);
+        }
+        if (extendedObservabilityExcludes != null) {
+            properties.put("extendedObservabilityExcludes", extendedObservabilityExcludes);
+        }
+        return properties;
+    }
+
+
+    public static SettingsState fromProperties(Properties properties) {
+        SettingsState settingsState = new SettingsState();
+        settingsState.apiUrl = (String) properties.get("apiUrl");
+        settingsState.apiToken = (String) properties.get("apiToken");
+        settingsState.jaegerUrl = (String) properties.get("jaegerUrl");
+        settingsState.jaegerQueryUrl = (String) properties.get("jaegerQueryUrl");
+        settingsState.jaegerLinkMode = JaegerLinkMode.valueOf((String) properties.get("jaegerLinkMode"));
+        settingsState.springBootObservabilityMode = SpringBootObservabilityMode.valueOf((String) properties.get("springBootObservabilityMode"));
+        settingsState.runtimeObservabilityBackendUrl = (String) properties.get("runtimeObservabilityBackendUrl");
+        settingsState.extendedObservability = (String) properties.get("extendedObservability");
+        settingsState.extendedObservabilityExcludes = (String) properties.get("extendedObservabilityExcludes");
+        return settingsState;
+    }
 }
 

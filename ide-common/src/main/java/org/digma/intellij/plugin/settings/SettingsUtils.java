@@ -1,9 +1,17 @@
 package org.digma.intellij.plugin.settings;
 
-import java.util.Objects;
+import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.vfs.VirtualFile;
+import org.digma.intellij.plugin.errorreporting.ErrorReporter;
+import org.digma.intellij.plugin.log.Log;
+import org.jetbrains.annotations.*;
+
+import java.io.*;
+import java.util.*;
 
 public class SettingsUtils {
 
+    private static final Logger LOGGER = Logger.getInstance(SettingsUtils.class);
 
     public static boolean isSettingsPointsToRemoteIp() {
 
@@ -28,4 +36,30 @@ public class SettingsUtils {
         }
     }
 
+
+    public static boolean exportSettingsToFile(@NotNull File file) {
+        try (OutputStream out = new FileOutputStream(file)) {
+            var properties = SettingsState.getInstance().asProperties();
+            properties.store(out, "Digma Plugin settings");
+            return true;
+        } catch (Throwable e) {
+            Log.warnWithException(LOGGER, e, "error exporting settings {}", e);
+            ErrorReporter.getInstance().reportError("SettingsUtils.exportSettingsToFile", e);
+        }
+        return false;
+    }
+
+
+    @Nullable
+    public static Properties importSettingsFromFile(@NotNull VirtualFile virtualFile) {
+        try (InputStream in = new FileInputStream(virtualFile.toNioPath().toFile())) {
+            Properties properties = new Properties();
+            properties.load(in);
+            return properties;
+        } catch (IOException e) {
+            Log.warnWithException(LOGGER, e, "error importing settings {}", e);
+            ErrorReporter.getInstance().reportError("SettingsUtils.importSettingsFromFile", e);
+        }
+        return null;
+    }
 }

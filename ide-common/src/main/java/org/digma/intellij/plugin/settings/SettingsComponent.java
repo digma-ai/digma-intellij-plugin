@@ -1,6 +1,8 @@
 package org.digma.intellij.plugin.settings;
 
 import com.intellij.icons.AllIcons;
+import com.intellij.openapi.fileChooser.*;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.*;
 import com.intellij.ui.*;
 import com.intellij.ui.components.*;
@@ -49,6 +51,9 @@ class SettingsComponent {
 
     public SettingsComponent() {
 
+        var defaultLabelForeground = JBColor.foreground();
+
+
         extendedObservabilityTextFiled.setToolTipText("package names in format 'my.pkg1;my.pkg2");
         extendedObservabilityExcludeTextField.setToolTipText("class/method names to exclude in format 'MyClass;MyOtherClass.myOtherMethod;*get");
         var extendedObservabilityTextBoxPanel = new JBPanel<JBPanel<?>>();
@@ -57,8 +62,6 @@ class SettingsComponent {
         var extendedObservabilityExcludeTextBoxPanel = new JBPanel<JBPanel<?>>();
         extendedObservabilityExcludeTextBoxPanel.setLayout(new BorderLayout());
         extendedObservabilityExcludeTextBoxPanel.add(extendedObservabilityExcludeTextField, BorderLayout.CENTER);
-
-        var defaultLabelForeground = JBColor.foreground();
 
 
         var myUrlLabel = new JBLabel("Digma API URL: ");
@@ -121,7 +124,6 @@ class SettingsComponent {
 
 
         myRuntimeObservabilityBackendUrlLabel.setToolTipText("Where should observability data be sent from the IDE? This would be the Digma collector URL typically listening to port 5050");
-
         myRuntimeObservabilityBackendUrlTextField.setInputVerifier(new InputVerifier() {
             @Override
             public boolean verify(JComponent input) {
@@ -141,7 +143,6 @@ class SettingsComponent {
 
 
         myEmbeddedJaegerMessage.setForeground(JBColor.BLUE);
-
         var myJaegerLinkModeLabel = new JBLabel("Jaeger link mode: ");
         myJaegerLinkModeLabel.setToolTipText("Internal will open the link as an embedded URL within the IDE. "
                 + "External will open the link externally to your default browser. "
@@ -157,45 +158,16 @@ class SettingsComponent {
                 + "Micrometer will use Micrometer tracing, including the annotation of 'Observed' "
         );
 
-        var resetButton = new JButton("Reset to defaults");
-        resetButton.setToolTipText("<html><body>Reset the settings to initial defaults</body>");
-        resetButton.addActionListener(e -> resetToDefaults());
 
+        var resetToDefaultsButton = createResetToDefaultsButton();
 
-        var userId = "";
-        if (DigmaDefaultAccountHolder.getInstance().getAccount() != null &&
-                !DigmaDefaultAccountHolder.getInstance().getAccount().getUserId().equals(DigmaAccountKt.DEFAULT_LOGIN_ID)) {
-            userId = DigmaDefaultAccountHolder.getInstance().getAccount().getUserId();
-        }
-        var userIdLabel = new JBLabel(userId);
-        userIdLabel.setCopyable(true);
+        var userIdLabel = createUserIdLabel();
 
-        var backendVersionLabel = new JBLabel("Unknown");
-        var someProject = ProjectUtilsKt.findActiveProject();
-        if (someProject != null) {
-            var about = BackendInfoHolder.getInstance(someProject).getAbout();
-            if (about != null) {
-                backendVersionLabel.setText(about.getApplicationVersion());
-            }
-        }
+        var backendVersionLabel = createBackendVersionLabel();
 
+        var importExportPanel = createImportExportPanel();
 
-        pluginResetWarning.setForeground(JBColor.RED);
-        pluginResetWarning.setVisible(false);
-        var resetPluginButton = new JButton("Reset plugin");
-        resetPluginButton.setToolTipText("<html><body>Reset plugin persistent properties to initial values to simulate fresh start</body>");
-        resetPluginButton.setVisible("true".equalsIgnoreCase(System.getProperty("org.digma.plugin.resetPlugin.enabled")));
-        resetPluginButton.addActionListener(e -> {
-            var confirmation = Messages.showYesNoDialog("Are you sure?\n(Plugin will reset and IDE will restart when the settings window is closed)", "Reset Confirmation", AllIcons.General.WarningDialog);
-            if (confirmation == 0) {
-                resetPluginRequested = true;
-                pluginResetWarning.setVisible(true);
-            } else {
-                resetPluginRequested = false;
-                pluginResetWarning.setVisible(false);
-            }
-        });
-
+        var resetPluginButton = createResetPluginButton();
 
 
         myMainPanel = FormBuilder.createFormBuilder()
@@ -209,9 +181,10 @@ class SettingsComponent {
                 .addLabeledComponent(myRuntimeObservabilityBackendUrlLabel, myRuntimeObservabilityBackendUrlTextField, 1, false)
                 .addLabeledComponent("Extended observability (beta)", extendedObservabilityTextBoxPanel, 1, false)
                 .addLabeledComponent("Extended observability exclude (beta)", extendedObservabilityExcludeTextBoxPanel, 1, false)
-                .addComponent(resetButton)
+                .addComponent(resetToDefaultsButton)
                 .addLabeledComponent(new JBLabel("User id"), userIdLabel)
                 .addLabeledComponent(new JBLabel("Backend version"), backendVersionLabel)
+                .addComponent(importExportPanel)
                 .addComponent(resetPluginButton)
                 .addComponent(pluginResetWarning)
                 .addComponentFillVertically(new JPanel(), 0)
@@ -348,10 +321,12 @@ class SettingsComponent {
     }
 
 
-
     private void resetToDefaults() {
         //create a new SettingsState object and use it for default startup values
-        SettingsState settingsState = new SettingsState();
+        resetFromSettings(new SettingsState());
+    }
+
+    private void resetFromSettings(SettingsState settingsState) {
         resetResetPluginRequested();
         hidePluginResetWarning();
         this.setApiUrl(settingsState.getApiUrl());
@@ -370,4 +345,102 @@ class SettingsComponent {
     public void hidePluginResetWarning() {
         this.pluginResetWarning.setVisible(false);
     }
+
+
+    @NotNull
+    private JButton createResetToDefaultsButton() {
+        var resetButton = new JButton("Reset to defaults");
+        resetButton.setToolTipText("<html><body>Reset the settings to initial defaults</body>");
+        resetButton.addActionListener(e -> resetToDefaults());
+        return resetButton;
+    }
+
+
+    @NotNull
+    private static JBLabel createUserIdLabel() {
+        var userId = "";
+        if (DigmaDefaultAccountHolder.getInstance().getAccount() != null &&
+                !DigmaDefaultAccountHolder.getInstance().getAccount().getUserId().equals(DigmaAccountKt.DEFAULT_LOGIN_ID)) {
+            userId = DigmaDefaultAccountHolder.getInstance().getAccount().getUserId();
+        }
+        var userIdLabel = new JBLabel(userId);
+        userIdLabel.setCopyable(true);
+        return userIdLabel;
+    }
+
+
+    @NotNull
+    private static JBLabel createBackendVersionLabel() {
+        var backendVersionLabel = new JBLabel("Unknown");
+        var someProject = ProjectUtilsKt.findActiveProject();
+        if (someProject != null) {
+            var about = BackendInfoHolder.getInstance(someProject).getAbout();
+            if (about != null) {
+                backendVersionLabel.setText(about.getApplicationVersion());
+            }
+        }
+        return backendVersionLabel;
+    }
+
+
+    private JPanel createImportExportPanel() {
+        //noinspection ExtractMethodRecommender
+        var exportSettingsButton = new JButton("Export Settings");
+        exportSettingsButton.addActionListener(e -> {
+
+            Messages.showInfoMessage("I Will export the saved settings, Not necessarily what is now showing. to export the shown values please first save and reopen settings to export.", "Export");
+
+            var dialog = FileChooserFactory.getInstance().createSaveFileDialog(new FileSaverDescriptor("Export To File", "Export settings to file", "conf"), (Project) null);
+            var file = dialog.save("digma-setting.conf");
+            if (file != null) {
+                var exportResult = SettingsUtils.exportSettingsToFile(file.getFile());
+                if (!exportResult) {
+                    Messages.showErrorDialog("Could not export settings,Please check the logs.", "Export Error");
+                }
+            }
+        });
+
+        var importSettingsButton = new JButton("Import Settings");
+        importSettingsButton.addActionListener(e -> {
+            var dialog = FileChooserFactory.getInstance().createPathChooser(new FileChooserDescriptor(true, false, false, false, false, false), null, myMainPanel);
+            dialog.choose(null, virtualFiles -> {
+                if (virtualFiles.size() == 1) {
+                    var properties = SettingsUtils.importSettingsFromFile(virtualFiles.get(0));
+                    if (properties == null) {
+                        Messages.showErrorDialog("Could not import settings,Please check the logs.", "Import Error");
+                    } else {
+                        resetFromSettings(SettingsState.fromProperties(properties));
+                    }
+                }
+            });
+        });
+
+        var importExportPanel = new JPanel();
+        importExportPanel.add(exportSettingsButton);
+        importExportPanel.add(importSettingsButton);
+
+        return importExportPanel;
+    }
+
+
+    @NotNull
+    private JButton createResetPluginButton() {
+        pluginResetWarning.setForeground(JBColor.RED);
+        pluginResetWarning.setVisible(false);
+        var resetPluginButton = new JButton("Reset plugin");
+        resetPluginButton.setToolTipText("<html><body>Reset plugin persistent properties to initial values to simulate fresh start</body>");
+        resetPluginButton.setVisible("true".equalsIgnoreCase(System.getProperty("org.digma.plugin.resetPlugin.enabled")));
+        resetPluginButton.addActionListener(e -> {
+            var confirmation = Messages.showYesNoDialog("Are you sure?\n(Plugin will reset and IDE will restart when the settings window is closed)", "Reset Confirmation", AllIcons.General.WarningDialog);
+            if (confirmation == Messages.YES) {
+                resetPluginRequested = true;
+                pluginResetWarning.setVisible(true);
+            } else {
+                resetPluginRequested = false;
+                pluginResetWarning.setVisible(false);
+            }
+        });
+        return resetPluginButton;
+    }
+
 }

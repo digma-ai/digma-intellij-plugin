@@ -188,9 +188,12 @@ object BuildProfiles {
 
 
         Profile.p242 to BuildProfile(
+            //todo: keeping this profile as EAP until rider 2024.2 is releases because there is no binary release of rider yet
+            // thst's instead of treating Idea and rider differently in build scripts
+            isEAP = true,
+
             profile = Profile.p242,
             platformVersion = "2024.2",
-            //todo: change rider version when its out
             riderVersion = "2024.2-EAP9-SNAPSHOT",
             pycharmVersion = "2024.2",
             riderTargetFramework = "net8.0",

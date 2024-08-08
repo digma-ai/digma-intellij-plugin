@@ -31,14 +31,14 @@ public class SettingsUtils {
         if (settingsComponent.getApiUrl().isBlank()) {
             throw new ConfigurationException("Api url can not be empty");
         }
-        if (!CommonUtils.isHttpsUrl(settingsComponent.getApiUrl())) {
-            throw new ConfigurationException("Api url schema must be https");
-        }
         try {
             URLValidator.create(settingsComponent.getApiUrl()).validate();
         } catch (MalformedURLException | URISyntaxException | URLValidator.InvalidUrlException | URLValidator.QueryNotAllowedException |
                  URLValidator.IncorrectSchemaException e) {
             throw new ConfigurationException("Api url is not a well formed: " + e.getMessage());
+        }
+        if (!CommonUtils.isHttpsUrl(settingsComponent.getApiUrl())) {
+            throw new ConfigurationException("Api url schema must be https");
         }
 
         if (settingsComponent.getRuntimeObservabilityBackendUrl().isBlank()) {

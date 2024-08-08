@@ -38,7 +38,6 @@ public class SettingsState implements PersistentStateComponent<SettingsState>, D
 
     @NotNull
     private String apiUrl = DEFAULT_API_URL;
-
     @Nullable
     private String apiToken = null;
     @Nullable
@@ -205,7 +204,6 @@ public class SettingsState implements PersistentStateComponent<SettingsState>, D
     public String getNormalizedExtendedObservabilityExcludes() {
         return normalizeExtendedObservabilityValue(extendedObservabilityExcludes);
     }
-
 
 }
 

@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.settings;
 
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.fileChooser.*;
+import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.*;
 import com.intellij.ui.*;
@@ -11,6 +12,7 @@ import com.intellij.util.ui.FormBuilder;
 import org.digma.intellij.plugin.analytics.BackendInfoHolder;
 import org.digma.intellij.plugin.auth.account.*;
 import org.digma.intellij.plugin.common.*;
+import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.jetbrains.annotations.*;
 
 import javax.swing.*;
@@ -386,33 +388,45 @@ class SettingsComponent {
     private JPanel createImportExportPanel() {
         //noinspection ExtractMethodRecommender
         var exportSettingsButton = new JButton("Export Settings");
-        exportSettingsButton.addActionListener(e -> {
+        exportSettingsButton.addActionListener(actionEvent -> {
+            try {
 
-            Messages.showInfoMessage("I Will export the saved settings, Not necessarily what is now showing. to export the shown values please first save and reopen settings to export.", "Export");
+                SettingsUtils.validateSettings(this);
 
-            var dialog = FileChooserFactory.getInstance().createSaveFileDialog(new FileSaverDescriptor("Export To File", "Export settings to file", "conf"), (Project) null);
-            var file = dialog.save("digma-setting.conf");
-            if (file != null) {
-                var exportResult = SettingsUtils.exportSettingsToFile(file.getFile());
-                if (!exportResult) {
-                    Messages.showErrorDialog("Could not export settings,Please check the logs.", "Export Error");
+                var dialog = FileChooserFactory.getInstance().createSaveFileDialog(new FileSaverDescriptor("Export To File", "Export settings to file", "conf"), (Project) null);
+                var file = dialog.save("digma-setting.conf");
+                if (file != null) {
+                    var exportResult = SettingsUtils.exportSettingsToFile(file.getFile(), toProperties());
+                    if (!exportResult) {
+                        Messages.showErrorDialog("Could not export settings,Please check the logs.", "Export Error");
+                    }
                 }
+            } catch (ConfigurationException configurationException) {
+                Messages.showErrorDialog(configurationException.getMessage(), "Invalid Settings");
+            } catch (Throwable e) {
+                Messages.showErrorDialog(e.getMessage(), "Error");
+                ErrorReporter.getInstance().reportError("SettingsComponent.exportSettingsButton.ActionListener", e);
             }
         });
 
         var importSettingsButton = new JButton("Import Settings");
-        importSettingsButton.addActionListener(e -> {
-            var dialog = FileChooserFactory.getInstance().createPathChooser(new FileChooserDescriptor(true, false, false, false, false, false), null, myMainPanel);
-            dialog.choose(null, virtualFiles -> {
-                if (virtualFiles.size() == 1) {
-                    var properties = SettingsUtils.importSettingsFromFile(virtualFiles.get(0));
-                    if (properties == null) {
-                        Messages.showErrorDialog("Could not import settings,Please check the logs.", "Import Error");
-                    } else {
-                        resetFromSettings(SettingsState.fromProperties(properties));
+        importSettingsButton.addActionListener(actionEvent -> {
+            try {
+                var dialog = FileChooserFactory.getInstance().createPathChooser(new FileChooserDescriptor(true, false, false, false, false, false), null, myMainPanel);
+                dialog.choose(null, virtualFiles -> {
+                    if (virtualFiles.size() == 1) {
+                        var properties = SettingsUtils.importSettingsFromFile(virtualFiles.get(0));
+                        if (properties == null) {
+                            Messages.showErrorDialog("Could not import settings,Please check the logs.", "Import Error");
+                        } else {
+                            fromProperties(properties);
+                        }
                     }
-                }
-            });
+                });
+            } catch (Throwable e) {
+                Messages.showErrorDialog(e.getMessage(), "Error");
+                ErrorReporter.getInstance().reportError("SettingsComponent.importSettingsButton.ActionListener", e);
+            }
         });
 
         var importExportPanel = new JPanel();
@@ -441,6 +455,43 @@ class SettingsComponent {
             }
         });
         return resetPluginButton;
+    }
+
+
+    private Map<String, String> toProperties() {
+        Map<String, String> properties = new HashMap<>();
+        properties.put("apiUrl", getApiUrl());
+        if (getApiToken() != null) {
+            properties.put("apiToken", getApiToken());
+        }
+        if (getJaegerUrl() != null) {
+            properties.put("jaegerUrl", getJaegerUrl());
+        }
+        if (getJaegerQueryUrl() != null) {
+            properties.put("jaegerQueryUrl", getJaegerQueryUrl());
+        }
+        properties.put("jaegerLinkMode", getJaegerLinkMode().name());
+        properties.put("springBootObservabilityMode", getSpringBootObservabilityMode().name());
+        properties.put("runtimeObservabilityBackendUrl", getRuntimeObservabilityBackendUrl());
+        if (getExtendedObservability() != null) {
+            properties.put("extendedObservability", getExtendedObservability());
+        }
+        if (getExtendedObservabilityExclude() != null) {
+            properties.put("extendedObservabilityExcludes", getExtendedObservabilityExclude());
+        }
+        return properties;
+    }
+
+    private void fromProperties(Map<String, String> properties) {
+        setApiUrl(properties.get("apiUrl"));
+        setApiToken(properties.get("apiToken"));
+        setJaegerUrl(properties.get("jaegerUrl"));
+        setJaegerQueryUrl(properties.get("jaegerQueryUrl"));
+        setJaegerLinkMode(JaegerLinkMode.valueOf(properties.get("jaegerLinkMode")));
+        setSpringBootObservabilityMode(SpringBootObservabilityMode.valueOf(properties.get("springBootObservabilityMode")));
+        setRuntimeObservabilityBackendUrl(properties.get("runtimeObservabilityBackendUrl"));
+        setExtendedObservability(properties.get("extendedObservability"));
+        setExtendedObservabilityExclude(properties.get("extendedObservabilityExcludes"));
     }
 
 }

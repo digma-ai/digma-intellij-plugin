@@ -93,61 +93,7 @@ public class ProjectSettings implements Configurable {
         //run all checks and only then update the settings.
         //never update the settings before checks are complete because then the settings will have incorrect data
 
-        try {
-            Objects.requireNonNull(mySettingsComponent.getApiUrl(), "Api url can not be null");
-            Objects.requireNonNull(mySettingsComponent.getRuntimeObservabilityBackendUrl(), "Runtime observability url can not be null");
-        } catch (Exception e) {
-            throw new ConfigurationException(e.getMessage());
-        }
-
-        if (mySettingsComponent.getApiUrl().isBlank()) {
-            throw new ConfigurationException("Api url can not be empty");
-        }
-        if (!CommonUtils.isHttpsUrl(mySettingsComponent.getApiUrl())) {
-            throw new ConfigurationException("Api url schema must be https");
-        }
-        try {
-            URLValidator.create(mySettingsComponent.getApiUrl()).validate();
-        } catch (MalformedURLException | URISyntaxException | URLValidator.InvalidUrlException | URLValidator.QueryNotAllowedException |
-                 URLValidator.IncorrectSchemaException e) {
-            throw new ConfigurationException("Api url is not a well formed: " + e.getMessage());
-        }
-
-        if (mySettingsComponent.getRuntimeObservabilityBackendUrl().isBlank()) {
-            throw new ConfigurationException("Runtime observability url can not be empty");
-        }
-        try {
-            URLValidator.create(mySettingsComponent.getRuntimeObservabilityBackendUrl()).validate();
-        } catch (MalformedURLException | URISyntaxException | URLValidator.InvalidUrlException | URLValidator.QueryNotAllowedException |
-                 URLValidator.IncorrectSchemaException e) {
-            throw new ConfigurationException("Backend observability url is not a well formed: " + e.getMessage());
-        }
-
-
-        if (mySettingsComponent.getJaegerLinkMode() == JaegerLinkMode.Embedded) {
-            if (mySettingsComponent.getJaegerQueryUrl() == null || mySettingsComponent.getJaegerQueryUrl().trim().isBlank()) {
-                throw new ConfigurationException("Jaeger query url can not be empty in mode " + mySettingsComponent.getJaegerLinkMode());
-            }
-            try {
-                URLValidator.create(mySettingsComponent.getJaegerQueryUrl()).validate();
-            } catch (MalformedURLException | URISyntaxException | URLValidator.InvalidUrlException | URLValidator.QueryNotAllowedException |
-                     URLValidator.IncorrectSchemaException e) {
-                throw new ConfigurationException("Jaeger query url is not a well formed: " + e.getMessage());
-            }
-        } else {
-            if (mySettingsComponent.getJaegerUrl() == null || mySettingsComponent.getJaegerUrl().trim().isBlank()) {
-                throw new ConfigurationException("Jaeger url can not be empty in mode " + mySettingsComponent.getJaegerLinkMode());
-            }
-            try {
-                if (mySettingsComponent.getJaegerUrl() != null) {
-                    URLValidator.create(mySettingsComponent.getJaegerUrl()).validate();
-                }
-            } catch (MalformedURLException | URISyntaxException | URLValidator.InvalidUrlException | URLValidator.QueryNotAllowedException |
-                     URLValidator.IncorrectSchemaException e) {
-                throw new ConfigurationException("Jaeger url is not a well formed: " + e.getMessage());
-            }
-        }
-
+        SettingsUtils.validateSettings(mySettingsComponent);
 
         updateSettingsAndFireChange();
 

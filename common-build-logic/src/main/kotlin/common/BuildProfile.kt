@@ -74,7 +74,7 @@ fun Project.useBinaryInstaller(): Boolean = !this.currentProfile().isEAP
 
 object BuildProfiles {
 
-    enum class Profile { p231, p232, p233, p241, p242 }
+    enum class Profile { p231, p232, p233, p241, p242, p243 }
 
     fun Profile.greaterThan(other:Profile):Boolean{
         val thisNumber = this.name.substring(1).toInt()
@@ -102,8 +102,8 @@ object BuildProfiles {
     //update this list as new profiles are added or removed
     private val profileAliases = mapOf(
         "lowest" to Profile.p231.name,
-        "latest" to Profile.p241.name,
-        "eap" to Profile.p242.name,
+        "latest" to Profile.p242.name,
+        "eap" to Profile.p243.name,
     )
 
 
@@ -173,9 +173,9 @@ object BuildProfiles {
 
         Profile.p241 to BuildProfile(
             profile = Profile.p241,
-            platformVersion = "2024.1.4",
-            riderVersion = "2024.1.4",
-            pycharmVersion = "2024.1.4",
+            platformVersion = "2024.1.5",
+            riderVersion = "2024.1.5",
+            pycharmVersion = "2024.1.5",
             riderTargetFramework = "net8.0",
             riderResharperVersionConstant = "PROFILE_2023_2",
             platformVersionCode = "241",
@@ -188,16 +188,36 @@ object BuildProfiles {
 
 
         Profile.p242 to BuildProfile(
+            //todo: keeping this profile as EAP until rider 2024.2 is releases because there is no binary release of rider yet
+            // that's instead of treating Idea and rider differently in build scripts
             isEAP = true,
+
             profile = Profile.p242,
-            platformVersion = "242-EAP-SNAPSHOT",
+            platformVersion = "2024.2",
             riderVersion = "2024.2-EAP9-SNAPSHOT",
-            pycharmVersion = "242-EAP-SNAPSHOT",
+            pycharmVersion = "2024.2",
             riderTargetFramework = "net8.0",
             riderResharperVersionConstant = "PROFILE_2023_2",
             platformVersionCode = "242",
             pluginSinceBuild = "242",
             pluginUntilBuild = "242.*",
+            kotlinTarget = KotlinVersion.KOTLIN_1_9.version,
+            javaVersion = JavaVersion.VERSION_17.majorVersion,
+        ),
+
+        //todo: next EAP, currently same versions as 242 until 243 starts.
+        // not built in github yet
+        Profile.p243 to BuildProfile(
+            isEAP = true,
+            profile = Profile.p243,
+            platformVersion = "2024.2",
+            riderVersion = "2024.2-EAP9-SNAPSHOT",
+            pycharmVersion = "2024.2",
+            riderTargetFramework = "net8.0",
+            riderResharperVersionConstant = "PROFILE_2023_2",
+            platformVersionCode = "242",
+            pluginSinceBuild = "243",
+            pluginUntilBuild = "243.*",
             kotlinTarget = KotlinVersion.KOTLIN_1_9.version,
             javaVersion = JavaVersion.VERSION_17.majorVersion,
         )

@@ -173,9 +173,9 @@ object BuildProfiles {
 
         Profile.p241 to BuildProfile(
             profile = Profile.p241,
-            platformVersion = "2024.1.4",
-            riderVersion = "2024.1.4",
-            pycharmVersion = "2024.1.4",
+            platformVersion = "2024.1.5",
+            riderVersion = "2024.1.5",
+            pycharmVersion = "2024.1.5",
             riderTargetFramework = "net8.0",
             riderResharperVersionConstant = "PROFILE_2023_2",
             platformVersionCode = "241",
@@ -188,11 +188,11 @@ object BuildProfiles {
 
 
         Profile.p242 to BuildProfile(
-            isEAP = true,
             profile = Profile.p242,
-            platformVersion = "242-EAP-SNAPSHOT",
+            platformVersion = "2024.2",
+            //todo: change rider version when its out
             riderVersion = "2024.2-EAP9-SNAPSHOT",
-            pycharmVersion = "242-EAP-SNAPSHOT",
+            pycharmVersion = "2024.2",
             riderTargetFramework = "net8.0",
             riderResharperVersionConstant = "PROFILE_2023_2",
             platformVersionCode = "242",
@@ -200,7 +200,23 @@ object BuildProfiles {
             pluginUntilBuild = "242.*",
             kotlinTarget = KotlinVersion.KOTLIN_1_9.version,
             javaVersion = JavaVersion.VERSION_17.majorVersion,
-        )
+        ),
+
+        //todo: next EAP
+//        Profile.p243 to BuildProfile(
+//            isEAP = true,
+//            profile = Profile.p243,
+//            platformVersion = "2024.2",
+//            riderVersion = "2024.2-EAP9-SNAPSHOT",
+//            pycharmVersion = "2024.2",
+//            riderTargetFramework = "net8.0",
+//            riderResharperVersionConstant = "PROFILE_2023_2",
+//            platformVersionCode = "242",
+//            pluginSinceBuild = "242",
+//            pluginUntilBuild = "242.*",
+//            kotlinTarget = KotlinVersion.KOTLIN_1_9.version,
+//            javaVersion = JavaVersion.VERSION_17.majorVersion,
+//        )
 
     )
 

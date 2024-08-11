@@ -169,6 +169,7 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
         mutableDetails["ide.build"] = ApplicationInfo.getInstance().build.asString()
         mutableDetails["server.version"] = serverInfo?.applicationVersion.toString()
         mutableDetails["server.deploymentType"] = serverInfo?.deploymentType.toString()
+        mutableDetails["site"] = serverInfo?.site.toString()
 
         postHog?.capture(
             UniqueGeneratedUserId.userId,

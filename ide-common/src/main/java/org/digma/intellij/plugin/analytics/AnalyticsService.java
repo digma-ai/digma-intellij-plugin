@@ -514,6 +514,11 @@ public class AnalyticsService implements Disposable {
      * All calls to the AnalyticsProvider proxy must be wrapped by a call to this method.
      * this is purely catch exceptions and rethrow AnalyticsServiceException.
      */
+    /*
+    Note: this method should throw only AnalyticsServiceException.
+     the only case it will throw something else is on EDTAccessException or ReadAccessException which are severe errors
+     that should turn a red error to user, and we must catch those during development or testing before release.
+    */
     private <T> T executeCatching(Supplier<T> tSupplier) throws AnalyticsServiceException {
         try {
             return tSupplier.get();

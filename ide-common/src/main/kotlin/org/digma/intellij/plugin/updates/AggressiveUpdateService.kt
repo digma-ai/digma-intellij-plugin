@@ -10,7 +10,6 @@ import org.apache.maven.artifact.versioning.ComparableVersion
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
 import org.digma.intellij.plugin.analytics.ApiClientChangedEvent
-import org.digma.intellij.plugin.analytics.BackendInfoHolder
 import org.digma.intellij.plugin.common.DisposableAdaptor
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.common.buildVersionRequest
@@ -18,6 +17,7 @@ import org.digma.intellij.plugin.common.getPluginVersion
 import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.common.newerThan
 import org.digma.intellij.plugin.common.runWIthRetry
+import org.digma.intellij.plugin.common.runWIthRetryWithResult
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.AboutResult
@@ -118,7 +118,9 @@ class AggressiveUpdateService(val project: Project) : DisposableAdaptor {
     }
 
 
-    @Synchronized
+    //startMonitoring is called from init while the object is constructed.
+    //it should never be called concurrently because this is a project service and the platform guards against
+    // concurrent creation of services.
     private fun startMonitoring() {
 
         Log.log(logger::debug, "startMonitoring called")
@@ -128,6 +130,11 @@ class AggressiveUpdateService(val project: Project) : DisposableAdaptor {
             return
         }
 
+        //this task is paused by the scheduler if there is no connection. It's useless to try to update without backend because there is no way to
+        // know the backend version.
+        //but because this service starts on project startup,and actually IDE startup, it may run once before ApiErrorHandler had the chance
+        // to mark connection lost. if it will run when backend is not running there will be too many error reports in posthog,
+        // so it should ignore no connection errors.
         disposingPeriodicTask("AggressiveUpdate.periodic", delayBetweenUpdatesSeconds.inWholeMilliseconds, true) {
             update()
         }
@@ -140,14 +147,21 @@ class AggressiveUpdateService(val project: Project) : DisposableAdaptor {
             updateState()
             Log.log(logger::trace, "updating state on startup completed successfully")
         } catch (e: Throwable) {
-            val message = ExceptionUtils.getNonEmptyMessage(e)
-            Log.debugWithException(logger, e, "error in updateStateNow {}", message)
-            errorReporter.reportError("AggressiveUpdateService.updateStateNow", e)
+            //don't report connection errors , its useless and will report too many errors to posthog and the log
+            if (!ExceptionUtils.isAnyConnectionException(e)) {
+                val message = ExceptionUtils.getNonEmptyMessage(e)
+                Log.debugWithException(logger, e, "error in update {}", message)
+                errorReporter.reportError("AggressiveUpdateService.update", e)
+            }
         }
     }
 
 
     private fun updateState() {
+
+        //try to update with retry.
+        //there may be timeouts or no connection, in any case retry few times.
+        //if all retries fail this method will throw the exception
 
         runWIthRetry({
             Log.log(logger::debug, "loading versions")
@@ -157,25 +171,31 @@ class AggressiveUpdateService(val project: Project) : DisposableAdaptor {
             val prevUpdateState = updateStateRef.get().copy()
             update(versions)
             Log.log(logger::debug, "state updated. prev state: {}, new state: {}", prevUpdateState, updateStateRef)
-        }, backOffMillis = 2000, maxRetries = 5)
+        }, backOffMillis = 1000, maxRetries = 3)
     }
 
 
+    //if there is no backend running this method will throw an AnalyticsServiceException
     private fun buildVersions(): Versions {
-        try {
-            val versionsResponse = AnalyticsService.getInstance(project).getVersions(buildVersionRequest())
-            reportVersionsErrorsIfNecessary(versionsResponse.errors)
-            return Versions.fromVersionsResponse(versionsResponse)
+        return try {
+            //we know that getVersions may fail on timeouts so retry at least twice
+            runWIthRetryWithResult({
+                val versionsResponse = AnalyticsService.getInstance(project).getVersions(buildVersionRequest())
+                reportVersionsErrorsIfNecessary(versionsResponse.errors)
+                Versions.fromVersionsResponse(versionsResponse)
+            }, backOffMillis = 1000, maxRetries = 2)
         } catch (e: Throwable) {
-            val message = ExceptionUtils.getNonEmptyMessage(e)
-            Log.debugWithException(logger, e, "error in buildVersions {}", message)
-            errorReporter.reportError("AggressiveUpdateService.buildVersions", e)
+            //don't report connection errors , its useless and will report too many errors to posthog and the log
+            if (!ExceptionUtils.isAnyConnectionException(e)) {
+                val message = ExceptionUtils.getNonEmptyMessage(e)
+                Log.debugWithException(logger, e, "error in buildVersions {}", message)
+                errorReporter.reportError("AggressiveUpdateService.buildVersions", e)
+            }
 
-            //if getVersions failed try to get server version from getAbout
-            val about = BackendInfoHolder.getInstance(project).getAbout()
-            about?.let {
-                return Versions.fromAboutResponse(it)
-            } ?: throw RuntimeException("could not get backend info from getVersions or getAbout")
+            //if getVersions failed try to get server version from getAbout.
+            //if there is no connection getAbout will throw an AnalyticsServiceException
+            val about = AnalyticsService.getInstance(project).about
+            Versions.fromAboutResponse(about)
         }
     }
 

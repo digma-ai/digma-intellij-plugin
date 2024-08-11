@@ -117,12 +117,7 @@ public class ExceptionUtils {
     }
 
     public static boolean isConnectionException(@NotNull Throwable e) {
-
-        var ex = e.getCause();
-        while (ex != null && !(isConnectionUnavailableException(ex))) {
-            ex = ex.getCause();
-        }
-        return ex != null;
+        return findConnectException(e) != null;
     }
 
     public static boolean isConnectionUnavailableException(@NotNull Throwable exception) {
@@ -186,8 +181,7 @@ public class ExceptionUtils {
 
 
     public static boolean isSslConnectionException(@NotNull Throwable e) {
-        var cause = findAssignableCause(SSLException.class, e);
-        return cause != null;
+        return findSslException(e) != null;
     }
 
     @Nullable

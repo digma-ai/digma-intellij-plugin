@@ -16,8 +16,6 @@ import org.digma.intellij.plugin.common.buildVersionRequest
 import org.digma.intellij.plugin.common.getPluginVersion
 import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.common.newerThan
-import org.digma.intellij.plugin.common.runWIthRetry
-import org.digma.intellij.plugin.common.runWIthRetryWithResult
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.AboutResult
@@ -158,20 +156,13 @@ class AggressiveUpdateService(val project: Project) : DisposableAdaptor {
 
 
     private fun updateState() {
-
-        //try to update with retry.
-        //there may be timeouts or no connection, in any case retry few times.
-        //if all retries fail this method will throw the exception
-
-        runWIthRetry({
-            Log.log(logger::debug, "loading versions")
-            val versions = buildVersions()
-            Log.log(logger::debug, "loaded versions {}", versions)
-            Log.log(logger::debug, "updating state")
-            val prevUpdateState = updateStateRef.get().copy()
-            update(versions)
-            Log.log(logger::debug, "state updated. prev state: {}, new state: {}", prevUpdateState, updateStateRef)
-        }, backOffMillis = 1000, maxRetries = 3)
+        Log.log(logger::debug, "loading versions")
+        val versions = buildVersions()
+        Log.log(logger::debug, "loaded versions {}", versions)
+        Log.log(logger::debug, "updating state")
+        val prevUpdateState = updateStateRef.get().copy()
+        update(versions)
+        Log.log(logger::debug, "state updated. prev state: {}, new state: {}", prevUpdateState, updateStateRef)
     }
 
 

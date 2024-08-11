@@ -178,12 +178,9 @@ class AggressiveUpdateService(val project: Project) : DisposableAdaptor {
     //if there is no backend running this method will throw an AnalyticsServiceException
     private fun buildVersions(): Versions {
         return try {
-            //we know that getVersions may fail on timeouts so retry at least twice
-            runWIthRetryWithResult({
-                val versionsResponse = AnalyticsService.getInstance(project).getVersions(buildVersionRequest())
-                reportVersionsErrorsIfNecessary(versionsResponse.errors)
-                Versions.fromVersionsResponse(versionsResponse)
-            }, backOffMillis = 1000, maxRetries = 2)
+            val versionsResponse = AnalyticsService.getInstance(project).getVersions(buildVersionRequest())
+            reportVersionsErrorsIfNecessary(versionsResponse.errors)
+            Versions.fromVersionsResponse(versionsResponse)
         } catch (e: Throwable) {
             //don't report connection errors , its useless and will report too many errors to posthog and the log
             if (!ExceptionUtils.isAnyConnectionException(e)) {

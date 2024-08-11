@@ -133,7 +133,7 @@ class AggressiveUpdateService(val project: Project) : DisposableAdaptor {
         //but because this service starts on project startup,and actually IDE startup, it may run once before ApiErrorHandler had the chance
         // to mark connection lost. if it will run when backend is not running there will be too many error reports in posthog,
         // so it should ignore no connection errors.
-        disposingPeriodicTask("AggressiveUpdate.periodic", delayBetweenUpdatesSeconds.inWholeMilliseconds, true) {
+        disposingPeriodicTask("AggressiveUpdate.periodic", 10.seconds.inWholeMilliseconds, delayBetweenUpdatesSeconds.inWholeMilliseconds, true) {
             update()
         }
     }

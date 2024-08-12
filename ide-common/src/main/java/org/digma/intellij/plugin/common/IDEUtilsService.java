@@ -5,6 +5,16 @@ import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.psi.*;
 import org.jetbrains.annotations.*;
 
+/*
+This class is not perfect but it does serve our needs.
+see the comments in com.intellij.util.PlatformUtils, PlatformUtils is marked internal API so its better not to user it.
+for what we need its probably ok:
+isIdeaIDE() is for sure Idea if we have JavaLanguageService installed.
+isRiderIDE() is for sure rider if we have CHarpLanguageService installed.
+isPyCharmIDE() is for sure pycharm if we have PythonLanguageService installed and it's not Idea.
+if we need more capabilities here we need to explore the technics suggested in com.intellij.util.PlatformUtils
+ */
+
 @Service(Service.Level.PROJECT)
 public final class IDEUtilsService {
 
@@ -38,6 +48,7 @@ public final class IDEUtilsService {
         return idea.is();
     }
 
+    //this is not accurate, it may be rider but not a C# project
     public boolean isCSharpProject() {
         return rider.is();
     }
@@ -52,7 +63,8 @@ public final class IDEUtilsService {
     }
 
     public boolean isPyCharmIDE() {
-        return pycharm.is();
+        //python plugin may also be installed on Idea
+        return pycharm.is() && !idea.is();
     }
 
 

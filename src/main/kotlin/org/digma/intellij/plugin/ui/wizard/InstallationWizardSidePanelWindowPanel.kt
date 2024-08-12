@@ -34,7 +34,6 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.jcef.common.CustomSchemeHandlerFactory
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
-import org.digma.intellij.plugin.persistence.updateInstallationWizardFlag
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.recentactivity.RecentActivityToolWindowShower
 import org.digma.intellij.plugin.scheduling.disposingPeriodicTask
@@ -218,9 +217,9 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                 }
 
                 PersistenceService.getInstance().firstWizardLaunchDone()
+                ActivityMonitor.getInstance(project).registerCustomEvent("installation-wizard-finished")
 
                 EDT.ensureEDT {
-                    updateInstallationWizardFlag()
                     ToolWindowShower.getInstance(project).showToolWindow()
                     MainToolWindowCardsController.getInstance(project).wizardFinished()
                     project.service<RecentActivityToolWindowShower>().showToolWindow()

@@ -61,8 +61,6 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.psi.LanguageServiceLocator"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.common.IDEUtilsService"/>
-
         <projectService serviceImplementation="org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.navigation.CodeButtonCaretContextService"

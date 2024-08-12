@@ -76,8 +76,7 @@ class DockerService {
 
 
     fun isEngineInstalled(): Boolean {
-        return PersistenceService.getInstance().isLocalEngineInstalled() != null &&
-                PersistenceService.getInstance().isLocalEngineInstalled() == true
+        return PersistenceService.getInstance().isLocalEngineInstalled()
     }
 
 
@@ -373,7 +372,7 @@ class DockerService {
                     project,
                     "Please make sure the Docker daemon is running\n" +
                             "Once the Docker daemon is running, press the retry button.\n",
-                    "Digma engine failed to run",
+                    "Digma Engine Failed to Run",
                     "Retry",
                     "Cancel",
                     null

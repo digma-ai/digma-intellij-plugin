@@ -36,13 +36,13 @@ fun startIdleUserTimers(parentDisposable: Disposable) {
         try {
 
             //only show one message at a time
-            if (PersistenceService.getInstance().isFirstTimeAssetsReceived() &&
+            if (PersistenceService.getInstance().isFirstAssetsReceived() &&
                 backendIdleDays() > 3 &&
                 backendHasntBeenRunningLastNotified() > 7
             ) {
                 service<NotificationsPersistenceState>().state.backendHasntBeenRunningForAWhileLastNotified = Instant.now()
                 showDigmaHasntBeenRunningForAWhile()
-            } else if (PersistenceService.getInstance().isFirstTimeAssetsReceived() &&
+            } else if (PersistenceService.getInstance().isFirstAssetsReceived() &&
                 backendIdleDays() <= 1 &&
                 userActionIdleDays() > 3 &&
                 hasntBeenOpenedForAWhileLastNotified() > 7
@@ -50,7 +50,7 @@ fun startIdleUserTimers(parentDisposable: Disposable) {
                 service<NotificationsPersistenceState>().state.hasntBeenOpenedForAWhileLastNotified = Instant.now()
                 showDigmaHasntBeenOpenedForAWhile()
             } else if (PersistenceService.getInstance().isFirstTimeConnectionEstablished() &&
-                !PersistenceService.getInstance().isFirstTimeAssetsReceived() &&
+                !PersistenceService.getInstance().isFirstAssetsReceived() &&
                 pluginInstalledDays() > 7 &&
                 hasntBeenActivatedLastNotified() > 7
             ) {

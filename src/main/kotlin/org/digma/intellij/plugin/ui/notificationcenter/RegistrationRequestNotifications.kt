@@ -44,7 +44,7 @@ fun startRequestRegisterTimers(parentDisposable: Disposable) {
         } else {
 
             try {
-                if (PersistenceService.getInstance().isFirstTimeAssetsReceived() &&
+                if (PersistenceService.getInstance().isFirstAssetsReceived() &&
                     !isUserRegistered() &&
                     daysSinceFirstAsset() > 14000 &&
                     moreThen24HoursSinceLastNotified()

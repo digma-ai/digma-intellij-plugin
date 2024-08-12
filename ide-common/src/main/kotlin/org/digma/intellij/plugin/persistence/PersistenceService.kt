@@ -2,7 +2,6 @@ package org.digma.intellij.plugin.persistence
 
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
-import org.digma.intellij.plugin.common.DatesUtils
 import java.time.Instant
 
 
@@ -42,8 +41,8 @@ class PersistenceService {
         return state.firstWizardLaunch
     }
 
-    fun isLocalEngineInstalled(): Boolean? {
-        return state.isLocalEngineInstalled
+    fun isLocalEngineInstalled(): Boolean {
+        return state.isLocalEngineInstalled ?: false
     }
 
     fun setLocalEngineInstalled(isInstalled: Boolean) {
@@ -54,16 +53,11 @@ class PersistenceService {
         return state.userEmail != null || state.userRegistrationEmail != null
     }
 
-    fun isFirstTimeAssetsReceived(): Boolean {
-        //todo: backwards compatibility, remove state.firstTimeAssetsReceived on May 2024
-        if (state.firstTimeAssetsReceived && state.firstTimeAssetsReceivedTimestamp == null) {
-            state.firstTimeAssetsReceivedTimestamp = Instant.now()
-        }
-
+    fun isFirstAssetsReceived(): Boolean {
         return state.firstTimeAssetsReceivedTimestamp != null
     }
 
-    fun setFirstTimeAssetsReceived() {
+    fun setFirstAssetsReceived() {
         state.firstTimeAssetsReceivedTimestamp = Instant.now()
     }
 
@@ -84,54 +78,31 @@ class PersistenceService {
     }
 
     fun isFirstTimePerformanceMetrics(): Boolean {
-        //todo: backwards compatibility, remove state.firstTimePerformanceMetrics on May 2024
-        if (state.firstTimePerformanceMetrics && state.firstTimePerformanceMetricsTimestamp == null) {
-            state.firstTimePerformanceMetricsTimestamp = Instant.now()
-        }
-
-        return state.firstTimePerformanceMetricsTimestamp != null
+        return state.firstTimePerformanceMetricsTimestamp == null
     }
 
-    fun setFirstTimePerformanceMetrics() {
+    fun setFirstTimePerformanceMetricsDone() {
         state.firstTimePerformanceMetricsTimestamp = Instant.now()
     }
 
 
-    fun isFirstTimeInsightReceived(): Boolean {
-        //todo: backwards compatibility, remove state.firstTimeInsightReceived on May 2024
-        if (state.firstTimeInsightReceived && state.firstTimeInsightReceivedTimestamp == null) {
-            state.firstTimeInsightReceivedTimestamp = Instant.now()
-        }
-
+    fun isFirstInsightReceived(): Boolean {
         return state.firstTimeInsightReceivedTimestamp != null
     }
 
-    fun setFirstTimeInsightReceived() {
+    fun setFirstInsightReceived() {
         state.firstTimeInsightReceivedTimestamp = Instant.now()
     }
 
 
-    fun isFirstTimeRecentActivityReceived(): Boolean {
-        //todo: backwards compatibility, remove state.firstTimeRecentActivityReceived on May 2024
-        if (state.firstTimeRecentActivityReceived && state.firstTimeRecentActivityReceivedTimestamp == null) {
-            state.firstTimeRecentActivityReceivedTimestamp = Instant.now()
-        }
-
+    fun isFirstRecentActivityReceived(): Boolean {
         return state.firstTimeRecentActivityReceivedTimestamp != null
     }
 
-    fun setFirstTimeRecentActivityReceived() {
+    fun setFirstRecentActivityReceived() {
         state.firstTimeRecentActivityReceivedTimestamp = Instant.now()
     }
 
-
-    fun isWorkspaceOnly(): Boolean {
-        return state.isWorkspaceOnly
-    }
-
-    fun setWorkspaceOnly(isWorkspaceOnly: Boolean) {
-        state.isWorkspaceOnly = isWorkspaceOnly
-    }
 
     fun isObservabilityEnabled(): Boolean {
         return state.isObservabilityEnabled
@@ -139,31 +110,19 @@ class PersistenceService {
 
     fun setObservabilityEnabled(isObservabilityEnabled: Boolean) {
         state.isObservabilityEnabled = isObservabilityEnabled
-        //todo: remove isAutoOtel on June 2024
-        state.isAutoOtel = isObservabilityEnabled
     }
-
 
 
     fun isFirstTimeConnectionEstablished(): Boolean {
-        //todo: backwards compatibility, remove state.firstTimeConnectionEstablished and
-        // state.firstTimeConnectionEstablishedTimestamp on May 2024
-        if (state.firstTimeConnectionEstablished && state.firstTimeConnectionEstablishedTimestampNew == null) {
-            val instant = state.firstTimeConnectionEstablishedTimestamp?.let {
-                DatesUtils.Instants.stringToInstant(it)
-            } ?: Instant.now()
-            state.firstTimeConnectionEstablishedTimestampNew = instant
-        }
-
-        return state.firstTimeConnectionEstablishedTimestampNew != null
+        return state.firstTimeConnectionEstablishedTimestamp != null
     }
 
     fun setFirstTimeConnectionEstablished() {
-        state.firstTimeConnectionEstablishedTimestampNew = Instant.now()
+        state.firstTimeConnectionEstablishedTimestamp = Instant.now()
     }
 
     fun getFirstTimeConnectionEstablishedTimestamp(): Instant? {
-        return state.firstTimeConnectionEstablishedTimestampNew
+        return state.firstTimeConnectionEstablishedTimestamp
     }
 
 
@@ -219,16 +178,6 @@ class PersistenceService {
     fun setNoInsightsYetNotificationPassed() {
         state.noInsightsYetNotificationPassed = true
     }
-
-
-    fun getNotificationsStartDate(): String? {
-        return state.notificationsStartDate
-    }
-
-    fun setNotificationsStartDate(notificationsStartDate: String) {
-        state.notificationsStartDate = notificationsStartDate
-    }
-
 
     fun updateLastConnectionTimestamp() {
         state.lastConnectionTimestamp = Instant.now()

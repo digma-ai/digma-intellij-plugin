@@ -176,7 +176,7 @@ class InsightsService(val project: Project) : InsightsServiceImpl(project) {
 
     private fun onInsightReceived(insights: String) {
 
-        if (PersistenceService.getInstance().isFirstTimeInsightReceived()) {
+        if (PersistenceService.getInstance().isFirstInsightReceived()) {
             return
         }
 
@@ -185,7 +185,7 @@ class InsightsService(val project: Project) : InsightsServiceImpl(project) {
             val totalCount = jsonNode.get("totalCount")
             if (totalCount.isInt && totalCount.asInt() > 0) {
                 ActivityMonitor.getInstance(project).registerFirstInsightReceived()
-                PersistenceService.getInstance().setFirstTimeInsightReceived()
+                PersistenceService.getInstance().setFirstInsightReceived()
             }
         } catch (e: Throwable) {
             ErrorReporter.getInstance().reportError(project, "InsightsService.onInsightReceived", e)

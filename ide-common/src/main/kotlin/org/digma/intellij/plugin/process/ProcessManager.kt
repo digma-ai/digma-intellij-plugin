@@ -209,6 +209,10 @@ class ProcessManager(private val project: Project) : Disposable {
                     return@Listener
                 }
 
+                if (myAlarm.isDisposed) {
+                    return@Listener
+                }
+
                 Log.log(logger::trace, "got psi modification, canceling process and starting blackout, process {}", processName)
                 indicator?.cancel()
                 inBlackout = true

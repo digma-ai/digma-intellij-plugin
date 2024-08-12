@@ -1,40 +1,36 @@
 package org.digma.intellij.plugin.common;
 
+import com.intellij.openapi.components.Service;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.*;
-import com.intellij.util.PlatformUtils;
-import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.psi.*;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.*;
 
-@SuppressWarnings("UnstableApiUsage")
-public class IDEUtilsService {
+/*
+This class is not perfect but it does serve our needs.
+see the comments in com.intellij.util.PlatformUtils, PlatformUtils is marked internal API so its better not to user it.
+for what we need its probably ok:
+isIdeaIDE() is for sure Idea if we have JavaLanguageService installed.
+isRiderIDE() is for sure rider if we have CHarpLanguageService installed.
+isPyCharmIDE() is for sure pycharm if we have PythonLanguageService installed and it's not Idea.
+if we need more capabilities here we need to explore the technics suggested in com.intellij.util.PlatformUtils
+ */
 
-    private final IsRider isRider;
-    private final IsIdea isIdea;
+@Service(Service.Level.PROJECT)
+public final class IDEUtilsService {
+
+    private final Idea idea;
+    private final Rider rider;
+    private final Pycharm pycharm;
 
 
     public IDEUtilsService(Project project) {
-        isRider = new IsRider(project);
-        isIdea = new IsIdea(project);
+        idea = new Idea(project);
+        rider = new Rider(project);
+        pycharm = new Pycharm(project);
     }
 
     public static IDEUtilsService getInstance(@NotNull Project project){
         return project.getService(IDEUtilsService.class);
-    }
-
-
-    public static boolean isAlreadyPassedInstallationWizard(){
-        PersistenceService persistenceService = PersistenceService.getInstance();
-        return IDEUtilsService.isIdeaIDE() && persistenceService.isAlreadyPassedTheInstallationWizardForIdeaIDE() ||
-                IDEUtilsService.isRiderIDE() && persistenceService.isAlreadyPassedTheInstallationWizardForRiderIDE() ||
-                IDEUtilsService.isPyCharmIDE() && persistenceService.isAlreadyPassedTheInstallationWizardForPyCharmIDE();
-    }
-
-
-    public static boolean shouldOpenWizard(){
-        return !isAlreadyPassedInstallationWizard();
     }
 
 
@@ -49,110 +45,76 @@ public class IDEUtilsService {
     mean that its pycharm.
      */
     public boolean isJavaProject() {
-        return (PlatformUtils.isIdeaCommunity() || PlatformUtils.isIdeaUltimate()) && isIdea.isIdea();
+        return idea.is();
     }
 
+    //this is not accurate, it may be rider but not a C# project
     public boolean isCSharpProject() {
-        return (PlatformUtils.isIdeaCommunity() || PlatformUtils.isIdeaUltimate()) && isRider.isRider();
+        return rider.is();
     }
 
 
-    public static boolean isIdeaIDE() {
-        return PlatformUtils.isIdeaCommunity() || PlatformUtils.isIdeaUltimate();
+    public boolean isIdeaIDE() {
+        return idea.is();
     }
 
-    public static boolean isRiderIDE() {
-        return PlatformUtils.isRider();
+    public boolean isRiderIDE() {
+        return rider.is();
     }
 
-    public static boolean isPyCharmIDE() {
-        return PlatformUtils.isPyCharm() || PlatformUtils.isPyCharmCommunity() || PlatformUtils.isPyCharmEducational();
-    }
-
-    public boolean isRiderAndCSharpFile(@NotNull Project project, VirtualFile file) {
-
-        //it may be a C# file that was opened from vcs, it doesn't count as C# that CSharpLanguageService should handle
-        if (!VfsUtilsKt.isValidVirtualFile(file)) {
-            return false;
-        }
-
-        if (isRider.isRider()) {
-            LanguageService csharpLanguageService = isRider.getCSharpLanguageService();
-            PsiFile psiFile = PsiAccessUtilsKt.runInReadAccessWithResult(() -> PsiManager.getInstance(project).findFile(file));
-            if (!PsiUtils.isValidPsiFile(psiFile)) {
-                return false;
-            }
-            return csharpLanguageService.isServiceFor(psiFile.getLanguage());
-        }
-
-        return false;
-    }
-
-    public boolean isRider() {
-        return isRider.isRider();
+    public boolean isPyCharmIDE() {
+        //python plugin may also be installed on Idea
+        return pycharm.is() && !idea.is();
     }
 
 
-
-
-    private static class IsRider {
+    private static abstract class IsIDE {
 
         private LanguageService myLanguageService = null;
 
-        public IsRider(Project project) {
-            init(project);
+        private IsIDE(Project project, SupportedLanguages language) {
+            init(project, language);
         }
 
-        @SuppressWarnings("unchecked")
-        private void init(Project project) {
-            Class<LanguageService> cshrpLanguageServiceClass;
+        private void init(Project project, SupportedLanguages language) {
             try {
-                cshrpLanguageServiceClass = (Class<LanguageService>) Class.forName(SupportedLanguages.CSHARP.getLanguageServiceClassName());
-                myLanguageService = project.getService(cshrpLanguageServiceClass);
+                @SuppressWarnings("unchecked") Class<LanguageService> languageServiceClass = (Class<LanguageService>) Class.forName(language.getLanguageServiceClassName());
+                //noinspection IncorrectServiceRetrieving
+                myLanguageService = project.getService(languageServiceClass);
             } catch (Throwable ignored) {
                 //catch throwable and not exception because it may be Error like NoClassDefFound
             }
         }
 
-        public boolean isRider() {
+        boolean is() {
             return myLanguageService != null;
         }
 
-        public LanguageService getCSharpLanguageService() {
+        @Nullable
+        LanguageService getLanguageService() {
             return myLanguageService;
         }
+
     }
 
 
-
-    private static class IsIdea {
-
-        private LanguageService myLanguageService = null;
-
-        public IsIdea(Project project) {
-            init(project);
-        }
-
-        @SuppressWarnings("unchecked")
-        private void init(Project project) {
-            Class<LanguageService> javaLanguageServiceClass;
-            try {
-                javaLanguageServiceClass = (Class<LanguageService>) Class.forName(SupportedLanguages.JAVA.getLanguageServiceClassName());
-                myLanguageService = project.getService(javaLanguageServiceClass);
-            } catch (Throwable ignored) {
-                //catch throwable and not exception because it may be Error like NoClassDefFound
-            }
-        }
-
-        public boolean isIdea() {
-            return myLanguageService != null;
-        }
-
-        public LanguageService getJavaLanguageService() {
-            return myLanguageService;
+    private static class Rider extends IsIDE {
+        private Rider(Project project) {
+            super(project, SupportedLanguages.CSHARP);
         }
     }
 
+    private static class Idea extends IsIDE {
+        private Idea(Project project) {
+            super(project, SupportedLanguages.JAVA);
+        }
+    }
+
+    private static class Pycharm extends IsIDE {
+        private Pycharm(Project project) {
+            super(project, SupportedLanguages.PYTHON);
+        }
+    }
 
 
 }

@@ -8,7 +8,7 @@ import com.intellij.openapi.wm.*;
 import com.intellij.ui.content.ContentFactory;
 import com.intellij.util.ui.JBUI;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
-import org.digma.intellij.plugin.common.*;
+import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
@@ -32,7 +32,7 @@ import static org.digma.intellij.plugin.ui.wizard.InstallationWizardSidePanelWin
 /**
  * The main Digma tool window on left panel
  */
-public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
+public final class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
 
     private static final Logger LOGGER = Logger.getInstance(DigmaSidePaneToolWindowFactory.class);
     private static final String DIGMA_NAME = "DIGMA";
@@ -50,11 +50,6 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
 
         //initialize AnalyticsService early so the UI can detect the connection status when created
         AnalyticsService.getInstance(project);
-
-        if (!PersistenceService.getInstance().isFirstTimePluginLoaded()) {
-            PersistenceService.getInstance().setFirstTimePluginLoaded();
-            ActivityMonitor.getInstance(project).registerFirstTimePluginLoadedNew();
-        }
 
         Log.log(LOGGER::debug, "createToolWindowContent for project  {}", project);
 
@@ -98,9 +93,9 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
                 wizardPanelBuilder,
                 troubleshootingPanelBuilder);
 
-        if (IDEUtilsService.shouldOpenWizard()) {
+        if (PersistenceService.getInstance().isFirstWizardLaunch()) {
             ActivityMonitor.getInstance(project).registerCustomEvent("show-installation-wizard",
-                    Collections.singletonMap("reason", "show on startup,probably new installation"));
+                    Collections.singletonMap("reason", "show on startup,first wizard launch is true"));
             MainToolWindowCardsController.getInstance(project).showWizard(false);
         }
         else{

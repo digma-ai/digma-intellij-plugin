@@ -72,15 +72,10 @@ class PersistenceService {
     }
 
     fun isFirstTimePluginLoaded(): Boolean {
-        //todo: backwards compatibility, remove state.isFirstTimePluginLoaded on May 2024
-        if (state.isFirstTimePluginLoaded && state.firstTimePluginLoadedTimestamp == null) {
-            state.firstTimePluginLoadedTimestamp = Instant.now()
-        }
-
-        return state.firstTimePluginLoadedTimestamp != null
+        return state.firstTimePluginLoadedTimestamp == null
     }
 
-    fun setFirstTimePluginLoaded() {
+    fun setFirstTimePluginLoadedDone() {
         state.firstTimePluginLoadedTimestamp = Instant.now()
     }
 
@@ -148,29 +143,6 @@ class PersistenceService {
         state.isAutoOtel = isObservabilityEnabled
     }
 
-    fun isAlreadyPassedTheInstallationWizardForIdeaIDE(): Boolean {
-        return state.alreadyPassedTheInstallationWizardForIdeaIDE
-    }
-
-    fun setAlreadyPassedTheInstallationWizardForIdeaIDE() {
-        state.alreadyPassedTheInstallationWizardForIdeaIDE = true
-    }
-
-    fun isAlreadyPassedTheInstallationWizardForRiderIDE(): Boolean {
-        return state.alreadyPassedTheInstallationWizardForRiderIDE
-    }
-
-    fun setAlreadyPassedTheInstallationWizardForRiderIDE() {
-        state.alreadyPassedTheInstallationWizardForRiderIDE = true
-    }
-
-    fun isAlreadyPassedTheInstallationWizardForPyCharmIDE(): Boolean {
-        return state.alreadyPassedTheInstallationWizardForPyCharmIDE
-    }
-
-    fun setAlreadyPassedTheInstallationWizardForPyCharmIDE() {
-        state.alreadyPassedTheInstallationWizardForPyCharmIDE = true
-    }
 
 
     fun isFirstTimeConnectionEstablished(): Boolean {

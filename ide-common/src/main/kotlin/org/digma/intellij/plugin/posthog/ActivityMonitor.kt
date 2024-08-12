@@ -646,12 +646,7 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
     }
 
 
-    //todo: remove at some point
     fun registerFirstTimePluginLoaded() {
-        postHog?.capture(UniqueGeneratedUserId.userId, "plugin first-loaded")
-    }
-
-    fun registerFirstTimePluginLoadedNew() {
         postHog?.capture(UniqueGeneratedUserId.userId, "plugin first-init")
     }
 

@@ -21,7 +21,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.*;
 
 import static org.digma.intellij.plugin.analytics.EnvUtilsKt.refreshEnvironmentsNowOnBackground;
-import static org.digma.intellij.plugin.persistence.PersistenceUtilsKt.updateInstallationWizardFlag;
 import static org.digma.intellij.plugin.scheduling.SchedulersKt.oneShotTask;
 
 /**
@@ -106,7 +105,6 @@ public class MainToolWindowCardsController implements Disposable {
                 if (isCentralized()) {
                     //do here everything that happens on INSTALLATION_WIZARD/FINISH message
                     PersistenceService.getInstance().firstWizardLaunchDone();
-                    updateInstallationWizardFlag();
                     EDT.ensureEDT(() -> {
                         ToolWindowShower.getInstance(project).showToolWindow();
                         project.getService(RecentActivityToolWindowShower.class).showToolWindow();
@@ -296,7 +294,7 @@ public class MainToolWindowCardsController implements Disposable {
         //in case user finished new install but never clicked finish in the wizard, and clicks a link somewhere,
         // for example in recent activity, then close everything to show the main panel
         if (wizard.isOn()) {
-            updateInstallationWizardFlag();
+            PersistenceService.getInstance().firstWizardLaunchDone();
         }
         wizardFinished();
         troubleshootingFinished();

@@ -194,7 +194,7 @@ class AddEnvironmentsService {
                 //maven run configuration does not fall in the categories above and requires special handling
 
                 val jvmBuildSystemHelperService: JvmBuildSystemHelperService = project.service<JvmBuildSystemHelperService>()
-                if (IDEUtilsService.isIdeaIDE() && jvmBuildSystemHelperService.isMaven(config)) {
+                if (IDEUtilsService.getInstance(project).isIdeaIDE && jvmBuildSystemHelperService.isMaven(config)) {
                     Log.log(logger::info, "adding environment to configuration {}", config.name)
                     //if environment is empty we create new one jvmBuildSystemHelperService.updateEnvironmentOnConfiguration
                     // will create a new env on maven configuration
@@ -276,10 +276,10 @@ class AddEnvironmentsService {
                 //maven run configuration does not fall in the categories above and requires special handling
 
                 val jvmBuildSystemHelperService: JvmBuildSystemHelperService = project.service<JvmBuildSystemHelperService>()
-                if (IDEUtilsService.isIdeaIDE() && jvmBuildSystemHelperService.isMaven(config)) {
+                if (IDEUtilsService.getInstance(project).isIdeaIDE && jvmBuildSystemHelperService.isMaven(config)) {
                     Log.log(logger::info, "clearing configuration {}", config.name)
                     val envs = jvmBuildSystemHelperService.getEnvironmentMapFromRunConfiguration(config)?.toMutableMap()
-                    //if there is no env there is nothing to clean
+                    //if there is no environment then there is nothing to clean
                     if (envs != null) {
                         clearAttributesFromConfig(envs)
                         jvmBuildSystemHelperService.updateEnvironmentOnConfiguration(config, envs)

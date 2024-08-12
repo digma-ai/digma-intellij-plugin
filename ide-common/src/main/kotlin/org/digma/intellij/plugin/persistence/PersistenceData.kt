@@ -19,9 +19,6 @@ internal data class PersistenceData(
     // remove isAutoOtel after some versions, can remove in June 2024 when probably all users updated the plugin
     var isAutoOtel: Boolean = true,
     var isObservabilityEnabled: Boolean = true,
-    var alreadyPassedTheInstallationWizardForIdeaIDE: Boolean = false,
-    var alreadyPassedTheInstallationWizardForRiderIDE: Boolean = false,
-    var alreadyPassedTheInstallationWizardForPyCharmIDE: Boolean = false,
     var firstWizardLaunch: Boolean = true,
 
 
@@ -64,8 +61,6 @@ internal data class PersistenceData(
     @OptionTag(converter = InstantConverter::class)
     var firstTimeRecentActivityReceivedTimestamp: Instant? = null,
 
-    //todo: remove isFirstTimePluginLoaded in May 2024
-    var isFirstTimePluginLoaded: Boolean = false,
     @OptionTag(converter = InstantConverter::class)
     var firstTimePluginLoadedTimestamp: Instant? = null,
 

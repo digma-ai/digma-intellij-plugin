@@ -313,7 +313,8 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
     }
 
     fun registerFirstInsightReceived() {
-        capture("insight first-received")
+        capture("insight first-received") //todo: fix dashboards to use 'plugin first-insight' and remove this one
+        capture("plugin first-insight") //use this so it's the same pattern as "plugin first-assets" and "plugin first-activity"
     }
 
     fun registerFirstAssetsReceived() {

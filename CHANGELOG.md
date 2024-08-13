@@ -1,6 +1,16 @@
 # Changelog
 
-## [2.0.368] - 2024-08-07
+## [2.0.369] - 2024-08-13
+
+- update build profiles by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2379
+- export import settings Closes #2370 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2378
+- Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2380
+- add-site-to-posthog by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2381
+- better error handling in AggressiveUpdateService Closes #2383 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2384
+- check myAlarm.isDisposed Closes #2386 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2387
+- reorganize first time plugin loaded persistence and event Closes #2391 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2396
+
+## 2.0.368 - 2024-08-07
 
 - reset user id Closes #2372 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2373
 - Feature/report fix by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2371

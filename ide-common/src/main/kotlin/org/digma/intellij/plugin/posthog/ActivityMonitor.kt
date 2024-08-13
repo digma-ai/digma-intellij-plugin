@@ -160,9 +160,9 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
 
         val mutableDetails = details.toMutableMap()
 
-        mutableDetails["firstTimeInsightReceived"] = PersistenceService.getInstance().isFirstTimeInsightReceived()
-        mutableDetails["firstTimeAssetsReceived"] = PersistenceService.getInstance().isFirstTimeAssetsReceived()
-        mutableDetails["firstTimeRecentActivityReceived"] = PersistenceService.getInstance().isFirstTimeRecentActivityReceived()
+        mutableDetails["firstTimeInsightReceived"] = PersistenceService.getInstance().isFirstInsightReceived()
+        mutableDetails["firstTimeAssetsReceived"] = PersistenceService.getInstance().isFirstAssetsReceived()
+        mutableDetails["firstTimeRecentActivityReceived"] = PersistenceService.getInstance().isFirstRecentActivityReceived()
         mutableDetails["plugin.version"] = SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("unknown")
         mutableDetails["ide.version"] = ApplicationInfo.getInstance().fullVersion
         mutableDetails["ide.name"] = ApplicationInfo.getInstance().versionName
@@ -254,7 +254,7 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
     private fun registerOnlineOfflineUserAction(details: Map<String, Any>) {
 
         val eventName =
-            if (PersistenceService.getInstance().isFirstTimeAssetsReceived() && BackendConnectionMonitor.getInstance(project).isConnectionOk()) {
+            if (PersistenceService.getInstance().isFirstAssetsReceived() && BackendConnectionMonitor.getInstance(project).isConnectionOk()) {
                 "online-user-action"
             } else {
                 "offline-user-action"
@@ -313,7 +313,8 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
     }
 
     fun registerFirstInsightReceived() {
-        capture("insight first-received")
+        capture("insight first-received") //todo: fix dashboards to use 'plugin first-insight' and remove this one
+        capture("plugin first-insight") //use this so it's the same pattern as "plugin first-assets" and "plugin first-activity"
     }
 
     fun registerFirstAssetsReceived() {

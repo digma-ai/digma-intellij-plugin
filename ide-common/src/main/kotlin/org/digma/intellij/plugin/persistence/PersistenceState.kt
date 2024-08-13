@@ -31,9 +31,9 @@ internal open class PersistenceState : PersistentStateComponent<PersistenceData>
     override fun loadState(state: PersistenceData) {
         myPersistenceData = state
 
-        //todo: backwards compatibility, we want to change the name to isObservabilityEnabled.
-        // remove isAutoOtel after some versions, can remove in June 2024 when probably all users updated the plugin
-        myPersistenceData.isObservabilityEnabled = myPersistenceData.isAutoOtel
+        //todo: backwards compatibility, remove firstTimeConnectionEstablishedTimestampNew in January 2025
+        // renamed without the new suffix
+        myPersistenceData.firstTimeConnectionEstablishedTimestamp = myPersistenceData.firstTimeConnectionEstablishedTimestampNew
     }
 
 

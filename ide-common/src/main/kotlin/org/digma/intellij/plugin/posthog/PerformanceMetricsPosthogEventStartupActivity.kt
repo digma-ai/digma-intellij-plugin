@@ -48,7 +48,7 @@ class ContinuousPerformanceMetricsReporter : DisposableAdaptor {
 
         Log.log(logger::info, "ContinuousPerformanceMetricsReporter starting")
 
-        if (!PersistenceService.getInstance().isFirstTimePerformanceMetrics()) {
+        if (PersistenceService.getInstance().isFirstTimePerformanceMetrics()) {
 
             val disposable = Disposer.newDisposable()
             disposable.disposingPeriodicTask(
@@ -56,7 +56,7 @@ class ContinuousPerformanceMetricsReporter : DisposableAdaptor {
                 2.minutes.inWholeMilliseconds,
                 10.minutes.inWholeMilliseconds, true
             ) {
-                if (!PersistenceService.getInstance().isFirstTimePerformanceMetrics()) {
+                if (PersistenceService.getInstance().isFirstTimePerformanceMetrics()) {
                     checkForFirstTime()
                 } else {
                     //will dispose this task
@@ -73,7 +73,7 @@ class ContinuousPerformanceMetricsReporter : DisposableAdaptor {
 
     private fun checkForFirstTime() {
 
-        if (!PersistenceService.getInstance().isFirstTimePerformanceMetrics()) {
+        if (PersistenceService.getInstance().isFirstTimePerformanceMetrics()) {
             try {
 
                 findActiveProject()?.takeIf { isProjectValid(it) }?.let { project ->
@@ -85,8 +85,8 @@ class ContinuousPerformanceMetricsReporter : DisposableAdaptor {
                         getActivityMonitor(project).let { activityMonitor ->
                             Log.log(logger::info, "registering first time performance metrics")
                             activityMonitor.registerPerformanceMetrics(result, true)
-                            if (!PersistenceService.getInstance().isFirstTimePerformanceMetrics()) {
-                                PersistenceService.getInstance().setFirstTimePerformanceMetrics()
+                            if (PersistenceService.getInstance().isFirstTimePerformanceMetrics()) {
+                                PersistenceService.getInstance().setFirstTimePerformanceMetricsDone()
                             }
                         }
                     }

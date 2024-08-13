@@ -78,13 +78,13 @@ class AssetsService(private val project: Project) : Disposable {
 
     private fun checkInsightExists() {
 
-        if (!PersistenceService.getInstance().isFirstTimeAssetsReceived()) {
+        if (!PersistenceService.getInstance().isFirstAssetsReceived()) {
             try {
                 val insightsExists = AnalyticsService.getInstance(project).insightsExist
                 val payload = objectMapper.readTree(insightsExists)
                 if (!payload.isMissingNode && payload["insightExists"].asBoolean()) {
                     ActivityMonitor.getInstance(project).registerFirstAssetsReceived()
-                    PersistenceService.getInstance().setFirstTimeAssetsReceived()
+                    PersistenceService.getInstance().setFirstAssetsReceived()
                 }
             } catch (e: Throwable) {
                 Log.warnWithException(logger, project, e, "error reporting FirstTimeAssetsReceived {}", e)

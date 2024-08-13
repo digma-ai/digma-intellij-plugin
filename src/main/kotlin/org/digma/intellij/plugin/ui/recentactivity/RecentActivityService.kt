@@ -77,8 +77,8 @@ class RecentActivityService(val project: Project, private val cs: CoroutineScope
 
             val recentActivityData = AnalyticsService.getInstance(project).getRecentActivity(environmentsIds)
 
-            if (recentActivityData.entries.isNotEmpty() && !service<PersistenceService>().isFirstTimeRecentActivityReceived()) {
-                service<PersistenceService>().setFirstTimeRecentActivityReceived()
+            if (recentActivityData.entries.isNotEmpty() && !service<PersistenceService>().isFirstRecentActivityReceived()) {
+                service<PersistenceService>().setFirstRecentActivityReceived()
                 ActivityMonitor.getInstance(project).registerFirstTimeRecentActivityReceived()
             }
 

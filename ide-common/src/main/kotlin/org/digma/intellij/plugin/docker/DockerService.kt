@@ -89,7 +89,8 @@ class DockerService {
     private fun isDockerDaemonDownExitValue(exitValue: String): Boolean {
         return exitValue.contains("Cannot connect to the Docker daemon", true) ||//mac, linux
                 exitValue.contains("docker daemon is not running", true) || //win
-                exitValue.contains("The system cannot find the file specified", true) || //win
+                //this is an error on windows with docker desktop that will be solved by starting docker desktop
+                (exitValue.contains("error during connect", true) && exitValue.contains("The system cannot find the file specified", true)) || //win
                 exitValue.contains("Error while fetching server API version", true)
     }
 

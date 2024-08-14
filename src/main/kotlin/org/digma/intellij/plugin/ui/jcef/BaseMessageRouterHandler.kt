@@ -285,7 +285,8 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                             }
                             if (scopeNode is NullNode) {
                                 val stats =
-                                    AnalyticsService.getInstance(project).getInsightsStats(null, insightTypes.joinToString(), services.joinToString())
+                                    AnalyticsService.getInstance(project)
+                                        .getInsightsStats(null, insightTypes.joinToString(","), services.joinToString(","))
                                 project.messageBus.syncPublisher(InsightStatsChangedEvent.INSIGHT_STATS_CHANGED_TOPIC)
                                     .insightStatsChanged(
                                         null,
@@ -298,7 +299,7 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                             } else {
                                 val spanCodeObjectId = scopeNode.get("span").get("spanCodeObjectId").asText()
                                 val stats = AnalyticsService.getInstance(project)
-                                    .getInsightsStats(spanCodeObjectId, insightTypes.joinToString(), services.joinToString())
+                                    .getInsightsStats(spanCodeObjectId, insightTypes.joinToString(","), services.joinToString(","))
                                 project.messageBus.syncPublisher(InsightStatsChangedEvent.INSIGHT_STATS_CHANGED_TOPIC)
                                     .insightStatsChanged(
                                         scopeNode,

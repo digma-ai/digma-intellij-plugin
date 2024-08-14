@@ -1,6 +1,13 @@
 # Changelog
 
-## [2.0.369] - 2024-08-13
+## [2.0.370] - 2024-08-14
+
+- remove-unused-properties-from-PersistenceState Closes #2390 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2397
+- Add error for docker daemon down Closes #2040 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2404
+- fix disposing in scheduled tasks Closes #2400 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2405
+- Change user id order by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2406
+
+## 2.0.369 - 2024-08-13
 
 - update build profiles by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2379
 - export import settings Closes #2370 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2378

@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.370] - 2024-08-14
+## [2.0.371] - 2024-08-14
+
+- Feature/service filters by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2407
+
+## 2.0.370 - 2024-08-14
 
 - remove-unused-properties-from-PersistenceState Closes #2390 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2397
 - Add error for docker daemon down Closes #2040 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2404

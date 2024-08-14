@@ -349,7 +349,7 @@ fun Disposable.disposingOneShotDelayedTask(name: String, delay: Long, block: () 
     consider this:
     calling disposingOneShotDelayedTask on a Disposable ,lets say a project service. and we would just register
     a child disposable on the project service to cancel the task.
-    if the project is closed before the task is executed the parent disposable, the service, will be disposed with all its children
+    if the project is closed before the task is executed, the parent disposable, the service, will be disposed with all its children
     and the task will be canceled.
     but if the task did execute and the project service was not disposed yet, we are left with a disposable child that will be disposed
     only when the service is disposed.
@@ -359,14 +359,14 @@ fun Disposable.disposingOneShotDelayedTask(name: String, delay: Long, block: () 
     the solution:
     calling disposingOneShotDelayedTask on a Disposable project service. the parent.
     we create here a new disposable,the child, register it as child of the parent.
-    register the task on the child disposable and in disposingOneShotDelayedTask0 we register a child for the child.
+    register the task on the child disposable and in disposingOneShotDelayedTaskImpl we register a child for the child.
     if the parent is disposed before the task is executed, the first child will be disposed, its child will be disposed and the task
     will be canceled.
     if the task executed and completed, the task itself disposes the first child, which will dispose its child. and now the parent
     doesn't have a leftover child.
 
-    Notice that we execute disposingOneShotDelayedTask0 on the child disposable, its private and should only be used internally.
-    in disposingOneShotDelayedTask0 when the task completes it disposes this in the finally block.
+    Notice that we execute disposingOneShotDelayedTaskImpl on the child disposable, its private and should only be used internally.
+    in disposingOneShotDelayedTaskImpl when the task completes it disposes 'this' in the finally block.
     see unit tests:
     testDisposingOneShotDelayedTaskParentDisposableHasNoChildren
     testDisposingOneShotDelayedTaskCanceledParentDisposableHasNoChildren

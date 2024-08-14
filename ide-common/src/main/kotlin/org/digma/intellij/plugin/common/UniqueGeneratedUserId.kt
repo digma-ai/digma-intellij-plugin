@@ -17,6 +17,7 @@ object UniqueGeneratedUserId {
             userId = "$userName@${CommonUtils.getLocalHostname()}"
             isDevUser = true
         } else if (System.getenv("devenv") == "externalUserSimulator") {
+            //this is just to overcome my own deleted external user which can not be recreated in posthog
             if (service<PersistenceService>().getUserId() == null) {
                 service<PersistenceService>().setUserId(generateUniqueUserId("digma"))
             }

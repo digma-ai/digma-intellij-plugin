@@ -13,8 +13,16 @@ object UniqueGeneratedUserId {
 
     init {
         if (System.getenv("devenv") == "digma") {
-            userId = CommonUtils.getLocalHostname()
+            val userName = System.getProperty("user.name") ?: "user"
+            userId = "$userName@${CommonUtils.getLocalHostname()}"
             isDevUser = true
+        } else if (System.getenv("devenv") == "externalUserSimulator") {
+            //this is just to overcome my own deleted external user which can not be recreated in posthog
+            if (service<PersistenceService>().getUserId() == null) {
+                service<PersistenceService>().setUserId(generateUniqueUserId("digma"))
+            }
+            userId = service<PersistenceService>().getUserId()!!
+            isDevUser = false
         } else {
             if (service<PersistenceService>().getUserId() == null) {
                 service<PersistenceService>().setUserId(generateUniqueUserId())
@@ -27,7 +35,7 @@ object UniqueGeneratedUserId {
 
 
 //this method is outside the class so that it can be tested,UniqueGeneratedUserId can not be instantiated in regular unit tests
-fun generateUniqueUserId(): String {
+fun generateUniqueUserId(salt: String = ""): String {
     try {
         val userName = System.getProperty("user.name")
         val userHome = System.getProperty("user.home")
@@ -36,7 +44,7 @@ fun generateUniqueUserId(): String {
         //MUST BE SORTED
         val ni = NetworkInterface.networkInterfaces().toList().mapNotNull { it.hardwareAddress }.map { macAddressToString(it) }.sorted()
             .joinToString("-")
-        val baseString = userName + userHome + osName + osArch + ni
+        val baseString = salt + userName + userHome + osName + osArch + ni
         return DigestUtils.sha1Hex(baseString)
     } catch (e: Throwable) {
         return DigestUtils.sha1Hex(UUID.randomUUID().toString())

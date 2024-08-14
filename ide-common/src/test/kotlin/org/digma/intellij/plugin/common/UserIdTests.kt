@@ -14,4 +14,13 @@ class UserIdTests {
         }
     }
 
+    @Test
+    fun testUniquenessWithSalt() {
+        val myId = generateUniqueUserId("digma")
+        repeat(10) {
+            val id = generateUniqueUserId("digma")
+            assertEquals(myId, id)
+        }
+    }
+
 }

@@ -37,7 +37,7 @@ fun generateUniqueUserId(): String {
         //MUST BE SORTED
         val ni = NetworkInterface.networkInterfaces().toList().mapNotNull { it.hardwareAddress }.map { macAddressToString(it) }.sorted()
             .joinToString("-")
-        val baseString = "$userName~$userHome~$osName~$osArch~$ni"
+        val baseString = "$userName-$userHome-$osName-$osArch-$ni"
         return DigestUtils.sha1Hex(baseString)
     } catch (e: Throwable) {
         return DigestUtils.sha1Hex(UUID.randomUUID().toString())

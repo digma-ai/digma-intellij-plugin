@@ -316,9 +316,9 @@ tasks {
 
         )
 
-        //to simulate external user
+        //to simulate external user. don't change the value it's used in UniqueGeneratedUserId
 //        environment(
-//            "devenv" to "notdigma"
+//            "devenv" to "externalUserSimulator"
 //        )
 
     }

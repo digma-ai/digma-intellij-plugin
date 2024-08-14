@@ -148,7 +148,7 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
 
 
     override fun dispose() {
-        //nothing to do, used as parent disposable
+        postHog?.shutdown()
     }
 
 
@@ -171,11 +171,16 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
         mutableDetails["server.deploymentType"] = serverInfo?.deploymentType.toString()
         mutableDetails["site"] = serverInfo?.site.toString()
 
-        postHog?.capture(
-            UniqueGeneratedUserId.userId,
-            eventName,
-            mutableDetails
-        )
+        Log.log(logger::trace, "sending event {}, posthog is alive: {}", eventName, postHog != null)
+        try {
+            postHog?.capture(
+                UniqueGeneratedUserId.userId,
+                eventName,
+                mutableDetails
+            )
+        } catch (e: Throwable) {
+            Log.warnWithException(logger, e, "error in postHog.capture")
+        }
     }
 
 
@@ -648,11 +653,16 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
 
 
     fun registerFirstTimePluginLoaded() {
+        //only here use postHog, this event doesn't need all the common properties
         postHog?.capture(UniqueGeneratedUserId.userId, "plugin first-init")
     }
 
-    fun registerPluginLoaded() {
-        postHog?.capture(UniqueGeneratedUserId.userId, "plugin loaded")
+    fun registerProjectOpened(openProjects: Int) {
+        capture("project opened", mapOf("open.projects" to openProjects))
+    }
+
+    fun registerProjectClosed(openProjects: Int) {
+        capture("project closed", mapOf("open.projects" to openProjects))
     }
 
     fun registerPluginUninstalled(): String {

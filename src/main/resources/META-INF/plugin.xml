@@ -109,7 +109,7 @@
                                     id="org.digma.intellij.plugin.editor.DigmaEditorNotificationProvider"/>
 
         <postStartupActivity implementation="org.digma.intellij.plugin.posthog.ActivityMonitorStarter"/>
-        <postStartupActivity implementation="org.digma.intellij.plugin.common.StartupStartupActivity"/>
+        <postStartupActivity implementation="org.digma.intellij.plugin.posthog.FirstInitStartupActivity"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.ui.recentactivity.RecentActivitiesStartup"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.posthog.ContainerEngineStartupActivity"/>
         <postStartupActivity
@@ -129,6 +129,8 @@
         <postStartupActivity implementation="org.digma.intellij.plugin.digmathon.DigmathonStartup"/>
 
         <postStartupActivity implementation="org.digma.intellij.plugin.scheduling.ThreadPoolProviderServiceStarter"/>
+
+        <postStartupActivity implementation="org.digma.intellij.plugin.posthog.CountingProjectActivity"/>
 
 
     </extensions>
@@ -159,5 +161,9 @@
                 topic="org.digma.intellij.plugin.updates.AggressiveUpdateStateChangedEvent"/>
     </projectListeners>
 
+    <applicationListeners>
+        <listener class="org.digma.intellij.plugin.posthog.CountingProjectCloseListener"
+                  topic="com.intellij.openapi.project.ProjectCloseListener"/>
+    </applicationListeners>
 
 </idea-plugin>

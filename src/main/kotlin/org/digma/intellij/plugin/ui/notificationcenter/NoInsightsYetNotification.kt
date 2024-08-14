@@ -15,7 +15,7 @@ import org.digma.intellij.plugin.scheduling.disposingPeriodicTask
 import java.time.Instant
 import kotlin.time.Duration.Companion.minutes
 
-
+//parentDisposable is the service
 fun startNoInsightsYetNotificationTimer(parentDisposable: Disposable) {
 
     if (service<PersistenceService>().isFirstInsightReceived()) {
@@ -44,9 +44,7 @@ private fun scheduleShowNotification(parentDisposable: Disposable, firstConnecti
         firstConnectionTime
     )
 
-    val disposable = Disposer.newDisposable()
-    Disposer.register(parentDisposable, disposable)
-    disposable.disposingOneShotDelayedTask("NoInsightsYetNotificationTimer.showNoInsightsYetNotification", 30.minutes.inWholeMilliseconds) {
+    parentDisposable.disposingOneShotDelayedTask("NoInsightsYetNotificationTimer.showNoInsightsYetNotification", 30.minutes.inWholeMilliseconds) {
         if (!service<PersistenceService>().isFirstInsightReceived()) {
             Log.log(AppNotificationCenter.logger::info, "in NoInsightsYetNotificationTimer, showing notification")
             showNoInsightsYetNotification()

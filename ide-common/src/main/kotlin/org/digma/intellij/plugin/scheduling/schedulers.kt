@@ -317,13 +317,25 @@ fun Disposable.disposingPeriodicTask(name: String, startupDelay: Long, period: L
         return false
     }
 
-    Disposer.register(this) {
-        Log.log(logger::trace, "disposing periodic task {}", name)
+    //it may happen that 'this' is already disposed before registering a disposer.
+    //for example tasks that dispose themselves. see for example startNoInsightsYetNotificationTimer,
+    // in a matter of microseconds it may happen that the task will run and dispose itself before we had a chance to register a disposer,
+    //if that happens the task will never be canceled.
+    //or 'this' may be disposed very quickly by some other component.
+    //in any case, if Disposer.register fails for any reason then cancel the task immediately, otherwise the task will never be canceled.
+    //we send an error event, although it is not really an error because it is probably an ok flow, but maybe we want to know about
+    // these cases and improve if necessary.
+    try {
+        Disposer.register(this) {
+            Log.log(logger::trace, "disposing periodic task {}", name)
+            future.cancel(true)
+        }
+    } catch (e: Throwable) {
         future.cancel(true)
+        Log.warnWithException(logger, e, "could not register disposer for task {}", name)
+        ErrorReporter.getInstance().reportError("org.digma.scheduler.disposingPeriodicTask", e, mapOf("task.name" to name))
     }
     return true
-
-
 }
 
 /**
@@ -404,14 +416,26 @@ private fun Disposable.disposingOneShotDelayedTaskImpl(name: String, delay: Long
         return false
     }
 
-
-    //this will run when parent disposable is disposed which will dispose this disposable and its children,if not disposed already.
-    Disposer.register(this) {
-        Log.log(logger::trace, "disposing delayed task {}", name)
+    //it may happen that 'this' is already disposed before registering a disposer.
+    //for example tasks that dispose themselves. see for example startNoInsightsYetNotificationTimer,
+    // in a matter of microseconds it may happen that the task will run and dispose itself before we had a chance to register a disposer,
+    //if that happens the task will never be canceled.
+    //or 'this' may be disposed very quickly by some other component.
+    //in any case, if Disposer.register fails for any reason then cancel the task immediately, otherwise the task will never be canceled.
+    //we send an error event, although it is not really an error because it is probably an ok flow, but maybe we want to know about
+    // these cases and improve if necessary.
+    try {
+        Disposer.register(this) {
+            Log.log(logger::trace, "disposing delayed task {}", name)
+            future.cancel(true)
+        }
+    } catch (e: Throwable) {
         future.cancel(true)
+        Log.warnWithException(logger, e, "could not register disposer for task {}", name)
+        ErrorReporter.getInstance().reportError("org.digma.scheduler.disposingPeriodicTask", e, mapOf("task.name" to name))
     }
-
     return true
+
 }
 
 /**

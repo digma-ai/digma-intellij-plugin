@@ -54,6 +54,10 @@ class SessionMetadataProperties {
         metadataProperties[key] = SessionMetadataProperty(value)
     }
 
+    fun delete(key: Any) {
+        metadataProperties.remove(key)
+    }
+
     inline fun <reified T> remove(key: Any): T? {
         return metadataProperties.remove(key) as T?
     }

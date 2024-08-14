@@ -13,7 +13,8 @@ object UniqueGeneratedUserId {
 
     init {
         if (System.getenv("devenv") == "digma") {
-            userId = CommonUtils.getLocalHostname()
+            val userName = System.getProperty("user.name") ?: "user"
+            userId = "$userName@${CommonUtils.getLocalHostname()}"
             isDevUser = true
         } else {
             if (service<PersistenceService>().getUserId() == null) {
@@ -36,7 +37,7 @@ fun generateUniqueUserId(): String {
         //MUST BE SORTED
         val ni = NetworkInterface.networkInterfaces().toList().mapNotNull { it.hardwareAddress }.map { macAddressToString(it) }.sorted()
             .joinToString("-")
-        val baseString = userName + userHome + osName + osArch + ni
+        val baseString = "$userName~$userHome~$osName~$osArch~$ni"
         return DigestUtils.sha1Hex(baseString)
     } catch (e: Throwable) {
         return DigestUtils.sha1Hex(UUID.randomUUID().toString())

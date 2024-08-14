@@ -17,6 +17,7 @@ data class GetIssuesRequestPayload
     "sortBy",
     "sortOrder",
     "insightTypes",
+    "services",
     "page"
 )
 constructor(
@@ -28,5 +29,6 @@ constructor(
     val sortBy: String,
     val sortOrder: String,
     @JsonRawValue val insightTypes: String?,
+    @JsonRawValue val services: String?,
     val page: Number
 )

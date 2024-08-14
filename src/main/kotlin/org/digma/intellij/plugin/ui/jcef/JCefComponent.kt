@@ -269,7 +269,7 @@ private constructor(
                     scope: SpanScope?, codeLocation: CodeLocation, hasErrors: Boolean, scopeContext: ScopeContext?, environmentId: String?
                 ) {
                     try {
-                        val insightsStats = AnalyticsService.getInstance(project).getInsightsStats(scope?.spanCodeObjectId, null)
+                        val insightsStats = AnalyticsService.getInstance(project).getInsightsStats(scope?.spanCodeObjectId, null, null)
 
                         sendScopeChangedMessage(
                             jbCefBrowser.cefBrowser,

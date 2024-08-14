@@ -99,6 +99,7 @@ public abstract class AbstractInsightsMessageRouterHandler extends BaseCommonMes
                 query.at("/sorting/criterion").asText(null),
                 query.at("/sorting/order").asText(null),
                 query.at("/insightTypes").toString(),
+                query.at("/services").toString(),
                 query.at("/page").asInt(0));
 
         InsightsService.getInstance(getProject()).refreshIssuesList(request);

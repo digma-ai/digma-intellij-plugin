@@ -167,7 +167,7 @@ class ScopeManager(private val project: Project) {
 
         //in both these cases, if there are no insights, show analytics
         if (preferredView == null || preferredView == View.Insights) {
-            val insightsStats = AnalyticsService.getInstance(project).getInsightsStats(scope.spanCodeObjectId, null)
+            val insightsStats = AnalyticsService.getInstance(project).getInsightsStats(scope.spanCodeObjectId, null, null)
             if (insightsStats.issuesInsightsCount == 0) {
                 MainContentViewSwitcher.getInstance(project).showAnalytics()
             } else {

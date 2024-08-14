@@ -462,7 +462,7 @@ public class AnalyticsService implements Disposable {
     }
 
     @NotNull
-    public InsightsStatsResult getInsightsStats(String spanCodeObjectId, String insightTypes) {
+    public InsightsStatsResult getInsightsStats(String spanCodeObjectId, String insightTypes, String services) {
         try {
             var envId = getCurrentEnvironmentId();
             var params = new HashMap<String, Object>();
@@ -474,6 +474,10 @@ public class AnalyticsService implements Disposable {
 
             if (insightTypes != null && !insightTypes.isEmpty()) {
                 params.put("insights", insightTypes);
+            }
+
+            if (services != null && !services.isEmpty()) {
+                params.put("services", services);
             }
 
             return executeCatching(() -> analyticsProviderProxy.getInsightsStats(params));

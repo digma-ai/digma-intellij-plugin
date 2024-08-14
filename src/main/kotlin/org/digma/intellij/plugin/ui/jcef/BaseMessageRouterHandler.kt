@@ -270,14 +270,23 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                         payload?.let {
                             val scopeNode = payload.get("scope")
                             val insightTypesJsonArray = payload.at("/filters/insights")
+                            val servicesJsonArray = payload.at("/filters/services")
                             val insightTypes = mutableListOf<String>()
                             if (insightTypesJsonArray is ArrayNode) {
                                 insightTypesJsonArray.forEach { type: JsonNode ->
                                     insightTypes.add(type.asText())
                                 }
                             }
+                            val services = mutableListOf<String>()
+                            if (servicesJsonArray is ArrayNode) {
+                                servicesJsonArray.forEach { type: JsonNode ->
+                                    services.add(type.asText())
+                                }
+                            }
                             if (scopeNode is NullNode) {
-                                val stats = AnalyticsService.getInstance(project).getInsightsStats(null, insightTypes.joinToString())
+                                val stats =
+                                    AnalyticsService.getInstance(project)
+                                        .getInsightsStats(null, insightTypes.joinToString(","), services.joinToString(","))
                                 project.messageBus.syncPublisher(InsightStatsChangedEvent.INSIGHT_STATS_CHANGED_TOPIC)
                                     .insightStatsChanged(
                                         null,
@@ -289,7 +298,8 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                                     )
                             } else {
                                 val spanCodeObjectId = scopeNode.get("span").get("spanCodeObjectId").asText()
-                                val stats = AnalyticsService.getInstance(project).getInsightsStats(spanCodeObjectId, insightTypes.joinToString())
+                                val stats = AnalyticsService.getInstance(project)
+                                    .getInsightsStats(spanCodeObjectId, insightTypes.joinToString(","), services.joinToString(","))
                                 project.messageBus.syncPublisher(InsightStatsChangedEvent.INSIGHT_STATS_CHANGED_TOPIC)
                                     .insightStatsChanged(
                                         scopeNode,
@@ -377,7 +387,7 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
             Log.debugWithException(logger, project, e, "error calling about")
         }
 
-        val insightsStats = AnalyticsService.getInstance(project).getInsightsStats(null, null)
+        val insightsStats = AnalyticsService.getInstance(project).getInsightsStats(null, null, null)
 
         updateDigmaEngineStatus(project, browser)
 

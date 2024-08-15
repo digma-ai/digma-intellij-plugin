@@ -134,7 +134,6 @@ class DockerService {
     fun installEngine(project: Project, resultTask: Consumer<String>) {
         installationInProgress = true
 
-        PersistenceService.getInstance().setLocalEngineInstalled(true)
 
         val onCompleted = Consumer { _: String ->
             installationInProgress = false

@@ -298,6 +298,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                     }
                     val isEngineUp = connectionOk && success
                     if (isEngineUp) {
+                        PersistenceService.getInstance().setLocalEngineInstalled(true)
                         sendDockerResult(
                             ConnectionCheckResult.SUCCESS.value,
                             "",

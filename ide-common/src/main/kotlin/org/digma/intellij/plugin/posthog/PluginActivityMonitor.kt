@@ -13,6 +13,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import org.digma.intellij.plugin.PluginId
 import org.digma.intellij.plugin.docker.DockerService
+import org.digma.intellij.plugin.docker.LocalInstallationFacade
 import org.digma.intellij.plugin.log.Log
 
 @Suppress("UnstableApiUsage")
@@ -57,7 +58,7 @@ class PluginActivityMonitor(private val project: Project) : PluginStateListener,
 
             if (service<DockerService>().isEngineInstalled()) {
                 Log.log(LOGGER::info, "removing digma engine on plugin uninstall")
-                service<DockerService>().removeEngine(project) {
+                service<LocalInstallationFacade>().removeEngine(project) {
                     Log.log(LOGGER::info, "removed digma engine on plugin uninstall completed with {}", it)
                 }
             }

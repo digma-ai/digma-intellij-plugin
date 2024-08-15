@@ -7,6 +7,8 @@ import com.intellij.openapi.project.Project
 import com.intellij.ui.awt.RelativePoint
 import com.intellij.util.ui.JBUI.Borders.empty
 import org.digma.intellij.plugin.docker.DockerService
+import org.digma.intellij.plugin.docker.LocalInstallationFacade
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
 import org.digma.intellij.plugin.service.EditorService
 import org.digma.intellij.plugin.ui.common.Links.DIGMA_DOCKER_APP_URL
@@ -44,7 +46,15 @@ class UpdateBackendAction {
                         HintManager.getInstance()
                             .showHint(upgradePopupLabel, RelativePoint.getNorthWestOf(it), HintManager.HIDE_BY_ESCAPE, 5000)
                     }
-                    service<DockerService>().upgradeEngine(project)
+                    service<LocalInstallationFacade>().upgradeEngine(project) { exitValue ->
+                        if (exitValue != "0") {
+                            ErrorReporter.getInstance().reportError(
+                                "UpdateBackendAction.upgradeLocalEngine",
+                                "failed to upgrade local engine",
+                                mapOf("exitValue" to exitValue)
+                            )
+                        }
+                    }
                 } else {
                     EditorService.getInstance(project)
                         .openClasspathResourceReadOnly(UPDATE_GUIDE_DOCKER_COMPOSE_NAME, UPDATE_GUIDE_DOCKER_COMPOSE_PATH)

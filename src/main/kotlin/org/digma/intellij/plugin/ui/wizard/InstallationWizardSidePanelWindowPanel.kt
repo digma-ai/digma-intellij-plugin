@@ -30,6 +30,7 @@ import org.digma.intellij.plugin.digmathon.DigmathonService
 import org.digma.intellij.plugin.digmathon.UserFinishedDigmathonEvent
 import org.digma.intellij.plugin.docker.DigmaInstallationStatus
 import org.digma.intellij.plugin.docker.DockerService
+import org.digma.intellij.plugin.docker.LocalInstallationFacade
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.jcef.common.CustomSchemeHandlerFactory
 import org.digma.intellij.plugin.log.Log
@@ -250,7 +251,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
 
                 localEngineOperationRunning.set(true)
 
-                service<DockerService>().installEngine(project) { exitValue ->
+                service<LocalInstallationFacade>().installEngine(project) { exitValue ->
 
                     EDT.assertNonDispatchThread()
 
@@ -384,7 +385,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
             }
             if (JCEFGlobalConstants.INSTALLATION_WIZARD_START_DIGMA_ENGINE.equals(action, ignoreCase = true)) {
                 localEngineOperationRunning.set(true)
-                service<DockerService>().startEngine(project) { exitValue ->
+                service<LocalInstallationFacade>().startEngine(project) { exitValue ->
 
                     EDT.assertNonDispatchThread()
 
@@ -460,7 +461,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
             }
             if (JCEFGlobalConstants.INSTALLATION_WIZARD_STOP_DIGMA_ENGINE.equals(action, ignoreCase = true)) {
                 localEngineOperationRunning.set(true)
-                service<DockerService>().stopEngine(project) { exitValue ->
+                service<LocalInstallationFacade>().stopEngine(project) { exitValue ->
 
                     EDT.assertNonDispatchThread()
 

@@ -21,7 +21,15 @@ import org.digma.intellij.plugin.posthog.ActivityMonitor
 import java.util.function.Consumer
 import java.util.function.Supplier
 
-
+/**
+ * this service is a front end to docker, it can install,upgrade,stop,start,remove and also provide
+ * information about docker installation and running instances.
+ * this service is a kind of CRUD service, the core operation of install,upgrade,stop,start,remove
+ * should never be called directly because it does not manage single access and locking, meaning if install is called
+ * multiple times concurrently it may cause failures. please never call these operations directly, always call
+ * LocalInstallationFacade for these CRUD operations,LocalInstallationFacade manages single access and logical flows.
+ * information services may be called directly
+ */
 @Service(Service.Level.APP)
 class DockerService {
 
@@ -95,7 +103,6 @@ class DockerService {
     }
 
 
-
     fun collectDigmaContainerLog(): String {
         try {
 
@@ -113,7 +120,7 @@ class DockerService {
             val getLogCommand = GeneralCommandLine(dockerCmd, "logs", "--tail", "1000", "$containerId")
                 .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
 
-            val processOutput: ProcessOutput =  ExecUtil.execAndGetOutput(getLogCommand)
+            val processOutput: ProcessOutput = ExecUtil.execAndGetOutput(getLogCommand)
             return processOutput.toString()
 
         } catch (ex: Exception) {
@@ -179,11 +186,25 @@ class DockerService {
     }
 
 
-    fun upgradeEngine(project: Project) {
+    fun upgradeEngine(project: Project, resultTask: Consumer<String>) {
 
         ActivityMonitor.getInstance(project).registerDigmaEngineEventStart("upgradeEngine", mapOf())
 
         Backgroundable.runInNewBackgroundThread(project, "upgrading digma engine") {
+
+            //stop the engine before upgrade using the current compose file, before downloading a new file.
+            //the engine should be up otherwise the upgrade would not be triggered.
+            //ignore errors, we'll try to upgrade anyway after that.
+            try {
+                val dockerComposeCmd = getDockerComposeCommand()
+                dockerComposeCmd?.let {
+                    engine.down(project, downloader.composeFile, it, false)
+                }
+            } catch (e: Throwable) {
+                ErrorReporter.getInstance().reportError(project, "DockerService.upgradeEngine", e)
+                Log.warnWithException(logger, e, "Failed to stop docker engine {}", e)
+            }
+
 
             try {
                 if (downloader.downloadComposeFile(true)) {
@@ -191,22 +212,28 @@ class DockerService {
 
                     if (dockerComposeCmd != null) {
                         val exitValue = engine.up(project, downloader.composeFile, dockerComposeCmd)
+                        //in upgrade there is no need to check if daemon is down because upgrade will not be triggered if the engine is not running.
                         if (exitValue != "0") {
                             ActivityMonitor.getInstance(project).registerDigmaEngineEventError("upgradeEngine", exitValue)
                             Log.log(logger::warn, "error upgrading engine {}", exitValue)
                         }
+
+                        notifyResult(exitValue, resultTask)
                     } else {
                         ActivityMonitor.getInstance(project).registerDigmaEngineEventError("upgradeEngine", "could not find docker compose command")
                         Log.log(logger::warn, "could not find docker compose command")
+                        notifyResult(NO_DOCKER_COMPOSE_COMMAND, resultTask)
                     }
                 } else {
                     ActivityMonitor.getInstance(project).registerDigmaEngineEventError("upgradeEngine", "Failed to download compose file")
                     Log.log(logger::warn, "Failed to download compose file")
+                    notifyResult("Failed to download compose file", resultTask)
                 }
             } catch (e: Exception) {
                 ErrorReporter.getInstance().reportError(project, "DockerService.upgradeEngine", e)
                 ActivityMonitor.getInstance(project).registerDigmaEngineEventError("upgradeEngine", "Failed in upgradeEngine $e")
                 Log.warnWithException(logger, e, "Failed install docker engine {}", e)
+                notifyResult("Failed to upgrade docker engine: $e", resultTask)
             } finally {
                 ActivityMonitor.getInstance(project).registerDigmaEngineEventEnd("upgradeEngine", mapOf())
             }
@@ -265,15 +292,19 @@ class DockerService {
                     val dockerComposeCmd = getDockerComposeCommand()
 
                     if (dockerComposeCmd != null) {
-                        //we try to detect errors when running the docker command. engine.start executes docker-compose up,
-                        // if executing docker-compose up while containers exist it will print many errors that are ok but
-                        // that interferes with our attempt to detect errors.
-                        //so running down and then up solves it
-                        engine.down(project, downloader.composeFile, dockerComposeCmd, false)
+
                         try {
+                            //we try to detect errors when running the docker command. engine.start executes docker-compose up,
+                            // if executing docker-compose up while containers exist it will print many errors that are ok but
+                            // that interferes with our attempt to detect errors.
+                            //so running down and then up solves it.
+                            //in any case it's better to stop before start because we don't know the state of the engine, maybe its
+                            // partially up and start will fail.
+                            engine.down(project, downloader.composeFile, dockerComposeCmd, false)
                             Thread.sleep(2000)
                         } catch (e: Exception) {
-                            //ignore
+                            ErrorReporter.getInstance().reportError(project, "DockerService.startEngine", e)
+                            Log.warnWithException(logger, e, "Failed to stop docker engine {}", e)
                         }
 
                         var exitValue = engine.start(project, downloader.composeFile, dockerComposeCmd)
@@ -466,7 +497,6 @@ class DockerService {
     private fun notifyResult(errorMsg: String, resultTask: Consumer<String>) {
         resultTask.accept(errorMsg)
     }
-
 
 
 }

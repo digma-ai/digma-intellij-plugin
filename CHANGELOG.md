@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.371] - 2024-08-14
+## [2.0.372] - 2024-08-15
+
+- remove plugin loaded event Closes #2389 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2409
+- Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2412
+
+## 2.0.371 - 2024-08-14
 
 - Feature/service filters by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2407
 

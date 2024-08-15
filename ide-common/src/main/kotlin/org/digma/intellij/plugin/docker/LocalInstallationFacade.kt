@@ -85,7 +85,6 @@ class LocalInstallationFacade {
                     myResultTask.addConsumer(resultTask)
                     block.invoke()
                 }
-
                 op -> myResultTask.addConsumer(resultTask)
                 else -> {
                     //reject
@@ -106,9 +105,14 @@ class LocalInstallationFacade {
 
         override fun accept(result: String) {
             myLock.withLock {
-                operationInProgress.set(null)
-                myConsumers.forEach {
-                    it.accept(result)
+
+                try {
+                    myConsumers.forEach {
+                        it.accept(result)
+                    }
+                } finally {
+                    operationInProgress.set(null)
+                    myConsumers.clear()
                 }
             }
         }

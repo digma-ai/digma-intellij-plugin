@@ -1,7 +1,9 @@
 package org.digma.intellij.plugin.docker
 
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import org.digma.intellij.plugin.log.Log
 import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.locks.ReentrantLock
 import java.util.function.Consumer
@@ -13,6 +15,8 @@ import kotlin.concurrent.withLock
  */
 @Service(Service.Level.APP)
 class LocalInstallationFacade {
+
+    private val logger = Logger.getInstance(this::class.java)
 
     private enum class OP { INSTALL, UPGRADE, STOP, START, REMOVE }
 
@@ -33,8 +37,10 @@ class LocalInstallationFacade {
 
     fun installEngine(project: Project, resultTask: Consumer<String>) {
 
-        if (DockerService.getInstance().isEngineRunning(project)) {
-            resultTask.accept("install engine rejected because local engine is installed and running, please remove before reinstall")
+        Log.log(logger::trace, "installEngine requested")
+        if (DockerService.getInstance().isEngineInstalled()) {
+            Log.log(logger::trace, "installEngine rejected because already installed")
+            resultTask.accept("install engine rejected because local engine is installed, please remove before reinstall")
             return
         }
 
@@ -45,6 +51,7 @@ class LocalInstallationFacade {
 
     fun upgradeEngine(project: Project, resultTask: Consumer<String>) {
 
+        Log.log(logger::trace, "upgradeEngine requested")
         doOperation(OP.UPGRADE, resultTask) {
             DockerService.getInstance().upgradeEngine(project, myResultTask)
         }
@@ -52,6 +59,7 @@ class LocalInstallationFacade {
 
     fun stopEngine(project: Project, resultTask: Consumer<String>) {
 
+        Log.log(logger::trace, "stopEngine requested")
         doOperation(OP.STOP, resultTask) {
             DockerService.getInstance().stopEngine(project, myResultTask)
         }
@@ -59,8 +67,10 @@ class LocalInstallationFacade {
 
     fun startEngine(project: Project, resultTask: Consumer<String>) {
 
+        Log.log(logger::trace, "startEngine requested")
         if (DockerService.getInstance().isEngineRunning(project)) {
-            resultTask.accept("start engine rejected because local engine is installed and running, please remove stop before start")
+            Log.log(logger::trace, "startEngine rejected because already running")
+            resultTask.accept("start engine rejected because local engine is installed and running, please remove or stop before start")
             return
         }
 
@@ -71,6 +81,7 @@ class LocalInstallationFacade {
 
     fun removeEngine(project: Project, resultTask: Consumer<String>) {
 
+        Log.log(logger::trace, "removeEngine requested")
         doOperation(OP.REMOVE, resultTask) {
             DockerService.getInstance().removeEngine(project, myResultTask)
         }
@@ -78,16 +89,24 @@ class LocalInstallationFacade {
 
 
     private fun doOperation(op: OP, resultTask: Consumer<String>, block: () -> Unit) {
+
+        Log.log(logger::trace, "$op requested, locking")
         myLock.withLock {
             when (operationInProgress.get()) {
                 null -> {
+                    Log.log(logger::trace, "$op requested, nothing is running , starting $op")
                     operationInProgress.set(op)
                     myResultTask.addConsumer(resultTask)
                     block.invoke()
                 }
-                op -> myResultTask.addConsumer(resultTask)
+
+                op -> {
+                    Log.log(logger::trace, "$op requested but already running, adding result consumer")
+                    myResultTask.addConsumer(resultTask)
+                }
                 else -> {
                     //reject
+                    Log.log(logger::trace, "$op requested but ${operationInProgress.get()} already running, rejecting $op")
                     resultTask.accept("$op engine rejected because ${operationInProgress.get()} is in progress")
                 }
             }
@@ -106,10 +125,12 @@ class LocalInstallationFacade {
         override fun accept(result: String) {
             myLock.withLock {
                 try {
+                    Log.log(logger::trace, "got result from ${operationInProgress.get()}")
                     myConsumers.forEach {
                         it.accept(result)
                     }
                 } finally {
+                    Log.log(logger::trace, "completing operation ${operationInProgress.get()}")
                     operationInProgress.set(null)
                     myConsumers.clear()
                 }

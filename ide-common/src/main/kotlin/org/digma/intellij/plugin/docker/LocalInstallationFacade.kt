@@ -125,7 +125,7 @@ class LocalInstallationFacade {
         override fun accept(result: String) {
             myLock.withLock {
                 try {
-                    Log.log(logger::trace, "got result from ${operationInProgress.get()}")
+                    Log.log(logger::trace, "got result from ${operationInProgress.get()}, exit value $result")
                     myConsumers.forEach {
                         it.accept(result)
                     }

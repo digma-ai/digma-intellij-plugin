@@ -320,8 +320,10 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                         sendIsDigmaEngineInstalled(false, jbCefBrowser)
                         sendIsDigmaEngineRunning(false, jbCefBrowser)
 
-                        //start remove if install failed. wait a second to let the installEngine finish, so it reports
+                        //if install failed remove the engine. wait a second to let the installEngine finish and reports
                         // the installEngine.end to posthog before removeEngine.start
+                        //also the LocalInstallationFacade needs to completely finish the install operation before it will allow
+                        // another operation
                         Backgroundable.executeOnPooledThread {
                             try {
                                 Thread.sleep(2000)
@@ -329,7 +331,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                                 //ignore
                             }
                             Log.log(logger::warn, "removing engine after installation failed")
-                            service<DockerService>().removeEngine(project) { exitValue ->
+                            service<LocalInstallationFacade>().removeEngine(project) { exitValue ->
                                 updateDigmaEngineStatus(project, jbCefBrowser.cefBrowser)
                                 if (exitValue != "0") {
                                     Log.log(logger::warn, "error removing engine after failure {}", exitValue)
@@ -346,7 +348,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
             }
             if (JCEFGlobalConstants.INSTALLATION_WIZARD_UNINSTALL_DIGMA_ENGINE.equals(action, ignoreCase = true)) {
                 localEngineOperationRunning.set(true)
-                service<DockerService>().removeEngine(project) { exitValue ->
+                service<LocalInstallationFacade>().removeEngine(project) { exitValue ->
 
                     EDT.assertNonDispatchThread()
 

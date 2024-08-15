@@ -105,7 +105,6 @@ class LocalInstallationFacade {
 
         override fun accept(result: String) {
             myLock.withLock {
-
                 try {
                     myConsumers.forEach {
                         it.accept(result)

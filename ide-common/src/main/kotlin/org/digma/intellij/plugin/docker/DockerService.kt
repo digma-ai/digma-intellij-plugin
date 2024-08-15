@@ -281,6 +281,7 @@ class DockerService {
         }
     }
 
+
     fun startEngine(project: Project, resultTask: Consumer<String>) {
 
         ActivityMonitor.getInstance(project).registerDigmaEngineEventStart("startEngine", mapOf())
@@ -443,6 +444,7 @@ class DockerService {
 
         return exitValue
     }
+
 
     private fun tryStartDockerDaemon(project: Project) {
 

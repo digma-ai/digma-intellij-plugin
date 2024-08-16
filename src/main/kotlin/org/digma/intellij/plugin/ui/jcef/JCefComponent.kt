@@ -99,8 +99,7 @@ private constructor(
                     Backgroundable.executeOnPooledThread {
                         try {
                             sendUserInfoMessage(jbCefBrowser.cefBrowser, DigmaDefaultAccountHolder.getInstance().account?.userId, project)
-                            val status = service<DockerService>().getActualRunningEngine(project)
-                            updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
+                            updateDigmaEngineStatus(project, jbCefBrowser.cefBrowser)
                             sendBackendAboutInfo(jbCefBrowser.cefBrowser, project)
                         } catch (e: Throwable) {
                             Log.warnWithException(logger, project, e, "error in ApiClientChangedEvent")
@@ -199,8 +198,7 @@ private constructor(
                     sendIsMicrometerProject(jbCefBrowser.cefBrowser, SpringBootMicrometerConfigureDepsService.isSpringBootWithMicrometer())
                     sendIsJaegerButtonEnabledMessage(jbCefBrowser.cefBrowser)
                     sendBackendAboutInfo(jbCefBrowser.cefBrowser, project)
-                    val status = service<DockerService>().getActualRunningEngine(project)
-                    updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
+                    updateDigmaEngineStatus(project, jbCefBrowser.cefBrowser)
                 } catch (e: Throwable) {
                     Log.warnWithException(logger, project, e, "error in SettingsState")
                     ErrorReporter.getInstance().reportError(project, "JCefComponent.SettingsState", e)

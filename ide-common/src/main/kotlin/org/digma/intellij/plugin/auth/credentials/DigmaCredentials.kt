@@ -36,6 +36,8 @@ class DigmaCredentials
     private val creationTime: Long
 ) : CredentialsWithRefresh {
 
+    //the format of expirationTime from the server is 2024-08-18T21:33:24Z
+
 
     //expiresIn is the time left for expiration, it is not accurate because it is assigned some time after
     // the server created the expirationTime. it should actually be

@@ -5,7 +5,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.*;
 import com.intellij.openapi.wm.ex.ToolWindowManagerListener;
 import org.digma.intellij.plugin.PluginId;
-import org.digma.intellij.plugin.docker.DockerService;
+import org.digma.intellij.plugin.docker.*;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.ui.notificationcenter.AppNotificationCenter;
 import org.jetbrains.annotations.NotNull;
@@ -52,7 +52,7 @@ public class DigmaToolWindowsListener implements ToolWindowManagerListener {
     private void onMainToolWindowClose() {
         ActivityMonitor.getInstance(project).registerSidePanelClosed();
 
-        if (DockerService.getInstance().isInstallationInProgress()) {
+        if (LocalInstallationFacade.getInstance().isInstallationInProgress()) {
             ApplicationManager.getApplication().getService(AppNotificationCenter.class).showInstallationInProgressNotification(project);
         }
     }

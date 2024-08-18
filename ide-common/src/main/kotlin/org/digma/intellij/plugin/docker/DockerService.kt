@@ -38,7 +38,6 @@ class DockerService {
 
     private val engine = Engine()
     private val downloader = Downloader()
-    private var installationInProgress: Boolean = false
 
     companion object {
 
@@ -75,10 +74,6 @@ class DockerService {
         return discoverActualRunningEngine(true)
     }
 
-
-    fun isInstallationInProgress(): Boolean {
-        return installationInProgress
-    }
 
     fun isDockerInstalled(): Boolean {
         return isInstalled(DOCKER_COMMAND)
@@ -138,12 +133,6 @@ class DockerService {
 
     @Internal
     fun installEngine(project: Project, resultTask: Consumer<String>) {
-        installationInProgress = true
-
-
-        val onCompleted = Consumer { _: String ->
-            installationInProgress = false
-        }.andThen(resultTask)
 
         ActivityMonitor.getInstance(project).registerDigmaEngineEventStart("installEngine", mapOf())
 
@@ -167,23 +156,23 @@ class DockerService {
                             }
                         }
 
-                        notifyResult(exitValue, onCompleted)
+                        notifyResult(exitValue, resultTask)
                     } else {
                         ActivityMonitor.getInstance(project).registerDigmaEngineEventError("installEngine", "could not find docker compose command")
                         Log.log(logger::warn, "could not find docker compose command")
-                        notifyResult(NO_DOCKER_COMPOSE_COMMAND, onCompleted)
+                        notifyResult(NO_DOCKER_COMPOSE_COMMAND, resultTask)
                     }
                 } else {
                     ActivityMonitor.getInstance(project).registerDigmaEngineEventError("installEngine", "Failed to download compose file")
                     Log.log(logger::warn, "Failed to download compose file")
-                    notifyResult("Failed to download compose file", onCompleted)
+                    notifyResult("Failed to download compose file", resultTask)
                 }
 
             } catch (e: Throwable) {
                 ErrorReporter.getInstance().reportError(project, "DockerService.installEngine", e)
                 ActivityMonitor.getInstance(project).registerDigmaEngineEventError("installEngine", "Failed in installEngine $e")
                 Log.warnWithException(logger, e, "Failed install docker engine {}", e)
-                notifyResult("Failed to install docker engine: $e", onCompleted)
+                notifyResult("Failed to install docker engine: $e", resultTask)
             } finally {
                 ActivityMonitor.getInstance(project).registerDigmaEngineEventEnd("installEngine", mapOf())
             }

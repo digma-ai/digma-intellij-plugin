@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.docker
 
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.log.Log
@@ -24,6 +25,15 @@ class LocalInstallationFacade {
     private val operationInProgress = AtomicReference<OP>(null)
 
     private val myResultTask = MyResultTask()
+
+
+    companion object {
+        @JvmStatic
+        fun getInstance(): LocalInstallationFacade {
+            return service<LocalInstallationFacade>()
+        }
+    }
+
 
     /*
         for any operation that is requested the flow is:
@@ -112,6 +122,16 @@ class LocalInstallationFacade {
             }
         }
     }
+
+
+    fun isInstallationInProgress(): Boolean {
+        return operationInProgress.get() == OP.INSTALL
+    }
+
+
+
+
+
 
 
     private inner class MyResultTask : Consumer<String> {

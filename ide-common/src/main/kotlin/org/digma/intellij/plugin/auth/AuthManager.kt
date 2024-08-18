@@ -527,7 +527,7 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
 
                                 val refreshSuccess = try {
                                     val loginHandler = LoginHandler.createLoginHandler(myAnalyticsProvider)
-                                    loginHandler.refresh(account, credentials, "auto refresh job")
+                                    loginHandler.refresh(account, credentials, "auto refresh job because credentials expire in $expireIn")
                                 } catch (e: Throwable) {
                                     false
                                 }

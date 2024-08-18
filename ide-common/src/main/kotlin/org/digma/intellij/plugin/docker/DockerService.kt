@@ -18,6 +18,7 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.jetbrains.annotations.ApiStatus.Internal
 import java.util.function.Consumer
 import java.util.function.Supplier
 
@@ -80,7 +81,11 @@ class DockerService {
     }
 
     fun isDockerInstalled(): Boolean {
-        return isInstalled(DOCKER_COMMAND) || isInstalled(DOCKER_COMPOSE_COMMAND)
+        return isInstalled(DOCKER_COMMAND)
+    }
+
+    fun isDockerComposeInstalled(): Boolean {
+        return isInstalled(DOCKER_COMPOSE_COMMAND)
     }
 
 
@@ -131,6 +136,7 @@ class DockerService {
     }
 
 
+    @Internal
     fun installEngine(project: Project, resultTask: Consumer<String>) {
         installationInProgress = true
 
@@ -184,7 +190,7 @@ class DockerService {
         }
     }
 
-
+    @Internal
     fun upgradeEngine(project: Project, resultTask: Consumer<String>) {
 
         ActivityMonitor.getInstance(project).registerDigmaEngineEventStart("upgradeEngine", mapOf())
@@ -239,7 +245,7 @@ class DockerService {
         }
     }
 
-
+    @Internal
     fun stopEngine(project: Project, resultTask: Consumer<String>) {
 
         ActivityMonitor.getInstance(project).registerDigmaEngineEventStart("stopEngine", mapOf())
@@ -280,7 +286,7 @@ class DockerService {
         }
     }
 
-
+    @Internal
     fun startEngine(project: Project, resultTask: Consumer<String>) {
 
         ActivityMonitor.getInstance(project).registerDigmaEngineEventStart("startEngine", mapOf())
@@ -341,7 +347,7 @@ class DockerService {
 
     }
 
-
+    @Internal
     fun removeEngine(project: Project, resultTask: Consumer<String>) {
 
         ActivityMonitor.getInstance(project).registerDigmaEngineEventStart("removeEngine", mapOf())

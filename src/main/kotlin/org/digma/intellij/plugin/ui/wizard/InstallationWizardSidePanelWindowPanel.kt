@@ -125,7 +125,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
         USER_EMAIL_VARIABLE to (PersistenceService.getInstance().getUserEmail() ?: ""),
         IS_OBSERVABILITY_ENABLED_VARIABLE to PersistenceService.getInstance().isObservabilityEnabled(),
         IS_DOCKER_INSTALLED to service<DockerService>().isDockerInstalled(),
-        IS_DOCKER_COMPOSE_INSTALLED to service<DockerService>().isDockerInstalled(),
+        IS_DOCKER_COMPOSE_INSTALLED to service<DockerService>().isDockerComposeInstalled(),
         IS_DIGMA_ENGINE_INSTALLED to service<DockerService>().isEngineInstalled(),
         IS_DIGMA_ENGINE_RUNNING to service<DockerService>().isEngineRunning(project),
         IS_WIZARD_FIRST_LAUNCH to PersistenceService.getInstance().isFirstWizardLaunch(),

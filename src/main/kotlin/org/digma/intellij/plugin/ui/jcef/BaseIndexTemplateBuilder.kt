@@ -82,7 +82,7 @@ abstract class BaseIndexTemplateBuilder(resourceFolderName: String, private val 
             data[IS_DIGMA_ENGINE_INSTALLED] = service<DockerService>().isEngineInstalled()
             data[IS_DIGMA_ENGINE_RUNNING] = service<DockerService>().isEngineRunning(project)
             data[IS_DOCKER_INSTALLED] = service<DockerService>().isDockerInstalled()
-            data[IS_DOCKER_COMPOSE_INSTALLED] = service<DockerService>().isDockerInstalled()
+            data[IS_DOCKER_COMPOSE_INSTALLED] = service<DockerService>().isDockerComposeInstalled()
             data[DIGMA_API_URL] = SettingsState.getInstance().apiUrl
             data[DIGMA_API_PROXY_PREFIX] = ApiProxyResourceHandler.URL_PREFIX
             data[JAEGER_URL] = getJaegerUrl() ?: ""

@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.372] - 2024-08-15
+## [2.0.373] - 2024-08-18
+
+- prevent parallel and multiple engine installation and start Closes #2410 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2411
+- remove refresh events Closes #2413 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2414
+
+## 2.0.372 - 2024-08-15
 
 - remove plugin loaded event Closes #2389 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2409
 - Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2412

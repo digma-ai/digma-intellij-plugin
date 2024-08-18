@@ -13,7 +13,7 @@ repositories {
 dependencies {
     //when updating intellij-platform-gradle-plugin update also org.jetbrains.intellij.platform.settings plugin
     // in settings file to the same version. we need to maintain it in two places, unfortunately.
-    implementation("org.jetbrains.intellij.platform:intellij-platform-gradle-plugin:2.0.0")
+    implementation("org.jetbrains.intellij.platform:intellij-platform-gradle-plugin:2.0.1")
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.24")
     implementation("com.glovoapp.gradle:versioning:1.1.10")
     implementation("de.undercouch:gradle-download-task:5.6.0")

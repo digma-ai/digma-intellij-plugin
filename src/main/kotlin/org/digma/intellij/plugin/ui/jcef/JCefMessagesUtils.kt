@@ -7,7 +7,7 @@ import com.intellij.ui.jcef.JBCefBrowser
 import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.docker.DigmaInstallationStatus
-import org.digma.intellij.plugin.docker.DockerService
+import org.digma.intellij.plugin.docker.LocalInstallationFacade
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.model.rest.environment.Env
 import org.digma.intellij.plugin.model.rest.insights.SpanEnvironment
@@ -44,6 +44,8 @@ import org.digma.intellij.plugin.ui.jcef.model.SetStateMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetUserEmailMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetUserFinishedDigmathon
 import org.digma.intellij.plugin.ui.jcef.model.SetUserInfoMessage
+import org.digma.intellij.plugin.ui.jcef.model.SetViewMessage
+import org.digma.intellij.plugin.ui.jcef.model.SetViewMessagePayload
 import org.digma.intellij.plugin.ui.jcef.model.UICodeFontRequest
 import org.digma.intellij.plugin.ui.jcef.model.UIFontRequest
 import org.digma.intellij.plugin.ui.jcef.model.UIThemeRequest
@@ -53,8 +55,6 @@ import org.digma.intellij.plugin.ui.jcef.model.UiThemePayload
 import org.digma.intellij.plugin.ui.jcef.model.UserEmailPayload
 import org.digma.intellij.plugin.ui.jcef.model.UserFinishedDigmathonPayload
 import org.digma.intellij.plugin.ui.jcef.model.UserInfoPayload
-import org.digma.intellij.plugin.ui.jcef.model.SetViewMessage
-import org.digma.intellij.plugin.ui.jcef.model.SetViewMessagePayload
 import org.digma.intellij.plugin.ui.settings.Theme
 
 
@@ -111,7 +111,7 @@ fun sendUserFinishedDigmathon(cefBrowser: CefBrowser) {
 
 fun updateDigmaEngineStatus(project: Project, cefBrowser: CefBrowser) {
     try {
-        val status = service<DockerService>().getActualRunningEngine(project)
+        val status = service<LocalInstallationFacade>().getDigmaInstallationStatus(project)
         updateDigmaEngineStatus(cefBrowser, status)
     } catch (e: Throwable) {
         ErrorReporter.getInstance().reportError("updateDigmaEngineStatus", e)

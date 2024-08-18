@@ -6,7 +6,6 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.awt.RelativePoint
 import com.intellij.util.ui.JBUI.Borders.empty
-import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.docker.LocalInstallationFacade
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
@@ -33,7 +32,7 @@ class UpdateBackendAction {
             }
 
             BackendDeploymentType.DockerCompose -> {
-                if (service<DockerService>().isEngineInstalled()) {
+                if (service<LocalInstallationFacade>().isLocalEngineInstalled()) {
                     sourceComponent?.let {
                         val upgradePopupLabel = JLabel(
                             asHtml(

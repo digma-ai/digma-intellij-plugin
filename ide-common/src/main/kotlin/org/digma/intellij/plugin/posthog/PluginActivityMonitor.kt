@@ -12,7 +12,6 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import org.digma.intellij.plugin.PluginId
-import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.docker.LocalInstallationFacade
 import org.digma.intellij.plugin.log.Log
 
@@ -56,7 +55,7 @@ class PluginActivityMonitor(private val project: Project) : PluginStateListener,
             BrowserUtil.browse("https://digma.ai/uninstall?u=$userId", project)
 
 
-            if (service<DockerService>().isEngineInstalled()) {
+            if (service<LocalInstallationFacade>().isLocalEngineInstalled()) {
                 Log.log(LOGGER::info, "removing digma engine on plugin uninstall")
                 service<LocalInstallationFacade>().removeEngine(project) {
                     Log.log(LOGGER::info, "removed digma engine on plugin uninstall completed with {}", it)

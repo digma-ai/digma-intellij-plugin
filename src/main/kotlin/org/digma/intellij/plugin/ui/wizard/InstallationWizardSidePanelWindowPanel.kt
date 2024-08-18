@@ -126,8 +126,8 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
         IS_OBSERVABILITY_ENABLED_VARIABLE to PersistenceService.getInstance().isObservabilityEnabled(),
         IS_DOCKER_INSTALLED to service<DockerService>().isDockerInstalled(),
         IS_DOCKER_COMPOSE_INSTALLED to service<DockerService>().isDockerComposeInstalled(),
-        IS_DIGMA_ENGINE_INSTALLED to service<DockerService>().isEngineInstalled(),
-        IS_DIGMA_ENGINE_RUNNING to service<DockerService>().isEngineRunning(project),
+        IS_DIGMA_ENGINE_INSTALLED to service<LocalInstallationFacade>().isLocalEngineInstalled(),
+        IS_DIGMA_ENGINE_RUNNING to service<LocalInstallationFacade>().isLocalEngineRunning(project),
         IS_WIZARD_FIRST_LAUNCH to PersistenceService.getInstance().isFirstWizardLaunch(),
         IS_JAEGER_ENABLED to isJaegerButtonEnabled(),
         IS_WIZARD_SKIP_INSTALLATION_STEP to wizardSkipInstallationStep,
@@ -180,7 +180,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
             val action: String = requestJsonNode["action"].asText()
 
             if ("INSTALLATION_WIZARD/INITIALIZE".equals(action, ignoreCase = true)) {
-                digmaStatusUpdater.start(project, jbCefBrowser.cefBrowser)
+                digmaStatusUpdater.start(project, jbCefBrowser)
             }
             if ("INSTALLATION_WIZARD/CLOSE".equals(action, ignoreCase = true)) {
                 EDT.ensureEDT {
@@ -546,7 +546,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                 }
 
                 try {
-                    val status = service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionLost()
+                    val status = service<LocalInstallationFacade>().getCurrentDigmaInstallationStatusOnConnectionLost()
                     updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
                 } catch (e: Exception) {
                     ErrorReporter.getInstance().reportError(project, "createInstallationWizardSidePanelWindowPanel.connectionLost", e)
@@ -558,7 +558,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                     return
                 }
                 try {
-                    val status = service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionGained()
+                    val status = service<LocalInstallationFacade>().getCurrentDigmaInstallationStatusOnConnectionGained()
                     updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
                 } catch (e: Exception) {
                     ErrorReporter.getInstance().reportError(project, "createInstallationWizardSidePanelWindowPanel.connectionGained", e)
@@ -664,7 +664,7 @@ class DigmaStatusUpdater {
 
     private var digmaInstallationStatus = AtomicReference<DigmaInstallationStatus?>(null)
 
-    fun start(project: Project, cefBrowser: CefBrowser) {
+    fun start(project: Project, jbCefBrowser: JBCefBrowser) {
 
         Log.log(logger::trace, project, "starting DigmaStatusUpdater")
 
@@ -674,7 +674,7 @@ class DigmaStatusUpdater {
         myDisposable?.let {
             it.disposingPeriodicTask("InstallationWizard.DigmaStatusUpdater", 2.seconds.inWholeMilliseconds, false) {
                 try {
-                    val currentStatus = service<DockerService>().getActualRunningEngine(project)
+                    val currentStatus = service<LocalInstallationFacade>().getDigmaInstallationStatus(project)
 
                     //DigmaInstallationStatus is data class so we can rely on equals
                     if (digmaInstallationStatus.get() == null || currentStatus != digmaInstallationStatus.get()) {
@@ -682,9 +682,14 @@ class DigmaStatusUpdater {
                         digmaInstallationStatus.set(currentStatus)
                         Log.log(logger::trace, project, "updating wizard with digmaInstallationStatus {}", digmaInstallationStatus)
                         digmaInstallationStatus.get()?.let { status ->
-                            updateDigmaEngineStatus(cefBrowser, status)
+                            updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
                         }
                     }
+
+                    sendIsDigmaEngineInstalled(LocalInstallationFacade.getInstance().isLocalEngineInstalled(), jbCefBrowser)
+                    sendIsDigmaEngineRunning(LocalInstallationFacade.getInstance().isLocalEngineRunning(project), jbCefBrowser)
+
+
                 } catch (e: Exception) {
                     Log.warnWithException(logger, project, e, "error in DigmaStatusUpdater {}", e)
                     ErrorReporter.getInstance().reportError(project, "DigmaStatusUpdater.loop", e)

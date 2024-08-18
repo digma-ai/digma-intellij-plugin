@@ -1,10 +1,10 @@
 package org.digma.intellij.plugin.dashboard;
 
-import com.intellij.openapi.application.*;
+import com.intellij.openapi.application.ApplicationNamesInfo;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import freemarker.template.*;
-import org.digma.intellij.plugin.docker.DockerService;
+import org.digma.intellij.plugin.docker.*;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.settings.SettingsState;
@@ -56,8 +56,8 @@ public class DashboardIndexTemplateBuilder {
             var userEmail = PersistenceService.getInstance().getUserEmail();
             data.put(USER_EMAIL_VARIABLE, userEmail == null ? "" : userEmail);
             data.put(IS_OBSERVABILITY_ENABLED_VARIABLE, PersistenceService.getInstance().isObservabilityEnabled());
-            data.put(IS_DIGMA_ENGINE_INSTALLED, DockerService.getInstance().isEngineInstalled());
-            data.put(IS_DIGMA_ENGINE_RUNNING, DockerService.getInstance().isEngineRunning(project));
+            data.put(IS_DIGMA_ENGINE_INSTALLED, LocalInstallationFacade.getInstance().isLocalEngineInstalled());
+            data.put(IS_DIGMA_ENGINE_RUNNING, LocalInstallationFacade.getInstance().isLocalEngineRunning(project));
             data.put(IS_DOCKER_INSTALLED, DockerService.getInstance().isDockerInstalled());
             data.put(IS_DOCKER_COMPOSE_INSTALLED, DockerService.getInstance().isDockerComposeInstalled());
             data.put(DIGMA_API_URL, SettingsState.getInstance().getApiUrl());

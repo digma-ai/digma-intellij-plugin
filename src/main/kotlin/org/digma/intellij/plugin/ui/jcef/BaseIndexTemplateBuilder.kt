@@ -14,6 +14,7 @@ import org.digma.intellij.plugin.analytics.getCurrentEnvironment
 import org.digma.intellij.plugin.common.UniqueGeneratedUserId
 import org.digma.intellij.plugin.digmathon.DigmathonService
 import org.digma.intellij.plugin.docker.DockerService
+import org.digma.intellij.plugin.docker.LocalInstallationFacade
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
 import org.digma.intellij.plugin.log.Log
@@ -79,8 +80,8 @@ abstract class BaseIndexTemplateBuilder(resourceFolderName: String, private val 
             data[USER_EMAIL_VARIABLE] = PersistenceService.getInstance().getUserEmail() ?: ""
             data[USER_REGISTRATION_EMAIL_VARIABLE] = PersistenceService.getInstance().getUserRegistrationEmail() ?: ""
             data[IS_OBSERVABILITY_ENABLED_VARIABLE] = PersistenceService.getInstance().isObservabilityEnabled()
-            data[IS_DIGMA_ENGINE_INSTALLED] = service<DockerService>().isEngineInstalled()
-            data[IS_DIGMA_ENGINE_RUNNING] = service<DockerService>().isEngineRunning(project)
+            data[IS_DIGMA_ENGINE_INSTALLED] = service<LocalInstallationFacade>().isLocalEngineInstalled()
+            data[IS_DIGMA_ENGINE_RUNNING] = service<LocalInstallationFacade>().isLocalEngineRunning(project)
             data[IS_DOCKER_INSTALLED] = service<DockerService>().isDockerInstalled()
             data[IS_DOCKER_COMPOSE_INSTALLED] = service<DockerService>().isDockerComposeInstalled()
             data[DIGMA_API_URL] = SettingsState.getInstance().apiUrl

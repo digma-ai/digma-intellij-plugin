@@ -9,7 +9,13 @@ enum class DigmaInstallationType {
 data class DigmaInstallationStatus(
     val connection: ConnectionStatus,
     val runningDigmaInstances: List<DigmaInstallationType>,
-)
+) {
+
+    companion object {
+        val NOT_RUNNING = DigmaInstallationStatus(ConnectionStatus(null, false), listOf())
+    }
+
+}
 
 enum class ConnectionType { local, remote }
 

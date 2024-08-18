@@ -12,7 +12,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.MessageConstants
 import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.util.SystemInfo
-import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
@@ -52,27 +51,13 @@ class DockerService {
 
     init {
 
-        if (isEngineInstalled()) {
+        if (PersistenceService.getInstance().isLocalEngineInstalled()) {
             //this will happen on IDE start,
             // DockerService is an application service so Downloader will be singleton per application
             downloader.downloadComposeFile()
         }
     }
 
-
-    fun getActualRunningEngine(project: Project): DigmaInstallationStatus {
-        return discoverActualRunningEngine(project)
-    }
-
-
-    fun getCurrentDigmaInstallationStatusOnConnectionLost(): DigmaInstallationStatus {
-        return discoverActualRunningEngine(false)
-    }
-
-
-    fun getCurrentDigmaInstallationStatusOnConnectionGained(): DigmaInstallationStatus {
-        return discoverActualRunningEngine(true)
-    }
 
 
     fun isDockerInstalled(): Boolean {
@@ -81,25 +66,6 @@ class DockerService {
 
     fun isDockerComposeInstalled(): Boolean {
         return isInstalled(DOCKER_COMPOSE_COMMAND)
-    }
-
-
-    fun isEngineInstalled(): Boolean {
-        return PersistenceService.getInstance().isLocalEngineInstalled()
-    }
-
-
-    fun isEngineRunning(project: Project): Boolean {
-        return isEngineInstalled() && BackendConnectionMonitor.getInstance(project).isConnectionOk()
-    }
-
-
-    private fun isDockerDaemonDownExitValue(exitValue: String): Boolean {
-        return exitValue.contains("Cannot connect to the Docker daemon", true) ||//mac, linux
-                exitValue.contains("docker daemon is not running", true) || //win
-                //this is an error on windows with docker desktop that will be solved by starting docker desktop
-                (exitValue.contains("error during connect", true) && exitValue.contains("The system cannot find the file specified", true)) || //win
-                exitValue.contains("Error while fetching server API version", true)
     }
 
 
@@ -386,6 +352,15 @@ class DockerService {
                 ActivityMonitor.getInstance(project).registerDigmaEngineEventEnd("removeEngine", mapOf())
             }
         }
+    }
+
+
+    private fun isDockerDaemonDownExitValue(exitValue: String): Boolean {
+        return exitValue.contains("Cannot connect to the Docker daemon", true) ||//mac, linux
+                exitValue.contains("docker daemon is not running", true) || //win
+                //this is an error on windows with docker desktop that will be solved by starting docker desktop
+                (exitValue.contains("error during connect", true) && exitValue.contains("The system cannot find the file specified", true)) || //win
+                exitValue.contains("Error while fetching server API version", true)
     }
 
 

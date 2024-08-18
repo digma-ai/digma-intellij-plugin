@@ -4,7 +4,9 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.persistence.PersistenceService
 import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.locks.ReentrantLock
 import java.util.function.Consumer
@@ -48,7 +50,7 @@ class LocalInstallationFacade {
     fun installEngine(project: Project, resultTask: Consumer<String>) {
 
         Log.log(logger::trace, "installEngine requested")
-        if (DockerService.getInstance().isEngineInstalled()) {
+        if (isLocalEngineInstalled()) {
             Log.log(logger::trace, "installEngine rejected because already installed")
             resultTask.accept("install engine rejected because local engine is installed, please remove before reinstall")
             return
@@ -78,7 +80,7 @@ class LocalInstallationFacade {
     fun startEngine(project: Project, resultTask: Consumer<String>) {
 
         Log.log(logger::trace, "startEngine requested")
-        if (DockerService.getInstance().isEngineRunning(project)) {
+        if (isLocalEngineRunning(project)) {
             Log.log(logger::trace, "startEngine rejected because already running")
             resultTask.accept("start engine rejected because local engine is installed and running, please remove or stop before start")
             return
@@ -114,6 +116,7 @@ class LocalInstallationFacade {
                     Log.log(logger::trace, "$op requested but already running, adding result consumer")
                     myResultTask.addConsumer(resultTask)
                 }
+
                 else -> {
                     //reject
                     Log.log(logger::trace, "$op requested but ${operationInProgress.get()} already running, rejecting $op")
@@ -129,9 +132,45 @@ class LocalInstallationFacade {
     }
 
 
+    fun isLocalEngineInstalled(): Boolean {
+        if (operationInProgress.get() == OP.INSTALL) {
+            return false
+        }
+        return PersistenceService.getInstance().isLocalEngineInstalled()
+    }
 
 
+    fun isLocalEngineRunning(project: Project): Boolean {
+        return isLocalEngineInstalled() && BackendConnectionMonitor.getInstance(project).isConnectionOk()
+    }
 
+
+    fun getDigmaInstallationStatus(project: Project): DigmaInstallationStatus {
+
+        return when (operationInProgress.get()) {
+            null -> {
+                discoverActualRunningEngine(project)
+            }
+
+            OP.INSTALL, OP.START, OP.UPGRADE -> {
+                DigmaInstallationStatus.NOT_RUNNING
+            }
+
+            else -> {
+                discoverActualRunningEngine(project)
+            }
+        }
+    }
+
+
+    fun getCurrentDigmaInstallationStatusOnConnectionLost(): DigmaInstallationStatus {
+        return discoverActualRunningEngine(false)
+    }
+
+
+    fun getCurrentDigmaInstallationStatusOnConnectionGained(): DigmaInstallationStatus {
+        return discoverActualRunningEngine(true)
+    }
 
 
     private inner class MyResultTask : Consumer<String> {

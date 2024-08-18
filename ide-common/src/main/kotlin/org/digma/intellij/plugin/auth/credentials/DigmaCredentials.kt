@@ -50,7 +50,7 @@ class DigmaCredentials
      *         false if the token has already expired.
      */
     @JsonIgnore
-    override fun isAccessTokenValid(): Boolean = Date(System.currentTimeMillis()).time < expirationTime
+    override fun isAccessTokenValid(): Boolean = Clock.System.now().toEpochMilliseconds() < expirationTime
 
     @JsonIgnore
     fun getExpirationTimeAsDate(): Date {

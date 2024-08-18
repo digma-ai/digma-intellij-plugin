@@ -85,7 +85,7 @@ interface LoginHandler {
 
             trace("logout called, trigger {}", trigger)
 
-            reportAuthPosthogEvent("logout", this.javaClass.simpleName, mapOf("logout trigger" to trigger))
+            reportAuthPosthogEvent("logout", this.javaClass.simpleName, trigger)
 
             val digmaAccount = DigmaDefaultAccountHolder.getInstance().account
 
@@ -102,7 +102,8 @@ interface LoginHandler {
             reportAuthPosthogEvent(
                 "logout success",
                 this.javaClass.simpleName,
-                mapOf("logout trigger" to trigger, "account found" to (digmaAccount != null))
+                trigger,
+                mapOf("account found" to (digmaAccount != null))
             )
 
             //return true only if an account was really deleted
@@ -112,7 +113,7 @@ interface LoginHandler {
             warnWithException(e, "Exception in logout {}, trigger {}", e, trigger)
             ErrorReporter.getInstance().reportError("${javaClass.simpleName}.logout", e, mapOf("logout trigger" to trigger))
             val errorMessage = ExceptionUtils.getNonEmptyMessage(e)
-            reportAuthPosthogEvent("logout failed", this.javaClass.simpleName, mapOf("error" to errorMessage, "logout trigger" to trigger))
+            reportAuthPosthogEvent("logout failed", this.javaClass.simpleName, trigger, mapOf("error" to errorMessage))
             false
         }
     }

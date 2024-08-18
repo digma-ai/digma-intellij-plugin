@@ -399,6 +399,7 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
                     reportAuthPosthogEvent(
                         "fire auth info changed",
                         this.javaClass.simpleName,
+                        null,
                         mapOf("user.id" to myLatestAuthInfo.userId.toString(), "listeners" to listeners.size)
                     )
                 }

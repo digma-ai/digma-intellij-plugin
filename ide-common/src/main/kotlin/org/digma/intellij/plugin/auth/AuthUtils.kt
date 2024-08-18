@@ -3,11 +3,16 @@ package org.digma.intellij.plugin.auth
 import org.digma.intellij.plugin.common.findActiveProject
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 
-fun reportAuthPosthogEvent(evenName: String, caller: String, details: Map<String, Any> = mapOf()) {
+fun reportAuthPosthogEvent(evenName: String, caller: String, trigger: String?, details: Map<String, Any> = mapOf()) {
     findActiveProject()?.let { project ->
         val detailsToSend = details.toMutableMap()
         detailsToSend["caller"] = caller
         detailsToSend["auth"] = "true" //a property for filtering auth events ,filter on auth isSet
+
+        trigger?.let {
+            detailsToSend["trigger"] = it
+        }
+
         ActivityMonitor.getInstance(project).registerAuthEvent(evenName, detailsToSend)
     }
 }

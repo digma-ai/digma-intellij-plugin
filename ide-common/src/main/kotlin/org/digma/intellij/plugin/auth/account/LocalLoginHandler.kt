@@ -23,7 +23,7 @@ class LocalLoginHandler(analyticsProvider: RestAnalyticsProvider) : AbstractLogi
             trace("loginOrRefresh called, url: {},trigger {}", analyticsProvider.apiUrl, trigger)
 
             withAuthManagerDebug {
-                reportAuthPosthogEvent("loginOrRefresh", this.javaClass.simpleName, mapOf("loginOrRefresh trigger" to trigger))
+                reportAuthPosthogEvent("loginOrRefresh", this.javaClass.simpleName, trigger)
             }
 
             val digmaAccount = getDefaultAccount()
@@ -132,7 +132,8 @@ class LocalLoginHandler(analyticsProvider: RestAnalyticsProvider) : AbstractLogi
             reportAuthPosthogEvent(
                 "loginOrRefresh failed",
                 this.javaClass.simpleName,
-                mapOf("error" to errorMessage, "loginOrRefresh trigger" to trigger)
+                trigger,
+                mapOf("error" to errorMessage)
             )
 
             //if got exception here it may be from refresh or login, in both cases delete the current account
@@ -143,7 +144,7 @@ class LocalLoginHandler(analyticsProvider: RestAnalyticsProvider) : AbstractLogi
             false
         } finally {
             withAuthManagerDebug {
-                reportAuthPosthogEvent("loginOrRefresh completed", this.javaClass.simpleName, mapOf("loginOrRefresh trigger" to trigger))
+                reportAuthPosthogEvent("loginOrRefresh completed", this.javaClass.simpleName, trigger)
             }
         }
 

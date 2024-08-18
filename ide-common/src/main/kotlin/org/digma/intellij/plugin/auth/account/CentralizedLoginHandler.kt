@@ -18,7 +18,7 @@ class CentralizedLoginHandler(analyticsProvider: RestAnalyticsProvider) : Abstra
             trace("loginOrRefresh called, url: {},trigger {}", analyticsProvider.apiUrl, trigger)
 
             withAuthManagerDebug {
-                reportAuthPosthogEvent("loginOrRefresh", this.javaClass.simpleName, mapOf("loginOrRefresh trigger" to trigger))
+                reportAuthPosthogEvent("loginOrRefresh", this.javaClass.simpleName, trigger)
             }
 
             val digmaAccount = getDefaultAccount()
@@ -98,7 +98,8 @@ class CentralizedLoginHandler(analyticsProvider: RestAnalyticsProvider) : Abstra
             reportAuthPosthogEvent(
                 "loginOrRefresh failed",
                 this.javaClass.simpleName,
-                mapOf("error" to errorMessage, "loginOrRefresh trigger" to trigger)
+                trigger,
+                mapOf("error" to errorMessage)
             )
 
             //if got exception here then we probably can't refresh,logout, user will be redirected to login,
@@ -107,7 +108,7 @@ class CentralizedLoginHandler(analyticsProvider: RestAnalyticsProvider) : Abstra
             throw e
         } finally {
             withAuthManagerDebug {
-                reportAuthPosthogEvent("loginOrRefresh completed", this.javaClass.simpleName, mapOf("loginOrRefresh trigger" to trigger))
+                reportAuthPosthogEvent("loginOrRefresh completed", this.javaClass.simpleName, trigger)
             }
         }
 

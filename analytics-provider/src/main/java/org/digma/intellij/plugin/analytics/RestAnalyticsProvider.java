@@ -669,7 +669,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable, Base
             ObjectMapper objectMapper = new ObjectMapper();
             objectMapper.setTimeZone(TimeZone.getTimeZone("UTC"));
             objectMapper.registerModule(new JavaTimeModule());
-            //objectMapper can be configured here is necessary
+            //objectMapper can be configured here if necessary
             objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
             objectMapper.disable(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES);
             objectMapper.enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE);

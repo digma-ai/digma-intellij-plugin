@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.auth.account
 
 import org.digma.intellij.plugin.analytics.RestAnalyticsProvider
 import org.digma.intellij.plugin.auth.reportAuthPosthogEvent
+import org.digma.intellij.plugin.auth.withAuthManagerDebug
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import kotlin.time.Duration.Companion.seconds
@@ -16,7 +17,9 @@ class CentralizedLoginHandler(analyticsProvider: RestAnalyticsProvider) : Abstra
 
             trace("loginOrRefresh called, url: {},trigger {}", analyticsProvider.apiUrl, trigger)
 
-            reportAuthPosthogEvent("loginOrRefresh", this.javaClass.simpleName, mapOf("loginOrRefresh trigger" to trigger))
+            withAuthManagerDebug {
+                reportAuthPosthogEvent("loginOrRefresh", this.javaClass.simpleName, mapOf("loginOrRefresh trigger" to trigger))
+            }
 
             val digmaAccount = getDefaultAccount()
 
@@ -103,7 +106,9 @@ class CentralizedLoginHandler(analyticsProvider: RestAnalyticsProvider) : Abstra
             logout("${this.javaClass.simpleName}: error in loginOrRefresh $e")
             throw e
         } finally {
-            reportAuthPosthogEvent("loginOrRefresh completed", this.javaClass.simpleName, mapOf("loginOrRefresh trigger" to trigger))
+            withAuthManagerDebug {
+                reportAuthPosthogEvent("loginOrRefresh completed", this.javaClass.simpleName, mapOf("loginOrRefresh trigger" to trigger))
+            }
         }
 
     }

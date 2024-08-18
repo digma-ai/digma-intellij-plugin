@@ -32,7 +32,7 @@ import org.digma.intellij.plugin.common.newerThan
 import org.digma.intellij.plugin.digmathon.DigmathonActivationEvent
 import org.digma.intellij.plugin.digmathon.DigmathonProductKeyStateChangedEvent
 import org.digma.intellij.plugin.digmathon.UserFinishedDigmathonEvent
-import org.digma.intellij.plugin.docker.DockerService
+import org.digma.intellij.plugin.docker.LocalInstallationFacade
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
 import org.digma.intellij.plugin.log.Log
@@ -99,8 +99,7 @@ private constructor(
                     Backgroundable.executeOnPooledThread {
                         try {
                             sendUserInfoMessage(jbCefBrowser.cefBrowser, DigmaDefaultAccountHolder.getInstance().account?.userId, project)
-                            val status = service<DockerService>().getActualRunningEngine(project)
-                            updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
+                            updateDigmaEngineStatus(project, jbCefBrowser.cefBrowser)
                             sendBackendAboutInfo(jbCefBrowser.cefBrowser, project)
                         } catch (e: Throwable) {
                             Log.warnWithException(logger, project, e, "error in ApiClientChangedEvent")
@@ -162,7 +161,7 @@ private constructor(
                     connectionEventAlarm.cancelAllRequests()
                     connectionEventAlarm.addRequest({
                         try {
-                            val status = service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionLost()
+                            val status = service<LocalInstallationFacade>().getCurrentDigmaInstallationStatusOnConnectionLost()
                             updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
                         } catch (e: Exception) {
                             Log.warnWithException(logger, project, e, "error in connectionLost")
@@ -176,7 +175,7 @@ private constructor(
                     connectionEventAlarm.cancelAllRequests()
                     connectionEventAlarm.addRequest({
                         try {
-                            val status = service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionGained()
+                            val status = service<LocalInstallationFacade>().getCurrentDigmaInstallationStatusOnConnectionGained()
                             updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
                             sendBackendAboutInfo(jbCefBrowser.cefBrowser, project)
                         } catch (e: Exception) {
@@ -199,8 +198,7 @@ private constructor(
                     sendIsMicrometerProject(jbCefBrowser.cefBrowser, SpringBootMicrometerConfigureDepsService.isSpringBootWithMicrometer())
                     sendIsJaegerButtonEnabledMessage(jbCefBrowser.cefBrowser)
                     sendBackendAboutInfo(jbCefBrowser.cefBrowser, project)
-                    val status = service<DockerService>().getActualRunningEngine(project)
-                    updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
+                    updateDigmaEngineStatus(project, jbCefBrowser.cefBrowser)
                 } catch (e: Throwable) {
                     Log.warnWithException(logger, project, e, "error in SettingsState")
                     ErrorReporter.getInstance().reportError(project, "JCefComponent.SettingsState", e)

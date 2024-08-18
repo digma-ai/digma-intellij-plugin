@@ -12,16 +12,24 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.MessageConstants
 import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.util.SystemInfo
-import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.jetbrains.annotations.ApiStatus.Internal
 import java.util.function.Consumer
 import java.util.function.Supplier
 
-
+/**
+ * this service is a front end to docker, it can install,upgrade,stop,start,remove and also provide
+ * information about docker installation and running instances.
+ * this service is a kind of CRUD service, the core operation of install,upgrade,stop,start,remove
+ * should never be called directly because it does not manage single access and locking, meaning if install is called
+ * multiple times concurrently it may cause failures. please never call these operations directly, always call
+ * LocalInstallationFacade for these CRUD operations,LocalInstallationFacade manages single access and logical flows.
+ * information services may be called directly
+ */
 @Service(Service.Level.APP)
 class DockerService {
 
@@ -29,7 +37,6 @@ class DockerService {
 
     private val engine = Engine()
     private val downloader = Downloader()
-    private var installationInProgress: Boolean = false
 
     companion object {
 
@@ -44,7 +51,7 @@ class DockerService {
 
     init {
 
-        if (isEngineInstalled()) {
+        if (PersistenceService.getInstance().isLocalEngineInstalled()) {
             //this will happen on IDE start,
             // DockerService is an application service so Downloader will be singleton per application
             downloader.downloadComposeFile()
@@ -52,48 +59,14 @@ class DockerService {
     }
 
 
-    fun getActualRunningEngine(project: Project): DigmaInstallationStatus {
-        return discoverActualRunningEngine(project)
-    }
-
-
-    fun getCurrentDigmaInstallationStatusOnConnectionLost(): DigmaInstallationStatus {
-        return discoverActualRunningEngine(false)
-    }
-
-
-    fun getCurrentDigmaInstallationStatusOnConnectionGained(): DigmaInstallationStatus {
-        return discoverActualRunningEngine(true)
-    }
-
-
-    fun isInstallationInProgress(): Boolean {
-        return installationInProgress
-    }
 
     fun isDockerInstalled(): Boolean {
-        return isInstalled(DOCKER_COMMAND) || isInstalled(DOCKER_COMPOSE_COMMAND)
+        return isInstalled(DOCKER_COMMAND)
     }
 
-
-    fun isEngineInstalled(): Boolean {
-        return PersistenceService.getInstance().isLocalEngineInstalled()
+    fun isDockerComposeInstalled(): Boolean {
+        return isInstalled(DOCKER_COMPOSE_COMMAND)
     }
-
-
-    fun isEngineRunning(project: Project): Boolean {
-        return isEngineInstalled() && BackendConnectionMonitor.getInstance(project).isConnectionOk()
-    }
-
-
-    private fun isDockerDaemonDownExitValue(exitValue: String): Boolean {
-        return exitValue.contains("Cannot connect to the Docker daemon", true) ||//mac, linux
-                exitValue.contains("docker daemon is not running", true) || //win
-                //this is an error on windows with docker desktop that will be solved by starting docker desktop
-                (exitValue.contains("error during connect", true) && exitValue.contains("The system cannot find the file specified", true)) || //win
-                exitValue.contains("Error while fetching server API version", true)
-    }
-
 
 
     fun collectDigmaContainerLog(): String {
@@ -113,7 +86,7 @@ class DockerService {
             val getLogCommand = GeneralCommandLine(dockerCmd, "logs", "--tail", "1000", "$containerId")
                 .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
 
-            val processOutput: ProcessOutput =  ExecUtil.execAndGetOutput(getLogCommand)
+            val processOutput: ProcessOutput = ExecUtil.execAndGetOutput(getLogCommand)
             return processOutput.toString()
 
         } catch (ex: Exception) {
@@ -124,14 +97,8 @@ class DockerService {
     }
 
 
+    @Internal
     fun installEngine(project: Project, resultTask: Consumer<String>) {
-        installationInProgress = true
-
-        PersistenceService.getInstance().setLocalEngineInstalled(true)
-
-        val onCompleted = Consumer { _: String ->
-            installationInProgress = false
-        }.andThen(resultTask)
 
         ActivityMonitor.getInstance(project).registerDigmaEngineEventStart("installEngine", mapOf())
 
@@ -155,35 +122,49 @@ class DockerService {
                             }
                         }
 
-                        notifyResult(exitValue, onCompleted)
+                        notifyResult(exitValue, resultTask)
                     } else {
                         ActivityMonitor.getInstance(project).registerDigmaEngineEventError("installEngine", "could not find docker compose command")
                         Log.log(logger::warn, "could not find docker compose command")
-                        notifyResult(NO_DOCKER_COMPOSE_COMMAND, onCompleted)
+                        notifyResult(NO_DOCKER_COMPOSE_COMMAND, resultTask)
                     }
                 } else {
                     ActivityMonitor.getInstance(project).registerDigmaEngineEventError("installEngine", "Failed to download compose file")
                     Log.log(logger::warn, "Failed to download compose file")
-                    notifyResult("Failed to download compose file", onCompleted)
+                    notifyResult("Failed to download compose file", resultTask)
                 }
 
             } catch (e: Throwable) {
                 ErrorReporter.getInstance().reportError(project, "DockerService.installEngine", e)
                 ActivityMonitor.getInstance(project).registerDigmaEngineEventError("installEngine", "Failed in installEngine $e")
                 Log.warnWithException(logger, e, "Failed install docker engine {}", e)
-                notifyResult("Failed to install docker engine: $e", onCompleted)
+                notifyResult("Failed to install docker engine: $e", resultTask)
             } finally {
                 ActivityMonitor.getInstance(project).registerDigmaEngineEventEnd("installEngine", mapOf())
             }
         }
     }
 
-
-    fun upgradeEngine(project: Project) {
+    @Internal
+    fun upgradeEngine(project: Project, resultTask: Consumer<String>) {
 
         ActivityMonitor.getInstance(project).registerDigmaEngineEventStart("upgradeEngine", mapOf())
 
         Backgroundable.runInNewBackgroundThread(project, "upgrading digma engine") {
+
+            //stop the engine before upgrade using the current compose file, before downloading a new file.
+            //the engine should be up otherwise the upgrade would not be triggered.
+            //ignore errors, we'll try to upgrade anyway after that.
+            try {
+                val dockerComposeCmd = getDockerComposeCommand()
+                dockerComposeCmd?.let {
+                    engine.down(project, downloader.composeFile, it, false)
+                }
+            } catch (e: Throwable) {
+                ErrorReporter.getInstance().reportError(project, "DockerService.upgradeEngine", e)
+                Log.warnWithException(logger, e, "Failed to stop docker engine {}", e)
+            }
+
 
             try {
                 if (downloader.downloadComposeFile(true)) {
@@ -191,29 +172,35 @@ class DockerService {
 
                     if (dockerComposeCmd != null) {
                         val exitValue = engine.up(project, downloader.composeFile, dockerComposeCmd)
+                        //in upgrade there is no need to check if daemon is down because upgrade will not be triggered if the engine is not running.
                         if (exitValue != "0") {
                             ActivityMonitor.getInstance(project).registerDigmaEngineEventError("upgradeEngine", exitValue)
                             Log.log(logger::warn, "error upgrading engine {}", exitValue)
                         }
+
+                        notifyResult(exitValue, resultTask)
                     } else {
                         ActivityMonitor.getInstance(project).registerDigmaEngineEventError("upgradeEngine", "could not find docker compose command")
                         Log.log(logger::warn, "could not find docker compose command")
+                        notifyResult(NO_DOCKER_COMPOSE_COMMAND, resultTask)
                     }
                 } else {
                     ActivityMonitor.getInstance(project).registerDigmaEngineEventError("upgradeEngine", "Failed to download compose file")
                     Log.log(logger::warn, "Failed to download compose file")
+                    notifyResult("Failed to download compose file", resultTask)
                 }
             } catch (e: Exception) {
                 ErrorReporter.getInstance().reportError(project, "DockerService.upgradeEngine", e)
                 ActivityMonitor.getInstance(project).registerDigmaEngineEventError("upgradeEngine", "Failed in upgradeEngine $e")
                 Log.warnWithException(logger, e, "Failed install docker engine {}", e)
+                notifyResult("Failed to upgrade docker engine: $e", resultTask)
             } finally {
                 ActivityMonitor.getInstance(project).registerDigmaEngineEventEnd("upgradeEngine", mapOf())
             }
         }
     }
 
-
+    @Internal
     fun stopEngine(project: Project, resultTask: Consumer<String>) {
 
         ActivityMonitor.getInstance(project).registerDigmaEngineEventStart("stopEngine", mapOf())
@@ -254,6 +241,7 @@ class DockerService {
         }
     }
 
+    @Internal
     fun startEngine(project: Project, resultTask: Consumer<String>) {
 
         ActivityMonitor.getInstance(project).registerDigmaEngineEventStart("startEngine", mapOf())
@@ -265,15 +253,19 @@ class DockerService {
                     val dockerComposeCmd = getDockerComposeCommand()
 
                     if (dockerComposeCmd != null) {
-                        //we try to detect errors when running the docker command. engine.start executes docker-compose up,
-                        // if executing docker-compose up while containers exist it will print many errors that are ok but
-                        // that interferes with our attempt to detect errors.
-                        //so running down and then up solves it
-                        engine.down(project, downloader.composeFile, dockerComposeCmd, false)
+
                         try {
+                            //we try to detect errors when running the docker command. engine.start executes docker-compose up,
+                            // if executing docker-compose up while containers exist it will print many errors that are ok but
+                            // that interferes with our attempt to detect errors.
+                            //so running down and then up solves it.
+                            //in any case it's better to stop before start because we don't know the state of the engine, maybe its
+                            // partially up and start will fail.
+                            engine.down(project, downloader.composeFile, dockerComposeCmd, false)
                             Thread.sleep(2000)
                         } catch (e: Exception) {
-                            //ignore
+                            ErrorReporter.getInstance().reportError(project, "DockerService.startEngine", e)
+                            Log.warnWithException(logger, e, "Failed to stop docker engine {}", e)
                         }
 
                         var exitValue = engine.start(project, downloader.composeFile, dockerComposeCmd)
@@ -310,7 +302,7 @@ class DockerService {
 
     }
 
-
+    @Internal
     fun removeEngine(project: Project, resultTask: Consumer<String>) {
 
         ActivityMonitor.getInstance(project).registerDigmaEngineEventStart("removeEngine", mapOf())
@@ -363,6 +355,15 @@ class DockerService {
     }
 
 
+    private fun isDockerDaemonDownExitValue(exitValue: String): Boolean {
+        return exitValue.contains("Cannot connect to the Docker daemon", true) ||//mac, linux
+                exitValue.contains("docker daemon is not running", true) || //win
+                //this is an error on windows with docker desktop that will be solved by starting docker desktop
+                (exitValue.contains("error during connect", true) && exitValue.contains("The system cannot find the file specified", true)) || //win
+                exitValue.contains("Error while fetching server API version", true)
+    }
+
+
     private fun doRetryFlowWhenDockerDaemonIsDown(project: Project, prevExitValue: String, runCommand: Supplier<String>): String {
 
         val eventName = "docker-daemon-is-down"
@@ -412,6 +413,7 @@ class DockerService {
 
         return exitValue
     }
+
 
     private fun tryStartDockerDaemon(project: Project) {
 
@@ -466,7 +468,6 @@ class DockerService {
     private fun notifyResult(errorMsg: String, resultTask: Consumer<String>) {
         resultTask.accept(errorMsg)
     }
-
 
 
 }

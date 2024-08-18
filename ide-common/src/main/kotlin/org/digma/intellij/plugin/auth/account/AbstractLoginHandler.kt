@@ -7,6 +7,7 @@ import org.digma.intellij.plugin.analytics.RestAnalyticsProvider
 import org.digma.intellij.plugin.auth.AuthApiClient
 import org.digma.intellij.plugin.auth.credentials.DigmaCredentials
 import org.digma.intellij.plugin.auth.reportAuthPosthogEvent
+import org.digma.intellij.plugin.auth.withAuthManagerDebug
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import kotlin.coroutines.coroutineContext
@@ -84,14 +85,18 @@ abstract class AbstractLoginHandler(protected val analyticsProvider: RestAnalyti
 
             trace("refresh called for url {},trigger {}", analyticsProvider.apiUrl, trigger)
 
-            reportAuthPosthogEvent("refresh token", this.javaClass.simpleName, mapOf("refresh trigger" to trigger))
+            withAuthManagerDebug {
+                reportAuthPosthogEvent("refresh token", this.javaClass.simpleName, mapOf("refresh trigger" to trigger))
+            }
 
             val newCredentials = authApiClient.refreshToken(account, credentials)
             SingletonAccountUpdater.updateAccount(account, newCredentials)
 
             trace("refresh success for url {}, updated account {},trigger {}", analyticsProvider.apiUrl, getDefaultAccount(), trigger)
 
-            reportAuthPosthogEvent("refresh token success", this.javaClass.simpleName, mapOf("refresh trigger" to trigger))
+            withAuthManagerDebug {
+                reportAuthPosthogEvent("refresh token success", this.javaClass.simpleName, mapOf("refresh trigger" to trigger))
+            }
 
             true
 

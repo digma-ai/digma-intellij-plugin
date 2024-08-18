@@ -301,6 +301,9 @@ tasks {
             "kotlinx.coroutines.debug" to "",
             "org.digma.plugin.report.all.errors" to "true",
 
+            //to debug AuthManager
+            //"org.digma.plugin.auth.debug" to "true",
+
 //            "idea.ProcessCanceledException" to "disabled"
 
 

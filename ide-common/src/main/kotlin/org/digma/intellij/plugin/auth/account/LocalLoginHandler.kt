@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.auth.account
 import kotlinx.coroutines.CoroutineName
 import org.digma.intellij.plugin.analytics.RestAnalyticsProvider
 import org.digma.intellij.plugin.auth.reportAuthPosthogEvent
+import org.digma.intellij.plugin.auth.withAuthManagerDebug
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import kotlin.coroutines.coroutineContext
@@ -21,7 +22,9 @@ class LocalLoginHandler(analyticsProvider: RestAnalyticsProvider) : AbstractLogi
 
             trace("loginOrRefresh called, url: {},trigger {}", analyticsProvider.apiUrl, trigger)
 
-            reportAuthPosthogEvent("loginOrRefresh", this.javaClass.simpleName, mapOf("loginOrRefresh trigger" to trigger))
+            withAuthManagerDebug {
+                reportAuthPosthogEvent("loginOrRefresh", this.javaClass.simpleName, mapOf("loginOrRefresh trigger" to trigger))
+            }
 
             val digmaAccount = getDefaultAccount()
 
@@ -139,7 +142,9 @@ class LocalLoginHandler(analyticsProvider: RestAnalyticsProvider) : AbstractLogi
 
             false
         } finally {
-            reportAuthPosthogEvent("loginOrRefresh completed", this.javaClass.simpleName, mapOf("loginOrRefresh trigger" to trigger))
+            withAuthManagerDebug {
+                reportAuthPosthogEvent("loginOrRefresh completed", this.javaClass.simpleName, mapOf("loginOrRefresh trigger" to trigger))
+            }
         }
 
     }

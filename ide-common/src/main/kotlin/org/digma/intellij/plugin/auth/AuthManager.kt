@@ -395,11 +395,13 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
 
                 Log.log(logger::trace, "in fireChange, auth info changed , firing event {}", myLatestAuthInfo)
 
-                reportAuthPosthogEvent(
-                    "fire auth info changed",
-                    this.javaClass.simpleName,
-                    mapOf("user.id" to myLatestAuthInfo.userId.toString(), "listeners" to listeners.size)
-                )
+                withAuthManagerDebug {
+                    reportAuthPosthogEvent(
+                        "fire auth info changed",
+                        this.javaClass.simpleName,
+                        mapOf("user.id" to myLatestAuthInfo.userId.toString(), "listeners" to listeners.size)
+                    )
+                }
 
                 Log.log(
                     logger::trace, "firing authInfoChanged, default account {}, analytics url {}",

@@ -11,3 +11,12 @@ fun reportAuthPosthogEvent(evenName: String, caller: String, details: Map<String
         ActivityMonitor.getInstance(project).registerAuthEvent(evenName, detailsToSend)
     }
 }
+
+
+//if we want to debug issues in auth manager wrap some code that will run only if debug is on.
+//set the property in runIde task
+fun withAuthManagerDebug(block: () -> Unit) {
+    if (System.getProperty("org.digma.plugin.auth.debug") != null) {
+        block.invoke()
+    }
+}

@@ -631,7 +631,7 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
                     }
 
                 } catch (e: CancellationException) {
-                    Log.log(logger::trace, "${coroutineContext[CoroutineName]} git CancellationException {}", e)
+                    Log.log(logger::trace, "${coroutineContext[CoroutineName]} got CancellationException {}", e)
                     throw e
                 } catch (e: Throwable) {
                     Log.warnWithException(logger, e, "${coroutineContext[CoroutineName]} error in autoRefreshJob")

@@ -478,6 +478,9 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
         Log.log(logger::trace, "launching autoRefreshJob")
         return cs.launch(CoroutineName("autoRefreshJob")) {
 
+            var statisticsStartTime = Clock.System.now()
+            var refreshCounter = 0
+
             Log.log(logger::trace, "${coroutineContext[CoroutineName]} auto refresh job started")
             var delay: Duration
             while (isActive) {
@@ -518,7 +521,10 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
                                     (credentials.expirationTime - Clock.System.now().toEpochMilliseconds())
                                 ).toDuration(DurationUnit.MILLISECONDS)
 
-                            if (expireIn <= 1.minutes) {
+                            if (expireIn == ZERO) {
+                                //don't refresh if expireIn is zero it will e refreshed on authentication exception
+                                delay = 5.minutes
+                            } else if (expireIn <= 1.minutes) {
                                 Log.log(
                                     logger::trace,
                                     "${coroutineContext[CoroutineName]} credentials expires in {} , refreshing account {}",
@@ -533,11 +539,30 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
                                     false
                                 }
 
+                                refreshCounter++
+
+                                //send statistics
+                                val now = Clock.System.now()
+                                val timeSinceLastStatistics = (now - statisticsStartTime).inWholeMilliseconds.toDuration(DurationUnit.MILLISECONDS)
+//                                if (timeSinceLastStatistics >= 1.hours) {
+                                ///todo: temp change to 1 hour
+                                if (timeSinceLastStatistics >= 20.minutes) {
+                                    statisticsStartTime = now
+                                    reportAuthPosthogEvent(
+                                        "AutoRefreshStats", "AutoRefreshJob", null, mapOf(
+                                            "period.minutes" to timeSinceLastStatistics.inWholeMinutes,
+                                            "refresh.counter" to refreshCounter
+                                        )
+                                    )
+                                    refreshCounter = 0
+                                }
+
                                 if (refreshSuccess) {
                                     fireChange()
                                     Log.log(logger::trace, "${coroutineContext[CoroutineName]} credentials for account refreshed {}", account)
-                                    //immediately loop again and compute the next delay
-                                    delay = ZERO
+                                    //after successful refresh wait 5 minutes , the token should be valid for 15 minutes
+                                    //it should also let the credential store save and refresh its caches if any.
+                                    delay = 5.minutes
                                 } else {
                                     Log.log(logger::trace, "${coroutineContext[CoroutineName]} refresh failed, waiting 5 minutes")
                                     delay = 5.minutes

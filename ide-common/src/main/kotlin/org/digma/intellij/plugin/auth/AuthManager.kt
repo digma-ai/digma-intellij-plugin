@@ -43,6 +43,7 @@ import java.util.concurrent.Semaphore
 import kotlin.math.max
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.ZERO
+import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
@@ -541,12 +542,23 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
 
                                 refreshCounter++
 
-                                //send statistics
+
+                                //Detect errors and send statistics
                                 val now = Clock.System.now()
                                 val timeSinceLastStatistics = (now - statisticsStartTime).inWholeMilliseconds.toDuration(DurationUnit.MILLISECONDS)
-//                                if (timeSinceLastStatistics >= 1.hours) {
-                                ///todo: temp change to 1 hour
-                                if (timeSinceLastStatistics >= 20.minutes) {
+
+                                //detect too many refresh in a short time. in correct functioning there should never be more than 5 refresh in 1 hour
+                                if (refreshCounter > 5 && timeSinceLastStatistics < 1.hours) {
+                                    ErrorReporter.getInstance().reportError(
+                                        "AuthManager.autoRefreshJob", "too many refresh", mapOf(
+                                            "period.minutes" to timeSinceLastStatistics.inWholeMinutes,
+                                            "refresh.counter" to refreshCounter
+                                        )
+                                    )
+                                }
+
+                                //send statistics approximately every 1 hour , this will help detect incorrect functioning on this job.
+                                if (timeSinceLastStatistics >= 1.hours) {
                                     statisticsStartTime = now
                                     reportAuthPosthogEvent(
                                         "AutoRefreshStats", "AutoRefreshJob", null, mapOf(

@@ -33,7 +33,11 @@ internal open class PersistenceState : PersistentStateComponent<PersistenceData>
 
         //todo: backwards compatibility, remove firstTimeConnectionEstablishedTimestampNew in January 2025
         // renamed without the new suffix
-        myPersistenceData.firstTimeConnectionEstablishedTimestamp = myPersistenceData.firstTimeConnectionEstablishedTimestampNew
+        if (myPersistenceData.firstTimeConnectionEstablishedTimestampNew != null &&
+            myPersistenceData.firstTimeConnectionEstablishedTimestamp == null
+        ) {
+            myPersistenceData.firstTimeConnectionEstablishedTimestamp = myPersistenceData.firstTimeConnectionEstablishedTimestampNew
+        }
     }
 
 

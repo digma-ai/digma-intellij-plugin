@@ -617,10 +617,15 @@ public class AnalyticsService implements Disposable {
                 }
 
 
-                //todo: not thread safe so the block may be invoked more then once
                 if (!PersistenceService.getInstance().isFirstTimeConnectionEstablished()) {
-                    ActivityMonitor.getInstance(project).registerFirstConnectionEstablished();
-                    PersistenceService.getInstance().setFirstTimeConnectionEstablished();
+                    //if this block is not synchronized the event may be sent more than once.
+                    //synchronization only happens on first time because of double check
+                    synchronized (this) {
+                        if (!PersistenceService.getInstance().isFirstTimeConnectionEstablished()) {
+                            ActivityMonitor.getInstance(project).registerFirstConnectionEstablished();
+                            PersistenceService.getInstance().setFirstTimeConnectionEstablished();
+                        }
+                    }
                 }
 
                 PersistenceService.getInstance().updateLastConnectionTimestamp();

@@ -1,6 +1,14 @@
 # Changelog
 
-## [2.0.373] - 2024-08-18
+## [2.0.374] - 2024-08-20
+
+- update build profiles by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2415
+- enable auth debug in development by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2417
+- change trigger field name by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2419
+- fix first time connection established event by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2420
+- improve auto refresh job by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2421
+
+## 2.0.373 - 2024-08-18
 
 - prevent parallel and multiple engine installation and start Closes #2410 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2411
 - remove refresh events Closes #2413 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2414

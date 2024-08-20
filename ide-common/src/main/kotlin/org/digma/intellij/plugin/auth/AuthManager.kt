@@ -43,6 +43,7 @@ import java.util.concurrent.Semaphore
 import kotlin.math.max
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.ZERO
+import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
@@ -444,6 +445,7 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
             autoRefreshWaitingJob?.cancel(CancellationException(message, null))
             autoRefreshJob?.cancel(CancellationException(message, null))
         } catch (e: Throwable) {
+            Log.warnWithException(logger, e, "autoRefreshJob failed to stop {}", e)
             ErrorReporter.getInstance().reportError("AuthManager.stopAutoRefresh", e)
         }
     }
@@ -453,6 +455,7 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
             Log.log(logger::trace, "starting autoRefreshJob")
             autoRefreshJob = startAutoRefreshJob(cs)
         } catch (e: Throwable) {
+            Log.warnWithException(logger, e, "autoRefreshJob failed to start {}", e)
             ErrorReporter.getInstance().reportError("AuthManager.startAutoRefresh", e)
         }
     }
@@ -462,6 +465,7 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
             Log.log(logger::trace, "canceling autoRefreshJob.autoRefreshWaitingJob {}", message)
             autoRefreshWaitingJob?.cancel(CancellationException(message, null))
         } catch (e: Throwable) {
+            Log.warnWithException(logger, e, "autoRefreshJob.autoRefreshWaitingJob failed to stop {}", e)
             ErrorReporter.getInstance().reportError("AuthManager.cancelAutoRefreshWaitingJob", e)
         }
     }
@@ -477,6 +481,9 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
 
         Log.log(logger::trace, "launching autoRefreshJob")
         return cs.launch(CoroutineName("autoRefreshJob")) {
+
+            var statisticsStartTime = Clock.System.now()
+            var refreshCounter = 0
 
             Log.log(logger::trace, "${coroutineContext[CoroutineName]} auto refresh job started")
             var delay: Duration
@@ -507,7 +514,11 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
                             delay = 10.minutes
                         } else if (credentials == null) {
                             //if credentials not found it will probably be created soon
-                            Log.log(logger::trace, "${coroutineContext[CoroutineName]} credentials for account not found, waiting 1 minute")
+                            Log.log(
+                                logger::trace,
+                                "${coroutineContext[CoroutineName]} credentials for account not found, waiting 1 minute. account {}",
+                                account
+                            )
                             delay = 1.minutes
                         } else {
                             Log.log(logger::trace, "${coroutineContext[CoroutineName]} found account and credentials {}", account)
@@ -518,7 +529,15 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
                                     (credentials.expirationTime - Clock.System.now().toEpochMilliseconds())
                                 ).toDuration(DurationUnit.MILLISECONDS)
 
-                            if (expireIn <= 1.minutes) {
+                            if (expireIn == ZERO) {
+                                //don't refresh if expireIn is zero it will e refreshed on authentication exception
+                                Log.log(
+                                    logger::trace,
+                                    "${coroutineContext[CoroutineName]} credentials expires in zero seconds,not refreshing, waiting 5 minutes. account {}",
+                                    account
+                                )
+                                delay = 5.minutes
+                            } else if (expireIn <= 1.minutes) {
                                 Log.log(
                                     logger::trace,
                                     "${coroutineContext[CoroutineName]} credentials expires in {} , refreshing account {}",
@@ -533,13 +552,51 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
                                     false
                                 }
 
+                                refreshCounter++
+
+
+                                //Detect errors and send statistics
+                                val now = Clock.System.now()
+                                val timeSinceLastStatistics = (now - statisticsStartTime).inWholeMilliseconds.toDuration(DurationUnit.MILLISECONDS)
+
+                                //detect too many refresh in a short time. in correct functioning there should never be more than 5 refresh in 1 hour
+                                if (refreshCounter > 5 && timeSinceLastStatistics < 1.hours) {
+                                    ErrorReporter.getInstance().reportError(
+                                        "AuthManager.autoRefreshJob", "too many refresh", mapOf(
+                                            "period.minutes" to timeSinceLastStatistics.inWholeMinutes,
+                                            "refresh.counter" to refreshCounter
+                                        )
+                                    )
+                                }
+
+                                //send statistics approximately every 1 hour , this will help detect incorrect functioning on this job.
+                                if (timeSinceLastStatistics >= 1.hours) {
+                                    statisticsStartTime = now
+                                    reportAuthPosthogEvent(
+                                        "AutoRefreshStatistics", "AutoRefreshJob", null, mapOf(
+                                            "period.minutes" to timeSinceLastStatistics.inWholeMinutes,
+                                            "refresh.counter" to refreshCounter
+                                        )
+                                    )
+                                    refreshCounter = 0
+                                }
+
                                 if (refreshSuccess) {
                                     fireChange()
-                                    Log.log(logger::trace, "${coroutineContext[CoroutineName]} credentials for account refreshed {}", account)
-                                    //immediately loop again and compute the next delay
-                                    delay = ZERO
+                                    Log.log(
+                                        logger::trace,
+                                        "${coroutineContext[CoroutineName]} credentials for account refreshed,waiting 5 minutes. account {}",
+                                        account
+                                    )
+                                    //after successful refresh wait 5 minutes , the token should be valid for 15 minutes
+                                    //it should also let the credential store save and refresh its caches if any.
+                                    delay = 5.minutes
                                 } else {
-                                    Log.log(logger::trace, "${coroutineContext[CoroutineName]} refresh failed, waiting 5 minutes")
+                                    Log.log(
+                                        logger::trace,
+                                        "${coroutineContext[CoroutineName]} refresh failed, waiting 5 minutes. account {}",
+                                        account
+                                    )
                                     delay = 5.minutes
                                 }
                             } else {
@@ -547,9 +604,10 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
                                     max(0L, (expireIn.inWholeMilliseconds - 1.minutes.inWholeMilliseconds)).toDuration(DurationUnit.MILLISECONDS)
                                 Log.log(
                                     logger::trace,
-                                    "${coroutineContext[CoroutineName]} credentials for account expires in {}, waiting {}",
+                                    "${coroutineContext[CoroutineName]} credentials for account expires in {}, waiting {}. account {}",
                                     expireIn,
-                                    delay
+                                    delay,
+                                    account
                                 )
                             }
                         }
@@ -573,6 +631,7 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
                     }
 
                 } catch (e: CancellationException) {
+                    Log.log(logger::trace, "${coroutineContext[CoroutineName]} got CancellationException {}", e)
                     throw e
                 } catch (e: Throwable) {
                     Log.warnWithException(logger, e, "${coroutineContext[CoroutineName]} error in autoRefreshJob")
@@ -581,7 +640,10 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
                 }
             }
 
-            Log.log(logger::trace, "job autoRefreshJob exited (this should happen on IDE shutdown or when replacing api client)")
+            Log.log(
+                logger::trace,
+                "${coroutineContext[CoroutineName]} job autoRefreshJob exited (this should happen on IDE shutdown or when replacing api client)"
+            )
         }
     }
 

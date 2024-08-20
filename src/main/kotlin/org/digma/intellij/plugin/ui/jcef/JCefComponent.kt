@@ -138,7 +138,7 @@ private constructor(
             override fun editorFontChange(fontName: String) {
                 sendRequestToChangeCodeFont(fontName, jbCefBrowser)
             }
-        }, this)
+        }, parentDisposable)
 
         AuthManager.getInstance().addAuthInfoChangeListener({ authInfo ->
             try {
@@ -417,6 +417,8 @@ private constructor(
 
             val jCefComponent =
                 JCefComponent(project, parentDisposable, name, jbCefBrowser)
+
+            Disposer.register(parentDisposable, jCefComponent)
 
             //register disposable for the above components
             Disposer.register(parentDisposable) {

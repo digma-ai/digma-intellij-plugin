@@ -75,12 +75,16 @@ internal class JvmEndpointNavigationProvider(project: Project) : AbstractNavigat
                 context.indicator.checkCanceled()
             }
         } finally {
-            Log.log(logger::info, "Building endpoint navigation completed, have {} endpoints locations", endpointsMap.size)
             if (buildLock.isHeldByCurrentThread) {
                 buildLock.unlock()
             }
+            Log.log(
+                logger::info,
+                "Building endpoint navigation completed for project {}, have {} endpoints locations",
+                project.name,
+                endpointsMap.size
+            )
         }
-
     }
 
 

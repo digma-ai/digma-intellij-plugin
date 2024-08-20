@@ -76,10 +76,10 @@ internal class JvmSpanNavigationProvider(project: Project) : AbstractNavigationD
                 context.indicator.checkCanceled()
             }
         } finally {
-            Log.log(logger::info, "Building span navigation completed, have {} span locations", spanLocations.size)
             if (buildLock.isHeldByCurrentThread) {
                 buildLock.unlock()
             }
+            Log.log(logger::info, "Building span navigation completed for project {}, have {} span locations", project.name, spanLocations.size)
         }
 
     }

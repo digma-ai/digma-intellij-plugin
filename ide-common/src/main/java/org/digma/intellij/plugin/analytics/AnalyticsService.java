@@ -638,18 +638,22 @@ public class AnalyticsService implements Disposable {
 
                 //this message should help us understand the logs when debugging issues. it will help
                 // understand that there are more and more exceptions.
-                //code below and in handleInvocationTargetException will log the exceptions but our Log class
+                //code below and in ApiErrorHandler.handleInvocationTargetException will log the exceptions but our Log class
                 // will not explode the logs, so we don't see all the exceptions in the log as they happen.
                 //this message will explode the idea.log if user has digma trace logging on and no backend running,
                 // which shouldn't happen, users should not have digma trace logging on all the time.
-                var realCause = ExceptionUtils.findRootCause(e);
-                exception = realCause;
-                Log.log(LOGGER::trace, "got exception in AnalyticsService {}", realCause);
+                var rootCause = ExceptionUtils.findRootCausePreferConnectionException(e);
+                exception = rootCause;
+                Log.log(LOGGER::trace, "got exception in AnalyticsService {}", rootCause);
 
 
+                //for these methods we rethrow the exception without effecting the connection status.
+                //prefer connection exception as root cause because if the code checks isConnectionException it should be true,
+                // if we put the real root-cause it may be an exception that is not considered connection exception, for example
+                // ssl exception may wrap EOFException and EOFException alone is not considered connection exception.
                 if (methodsThatShouldNotChangeConnectionStatus.contains(method.getName())) {
                     Log.warnWithException(LOGGER, e, "error in method {}", method.getName());
-                    throw new AnalyticsServiceException(realCause);
+                    throw new AnalyticsServiceException(rootCause);
                 }
 
 

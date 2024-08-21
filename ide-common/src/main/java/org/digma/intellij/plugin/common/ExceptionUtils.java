@@ -58,6 +58,20 @@ public class ExceptionUtils {
 
 
     @NotNull
+    public static Throwable findRootCausePreferConnectionException(@NotNull Throwable throwable) {
+        var rootCause = findConnectException(throwable);
+        if (rootCause == null) {
+            rootCause = findSslException(throwable);
+        }
+        if (rootCause == null) {
+            rootCause = findRootCause(throwable);
+        }
+        return rootCause;
+    }
+
+
+
+    @NotNull
     public static Throwable findRootCause(@NotNull Throwable throwable) {
 
         try {

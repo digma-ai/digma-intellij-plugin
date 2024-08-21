@@ -43,7 +43,10 @@ don't add DIGMA_OBSERVABILITY if it's not necessary, it may confuse the instrume
 */
 const val DIGMA_OBSERVABILITY = "DIGMA_OBSERVABILITY"
 
-enum class DigmaObservabilityType { app, test }
+enum class DigmaObservabilityType {
+    //app and true means the same thing, true is backwards compatibility
+    app, test, `true`;
+}
 
 val KNOWN_IRRELEVANT_TASKS = setOf(
     /*

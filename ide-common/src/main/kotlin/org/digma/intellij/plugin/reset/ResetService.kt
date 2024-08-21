@@ -28,7 +28,7 @@ class ResetService(val cs: CoroutineScope) {
                 PersistenceService.getInstance().nullifyUserId()
                 PersistenceService.getInstance().nullifyUserRegistrationEmail()
                 PersistenceService.getInstance().nullifyUserEmail()
-                AuthManager.getInstance().logoutSynchronously()
+                AuthManager.getInstance().logoutSynchronously("reset plugin")
                 ApplicationManager.getApplication().invokeLater {
                     ApplicationManager.getApplication().restart()
                 }

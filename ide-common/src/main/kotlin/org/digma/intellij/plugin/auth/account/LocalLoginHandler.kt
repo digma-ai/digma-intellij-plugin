@@ -30,7 +30,8 @@ class LocalLoginHandler(analyticsProvider: RestAnalyticsProvider) : AbstractLogi
 
             if (digmaAccount == null) {
                 trace("no account found in loginOrRefresh, doing silent login for url: {}", analyticsProvider.apiUrl)
-                val loginResult = login(SILENT_LOGIN_USER, SILENT_LOGIN_PASSWORD, "${this.javaClass.simpleName} silent login because no account")
+                val loginResult =
+                    login(SILENT_LOGIN_USER, SILENT_LOGIN_PASSWORD, "${this.javaClass.simpleName} silent login because no account,$trigger")
                 if (loginResult.isSuccess) {
                     trace("silent login success for url: {}, account {}", analyticsProvider.apiUrl, getDefaultAccount())
                 } else {
@@ -43,12 +44,12 @@ class LocalLoginHandler(analyticsProvider: RestAnalyticsProvider) : AbstractLogi
                     digmaAccount,
                     analyticsProvider.apiUrl
                 )
-                logout("${this.javaClass.simpleName}: account url different from analytics url")
+                logout("${this.javaClass.simpleName}: account url different from analytics url,$trigger")
                 trace("doing silent login for url: {}", analyticsProvider.apiUrl)
                 val loginResult = login(
                     SILENT_LOGIN_USER,
                     SILENT_LOGIN_PASSWORD,
-                    "${this.javaClass.simpleName} silent login because account url different from analytics url"
+                    "${this.javaClass.simpleName} silent login because account url different from analytics url,$trigger"
                 )
                 if (loginResult.isSuccess) {
                     trace("silent login success for url: {}, account {}", analyticsProvider.apiUrl, getDefaultAccount())
@@ -76,12 +77,12 @@ class LocalLoginHandler(analyticsProvider: RestAnalyticsProvider) : AbstractLogi
                         digmaAccount,
                         analyticsProvider.apiUrl
                     )
-                    logout("${this.javaClass.simpleName}: no credentials for account")
+                    logout("${this.javaClass.simpleName}: no credentials for account,$trigger")
                     trace("doing silent login for url: {}", analyticsProvider.apiUrl)
                     val loginResult = login(
                         SILENT_LOGIN_USER,
                         SILENT_LOGIN_PASSWORD,
-                        "${this.javaClass.simpleName} silent login because account exists but no credentials"
+                        "${this.javaClass.simpleName} silent login because account exists but no credentials,$trigger"
                     )
                     if (loginResult.isSuccess) {
                         trace("silent login success for url: {}, account {}", analyticsProvider.apiUrl, getDefaultAccount())
@@ -95,7 +96,7 @@ class LocalLoginHandler(analyticsProvider: RestAnalyticsProvider) : AbstractLogi
 
                     if (!credentials.isAccessTokenValid()) {
                         trace("access token for account expired, refreshing token. account {}", digmaAccount)
-                        val refreshResult = refresh(digmaAccount, credentials, "${this.javaClass.simpleName} token expired")
+                        val refreshResult = refresh(digmaAccount, credentials, "${this.javaClass.simpleName} token expired,$trigger")
                         trace("refresh token completed for account {}, result {}", digmaAccount, refreshResult)
                         refreshResult
                     } else if (onAuthenticationError && credentials.isOlderThen(30.seconds)) {
@@ -113,7 +114,7 @@ class LocalLoginHandler(analyticsProvider: RestAnalyticsProvider) : AbstractLogi
 
                         trace("onAuthenticationError is true and credentials older then 30 seconds, refreshing token for account {}", digmaAccount)
                         val refreshResult =
-                            refresh(digmaAccount, credentials, "${this.javaClass.simpleName} on onAuthenticationError and token is old")
+                            refresh(digmaAccount, credentials, "${this.javaClass.simpleName} on onAuthenticationError and token is old,$trigger")
                         trace("refresh token completed for account {},result {}", digmaAccount, refreshResult)
                         refreshResult
                     } else {
@@ -138,8 +139,8 @@ class LocalLoginHandler(analyticsProvider: RestAnalyticsProvider) : AbstractLogi
 
             //if got exception here it may be from refresh or login, in both cases delete the current account
             //and login again
-            logout("${this.javaClass.simpleName}: error in loginOrRefresh $e")
-            login(SILENT_LOGIN_USER, SILENT_LOGIN_PASSWORD, "${this.javaClass.simpleName} silent login because of error $e")
+            logout("${this.javaClass.simpleName}: error in loginOrRefresh $e,$trigger")
+            login(SILENT_LOGIN_USER, SILENT_LOGIN_PASSWORD, "${this.javaClass.simpleName} silent login because of error $e,$trigger")
 
             false
         } finally {

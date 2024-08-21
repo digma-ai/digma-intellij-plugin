@@ -40,12 +40,12 @@ public class Log {
         if (!logger.isDebugEnabled()) {
             return;
         }
-
+        //always write the message so we see it in the log,check frequency only for the exception
+        logger.debug(DIGMA + String.format(format.replace("{}", "%s"), args));
         if (FREQUENT_ERROR_DETECTOR.isTooFrequentException(format, e)) {
             return;
         }
-
-        logger.debug(DIGMA + String.format(format.replace("{}", "%s"), args),e);
+        logger.debug(e);
     }
 
     public static void debugWithException(Logger logger, Project project,Throwable e, String format, Object... args) {
@@ -53,12 +53,12 @@ public class Log {
         if (!logger.isDebugEnabled()) {
             return;
         }
-
+        //always write the message so we see it in the log,check frequency only for the exception
+        logger.debug(DIGMA_PROJECT + project.getName() + ": " + String.format(format.replace("{}", "%s"), args));
         if (FREQUENT_ERROR_DETECTOR.isTooFrequentException(format, e)) {
             return;
         }
-
-        logger.debug(DIGMA_PROJECT + project.getName() + ": " + String.format(format.replace("{}", "%s"), args),e);
+        logger.debug(e);
     }
 
 
@@ -68,10 +68,12 @@ public class Log {
         if (e instanceof NoSelectedEnvironmentException) {
             debugWithException(logger, e, format, args);
         } else {
+            //always write the message so we see it in the log,check frequency only for the exception
+            logger.warn(DIGMA + String.format(format.replace("{}", "%s"), args));
             if (FREQUENT_ERROR_DETECTOR.isTooFrequentException(format, e)) {
                 return;
             }
-            logger.warn(DIGMA + String.format(format.replace("{}", "%s"), args), e);
+            logger.warn(e);
         }
     }
 
@@ -81,10 +83,12 @@ public class Log {
         if (e instanceof NoSelectedEnvironmentException) {
             debugWithException(logger, project, e, format, args);
         } else {
+            //always write the message so we see it in the log,check frequency only for the exception
+            logger.warn(DIGMA_PROJECT + project.getName() + ": " + String.format(format.replace("{}", "%s"), args));
             if (FREQUENT_ERROR_DETECTOR.isTooFrequentException(format, e)) {
                 return;
             }
-            logger.warn(DIGMA_PROJECT + project.getName() + ": " + String.format(format.replace("{}", "%s"), args), e);
+            logger.warn(e);
         }
     }
 
@@ -100,39 +104,39 @@ public class Log {
 
     //Note: We should never log error in intellij because logging error will popup a red error to the user.
 
-    private static void error(Logger logger, Project project, Exception exception, String format, Object... args) {
+//    private static void error(Logger logger, Project project, Exception exception, String format, Object... args) {
+//
+//        if (exception instanceof NoSelectedEnvironmentException) {
+//            debugWithException(logger, exception, format, args);
+//        } else {
+//
+//            if (FREQUENT_ERROR_DETECTOR.isTooFrequentException(format, exception)) {
+//                return;
+//            }
+//
+//            var msg = String.format(format.replace("{}", "%s"), args);
+//            error(logger, exception, DIGMA_PROJECT + project.getName() + ": " + msg);
+//            ErrorReporter.getInstance().reportError(project, "Log.error", exception);
+//        }
+//    }
+//
+//    private static void error(Logger logger, Exception exception, String format, Object... args) {
+//        if (FREQUENT_ERROR_DETECTOR.isTooFrequentException(format, exception)) {
+//            return;
+//        }
+//        error(logger, exception, DIGMA + String.format(format.replace("{}", "%s"), args));
+//    }
 
-        if (exception instanceof NoSelectedEnvironmentException) {
-            debugWithException(logger, exception, format, args);
-        } else {
+//    private static void error(Logger logger, Exception exception, String msg) {
+//        if (FREQUENT_ERROR_DETECTOR.isTooFrequentException(msg, exception)) {
+//            return;
+//        }
+//        logger.error(DIGMA + msg, exception);
+//    }
 
-            if (FREQUENT_ERROR_DETECTOR.isTooFrequentException(format, exception)) {
-                return;
-            }
-
-            var msg = String.format(format.replace("{}", "%s"), args);
-            error(logger, exception, DIGMA_PROJECT + project.getName() + ": " + msg);
-            ErrorReporter.getInstance().reportError(project, "Log.error", exception);
-        }
-    }
-
-    private static void error(Logger logger, Exception exception, String format, Object... args) {
-        if (FREQUENT_ERROR_DETECTOR.isTooFrequentException(format, exception)) {
-            return;
-        }
-        error(logger, exception, DIGMA + String.format(format.replace("{}", "%s"), args));
-    }
-
-    private static void error(Logger logger, Exception exception, String msg) {
-        if (FREQUENT_ERROR_DETECTOR.isTooFrequentException(msg, exception)) {
-            return;
-        }
-        logger.error(DIGMA + msg, exception);
-    }
-
-    private static void error(Logger logger, String msg) {
-        logger.error(DIGMA + msg);
-    }
+//    private static void error(Logger logger, String msg) {
+//        logger.error(DIGMA + msg);
+//    }
 
 
 

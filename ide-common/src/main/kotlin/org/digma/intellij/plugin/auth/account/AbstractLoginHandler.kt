@@ -59,7 +59,15 @@ abstract class AbstractLoginHandler(protected val analyticsProvider: RestAnalyti
 
             trace("login success for url {}, user {}, created account {},trigger {}", analyticsProvider.apiUrl, user, getDefaultAccount(), trigger)
 
-            reportAuthPosthogEvent("login success", this.javaClass.simpleName, trigger, mapOf("user" to user))
+            reportAuthPosthogEvent(
+                "login success", this.javaClass.simpleName, trigger, mapOf(
+                    "user" to user,
+                    "account.id" to account.id,
+                    "accessTokenHash" to credentials.accessTokenHash(),
+                    "refreshTokenHash" to credentials.refreshTokenHash(),
+                    "expirationDate" to credentials.getExpirationTimeAsDate()
+                )
+            )
 
             LoginResult(true, credentials.userId, null)
 
@@ -87,7 +95,14 @@ abstract class AbstractLoginHandler(protected val analyticsProvider: RestAnalyti
             trace("refresh called for url {},trigger {}", analyticsProvider.apiUrl, trigger)
 
             withAuthManagerDebug {
-                reportAuthPosthogEvent("refresh token", this.javaClass.simpleName, trigger)
+                reportAuthPosthogEvent(
+                    "refresh token", this.javaClass.simpleName, trigger, mapOf(
+                        "account.id" to account.id,
+                        "accessTokenHash" to credentials.accessTokenHash(),
+                        "refreshTokenHash" to credentials.refreshTokenHash(),
+                        "expirationDate" to credentials.getExpirationTimeAsDate()
+                    )
+                )
             }
 
             val newCredentials = authApiClient.refreshToken(account, credentials)
@@ -96,7 +111,17 @@ abstract class AbstractLoginHandler(protected val analyticsProvider: RestAnalyti
             trace("refresh success for url {}, updated account {},trigger {}", analyticsProvider.apiUrl, getDefaultAccount(), trigger)
 
             withAuthManagerDebug {
-                reportAuthPosthogEvent("refresh token success", this.javaClass.simpleName, trigger)
+                reportAuthPosthogEvent(
+                    "refresh token success", this.javaClass.simpleName, trigger, mapOf(
+                        "account.id" to account.id,
+                        "oldAccessTokenHash" to credentials.accessTokenHash(),
+                        "oldRefreshTokenHash" to credentials.refreshTokenHash(),
+                        "oldExpirationDate" to credentials.getExpirationTimeAsDate(),
+                        "newAccessTokenHash" to newCredentials.accessTokenHash(),
+                        "newRefreshTokenHash" to newCredentials.refreshTokenHash(),
+                        "newExpirationDate" to newCredentials.getExpirationTimeAsDate()
+                    )
+                )
             }
 
             true
@@ -105,7 +130,15 @@ abstract class AbstractLoginHandler(protected val analyticsProvider: RestAnalyti
             warnWithException(e, "Exception in refresh {}", e)
             ErrorReporter.getInstance().reportError("${javaClass.simpleName}.refresh", e, mapOf("refresh trigger" to trigger))
             val errorMessage = ExceptionUtils.getNonEmptyMessage(e)
-            reportAuthPosthogEvent("refresh token failed", this.javaClass.simpleName, trigger, mapOf("error" to errorMessage))
+            reportAuthPosthogEvent(
+                "refresh token failed", this.javaClass.simpleName, trigger, mapOf(
+                    "error" to errorMessage,
+                    "account.id" to account.id,
+                    "accessTokenHash" to credentials.accessTokenHash(),
+                    "refreshTokenHash" to credentials.refreshTokenHash(),
+                    "expirationDate" to credentials.getExpirationTimeAsDate()
+                )
+            )
 
             val authenticationException = ExceptionUtils.findCause(AuthenticationException::class.java, e)
             if (authenticationException != null) {

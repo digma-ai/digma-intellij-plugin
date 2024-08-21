@@ -1,6 +1,12 @@
 # Changelog
 
-## [2.0.374] - 2024-08-20
+## [2.0.375] - 2024-08-21
+
+- support-true-in-digma-observability Closes #2426 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2427
+- refactore change listener for span and endpoint navigation Closes #2408 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2424
+- better exception handling for methods that should not affect connecti… Closes #2416 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2428
+
+## 2.0.374 - 2024-08-20
 
 - update build profiles by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2415
 - enable auth debug in development by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2417

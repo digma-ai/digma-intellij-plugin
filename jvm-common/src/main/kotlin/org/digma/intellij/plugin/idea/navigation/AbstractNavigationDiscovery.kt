@@ -3,37 +3,23 @@ package org.digma.intellij.plugin.idea.navigation
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.editor.Document
-import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.psi.PsiDocumentManager
-import com.intellij.psi.PsiFile
-import com.intellij.psi.PsiManager
-import com.intellij.psi.PsiTreeAnyChangeAbstractAdapter
 import com.intellij.psi.search.GlobalSearchScope
-import com.intellij.util.Alarm
 import com.intellij.util.concurrency.AppExecutorUtil
 import kotlinx.datetime.Clock
-import org.digma.intellij.plugin.common.Backgroundable
-import org.digma.intellij.plugin.common.EDT
-import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.common.SearchScopeProvider
 import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.common.isValidVirtualFile
-import org.digma.intellij.plugin.common.runInReadAccessWithResult
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.navigation.model.NavigationDiscoveryTrigger
 import org.digma.intellij.plugin.idea.navigation.model.NavigationProcessContext
-import org.digma.intellij.plugin.idea.psi.isJvmSupportedFile
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.process.ProcessManager
-import org.digma.intellij.plugin.psi.PsiUtils
 import org.digma.intellij.plugin.session.SessionMetadataProperties
 import org.digma.intellij.plugin.session.getPluginLoadedKey
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
@@ -50,22 +36,12 @@ abstract class AbstractNavigationDiscovery(protected val project: Project) : Dis
         get() = AppExecutorUtil.createBoundedScheduledExecutorService("${this.type}Nav", 1)
 
 
-    init {
-        //we need PsiTreeChange because bulk file listener does not always notify on time on changes, it will notify all changes only
-        // when saving files. for example if refactoring name for class A that requires changes on class B, bulk file listener will notify on A,
-        // but not on B, only when the system decides to save changes it will notify on B.
-        //psi change events will be fired immediately on all changed classes.
-        //on the other hand psi change events will not be fired for file deletion, but bulk listener will.
-        //so we use a combination of both.
-        //many times we will be notified for the same file more than once, and we will run a process more than once for the same file, while its better
-        // not to the performance and resource consumption is not much more.
-        @Suppress("LeakingThis")
-        PsiManager.getInstance(project).addPsiTreeChangeListener(MyPsiTreeAnyChangeListener(this), this)
-    }
-
-
     override fun dispose() {
-        scheduledExecutorService.shutdownNow()
+        try {
+            scheduledExecutorService.shutdownNow()
+        } catch (e: Throwable) {
+            //ignore
+        }
     }
 
     abstract val type: String
@@ -113,14 +89,18 @@ abstract class AbstractNavigationDiscovery(protected val project: Project) : Dis
         scheduledExecutorService.schedule({
 
             try {
-                Log.log(logger::trace, "Starting navigation discovery process in smart mode")
+                Log.log(logger::trace, "Starting navigation discovery process for {}", type)
+                Log.log(logger::trace, "waiting for smart mode")
                 DumbService.getInstance(project).waitForSmartMode()
+                Log.log(logger::trace, "processing in smart mode")
                 //run the preTask on same thread before the main task
                 preTask?.run()
                 buildNavigationUnderProgress(searchScopeProvider, navigationDiscoveryTrigger, retry)
             } catch (e: Throwable) {
                 Log.warnWithException(logger, project, e, "Error in navigation discovery process")
                 ErrorReporter.getInstance().reportError(project, "${this::class.simpleName}.schedule", e)
+            } finally {
+                Log.log(logger::trace, "Navigation discovery process completed for {}", type)
             }
 
         }, delayMillis, TimeUnit.MILLISECONDS)
@@ -173,47 +153,13 @@ abstract class AbstractNavigationDiscovery(protected val project: Project) : Dis
 
     }
 
-    fun documentChanged(document: Document) {
-
-        //this method is called on background thread from documentChanged event so that the EDT is released quickly.
-
-        EDT.assertNonDispatchThread()
-        ReadActions.assertNotInReadAccess()
-
-        try {
-            if (!isProjectValid(project)) {
-                return
-            }
-
-            val psiFile = runInReadAccessWithResult {
-                PsiDocumentManager.getInstance(project).getPsiFile(document)
-            }
-
-            psiFile?.let {
-                if (PsiUtils.isValidPsiFile(it) && isJvmSupportedFile(project, it)) {
-                    val virtualFile = FileDocumentManager.getInstance().getFile(document)
-                    virtualFile?.takeIf { isValidVirtualFile(virtualFile) }?.let { vf ->
-                        fileChanged(vf)
-                    }
-                }
-            }
-        } catch (e: Throwable) {
-            Log.warnWithException(logger, e, "Exception in documentChanged")
-            ErrorReporter.getInstance().reportError(project, "${this::class.simpleName}.documentChanged", e)
-        }
-    }
-
-
     /*
     This method must be called with a file that is relevant for span discovery and span navigation.
-    checking that should be done before calling this method.
+    checking that it is should be done before calling this method.
     */
     fun fileChanged(virtualFile: VirtualFile?) {
 
         //this method should be very fast and only schedule a task for the changed file.
-        //it's called on background from BulkFileChangeListenerForJvmNavigationDiscovery.processEvents.
-        //it's called on background from documentChanged
-        //it's called on background from MyPsiTreeAnyChangeListener
 
         if (!isProjectValid(project) || !isValidVirtualFile(virtualFile)) {
             return
@@ -244,12 +190,12 @@ abstract class AbstractNavigationDiscovery(protected val project: Project) : Dis
             return
         }
 
-        Backgroundable.ensurePooledThreadWithoutReadAccess {
-            if (virtualFile != null) {
-                buildLock.lock()
-                try {
-                    removeDiscoveryForFile(virtualFile)
-                } finally {
+        if (virtualFile != null) {
+            buildLock.lock()
+            try {
+                removeDiscoveryForFile(virtualFile)
+            } finally {
+                if (buildLock.isHeldByCurrentThread) {
                     buildLock.unlock()
                 }
             }
@@ -262,11 +208,11 @@ abstract class AbstractNavigationDiscovery(protected val project: Project) : Dis
             return
         }
 
-        Backgroundable.ensurePooledThreadWithoutReadAccess {
-            buildLock.lock()
-            try {
-                removeDiscoveryForPath(path)
-            } finally {
+        buildLock.lock()
+        try {
+            removeDiscoveryForPath(path)
+        } finally {
+            if (buildLock.isHeldByCurrentThread) {
                 buildLock.unlock()
             }
         }
@@ -337,33 +283,6 @@ abstract class AbstractNavigationDiscovery(protected val project: Project) : Dis
                 "error" to error.toString()
             )
         )
-    }
-
-
-    //PsiTreeChangeEvent are fired many times for the same file, actually for every psi change in the file.
-    //this listener will make sure not to call fileChanged for every event.
-    //it collects the changed files and calls fileChanged every 5 seconds for the collected files.
-    private inner class MyPsiTreeAnyChangeListener(val abstractNavigationDiscovery: AbstractNavigationDiscovery) : PsiTreeAnyChangeAbstractAdapter() {
-
-        private val changeAlarm = Alarm(Alarm.ThreadToUse.POOLED_THREAD, abstractNavigationDiscovery)
-        private val changedFiles = ConcurrentHashMap.newKeySet<VirtualFile>()
-
-        override fun onChange(file: PsiFile?) {
-            file?.let {
-                val vf = it.virtualFile
-                if (isValidRelevantFile(project, vf) && PsiUtils.isValidPsiFile(it) && isJvmSupportedFile(project, it)) {
-                    changedFiles.add(vf)
-                    changeAlarm.cancelAllRequests()
-                    changeAlarm.addRequest({
-                        changedFiles.forEach { file ->
-                            Log.log(logger::trace, "got psi tree change for file {}", file)
-                            changedFiles.remove(file)
-                            abstractNavigationDiscovery.fileChanged(file)
-                        }
-                    }, 5000)
-                }
-            }
-        }
     }
 
 }

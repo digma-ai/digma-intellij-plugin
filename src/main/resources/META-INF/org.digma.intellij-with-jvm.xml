@@ -54,18 +54,4 @@
 
     </extensions>
 
-
-    <projectListeners>
-        <listener
-                class="org.digma.intellij.plugin.idea.navigation.DocumentsChangeListenerForJvmNavigationDiscovery"
-                topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
-    </projectListeners>
-
-    <applicationListeners>
-        <listener
-                class="org.digma.intellij.plugin.idea.navigation.BulkFileChangeListenerForJvmNavigationDiscovery"
-                topic="com.intellij.openapi.vfs.newvfs.BulkFileListener"/>
-    </applicationListeners>
-
-
 </idea-plugin>

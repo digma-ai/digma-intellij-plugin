@@ -5,6 +5,7 @@ import com.intellij.execution.configurations.RunConfiguration
 import com.intellij.execution.configurations.SimpleJavaParameters
 import com.intellij.execution.configurations.SimpleProgramParameters
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemRunConfiguration
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 
 open class ParametersExtractor(protected val configuration: RunConfiguration, protected val params: SimpleProgramParameters) {
 
@@ -69,7 +70,18 @@ open class ParametersExtractor(protected val configuration: RunConfiguration, pr
 
     fun getDigmaObservability(): DigmaObservabilityType? {
         return extractEnvValue(DIGMA_OBSERVABILITY)?.takeIf { it.isNotBlank() }?.let {
-            DigmaObservabilityType.valueOf(it)
+            try {
+                DigmaObservabilityType.valueOf(it)
+            } catch (e: Throwable) {
+                //report an error so we know if users put non-supported value
+                ErrorReporter.getInstance().reportError(
+                    "ParametersExtractor.getDigmaObservability", "non supported value in DIGMA_OBSERVABILITY",
+                    mapOf(
+                        "value" to it
+                    )
+                )
+                DigmaObservabilityType.app
+            }
         } ?: if (isEnvExists(DIGMA_OBSERVABILITY)) DigmaObservabilityType.app else null
     }
 

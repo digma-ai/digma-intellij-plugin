@@ -94,7 +94,9 @@ internal class JvmSpanNavigationProvider(project: Project) : AbstractNavigationD
         try {
             val url = Urls.newUri("file", path).toString()
             removeDiscoveryForUrl(url)
-        } catch (e: URISyntaxException) {
+        } catch (e: Throwable) {
+            //UrlImpl throws RuntimeException here ,
+            //something like 'Relative path in absolute URI: file://What's%20New%20in%20IntelliJ%20IDEA'
             //catch this error and log, no need to report to posthog
             Log.warnWithException(logger, e, "error removing path")
         }

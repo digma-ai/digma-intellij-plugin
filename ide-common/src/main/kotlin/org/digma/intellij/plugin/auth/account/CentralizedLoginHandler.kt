@@ -33,7 +33,7 @@ class CentralizedLoginHandler(analyticsProvider: RestAnalyticsProvider) : Abstra
                     digmaAccount,
                     analyticsProvider.apiUrl
                 )
-                logout("${this.javaClass.simpleName}: account url different from analytics url")
+                logout("${this.javaClass.simpleName}: account url different from analytics url,$trigger")
                 false
             } else {
 
@@ -55,7 +55,7 @@ class CentralizedLoginHandler(analyticsProvider: RestAnalyticsProvider) : Abstra
                         digmaAccount,
                         analyticsProvider.apiUrl
                     )
-                    logout("${this.javaClass.simpleName}: no credentials for account")
+                    logout("${this.javaClass.simpleName}: no credentials for account,$trigger")
                     false
                 } else {
 
@@ -63,7 +63,7 @@ class CentralizedLoginHandler(analyticsProvider: RestAnalyticsProvider) : Abstra
 
                     if (!credentials.isAccessTokenValid()) {
                         trace("access token for account expired, refreshing token. account {}", digmaAccount)
-                        val refreshResult = refresh(digmaAccount, credentials, "${this.javaClass.simpleName} token expired")
+                        val refreshResult = refresh(digmaAccount, credentials, "${this.javaClass.simpleName} token expired,$trigger")
                         trace("refresh token completed for account {}, result {}", digmaAccount, refreshResult)
                         refreshResult
                     } else if (onAuthenticationError && credentials.isOlderThen(30.seconds)) {
@@ -79,7 +79,7 @@ class CentralizedLoginHandler(analyticsProvider: RestAnalyticsProvider) : Abstra
 
                         trace("onAuthenticationError is true and credentials older then 30 seconds, refreshing token. account {}", digmaAccount)
                         val refreshResult =
-                            refresh(digmaAccount, credentials, "${this.javaClass.simpleName} on onAuthenticationError and token is old")
+                            refresh(digmaAccount, credentials, "${this.javaClass.simpleName} on onAuthenticationError and token is old,$trigger")
                         trace("refresh token completed for account {}, result {}", digmaAccount, refreshResult)
                         refreshResult
                     } else {
@@ -104,7 +104,7 @@ class CentralizedLoginHandler(analyticsProvider: RestAnalyticsProvider) : Abstra
 
             //if got exception here then we probably can't refresh,logout, user will be redirected to login,
             // throw the exception to report it
-            logout("${this.javaClass.simpleName}: error in loginOrRefresh $e")
+            logout("${this.javaClass.simpleName}: error in loginOrRefresh $e,$trigger")
             throw e
         } finally {
             withAuthManagerDebug {

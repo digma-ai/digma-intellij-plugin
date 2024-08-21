@@ -241,7 +241,7 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                     }
 
                     JCEFGlobalConstants.GLOBAL_LOGOUT -> {
-                        AuthManager.getInstance().logoutAsync()
+                        AuthManager.getInstance().logoutAsync("user logout")
                     }
 
                     JCEFGlobalConstants.GLOBAL_LOGIN -> {
@@ -447,8 +447,8 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
         val payload = getPayloadFromRequest(requestJsonNode)
         val result = payload?.let {
             try {
-                AuthManager.getInstance().logoutSynchronously()
-                val result = AuthManager.getInstance().loginSynchronously(it.get("email").asText(), it.get("password").asText())
+                AuthManager.getInstance().logoutSynchronously("user login")
+                val result = AuthManager.getInstance().loginSynchronously(it.get("email").asText(), it.get("password").asText(), "user login")
                 if (result.isSuccess) {
                     UserRegistrationManager.getInstance(project)
                         .register(mapOf("email" to it.get("email").asText()), JCEFGlobalConstants.GLOBAL_LOGIN)

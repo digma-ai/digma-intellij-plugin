@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.intellij.collaboration.auth.credentials.CredentialsWithRefresh
 import kotlinx.datetime.Clock
+import org.apache.commons.codec.digest.DigestUtils
 import java.beans.ConstructorProperties
 import java.util.Date
 import kotlin.math.max
@@ -74,4 +75,17 @@ class DigmaCredentials
     fun isYoungerThen(seconds: Duration): Boolean {
         return !isOlderThen(seconds)
     }
+
+    @JsonIgnore
+    fun accessTokenHash(): String {
+        return DigestUtils.sha1Hex(accessToken)
+    }
+
+    @JsonIgnore
+    fun refreshTokenHash(): String {
+        return DigestUtils.sha1Hex(refreshToken)
+    }
+
+
+
 }

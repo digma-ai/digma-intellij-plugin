@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.376] - 2024-08-22
+## [2.0.377] - 2024-08-22
+
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2442
+- Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2445
+
+## 2.0.376 - 2024-08-22
 
 - Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2430
 - catch-runtime-exception-in-removeDiscoveryForPath Closes #2403 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2431

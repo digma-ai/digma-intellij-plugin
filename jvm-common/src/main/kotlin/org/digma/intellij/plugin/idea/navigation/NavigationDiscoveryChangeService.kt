@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.idea.navigation
 
-import com.intellij.lang.java.JavaLanguage
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.Logger
@@ -31,7 +30,6 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.psi.isJvmSupportedFile
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.psi.PsiUtils
-import org.jetbrains.kotlin.idea.KotlinLanguage
 import java.util.LinkedList
 import java.util.Queue
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -186,19 +184,23 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
     private inner class NavigationDiscoveryPsiTreeChangeListener : PsiTreeAnyChangeAbstractAdapter() {
         override fun onChange(file: PsiFile?) {
 
-            if (!isProjectValid(project)) {
-                return
-            }
-
-            //this method should be very fast, it runs on EDT.
-            // selecting relevant files should be done while processing in background.
-            file?.let {
-                //very quick selection of java and kotlin files only.
-                //when the files are processed there is another check isJvmSupportedFile, but instead of collecting
-                // all files and checking later we check here first because there may be many files that are not relevant
-                if (isJavaOrKotlinFile(it)) {
-                    addChangedFile(it.virtualFile)
+            try {
+                if (!isProjectValid(project)) {
+                    return
                 }
+
+                //this method should be very fast, it runs on EDT.
+                // selecting relevant files should be done while processing in background.
+                file?.let {
+                    //very quick selection of java and kotlin files only.
+                    //when the files are processed there is another check isJvmSupportedFile, but instead of collecting
+                    // all files and checking later we check here first because there may be many files that are not relevant
+                    if (isJavaOrKotlinFile(it)) {
+                        addChangedFile(it.virtualFile)
+                    }
+                }
+            } catch (e: Throwable) {
+                ErrorReporter.getInstance().reportError("NavigationDiscoveryChangeService.NavigationDiscoveryPsiTreeChangeListener.onChange", e)
             }
         }
     }
@@ -222,16 +224,28 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
     private inner class NavigationDiscoveryAsyncFileChangeListener : AsyncFileListener {
         override fun prepareChange(events: List<VFileEvent>): AsyncFileListener.ChangeApplier? {
 
-            if (!isProjectValid(project)) {
-                return null
-            }
-
-            return object : AsyncFileListener.ChangeApplier {
-                override fun afterVfsChange() {
-                    //this method should be very fast, it runs with write action.
-                    //selecting relevant files should be done while processing in background.
-                    addBulkEvents(events)
+            try {
+                if (!isProjectValid(project)) {
+                    return null
                 }
+
+                return object : AsyncFileListener.ChangeApplier {
+                    override fun afterVfsChange() {
+                        //this method should be very fast, it runs with write action.
+                        //selecting relevant files should be done while processing in background.
+                        try {
+                            addBulkEvents(events)
+                        } catch (e: Throwable) {
+                            ErrorReporter.getInstance()
+                                .reportError("NavigationDiscoveryChangeService.NavigationDiscoveryAsyncFileChangeListener.afterVfsChange", e)
+                        }
+
+                    }
+                }
+            } catch (e: Throwable) {
+                ErrorReporter.getInstance()
+                    .reportError("NavigationDiscoveryChangeService.NavigationDiscoveryAsyncFileChangeListener.prepareChange", e)
+                return null
             }
         }
     }

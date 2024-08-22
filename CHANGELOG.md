@@ -1,6 +1,14 @@
 # Changelog
 
-## [2.0.375] - 2024-08-21
+## [2.0.376] - 2024-08-22
+
+- Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2430
+- catch-runtime-exception-in-removeDiscoveryForPath Closes #2403 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2431
+- more-details-in-auth-errors by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2433
+- fix-backend-error-properties by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2443
+- fix-NoClassDefFoundError-KotlinLanguage by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2444
+
+## 2.0.375 - 2024-08-21
 
 - support-true-in-digma-observability Closes #2426 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2427
 - refactore change listener for span and endpoint navigation Closes #2408 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2424

@@ -140,7 +140,7 @@ class UpdatesService(private val project: Project) : Disposable {
 
             if (currErrors != prevBackendErrorsList) {
                 currErrors.forEach {
-                    ErrorReporter.getInstance().reportBackendError(project, it, "query-for-versions-and-propose-to-update")
+                    ErrorReporter.getInstance().reportBackendError(project, "UpdatesService.checkForNewerVersions", it)
                 }
             }
 

@@ -366,7 +366,7 @@ class AggressiveUpdateService(val project: Project) : DisposableAdaptor {
     private fun reportVersionsErrorsIfNecessary(errors: List<String>) {
         try {
             errors.forEach {
-                errorReporter.reportBackendError(null, it, "${this::class.simpleName}.getVersions")
+                errorReporter.reportBackendError(null, "AggressiveUpdateService.getVersions", it)
             }
         } catch (e: Throwable) {
             errorReporter.reportError("AggressiveUpdateService.reportVersionsErrorsIfNecessary", e)

@@ -375,7 +375,8 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
     }
 
     private fun isJavaOrKotlinFile(psiFile: PsiFile): Boolean {
-        return psiFile.language == JavaLanguage.INSTANCE || psiFile.language == KotlinLanguage.INSTANCE
+        return psiFile.language.displayName.equals("Java", true) ||
+                psiFile.language.displayName.equals("Kotlin", true)
     }
 
 }

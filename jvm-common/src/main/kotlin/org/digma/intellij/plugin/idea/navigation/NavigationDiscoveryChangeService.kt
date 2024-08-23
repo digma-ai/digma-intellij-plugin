@@ -278,31 +278,41 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
 
                     when (item) {
                         is VFileDeleteEvent -> {
-                            deleteFromNavigation(project, item.file)
+                            if (isJavaOrKotlinFile(item.file)) {
+                                deleteFromNavigation(project, item.file)
+                            }
                         }
 
                         is VFilePropertyChangeEvent -> {
                             //we're interested only when the name property is changed
                             if (item.propertyName == VirtualFile.PROP_NAME) {
+                                if (isJavaOrKotlinFile(item.file)) {
+                                    deleteFromNavigationByOldPath(project, item.oldPath)
+                                    addChangedFile(item.file)
+                                }
+                            }
+                        }
+
+                        is VFileMoveEvent -> {
+                            if (isJavaOrKotlinFile(item.file)) {
                                 deleteFromNavigationByOldPath(project, item.oldPath)
                                 addChangedFile(item.file)
                             }
                         }
 
-                        is VFileMoveEvent -> {
-                            deleteFromNavigationByOldPath(project, item.oldPath)
-                            addChangedFile(item.file)
-                        }
-
                         is VFileCopyEvent -> {
                             item.findCreatedFile()?.let { newFile ->
-                                addChangedFile(newFile)
+                                if (isJavaOrKotlinFile(newFile)) {
+                                    addChangedFile(newFile)
+                                }
                             }
                         }
 
                         else -> {
                             item.file?.let {
-                                addChangedFile(it)
+                                if (isJavaOrKotlinFile(it)) {
+                                    addChangedFile(it)
+                                }
                             }
                         }
                     }
@@ -357,7 +367,7 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
         //primitive check that it's a java or kotlin file.
         //better not to call file deleted if it's not a relevant file although nothing will happen if the file was not mapped.
         //a deleted file doesn't have PsiFile anymore so we can't find PsiFile and check language.
-        if (file.name.endsWith("java", true) || file.name.endsWith("kt", true)) {
+        if (isJavaOrKotlinFile(file)) {
             Log.log(logger::trace, "calling fileDeleted for {}", file)
             JvmSpanNavigationProvider.getInstance(project).fileDeleted(file)
             JvmEndpointNavigationProvider.getInstance(project).fileDeleted(file)
@@ -368,7 +378,7 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
         //primitive check that it's a java or kotlin file.
         //better not to call file deleted if it's not a relevant file although nothing will happen if the file was not mapped.
         //a deleted file doesn't have PsiFile anymore so we can't find PsiFile and check language.
-        if (oldPath.endsWith("java", true) || oldPath.endsWith("kt", true)) {
+        if (isJavaOrKotlinPath(oldPath)) {
             Log.log(logger::trace, "calling pathDeleted for {}", oldPath)
             JvmSpanNavigationProvider.getInstance(project).pathDeleted(oldPath)
             JvmEndpointNavigationProvider.getInstance(project).pathDeleted(oldPath)
@@ -391,6 +401,16 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
     private fun isJavaOrKotlinFile(psiFile: PsiFile): Boolean {
         return psiFile.language.displayName.equals("Java", true) ||
                 psiFile.language.displayName.equals("Kotlin", true)
+    }
+
+    private fun isJavaOrKotlinFile(virtualFile: VirtualFile): Boolean {
+        return virtualFile.name.endsWith(".java", true) ||
+                virtualFile.name.endsWith(".kt", true)
+    }
+
+    private fun isJavaOrKotlinPath(path: String): Boolean {
+        return path.endsWith(".java", true) ||
+                path.endsWith(".kt", true)
     }
 
 }

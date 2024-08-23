@@ -7,6 +7,7 @@ import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.common.EDT
+import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.updates.AggressiveUpdateService
 import org.digma.intellij.plugin.updates.AggressiveUpdateStateChangedEvent
@@ -145,6 +146,10 @@ class RecentActivityToolWindowCardsController(private val project: Project) {
 
     private fun showCard(card: RecentActivityWindowCard) {
         Log.log(logger::debug, "showCard called with {}", card)
+
+        if (!isProjectValid(project)) {
+            return
+        }
 
 
         //need to keep the UPDATE_MODE if AggressiveUpdateService is still in update mode.

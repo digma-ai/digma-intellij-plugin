@@ -51,6 +51,8 @@ fun isRelevantFile(project: Project, file: VirtualFile?): Boolean {
 
 }
 
+//this method checks isInContent which needs read access. don't call it from EDT events like
+// onChange in psi tree listeners because it will cause short freezes, only call it on background processing
 fun isValidRelevantFile(project: Project, file: VirtualFile?): Boolean {
     return isRelevantFile(project, file) &&
             isValidVirtualFile(file) &&
@@ -59,7 +61,8 @@ fun isValidRelevantFile(project: Project, file: VirtualFile?): Boolean {
 
 }
 
-
+//don't call this method on EDT events like onChange in psi tree listeners because it will
+// cause short freezes, only call it on background processing
 fun isInContent(project: Project, file: VirtualFile): Boolean {
     return ReadActions.ensureReadAction(Supplier {
         ProjectFileIndex.getInstance(project).isInContent(file)

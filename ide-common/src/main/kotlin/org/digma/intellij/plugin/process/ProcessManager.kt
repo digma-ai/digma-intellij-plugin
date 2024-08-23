@@ -7,6 +7,7 @@ import com.intellij.openapi.progress.EmptyProgressIndicator
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
+import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.psi.util.PsiModificationTracker
@@ -132,6 +133,7 @@ class ProcessManager(private val project: Project) : Disposable {
                 myModificationTracker?.indicator = indicator
                 myModificationTracker?.currentRetry = retry
 
+                DumbService.getInstance(project).waitForSmartMode()
                 ProgressManager.getInstance().runProcess({
                     task.run()
                 }, indicator)

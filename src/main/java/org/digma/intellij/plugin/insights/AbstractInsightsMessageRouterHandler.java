@@ -46,7 +46,7 @@ public abstract class AbstractInsightsMessageRouterHandler extends BaseCommonMes
 
             case "INSIGHTS/OPEN_HISTOGRAM" -> openHistogram(requestJsonNode);
 
-            case "INSIGHTS/RECALCULATE" -> recalculate(requestJsonNode);
+            case "INSIGHTS/RECALCULATE" -> recalculate(browser, requestJsonNode);
 
             case "INSIGHTS/GO_TO_TRACE" -> goToTrace(requestJsonNode);
 
@@ -281,10 +281,12 @@ public abstract class AbstractInsightsMessageRouterHandler extends BaseCommonMes
         InsightsService.getInstance(getProject()).openLiveView(codeObjectId);
     }
 
-
-    private void recalculate(JsonNode jsonNode) throws JsonProcessingException {
+    private void recalculate(@NotNull CefBrowser browser, JsonNode jsonNode) throws JsonProcessingException {
         var insightId = getObjectMapper().readTree(jsonNode.get("payload").toString()).get("id").asText();
         InsightsService.getInstance(getProject()).recalculate(insightId);
+
+        var message = new SetInsightRecalculatedMessage(new SetInsightRecalculated(insightId));
+        serializeAndExecuteWindowPostMessageJavaScript(browser, message);
     }
 
     private void goToTrace(JsonNode jsonNode) {
@@ -310,7 +312,5 @@ public abstract class AbstractInsightsMessageRouterHandler extends BaseCommonMes
             InsightsService.getInstance(getProject()).goToTraceComparison(traceId1, traceName1, traceId2, traceName2, insightType);
         }
     }
-
-
 }
 

@@ -338,7 +338,7 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
 
             ActivityMonitor.getInstance(project).registerCustomEvent(
                 "LargeBulkUpdate", mapOf(
-                    "event" to "changeFiles",
+                    "eventName" to "changeFiles",
                     "changedFiles.size" to changedFiles.size
                 )
             )
@@ -390,7 +390,7 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
 
             ActivityMonitor.getInstance(project).registerCustomEvent(
                 "LargeBulkUpdate", mapOf(
-                    "event" to "bulkEvents",
+                    "eventName" to "bulkEvents",
                     "bulkEvents.size" to bulkEvents.size
                 )
             )

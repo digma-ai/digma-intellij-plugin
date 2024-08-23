@@ -233,6 +233,9 @@ abstract class AbstractNavigationDiscovery(protected val project: Project) : Dis
     fun fileDeleted(virtualFile: VirtualFile?) {
 
         scheduledExecutorService.schedule({
+
+            Log.log(logger::trace, project, "running task fileDeleted for {}, {}", type, virtualFile)
+
             if (isProjectValid(project)) {
 
                 if (virtualFile != null) {
@@ -246,12 +249,18 @@ abstract class AbstractNavigationDiscovery(protected val project: Project) : Dis
                     }
                 }
             }
+
+            Log.log(logger::trace, project, "task fileDeleted completed for {}, {}", type, virtualFile)
+
         }, 0, TimeUnit.MILLISECONDS)
     }
 
     fun pathDeleted(path: String) {
 
         scheduledExecutorService.schedule({
+
+            Log.log(logger::trace, project, "running task pathDeleted for {}, {}", type, path)
+
             if (isProjectValid(project)) {
 
                 buildLock.lock()
@@ -263,6 +272,9 @@ abstract class AbstractNavigationDiscovery(protected val project: Project) : Dis
                     }
                 }
             }
+
+            Log.log(logger::trace, project, "task pathDeleted completed for {}, {}", type, path)
+
         }, 0, TimeUnit.MILLISECONDS)
     }
 

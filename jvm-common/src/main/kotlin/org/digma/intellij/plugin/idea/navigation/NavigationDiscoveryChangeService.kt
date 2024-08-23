@@ -29,6 +29,7 @@ import org.digma.intellij.plugin.common.runInReadAccessWithResult
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.psi.isJvmSupportedFile
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.psi.PsiUtils
 import java.util.LinkedList
 import java.util.Queue
@@ -335,9 +336,9 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
 
             pauseAndLaunchFullUpdate()
 
-            ErrorReporter.getInstance().reportErrorSkipFrequencyCheck(
-                project,
-                "NavigationDiscoveryChangeService.addChangedFile", "too many changed files", mapOf(
+            ActivityMonitor.getInstance(project).registerCustomEvent(
+                "LargeBulkUpdate", mapOf(
+                    "event" to "changeFiles",
                     "changedFiles.size" to changedFiles.size
                 )
             )
@@ -387,9 +388,9 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
 
             pauseAndLaunchFullUpdate()
 
-            ErrorReporter.getInstance().reportErrorSkipFrequencyCheck(
-                project,
-                "NavigationDiscoveryChangeService.addBulkEvent", "too many bulk change events", mapOf(
+            ActivityMonitor.getInstance(project).registerCustomEvent(
+                "LargeBulkUpdate", mapOf(
+                    "event" to "bulkEvents",
                     "bulkEvents.size" to bulkEvents.size
                 )
             )

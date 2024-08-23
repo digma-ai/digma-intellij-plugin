@@ -381,7 +381,7 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
         }
 
         //protect against high memory consumption, if so many files are changed at once pause collecting events and launch a full update
-        if (bulkEvents.size > 1000) {
+        if (bulkEvents.size > 100) {
 
             Log.log(logger::trace, project, "discovered too many bulk change events {}", bulkEvents.size)
 

@@ -6,10 +6,10 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.util.Urls
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.ReadActions
+import org.digma.intellij.plugin.idea.navigation.model.NavigationDiscoveryTrigger
 import org.digma.intellij.plugin.idea.navigation.model.NavigationProcessContext
 import org.digma.intellij.plugin.idea.navigation.model.SpanLocation
 import org.digma.intellij.plugin.log.Log
-import java.net.URISyntaxException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.function.Consumer
 
@@ -47,9 +47,9 @@ internal class JvmSpanNavigationProvider(project: Project) : AbstractNavigationD
     }
 
 
-    override fun getTask(myContext: NavigationProcessContext): Runnable {
+    override fun getTask(myContext: NavigationProcessContext, navigationDiscoveryTrigger: NavigationDiscoveryTrigger, retry: Int): Runnable {
         return Runnable {
-            buildSpanNavigation(myContext)
+            buildSpanNavigation(myContext, navigationDiscoveryTrigger, retry)
         }
     }
 
@@ -57,13 +57,13 @@ internal class JvmSpanNavigationProvider(project: Project) : AbstractNavigationD
         return spanLocations.size
     }
 
-    private fun buildSpanNavigation(context: NavigationProcessContext) {
+    private fun buildSpanNavigation(context: NavigationProcessContext, navigationDiscoveryTrigger: NavigationDiscoveryTrigger, retry: Int) {
 
         EDT.assertNonDispatchThread()
         //should not run in read action so that every section can wait for smart mode
         ReadActions.assertNotInReadAccess()
 
-        Log.log(logger::info, "Building span navigation")
+        Log.log(logger::info, project, "Building span navigation, trigger {},retry {}", navigationDiscoveryTrigger, retry)
 
         buildLock.lock()
         try {
@@ -79,7 +79,14 @@ internal class JvmSpanNavigationProvider(project: Project) : AbstractNavigationD
             if (buildLock.isHeldByCurrentThread) {
                 buildLock.unlock()
             }
-            Log.log(logger::info, "Building span navigation completed for project {}, have {} span locations", project.name, spanLocations.size)
+            Log.log(
+                logger::info,
+                project,
+                "Building span navigation completed trigger {},retry {}, have {} span locations",
+                navigationDiscoveryTrigger,
+                retry,
+                spanLocations.size
+            )
         }
 
     }

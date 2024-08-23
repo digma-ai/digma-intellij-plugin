@@ -148,10 +148,19 @@ open class ErrorReporter {
 
     //this method is used to report an error that is not an exception. it should contain some details to say what the error is
     open fun reportError(project: Project?, message: String, action: String, details: Map<String, Any>) {
+        reportErrorImpl(project, message, action, details)
+    }
+
+    open fun reportErrorSkipFrequencyCheck(project: Project?, message: String, action: String, details: Map<String, Any>) {
+        reportErrorImpl(project, message, action, details, true)
+    }
+
+    private fun reportErrorImpl(project: Project?, message: String, action: String, details: Map<String, Any>, skipFrequencyCheck: Boolean = false) {
 
         try {
+
             val frequency = frequencyDetector.getErrorFrequency(message, action)
-            if (frequency.isTooFrequent()) {
+            if (frequency.isTooFrequent() && !skipFrequencyCheck) {
                 return
             }
 

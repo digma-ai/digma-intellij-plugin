@@ -50,7 +50,7 @@ abstract class AbstractNavigationDiscovery(protected val project: Project) : Dis
 
     abstract fun removeDiscoveryForPath(path: String)
 
-    abstract fun getTask(myContext: NavigationProcessContext): Runnable
+    abstract fun getTask(myContext: NavigationProcessContext, navigationDiscoveryTrigger: NavigationDiscoveryTrigger, retry: Int): Runnable
 
     abstract fun getNumFound(): Int
 
@@ -62,6 +62,10 @@ abstract class AbstractNavigationDiscovery(protected val project: Project) : Dis
     //on file changed the same thing will happen for one file.
     fun buildNavigationDiscovery() {
         schedule({ GlobalSearchScope.projectScope(project) }, null, NavigationDiscoveryTrigger.Startup)
+    }
+
+    fun buildNavigationDiscoveryFullUpdate() {
+        schedule({ GlobalSearchScope.projectScope(project) }, null, NavigationDiscoveryTrigger.FullUpdate)
     }
 
 
@@ -76,11 +80,17 @@ abstract class AbstractNavigationDiscovery(protected val project: Project) : Dis
             return
         }
 
-        Log.log(logger::trace, "Scheduling navigation discovery , retry {}", retry)
+        Log.log(logger::trace, project, "Scheduling navigation discovery trigger {}, retry {}", navigationDiscoveryTrigger, retry)
 
         //max 20 retries and give up
         if (retry > 20) {
-            Log.log(logger::trace, "Max retries exceeded, Not scheduling navigation discovery , retry {}", retry)
+            Log.log(
+                logger::trace,
+                project,
+                "Max retries exceeded, Not scheduling navigation discovery trigger {}, retry {}",
+                navigationDiscoveryTrigger,
+                retry
+            )
             return
         }
 
@@ -89,18 +99,32 @@ abstract class AbstractNavigationDiscovery(protected val project: Project) : Dis
         scheduledExecutorService.schedule({
 
             try {
-                Log.log(logger::trace, "Starting navigation discovery process for {}", type)
-                Log.log(logger::trace, "waiting for smart mode")
+                Log.log(
+                    logger::trace,
+                    project,
+                    "Starting navigation discovery process for {},trigger {},retry {}",
+                    type,
+                    navigationDiscoveryTrigger,
+                    retry
+                )
+                Log.log(logger::trace, project, "waiting for smart mode for {},trigger {},retry {}", type, navigationDiscoveryTrigger, retry)
                 DumbService.getInstance(project).waitForSmartMode()
-                Log.log(logger::trace, "processing in smart mode")
+                Log.log(logger::trace, project, "processing in smart mode for {},trigger {},retry {}", type, navigationDiscoveryTrigger, retry)
                 //run the preTask on same thread before the main task
                 preTask?.run()
                 buildNavigationUnderProgress(searchScopeProvider, navigationDiscoveryTrigger, retry)
             } catch (e: Throwable) {
-                Log.warnWithException(logger, project, e, "Error in navigation discovery process")
+                Log.warnWithException(logger, project, e, "Error in navigation discovery process {}", e)
                 ErrorReporter.getInstance().reportError(project, "${this::class.simpleName}.schedule", e)
             } finally {
-                Log.log(logger::trace, "Navigation discovery process completed for {}", type)
+                Log.log(
+                    logger::trace,
+                    project,
+                    "Navigation discovery process completed for {},trigger {},retry {}",
+                    type,
+                    navigationDiscoveryTrigger,
+                    retry
+                )
             }
 
         }, delayMillis, TimeUnit.MILLISECONDS)
@@ -113,7 +137,7 @@ abstract class AbstractNavigationDiscovery(protected val project: Project) : Dis
         retry: Int
     ) {
 
-        Log.log(logger::trace, "Building navigation discovery process")
+        Log.log(logger::trace, project, "Building navigation discovery process for {},trigger {},retry {}", type, navigationDiscoveryTrigger, retry)
 
         if (!isProjectValid(project)) {
             return
@@ -124,7 +148,7 @@ abstract class AbstractNavigationDiscovery(protected val project: Project) : Dis
         val processName = "${this::class.simpleName}.buildNavigationUnderProgress"
 
         val context = NavigationProcessContext(searchScopeProvider, processName)
-        val task = getTask(context)
+        val task = getTask(context, navigationDiscoveryTrigger, retry)
         val processResult = project.service<ProcessManager>().runTaskUnderProcess(task, context, true, 10, true)
 
         registerFinishedEvent(
@@ -140,13 +164,35 @@ abstract class AbstractNavigationDiscovery(protected val project: Project) : Dis
         //if process failed, schedule another retry immediately.
         //if process succeeded but there are errors schedule again in 2 minutes,hopefully with fewer errors
         if (!processResult.success) {
-            Log.log(logger::trace, "Navigation discovery process failed,please check the log {}", processResult)
+            Log.log(
+                logger::trace,
+                project,
+                "Navigation discovery process failed for {},trigger {},retry {},processResult {},please check the log",
+                type,
+                navigationDiscoveryTrigger,
+                retry,
+                processResult
+            )
             schedule(searchScopeProvider, null, navigationDiscoveryTrigger, 0, retry + 1)
         } else if (context.hasErrors()) {
-            Log.log(logger::trace, "Navigation discovery process had errors,please check the log {}", processResult)
+            Log.log(
+                logger::trace, project, "Navigation discovery process had errors for {},trigger {},retry {},processResult {},please check the log",
+                type,
+                navigationDiscoveryTrigger,
+                retry,
+                processResult
+            )
             schedule(searchScopeProvider, null, navigationDiscoveryTrigger, TimeUnit.MINUTES.toMillis(2L), retry + 1)
         } else {
-            Log.log(logger::trace, "Navigation discovery process completed successfully {}", processResult)
+            Log.log(
+                logger::trace,
+                project,
+                "Navigation discovery process completed successfully for {},trigger {},retry {},processResult {}",
+                type,
+                navigationDiscoveryTrigger,
+                retry,
+                processResult
+            )
         }
 
         context.logErrors(logger, project, true)
@@ -165,7 +211,7 @@ abstract class AbstractNavigationDiscovery(protected val project: Project) : Dis
             return
         }
 
-        Log.log(logger::trace, "got fileChanged for {}", virtualFile)
+        Log.log(logger::trace, project, "got fileChanged for {}, {}", type, virtualFile)
 
         try {
             virtualFile?.takeIf { isValidVirtualFile(virtualFile) }?.let { vf ->
@@ -178,7 +224,7 @@ abstract class AbstractNavigationDiscovery(protected val project: Project) : Dis
                 )
             }
         } catch (e: Throwable) {
-            Log.warnWithException(logger, e, "Exception in fileChanged")
+            Log.warnWithException(logger, project, e, "Exception in fileChanged")
             ErrorReporter.getInstance().reportError(project, "${this::class.simpleName}.fileChanged", e)
         }
     }
@@ -186,36 +232,38 @@ abstract class AbstractNavigationDiscovery(protected val project: Project) : Dis
 
     fun fileDeleted(virtualFile: VirtualFile?) {
 
-        if (!isProjectValid(project)) {
-            return
-        }
+        scheduledExecutorService.schedule({
+            if (isProjectValid(project)) {
 
-        if (virtualFile != null) {
-            buildLock.lock()
-            try {
-                removeDiscoveryForFile(virtualFile)
-            } finally {
-                if (buildLock.isHeldByCurrentThread) {
-                    buildLock.unlock()
+                if (virtualFile != null) {
+                    buildLock.lock()
+                    try {
+                        removeDiscoveryForFile(virtualFile)
+                    } finally {
+                        if (buildLock.isHeldByCurrentThread) {
+                            buildLock.unlock()
+                        }
+                    }
                 }
             }
-        }
+        }, 0, TimeUnit.MILLISECONDS)
     }
 
     fun pathDeleted(path: String) {
 
-        if (!isProjectValid(project)) {
-            return
-        }
+        scheduledExecutorService.schedule({
+            if (isProjectValid(project)) {
 
-        buildLock.lock()
-        try {
-            removeDiscoveryForPath(path)
-        } finally {
-            if (buildLock.isHeldByCurrentThread) {
-                buildLock.unlock()
+                buildLock.lock()
+                try {
+                    removeDiscoveryForPath(path)
+                } finally {
+                    if (buildLock.isHeldByCurrentThread) {
+                        buildLock.unlock()
+                    }
+                }
             }
-        }
+        }, 0, TimeUnit.MILLISECONDS)
     }
 
 

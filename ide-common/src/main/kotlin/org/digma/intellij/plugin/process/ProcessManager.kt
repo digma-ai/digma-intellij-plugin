@@ -144,12 +144,12 @@ class ProcessManager(private val project: Project) : Disposable {
                 @Suppress("IncorrectProcessCanceledExceptionHandling")
                 e: ProcessCanceledException,
             ) {
-                Log.log(logger::trace, "process canceled {}", context.processName)
+                Log.log(logger::trace, "process canceled {}, retry {}", context.processName, retry)
                 canceled = true
                 logPCE(e, context)
                 error = e
             } catch (e: Throwable) {
-                Log.log(logger::trace, "process {} failed {}", context.processName, e)
+                Log.log(logger::trace, "process {} failed {}, retry {}", context.processName, e, retry)
                 logError(e, context)
                 error = e
             }

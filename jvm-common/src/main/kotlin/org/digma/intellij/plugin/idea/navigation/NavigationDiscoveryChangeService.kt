@@ -230,6 +230,16 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
             return
         }
 
+        /*
+        when the currently running coroutine completes another one can start.
+        if another one wants to start while calling the buildNavigationDiscoveryFullUpdate it will be
+        rejected, it's ok, the process will start and will do a full update, there no real chance to miss
+        an update, the timing should always be ok.
+        and if user is doing such large refactoring many times then maybe navigation mapping will not be 100% complete,
+        but as said there is a very small chance for that to happen.
+         */
+
+
         //make sure not to launch twice because events keep coming until pause is called
         launchFullUpdateLock.withLock {
 
@@ -330,6 +340,7 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
         }
 
         //protect against high memory consumption, if so many files are changed at once pause collecting changed files and launch full update
+        //200 is just a number that seems reasonable to do a full update instead of updating separate files
         if (changedFiles.size > 200) {
 
             Log.log(logger::trace, project, "discovered too many changed files {}", changedFiles.size)
@@ -382,6 +393,7 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
         }
 
         //protect against high memory consumption, if so many files are changed at once pause collecting events and launch a full update
+        //200 is just a number that seems reasonable to do a full update instead of updating separate files
         if (bulkEvents.size > 200) {
 
             Log.log(logger::trace, project, "discovered too many bulk change events {}", bulkEvents.size)

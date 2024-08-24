@@ -355,6 +355,7 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
             )
             return
         }
+        Log.log(logger::trace, project, "adding changed file {}", virtualFile.url)
         changedFiles.add(virtualFile.url)
 
     }

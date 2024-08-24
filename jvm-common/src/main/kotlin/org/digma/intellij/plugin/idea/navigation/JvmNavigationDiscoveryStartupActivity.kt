@@ -9,11 +9,11 @@ internal class JvmNavigationDiscoveryStartupActivity : DigmaProjectActivity() {
 
     override fun executeProjectStartup(project: Project) {
 
-        Log.log(logger::info, "starting span navigation mapping")
+        Log.log(logger::info, project, "starting span navigation mapping")
         val jvmSpanNavigationProvider = JvmSpanNavigationProvider.getInstance(project)
         jvmSpanNavigationProvider.buildNavigationDiscovery()
 
-        Log.log(logger::info, "starting endpoint navigation mapping")
+        Log.log(logger::info, project, "starting endpoint navigation mapping")
         val javaEndpointNavigationProvider = JvmEndpointNavigationProvider.getInstance(project)
         javaEndpointNavigationProvider.buildNavigationDiscovery()
 

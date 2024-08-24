@@ -6,12 +6,12 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.util.Urls
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.ReadActions
+import org.digma.intellij.plugin.idea.navigation.model.NavigationDiscoveryTrigger
 import org.digma.intellij.plugin.idea.navigation.model.NavigationProcessContext
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscovery
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscoveryService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
-import java.net.URISyntaxException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArraySet
 import java.util.function.Predicate
@@ -39,9 +39,9 @@ internal class JvmEndpointNavigationProvider(project: Project) : AbstractNavigat
     }
 
 
-    override fun getTask(myContext: NavigationProcessContext): Runnable {
+    override fun getTask(myContext: NavigationProcessContext, navigationDiscoveryTrigger: NavigationDiscoveryTrigger, retry: Int): Runnable {
         return Runnable {
-            buildEndpointNavigation(myContext)
+            buildEndpointNavigation(myContext, navigationDiscoveryTrigger, retry)
         }
     }
 
@@ -49,13 +49,13 @@ internal class JvmEndpointNavigationProvider(project: Project) : AbstractNavigat
         return endpointsMap.values.flatten().size
     }
 
-    private fun buildEndpointNavigation(context: NavigationProcessContext) {
+    private fun buildEndpointNavigation(context: NavigationProcessContext, navigationDiscoveryTrigger: NavigationDiscoveryTrigger, retry: Int) {
 
         EDT.assertNonDispatchThread()
         //should not run in read action so that every section can wait for smart mode
         ReadActions.assertNotInReadAccess()
 
-        Log.log(logger::info, "Building endpoint navigation")
+        Log.log(logger::info, project, "Building endpoint navigation, trigger {},retry {}", navigationDiscoveryTrigger, retry)
 
         buildLock.lock()
         try {
@@ -79,9 +79,10 @@ internal class JvmEndpointNavigationProvider(project: Project) : AbstractNavigat
                 buildLock.unlock()
             }
             Log.log(
-                logger::info,
-                "Building endpoint navigation completed for project {}, have {} endpoints locations",
-                project.name,
+                logger::info, project,
+                "Building endpoint navigation completed, trigger {},retry {}, have {} endpoints locations",
+                navigationDiscoveryTrigger,
+                retry,
                 endpointsMap.size
             )
         }
@@ -107,7 +108,7 @@ internal class JvmEndpointNavigationProvider(project: Project) : AbstractNavigat
             //UrlImpl throws RuntimeException here ,
             //something like 'Relative path in absolute URI: file://What's%20New%20in%20IntelliJ%20IDEA'
             //catch this error and log, no need to report to posthog
-            Log.warnWithException(logger, e, "error removing path")
+            Log.warnWithException(logger, project, e, "error removing path")
         }
     }
 

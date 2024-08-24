@@ -7,6 +7,7 @@ import com.intellij.openapi.progress.EmptyProgressIndicator
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
+import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.psi.util.PsiModificationTracker
@@ -132,6 +133,7 @@ class ProcessManager(private val project: Project) : Disposable {
                 myModificationTracker?.indicator = indicator
                 myModificationTracker?.currentRetry = retry
 
+                DumbService.getInstance(project).waitForSmartMode()
                 ProgressManager.getInstance().runProcess({
                     task.run()
                 }, indicator)
@@ -144,12 +146,12 @@ class ProcessManager(private val project: Project) : Disposable {
                 @Suppress("IncorrectProcessCanceledExceptionHandling")
                 e: ProcessCanceledException,
             ) {
-                Log.log(logger::trace, "process canceled {}", context.processName)
+                Log.log(logger::trace, "process canceled {}, retry {}", context.processName, retry)
                 canceled = true
                 logPCE(e, context)
                 error = e
             } catch (e: Throwable) {
-                Log.log(logger::trace, "process {} failed {}", context.processName, e)
+                Log.log(logger::trace, "process {} failed {}, retry {}", context.processName, e, retry)
                 logError(e, context)
                 error = e
             }

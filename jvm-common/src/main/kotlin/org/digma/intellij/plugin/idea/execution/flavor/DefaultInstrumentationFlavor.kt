@@ -22,7 +22,7 @@ open class DefaultInstrumentationFlavor : BaseInstrumentationFlavor() {
 
     companion object {
         private val SUPPORTED_GRADLE_TASKS = listOf("main", "bootRun", "run")
-        private val SUPPORTED_GRADLE_TEST_TASKS = listOf("test", "bootTestRun")
+        private val SUPPORTED_GRADLE_TEST_TASKS = listOf("test", "bootTestRun", "integrationTest", "integrationTests")
         private val SUPPORTED_MAVEN_GOALS = listOf(
             "exec:exec",
             "exec:java",

@@ -10,6 +10,7 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import org.digma.intellij.plugin.PluginId
+import org.digma.intellij.plugin.activation.UserActivationService
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.findActiveProject
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
@@ -44,7 +45,7 @@ fun startRequestRegisterTimers(parentDisposable: Disposable) {
         } else {
 
             try {
-                if (PersistenceService.getInstance().isFirstAssetsReceived() &&
+                if (UserActivationService.getInstance().isFirstAssetsReceived() &&
                     !isUserRegistered() &&
                     daysSinceFirstAsset() > 14000 &&
                     moreThen24HoursSinceLastNotified()

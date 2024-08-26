@@ -9,6 +9,7 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.PluginId
+import org.digma.intellij.plugin.activation.UserActivationService
 import org.digma.intellij.plugin.common.UniqueGeneratedUserId
 import org.digma.intellij.plugin.common.findActiveProject
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
@@ -36,13 +37,13 @@ fun startIdleUserTimers(parentDisposable: Disposable) {
         try {
 
             //only show one message at a time
-            if (PersistenceService.getInstance().isFirstAssetsReceived() &&
+            if (UserActivationService.getInstance().isFirstAssetsReceived() &&
                 backendIdleDays() > 3 &&
                 backendHasntBeenRunningLastNotified() > 7
             ) {
                 service<NotificationsPersistenceState>().state.backendHasntBeenRunningForAWhileLastNotified = Instant.now()
                 showDigmaHasntBeenRunningForAWhile()
-            } else if (PersistenceService.getInstance().isFirstAssetsReceived() &&
+            } else if (UserActivationService.getInstance().isFirstAssetsReceived() &&
                 backendIdleDays() <= 1 &&
                 userActionIdleDays() > 3 &&
                 hasntBeenOpenedForAWhileLastNotified() > 7
@@ -50,7 +51,7 @@ fun startIdleUserTimers(parentDisposable: Disposable) {
                 service<NotificationsPersistenceState>().state.hasntBeenOpenedForAWhileLastNotified = Instant.now()
                 showDigmaHasntBeenOpenedForAWhile()
             } else if (PersistenceService.getInstance().isFirstTimeConnectionEstablished() &&
-                !PersistenceService.getInstance().isFirstAssetsReceived() &&
+                !UserActivationService.getInstance().isFirstAssetsReceived() &&
                 pluginInstalledDays() > 7 &&
                 hasntBeenActivatedLastNotified() > 7
             ) {

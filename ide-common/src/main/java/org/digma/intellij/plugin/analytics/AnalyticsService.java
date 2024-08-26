@@ -10,6 +10,7 @@ import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.rest.AboutResult;
+import org.digma.intellij.plugin.model.rest.activation.DiscoveredDataResponse;
 import org.digma.intellij.plugin.model.rest.assets.AssetDisplayInfo;
 import org.digma.intellij.plugin.model.rest.codelens.*;
 import org.digma.intellij.plugin.model.rest.codespans.CodeContextSpans;
@@ -488,8 +489,13 @@ public class AnalyticsService implements Disposable {
     }
 
     @NotNull
-    public List<SpanEnvironment> getSpanEnvironmentsStats(String spanCodeObjectId) throws AnalyticsServiceException  {
+    public List<SpanEnvironment> getSpanEnvironmentsStats(String spanCodeObjectId) throws AnalyticsServiceException {
         return executeCatching(() -> analyticsProviderProxy.getSpanEnvironmentsStats(spanCodeObjectId));
+    }
+
+    @NotNull
+    public DiscoveredDataResponse getDiscoveredData() throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.getDiscoveredData());
     }
 
     public HttpResponse lowLevelCall(HttpRequest request) throws AnalyticsServiceException {

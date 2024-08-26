@@ -5,6 +5,7 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import org.digma.intellij.plugin.activation.UserActivationService
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.common.createObjectMapper
@@ -13,8 +14,6 @@ import org.digma.intellij.plugin.insights.InsightsServiceImpl
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.insights.MarkInsightsAsReadScope
 import org.digma.intellij.plugin.model.rest.insights.issues.GetIssuesRequestPayload
-import org.digma.intellij.plugin.persistence.PersistenceService
-import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.insights.model.SetAllInsightsAsReadData
 import org.digma.intellij.plugin.ui.insights.model.SetAllInsightsMarkAsReadMessage
 import org.digma.intellij.plugin.ui.insights.model.SetDismissedData
@@ -176,7 +175,7 @@ class InsightsService(val project: Project) : InsightsServiceImpl(project) {
 
     private fun onInsightReceived(insights: String) {
 
-        if (PersistenceService.getInstance().isFirstInsightReceived()) {
+        if (UserActivationService.getInstance().isFirstInsightReceived()) {
             return
         }
 
@@ -184,8 +183,7 @@ class InsightsService(val project: Project) : InsightsServiceImpl(project) {
             val jsonNode = objectMapper.readTree(insights)
             val totalCount = jsonNode.get("totalCount")
             if (totalCount.isInt && totalCount.asInt() > 0) {
-                ActivityMonitor.getInstance(project).registerFirstInsightReceived()
-                PersistenceService.getInstance().setFirstInsightReceived()
+                UserActivationService.getInstance().setFirstInsightReceivedOld(project)
             }
         } catch (e: Throwable) {
             ErrorReporter.getInstance().reportError(project, "InsightsService.onInsightReceived", e)

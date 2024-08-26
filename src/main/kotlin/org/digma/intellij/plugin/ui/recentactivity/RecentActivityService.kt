@@ -9,6 +9,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import org.digma.intellij.plugin.activation.UserActivationService
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.analytics.refreshEnvironmentsNowOnBackground
@@ -16,7 +17,6 @@ import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult
-import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.UserActionOrigin
 import org.digma.intellij.plugin.recentactivity.RecentActivityToolWindowShower
@@ -77,9 +77,8 @@ class RecentActivityService(val project: Project, private val cs: CoroutineScope
 
             val recentActivityData = AnalyticsService.getInstance(project).getRecentActivity(environmentsIds)
 
-            if (recentActivityData.entries.isNotEmpty() && !service<PersistenceService>().isFirstRecentActivityReceived()) {
-                service<PersistenceService>().setFirstRecentActivityReceived()
-                ActivityMonitor.getInstance(project).registerFirstTimeRecentActivityReceived()
+            if (recentActivityData.entries.isNotEmpty() && !service<UserActivationService>().isFirstRecentActivityReceived()) {
+                UserActivationService.getInstance().setFirstRecentActivityReceivedOld(project)
             }
 
             Log.log(logger::trace, project, "got recent activity {}", recentActivityData)

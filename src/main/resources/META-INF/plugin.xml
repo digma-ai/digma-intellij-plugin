@@ -117,6 +117,8 @@
         <postStartupActivity implementation="org.digma.intellij.plugin.analytics.AnalyticsServiceStarter"/>
         <postStartupActivity
                 implementation="org.digma.intellij.plugin.posthog.PerformanceMetricsPosthogEventStartupActivity"/>
+        <postStartupActivity
+                implementation="org.digma.intellij.plugin.activation.UserActivationStartup"/>
 
 
 

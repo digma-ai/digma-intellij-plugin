@@ -14,6 +14,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.datetime.toJavaInstant
+import org.digma.intellij.plugin.activation.UserActivationService
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.common.Frequency
@@ -160,9 +161,9 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
 
         val mutableDetails = details.toMutableMap()
 
-        mutableDetails["firstTimeInsightReceived"] = PersistenceService.getInstance().isFirstInsightReceived()
-        mutableDetails["firstTimeAssetsReceived"] = PersistenceService.getInstance().isFirstAssetsReceived()
-        mutableDetails["firstTimeRecentActivityReceived"] = PersistenceService.getInstance().isFirstRecentActivityReceived()
+        mutableDetails["firstTimeInsightReceived"] = UserActivationService.getInstance().isFirstInsightReceived()
+        mutableDetails["firstTimeAssetsReceived"] = UserActivationService.getInstance().isFirstAssetsReceived()
+        mutableDetails["firstTimeRecentActivityReceived"] = UserActivationService.getInstance().isFirstRecentActivityReceived()
         mutableDetails["plugin.version"] = SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("unknown")
         mutableDetails["ide.version"] = ApplicationInfo.getInstance().fullVersion
         mutableDetails["ide.name"] = ApplicationInfo.getInstance().versionName
@@ -259,7 +260,7 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
     private fun registerOnlineOfflineUserAction(details: Map<String, Any>) {
 
         val eventName =
-            if (PersistenceService.getInstance().isFirstAssetsReceived() && BackendConnectionMonitor.getInstance(project).isConnectionOk()) {
+            if (UserActivationService.getInstance().isFirstAssetsReceived() && BackendConnectionMonitor.getInstance(project).isConnectionOk()) {
                 "online-user-action"
             } else {
                 "offline-user-action"

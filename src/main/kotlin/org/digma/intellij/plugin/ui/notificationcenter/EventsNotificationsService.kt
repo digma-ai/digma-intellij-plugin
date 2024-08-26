@@ -15,8 +15,8 @@ import com.intellij.openapi.ui.popup.JBPopupListener
 import com.intellij.openapi.ui.popup.LightweightWindowEvent
 import org.digma.intellij.plugin.PluginId
 import org.digma.intellij.plugin.analytics.AnalyticsService
-import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.common.Backgroundable
+import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.common.createObjectMapper
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
@@ -73,13 +73,14 @@ class EventsNotificationsService(val project: Project) : Disposable {
 
                 updateLastEventTime(events)
 
-            } catch (e: AnalyticsServiceException) {
-                Log.debugWithException(logger, e, "could not get latest events {}", e)
-                ErrorReporter.getInstance().reportError(project, "EventsNotificationsService.waitForEvents", e)
-            } catch (e: Exception) {
-                Log.log(logger::trace, "could not get latest events {}", e.message)
-                Log.warnWithException(logger, e, "could not get latest events {}", e.message)
-                ErrorReporter.getInstance().reportError(project, "EventsNotificationsService.waitForEvents", e)
+            } catch (e: Throwable) {
+                //no need to report connection exception, it is reported by AnalyticsService
+                if (ExceptionUtils.isAnyConnectionException(e)) {
+                    Log.debugWithException(logger, e, "could not get latest events {}", e)
+                } else {
+                    Log.warnWithException(logger, e, "could not get latest events {}", e.message)
+                    ErrorReporter.getInstance().reportError(project, "EventsNotificationsService.waitForEvents", e)
+                }
             }
         }
     }

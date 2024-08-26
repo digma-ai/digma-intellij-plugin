@@ -46,9 +46,9 @@ fun <T> executeCatchingWithResultWithRetry(
 fun isRelevantFile(project: Project, file: VirtualFile?): Boolean {
     return isProjectValid(project) &&
             file != null &&
-            !file.isDirectory
-
-
+            !file.isDirectory &&
+            //don't need to support LightVirtualFile. don't want to use the class because I'm not sure if it's available in all installed IDEs
+            file.javaClass.name != "com.intellij.testFramework.LightVirtualFile"
 }
 
 //this method checks isInContent which needs read access. don't call it from EDT events like

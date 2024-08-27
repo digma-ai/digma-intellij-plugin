@@ -92,7 +92,6 @@ public abstract class InsightsServiceImpl implements Disposable {
         }
     }
 
-
     public void goToTrace(@NotNull String traceId, @NotNull String traceName, @NotNull String insightType, @Nullable String spanCodeObjectId) {
         JaegerUtilKt.openJaegerFromInsight(project, traceId, traceName, insightType, spanCodeObjectId);
     }
@@ -100,6 +99,4 @@ public abstract class InsightsServiceImpl implements Disposable {
     public void goToTraceComparison(@NotNull String traceId1, @NotNull String traceName1, @NotNull String traceId2, @NotNull String traceName2, @NotNull String insightType) {
         JaegerUtilKt.openJaegerComparisonFromInsight(project, traceId1, traceName1, traceId2, traceName2, insightType);
     }
-
-
 }

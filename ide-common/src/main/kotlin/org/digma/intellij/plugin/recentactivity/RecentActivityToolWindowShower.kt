@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.recentactivity
 
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
@@ -15,6 +16,14 @@ class RecentActivityToolWindowShower(val project: Project) {
     private val logger = Logger.getInstance(this::class.java)
 
     var toolWindow: ToolWindow? = null
+
+    companion object {
+        @JvmStatic
+        fun getInstance(project: Project): RecentActivityToolWindowShower {
+            return project.service<RecentActivityToolWindowShower>()
+        }
+    }
+
 
     fun showToolWindow() {
         Log.log(logger::trace, "showToolWindow invoked")

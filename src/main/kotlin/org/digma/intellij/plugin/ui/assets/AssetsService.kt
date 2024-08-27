@@ -83,7 +83,7 @@ class AssetsService(private val project: Project) : Disposable {
                 val insightsExists = AnalyticsService.getInstance(project).insightsExist
                 val payload = objectMapper.readTree(insightsExists)
                 if (!payload.isMissingNode && payload["insightExists"].asBoolean()) {
-                    UserActivationService.getInstance().setFirstAssetsReceivedOld(project)
+                    UserActivationService.getInstance().setFirstAssetsReceived(project)
                 }
             } catch (e: Throwable) {
                 Log.warnWithException(logger, project, e, "error reporting FirstTimeAssetsReceived {}", e)

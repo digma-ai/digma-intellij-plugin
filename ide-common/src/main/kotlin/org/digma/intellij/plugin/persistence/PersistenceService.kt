@@ -267,5 +267,37 @@ class PersistenceService {
         state.digmathonStartedForUser = started
     }
 
+    fun setRecentActivityFound() {
+        state.firstTimeRecentActivityFoundTimestamp = Instant.now()
+    }
+
+    fun isRecentActivityFound(): Boolean {
+        return state.firstTimeRecentActivityFoundTimestamp != null
+    }
+
+    fun setAssetFound() {
+        state.firstTimeAssetFoundTimestamp = Instant.now()
+    }
+
+    fun isAssetFound(): Boolean {
+        return state.firstTimeAssetFoundTimestamp != null
+    }
+
+    fun setIssueFound() {
+        state.firstTimeIssueFoundTimestamp = Instant.now()
+    }
+
+    fun isIssueFound(): Boolean {
+        return state.firstTimeIssueFoundTimestamp != null
+    }
+
+    fun setApplyNewActivationLogic() {
+        state.applyNewActivationLogic = true
+    }
+
+    fun isApplyNewActivationLogic(): Boolean {
+        return state.applyNewActivationLogic
+    }
+
 
 }

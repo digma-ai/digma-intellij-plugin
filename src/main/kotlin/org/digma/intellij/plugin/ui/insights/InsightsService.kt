@@ -183,7 +183,7 @@ class InsightsService(val project: Project) : InsightsServiceImpl(project) {
             val jsonNode = objectMapper.readTree(insights)
             val totalCount = jsonNode.get("totalCount")
             if (totalCount.isInt && totalCount.asInt() > 0) {
-                UserActivationService.getInstance().setFirstInsightReceivedOld(project)
+                UserActivationService.getInstance().setFirstInsightReceived(project)
             }
         } catch (e: Throwable) {
             ErrorReporter.getInstance().reportError(project, "InsightsService.onInsightReceived", e)

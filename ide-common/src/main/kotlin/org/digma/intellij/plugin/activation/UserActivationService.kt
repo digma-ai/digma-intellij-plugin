@@ -18,30 +18,19 @@ import org.digma.intellij.plugin.model.rest.activation.DiscoveredDataResponse
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.scheduling.disposingPeriodicTask
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 import kotlin.time.Duration.Companion.minutes
 
 @Service(Service.Level.APP)
 class UserActivationService : DisposableAdaptor {
 
-    //todo: ar some point we need to stop supporting backwards compatibility and remove
-    // all code that calls setFirstAssetsReceivedOld,setFirstInsightReceivedOld and setFirstRecentActivityReceivedOld
-    // it can be done when most users will update to backend version 0.3.76
-    // this class was developed in August 2024, so probably in few months we can remove the backwards compatibility.
-    // check in posthog how many users still use backend lower then 0.3.76
-
 
     private val logger = Logger.getInstance(UserActivationService::class.java)
 
-    private var backendVersionIs0376OrHigher: Boolean? = null
+    private val startedMonitoringLock = ReentrantLock(true)
 
-    //userActivationStatus will be updated from server data,
-    //or from calls to setFirstAssetsReceivedOld,setFirstInsightReceivedOld and setFirstRecentActivityReceivedOld if server is older than 0.3.76
-    private val userActivationStatus: UserActivationStatus = UserActivationStatus(
-        PersistenceService.getInstance().isFirstAssetsReceived(),
-        PersistenceService.getInstance().isFirstInsightReceived(),
-        PersistenceService.getInstance().isFirstRecentActivityReceived()
-    )
-
+    private var monitoringStarted = false
 
     init {
         startMonitoring()
@@ -55,11 +44,32 @@ class UserActivationService : DisposableAdaptor {
         }
     }
 
+    //applyNewActivationLogic will be called only once in the lifetime of the plugin after new installation.
+    //this is the indication to apply the new login only to new installations of the plugin version that contains this login.
+    //the logic will not be applied to users that installed previous versions of the plugin.
+    //there may be a race condition between the call to startMonitoring in the init and the call to
+    // applyNewActivationLogic. So startMonitoring needs a lock to make sure we don't start the task twice.
+    fun applyNewActivationLogic() {
+        PersistenceService.getInstance().setApplyNewActivationLogic()
+        startMonitoring()
+    }
+
 
     private fun startMonitoring() {
+        if (PersistenceService.getInstance().isApplyNewActivationLogic()) {
+            startedMonitoringLock.withLock {
+                if (!monitoringStarted) {
+                    monitoringStarted = true
+                    startMonitoringImpl()
+                }
+            }
+        }
+    }
 
-        if (userActivationStatus.isDone()) {
-            Log.log(logger::trace, "user activation completed, no executing monitoring task")
+    private fun startMonitoringImpl() {
+
+        if (backendUserActivationIsComplete()) {
+            Log.log(logger::trace, "user activation completed, not executing monitoring task")
             return
         }
 
@@ -79,15 +89,14 @@ class UserActivationService : DisposableAdaptor {
                 if (project != null) {
                     val about = AnalyticsService.getInstance(project).about
                     Log.log(logger::trace, "got server version {}", about.applicationVersion)
-                    updateServerVersionFlag(about)
-                    if (backendVersionIs0376OrHigher == true) {
+                    if (backendVersionIs0376OrHigher(about)) {
                         Log.log(logger::trace, "updating user activation status from server {}", about.applicationVersion)
                         val discoveredDataResponse = AnalyticsService.getInstance(project).discoveredData
-                        updateStatus(discoveredDataResponse)
+                        updateBackendStatus(discoveredDataResponse)
                     }
                 }
 
-                if (userActivationStatus.isDone()) {
+                if (backendUserActivationIsComplete()) {
                     Log.log(logger::trace, "user activation completed, canceling task")
                     Disposer.dispose(disposable)
                 }
@@ -101,90 +110,120 @@ class UserActivationService : DisposableAdaptor {
         }
     }
 
-    private fun updateStatus(discoveredDataResponse: DiscoveredDataResponse) {
+    private fun backendUserActivationIsComplete(): Boolean {
+        return isRecentActivityFound() && isAssetFound() && isIssueFound()
+    }
+
+
+    private fun updateBackendStatus(discoveredDataResponse: DiscoveredDataResponse) {
+
+        val currentRecentActivityFound = isRecentActivityFound()
+        val currentAssetFound = isAssetFound()
+        val currentIssueFound = isIssueFound()
+
+
         //usually findActiveProject() will find a project. but if we can't find an active project don't set the flags
         // because we will not be able to send to posthog, it will happen next time.
         if (discoveredDataResponse.recentActivityFound) {
-            findActiveProject()?.let { setFirstRecentActivityReceived(it) }
+            findActiveProject()?.let { setRecentActivityFound(it) }
         }
         if (discoveredDataResponse.assetFound) {
-            findActiveProject()?.let { setFirstAssetsReceived(it) }
+            findActiveProject()?.let { setAssetFound(it) }
         }
         if (discoveredDataResponse.issueFound) {
-            findActiveProject()?.let { setFirstInsightReceived(it) }
+            findActiveProject()?.let { setIssueFound(it) }
+        }
+
+        showNotification(currentRecentActivityFound, currentAssetFound, currentIssueFound)
+
+    }
+
+
+    private fun showNotification(prevRecentActivityFound: Boolean, prevAssetFound: Boolean, prevIssueFound: Boolean) {
+        if (!prevIssueFound && isIssueFound()) {
+            showNewIssueNotification()
+        } else if (!prevAssetFound && isAssetFound()) {
+            showNewAssetNotification()
+        } else if (!prevRecentActivityFound && isRecentActivityFound()) {
+            showNewRecentActivityNotification()
         }
     }
 
-    private fun updateServerVersionFlag(about: AboutResult) {
+
+    private fun backendVersionIs0376OrHigher(about: AboutResult): Boolean {
         val currentServerVersion = ComparableVersion(about.applicationVersion)
         val featureServerVersion = ComparableVersion("0.3.76")
-        backendVersionIs0376OrHigher = currentServerVersion.newerThan(featureServerVersion) ||
+        return currentServerVersion.newerThan(featureServerVersion) ||
                 currentServerVersion == featureServerVersion
     }
 
 
-    fun setFirstAssetsReceivedOld(project: Project) {
-        if (backendVersionIs0376OrHigher == true) {
-            return
+    private fun setRecentActivityFound(project: Project) {
+        if (!isRecentActivityFound()) {
+            PersistenceService.getInstance().setRecentActivityFound()
+            ActivityMonitor.getInstance(project).registerRecentActivityFound()
         }
-        setFirstAssetsReceived(project)
     }
 
-    private fun setFirstAssetsReceived(project: Project) {
-        userActivationStatus.assetFound = true
-        PersistenceService.getInstance().setFirstAssetsReceived()
-        ActivityMonitor.getInstance(project).registerFirstAssetsReceived()
+    fun isRecentActivityFound(): Boolean {
+        return PersistenceService.getInstance().isRecentActivityFound()
+    }
+
+    private fun setAssetFound(project: Project) {
+        if (!isAssetFound()) {
+            PersistenceService.getInstance().setAssetFound()
+            ActivityMonitor.getInstance(project).registerAssetFound()
+        }
+    }
+
+    fun isAssetFound(): Boolean {
+        return PersistenceService.getInstance().isAssetFound()
+    }
+
+    private fun setIssueFound(project: Project) {
+        if (!isIssueFound()) {
+            PersistenceService.getInstance().setIssueFound()
+            ActivityMonitor.getInstance(project).registerIssueFound()
+        }
+    }
+
+    fun isIssueFound(): Boolean {
+        return PersistenceService.getInstance().isIssueFound()
+    }
+
+
+    fun setFirstAssetsReceived(project: Project) {
+        if (!isFirstAssetsReceived()) {
+            PersistenceService.getInstance().setFirstAssetsReceived()
+            ActivityMonitor.getInstance(project).registerFirstAssetsReceived()
+        }
     }
 
     fun isFirstAssetsReceived(): Boolean {
-        return userActivationStatus.assetFound
+        return PersistenceService.getInstance().isFirstAssetsReceived()
     }
 
 
-    fun setFirstInsightReceivedOld(project: Project) {
-        if (backendVersionIs0376OrHigher == true) {
-            return
+    fun setFirstInsightReceived(project: Project) {
+        if (!isFirstInsightReceived()) {
+            PersistenceService.getInstance().setFirstInsightReceived()
+            ActivityMonitor.getInstance(project).registerFirstInsightReceived()
         }
-        setFirstInsightReceived(project)
-    }
-
-    private fun setFirstInsightReceived(project: Project) {
-        userActivationStatus.issueFound = true
-        PersistenceService.getInstance().setFirstInsightReceived()
-        ActivityMonitor.getInstance(project).registerFirstInsightReceived()
     }
 
     fun isFirstInsightReceived(): Boolean {
-        return userActivationStatus.issueFound
+        return PersistenceService.getInstance().isFirstInsightReceived()
     }
 
 
-    fun setFirstRecentActivityReceivedOld(project: Project) {
-        if (backendVersionIs0376OrHigher == true) {
-            return
+    fun setFirstRecentActivityReceived(project: Project) {
+        if (!isFirstRecentActivityReceived()) {
+            PersistenceService.getInstance().setFirstRecentActivityReceived()
+            ActivityMonitor.getInstance(project).registerFirstTimeRecentActivityReceived()
         }
-        setFirstRecentActivityReceived(project)
-    }
-
-    private fun setFirstRecentActivityReceived(project: Project) {
-        userActivationStatus.recentActivityFound = true
-        PersistenceService.getInstance().setFirstRecentActivityReceived()
-        ActivityMonitor.getInstance(project).registerFirstTimeRecentActivityReceived()
     }
 
     fun isFirstRecentActivityReceived(): Boolean {
-        return userActivationStatus.recentActivityFound
-    }
-
-}
-
-
-private class UserActivationStatus(
-    var assetFound: Boolean = false,
-    var issueFound: Boolean = false,
-    var recentActivityFound: Boolean = false
-) {
-    fun isDone(): Boolean {
-        return assetFound && issueFound && recentActivityFound
+        return PersistenceService.getInstance().isFirstRecentActivityReceived()
     }
 }

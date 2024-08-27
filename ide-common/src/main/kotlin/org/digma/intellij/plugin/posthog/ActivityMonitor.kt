@@ -164,6 +164,12 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
         mutableDetails["firstTimeInsightReceived"] = UserActivationService.getInstance().isFirstInsightReceived()
         mutableDetails["firstTimeAssetsReceived"] = UserActivationService.getInstance().isFirstAssetsReceived()
         mutableDetails["firstTimeRecentActivityReceived"] = UserActivationService.getInstance().isFirstRecentActivityReceived()
+
+        mutableDetails["firstTimeIssueFound"] = UserActivationService.getInstance().isIssueFound()
+        mutableDetails["firstTimeAssetsFound"] = UserActivationService.getInstance().isAssetFound()
+        mutableDetails["firstTimeRecentActivityFound"] = UserActivationService.getInstance().isRecentActivityFound()
+
+
         mutableDetails["plugin.version"] = SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("unknown")
         mutableDetails["ide.version"] = ApplicationInfo.getInstance().fullVersion
         mutableDetails["ide.name"] = ApplicationInfo.getInstance().versionName
@@ -1015,6 +1021,18 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
 
     fun registerAuthEvent(action: String, details: Map<String, Any>) {
         capture(action, details)
+    }
+
+    fun registerRecentActivityFound() {
+        capture("RecentActivityFound")
+    }
+
+    fun registerAssetFound() {
+        capture("AssetFound")
+    }
+
+    fun registerIssueFound() {
+        capture("IssueFound")
     }
 
 }

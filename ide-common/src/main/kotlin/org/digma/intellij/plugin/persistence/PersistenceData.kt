@@ -62,6 +62,16 @@ internal data class PersistenceData(
 
     @OptionTag(converter = InstantConverter::class)
     var digmathonViewedInsightsLastUpdated: Instant? = null,
-    var digmathonStartedForUser: Boolean = false
+    var digmathonStartedForUser: Boolean = false,
+
+    var applyNewActivationLogic: Boolean = false,
+
+    @OptionTag(converter = InstantConverter::class)
+    var firstTimeRecentActivityFoundTimestamp: Instant? = null,
+    @OptionTag(converter = InstantConverter::class)
+    var firstTimeAssetFoundTimestamp: Instant? = null,
+    @OptionTag(converter = InstantConverter::class)
+    var firstTimeIssueFoundTimestamp: Instant? = null,
+
 
 )

@@ -226,4 +226,13 @@ class UserActivationService : DisposableAdaptor {
     fun isFirstRecentActivityReceived(): Boolean {
         return PersistenceService.getInstance().isFirstRecentActivityReceived()
     }
+
+    fun isAnyUsageReported(): Boolean {
+        return isAssetFound() ||
+                isIssueFound() ||
+                isRecentActivityFound() ||
+                isFirstRecentActivityReceived() ||
+                isFirstInsightReceived() ||
+                isFirstAssetsReceived()
+    }
 }

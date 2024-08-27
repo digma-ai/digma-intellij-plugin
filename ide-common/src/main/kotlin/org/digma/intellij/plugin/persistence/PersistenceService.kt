@@ -179,6 +179,14 @@ class PersistenceService {
         state.noInsightsYetNotificationPassed = true
     }
 
+    fun isUsingTheCliNotificationPassed(): Boolean {
+        return state.usingTheCliNotificationPassed
+    }
+
+    fun setUsingTheCliNotificationPassed() {
+        state.usingTheCliNotificationPassed = true
+    }
+
     fun updateLastConnectionTimestamp() {
         state.lastConnectionTimestamp = Instant.now()
     }

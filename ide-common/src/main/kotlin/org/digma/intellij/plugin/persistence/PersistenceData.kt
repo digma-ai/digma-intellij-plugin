@@ -20,6 +20,8 @@ internal data class PersistenceData(
 
     var noInsightsYetNotificationPassed: Boolean = false,
 
+    var usingTheCliNotificationPassed: Boolean = false,
+
     @OptionTag(converter = InstantConverter::class)
     var firstTimeAssetsReceivedTimestamp: Instant? = null,
 

@@ -54,6 +54,7 @@ class RecentActivityPanel(private val project: Project) : DisposablePanel(), Rel
 
     override fun reload() {
         dispose()
+        project.service<LiveViewUpdater>().stopLiveView()
         removeAll()
         parentDisposable = Disposer.newDisposable()
         jCefComponent = build()

@@ -166,4 +166,14 @@
                   topic="com.intellij.openapi.project.ProjectCloseListener"/>
     </applicationListeners>
 
+
+    <actions>
+        <action id="org.digma.intellij.plugin.reload.ReloadAction" class="org.digma.intellij.plugin.reload.ReloadAction"
+                text="Reload Digma UI" description="Reload Digma jcef browsers"
+                icon="org.digma.intellij.plugin.icons.AppIcons.TOOL_WINDOW">
+            <add-to-group group-id="HelpMenu" anchor="last"/>
+        </action>
+    </actions>
+
+
 </idea-plugin>

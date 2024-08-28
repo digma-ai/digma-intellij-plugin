@@ -1,9 +1,11 @@
 package org.digma.intellij.plugin.ui.mainapp
 
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.ui.jcef.JBCefApp
 import com.intellij.util.ui.JBUI
+import org.digma.intellij.plugin.reload.ReloadService
 import org.digma.intellij.plugin.ui.insights.InsightsService
 import org.digma.intellij.plugin.ui.jcef.DownloadHandlerAdapter
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
@@ -11,15 +13,29 @@ import org.digma.intellij.plugin.ui.list.listBackground
 import org.digma.intellij.plugin.ui.navigation.CodeButtonCaretContextService
 import org.digma.intellij.plugin.ui.navigation.NavigationService
 import org.digma.intellij.plugin.ui.panels.DisposablePanel
+import org.digma.intellij.plugin.ui.panels.ReloadablePanel
 import org.digma.intellij.plugin.ui.tests.TestsUpdater
 import java.awt.BorderLayout
 import java.awt.Insets
 import javax.swing.JComponent
 import javax.swing.JLabel
 
-class MainAppPanel(private val project: Project) : DisposablePanel() {
+class MainAppPanel(private val project: Project) : DisposablePanel(), ReloadablePanel {
+
+    private var jCefComponent: JCefComponent? = null
+
+    private var parentDisposable = Disposer.newDisposable()
 
     init {
+        jCefComponent = build()
+        service<ReloadService>().register(this, MainAppService.getInstance(project))
+        Disposer.register(MainAppService.getInstance(project)) {
+            dispose()
+        }
+    }
+
+
+    private fun build(): JCefComponent? {
 
         val jCefComponent = createJcefComponent()
 
@@ -30,12 +46,6 @@ class MainAppPanel(private val project: Project) : DisposablePanel() {
         add(jcefUiComponent, BorderLayout.CENTER)
         background = listBackground()
 
-        Disposer.register(MainAppService.getInstance(project)) {
-            jCefComponent?.dispose()
-            remove(jcefUiComponent)
-            dispose()
-        }
-
         jCefComponent?.let {
             MainAppService.getInstance(project).setJCefComponent(it)
             TestsUpdater.getInstance(project).setJCefComponent(it)
@@ -44,12 +54,22 @@ class MainAppPanel(private val project: Project) : DisposablePanel() {
             CodeButtonCaretContextService.getInstance(project).setJCefComponent(it)
         }
 
+        return jCefComponent
     }
+
+
+    override fun reload() {
+        dispose()
+        removeAll()
+        parentDisposable = Disposer.newDisposable()
+        jCefComponent = build()
+    }
+
 
     private fun createJcefComponent(): JCefComponent? {
         return if (JBCefApp.isSupported()) {
             JCefComponent.JCefComponentBuilder(
-                project, "Main", MainAppService.getInstance(project),
+                project, "Main", parentDisposable,
                 MAIN_APP_URL,
                 MainAppMessageRouterHandler(project)
             )
@@ -66,6 +86,9 @@ class MainAppPanel(private val project: Project) : DisposablePanel() {
     }
 
     override fun dispose() {
-        //nothing to do
+        Disposer.dispose(parentDisposable)
+        jCefComponent?.let {
+            Disposer.dispose(it)
+        }
     }
 }

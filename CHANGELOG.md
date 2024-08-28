@@ -1,6 +1,18 @@
 # Changelog
 
-## [2.0.377] - 2024-08-22
+## [2.0.378] - 2024-08-28
+
+- Fix error container already disposed by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2448
+- run full update navigation discovery on large changes Closes #2446 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2451
+- better exception handling in EventsNotificationsService by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2453
+- ignore LightVirtualFile in navigation discovery Closes #2454 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2456
+- update rider version by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2457
+- support gradle integrationTests task Closes #2437 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2458
+- Added recheck response by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2452
+- reload UI by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2461
+- reload UI by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2462
+
+## 2.0.377 - 2024-08-22
 
 - Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2442
 - Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2445

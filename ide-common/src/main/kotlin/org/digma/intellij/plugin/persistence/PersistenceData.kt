@@ -23,7 +23,16 @@ internal data class PersistenceData(
     var usingTheCliNotificationPassed: Boolean = false,
 
     @OptionTag(converter = InstantConverter::class)
+    var firstTimeIssueReceivedTimestamp: Instant? = null,
+    @OptionTag(converter = InstantConverter::class)
     var firstTimeAssetsReceivedTimestamp: Instant? = null,
+    @OptionTag(converter = InstantConverter::class)
+    var firstTimeInsightReceivedTimestamp: Instant? = null,
+    @OptionTag(converter = InstantConverter::class)
+    var firstTimeRecentActivityReceivedTimestamp: Instant? = null,
+    @OptionTag(converter = InstantConverter::class)
+    var firstTimeDataReceivedTimestamp: Instant? = null,
+
 
     //todo: backwards compatibility, remove firstTimeConnectionEstablishedTimestampNew in January 2025
     // renamed without the new suffix
@@ -32,11 +41,6 @@ internal data class PersistenceData(
     @OptionTag(converter = InstantConverter::class)
     var firstTimeConnectionEstablishedTimestamp: Instant? = null,
 
-    @OptionTag(converter = InstantConverter::class)
-    var firstTimeInsightReceivedTimestamp: Instant? = null,
-
-    @OptionTag(converter = InstantConverter::class)
-    var firstTimeRecentActivityReceivedTimestamp: Instant? = null,
 
     @OptionTag(converter = InstantConverter::class)
     var firstTimePluginLoadedTimestamp: Instant? = null,
@@ -73,7 +77,13 @@ internal data class PersistenceData(
     @OptionTag(converter = InstantConverter::class)
     var firstTimeAssetFoundTimestamp: Instant? = null,
     @OptionTag(converter = InstantConverter::class)
+    var firstTimeInsightFoundTimestamp: Instant? = null,
+    @OptionTag(converter = InstantConverter::class)
     var firstTimeIssueFoundTimestamp: Instant? = null,
+    @OptionTag(converter = InstantConverter::class)
+    var firstTimeImportantIssueFoundTimestamp: Instant? = null,
+    @OptionTag(converter = InstantConverter::class)
+    var firstTimeDataFoundTimestamp: Instant? = null,
 
 
 )

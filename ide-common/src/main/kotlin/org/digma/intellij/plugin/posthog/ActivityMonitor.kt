@@ -161,12 +161,15 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
 
         val mutableDetails = details.toMutableMap()
 
+        mutableDetails["firstTimeIssueReceived"] = UserActivationService.getInstance().isFirstIssueReceived()
         mutableDetails["firstTimeInsightReceived"] = UserActivationService.getInstance().isFirstInsightReceived()
         mutableDetails["firstTimeAssetsReceived"] = UserActivationService.getInstance().isFirstAssetsReceived()
         mutableDetails["firstTimeRecentActivityReceived"] = UserActivationService.getInstance().isFirstRecentActivityReceived()
 
         mutableDetails["firstTimeIssueFound"] = UserActivationService.getInstance().isIssueFound()
+        mutableDetails["firstTimeImportantIssueFound"] = UserActivationService.getInstance().isImportantIssueFound()
         mutableDetails["firstTimeAssetsFound"] = UserActivationService.getInstance().isAssetFound()
+        mutableDetails["firstTimeInsightFound"] = UserActivationService.getInstance().isInsightFound()
         mutableDetails["firstTimeRecentActivityFound"] = UserActivationService.getInstance().isRecentActivityFound()
 
 
@@ -329,6 +332,10 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
         capture("plugin first-insight") //use this so it's the same pattern as "plugin first-assets" and "plugin first-activity"
     }
 
+    fun registerFirstIssueReceived() {
+        capture("plugin first-issue")
+    }
+
     fun registerFirstAssetsReceived() {
         capture("plugin first-assets")
         postHog?.set(
@@ -340,6 +347,10 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
 
     fun registerFirstTimeRecentActivityReceived() {
         capture("plugin first-activity")
+    }
+
+    fun registerFirstTimeDataReceived() {
+        capture("plugin first-data")
     }
 
     fun registerObservabilityOn() {
@@ -1031,8 +1042,20 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
         capture("AssetFound")
     }
 
+    fun registerInsightFound() {
+        capture("InsightFound")
+    }
+
     fun registerIssueFound() {
         capture("IssueFound")
+    }
+
+    fun registerImportantIssueFound() {
+        capture("ImportantIssueFound")
+    }
+
+    fun registerDataFound() {
+        capture("DataFound")
     }
 
 }

@@ -36,6 +36,25 @@ fun showNewIssueNotification() {
     }
 }
 
+fun showNewInsightNotification() {
+    findActiveProject()?.let { project ->
+        val notificationName = "NewInsightFoundNotification"
+        ActivityMonitor.getInstance(project).registerNotificationCenterEvent("Show.$notificationName", mapOf())
+        val notification = NotificationGroupManager.getInstance().getNotificationGroup(DIGMA_STICKY_BALLOON_NOTIFICATION_GROUP)
+            .createNotification(
+                "Digma has some initial analytics results. Click the link bellow to see the list of assets and drill into any specific one to see more data.",
+                NotificationType.INFORMATION
+            )
+        notification.addAction(ShowInsightAction(project, notification, notificationName))
+        notification.whenExpired {
+            ActivityMonitor.getInstance(project).registerNotificationCenterEvent("$notificationName.expired", mapOf())
+        }
+        notification.setImportant(true)
+        notification.setToolWindowId(PluginId.TOOL_WINDOW_ID)
+        notification.notify(project)
+    }
+}
+
 fun showNewAssetNotification() {
     findActiveProject()?.let { project ->
         val notificationName = "NewAssetFoundNotification"
@@ -85,10 +104,28 @@ private class ShowIssuesAction(
         try {
             ActivityMonitor.getInstance(project).registerNotificationCenterEvent("$notificationName.clicked", mapOf())
             ToolWindowShower.getInstance(project).showToolWindow()
-            MainContentViewSwitcher.getInstance(project).showInsights()
+            //todo: show the issues tab
             notification.expire()
         } catch (e: Throwable) {
             ErrorReporter.getInstance().reportError(project, "ShowIssuesAction.actionPerformed", e)
+        }
+    }
+}
+
+private class ShowInsightAction(
+    private val project: Project,
+    private val notification: Notification,
+    private val notificationName: String
+) : AnAction("Show Insights") {
+    override fun actionPerformed(e: AnActionEvent) {
+
+        try {
+            ActivityMonitor.getInstance(project).registerNotificationCenterEvent("$notificationName.clicked", mapOf())
+            ToolWindowShower.getInstance(project).showToolWindow()
+            //todo: show the insights/analytics tab
+            notification.expire()
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError(project, "ShowInsightAction.actionPerformed", e)
         }
     }
 }
@@ -103,7 +140,7 @@ private class ShowAssetAction(
         try {
             ActivityMonitor.getInstance(project).registerNotificationCenterEvent("$notificationName.clicked", mapOf())
             ToolWindowShower.getInstance(project).showToolWindow()
-            MainContentViewSwitcher.getInstance(project).showAssets()
+            //todo: show the assets tab
             notification.expire()
         } catch (e: Throwable) {
             ErrorReporter.getInstance().reportError(project, "ShowAssetAction.actionPerformed", e)

@@ -9,11 +9,15 @@ data class DiscoveredDataResponse
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 @ConstructorProperties(
     "assetFound",
+    "insightFound",
     "issueFound",
+    "importantIssueFound",
     "recentActivityFound"
 )
 constructor(
     val assetFound: Boolean,
+    val insightFound: Boolean,
     val issueFound: Boolean,
+    val importantIssueFound: Boolean,
     val recentActivityFound: Boolean,
 )

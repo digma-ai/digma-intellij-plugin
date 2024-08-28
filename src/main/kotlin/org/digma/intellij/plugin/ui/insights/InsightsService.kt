@@ -74,6 +74,7 @@ class InsightsService(val project: Project) : InsightsServiceImpl(project) {
     fun refreshIssuesList(request: GetIssuesRequestPayload) {
         val message = try {
             val issues = AnalyticsService.getInstance(project).getIssues(request)
+            reportFirstIssue(issues)
             SetIssuesDataListMessage(issues)
         } catch (e: AnalyticsServiceException) {
             Log.debugWithException(logger, project, e, "Error loading issues {}", e.message)
@@ -85,6 +86,25 @@ class InsightsService(val project: Project) : InsightsServiceImpl(project) {
             serializeAndExecuteWindowPostMessageJavaScript(it.jbCefBrowser.cefBrowser, message)
         }
     }
+
+    private fun reportFirstIssue(issues: String) {
+
+        if (UserActivationService.getInstance().isFirstIssueReceived()) {
+            return
+        }
+
+        val count = try {
+            objectMapper.readTree(issues).get("totalCount").asInt()
+        } catch (e: Throwable) {
+            0
+        }
+        if (count > 0) {
+            UserActivationService.getInstance().setFirstIssueReceived(project)
+        }
+    }
+
+
+
 
     fun refreshIssuesFilters(backendQueryParams: MutableMap<String, Any>) {
         val message = try {

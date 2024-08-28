@@ -53,6 +53,14 @@ class PersistenceService {
         return state.userEmail != null || state.userRegistrationEmail != null
     }
 
+    fun isFirstIssueReceived(): Boolean {
+        return state.firstTimeIssueReceivedTimestamp != null
+    }
+
+    fun setFirstIssueReceived() {
+        state.firstTimeIssueReceivedTimestamp = Instant.now()
+    }
+
     fun isFirstAssetsReceived(): Boolean {
         return state.firstTimeAssetsReceivedTimestamp != null
     }
@@ -92,6 +100,14 @@ class PersistenceService {
 
     fun setFirstInsightReceived() {
         state.firstTimeInsightReceivedTimestamp = Instant.now()
+    }
+
+    fun isFirstDataReceived(): Boolean {
+        return state.firstTimeDataReceivedTimestamp != null
+    }
+
+    fun setFirstDataReceived() {
+        state.firstTimeDataReceivedTimestamp = Instant.now()
     }
 
 
@@ -291,12 +307,36 @@ class PersistenceService {
         return state.firstTimeAssetFoundTimestamp != null
     }
 
+    fun setInsightFound() {
+        state.firstTimeInsightFoundTimestamp = Instant.now()
+    }
+
+    fun isInsightFound(): Boolean {
+        return state.firstTimeInsightFoundTimestamp != null
+    }
+
     fun setIssueFound() {
         state.firstTimeIssueFoundTimestamp = Instant.now()
     }
 
     fun isIssueFound(): Boolean {
         return state.firstTimeIssueFoundTimestamp != null
+    }
+
+    fun setImportantIssueFound() {
+        state.firstTimeImportantIssueFoundTimestamp = Instant.now()
+    }
+
+    fun isImportantIssueFound(): Boolean {
+        return state.firstTimeImportantIssueFoundTimestamp != null
+    }
+
+    fun setDataFound() {
+        state.firstTimeDataFoundTimestamp = Instant.now()
+    }
+
+    fun isDataFound(): Boolean {
+        return state.firstTimeDataFoundTimestamp != null
     }
 
     fun setApplyNewActivationLogic() {

@@ -25,6 +25,7 @@ import kotlin.time.Duration.Companion.minutes
 @Service(Service.Level.APP)
 class UserActivationService : DisposableAdaptor {
 
+    //todo: open specific UI tab from notifications
 
     private val logger = Logger.getInstance(UserActivationService::class.java)
 
@@ -89,7 +90,7 @@ class UserActivationService : DisposableAdaptor {
                 if (project != null) {
                     val about = AnalyticsService.getInstance(project).about
                     Log.log(logger::trace, "got server version {}", about.applicationVersion)
-                    if (backendVersionIs0376OrHigher(about)) {
+                    if (backendVersionIs03113OrHigher(about)) {
                         Log.log(logger::trace, "updating user activation status from server {}", about.applicationVersion)
                         val discoveredDataResponse = AnalyticsService.getInstance(project).discoveredData
                         updateBackendStatus(discoveredDataResponse)
@@ -111,37 +112,56 @@ class UserActivationService : DisposableAdaptor {
     }
 
     private fun backendUserActivationIsComplete(): Boolean {
-        return isRecentActivityFound() && isAssetFound() && isIssueFound()
+        return isRecentActivityFound() && isAssetFound() && isIssueFound() && isImportantIssueFound() && isInsightFound()
     }
 
 
     private fun updateBackendStatus(discoveredDataResponse: DiscoveredDataResponse) {
 
-        val currentRecentActivityFound = isRecentActivityFound()
-        val currentAssetFound = isAssetFound()
+        val currentImportantIssueFound = isImportantIssueFound()
         val currentIssueFound = isIssueFound()
+        val currentInsightFound = isInsightFound()
+        val currentAssetFound = isAssetFound()
+        val currentRecentActivityFound = isRecentActivityFound()
 
 
         //usually findActiveProject() will find a project. but if we can't find an active project don't set the flags
         // because we will not be able to send to posthog, it will happen next time.
-        if (discoveredDataResponse.recentActivityFound) {
-            findActiveProject()?.let { setRecentActivityFound(it) }
-        }
-        if (discoveredDataResponse.assetFound) {
-            findActiveProject()?.let { setAssetFound(it) }
+        if (discoveredDataResponse.importantIssueFound) {
+            findActiveProject()?.let { setImportantIssueFound(it) }
         }
         if (discoveredDataResponse.issueFound) {
             findActiveProject()?.let { setIssueFound(it) }
         }
+        if (discoveredDataResponse.insightFound) {
+            findActiveProject()?.let { setInsightFound(it) }
+        }
+        if (discoveredDataResponse.assetFound) {
+            findActiveProject()?.let { setAssetFound(it) }
+        }
+        if (discoveredDataResponse.recentActivityFound) {
+            findActiveProject()?.let { setRecentActivityFound(it) }
+        }
 
-        showNotification(currentRecentActivityFound, currentAssetFound, currentIssueFound)
+        showNotification(currentImportantIssueFound, currentIssueFound, currentInsightFound, currentAssetFound, currentRecentActivityFound)
 
     }
 
 
-    private fun showNotification(prevRecentActivityFound: Boolean, prevAssetFound: Boolean, prevIssueFound: Boolean) {
-        if (!prevIssueFound && isIssueFound()) {
+    private fun showNotification(
+        prevImportantIssueFound: Boolean,
+        prevIssueFound: Boolean,
+        prevInsightFound: Boolean,
+        prevAssetFound: Boolean,
+        prevRecentActivityFound: Boolean
+    ) {
+
+        if (!prevImportantIssueFound && isImportantIssueFound()) {
             showNewIssueNotification()
+        } else if (!prevIssueFound && isIssueFound()) {
+            showNewIssueNotification()
+        } else if (!prevInsightFound && isInsightFound()) {
+            showNewInsightNotification()
         } else if (!prevAssetFound && isAssetFound()) {
             showNewAssetNotification()
         } else if (!prevRecentActivityFound && isRecentActivityFound()) {
@@ -150,15 +170,16 @@ class UserActivationService : DisposableAdaptor {
     }
 
 
-    private fun backendVersionIs0376OrHigher(about: AboutResult): Boolean {
+    private fun backendVersionIs03113OrHigher(about: AboutResult): Boolean {
         val currentServerVersion = ComparableVersion(about.applicationVersion)
-        val featureServerVersion = ComparableVersion("0.3.76")
+        val featureServerVersion = ComparableVersion("0.3.113")
         return currentServerVersion.newerThan(featureServerVersion) ||
                 currentServerVersion == featureServerVersion
     }
 
 
     private fun setRecentActivityFound(project: Project) {
+        setDataFound(project)
         if (!isRecentActivityFound()) {
             PersistenceService.getInstance().setRecentActivityFound()
             ActivityMonitor.getInstance(project).registerRecentActivityFound()
@@ -170,6 +191,7 @@ class UserActivationService : DisposableAdaptor {
     }
 
     private fun setAssetFound(project: Project) {
+        setDataFound(project)
         if (!isAssetFound()) {
             PersistenceService.getInstance().setAssetFound()
             ActivityMonitor.getInstance(project).registerAssetFound()
@@ -180,7 +202,20 @@ class UserActivationService : DisposableAdaptor {
         return PersistenceService.getInstance().isAssetFound()
     }
 
+    private fun setInsightFound(project: Project) {
+        setDataFound(project)
+        if (!isInsightFound()) {
+            PersistenceService.getInstance().setInsightFound()
+            ActivityMonitor.getInstance(project).registerInsightFound()
+        }
+    }
+
+    fun isInsightFound(): Boolean {
+        return PersistenceService.getInstance().isInsightFound()
+    }
+
     private fun setIssueFound(project: Project) {
+        setDataFound(project)
         if (!isIssueFound()) {
             PersistenceService.getInstance().setIssueFound()
             ActivityMonitor.getInstance(project).registerIssueFound()
@@ -191,8 +226,44 @@ class UserActivationService : DisposableAdaptor {
         return PersistenceService.getInstance().isIssueFound()
     }
 
+    private fun setImportantIssueFound(project: Project) {
+        setDataFound(project)
+        if (!isImportantIssueFound()) {
+            PersistenceService.getInstance().setImportantIssueFound()
+            ActivityMonitor.getInstance(project).registerImportantIssueFound()
+        }
+    }
+
+    fun isImportantIssueFound(): Boolean {
+        return PersistenceService.getInstance().isImportantIssueFound()
+    }
+
+    private fun setDataFound(project: Project) {
+        if (!isDataFound()) {
+            PersistenceService.getInstance().setDataFound()
+            ActivityMonitor.getInstance(project).registerDataFound()
+        }
+    }
+
+    private fun isDataFound(): Boolean {
+        return PersistenceService.getInstance().isDataFound()
+    }
+
+
+    fun setFirstIssueReceived(project: Project) {
+        setFirstDataReceived(project)
+        if (!isFirstIssueReceived()) {
+            PersistenceService.getInstance().setFirstIssueReceived()
+            ActivityMonitor.getInstance(project).registerFirstIssueReceived()
+        }
+    }
+
+    fun isFirstIssueReceived(): Boolean {
+        return PersistenceService.getInstance().isFirstIssueReceived()
+    }
 
     fun setFirstAssetsReceived(project: Project) {
+        setFirstDataReceived(project)
         if (!isFirstAssetsReceived()) {
             PersistenceService.getInstance().setFirstAssetsReceived()
             ActivityMonitor.getInstance(project).registerFirstAssetsReceived()
@@ -205,6 +276,7 @@ class UserActivationService : DisposableAdaptor {
 
 
     fun setFirstInsightReceived(project: Project) {
+        setFirstDataReceived(project)
         if (!isFirstInsightReceived()) {
             PersistenceService.getInstance().setFirstInsightReceived()
             ActivityMonitor.getInstance(project).registerFirstInsightReceived()
@@ -217,6 +289,7 @@ class UserActivationService : DisposableAdaptor {
 
 
     fun setFirstRecentActivityReceived(project: Project) {
+        setFirstDataReceived(project)
         if (!isFirstRecentActivityReceived()) {
             PersistenceService.getInstance().setFirstRecentActivityReceived()
             ActivityMonitor.getInstance(project).registerFirstTimeRecentActivityReceived()
@@ -227,12 +300,27 @@ class UserActivationService : DisposableAdaptor {
         return PersistenceService.getInstance().isFirstRecentActivityReceived()
     }
 
+    private fun setFirstDataReceived(project: Project) {
+        if (!isFirstDataReceived()) {
+            PersistenceService.getInstance().setFirstDataReceived()
+            ActivityMonitor.getInstance(project).registerFirstTimeDataReceived()
+        }
+    }
+
+    private fun isFirstDataReceived(): Boolean {
+        return PersistenceService.getInstance().isFirstDataReceived()
+    }
+
+
     fun isAnyUsageReported(): Boolean {
         return isAssetFound() ||
                 isIssueFound() ||
+                isImportantIssueFound() ||
+                isInsightFound() ||
                 isRecentActivityFound() ||
                 isFirstRecentActivityReceived() ||
                 isFirstInsightReceived() ||
+                isFirstIssueReceived() ||
                 isFirstAssetsReceived()
     }
 }

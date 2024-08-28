@@ -33,6 +33,7 @@ class ReloadService {
             try {
                 if (isProjectValid(it)) {
                     MainToolWindowCardsController.getInstance(it).wizardFinished()
+                    MainToolWindowCardsController.getInstance(it).troubleshootingFinished()
                 }
             } catch (e: Throwable) {
                 ErrorReporter.getInstance().reportError("ReloadService.reload", e)

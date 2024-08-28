@@ -1,6 +1,12 @@
 # Changelog
 
-## [2.0.378] - 2024-08-28
+## [2.0.379] - 2024-08-28
+
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2463
+- update ui by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2464
+- Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2465
+
+## 2.0.378 - 2024-08-28
 
 - Fix error container already disposed by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2448
 - run full update navigation discovery on large changes Closes #2446 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2451

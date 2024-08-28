@@ -1,6 +1,8 @@
 package org.digma.intellij.plugin.reload
 
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.util.Disposer
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.ui.panels.ReloadablePanel
@@ -11,8 +13,15 @@ class ReloadService {
     private val reloadables = mutableListOf<ReloadablePanel>()
 
 
-    fun register(reloadablePanel: ReloadablePanel) {
+    fun register(reloadablePanel: ReloadablePanel, parentDisposable: Disposable) {
         reloadables.add(reloadablePanel)
+        Disposer.register(parentDisposable) {
+            remove(reloadablePanel)
+        }
+    }
+
+    fun remove(reloadablePanel: ReloadablePanel) {
+        reloadables.remove(reloadablePanel)
     }
 
 

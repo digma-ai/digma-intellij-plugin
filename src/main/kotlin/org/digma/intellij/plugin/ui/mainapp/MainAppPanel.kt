@@ -28,7 +28,7 @@ class MainAppPanel(private val project: Project) : DisposablePanel(), Reloadable
 
     init {
         jCefComponent = build()
-        service<ReloadService>().register(this)
+        service<ReloadService>().register(this, MainAppService.getInstance(project))
         Disposer.register(MainAppService.getInstance(project)) {
             dispose()
         }

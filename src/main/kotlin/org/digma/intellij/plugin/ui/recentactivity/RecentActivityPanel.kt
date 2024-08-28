@@ -24,7 +24,7 @@ class RecentActivityPanel(private val project: Project) : DisposablePanel(), Rel
 
     init {
         jCefComponent = build()
-        service<ReloadService>().register(this)
+        service<ReloadService>().register(this, project.service<RecentActivityService>())
         Disposer.register(project.service<RecentActivityService>()) {
             dispose()
         }

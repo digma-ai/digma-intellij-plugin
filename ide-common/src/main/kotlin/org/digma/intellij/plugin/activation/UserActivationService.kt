@@ -425,13 +425,13 @@ class UserActivationService : DisposableAdaptor {
      */
     fun issuesReceivedInProject(project: Project) {
 
+        //not interesting anymore
         if (isBackendUserActivationComplete()) {
             return
         }
 
         //not interesting anymore
         if (userSawIssues || dontNeedToShowNewIssueNotification()) {
-            Log.log(logger::trace, "ignoring issues received in project {}", project.name)
             return
         }
 
@@ -458,13 +458,13 @@ class UserActivationService : DisposableAdaptor {
 
     fun assetsReceivedInProject(project: Project) {
 
+        //not interesting anymore
         if (isBackendUserActivationComplete()) {
             return
         }
 
         //not interesting anymore
         if (userSawAssets || dontNeedToShowNewAssetNotification()) {
-            Log.log(logger::trace, "ignoring assets received in project {}", project.name)
             return
         }
 
@@ -491,13 +491,13 @@ class UserActivationService : DisposableAdaptor {
 
     fun insightsReceivedInProject(project: Project) {
 
+        //not interesting anymore
         if (isBackendUserActivationComplete()) {
             return
         }
 
         //not interesting anymore
         if (userSawInsights || dontNeedToShowNewInsightNotification()) {
-            Log.log(logger::trace, "ignoring insights received in project {}", project.name)
             return
         }
 
@@ -525,13 +525,13 @@ class UserActivationService : DisposableAdaptor {
 
     fun recentActivityReceivedInProject(project: Project) {
 
+        //not interesting anymore
         if (isBackendUserActivationComplete()) {
             return
         }
 
         //not interesting anymore
         if (userSawRecentActivity || dontNeedToShowNewRecentActivityNotification()) {
-            Log.log(logger::trace, "ignoring recent activity in project {}", project.name)
             return
         }
 

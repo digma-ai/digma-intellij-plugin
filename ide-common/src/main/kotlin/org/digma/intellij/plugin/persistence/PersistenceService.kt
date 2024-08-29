@@ -291,52 +291,52 @@ class PersistenceService {
         state.digmathonStartedForUser = started
     }
 
-    fun setRecentActivityFound() {
-        state.firstTimeRecentActivityFoundTimestamp = Instant.now()
+    fun setBackendRecentActivityFound() {
+        state.firstTimeBackendRecentActivityFoundTimestamp = Instant.now()
     }
 
-    fun isRecentActivityFound(): Boolean {
-        return state.firstTimeRecentActivityFoundTimestamp != null
+    fun isBackendRecentActivityFound(): Boolean {
+        return state.firstTimeBackendRecentActivityFoundTimestamp != null
     }
 
-    fun setAssetFound() {
-        state.firstTimeAssetFoundTimestamp = Instant.now()
+    fun setBackendAssetFound() {
+        state.firstTimeBackendAssetFoundTimestamp = Instant.now()
     }
 
-    fun isAssetFound(): Boolean {
-        return state.firstTimeAssetFoundTimestamp != null
+    fun isBackendAssetFound(): Boolean {
+        return state.firstTimeBackendAssetFoundTimestamp != null
     }
 
-    fun setInsightFound() {
-        state.firstTimeInsightFoundTimestamp = Instant.now()
+    fun setBackendInsightFound() {
+        state.firstTimeBackendInsightFoundTimestamp = Instant.now()
     }
 
-    fun isInsightFound(): Boolean {
-        return state.firstTimeInsightFoundTimestamp != null
+    fun isBackendInsightFound(): Boolean {
+        return state.firstTimeBackendInsightFoundTimestamp != null
     }
 
-    fun setIssueFound() {
-        state.firstTimeIssueFoundTimestamp = Instant.now()
+    fun setBackendIssueFound() {
+        state.firstTimeBackendIssueFoundTimestamp = Instant.now()
     }
 
-    fun isIssueFound(): Boolean {
-        return state.firstTimeIssueFoundTimestamp != null
+    fun isBackendIssueFound(): Boolean {
+        return state.firstTimeBackendIssueFoundTimestamp != null
     }
 
-    fun setImportantIssueFound() {
-        state.firstTimeImportantIssueFoundTimestamp = Instant.now()
+    fun setBackendImportantIssueFound() {
+        state.firstTimeBackendImportantIssueFoundTimestamp = Instant.now()
     }
 
-    fun isImportantIssueFound(): Boolean {
-        return state.firstTimeImportantIssueFoundTimestamp != null
+    fun isBackendImportantIssueFound(): Boolean {
+        return state.firstTimeBackendImportantIssueFoundTimestamp != null
     }
 
-    fun setDataFound() {
-        state.firstTimeDataFoundTimestamp = Instant.now()
+    fun setBackendDataFound() {
+        state.firstTimeBackendDataFoundTimestamp = Instant.now()
     }
 
-    fun isDataFound(): Boolean {
-        return state.firstTimeDataFoundTimestamp != null
+    fun isBackendDataFound(): Boolean {
+        return state.firstTimeBackendDataFoundTimestamp != null
     }
 
     fun setApplyNewActivationLogic() {

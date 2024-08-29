@@ -73,17 +73,17 @@ internal data class PersistenceData(
     var applyNewActivationLogic: Boolean = false,
 
     @OptionTag(converter = InstantConverter::class)
-    var firstTimeRecentActivityFoundTimestamp: Instant? = null,
+    var firstTimeBackendRecentActivityFoundTimestamp: Instant? = null,
     @OptionTag(converter = InstantConverter::class)
-    var firstTimeAssetFoundTimestamp: Instant? = null,
+    var firstTimeBackendAssetFoundTimestamp: Instant? = null,
     @OptionTag(converter = InstantConverter::class)
-    var firstTimeInsightFoundTimestamp: Instant? = null,
+    var firstTimeBackendInsightFoundTimestamp: Instant? = null,
     @OptionTag(converter = InstantConverter::class)
-    var firstTimeIssueFoundTimestamp: Instant? = null,
+    var firstTimeBackendIssueFoundTimestamp: Instant? = null,
     @OptionTag(converter = InstantConverter::class)
-    var firstTimeImportantIssueFoundTimestamp: Instant? = null,
+    var firstTimeBackendImportantIssueFoundTimestamp: Instant? = null,
     @OptionTag(converter = InstantConverter::class)
-    var firstTimeDataFoundTimestamp: Instant? = null,
+    var firstTimeBackendDataFoundTimestamp: Instant? = null,
 
 
-)
+    )

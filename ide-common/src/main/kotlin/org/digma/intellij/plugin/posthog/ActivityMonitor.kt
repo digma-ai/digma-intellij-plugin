@@ -166,11 +166,11 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
         mutableDetails["firstTimeAssetsReceived"] = UserActivationService.getInstance().isFirstAssetsReceived()
         mutableDetails["firstTimeRecentActivityReceived"] = UserActivationService.getInstance().isFirstRecentActivityReceived()
 
-        mutableDetails["firstTimeIssueFound"] = UserActivationService.getInstance().isIssueFound()
-        mutableDetails["firstTimeImportantIssueFound"] = UserActivationService.getInstance().isImportantIssueFound()
-        mutableDetails["firstTimeAssetsFound"] = UserActivationService.getInstance().isAssetFound()
-        mutableDetails["firstTimeInsightFound"] = UserActivationService.getInstance().isInsightFound()
-        mutableDetails["firstTimeRecentActivityFound"] = UserActivationService.getInstance().isRecentActivityFound()
+        mutableDetails["firstTimeBackendIssueFound"] = UserActivationService.getInstance().isBackendIssueFound()
+        mutableDetails["firstTimeBackendImportantIssueFound"] = UserActivationService.getInstance().isBackendImportantIssueFound()
+        mutableDetails["firstTimeBackendAssetsFound"] = UserActivationService.getInstance().isBackendAssetFound()
+        mutableDetails["firstTimeBackendInsightFound"] = UserActivationService.getInstance().isBackendInsightFound()
+        mutableDetails["firstTimeBackendRecentActivityFound"] = UserActivationService.getInstance().isBackendRecentActivityFound()
 
 
         mutableDetails["plugin.version"] = SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("unknown")
@@ -1034,28 +1034,28 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
         capture(action, details)
     }
 
-    fun registerRecentActivityFound() {
-        capture("RecentActivityFound")
+    fun registerBackendRecentActivityFound() {
+        capture("backend-recent-activity-found")
     }
 
-    fun registerAssetFound() {
-        capture("AssetFound")
+    fun registerBackendAssetFound() {
+        capture("backend-asset-found")
     }
 
-    fun registerInsightFound() {
-        capture("InsightFound")
+    fun registerBackendInsightFound() {
+        capture("backend-insight-found")
     }
 
-    fun registerIssueFound() {
-        capture("IssueFound")
+    fun registerBackendIssueFound() {
+        capture("backend-issue-found")
     }
 
-    fun registerImportantIssueFound() {
-        capture("ImportantIssueFound")
+    fun registerBackendImportantIssueFound() {
+        capture("backend-important-issue-found")
     }
 
-    fun registerDataFound() {
-        capture("DataFound")
+    fun registerBackendDataFound() {
+        capture("backend-data-found")
     }
 
 }

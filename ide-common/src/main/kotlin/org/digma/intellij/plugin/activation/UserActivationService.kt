@@ -69,7 +69,7 @@ class UserActivationService : DisposableAdaptor {
 
     private fun startMonitoringImpl() {
 
-        if (backendUserActivationIsComplete()) {
+        if (isBackendUserActivationComplete()) {
             Log.log(logger::trace, "user activation completed, not executing monitoring task")
             return
         }
@@ -90,14 +90,14 @@ class UserActivationService : DisposableAdaptor {
                 if (project != null) {
                     val about = AnalyticsService.getInstance(project).about
                     Log.log(logger::trace, "got server version {}", about.applicationVersion)
-                    if (backendVersionIs03113OrHigher(about)) {
+                    if (isBackendVersion03113OrHigher(about)) {
                         Log.log(logger::trace, "updating user activation status from server {}", about.applicationVersion)
                         val discoveredDataResponse = AnalyticsService.getInstance(project).discoveredData
                         updateBackendStatus(discoveredDataResponse)
                     }
                 }
 
-                if (backendUserActivationIsComplete()) {
+                if (isBackendUserActivationComplete()) {
                     Log.log(logger::trace, "user activation completed, canceling task")
                     Disposer.dispose(disposable)
                 }
@@ -111,36 +111,36 @@ class UserActivationService : DisposableAdaptor {
         }
     }
 
-    private fun backendUserActivationIsComplete(): Boolean {
-        return isRecentActivityFound() && isAssetFound() && isIssueFound() && isImportantIssueFound() && isInsightFound()
+    private fun isBackendUserActivationComplete(): Boolean {
+        return isBackendRecentActivityFound() && isBackendAssetFound() && isBackendIssueFound() && isBackendImportantIssueFound() && isBackendInsightFound()
     }
 
 
     private fun updateBackendStatus(discoveredDataResponse: DiscoveredDataResponse) {
 
-        val currentImportantIssueFound = isImportantIssueFound()
-        val currentIssueFound = isIssueFound()
-        val currentInsightFound = isInsightFound()
-        val currentAssetFound = isAssetFound()
-        val currentRecentActivityFound = isRecentActivityFound()
+        val currentImportantIssueFound = isBackendImportantIssueFound()
+        val currentIssueFound = isBackendIssueFound()
+        val currentInsightFound = isBackendInsightFound()
+        val currentAssetFound = isBackendAssetFound()
+        val currentRecentActivityFound = isBackendRecentActivityFound()
 
 
         //usually findActiveProject() will find a project. but if we can't find an active project don't set the flags
         // because we will not be able to send to posthog, it will happen next time.
         if (discoveredDataResponse.importantIssueFound) {
-            findActiveProject()?.let { setImportantIssueFound(it) }
+            findActiveProject()?.let { setBackendImportantIssueFound(it) }
         }
         if (discoveredDataResponse.issueFound) {
-            findActiveProject()?.let { setIssueFound(it) }
+            findActiveProject()?.let { setBackendIssueFound(it) }
         }
         if (discoveredDataResponse.insightFound) {
-            findActiveProject()?.let { setInsightFound(it) }
+            findActiveProject()?.let { setBackendInsightFound(it) }
         }
         if (discoveredDataResponse.assetFound) {
-            findActiveProject()?.let { setAssetFound(it) }
+            findActiveProject()?.let { setBackendAssetFound(it) }
         }
         if (discoveredDataResponse.recentActivityFound) {
-            findActiveProject()?.let { setRecentActivityFound(it) }
+            findActiveProject()?.let { setBackendRecentActivityFound(it) }
         }
 
         showNotification(currentImportantIssueFound, currentIssueFound, currentInsightFound, currentAssetFound, currentRecentActivityFound)
@@ -156,21 +156,21 @@ class UserActivationService : DisposableAdaptor {
         prevRecentActivityFound: Boolean
     ) {
 
-        if (!prevImportantIssueFound && isImportantIssueFound()) {
+        if (!prevImportantIssueFound && isBackendImportantIssueFound()) {
             showNewIssueNotification()
-        } else if (!prevIssueFound && isIssueFound()) {
+        } else if (!prevIssueFound && isBackendIssueFound()) {
             showNewIssueNotification()
-        } else if (!prevInsightFound && isInsightFound()) {
+        } else if (!prevInsightFound && isBackendInsightFound()) {
             showNewInsightNotification()
-        } else if (!prevAssetFound && isAssetFound()) {
+        } else if (!prevAssetFound && isBackendAssetFound()) {
             showNewAssetNotification()
-        } else if (!prevRecentActivityFound && isRecentActivityFound()) {
+        } else if (!prevRecentActivityFound && isBackendRecentActivityFound()) {
             showNewRecentActivityNotification()
         }
     }
 
 
-    private fun backendVersionIs03113OrHigher(about: AboutResult): Boolean {
+    private fun isBackendVersion03113OrHigher(about: AboutResult): Boolean {
         val currentServerVersion = ComparableVersion(about.applicationVersion)
         val featureServerVersion = ComparableVersion("0.3.113")
         return currentServerVersion.newerThan(featureServerVersion) ||
@@ -178,75 +178,75 @@ class UserActivationService : DisposableAdaptor {
     }
 
 
-    private fun setRecentActivityFound(project: Project) {
-        setDataFound(project)
-        if (!isRecentActivityFound()) {
-            PersistenceService.getInstance().setRecentActivityFound()
-            ActivityMonitor.getInstance(project).registerRecentActivityFound()
+    private fun setBackendRecentActivityFound(project: Project) {
+        setBackendDataFound(project)
+        if (!isBackendRecentActivityFound()) {
+            PersistenceService.getInstance().setBackendRecentActivityFound()
+            ActivityMonitor.getInstance(project).registerBackendRecentActivityFound()
         }
     }
 
-    fun isRecentActivityFound(): Boolean {
-        return PersistenceService.getInstance().isRecentActivityFound()
+    fun isBackendRecentActivityFound(): Boolean {
+        return PersistenceService.getInstance().isBackendRecentActivityFound()
     }
 
-    private fun setAssetFound(project: Project) {
-        setDataFound(project)
-        if (!isAssetFound()) {
-            PersistenceService.getInstance().setAssetFound()
-            ActivityMonitor.getInstance(project).registerAssetFound()
+    private fun setBackendAssetFound(project: Project) {
+        setBackendDataFound(project)
+        if (!isBackendAssetFound()) {
+            PersistenceService.getInstance().setBackendAssetFound()
+            ActivityMonitor.getInstance(project).registerBackendAssetFound()
         }
     }
 
-    fun isAssetFound(): Boolean {
-        return PersistenceService.getInstance().isAssetFound()
+    fun isBackendAssetFound(): Boolean {
+        return PersistenceService.getInstance().isBackendAssetFound()
     }
 
-    private fun setInsightFound(project: Project) {
-        setDataFound(project)
-        if (!isInsightFound()) {
-            PersistenceService.getInstance().setInsightFound()
-            ActivityMonitor.getInstance(project).registerInsightFound()
+    private fun setBackendInsightFound(project: Project) {
+        setBackendDataFound(project)
+        if (!isBackendInsightFound()) {
+            PersistenceService.getInstance().setBackendInsightFound()
+            ActivityMonitor.getInstance(project).registerBackendInsightFound()
         }
     }
 
-    fun isInsightFound(): Boolean {
-        return PersistenceService.getInstance().isInsightFound()
+    fun isBackendInsightFound(): Boolean {
+        return PersistenceService.getInstance().isBackendInsightFound()
     }
 
-    private fun setIssueFound(project: Project) {
-        setDataFound(project)
-        if (!isIssueFound()) {
-            PersistenceService.getInstance().setIssueFound()
-            ActivityMonitor.getInstance(project).registerIssueFound()
+    private fun setBackendIssueFound(project: Project) {
+        setBackendDataFound(project)
+        if (!isBackendIssueFound()) {
+            PersistenceService.getInstance().setBackendIssueFound()
+            ActivityMonitor.getInstance(project).registerBackendIssueFound()
         }
     }
 
-    fun isIssueFound(): Boolean {
-        return PersistenceService.getInstance().isIssueFound()
+    fun isBackendIssueFound(): Boolean {
+        return PersistenceService.getInstance().isBackendIssueFound()
     }
 
-    private fun setImportantIssueFound(project: Project) {
-        setDataFound(project)
-        if (!isImportantIssueFound()) {
-            PersistenceService.getInstance().setImportantIssueFound()
-            ActivityMonitor.getInstance(project).registerImportantIssueFound()
+    private fun setBackendImportantIssueFound(project: Project) {
+        setBackendDataFound(project)
+        if (!isBackendImportantIssueFound()) {
+            PersistenceService.getInstance().setBackendImportantIssueFound()
+            ActivityMonitor.getInstance(project).registerBackendImportantIssueFound()
         }
     }
 
-    fun isImportantIssueFound(): Boolean {
-        return PersistenceService.getInstance().isImportantIssueFound()
+    fun isBackendImportantIssueFound(): Boolean {
+        return PersistenceService.getInstance().isBackendImportantIssueFound()
     }
 
-    private fun setDataFound(project: Project) {
-        if (!isDataFound()) {
-            PersistenceService.getInstance().setDataFound()
-            ActivityMonitor.getInstance(project).registerDataFound()
+    private fun setBackendDataFound(project: Project) {
+        if (!isBackendDataFound()) {
+            PersistenceService.getInstance().setBackendDataFound()
+            ActivityMonitor.getInstance(project).registerBackendDataFound()
         }
     }
 
-    private fun isDataFound(): Boolean {
-        return PersistenceService.getInstance().isDataFound()
+    private fun isBackendDataFound(): Boolean {
+        return PersistenceService.getInstance().isBackendDataFound()
     }
 
 
@@ -313,11 +313,11 @@ class UserActivationService : DisposableAdaptor {
 
 
     fun isAnyUsageReported(): Boolean {
-        return isAssetFound() ||
-                isIssueFound() ||
-                isImportantIssueFound() ||
-                isInsightFound() ||
-                isRecentActivityFound() ||
+        return isBackendAssetFound() ||
+                isBackendIssueFound() ||
+                isBackendImportantIssueFound() ||
+                isBackendInsightFound() ||
+                isBackendRecentActivityFound() ||
                 isFirstRecentActivityReceived() ||
                 isFirstInsightReceived() ||
                 isFirstIssueReceived() ||

@@ -18,6 +18,7 @@ import org.cef.browser.CefBrowser
 import org.cef.browser.CefMessageRouter
 import org.cef.handler.CefDownloadHandler
 import org.cef.handler.CefLifeSpanHandlerAdapter
+import org.digma.intellij.plugin.activation.UserClickedNotificationEvent
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
 import org.digma.intellij.plugin.analytics.ApiClientChangedEvent
@@ -344,6 +345,20 @@ private constructor(
                 }
             }
         )
+
+
+
+        project.messageBus.connect(parentDisposable).subscribe(
+            UserClickedNotificationEvent.USER_CLICKED_NOTIFICATION_TOPIC, UserClickedNotificationEvent { name ->
+                try {
+                    sendGenericPluginEvent(project, jbCefBrowser.cefBrowser, name)
+                } catch (e: Throwable) {
+                    Log.warnWithException(logger, project, e, "error in notificationClicked")
+                    ErrorReporter.getInstance().reportError(project, "JCefComponent.notificationClicked", e)
+                }
+            }
+        )
+
     }
 
     override fun dispose() {

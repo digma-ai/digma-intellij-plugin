@@ -42,7 +42,6 @@ class AssetsService(private val project: Project) : Disposable {
     }
 
 
-
     fun getAssetFilters(queryParams: MutableMap<String, Any>): String {
         EDT.assertNonDispatchThread()
 
@@ -78,16 +77,19 @@ class AssetsService(private val project: Project) : Disposable {
 
     private fun checkInsightExists() {
 
-        if (!UserActivationService.getInstance().isFirstAssetsReceived()) {
-            try {
-                val insightsExists = AnalyticsService.getInstance(project).insightsExist
-                val payload = objectMapper.readTree(insightsExists)
-                if (!payload.isMissingNode && payload["insightExists"].asBoolean()) {
-                    UserActivationService.getInstance().setFirstAssetsReceived(project)
-                }
-            } catch (e: Throwable) {
-                Log.warnWithException(logger, project, e, "error reporting FirstTimeAssetsReceived {}", e)
+        if (UserActivationService.getInstance().isFirstAssetsReceived()) {
+            UserActivationService.getInstance().assetsReceivedInProject(project)
+            return
+        }
+
+        try {
+            val insightsExists = AnalyticsService.getInstance(project).insightsExist
+            val payload = objectMapper.readTree(insightsExists)
+            if (!payload.isMissingNode && payload["insightExists"].asBoolean()) {
+                UserActivationService.getInstance().setFirstAssetsReceived(project)
             }
+        } catch (e: Throwable) {
+            Log.warnWithException(logger, project, e, "error reporting FirstTimeAssetsReceived {}", e)
         }
     }
 

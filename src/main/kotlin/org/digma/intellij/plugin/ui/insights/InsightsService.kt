@@ -90,6 +90,7 @@ class InsightsService(val project: Project) : InsightsServiceImpl(project) {
     private fun reportFirstIssue(issues: String) {
 
         if (UserActivationService.getInstance().isFirstIssueReceived()) {
+            UserActivationService.getInstance().issuesReceivedInProject(project)
             return
         }
 
@@ -196,6 +197,7 @@ class InsightsService(val project: Project) : InsightsServiceImpl(project) {
     private fun onInsightReceived(insights: String) {
 
         if (UserActivationService.getInstance().isFirstInsightReceived()) {
+            UserActivationService.getInstance().insightsReceivedInProject(project)
             return
         }
 

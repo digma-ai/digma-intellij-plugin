@@ -14,6 +14,7 @@ import org.digma.intellij.plugin.PluginId
 import org.digma.intellij.plugin.activation.UserActivationService
 import org.digma.intellij.plugin.common.findActiveProject
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import org.digma.intellij.plugin.icons.IconsUtil
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
@@ -88,7 +89,7 @@ private fun showUsingTheCliNotification() {
                 "Using the CLI to run your code? Here is how to connect to Digma",
                 NotificationType.INFORMATION
             )
-
+        notification.icon = IconsUtil.loadIcon("/icons/affect.svg")
         notification.addAction(OpenUsingTheCliDocumentationAction(project, notification, notificationName))
 
         notification.whenExpired {

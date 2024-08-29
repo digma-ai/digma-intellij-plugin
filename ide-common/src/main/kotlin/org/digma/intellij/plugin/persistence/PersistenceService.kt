@@ -347,5 +347,45 @@ class PersistenceService {
         return state.applyNewActivationLogic
     }
 
+    fun setAlreadyShowedNewImportantIssueNotification() {
+        state.alreadyShowedNewImportantIssueNotification = true
+    }
+
+    fun isAlreadyShowedNewImportantIssueNotification(): Boolean {
+        return state.alreadyShowedNewImportantIssueNotification
+    }
+
+    fun setAlreadyShowedNewIssueNotification() {
+        state.alreadyShowedNewIssueNotification = true
+    }
+
+    fun isAlreadyShowedNewIssueNotification(): Boolean {
+        return state.alreadyShowedNewIssueNotification
+    }
+
+    fun setAlreadyShowedNewInsightNotification() {
+        state.alreadyShowedNewInsightNotification = true
+    }
+
+    fun isAlreadyShowedNewInsightNotification(): Boolean {
+        return state.alreadyShowedNewInsightNotification
+    }
+
+    fun setAlreadyShowedNewAssetNotification() {
+        state.alreadyShowedNewAssetNotification = true
+    }
+
+    fun isAlreadyShowedNewAssetNotification(): Boolean {
+        return state.alreadyShowedNewAssetNotification
+    }
+
+    fun setAlreadyShowedNewRecentActivityNotification() {
+        state.alreadyShowedNewRecentActivityNotification = true
+    }
+
+    fun isAlreadyShowedNewRecentActivityNotification(): Boolean {
+        return state.alreadyShowedNewRecentActivityNotification
+    }
+
 
 }

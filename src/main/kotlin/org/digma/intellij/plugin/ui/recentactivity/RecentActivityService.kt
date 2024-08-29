@@ -77,8 +77,12 @@ class RecentActivityService(val project: Project, private val cs: CoroutineScope
 
             val recentActivityData = AnalyticsService.getInstance(project).getRecentActivity(environmentsIds)
 
-            if (recentActivityData.entries.isNotEmpty() && !service<UserActivationService>().isFirstRecentActivityReceived()) {
-                UserActivationService.getInstance().setFirstRecentActivityReceived(project)
+            if (recentActivityData.entries.isNotEmpty()) {
+                if (UserActivationService.getInstance().isFirstRecentActivityReceived()) {
+                    UserActivationService.getInstance().recentActivityReceivedInProject(project)
+                } else {
+                    UserActivationService.getInstance().setFirstRecentActivityReceived(project)
+                }
             }
 
             Log.log(logger::trace, project, "got recent activity {}", recentActivityData)

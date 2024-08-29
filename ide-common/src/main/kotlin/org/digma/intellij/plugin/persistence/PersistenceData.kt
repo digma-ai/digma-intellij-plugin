@@ -85,5 +85,10 @@ internal data class PersistenceData(
     @OptionTag(converter = InstantConverter::class)
     var firstTimeBackendDataFoundTimestamp: Instant? = null,
 
+    var alreadyShowedNewRecentActivityNotification: Boolean = false,
+    var alreadyShowedNewAssetNotification: Boolean = false,
+    var alreadyShowedNewInsightNotification: Boolean = false,
+    var alreadyShowedNewIssueNotification: Boolean = false,
+    var alreadyShowedNewImportantIssueNotification: Boolean = false
 
-    )
+)

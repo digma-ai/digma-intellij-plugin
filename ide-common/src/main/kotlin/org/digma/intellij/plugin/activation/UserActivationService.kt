@@ -101,11 +101,11 @@ class UserActivationService : DisposableAdaptor {
                 val project = findActiveProject()
                 if (project != null) {
                     val about = AnalyticsService.getInstance(project).about
-                    Log.log(logger::trace, "got server version {}", about.applicationVersion)
+                    Log.log(logger::trace, "server version {}", about.applicationVersion)
                     if (isBackendVersion03114OrHigher(about)) {
                         Log.log(logger::trace, "updating user activation status from server {}", about.applicationVersion)
                         val discoveredDataResponse = AnalyticsService.getInstance(project).discoveredData
-                        Log.log(logger::trace, "got backend discovered data {}", discoveredDataResponse)
+                        Log.log(logger::trace, "backend discovered data {}", discoveredDataResponse)
                         updateBackendStatus(discoveredDataResponse)
                     }
                 }
@@ -319,7 +319,7 @@ class UserActivationService : DisposableAdaptor {
 
 
     private fun setBackendRecentActivityFound(project: Project) {
-        Log.log(logger::trace, "got backend recent activity found")
+        Log.log(logger::trace, "backend recent activity found")
         setBackendDataFound(project)
         if (!isBackendRecentActivityFound()) {
             PersistenceService.getInstance().setBackendRecentActivityFound()
@@ -332,7 +332,7 @@ class UserActivationService : DisposableAdaptor {
     }
 
     private fun setBackendAssetFound(project: Project) {
-        Log.log(logger::trace, "got backend asset found")
+        Log.log(logger::trace, "backend asset found")
         setBackendDataFound(project)
         if (!isBackendAssetFound()) {
             PersistenceService.getInstance().setBackendAssetFound()
@@ -345,7 +345,7 @@ class UserActivationService : DisposableAdaptor {
     }
 
     private fun setBackendInsightFound(project: Project) {
-        Log.log(logger::trace, "got backend insight found")
+        Log.log(logger::trace, "backend insight found")
         setBackendDataFound(project)
         if (!isBackendInsightFound()) {
             PersistenceService.getInstance().setBackendInsightFound()
@@ -358,7 +358,7 @@ class UserActivationService : DisposableAdaptor {
     }
 
     private fun setBackendIssueFound(project: Project) {
-        Log.log(logger::trace, "got backend issue found")
+        Log.log(logger::trace, "backend issue found")
         setBackendDataFound(project)
         if (!isBackendIssueFound()) {
             PersistenceService.getInstance().setBackendIssueFound()
@@ -371,7 +371,7 @@ class UserActivationService : DisposableAdaptor {
     }
 
     private fun setBackendImportantIssueFound(project: Project) {
-        Log.log(logger::trace, "got backend important issue found")
+        Log.log(logger::trace, "backend important issue found")
         setBackendDataFound(project)
         if (!isBackendImportantIssueFound()) {
             PersistenceService.getInstance().setBackendImportantIssueFound()
@@ -396,7 +396,7 @@ class UserActivationService : DisposableAdaptor {
 
 
     fun setFirstIssueReceived(project: Project) {
-        Log.log(logger::trace, "got plugin first issue received")
+        Log.log(logger::trace, "plugin first issue received")
         issuesReceivedInProject(project)
         setFirstDataReceived(project)
         if (!isFirstIssueReceived()) {
@@ -425,7 +425,7 @@ class UserActivationService : DisposableAdaptor {
      */
     fun issuesReceivedInProject(project: Project) {
 
-        //not interesting anymore
+        //not interesting. user activation completed, not going to show notifications anymore
         if (isBackendUserActivationComplete()) {
             return
         }
@@ -435,15 +435,17 @@ class UserActivationService : DisposableAdaptor {
             return
         }
 
-        Log.log(logger::trace, "issues received in project {}", project.name)
         if (mainToolWindowOpen[project.name] == true && findActiveProject() == project) {
-            Log.log(logger::trace, "marking userSawIssues = true")
+            Log.log(logger::trace, "marking userSawIssues in project {}", project.name)
             userSawIssues = true
+            //if we decide that user saw the issues then also mark the new issue notification as already shown
+            // so that we don't show it after restart
+            PersistenceService.getInstance().setAlreadyShowedNewIssueNotification()
         }
     }
 
     fun setFirstAssetsReceived(project: Project) {
-        Log.log(logger::trace, "got plugin first asset received")
+        Log.log(logger::trace, "plugin first asset received")
         assetsReceivedInProject(project)
         setFirstDataReceived(project)
         if (!isFirstAssetsReceived()) {
@@ -458,7 +460,7 @@ class UserActivationService : DisposableAdaptor {
 
     fun assetsReceivedInProject(project: Project) {
 
-        //not interesting anymore
+        //not interesting. user activation completed, not going to show notifications anymore
         if (isBackendUserActivationComplete()) {
             return
         }
@@ -468,15 +470,18 @@ class UserActivationService : DisposableAdaptor {
             return
         }
 
-        Log.log(logger::trace, "assets received in project {}", project.name)
         if (mainToolWindowOpen[project.name] == true && findActiveProject() == project) {
-            Log.log(logger::trace, "marking userSawAssets = true")
+            Log.log(logger::trace, "marking userSawAssets in project {}", project.name)
             userSawAssets = true
+            //if we decide that user saw the assets then also mark the new asset notification as already shown
+            // so that we don't show it after restart
+            PersistenceService.getInstance().setAlreadyShowedNewAssetNotification()
+
         }
     }
 
     fun setFirstInsightReceived(project: Project) {
-        Log.log(logger::trace, "got plugin first insight received")
+        Log.log(logger::trace, "plugin first insight received")
         insightsReceivedInProject(project)
         setFirstDataReceived(project)
         if (!isFirstInsightReceived()) {
@@ -491,7 +496,7 @@ class UserActivationService : DisposableAdaptor {
 
     fun insightsReceivedInProject(project: Project) {
 
-        //not interesting anymore
+        //not interesting. user activation completed, not going to show notifications anymore
         if (isBackendUserActivationComplete()) {
             return
         }
@@ -501,16 +506,18 @@ class UserActivationService : DisposableAdaptor {
             return
         }
 
-        Log.log(logger::trace, "insights received in project {}", project.name)
         if (mainToolWindowOpen[project.name] == true && findActiveProject() == project) {
-            Log.log(logger::trace, "marking userSawInsights = true")
+            Log.log(logger::trace, "marking userSawInsights in project {}", project.name)
             userSawInsights = true
+            //if we decide that user saw the insights then also mark the new insight notification as already shown
+            // so that we don't show it after restart
+            PersistenceService.getInstance().setAlreadyShowedNewInsightNotification()
         }
     }
 
 
     fun setFirstRecentActivityReceived(project: Project) {
-        Log.log(logger::trace, "got plugin first recent activity received")
+        Log.log(logger::trace, "plugin first recent activity received")
         recentActivityReceivedInProject(project)
         setFirstDataReceived(project)
         if (!isFirstRecentActivityReceived()) {
@@ -525,7 +532,7 @@ class UserActivationService : DisposableAdaptor {
 
     fun recentActivityReceivedInProject(project: Project) {
 
-        //not interesting anymore
+        //not interesting. user activation completed, not going to show notifications anymore
         if (isBackendUserActivationComplete()) {
             return
         }
@@ -535,10 +542,12 @@ class UserActivationService : DisposableAdaptor {
             return
         }
 
-        Log.log(logger::trace, "recent activity received in project {}", project.name)
         if (recentActivityToolWindowOpen[project.name] == true && findActiveProject() == project) {
-            Log.log(logger::trace, "marking userSawRecentActivity = true")
+            Log.log(logger::trace, "marking userSawRecentActivity in project {}", project.name)
             userSawRecentActivity = true
+            //if we decide that user saw recent activities then also mark the new recent activity notification as already shown
+            // so that we don't show it after restart
+            PersistenceService.getInstance().setAlreadyShowedNewRecentActivityNotification()
         }
     }
 
@@ -556,12 +565,11 @@ class UserActivationService : DisposableAdaptor {
 
 
     fun isAnyUsageReported(): Boolean {
-        return isBackendDataFound() ||
-                isFirstDataReceived()
+        return isBackendDataFound() || isFirstDataReceived()
     }
 
     fun mainToolWindowShown(project: Project) {
-        //not interesting anymore
+        //not interesting. user activation completed, not going to show notifications anymore
         if (isBackendUserActivationComplete()) {
             return
         }
@@ -570,7 +578,7 @@ class UserActivationService : DisposableAdaptor {
     }
 
     fun mainToolWindowHidden(project: Project) {
-        //not interesting anymore
+        //not interesting. user activation completed, not going to show notifications anymore
         if (isBackendUserActivationComplete()) {
             return
         }
@@ -579,7 +587,7 @@ class UserActivationService : DisposableAdaptor {
     }
 
     fun recentActivityToolWindowShown(project: Project) {
-        //not interesting anymore
+        //not interesting. user activation completed, not going to show notifications anymore
         if (isBackendUserActivationComplete()) {
             return
         }
@@ -588,7 +596,7 @@ class UserActivationService : DisposableAdaptor {
     }
 
     fun recentActivityToolWindowHidden(project: Project) {
-        //not interesting anymore
+        //not interesting. user activation completed, not going to show notifications anymore
         if (isBackendUserActivationComplete()) {
             return
         }

@@ -304,6 +304,8 @@ tasks {
 
 //            "idea.ProcessCanceledException" to "disabled"
 
+            //to log org.digma.intellij.plugin.reload.ReloadObserver
+            "idea.log.trace.categories" to "#org.digmajcef",
 
             //to use a local file for digma-agent or digma extension,
             // usually when developing and we want to test the plugin

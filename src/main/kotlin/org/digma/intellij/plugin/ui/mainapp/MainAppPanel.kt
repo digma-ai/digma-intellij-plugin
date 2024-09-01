@@ -10,6 +10,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import org.digma.intellij.plugin.reload.ReloadObserver
 import org.digma.intellij.plugin.reload.ReloadService
 import org.digma.intellij.plugin.ui.insights.InsightsService
 import org.digma.intellij.plugin.ui.jcef.DownloadHandlerAdapter
@@ -43,40 +44,13 @@ class MainAppPanel(private val project: Project) : DisposablePanel(), Reloadable
 
     init {
         jCefComponent = build()
-
+        jCefComponent?.let {
+            service<ReloadObserver>().register(this, it.getComponent(), MainAppService.getInstance(project))
+        }
         service<ReloadService>().register(this, MainAppService.getInstance(project))
         Disposer.register(MainAppService.getInstance(project)) {
             dispose()
         }
-
-//        val timer = Timer(1000) {
-//
-//
-//            if (graphicsChanged){
-//                graphicsChanged= false;
-//                System.gc();
-//
-//                val screenDevices = GraphicsEnvironment.getLocalGraphicsEnvironment().screenDevices
-//                GraphicsEnvironment.getLocalGraphicsEnvironment().screenDevices
-//                var newScreenNumber = screenDevices.size;
-//                System.out.println("screens:"+ newScreenNumber);
-//
-//                if (screensNumber!=newScreenNumber) {
-//                    screensNumber= newScreenNumber;
-//
-//                    try {
-//                        System.out.println("reloading ui");
-//                        service<ReloadService>().reload()
-//                    } catch (e: Throwable) {
-//                        ErrorReporter.getInstance().reportError("ReloadAction.actionPerformed", e)
-//                    }
-//                }
-//
-//
-//
-//            }
-//        }
-//        timer.start()
     }
 
 
@@ -86,43 +60,43 @@ class MainAppPanel(private val project: Project) : DisposablePanel(), Reloadable
 
         val jcefUiComponent: JComponent = jCefComponent?.getComponent() ?: JLabel("JCEF not supported")
 
-        jcefUiComponent.addPropertyChangeListener("graphicsConfiguration",{ evt: PropertyChangeEvent ->
-
-            System.out.println("Property changed:" + evt.propertyName + " old: " +  evt.oldValue + " new: " + evt.newValue)
-
-            if (evt.propertyName=="graphicsConfiguration"  && evt.oldValue!=null && evt.newValue!=null) {
-
-                System.out.println("graphicsConfiguration changed:" + " old: " + evt.oldValue + " new: " + evt.newValue)
-
-                CoroutineScope(Dispatchers.Main).launch {
-                    if (graphicsChanged) {
-                        graphicsChanged = false;
-                        System.gc();
-                        Thread.sleep(1500);
-
-
-                        val screenDevices = GraphicsEnvironment.getLocalGraphicsEnvironment().screenDevices
-                        GraphicsEnvironment.getLocalGraphicsEnvironment().screenDevices
-                        var newScreenNumber = screenDevices.size;
-                        System.out.println("screens:" + newScreenNumber);
-
-                        if (screensNumber != newScreenNumber) {
-                            screensNumber = newScreenNumber;
-
-                            try {
-                                System.out.println("reloading ui");
-                                service<ReloadService>().reload()
-                            } catch (e: Throwable) {
-                                ErrorReporter.getInstance().reportError("ReloadAction.actionPerformed", e)
-                            }
-                        }
-
-                    }
-
-                    graphicsChanged = true;
-
-                }
-            }});
+//        jcefUiComponent.addPropertyChangeListener("graphicsConfiguration",{ evt: PropertyChangeEvent ->
+//
+//            System.out.println("Property changed:" + evt.propertyName + " old: " +  evt.oldValue + " new: " + evt.newValue)
+//
+//            if (evt.propertyName=="graphicsConfiguration"  && evt.oldValue!=null && evt.newValue!=null) {
+//
+//                System.out.println("graphicsConfiguration changed:" + " old: " + evt.oldValue + " new: " + evt.newValue)
+//
+//                CoroutineScope(Dispatchers.Main).launch {
+//                    if (graphicsChanged) {
+//                        graphicsChanged = false;
+//                        System.gc();
+//                        Thread.sleep(1500);
+//
+//
+//                        val screenDevices = GraphicsEnvironment.getLocalGraphicsEnvironment().screenDevices
+//                        GraphicsEnvironment.getLocalGraphicsEnvironment().screenDevices
+//                        var newScreenNumber = screenDevices.size;
+//                        System.out.println("screens:" + newScreenNumber);
+//
+//                        if (screensNumber != newScreenNumber) {
+//                            screensNumber = newScreenNumber;
+//
+//                            try {
+//                                System.out.println("reloading ui");
+//                                service<ReloadService>().reload()
+//                            } catch (e: Throwable) {
+//                                ErrorReporter.getInstance().reportError("ReloadAction.actionPerformed", e)
+//                            }
+//                        }
+//
+//                    }
+//
+//                    graphicsChanged = true;
+//
+//                }
+//            }});
         //jcefUiComponent.addPropertyChangeListener("painting", PropertyChangeListener )
         layout = BorderLayout()
         border = JBUI.Borders.empty()

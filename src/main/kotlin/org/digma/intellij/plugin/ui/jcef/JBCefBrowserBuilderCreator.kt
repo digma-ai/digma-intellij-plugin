@@ -9,7 +9,7 @@ object JBCefBrowserBuilderCreator {
     fun create(): JBCefBrowserBuilder {
 
         val jbCefBrowserBuilder = JBCefBrowserBuilder()
-        if (SystemInfo.isLinux && isOffScreenRenderingModeEnabled()) {
+        if (isOffScreenRenderingModeEnabled()) {
             jbCefBrowserBuilder.setOffScreenRendering(true) // setting it to false may cause focus issues on some linux os
         }
 

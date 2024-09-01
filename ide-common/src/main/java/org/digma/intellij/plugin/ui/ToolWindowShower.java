@@ -61,6 +61,27 @@ public class ToolWindowShower {
                 }
             }
         });
+    }
+
+    public void hideToolWindow() {
+
+        EDT.ensureEDT(() -> {
+            Log.log(LOGGER::debug, "hideToolWindow invoked");
+
+            if (toolWindow != null) {
+                Log.log(LOGGER::debug, "Got reference to tool window, hiding..");
+                hide(toolWindow);
+            } else {
+                Log.log(LOGGER::debug, "Don't have reference to tool window, hiding with ToolWindowManager..");
+                ToolWindow tw = ToolWindowManager.getInstance(project).getToolWindow(PluginId.TOOL_WINDOW_ID);
+                if (tw != null) {
+                    Log.log(LOGGER::debug, "Got tool window from ToolWindowManager");
+                    hide(tw);
+                } else {
+                    Log.log(LOGGER::debug, "Could not find tool window");
+                }
+            }
+        });
 
     }
 
@@ -72,6 +93,15 @@ public class ToolWindowShower {
         } else {
             Log.log(LOGGER::debug, "Calling toolWindow.show");
             toolWindow.show();
+        }
+    }
+
+    private void hide(ToolWindow toolWindow) {
+        if (!toolWindow.isVisible()) {
+            Log.log(LOGGER::debug, "Tool window is already hidden");
+        } else {
+            Log.log(LOGGER::debug, "Calling toolWindow.show");
+            toolWindow.hide();
         }
     }
 }

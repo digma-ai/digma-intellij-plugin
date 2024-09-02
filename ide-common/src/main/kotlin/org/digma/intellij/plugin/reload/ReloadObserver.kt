@@ -62,6 +62,17 @@ class ReloadObserver(cs: CoroutineScope) {
     }
 
 
+    companion object {
+        private fun buildGraphicsDeviceList(): List<String> {
+            return GraphicsEnvironment.getLocalGraphicsEnvironment().screenDevices.map { it.iDstring }
+        }
+
+        private fun deviceListEquals(list1: List<String>, list2: List<String>): Boolean {
+            return list1.size == list2.size && list1.containsAll(list2)
+        }
+    }
+
+
     fun register(project: Project, jcefWrapperPanel: JPanel, jcefUiComponent: JComponent, parentDisposable: Disposable) {
 
         if (GraphicsEnvironment.isHeadless()) {
@@ -126,37 +137,36 @@ class ReloadObserver(cs: CoroutineScope) {
                 //if we don't catch the change we may miss a reload when it's needed.
                 //so wait for some seconds to try to detect the change. if there is no change no harm will be done and this
                 // coroutine will just finish doing nothing
-                var currentGraphicsDeviceNumber = GraphicsEnvironment.getLocalGraphicsEnvironment().screenDevices.size
+                var currentGraphicsDeviceList = buildGraphicsDeviceList()
                 val endWait = Clock.System.now() + 3.seconds
-                while (currentGraphicsDeviceNumber == componentDetails.graphicsDeviceNumber &&
+                while (deviceListEquals(currentGraphicsDeviceList, componentDetails.graphicsDeviceList) &&
                     Clock.System.now() < endWait
                 ) {
-                    Log.log(logger::trace, "waiting for device number to refresh for component {} in project {}", componentName, project.name)
+                    Log.log(logger::trace, "waiting for device list to refresh for component {} in project {}", componentName, project.name)
                     delay(100)
-                    currentGraphicsDeviceNumber = GraphicsEnvironment.getLocalGraphicsEnvironment().screenDevices.size
+                    currentGraphicsDeviceList = buildGraphicsDeviceList()
                 }
 
-                currentGraphicsDeviceNumber = GraphicsEnvironment.getLocalGraphicsEnvironment().screenDevices.size
-                if (currentGraphicsDeviceNumber != componentDetails.graphicsDeviceNumber) {
+                if (!deviceListEquals(currentGraphicsDeviceList, componentDetails.graphicsDeviceList)) {
                     Log.log(
                         logger::trace,
-                        "graphics device number has changed for component {} in project {},oldValue:{},newValue:{}",
+                        "graphics device list has changed for component {} in project {},oldValue:{},newValue:{}",
                         componentName,
                         project.name,
-                        componentDetails.graphicsDeviceNumber,
-                        currentGraphicsDeviceNumber
+                        componentDetails.graphicsDeviceList,
+                        currentGraphicsDeviceList
                     )
-                    componentDetails.graphicsDeviceNumber = currentGraphicsDeviceNumber
+                    componentDetails.graphicsDeviceList = currentGraphicsDeviceList
 
                     service<ReloadService>().reload(project)
                 } else {
                     Log.log(
                         logger::trace,
-                        "graphics device number has NOT changed for component {} in project {},oldValue:{},newValue:{}",
+                        "graphics device list has NOT changed for component {} in project {},oldValue:{},newValue:{}",
                         componentName,
                         project.name,
-                        componentDetails.graphicsDeviceNumber,
-                        currentGraphicsDeviceNumber
+                        componentDetails.graphicsDeviceList,
+                        currentGraphicsDeviceList
                     )
                 }
             } else if (currentDisplayMode != componentDetails.displayMode) {
@@ -184,7 +194,7 @@ class ReloadObserver(cs: CoroutineScope) {
     private data class ComponentDetails(val project: Project, val component: Component, val componentName: String) {
         var graphicDevice = component.graphicsConfiguration?.device?.iDstring
         var displayMode = component.graphicsConfiguration?.device?.displayMode
-        var graphicsDeviceNumber = GraphicsEnvironment.getLocalGraphicsEnvironment().screenDevices.size
+        var graphicsDeviceList = buildGraphicsDeviceList()
     }
 
 

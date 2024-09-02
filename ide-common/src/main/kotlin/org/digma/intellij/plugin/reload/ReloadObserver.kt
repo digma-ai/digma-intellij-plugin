@@ -181,7 +181,7 @@ class ReloadObserver(cs: CoroutineScope) {
     }
 
 
-    private class ComponentDetails(val project: Project, val component: Component, val componentName: String) {
+    private data class ComponentDetails(val project: Project, val component: Component, val componentName: String) {
         var graphicDevice = component.graphicsConfiguration?.device?.iDstring
         var displayMode = component.graphicsConfiguration?.device?.displayMode
         var graphicsDeviceNumber = GraphicsEnvironment.getLocalGraphicsEnvironment().screenDevices.size
@@ -199,7 +199,7 @@ class ReloadObserver(cs: CoroutineScope) {
 
         override fun propertyChange(evt: PropertyChangeEvent) {
             if (evt.propertyName == "graphicsConfiguration") {
-                Log.log(logger::trace, "got PropertyChangeEvent for {}, {}", componentName, evt)
+                Log.log(logger::trace, "got PropertyChangeEvent for {}, {}, component details {}", componentName, evt, componentDetails)
 
                 //componentDetails.graphicDevice may be null on startup so run the event,
                 // but if it's not null and new value or old value are null this only means that the component

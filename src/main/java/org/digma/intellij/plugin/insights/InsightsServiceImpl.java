@@ -48,7 +48,7 @@ public abstract class InsightsServiceImpl implements Disposable {
         var title = displayName;
         try {
 
-            DigmaHTMLEditorProvider.openEditor(project, "jb whats new", "https://www.jetbrains.com/idea/whatsnew/?utm_source=product&utm_medium=link&utm_campaign=IC&utm_content=2024.2");
+            DigmaHTMLEditorProvider.openEditorWithUrl(project, "jb whats new", "https://www.jetbrains.com/idea/whatsnew/?utm_source=product&utm_medium=link&utm_campaign=IC&utm_content=2024.2");
 //
 //            try {
 //                switch (insightType) {

@@ -48,29 +48,31 @@ public abstract class InsightsServiceImpl implements Disposable {
         var title = displayName;
         try {
 
-            try {
-                switch (insightType) {
-                    case "SpanDurations" -> {
-                        String htmlContent = AnalyticsService.getInstance(project).getHtmlGraphForSpanPercentiles(spanCodeObjectId, Laf.INSTANCE.getColorHex(Laf.Colors.getPLUGIN_BACKGROUND()));
-                        DigmaHTMLEditorProvider.openEditor(project, "Percentiles Graph of Span " + title, htmlContent);
-                    }
-                    case "SpanScaling" -> {
-                        String htmlContent = AnalyticsService.getInstance(project).getHtmlGraphForSpanScaling(spanCodeObjectId, Laf.INSTANCE.getColorHex(Laf.Colors.getPLUGIN_BACKGROUND()));
-                        DigmaHTMLEditorProvider.openEditor(project, "Scaling Graph of Span " + title, htmlContent);
-                    }
-                    default -> {
-                        //todo: a fallback when the type is unknown, we should add support for more types if necessary
-                        String htmlContent = AnalyticsService.getInstance(project).getHtmlGraphForSpanScaling(spanCodeObjectId, Laf.INSTANCE.getColorHex(Laf.Colors.getPLUGIN_BACKGROUND()));
-                        DigmaHTMLEditorProvider.openEditor(project, "Scaling Graph of Span " + title, htmlContent);
-                    }
-                }
-            } catch (IllegalArgumentException e) {
-                //fallback for span type that is not in the enum
-                String htmlContent = AnalyticsService.getInstance(project).getHtmlGraphForSpanScaling(spanCodeObjectId, Laf.INSTANCE.getColorHex(Laf.Colors.getPLUGIN_BACKGROUND()));
-                DigmaHTMLEditorProvider.openEditor(project, "Scaling Graph of Span " + title, htmlContent);
-            }
+            DigmaHTMLEditorProvider.openEditor(project, "jb whats new", "https://www.jetbrains.com/idea/whatsnew/?utm_source=product&utm_medium=link&utm_campaign=IC&utm_content=2024.2");
+//
+//            try {
+//                switch (insightType) {
+//                    case "SpanDurations" -> {
+//                        String htmlContent = AnalyticsService.getInstance(project).getHtmlGraphForSpanPercentiles(spanCodeObjectId, Laf.INSTANCE.getColorHex(Laf.Colors.getPLUGIN_BACKGROUND()));
+//                        DigmaHTMLEditorProvider.openEditor(project, "Percentiles Graph of Span " + title, htmlContent);
+//                    }
+//                    case "SpanScaling" -> {
+//                        String htmlContent = AnalyticsService.getInstance(project).getHtmlGraphForSpanScaling(spanCodeObjectId, Laf.INSTANCE.getColorHex(Laf.Colors.getPLUGIN_BACKGROUND()));
+//                        DigmaHTMLEditorProvider.openEditor(project, "Scaling Graph of Span " + title, htmlContent);
+//                    }
+//                    default -> {
+//                        //todo: a fallback when the type is unknown, we should add support for more types if necessary
+//                        String htmlContent = AnalyticsService.getInstance(project).getHtmlGraphForSpanScaling(spanCodeObjectId, Laf.INSTANCE.getColorHex(Laf.Colors.getPLUGIN_BACKGROUND()));
+//                        DigmaHTMLEditorProvider.openEditor(project, "Scaling Graph of Span " + title, htmlContent);
+//                    }
+//                }
+//            } catch (IllegalArgumentException e) {
+//                //fallback for span type that is not in the enum
+//                String htmlContent = AnalyticsService.getInstance(project).getHtmlGraphForSpanScaling(spanCodeObjectId, Laf.INSTANCE.getColorHex(Laf.Colors.getPLUGIN_BACKGROUND()));
+//                DigmaHTMLEditorProvider.openEditor(project, "Scaling Graph of Span " + title, htmlContent);
+//            }
 
-        } catch (AnalyticsServiceException e) {
+        } catch (Throwable e) {
             Log.warnWithException(logger, project, e, "Error in openHistogram for {},{} {}", spanCodeObjectId, title, e.getMessage());
             ErrorReporter.getInstance().reportError(project, "InsightsServiceImpl.openHistogram", e);
         }

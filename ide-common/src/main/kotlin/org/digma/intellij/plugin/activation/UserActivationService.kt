@@ -102,7 +102,7 @@ class UserActivationService : DisposableAdaptor {
                 if (project != null) {
                     val about = AnalyticsService.getInstance(project).about
                     Log.log(logger::trace, "server version {}", about.applicationVersion)
-                    if (isBackendVersion03114OrHigher(about)) {
+                    if (isBackendVersion03116OrHigher(about)) {
                         Log.log(logger::trace, "updating user activation status from server {}", about.applicationVersion)
                         val discoveredDataResponse = AnalyticsService.getInstance(project).discoveredData
                         Log.log(logger::trace, "backend discovered data {}", discoveredDataResponse)
@@ -310,12 +310,12 @@ class UserActivationService : DisposableAdaptor {
     }
 
 
-    private fun isBackendVersion03114OrHigher(about: AboutResult): Boolean {
+    private fun isBackendVersion03116OrHigher(about: AboutResult): Boolean {
         if (about.applicationVersion == "unknown") {
             return true
         }
         val currentServerVersion = ComparableVersion(about.applicationVersion)
-        val featureServerVersion = ComparableVersion("0.3.114")
+        val featureServerVersion = ComparableVersion("0.3.116")
         return currentServerVersion.newerThan(featureServerVersion) ||
                 currentServerVersion == featureServerVersion
     }

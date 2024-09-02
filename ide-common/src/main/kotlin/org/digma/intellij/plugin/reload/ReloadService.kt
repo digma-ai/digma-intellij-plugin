@@ -79,7 +79,12 @@ class ReloadService : DisposableAdaptor {
             }
 
             latestReloadForProject[project.name] = Clock.System.now()
-            reloadImpl(project)
+
+            //run the whole project reload on EDT, it may cause a short freeze, but we are aware of that.
+            //it is necessary for finding the selected editor
+            EDT.ensureEDT {
+                reloadImpl(project)
+            }
         }
     }
 
@@ -103,7 +108,14 @@ class ReloadService : DisposableAdaptor {
             }
         }
 
-        val selectedEditor = FileEditorManager.getInstance(project).selectedEditor
+        //because of the way we reload jaeger ui and dashboard by closing and opening the files again,
+        // we want to try and restore the selected editor
+        val selectedEditor = if (EDT.isEdt()) {
+            FileEditorManager.getInstance(project).selectedEditor
+        } else {
+            null
+        }
+
         reloadables.filter { it.getProject().name == project.name }.forEach {
             EDT.ensureEDT {
                 try {

@@ -31,7 +31,7 @@ class MainAppPanel(private val project: Project) : DisposablePanel(), Reloadable
         jCefComponent = build()
         jCefComponent?.let {
             service<ReloadService>().register(this, parentDisposable)
-            service<ReloadObserver>().register(this, it.getComponent(), parentDisposable)
+            service<ReloadObserver>().register(project, this, it.getComponent(), parentDisposable)
         }
         Disposer.register(MainAppService.getInstance(project)) {
             dispose()
@@ -69,7 +69,7 @@ class MainAppPanel(private val project: Project) : DisposablePanel(), Reloadable
         jCefComponent = build()
         jCefComponent?.let {
             service<ReloadService>().register(this, parentDisposable)
-            service<ReloadObserver>().register(this, it.getComponent(), parentDisposable)
+            service<ReloadObserver>().register(project, this, it.getComponent(), parentDisposable)
         }
     }
 

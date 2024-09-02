@@ -130,7 +130,13 @@ public final class DashboardService implements Disposable, ReloadableJCefContain
             }
         });
 
-        files.forEach(file -> FileEditorManager.getInstance(project).closeFile(file));
+
+        files.forEach(virtualFile -> {
+            if (virtualFile instanceof DashboardVirtualFile dashboardVirtualFile) {
+                dashboardVirtualFile.setValid(false);
+                FileEditorManager.getInstance(project).closeFile(dashboardVirtualFile);
+            }
+        });
 
         newFiles.forEach(file -> FileEditorManager.getInstance(project).openFile(file, true, true));
     }

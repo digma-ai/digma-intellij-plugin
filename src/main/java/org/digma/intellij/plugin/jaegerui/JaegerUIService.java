@@ -263,7 +263,12 @@ public class JaegerUIService implements Disposable, ReloadableJCefContainer {
             }
         });
 
-        files.forEach(file -> FileEditorManager.getInstance(project).closeFile(file));
+        files.forEach(virtualFile -> {
+            if (virtualFile instanceof JaegerUIVirtualFile jaegerUIVirtualFile) {
+                jaegerUIVirtualFile.setValid(false);
+                FileEditorManager.getInstance(project).closeFile(jaegerUIVirtualFile);
+            }
+        });
 
         newFiles.forEach(file -> FileEditorManager.getInstance(project).openFile(file, true, true));
     }

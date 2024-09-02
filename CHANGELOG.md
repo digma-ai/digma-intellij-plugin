@@ -1,6 +1,15 @@
 # Changelog
 
-## [2.0.380] - 2024-08-29
+## [2.0.382] - 2024-09-02
+
+- Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2470
+
+## 2.0.381 - 2024-09-01
+
+- Feature/merge store by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2469
+- trying to fix JCEF corruption by @doppleware in https://github.com/digma-ai/digma-intellij-plugin/pull/2471
+
+## 2.0.380 - 2024-08-29
 
 - Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2466
 - update ui by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2468

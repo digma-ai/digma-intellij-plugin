@@ -25,8 +25,6 @@ import kotlin.time.Duration.Companion.minutes
 @Service(Service.Level.APP)
 class UserActivationService : DisposableAdaptor {
 
-    //todo: open specific UI tab from notifications
-
     private val logger = Logger.getInstance(UserActivationService::class.java)
 
     private val startedMonitoringLock = ReentrantLock(true)

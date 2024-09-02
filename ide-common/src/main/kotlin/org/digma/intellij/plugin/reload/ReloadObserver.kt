@@ -24,6 +24,7 @@ import java.util.Queue
 import java.util.concurrent.ConcurrentLinkedQueue
 import javax.swing.JComponent
 import javax.swing.JPanel
+import kotlin.time.Duration.Companion.seconds
 
 
 /**
@@ -126,8 +127,10 @@ class ReloadObserver(cs: CoroutineScope) {
                 //so wait for some seconds to try to detect the change. if there is no change no harm will be done and this
                 // coroutine will just finish doing nothing
                 var currentGraphicsDeviceNumber = GraphicsEnvironment.getLocalGraphicsEnvironment().screenDevices.size
-                val endWait = Clock.System.now().epochSeconds + 3000
-                while (currentGraphicsDeviceNumber == componentDetails.graphicsDeviceNumber && Clock.System.now().epochSeconds < endWait) {
+                val endWait = Clock.System.now() + 3.seconds
+                while (currentGraphicsDeviceNumber == componentDetails.graphicsDeviceNumber &&
+                    Clock.System.now() < endWait
+                ) {
                     Log.log(logger::trace, "waiting for device number to refresh for component {} in project {}", componentName, project.name)
                     delay(100)
                     currentGraphicsDeviceNumber = GraphicsEnvironment.getLocalGraphicsEnvironment().screenDevices.size

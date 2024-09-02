@@ -20,8 +20,19 @@ internal data class PersistenceData(
 
     var noInsightsYetNotificationPassed: Boolean = false,
 
+    var usingTheCliNotificationPassed: Boolean = false,
+
+    @OptionTag(converter = InstantConverter::class)
+    var firstTimeIssueReceivedTimestamp: Instant? = null,
     @OptionTag(converter = InstantConverter::class)
     var firstTimeAssetsReceivedTimestamp: Instant? = null,
+    @OptionTag(converter = InstantConverter::class)
+    var firstTimeInsightReceivedTimestamp: Instant? = null,
+    @OptionTag(converter = InstantConverter::class)
+    var firstTimeRecentActivityReceivedTimestamp: Instant? = null,
+    @OptionTag(converter = InstantConverter::class)
+    var firstTimeDataReceivedTimestamp: Instant? = null,
+
 
     //todo: backwards compatibility, remove firstTimeConnectionEstablishedTimestampNew in January 2025
     // renamed without the new suffix
@@ -30,11 +41,6 @@ internal data class PersistenceData(
     @OptionTag(converter = InstantConverter::class)
     var firstTimeConnectionEstablishedTimestamp: Instant? = null,
 
-    @OptionTag(converter = InstantConverter::class)
-    var firstTimeInsightReceivedTimestamp: Instant? = null,
-
-    @OptionTag(converter = InstantConverter::class)
-    var firstTimeRecentActivityReceivedTimestamp: Instant? = null,
 
     @OptionTag(converter = InstantConverter::class)
     var firstTimePluginLoadedTimestamp: Instant? = null,
@@ -62,6 +68,27 @@ internal data class PersistenceData(
 
     @OptionTag(converter = InstantConverter::class)
     var digmathonViewedInsightsLastUpdated: Instant? = null,
-    var digmathonStartedForUser: Boolean = false
+    var digmathonStartedForUser: Boolean = false,
+
+    var applyNewActivationLogic: Boolean = false,
+
+    @OptionTag(converter = InstantConverter::class)
+    var firstTimeBackendRecentActivityFoundTimestamp: Instant? = null,
+    @OptionTag(converter = InstantConverter::class)
+    var firstTimeBackendAssetFoundTimestamp: Instant? = null,
+    @OptionTag(converter = InstantConverter::class)
+    var firstTimeBackendInsightFoundTimestamp: Instant? = null,
+    @OptionTag(converter = InstantConverter::class)
+    var firstTimeBackendIssueFoundTimestamp: Instant? = null,
+    @OptionTag(converter = InstantConverter::class)
+    var firstTimeBackendImportantIssueFoundTimestamp: Instant? = null,
+    @OptionTag(converter = InstantConverter::class)
+    var firstTimeBackendDataFoundTimestamp: Instant? = null,
+
+    var alreadyShowedNewRecentActivityNotification: Boolean = false,
+    var alreadyShowedNewAssetNotification: Boolean = false,
+    var alreadyShowedNewInsightNotification: Boolean = false,
+    var alreadyShowedNewIssueNotification: Boolean = false,
+    var alreadyShowedNewImportantIssueNotification: Boolean = false
 
 )

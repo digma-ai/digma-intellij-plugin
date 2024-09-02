@@ -21,6 +21,8 @@ import org.digma.intellij.plugin.ui.jcef.model.BackendInfoMessage
 import org.digma.intellij.plugin.ui.jcef.model.DigmaEngineStatusMessage
 import org.digma.intellij.plugin.ui.jcef.model.DigmathonProductKeyPayload
 import org.digma.intellij.plugin.ui.jcef.model.DigmathonStatePayload
+import org.digma.intellij.plugin.ui.jcef.model.GenericPluginEventMessage
+import org.digma.intellij.plugin.ui.jcef.model.GenericPluginEventPayload
 import org.digma.intellij.plugin.ui.jcef.model.IsJaegerButtonEnabledMessage
 import org.digma.intellij.plugin.ui.jcef.model.IsJaegerButtonEnabledMessagePayload
 import org.digma.intellij.plugin.ui.jcef.model.IsMicrometerPayload
@@ -274,5 +276,24 @@ fun sendRunConfigurationAttributes(
     project: Project, cefBrowser: CefBrowser, payload: RunConfigurationAttributesPayload
 ) {
     val message = SetRunConfigurationAttributesMessage(payload)
+    serializeAndExecuteWindowPostMessageJavaScript(cefBrowser, message, project)
+}
+
+
+fun sendGenericPluginEventStringPayload(project: Project, cefBrowser: CefBrowser, name: String, payload: String? = null) {
+    val jsonNode: JsonNode? = payload?.let {
+        try {
+            CommonObjectMapper.objectMapper.readTree(payload)
+        } catch (e: Throwable) {
+            null
+        }
+    }
+    sendGenericPluginEvent(project, cefBrowser, name, jsonNode)
+}
+
+
+fun sendGenericPluginEvent(project: Project, cefBrowser: CefBrowser, name: String, payload: JsonNode? = null) {
+    val messagePayload = GenericPluginEventPayload(name, payload)
+    val message = GenericPluginEventMessage(messagePayload)
     serializeAndExecuteWindowPostMessageJavaScript(cefBrowser, message, project)
 }

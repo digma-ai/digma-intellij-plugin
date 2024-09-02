@@ -14,6 +14,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.datetime.toJavaInstant
+import org.digma.intellij.plugin.activation.UserActivationService
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.common.Frequency
@@ -160,9 +161,18 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
 
         val mutableDetails = details.toMutableMap()
 
-        mutableDetails["firstTimeInsightReceived"] = PersistenceService.getInstance().isFirstInsightReceived()
-        mutableDetails["firstTimeAssetsReceived"] = PersistenceService.getInstance().isFirstAssetsReceived()
-        mutableDetails["firstTimeRecentActivityReceived"] = PersistenceService.getInstance().isFirstRecentActivityReceived()
+        mutableDetails["firstTimeIssueReceived"] = UserActivationService.getInstance().isFirstIssueReceived()
+        mutableDetails["firstTimeInsightReceived"] = UserActivationService.getInstance().isFirstInsightReceived()
+        mutableDetails["firstTimeAssetsReceived"] = UserActivationService.getInstance().isFirstAssetsReceived()
+        mutableDetails["firstTimeRecentActivityReceived"] = UserActivationService.getInstance().isFirstRecentActivityReceived()
+
+        mutableDetails["firstTimeBackendIssueFound"] = UserActivationService.getInstance().isBackendIssueFound()
+        mutableDetails["firstTimeBackendImportantIssueFound"] = UserActivationService.getInstance().isBackendImportantIssueFound()
+        mutableDetails["firstTimeBackendAssetsFound"] = UserActivationService.getInstance().isBackendAssetFound()
+        mutableDetails["firstTimeBackendInsightFound"] = UserActivationService.getInstance().isBackendInsightFound()
+        mutableDetails["firstTimeBackendRecentActivityFound"] = UserActivationService.getInstance().isBackendRecentActivityFound()
+
+
         mutableDetails["plugin.version"] = SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("unknown")
         mutableDetails["ide.version"] = ApplicationInfo.getInstance().fullVersion
         mutableDetails["ide.name"] = ApplicationInfo.getInstance().versionName
@@ -259,7 +269,7 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
     private fun registerOnlineOfflineUserAction(details: Map<String, Any>) {
 
         val eventName =
-            if (PersistenceService.getInstance().isFirstAssetsReceived() && BackendConnectionMonitor.getInstance(project).isConnectionOk()) {
+            if (UserActivationService.getInstance().isFirstAssetsReceived() && BackendConnectionMonitor.getInstance(project).isConnectionOk()) {
                 "online-user-action"
             } else {
                 "offline-user-action"
@@ -322,6 +332,10 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
         capture("plugin first-insight") //use this so it's the same pattern as "plugin first-assets" and "plugin first-activity"
     }
 
+    fun registerFirstIssueReceived() {
+        capture("plugin first-issue")
+    }
+
     fun registerFirstAssetsReceived() {
         capture("plugin first-assets")
         postHog?.set(
@@ -333,6 +347,10 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
 
     fun registerFirstTimeRecentActivityReceived() {
         capture("plugin first-activity")
+    }
+
+    fun registerFirstTimeDataReceived() {
+        capture("plugin first-data")
     }
 
     fun registerObservabilityOn() {
@@ -1014,6 +1032,30 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
 
     fun registerAuthEvent(action: String, details: Map<String, Any>) {
         capture(action, details)
+    }
+
+    fun registerBackendRecentActivityFound() {
+        capture("backend-recent-activity-found")
+    }
+
+    fun registerBackendAssetFound() {
+        capture("backend-asset-found")
+    }
+
+    fun registerBackendInsightFound() {
+        capture("backend-insight-found")
+    }
+
+    fun registerBackendIssueFound() {
+        capture("backend-issue-found")
+    }
+
+    fun registerBackendImportantIssueFound() {
+        capture("backend-important-issue-found")
+    }
+
+    fun registerBackendDataFound() {
+        capture("backend-data-found")
     }
 
 }

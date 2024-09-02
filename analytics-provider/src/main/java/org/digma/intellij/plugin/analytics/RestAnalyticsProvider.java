@@ -7,6 +7,7 @@ import okhttp3.*;
 import okhttp3.logging.HttpLoggingInterceptor;
 import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.model.rest.AboutResult;
+import org.digma.intellij.plugin.model.rest.activation.DiscoveredDataResponse;
 import org.digma.intellij.plugin.model.rest.assets.AssetDisplayInfo;
 import org.digma.intellij.plugin.model.rest.codelens.*;
 import org.digma.intellij.plugin.model.rest.codespans.CodeContextSpans;
@@ -425,6 +426,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable, Base
     @Override
     public void resetThrottlingStatus() {
         execute(client.analyticsProvider::resetThrottlingStatus);
+    }
+
+    @Override
+    public DiscoveredDataResponse getDiscoveredData() {
+        return execute(client.analyticsProvider::getDiscoveredData);
     }
 
     @Override
@@ -1141,5 +1147,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable, Base
 
         @GET("spans/environments")
         Call<List<SpanEnvironment>> getSpanEnvironmentsStats(@Query("SpanCodeObjectId") String spanCodeObjectId);
+
+        @Headers({
+                "Content-Type:application/json"
+        })
+        @GET("CodeAnalytics/discovered-data")
+        Call<DiscoveredDataResponse> getDiscoveredData();
     }
 }

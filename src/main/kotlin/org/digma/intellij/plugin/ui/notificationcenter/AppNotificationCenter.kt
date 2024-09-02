@@ -46,6 +46,8 @@ class AppNotificationCenter : Disposable {
         Log.log(logger::info, "Starting notification center")
         startNoInsightsYetNotificationTimer()
 
+        startUsingTheCliNotificationTimer()
+
         startIdleUserTimers(this)
 
         startRequestRegisterTimers(this)
@@ -94,6 +96,18 @@ class AppNotificationCenter : Disposable {
 
         Log.log(logger::info, "maybe starting NoInsightsReminderNotificationTimer")
         startNoInsightsYetNotificationTimer(this)
+
+    }
+
+    private fun startUsingTheCliNotificationTimer() {
+
+        if (service<PersistenceService>().isUsingTheCliNotificationPassed()) {
+            Log.log(logger::info, "UsingTheCliNotificationPassed already passed")
+            return
+        }
+
+        Log.log(logger::info, "maybe starting UsingTheCliNotificationTimer")
+        startUsingTheCliNotificationTimer(this)
 
     }
 

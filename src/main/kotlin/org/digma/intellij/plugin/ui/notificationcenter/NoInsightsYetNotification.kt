@@ -6,6 +6,7 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.service
 import com.intellij.openapi.util.Disposer
 import org.digma.intellij.plugin.PluginId
+import org.digma.intellij.plugin.activation.UserActivationService
 import org.digma.intellij.plugin.common.findActiveProject
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
@@ -18,7 +19,7 @@ import kotlin.time.Duration.Companion.minutes
 //parentDisposable is the service
 fun startNoInsightsYetNotificationTimer(parentDisposable: Disposable) {
 
-    if (service<PersistenceService>().isFirstInsightReceived()) {
+    if (service<UserActivationService>().isFirstInsightReceived()) {
         return
     }
 
@@ -45,7 +46,7 @@ private fun scheduleShowNotification(parentDisposable: Disposable, firstConnecti
     )
 
     parentDisposable.disposingOneShotDelayedTask("NoInsightsYetNotificationTimer.showNoInsightsYetNotification", 30.minutes.inWholeMilliseconds) {
-        if (!service<PersistenceService>().isFirstInsightReceived()) {
+        if (!service<UserActivationService>().isFirstInsightReceived()) {
             Log.log(AppNotificationCenter.logger::info, "in NoInsightsYetNotificationTimer, showing notification")
             showNoInsightsYetNotification()
         } else {

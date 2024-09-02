@@ -148,7 +148,7 @@ class ReloadObserver(cs: CoroutineScope) {
 
     private inner class MyPropertyChangeListener(
         component: Component,
-        private val componentName: String
+        private val componentName: String,
     ) :
         PropertyChangeListener {
 

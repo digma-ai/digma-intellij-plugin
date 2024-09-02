@@ -143,7 +143,7 @@ class ReloadService : DisposableAdaptor {
     private fun isProjectReloadedLately(project: Project): Boolean {
         return latestReloadForProject[project.name]?.let {
             val duration = Clock.System.now() - it
-            duration <= 5.seconds
+            duration <= 3.seconds
         } ?: false
     }
 

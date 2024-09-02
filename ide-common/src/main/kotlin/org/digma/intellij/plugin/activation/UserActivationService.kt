@@ -311,6 +311,9 @@ class UserActivationService : DisposableAdaptor {
 
 
     private fun isBackendVersion03114OrHigher(about: AboutResult): Boolean {
+        if (about.applicationVersion == "unknown") {
+            return true
+        }
         val currentServerVersion = ComparableVersion(about.applicationVersion)
         val featureServerVersion = ComparableVersion("0.3.114")
         return currentServerVersion.newerThan(featureServerVersion) ||

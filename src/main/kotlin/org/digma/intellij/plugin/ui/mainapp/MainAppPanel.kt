@@ -14,14 +14,14 @@ import org.digma.intellij.plugin.ui.list.listBackground
 import org.digma.intellij.plugin.ui.navigation.CodeButtonCaretContextService
 import org.digma.intellij.plugin.ui.navigation.NavigationService
 import org.digma.intellij.plugin.ui.panels.DisposablePanel
-import org.digma.intellij.plugin.ui.panels.ReloadablePanel
+import org.digma.intellij.plugin.reload.ReloadableJCefContainer
 import org.digma.intellij.plugin.ui.tests.TestsUpdater
 import java.awt.BorderLayout
 import java.awt.Insets
 import javax.swing.JComponent
 import javax.swing.JLabel
 
-class MainAppPanel(private val project: Project) : DisposablePanel(), ReloadablePanel {
+class MainAppPanel(private val project: Project) : DisposablePanel(), ReloadableJCefContainer {
 
     private var jCefComponent: JCefComponent? = null
 
@@ -31,7 +31,7 @@ class MainAppPanel(private val project: Project) : DisposablePanel(), Reloadable
         jCefComponent = build()
         jCefComponent?.let {
             service<ReloadService>().register(this, parentDisposable)
-            service<ReloadObserver>().register(project, this, it.getComponent(), parentDisposable)
+            service<ReloadObserver>().register(project, "MainApp", it.getComponent(), parentDisposable)
         }
         Disposer.register(MainAppService.getInstance(project)) {
             dispose()
@@ -69,7 +69,7 @@ class MainAppPanel(private val project: Project) : DisposablePanel(), Reloadable
         jCefComponent = build()
         jCefComponent?.let {
             service<ReloadService>().register(this, parentDisposable)
-            service<ReloadObserver>().register(project, this, it.getComponent(), parentDisposable)
+            service<ReloadObserver>().register(project, "MainApp", it.getComponent(), parentDisposable)
         }
     }
 

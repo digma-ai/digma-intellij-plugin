@@ -1,8 +1,8 @@
-package org.digma.intellij.plugin.ui.panels
+package org.digma.intellij.plugin.reload
 
 import com.intellij.openapi.project.Project
 
-interface ReloadablePanel {
+interface ReloadableJCefContainer {
     fun reload()
     fun getProject(): Project
 }

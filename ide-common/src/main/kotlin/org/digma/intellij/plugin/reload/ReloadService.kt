@@ -16,7 +16,6 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.recentactivity.RecentActivityToolWindowShower
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
-import org.digma.intellij.plugin.ui.panels.ReloadablePanel
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlin.time.Duration.Companion.seconds
@@ -26,22 +25,22 @@ class ReloadService : DisposableAdaptor {
 
     private val logger = Logger.getInstance(ReloadService::class.java)
 
-    private val reloadables = mutableListOf<ReloadablePanel>()
+    private val reloadables = mutableListOf<ReloadableJCefContainer>()
 
     private val latestReloadForProject = mutableMapOf<String, Instant>()
 
     private val myReloadLock = ReentrantLock(true)
 
 
-    fun register(reloadablePanel: ReloadablePanel, parentDisposable: Disposable) {
-        reloadables.add(reloadablePanel)
+    fun register(reloadableJCefContainer: ReloadableJCefContainer, parentDisposable: Disposable) {
+        reloadables.add(reloadableJCefContainer)
         Disposer.register(parentDisposable) {
-            remove(reloadablePanel)
+            remove(reloadableJCefContainer)
         }
     }
 
-    fun remove(reloadablePanel: ReloadablePanel) {
-        reloadables.remove(reloadablePanel)
+    fun remove(reloadableJCefContainer: ReloadableJCefContainer) {
+        reloadables.remove(reloadableJCefContainer)
     }
 
 

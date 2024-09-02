@@ -23,7 +23,6 @@ import java.beans.PropertyChangeListener
 import java.util.Queue
 import java.util.concurrent.ConcurrentLinkedQueue
 import javax.swing.JComponent
-import javax.swing.JPanel
 import kotlin.time.Duration.Companion.seconds
 
 
@@ -73,7 +72,7 @@ class ReloadObserver(cs: CoroutineScope) {
     }
 
 
-    fun register(project: Project, jcefWrapperPanel: JPanel, jcefUiComponent: JComponent, parentDisposable: Disposable) {
+    fun register(project: Project, appName: String, jcefUiComponent: JComponent, parentDisposable: Disposable) {
 
         if (GraphicsEnvironment.isHeadless()) {
             Log.log(logger::trace, "GraphicsEnvironment is headless, not registering components")
@@ -86,7 +85,7 @@ class ReloadObserver(cs: CoroutineScope) {
         }
 
         val jcefPropertyChangeListener =
-            MyPropertyChangeListener(project, jcefUiComponent, "${jcefWrapperPanel.javaClass.simpleName}.jcefUiComponent")
+            MyPropertyChangeListener(project, jcefUiComponent, "$appName.jcefUiComponent")
         jcefUiComponent.addPropertyChangeListener(jcefPropertyChangeListener)
 
         Disposer.register(parentDisposable) {

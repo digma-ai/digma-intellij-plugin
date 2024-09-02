@@ -191,10 +191,21 @@ class ReloadObserver(cs: CoroutineScope) {
     }
 
 
-    private data class ComponentDetails(val project: Project, val component: Component, val componentName: String) {
+    private class ComponentDetails(val project: Project, val component: Component, val componentName: String) {
         var graphicDevice = component.graphicsConfiguration?.device?.iDstring
         var displayMode = component.graphicsConfiguration?.device?.displayMode
         var graphicsDeviceList = buildGraphicsDeviceList()
+
+
+        override fun toString(): String {
+            return "ComponentDetails(project=${project.name}, " +
+                    "component=${component::class.java.simpleName}, " +
+                    "componentName='$componentName', " +
+                    "graphicDevice=$graphicDevice, " +
+                    "displayMode=$displayMode, " +
+                    "graphicsDeviceList=$graphicsDeviceList)"
+        }
+
     }
 
 
@@ -209,7 +220,7 @@ class ReloadObserver(cs: CoroutineScope) {
 
         override fun propertyChange(evt: PropertyChangeEvent) {
             if (evt.propertyName == "graphicsConfiguration") {
-                Log.log(logger::trace, "got PropertyChangeEvent for {}, {}, component details {}", componentName, evt, componentDetails)
+                Log.log(logger::trace, "got PropertyChangeEvent for {}, event {}, component details {}", componentName, evt, componentDetails)
 
                 //componentDetails.graphicDevice may be null on startup so run the event,
                 // but if it's not null and new value or old value are null this only means that the component
@@ -218,7 +229,7 @@ class ReloadObserver(cs: CoroutineScope) {
                     if (evt.oldValue == null || evt.newValue == null) {
                         Log.log(
                             logger::trace,
-                            "not adding event because old value or new value is null in PropertyChangeEvent for {}, {}",
+                            "not adding event because old value or new value is null in PropertyChangeEvent for {}, event {}",
                             componentName,
                             evt
                         )

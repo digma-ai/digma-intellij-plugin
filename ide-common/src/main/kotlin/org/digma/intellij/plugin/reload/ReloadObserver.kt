@@ -4,6 +4,7 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.util.SystemInfo
 import kotlinx.coroutines.CancellationException
@@ -11,6 +12,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import java.awt.Component
@@ -43,7 +45,7 @@ class ReloadObserver(cs: CoroutineScope) {
                     try {
                         val event = propertyChangedEvents.poll()
                         if (event == null) {
-                            delay(2000)
+                            delay(1000)
                         } else {
                             checkChangesAndReload(event)
                         }
@@ -58,7 +60,7 @@ class ReloadObserver(cs: CoroutineScope) {
     }
 
 
-    fun register(jcefWrapperPanel: JPanel, jcefUiComponent: JComponent, parentDisposable: Disposable) {
+    fun register(project: Project, jcefWrapperPanel: JPanel, jcefUiComponent: JComponent, parentDisposable: Disposable) {
 
         if (GraphicsEnvironment.isHeadless()) {
             Log.log(logger::trace, "GraphicsEnvironment is headless, not registering components")
@@ -71,7 +73,7 @@ class ReloadObserver(cs: CoroutineScope) {
         }
 
         val jcefPropertyChangeListener =
-            MyPropertyChangeListener(jcefUiComponent, "${jcefWrapperPanel.javaClass.simpleName}.jcefUiComponent")
+            MyPropertyChangeListener(project, jcefUiComponent, "${jcefWrapperPanel.javaClass.simpleName}.jcefUiComponent")
         jcefUiComponent.addPropertyChangeListener(jcefPropertyChangeListener)
 
         Disposer.register(parentDisposable) {
@@ -81,21 +83,32 @@ class ReloadObserver(cs: CoroutineScope) {
     }
 
 
-    private suspend fun checkChangesAndReload(event: Pair<ComponentDetails, PropertyChangeEvent>) {
+    private fun checkChangesAndReload(event: Pair<ComponentDetails, PropertyChangeEvent>) {
         try {
 
             Log.log(logger::trace, "checking graphics changes for component {}", event.first.componentName)
 
             val componentDetails = event.first
             val component = componentDetails.component
+            val project = componentDetails.project
+
+            if (!isProjectValid(project)) {
+                Log.log(
+                    logger::trace,
+                    "skipping checking graphics changes for component {} because project is invalid",
+                    componentDetails.componentName
+                )
+                return
+            }
 
             val currentDisplayMode = component.graphicsConfiguration?.device?.displayMode
             val currentGraphicsDevice = component.graphicsConfiguration?.device?.iDstring
             if (currentGraphicsDevice != componentDetails.graphicDevice) {
                 Log.log(
                     logger::trace,
-                    "component {} moved to another graphics device, oldValue:{},newValue:{}",
+                    "component {} in project {} moved to another graphics device, oldValue:{},newValue:{}",
                     componentDetails.componentName,
+                    project.name,
                     componentDetails.graphicDevice,
                     currentGraphicsDevice
                 )
@@ -103,34 +116,36 @@ class ReloadObserver(cs: CoroutineScope) {
                 componentDetails.graphicDevice = currentGraphicsDevice
                 componentDetails.displayMode = currentDisplayMode
 
-                delay(1000)
+//                delay(1000)
 
                 val currentGraphicsDeviceNumber = GraphicsEnvironment.getLocalGraphicsEnvironment().screenDevices.size
                 if (currentGraphicsDeviceNumber != componentDetails.graphicsDeviceNumber) {
                     Log.log(
                         logger::trace,
-                        "graphics device number has changed for component {} ,oldValue:{},newValue:{}",
+                        "graphics device number has changed for component {} in project {},oldValue:{},newValue:{}",
                         componentDetails.componentName,
+                        project.name,
                         componentDetails.graphicsDeviceNumber,
                         currentGraphicsDeviceNumber
                     )
                     componentDetails.graphicsDeviceNumber = currentGraphicsDeviceNumber
 
-                    service<ReloadService>().reload()
+                    service<ReloadService>().reload(project)
                 }
             } else if (currentDisplayMode != componentDetails.displayMode) {
                 Log.log(
                     logger::trace,
-                    "component {} display mode has changed, oldValue:{},newValue:{}",
+                    "component {} in project {} display mode has changed, oldValue:{},newValue:{}",
                     componentDetails.componentName,
+                    project.name,
                     componentDetails.displayMode,
                     currentDisplayMode
                 )
                 componentDetails.displayMode = currentDisplayMode
 
-                service<ReloadService>().reload()
+                service<ReloadService>().reload(project)
             } else {
-                Log.log(logger::trace, "no graphics changes for component {}", componentDetails.componentName)
+                Log.log(logger::trace, "no graphics changes for component {} in project {}", componentDetails.componentName, project.name)
             }
 
         } catch (e: Throwable) {
@@ -139,7 +154,7 @@ class ReloadObserver(cs: CoroutineScope) {
     }
 
 
-    private class ComponentDetails(val component: Component, val componentName: String) {
+    private class ComponentDetails(val project: Project, val component: Component, val componentName: String) {
         var graphicDevice = component.graphicsConfiguration?.device?.iDstring
         var displayMode = component.graphicsConfiguration?.device?.displayMode
         var graphicsDeviceNumber = GraphicsEnvironment.getLocalGraphicsEnvironment().screenDevices.size
@@ -147,12 +162,13 @@ class ReloadObserver(cs: CoroutineScope) {
 
 
     private inner class MyPropertyChangeListener(
+        project: Project,
         component: Component,
         private val componentName: String,
     ) :
         PropertyChangeListener {
 
-        private val componentDetails = ComponentDetails(component, componentName)
+        private val componentDetails = ComponentDetails(project, component, componentName)
 
         override fun propertyChange(evt: PropertyChangeEvent) {
             if (evt.propertyName == "graphicsConfiguration") {

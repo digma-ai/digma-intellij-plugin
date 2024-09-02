@@ -86,17 +86,19 @@ class ReloadObserver(cs: CoroutineScope) {
     private fun checkChangesAndReload(event: Pair<ComponentDetails, PropertyChangeEvent>) {
         try {
 
-            Log.log(logger::trace, "checking graphics changes for component {}", event.first.componentName)
-
             val componentDetails = event.first
             val component = componentDetails.component
+            val componentName = componentDetails.componentName
             val project = componentDetails.project
+
+            Log.log(logger::trace, "checking graphics changes for component {} in project {}", componentName, project.name)
+
 
             if (!isProjectValid(project)) {
                 Log.log(
                     logger::trace,
                     "skipping checking graphics changes for component {} because project is invalid",
-                    componentDetails.componentName
+                    componentName
                 )
                 return
             }
@@ -107,7 +109,7 @@ class ReloadObserver(cs: CoroutineScope) {
                 Log.log(
                     logger::trace,
                     "component {} in project {} moved to another graphics device, oldValue:{},newValue:{}",
-                    componentDetails.componentName,
+                    componentName,
                     project.name,
                     componentDetails.graphicDevice,
                     currentGraphicsDevice
@@ -123,7 +125,7 @@ class ReloadObserver(cs: CoroutineScope) {
                     Log.log(
                         logger::trace,
                         "graphics device number has changed for component {} in project {},oldValue:{},newValue:{}",
-                        componentDetails.componentName,
+                        componentName,
                         project.name,
                         componentDetails.graphicsDeviceNumber,
                         currentGraphicsDeviceNumber
@@ -136,7 +138,7 @@ class ReloadObserver(cs: CoroutineScope) {
                 Log.log(
                     logger::trace,
                     "component {} in project {} display mode has changed, oldValue:{},newValue:{}",
-                    componentDetails.componentName,
+                    componentName,
                     project.name,
                     componentDetails.displayMode,
                     currentDisplayMode
@@ -145,7 +147,7 @@ class ReloadObserver(cs: CoroutineScope) {
 
                 service<ReloadService>().reload(project)
             } else {
-                Log.log(logger::trace, "no graphics changes for component {} in project {}", componentDetails.componentName, project.name)
+                Log.log(logger::trace, "no graphics changes for component {} in project {}", componentName, project.name)
             }
 
         } catch (e: Throwable) {

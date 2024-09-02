@@ -12,6 +12,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
 import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
@@ -83,7 +84,7 @@ class ReloadObserver(cs: CoroutineScope) {
     }
 
 
-    private fun checkChangesAndReload(event: Pair<ComponentDetails, PropertyChangeEvent>) {
+    private suspend fun checkChangesAndReload(event: Pair<ComponentDetails, PropertyChangeEvent>) {
         try {
 
             val componentDetails = event.first
@@ -97,8 +98,9 @@ class ReloadObserver(cs: CoroutineScope) {
             if (!isProjectValid(project)) {
                 Log.log(
                     logger::trace,
-                    "skipping checking graphics changes for component {} because project is invalid",
-                    componentName
+                    "skipping checking graphics changes for component {} in project {} because project is invalid",
+                    componentName,
+                    project.name
                 )
                 return
             }
@@ -118,9 +120,20 @@ class ReloadObserver(cs: CoroutineScope) {
                 componentDetails.graphicDevice = currentGraphicsDevice
                 componentDetails.displayMode = currentDisplayMode
 
-//                delay(1000)
+                //it may take the GraphicsEnvironment some time to refresh the screen devices. it depends on native OS calls timing,
+                // it may take the OS some seconds to notify the GraphicsEnvironment about changes.
+                //if we don't catch the change we may miss a reload when it's needed.
+                //so wait for some seconds to try to detect the change. if there is no change no harm will be done and this
+                // coroutine will just finish doing nothing
+                var currentGraphicsDeviceNumber = GraphicsEnvironment.getLocalGraphicsEnvironment().screenDevices.size
+                val endWait = Clock.System.now().epochSeconds + 3000
+                while (currentGraphicsDeviceNumber == componentDetails.graphicsDeviceNumber && Clock.System.now().epochSeconds < endWait) {
+                    Log.log(logger::trace, "waiting for device number to refresh for component {} in project {}", componentName, project.name)
+                    delay(100)
+                    currentGraphicsDeviceNumber = GraphicsEnvironment.getLocalGraphicsEnvironment().screenDevices.size
+                }
 
-                val currentGraphicsDeviceNumber = GraphicsEnvironment.getLocalGraphicsEnvironment().screenDevices.size
+                currentGraphicsDeviceNumber = GraphicsEnvironment.getLocalGraphicsEnvironment().screenDevices.size
                 if (currentGraphicsDeviceNumber != componentDetails.graphicsDeviceNumber) {
                     Log.log(
                         logger::trace,
@@ -133,6 +146,15 @@ class ReloadObserver(cs: CoroutineScope) {
                     componentDetails.graphicsDeviceNumber = currentGraphicsDeviceNumber
 
                     service<ReloadService>().reload(project)
+                } else {
+                    Log.log(
+                        logger::trace,
+                        "graphics device number has NOT changed for component {} in project {},oldValue:{},newValue:{}",
+                        componentName,
+                        project.name,
+                        componentDetails.graphicsDeviceNumber,
+                        currentGraphicsDeviceNumber
+                    )
                 }
             } else if (currentDisplayMode != componentDetails.displayMode) {
                 Log.log(

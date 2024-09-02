@@ -265,7 +265,7 @@ public class JaegerUIService implements Disposable, ReloadableJCefContainer {
 
         files.forEach(file -> FileEditorManager.getInstance(project).closeFile(file));
 
-        newFiles.forEach(file -> FileEditorManager.getInstance(project).openFile(file));
+        newFiles.forEach(file -> FileEditorManager.getInstance(project).openFile(file, true, true));
     }
 
     @NotNull

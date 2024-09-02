@@ -122,7 +122,7 @@ public final class DashboardService implements Disposable, ReloadableJCefContain
 
         files.forEach(oldFile -> {
             if (oldFile instanceof DashboardVirtualFile dashboardVirtualFile) {
-                var newFile = new DashboardVirtualFile(dashboardVirtualFile.getName());
+                var newFile = new DashboardVirtualFile(dashboardVirtualFile.getDashboardName());
                 newFile.setDashboardName(dashboardVirtualFile.getDashboardName());
                 newFile.setPath(dashboardVirtualFile.getPath());
                 DASHBOARD_EDITOR_KEY.set(newFile, DashboardFileEditorProvider.DASHBOARD_EDITOR_TYPE);
@@ -132,7 +132,7 @@ public final class DashboardService implements Disposable, ReloadableJCefContain
 
         files.forEach(file -> FileEditorManager.getInstance(project).closeFile(file));
 
-        newFiles.forEach(file -> FileEditorManager.getInstance(project).openFile(file));
+        newFiles.forEach(file -> FileEditorManager.getInstance(project).openFile(file, true, true));
     }
 
     @NotNull

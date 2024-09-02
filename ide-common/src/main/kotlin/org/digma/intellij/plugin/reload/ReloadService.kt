@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.reload
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.util.Disposer
@@ -102,7 +103,7 @@ class ReloadService : DisposableAdaptor {
             }
         }
 
-
+        val selectedEditor = FileEditorManager.getInstance(project).selectedEditor
         reloadables.filter { it.getProject().name == project.name }.forEach {
             EDT.ensureEDT {
                 try {
@@ -114,6 +115,12 @@ class ReloadService : DisposableAdaptor {
                     Log.warnWithException(logger, project, e, "error in reload for project {}", project)
                     ErrorReporter.getInstance().reportError("ReloadService.reload", e)
                 }
+            }
+        }
+
+        EDT.ensureEDT {
+            selectedEditor?.takeIf { it.file.isValid }?.let {
+                FileEditorManager.getInstance(project).openFile(it.file)
             }
         }
 

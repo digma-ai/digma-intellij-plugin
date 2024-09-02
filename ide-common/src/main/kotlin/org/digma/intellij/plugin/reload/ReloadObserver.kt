@@ -200,6 +200,22 @@ class ReloadObserver(cs: CoroutineScope) {
         override fun propertyChange(evt: PropertyChangeEvent) {
             if (evt.propertyName == "graphicsConfiguration") {
                 Log.log(logger::trace, "got PropertyChangeEvent for {}, {}", componentName, evt)
+
+                //componentDetails.graphicDevice may be null on startup so run the event,
+                // but if it's not null and new value or old value are null this only means that the component
+                // becomes visible or hidden
+                if (componentDetails.graphicDevice != null) {
+                    if (evt.oldValue == null || evt.newValue == null) {
+                        Log.log(
+                            logger::trace,
+                            "not adding event because old value or new value is null in PropertyChangeEvent for {}, {}",
+                            componentName,
+                            evt
+                        )
+                        return
+                    }
+                }
+
                 //putting the events in a queue ensures we process them in the order they arrive.
                 //just launching a coroutine here does not guarantee order and may cause wrong decisions
                 //about reloading

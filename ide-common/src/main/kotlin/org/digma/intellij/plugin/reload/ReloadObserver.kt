@@ -126,39 +126,39 @@ class ReloadObserver(cs: CoroutineScope) {
                 //if we don't catch the change we may miss a reload when it's needed.
                 //so wait for some seconds to try to detect the change. if there is no change no harm will be done and this
                 // coroutine will just finish doing nothing
-                var currentGraphicsDeviceNumber = GraphicsEnvironment.getLocalGraphicsEnvironment().screenDevices.size
-                val endWait = Clock.System.now() + 3.seconds
-                while (currentGraphicsDeviceNumber == componentDetails.graphicsDeviceNumber &&
-                    Clock.System.now() < endWait
-                ) {
-                    Log.log(logger::trace, "waiting for device number to refresh for component {} in project {}", componentName, project.name)
-                    delay(100)
-                    currentGraphicsDeviceNumber = GraphicsEnvironment.getLocalGraphicsEnvironment().screenDevices.size
-                }
+//                var currentGraphicsDeviceNumber = GraphicsEnvironment.getLocalGraphicsEnvironment().screenDevices.size
+//                val endWait = Clock.System.now() + 3.seconds
+//                while (currentGraphicsDeviceNumber == componentDetails.graphicsDeviceNumber &&
+//                    Clock.System.now() < endWait
+//                ) {
+//                    Log.log(logger::trace, "waiting for device number to refresh for component {} in project {}", componentName, project.name)
+//                    delay(100)
+//                    currentGraphicsDeviceNumber = GraphicsEnvironment.getLocalGraphicsEnvironment().screenDevices.size
+//                }
 
-                currentGraphicsDeviceNumber = GraphicsEnvironment.getLocalGraphicsEnvironment().screenDevices.size
-                if (currentGraphicsDeviceNumber != componentDetails.graphicsDeviceNumber) {
-                    Log.log(
-                        logger::trace,
-                        "graphics device number has changed for component {} in project {},oldValue:{},newValue:{}",
-                        componentName,
-                        project.name,
-                        componentDetails.graphicsDeviceNumber,
-                        currentGraphicsDeviceNumber
-                    )
-                    componentDetails.graphicsDeviceNumber = currentGraphicsDeviceNumber
+//                currentGraphicsDeviceNumber = GraphicsEnvironment.getLocalGraphicsEnvironment().screenDevices.size
+//                if (currentGraphicsDeviceNumber != componentDetails.graphicsDeviceNumber) {
+//                    Log.log(
+//                        logger::trace,
+//                        "graphics device number has changed for component {} in project {},oldValue:{},newValue:{}",
+//                        componentName,
+//                        project.name,
+//                        componentDetails.graphicsDeviceNumber,
+//                        currentGraphicsDeviceNumber
+//                    )
+//                    componentDetails.graphicsDeviceNumber = currentGraphicsDeviceNumber
 
                     service<ReloadService>().reload(project)
-                } else {
-                    Log.log(
-                        logger::trace,
-                        "graphics device number has NOT changed for component {} in project {},oldValue:{},newValue:{}",
-                        componentName,
-                        project.name,
-                        componentDetails.graphicsDeviceNumber,
-                        currentGraphicsDeviceNumber
-                    )
-                }
+//                } else {
+//                    Log.log(
+//                        logger::trace,
+//                        "graphics device number has NOT changed for component {} in project {},oldValue:{},newValue:{}",
+//                        componentName,
+//                        project.name,
+//                        componentDetails.graphicsDeviceNumber,
+//                        currentGraphicsDeviceNumber
+//                    )
+//                }
             } else if (currentDisplayMode != componentDetails.displayMode) {
                 Log.log(
                     logger::trace,

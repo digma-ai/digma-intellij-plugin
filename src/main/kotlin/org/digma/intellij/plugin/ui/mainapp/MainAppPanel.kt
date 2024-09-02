@@ -5,6 +5,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.ui.jcef.JBCefApp
 import com.intellij.util.ui.JBUI
+import org.digma.intellij.plugin.reload.ReloadObserver
 import org.digma.intellij.plugin.reload.ReloadService
 import org.digma.intellij.plugin.ui.insights.InsightsService
 import org.digma.intellij.plugin.ui.jcef.DownloadHandlerAdapter
@@ -28,7 +29,10 @@ class MainAppPanel(private val project: Project) : DisposablePanel(), Reloadable
 
     init {
         jCefComponent = build()
-        service<ReloadService>().register(this, MainAppService.getInstance(project))
+        jCefComponent?.let {
+            service<ReloadService>().register(this, parentDisposable)
+            service<ReloadObserver>().register(this, it.getComponent(), parentDisposable)
+        }
         Disposer.register(MainAppService.getInstance(project)) {
             dispose()
         }
@@ -63,6 +67,14 @@ class MainAppPanel(private val project: Project) : DisposablePanel(), Reloadable
         removeAll()
         parentDisposable = Disposer.newDisposable()
         jCefComponent = build()
+        jCefComponent?.let {
+            service<ReloadService>().register(this, parentDisposable)
+            service<ReloadObserver>().register(this, it.getComponent(), parentDisposable)
+        }
+    }
+
+    override fun getProject(): Project {
+        return project
     }
 
 

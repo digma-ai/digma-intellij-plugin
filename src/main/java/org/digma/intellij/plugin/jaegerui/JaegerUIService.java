@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.jaegerui;
 
 import com.intellij.openapi.Disposable;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
@@ -14,6 +15,7 @@ import org.digma.intellij.plugin.navigation.View;
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator;
 import org.digma.intellij.plugin.posthog.*;
 import org.digma.intellij.plugin.psi.*;
+import org.digma.intellij.plugin.reload.*;
 import org.digma.intellij.plugin.scope.*;
 import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.model.TraceSample;
@@ -21,8 +23,10 @@ import org.jetbrains.annotations.*;
 
 import java.util.*;
 
+import static org.digma.intellij.plugin.jaegerui.JaegerUIVirtualFile.JAEGER_UI_EDITOR_KEY;
 
-public class JaegerUIService implements Disposable {
+
+public class JaegerUIService implements Disposable, ReloadableJCefContainer {
 
     private final Logger logger = Logger.getInstance(JaegerUIService.class);
 
@@ -31,6 +35,7 @@ public class JaegerUIService implements Disposable {
 
     public JaegerUIService(Project project) {
         this.project = project;
+        ApplicationManager.getApplication().getService(ReloadService.class).register(this, this);
     }
 
     @Override
@@ -237,4 +242,35 @@ public class JaegerUIService implements Disposable {
     }
 
 
+    @Override
+    public void reload() {
+
+        var files = Arrays.stream(FileEditorManager.getInstance(project).getOpenFiles()).filter(JaegerUIVirtualFile::isJaegerUIVirtualFile).toList();
+
+        var newFiles = new ArrayList<JaegerUIVirtualFile>();
+
+        files.forEach(oldFile -> {
+            if (oldFile instanceof JaegerUIVirtualFile jaegerUIVirtualFile) {
+                var newFile = new JaegerUIVirtualFile(jaegerUIVirtualFile.getName());
+                newFile.setJaegerBaseUrl(jaegerUIVirtualFile.getJaegerBaseUrl());
+                newFile.setTraceId(jaegerUIVirtualFile.getTraceId());
+                newFile.setTraceSamples(jaegerUIVirtualFile.getTraceSamples());
+                newFile.setSpanName(jaegerUIVirtualFile.getSpanName());
+                newFile.setSpanCodeObjectId(jaegerUIVirtualFile.getSpanCodeObjectId());
+                newFile.setSendSearchQuery(jaegerUIVirtualFile.isSendSearchQuery());
+                JAEGER_UI_EDITOR_KEY.set(newFile, JaegerUIFileEditorProvider.JAEGER_UI_EDITOR_TYPE);
+                newFiles.add(newFile);
+            }
+        });
+
+        files.forEach(filo -> FileEditorManager.getInstance(project).closeFile(filo));
+
+        newFiles.forEach(file -> FileEditorManager.getInstance(project).openFile(file));
+    }
+
+    @NotNull
+    @Override
+    public Project getProject() {
+        return project;
+    }
 }

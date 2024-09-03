@@ -210,7 +210,7 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
     or when doing a refactor that impacts many files.
     when that happens it doesn't make sense to update the files one by one, it will take too long, the changedFiles and
     bulkEvents lists will grow too large. and the executor service queue of the navigation discovery will grow too large.
-    we see sometimes updates of thousands of files. one example if to open the intellij-community repository and change branch,
+    we see sometimes updates of thousands of files. one example is to open the intellij-community repository and change branch,
     it will trigger an update of more than 40000 files. and we see also users with this amount of updates.
 
     when we discover a large update we want to:
@@ -299,6 +299,8 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
 
                         delay(1000)
                     }
+                } catch (ce: CancellationException) {
+                    throw ce
                 } catch (e: Throwable) {
                     //there should not be an exception here, the code in the try block should not produce any error.
                     // but protect against who knows what. we must make sure that resume is called eventually.
@@ -320,6 +322,8 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
                         val javaEndpointNavigationProvider = JvmEndpointNavigationProvider.getInstance(project)
                         javaEndpointNavigationProvider.buildNavigationDiscoveryFullUpdate()
                     }
+                } catch (ce: CancellationException) {
+                    throw ce
                 } catch (e: Throwable) {
                     Log.warnWithException(logger, project, e, "error launching full update {}", e)
                     ErrorReporter.getInstance().reportError("NavigationDiscoveryChangeService.pauseAndLaunchFullUpdate", e)

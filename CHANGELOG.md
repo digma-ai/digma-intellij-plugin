@@ -1,6 +1,15 @@
 # Changelog
 
-## [2.0.382] - 2024-09-02
+## [2.0.383] - 2024-09-03
+
+- user activation from backend Closes #2290 Closes #2439 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2455
+- shorten delay and reload per project by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2473
+- catch-cancel-in-NavigationDiscoveryChangeService by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2477
+- stop reporting refresh failed event Closes #2459 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2476
+- replace path with initialRoute by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2478
+- fix-disposable-in-ContinuousPerformanceMetricsReporter by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2482
+
+## 2.0.382 - 2024-09-02
 
 - Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2470
 

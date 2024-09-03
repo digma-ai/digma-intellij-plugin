@@ -64,7 +64,7 @@ public class DashboardIndexTemplateBuilder {
 
             data.put(DASHBOARD_ENVIRONMENT, getCurrentEnvironmentId(project));
             data.put(IS_LOGGING_ENABLED,getIsLoggingEnabledSystemProperty());
-            data.put(INITIAL_ROUTE_PARAM_NAME, dashboardVirtualFile.getPath());
+            data.put(INITIAL_ROUTE_PARAM_NAME, dashboardVirtualFile.getInitialRoute());
             Template template = freemarketConfiguration.getTemplate(INDEX_TEMPLATE_NAME);
             StringWriter stringWriter = new StringWriter();
             template.process(data, stringWriter);

@@ -51,6 +51,7 @@ class ContinuousPerformanceMetricsReporter : DisposableAdaptor {
         if (PersistenceService.getInstance().isFirstTimePerformanceMetrics()) {
 
             val disposable = Disposer.newDisposable()
+            Disposer.register(this, disposable)
             disposable.disposingPeriodicTask(
                 "ContinuousPerformanceMetricsReporter.waitForFirstTime",
                 2.minutes.inWholeMilliseconds,

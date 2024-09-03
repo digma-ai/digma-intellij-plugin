@@ -129,13 +129,16 @@ class LocalLoginHandler(analyticsProvider: RestAnalyticsProvider) : AbstractLogi
 
             warnWithException(e, "Exception in loginOrRefresh {}, url {}", e, analyticsProvider.apiUrl)
             ErrorReporter.getInstance().reportError("${javaClass.simpleName}.loginOrRefresh", e, mapOf("loginOrRefresh trigger" to trigger))
-            val errorMessage = ExceptionUtils.getNonEmptyMessage(e)
-            reportAuthPosthogEvent(
-                "loginOrRefresh failed",
-                this.javaClass.simpleName,
-                trigger,
-                mapOf("error" to errorMessage)
-            )
+
+            withAuthManagerDebug {
+                val errorMessage = ExceptionUtils.getNonEmptyMessage(e)
+                reportAuthPosthogEvent(
+                    "loginOrRefresh failed",
+                    this.javaClass.simpleName,
+                    trigger,
+                    mapOf("error" to errorMessage)
+                )
+            }
 
             //if got exception here it may be from refresh or login, in both cases delete the current account
             //and login again

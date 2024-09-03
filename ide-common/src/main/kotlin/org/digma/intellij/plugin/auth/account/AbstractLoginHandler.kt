@@ -74,14 +74,22 @@ abstract class AbstractLoginHandler(protected val analyticsProvider: RestAnalyti
         } catch (e: Throwable) {
 
             warnWithException(e, "Exception in login {}, url {}", e, analyticsProvider.apiUrl)
-            ErrorReporter.getInstance().reportError("${javaClass.simpleName}.login", e, mapOf("login trigger" to trigger))
-            val errorMessage = ExceptionUtils.getNonEmptyMessage(e)
-            reportAuthPosthogEvent(
-                "login failed",
-                this.javaClass.simpleName,
-                trigger,
-                mapOf("user" to user, "error" to errorMessage)
+            ErrorReporter.getInstance().reportError(
+                "${javaClass.simpleName}.login", e, mapOf(
+                    "login trigger" to trigger,
+                    "user" to user
+                )
             )
+
+            withAuthManagerDebug {
+                val errorMessage = ExceptionUtils.getNonEmptyMessage(e)
+                reportAuthPosthogEvent(
+                    "login failed",
+                    this.javaClass.simpleName,
+                    trigger,
+                    mapOf("user" to user, "error" to errorMessage)
+                )
+            }
 
             LoginResult(false, null, ExceptionUtils.getNonEmptyMessage(e))
         }
@@ -128,17 +136,28 @@ abstract class AbstractLoginHandler(protected val analyticsProvider: RestAnalyti
 
         } catch (e: Throwable) {
             warnWithException(e, "Exception in refresh {}", e)
-            ErrorReporter.getInstance().reportError("${javaClass.simpleName}.refresh", e, mapOf("refresh trigger" to trigger))
-            val errorMessage = ExceptionUtils.getNonEmptyMessage(e)
-            reportAuthPosthogEvent(
-                "refresh token failed", this.javaClass.simpleName, trigger, mapOf(
-                    "error" to errorMessage,
+            ErrorReporter.getInstance().reportError(
+                "${javaClass.simpleName}.refresh", e, mapOf(
+                    "refresh trigger" to trigger,
                     "account.id" to account.id,
                     "accessTokenHash" to credentials.accessTokenHash(),
                     "refreshTokenHash" to credentials.refreshTokenHash(),
                     "expirationDate" to credentials.getExpirationTimeAsDate()
                 )
             )
+
+            withAuthManagerDebug {
+                val errorMessage = ExceptionUtils.getNonEmptyMessage(e)
+                reportAuthPosthogEvent(
+                    "refresh token failed", this.javaClass.simpleName, trigger, mapOf(
+                        "error" to errorMessage,
+                        "account.id" to account.id,
+                        "accessTokenHash" to credentials.accessTokenHash(),
+                        "refreshTokenHash" to credentials.refreshTokenHash(),
+                        "expirationDate" to credentials.getExpirationTimeAsDate()
+                    )
+                )
+            }
 
             val authenticationException = ExceptionUtils.findCause(AuthenticationException::class.java, e)
             if (authenticationException != null) {

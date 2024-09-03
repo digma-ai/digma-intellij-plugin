@@ -76,7 +76,7 @@ public final class DashboardService implements Disposable, ReloadableJCefContain
 
         EDT.ensureEDT(() -> {
             var file = DashboardVirtualFile.createVirtualFile(reportName);
-            file.setPath("report");
+            file.setInitialRoute("report");
             FileEditorManager.getInstance(project).openFile(file, true, true);
         });
 
@@ -124,7 +124,7 @@ public final class DashboardService implements Disposable, ReloadableJCefContain
             if (oldFile instanceof DashboardVirtualFile dashboardVirtualFile) {
                 var newFile = new DashboardVirtualFile(dashboardVirtualFile.getDashboardName());
                 newFile.setDashboardName(dashboardVirtualFile.getDashboardName());
-                newFile.setPath(dashboardVirtualFile.getPath());
+                newFile.setInitialRoute(dashboardVirtualFile.getInitialRoute());
                 DASHBOARD_EDITOR_KEY.set(newFile, DashboardFileEditorProvider.DASHBOARD_EDITOR_TYPE);
                 newFiles.add(newFile);
             }

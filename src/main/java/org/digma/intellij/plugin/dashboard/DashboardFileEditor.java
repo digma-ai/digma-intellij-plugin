@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.dashboard;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileEditor.*;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.*;
@@ -8,6 +9,7 @@ import com.intellij.ui.jcef.JBCefBrowser;
 import org.cef.CefApp;
 import org.cef.browser.*;
 import org.cef.handler.CefLifeSpanHandlerAdapter;
+import org.digma.intellij.plugin.reload.ReloadObserver;
 import org.digma.intellij.plugin.ui.jcef.JBCefBrowserBuilderCreator;
 import org.digma.intellij.plugin.ui.settings.*;
 import org.jetbrains.annotations.*;
@@ -66,11 +68,13 @@ public class DashboardFileEditor extends UserDataHolderBase implements FileEdito
         jbCefBrowser.getJBCefClient().addLifeSpanHandler(lifeSpanHandler, jbCefBrowser.getCefBrowser());
 
         Disposer.register(this, () -> jbCefBrowser.getJBCefClient().removeLifeSpanHandler(lifeSpanHandler, jbCefBrowser.getCefBrowser()));
+
+        ApplicationManager.getApplication().getService(ReloadObserver.class).register(project, "Dashboard." + file.getName(), jbCefBrowser.getComponent(), this);
     }
 
     private void registerAppSchemeHandler(Project project, DashboardVirtualFile file) {
         CefApp.getInstance().registerSchemeHandlerFactory("http", DOMAIN_NAME,
-                new DashboardSchemeHandlerFactory(project,file));
+                new DashboardSchemeHandlerFactory(project, file));
     }
 
     @Override
@@ -120,8 +124,10 @@ public class DashboardFileEditor extends UserDataHolderBase implements FileEdito
 
     @Override
     public void dispose() {
-        jbCefBrowser.dispose();
-        cefMessageRouter.dispose();
+        if (jbCefBrowser != null) {
+            Disposer.dispose(jbCefBrowser);
+            cefMessageRouter.dispose();
+        }
     }
 
 }

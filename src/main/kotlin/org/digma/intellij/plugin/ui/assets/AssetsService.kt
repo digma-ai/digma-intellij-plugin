@@ -5,13 +5,13 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import org.digma.intellij.plugin.activation.UserActivationService
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.createObjectMapper
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.navigation.View
-import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.UserActionOrigin
 import org.digma.intellij.plugin.scope.ScopeManager
@@ -40,7 +40,6 @@ class AssetsService(private val project: Project) : Disposable {
         Log.log(logger::trace, project, "got categories [{}]", categories)
         return categories
     }
-
 
 
     fun getAssetFilters(queryParams: MutableMap<String, Any>): String {
@@ -78,17 +77,19 @@ class AssetsService(private val project: Project) : Disposable {
 
     private fun checkInsightExists() {
 
-        if (!PersistenceService.getInstance().isFirstAssetsReceived()) {
-            try {
-                val insightsExists = AnalyticsService.getInstance(project).insightsExist
-                val payload = objectMapper.readTree(insightsExists)
-                if (!payload.isMissingNode && payload["insightExists"].asBoolean()) {
-                    ActivityMonitor.getInstance(project).registerFirstAssetsReceived()
-                    PersistenceService.getInstance().setFirstAssetsReceived()
-                }
-            } catch (e: Throwable) {
-                Log.warnWithException(logger, project, e, "error reporting FirstTimeAssetsReceived {}", e)
+        if (UserActivationService.getInstance().isFirstAssetsReceived()) {
+            UserActivationService.getInstance().assetsReceivedInProject(project)
+            return
+        }
+
+        try {
+            val insightsExists = AnalyticsService.getInstance(project).insightsExist
+            val payload = objectMapper.readTree(insightsExists)
+            if (!payload.isMissingNode && payload["insightExists"].asBoolean()) {
+                UserActivationService.getInstance().setFirstAssetsReceived(project)
             }
+        } catch (e: Throwable) {
+            Log.warnWithException(logger, project, e, "error reporting FirstTimeAssetsReceived {}", e)
         }
     }
 

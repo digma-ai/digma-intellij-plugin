@@ -8,6 +8,7 @@ import org.digma.intellij.plugin.analytics.RestAnalyticsProvider
 import org.digma.intellij.plugin.auth.NoOpLoginHandler
 import org.digma.intellij.plugin.auth.credentials.DigmaCredentials
 import org.digma.intellij.plugin.auth.reportAuthPosthogEvent
+import org.digma.intellij.plugin.auth.withAuthManagerDebug
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
@@ -112,8 +113,10 @@ interface LoginHandler {
         } catch (e: Throwable) {
             warnWithException(e, "Exception in logout {}, trigger {}", e, trigger)
             ErrorReporter.getInstance().reportError("${javaClass.simpleName}.logout", e, mapOf("logout trigger" to trigger))
-            val errorMessage = ExceptionUtils.getNonEmptyMessage(e)
-            reportAuthPosthogEvent("logout failed", this.javaClass.simpleName, trigger, mapOf("error" to errorMessage))
+            withAuthManagerDebug {
+                val errorMessage = ExceptionUtils.getNonEmptyMessage(e)
+                reportAuthPosthogEvent("logout failed", this.javaClass.simpleName, trigger, mapOf("error" to errorMessage))
+            }
             false
         }
     }

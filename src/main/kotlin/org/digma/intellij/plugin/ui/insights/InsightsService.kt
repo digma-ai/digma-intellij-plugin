@@ -5,6 +5,7 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import org.digma.intellij.plugin.activation.UserActivationService
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.common.createObjectMapper
@@ -13,8 +14,6 @@ import org.digma.intellij.plugin.insights.InsightsServiceImpl
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.insights.MarkInsightsAsReadScope
 import org.digma.intellij.plugin.model.rest.insights.issues.GetIssuesRequestPayload
-import org.digma.intellij.plugin.persistence.PersistenceService
-import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.insights.model.SetAllInsightsAsReadData
 import org.digma.intellij.plugin.ui.insights.model.SetAllInsightsMarkAsReadMessage
 import org.digma.intellij.plugin.ui.insights.model.SetDismissedData
@@ -77,6 +76,7 @@ class InsightsService(val project: Project) : InsightsServiceImpl(project) {
     fun refreshIssuesList(request: GetIssuesRequestPayload) {
        val message = try {
             val issues = AnalyticsService.getInstance(project).getIssues(request)
+            reportFirstIssue(issues)
             SetIssuesDataListMessage(SetIssuesData(issues))
         } catch (e: AnalyticsServiceException) {
             Log.debugWithException(logger, project, e, "Error loading issues {}", e.message)
@@ -88,6 +88,26 @@ class InsightsService(val project: Project) : InsightsServiceImpl(project) {
             serializeAndExecuteWindowPostMessageJavaScript(it.jbCefBrowser.cefBrowser, message)
         }
     }
+
+    private fun reportFirstIssue(issues: String) {
+
+        if (UserActivationService.getInstance().isFirstIssueReceived()) {
+            UserActivationService.getInstance().issuesReceivedInProject(project)
+            return
+        }
+
+        val count = try {
+            objectMapper.readTree(issues).get("totalCount").asInt()
+        } catch (e: Throwable) {
+            0
+        }
+        if (count > 0) {
+            UserActivationService.getInstance().setFirstIssueReceived(project)
+        }
+    }
+
+
+
 
     fun refreshIssuesFilters(backendQueryParams: MutableMap<String, Any>) {
         val message = try {
@@ -178,7 +198,8 @@ class InsightsService(val project: Project) : InsightsServiceImpl(project) {
 
     private fun onInsightReceived(insights: String) {
 
-        if (PersistenceService.getInstance().isFirstInsightReceived()) {
+        if (UserActivationService.getInstance().isFirstInsightReceived()) {
+            UserActivationService.getInstance().insightsReceivedInProject(project)
             return
         }
 
@@ -186,8 +207,7 @@ class InsightsService(val project: Project) : InsightsServiceImpl(project) {
             val jsonNode = objectMapper.readTree(insights)
             val totalCount = jsonNode.get("totalCount")
             if (totalCount.isInt && totalCount.asInt() > 0) {
-                ActivityMonitor.getInstance(project).registerFirstInsightReceived()
-                PersistenceService.getInstance().setFirstInsightReceived()
+                UserActivationService.getInstance().setFirstInsightReceived(project)
             }
         } catch (e: Throwable) {
             ErrorReporter.getInstance().reportError(project, "InsightsService.onInsightReceived", e)

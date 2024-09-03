@@ -53,6 +53,14 @@ class PersistenceService {
         return state.userEmail != null || state.userRegistrationEmail != null
     }
 
+    fun isFirstIssueReceived(): Boolean {
+        return state.firstTimeIssueReceivedTimestamp != null
+    }
+
+    fun setFirstIssueReceived() {
+        state.firstTimeIssueReceivedTimestamp = Instant.now()
+    }
+
     fun isFirstAssetsReceived(): Boolean {
         return state.firstTimeAssetsReceivedTimestamp != null
     }
@@ -92,6 +100,14 @@ class PersistenceService {
 
     fun setFirstInsightReceived() {
         state.firstTimeInsightReceivedTimestamp = Instant.now()
+    }
+
+    fun isFirstDataReceived(): Boolean {
+        return state.firstTimeDataReceivedTimestamp != null
+    }
+
+    fun setFirstDataReceived() {
+        state.firstTimeDataReceivedTimestamp = Instant.now()
     }
 
 
@@ -177,6 +193,14 @@ class PersistenceService {
 
     fun setNoInsightsYetNotificationPassed() {
         state.noInsightsYetNotificationPassed = true
+    }
+
+    fun isUsingTheCliNotificationPassed(): Boolean {
+        return state.usingTheCliNotificationPassed
+    }
+
+    fun setUsingTheCliNotificationPassed() {
+        state.usingTheCliNotificationPassed = true
     }
 
     fun updateLastConnectionTimestamp() {
@@ -265,6 +289,102 @@ class PersistenceService {
 
     fun setDigmathonStartedForUser(started: Boolean) {
         state.digmathonStartedForUser = started
+    }
+
+    fun setBackendRecentActivityFound() {
+        state.firstTimeBackendRecentActivityFoundTimestamp = Instant.now()
+    }
+
+    fun isBackendRecentActivityFound(): Boolean {
+        return state.firstTimeBackendRecentActivityFoundTimestamp != null
+    }
+
+    fun setBackendAssetFound() {
+        state.firstTimeBackendAssetFoundTimestamp = Instant.now()
+    }
+
+    fun isBackendAssetFound(): Boolean {
+        return state.firstTimeBackendAssetFoundTimestamp != null
+    }
+
+    fun setBackendInsightFound() {
+        state.firstTimeBackendInsightFoundTimestamp = Instant.now()
+    }
+
+    fun isBackendInsightFound(): Boolean {
+        return state.firstTimeBackendInsightFoundTimestamp != null
+    }
+
+    fun setBackendIssueFound() {
+        state.firstTimeBackendIssueFoundTimestamp = Instant.now()
+    }
+
+    fun isBackendIssueFound(): Boolean {
+        return state.firstTimeBackendIssueFoundTimestamp != null
+    }
+
+    fun setBackendImportantIssueFound() {
+        state.firstTimeBackendImportantIssueFoundTimestamp = Instant.now()
+    }
+
+    fun isBackendImportantIssueFound(): Boolean {
+        return state.firstTimeBackendImportantIssueFoundTimestamp != null
+    }
+
+    fun setBackendDataFound() {
+        state.firstTimeBackendDataFoundTimestamp = Instant.now()
+    }
+
+    fun isBackendDataFound(): Boolean {
+        return state.firstTimeBackendDataFoundTimestamp != null
+    }
+
+    fun setApplyNewActivationLogic() {
+        state.applyNewActivationLogic = true
+    }
+
+    fun isApplyNewActivationLogic(): Boolean {
+        return state.applyNewActivationLogic
+    }
+
+    fun setAlreadyShowedNewImportantIssueNotification() {
+        state.alreadyShowedNewImportantIssueNotification = true
+    }
+
+    fun isAlreadyShowedNewImportantIssueNotification(): Boolean {
+        return state.alreadyShowedNewImportantIssueNotification
+    }
+
+    fun setAlreadyShowedNewIssueNotification() {
+        state.alreadyShowedNewIssueNotification = true
+    }
+
+    fun isAlreadyShowedNewIssueNotification(): Boolean {
+        return state.alreadyShowedNewIssueNotification
+    }
+
+    fun setAlreadyShowedNewInsightNotification() {
+        state.alreadyShowedNewInsightNotification = true
+    }
+
+    fun isAlreadyShowedNewInsightNotification(): Boolean {
+        return state.alreadyShowedNewInsightNotification
+    }
+
+    fun setAlreadyShowedNewAssetNotification() {
+        state.alreadyShowedNewAssetNotification = true
+    }
+
+    fun isAlreadyShowedNewAssetNotification(): Boolean {
+        return state.alreadyShowedNewAssetNotification
+    }
+
+    fun setAlreadyShowedNewRecentActivityNotification() {
+        state.alreadyShowedNewRecentActivityNotification = true
+    }
+
+    fun isAlreadyShowedNewRecentActivityNotification(): Boolean {
+        return state.alreadyShowedNewRecentActivityNotification
     }
 
 

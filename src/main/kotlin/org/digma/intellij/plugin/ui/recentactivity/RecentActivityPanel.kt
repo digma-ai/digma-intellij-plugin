@@ -11,13 +11,13 @@ import org.digma.intellij.plugin.ui.jcef.JCefComponent
 import org.digma.intellij.plugin.ui.jcef.JCefComponent.JCefComponentBuilder
 import org.digma.intellij.plugin.ui.list.listBackground
 import org.digma.intellij.plugin.ui.panels.DisposablePanel
-import org.digma.intellij.plugin.ui.panels.ReloadablePanel
+import org.digma.intellij.plugin.reload.ReloadableJCefContainer
 import java.awt.BorderLayout
 import java.awt.Insets
 import javax.swing.JComponent
 import javax.swing.JLabel
 
-class RecentActivityPanel(private val project: Project) : DisposablePanel(), ReloadablePanel {
+class RecentActivityPanel(private val project: Project) : DisposablePanel(), ReloadableJCefContainer {
 
     private var jCefComponent: JCefComponent? = null
 
@@ -27,7 +27,7 @@ class RecentActivityPanel(private val project: Project) : DisposablePanel(), Rel
         jCefComponent = build()
         jCefComponent?.let {
             service<ReloadService>().register(this, parentDisposable)
-            service<ReloadObserver>().register(this, it.getComponent(), parentDisposable)
+            service<ReloadObserver>().register(project, "RecentActivity", it.getComponent(), parentDisposable)
         }
         Disposer.register(project.service<RecentActivityService>()) {
             dispose()
@@ -64,7 +64,7 @@ class RecentActivityPanel(private val project: Project) : DisposablePanel(), Rel
         jCefComponent = build()
         jCefComponent?.let {
             service<ReloadService>().register(this, parentDisposable)
-            service<ReloadObserver>().register(this, it.getComponent(), parentDisposable)
+            service<ReloadObserver>().register(project, "RecentActivity", it.getComponent(), parentDisposable)
         }
     }
 

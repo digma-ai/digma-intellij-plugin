@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.analytics;
 
 import org.digma.intellij.plugin.model.rest.AboutResult;
+import org.digma.intellij.plugin.model.rest.activation.DiscoveredDataResponse;
 import org.digma.intellij.plugin.model.rest.assets.AssetDisplayInfo;
 import org.digma.intellij.plugin.model.rest.codelens.*;
 import org.digma.intellij.plugin.model.rest.codespans.CodeContextSpans;
@@ -147,4 +148,6 @@ public interface AnalyticsProvider extends Closeable {
     String getHighlightsImpact(HighlightsRequest request);
 
     List<SpanEnvironment> getSpanEnvironmentsStats(String spanCodeObjectId);
+
+    DiscoveredDataResponse getDiscoveredData();
 }

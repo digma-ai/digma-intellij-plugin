@@ -5,7 +5,8 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.*;
 import com.intellij.openapi.wm.ex.ToolWindowManagerListener;
 import org.digma.intellij.plugin.PluginId;
-import org.digma.intellij.plugin.docker.*;
+import org.digma.intellij.plugin.activation.UserActivationService;
+import org.digma.intellij.plugin.docker.LocalInstallationFacade;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.ui.notificationcenter.AppNotificationCenter;
 import org.jetbrains.annotations.NotNull;
@@ -22,9 +23,11 @@ public class DigmaToolWindowsListener implements ToolWindowManagerListener {
     public void toolWindowShown(@NotNull ToolWindow toolWindow) {
         if (toolWindow.getId().equals(PluginId.TOOL_WINDOW_ID)) {
             ActivityMonitor.getInstance(toolWindow.getProject()).registerSidePanelOpened();
+            UserActivationService.getInstance().mainToolWindowShown(project);
         }
         if (toolWindow.getId().equals(PluginId.OBSERVABILITY_WINDOW_ID)) {
             ActivityMonitor.getInstance(toolWindow.getProject()).registerObservabilityPanelOpened();
+            UserActivationService.getInstance().recentActivityToolWindowShown(project);
         }
     }
 
@@ -40,10 +43,12 @@ public class DigmaToolWindowsListener implements ToolWindowManagerListener {
 
             if (toolWindowId.equals(PluginId.TOOL_WINDOW_ID)) {
                 onMainToolWindowClose();
+                UserActivationService.getInstance().mainToolWindowHidden(project);
             }
 
             if (toolWindowId.equals(PluginId.OBSERVABILITY_WINDOW_ID)) {
                 onObservabilityToolWindowClose();
+                UserActivationService.getInstance().recentActivityToolWindowHidden(project);
             }
         }
     }

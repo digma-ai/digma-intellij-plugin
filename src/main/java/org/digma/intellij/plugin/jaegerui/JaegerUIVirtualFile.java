@@ -6,8 +6,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.testFramework.LightVirtualFile;
 import org.digma.intellij.plugin.common.DigmaVirtualFileMarker;
 import org.digma.intellij.plugin.ui.model.TraceSample;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.*;
 
 import java.util.List;
 
@@ -57,15 +56,15 @@ public class JaegerUIVirtualFile extends LightVirtualFile implements DigmaVirtua
         return file;
     }
 
-    private void setTraceSamples(List<TraceSample> traceSamples) {
+    public void setTraceSamples(List<TraceSample> traceSamples) {
         this.traceSamples = traceSamples;
     }
 
-    private void setTraceId(String traceId) {
+    public void setTraceId(String traceId) {
         this.traceId = traceId;
     }
 
-    private void setJaegerBaseUrl(String jaegerBaseUrl) {
+    public void setJaegerBaseUrl(String jaegerBaseUrl) {
         this.jaegerBaseUrl = jaegerBaseUrl;
     }
 
@@ -81,7 +80,7 @@ public class JaegerUIVirtualFile extends LightVirtualFile implements DigmaVirtua
         return traceSamples;
     }
 
-    private void setSpanName(String spanName) {
+    public void setSpanName(String spanName) {
         this.spanName = spanName;
     }
 

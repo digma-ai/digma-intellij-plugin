@@ -66,9 +66,20 @@ class EngagementScoreService(private val cs: CoroutineScope) : DisposableAdaptor
 
     private fun sendEvent() {
 
+        //compute average that includes up to the last day, exclude today.
+        val daysForAverage = service<EngagementScorePersistence>().state.meaningfulActionsCounters.filter {
+            LocalDate.parse(it.key) != today()
+        }
 
-        val activeDays = service<EngagementScorePersistence>().state.meaningfulActionsCounters.size
-        val average = service<EngagementScorePersistence>().state.meaningfulActionsCounters.values.average().roundToLong()
+        if (daysForAverage.isEmpty()){
+            return
+        }
+
+
+        val activeDays = daysForAverage.size
+        val average = daysForAverage.values.average().let {
+            if (it.isNaN()) 0 else it.roundToLong()
+        }
 
         //todo: when ActivityMonitor is changed to application service this coroutine can be removed and just send the event
         //this is just a technical debt that we have:
@@ -91,7 +102,7 @@ class EngagementScoreService(private val cs: CoroutineScope) : DisposableAdaptor
 
             project?.let {
 
-                //update last event time only if really send the event
+                //update last event time only if really sent the event
                 service<EngagementScorePersistence>().state.lastEventTime = today()
 
                 ActivityMonitor.getInstance(it).registerCustomEvent(

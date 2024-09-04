@@ -32,7 +32,7 @@ class EngagementScoreData {
     @OptionTag(converter = LocalDateConverter::class)
     var lastEventTime: LocalDate? = null
 
-    //using string as day and not LocalDate because its it's a bit messy to serialise LocalDate as map keys
+    //using string as day and not LocalDate because it's a bit messy to serialise LocalDate as map keys
     // with this persistence framework.
     @get:XMap(keyAttributeName = "day", valueAttributeName = "count")
     var meaningfulActionsCounters = mutableMapOf<String, Int>()

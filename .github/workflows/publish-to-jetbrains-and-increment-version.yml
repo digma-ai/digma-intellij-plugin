@@ -73,6 +73,8 @@ jobs:
           ./gradlew --no-configuration-cache  incrementSemanticVersionPatch 
           ./gradlew --no-configuration-cache  printSemanticVersion -q
 
+
+
       - name: Commit next version to main
         run: |
           VERSION=$(cat version.properties |grep "version="|cut -d= -f2)

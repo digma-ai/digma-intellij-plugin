@@ -108,7 +108,6 @@ public class JaegerUIFileEditor extends UserDataHolderBase implements FileEditor
             jCefComponent = null;
         }
         disposed = true;
-        file.setValid(false);
     }
 
 }

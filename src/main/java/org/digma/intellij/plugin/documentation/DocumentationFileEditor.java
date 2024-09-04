@@ -2,7 +2,7 @@ package org.digma.intellij.plugin.documentation;
 
 import com.intellij.openapi.fileEditor.*;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.UserDataHolderBase;
+import com.intellij.openapi.util.*;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.jcef.JBCefApp;
 import org.digma.intellij.plugin.ui.jcef.*;
@@ -101,11 +101,10 @@ public class DocumentationFileEditor extends UserDataHolderBase implements FileE
     @Override
     public void dispose() {
         if (jCefComponent != null) {
-            jCefComponent.dispose();
+            Disposer.dispose(jCefComponent);
             jCefComponent = null;
         }
         disposed = true;
-        file.setValid(false);
     }
 
 }

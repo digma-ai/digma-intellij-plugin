@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.project.Project
@@ -20,6 +21,7 @@ import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.common.Frequency
 import org.digma.intellij.plugin.common.UniqueGeneratedUserId
 import org.digma.intellij.plugin.common.objectToJson
+import org.digma.intellij.plugin.engagement.EngagementScoreService
 import org.digma.intellij.plugin.execution.DIGMA_INSTRUMENTATION_ERROR
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.AboutResult
@@ -251,6 +253,8 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
 
         val detailsToSend = details.toMutableMap()
         detailsToSend["action"] = action
+
+        service<EngagementScoreService>().addAction(action)
 
         capture(
             "user-action",

@@ -20,7 +20,9 @@ import org.digma.intellij.plugin.ui.insights.model.SetDismissedData
 import org.digma.intellij.plugin.ui.insights.model.SetDismissedMessage
 import org.digma.intellij.plugin.ui.insights.model.SetInsightDataListMessage
 import org.digma.intellij.plugin.ui.insights.model.SetInsightsAsReadData
+import org.digma.intellij.plugin.ui.insights.model.SetInsightsData
 import org.digma.intellij.plugin.ui.insights.model.SetInsightsMarkAsReadMessage
+import org.digma.intellij.plugin.ui.insights.model.SetIssuesData
 import org.digma.intellij.plugin.ui.insights.model.SetIssuesDataListMessage
 import org.digma.intellij.plugin.ui.insights.model.SetIssuesFilterMessage
 import org.digma.intellij.plugin.ui.insights.model.SetUnDismissedData
@@ -55,15 +57,15 @@ class InsightsService(val project: Project) : InsightsServiceImpl(project) {
     }
 
     fun refreshInsightsList(backendQueryParams: MutableMap<String, Any>) {
-
+        val viewMode = backendQueryParams["insightViewType"] as String;
         val message = try {
             val insights = AnalyticsService.getInstance(project).getInsights(backendQueryParams)
             onInsightReceived(insights)
-            SetInsightDataListMessage(insights)
+            SetInsightDataListMessage(SetInsightsData(insights, viewMode))
         } catch (e: AnalyticsServiceException) {
             Log.debugWithException(logger, project, e, "Error loading insights {}", e.message)
             val error = ErrorPayload(e.nonNullMessage)
-            SetInsightDataListMessage("{\"totalCount\":0,\"insights\":[]}",error)
+            SetInsightDataListMessage(SetInsightsData("{\"totalCount\":0,\"insights\":[]}", viewMode), error)
         }
 
         jCefComponent?.let {
@@ -72,14 +74,14 @@ class InsightsService(val project: Project) : InsightsServiceImpl(project) {
     }
 
     fun refreshIssuesList(request: GetIssuesRequestPayload) {
-        val message = try {
+       val message = try {
             val issues = AnalyticsService.getInstance(project).getIssues(request)
             reportFirstIssue(issues)
-            SetIssuesDataListMessage(issues)
+            SetIssuesDataListMessage(SetIssuesData(issues))
         } catch (e: AnalyticsServiceException) {
             Log.debugWithException(logger, project, e, "Error loading issues {}", e.message)
             val error = ErrorPayload(e.nonNullMessage)
-            SetIssuesDataListMessage("{\"totalCount\":0,\"insights\":[]}", error)
+            SetIssuesDataListMessage(SetIssuesData("{\"totalCount\":0,\"insights\":[]}"), error)
         }
 
         jCefComponent?.let {

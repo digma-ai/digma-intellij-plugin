@@ -30,15 +30,24 @@ class UserRegistrationManager(private val project: Project) {
         }
 
 
+        //if UserRequestedCourse is already true don't change again, it depends on who called this method, and it may be that
+        // the scope property doesn't exist but user already requested course before.
+        if (!PersistenceService.getInstance().isUserRequestedCourse()) {
+            val courseRequested = registrationMap["scope"] == "promotion"
+            if (courseRequested) {
+                PersistenceService.getInstance().setUserRequestedCourse(true)
+                ActivityMonitor.getInstance(project).registerUserRequestedCourse()
+            }
+        }
+
         if (PersistenceService.getInstance().getUserRegistrationEmail().isNullOrBlank() ||
             PersistenceService.getInstance().getUserRegistrationEmail() != email
         ) {
 
             ActivityMonitor.getInstance(project).registerCustomEvent("register local user", registrationMap)
             ActivityMonitor.getInstance(project).registerUserAction("local user registered", registrationMap)
-            val courseRequested = registrationMap["scope"] == "promotion"
             PersistenceService.getInstance().setUserRegistrationEmail(email)
-            ActivityMonitor.getInstance(project).registerEmail(email, courseRequested)//override the onboarding email
+            ActivityMonitor.getInstance(project).registerEmail(email)//override the onboarding email
             project.messageBus.syncPublisher(UserRegistrationEvent.USER_REGISTRATION_TOPIC).userRegistered(email)
         }
     }

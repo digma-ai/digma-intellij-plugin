@@ -12,6 +12,7 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import org.digma.intellij.plugin.PluginId
+import org.digma.intellij.plugin.common.UniqueGeneratedUserId
 import org.digma.intellij.plugin.docker.LocalInstallationFacade
 import org.digma.intellij.plugin.log.Log
 
@@ -36,9 +37,9 @@ class PluginActivityMonitor(private val project: Project) : PluginStateListener,
 
 
         val disabledListener = Runnable {
-            if (DisabledPluginsState.getDisabledIds().contains(myPluginId)){
-                val userId = ActivityMonitor.getInstance(project).registerPluginDisabled()
-                BrowserUtil.browse("https://digma.ai/disabled?u=$userId", project)
+            if (DisabledPluginsState.getDisabledIds().contains(myPluginId)) {
+                ActivityMonitor.getInstance(project).registerPluginDisabled()
+                BrowserUtil.browse("https://digma.ai/disabled?u=${UniqueGeneratedUserId.userId}", project)
             }
         }
 
@@ -50,9 +51,9 @@ class PluginActivityMonitor(private val project: Project) : PluginStateListener,
     }
 
     override fun uninstall(descriptor: IdeaPluginDescriptor) {
-        if(descriptor.pluginId.idString == PluginId.PLUGIN_ID){
-            val userId = ActivityMonitor.getInstance(project).registerPluginUninstalled()
-            BrowserUtil.browse("https://digma.ai/uninstall?u=$userId", project)
+        if (descriptor.pluginId.idString == PluginId.PLUGIN_ID) {
+            ActivityMonitor.getInstance(project).registerPluginUninstalled()
+            BrowserUtil.browse("https://digma.ai/uninstall?u=${UniqueGeneratedUserId.userId}", project)
 
 
             if (service<LocalInstallationFacade>().isLocalEngineInstalled()) {

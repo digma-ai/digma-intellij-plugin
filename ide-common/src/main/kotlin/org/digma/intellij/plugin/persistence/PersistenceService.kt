@@ -387,5 +387,12 @@ class PersistenceService {
         return state.alreadyShowedNewRecentActivityNotification
     }
 
+    fun setUserRequestedCourse(courseRequested: Boolean) {
+        state.userRequestedCourse = courseRequested
+    }
+
+    fun isUserRequestedCourse():Boolean {
+        return state.userRequestedCourse
+    }
 
 }

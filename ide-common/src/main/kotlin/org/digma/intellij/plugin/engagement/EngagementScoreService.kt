@@ -26,6 +26,12 @@ import kotlin.time.Duration.Companion.minutes
 class EngagementScoreService(private val cs: CoroutineScope) : DisposableAdaptor {
 
     companion object {
+
+        @JvmStatic
+        fun getInstance(): EngagementScoreService {
+            return service<EngagementScoreService>()
+        }
+
         val MEANINGFUL_ACTIONS = setOf(
             "span link clicked",
             "insights insight card asset link clicked",
@@ -71,12 +77,12 @@ class EngagementScoreService(private val cs: CoroutineScope) : DisposableAdaptor
             LocalDate.parse(it.key) != today()
         }
 
-        if (daysForAverage.isEmpty()){
+        if (daysForAverage.isEmpty()) {
             return
         }
 
 
-        val activeDays = daysForAverage.size
+        val activeDays = daysForAverage.size.toLong()
         val average = daysForAverage.values.average().let {
             if (it.isNaN()) 0 else it.roundToLong()
         }
@@ -102,15 +108,12 @@ class EngagementScoreService(private val cs: CoroutineScope) : DisposableAdaptor
 
             project?.let {
 
-                //update last event time only if really sent the event
+                //update only if really sent the event
                 service<EngagementScorePersistence>().state.lastEventTime = today()
+                service<EngagementScorePersistence>().state.latestRegisteredActiveDays = activeDays
+                service<EngagementScorePersistence>().state.latestRegisteredAverage = average
 
-                ActivityMonitor.getInstance(it).registerCustomEvent(
-                    "daily engagement score", mapOf(
-                        "meaningful_actions_days" to activeDays,
-                        "meaningful_actions_avg" to average
-                    )
-                )
+                ActivityMonitor.getInstance(it).registerEngagementScore(activeDays, average)
             }
         }
     }
@@ -137,6 +140,15 @@ class EngagementScoreService(private val cs: CoroutineScope) : DisposableAdaptor
         if (MEANINGFUL_ACTIONS.contains(action)) {
             service<EngagementScorePersistence>().state.increment(today())
         }
+    }
+
+
+    fun getLatestRegisteredActiveDays(): Long {
+        return service<EngagementScorePersistence>().state.latestRegisteredActiveDays
+    }
+
+    fun getLatestRegisteredAverage(): Long {
+        return service<EngagementScorePersistence>().state.latestRegisteredAverage
     }
 
 }

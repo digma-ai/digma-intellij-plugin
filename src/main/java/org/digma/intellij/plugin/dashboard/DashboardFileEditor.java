@@ -28,6 +28,7 @@ public class DashboardFileEditor extends UserDataHolderBase implements FileEdito
     private final VirtualFile file;
     private final JBCefBrowser jbCefBrowser;
     private final CefMessageRouter cefMessageRouter;
+    private boolean disposed = false;
 
     public DashboardFileEditor(Project project, VirtualFile file) {
         this.file = file;
@@ -109,7 +110,7 @@ public class DashboardFileEditor extends UserDataHolderBase implements FileEdito
 
     @Override
     public boolean isValid() {
-        return true;
+        return !disposed;
     }
 
     @Override
@@ -128,6 +129,7 @@ public class DashboardFileEditor extends UserDataHolderBase implements FileEdito
             Disposer.dispose(jbCefBrowser);
             cefMessageRouter.dispose();
         }
+        disposed = true;
     }
 
 }

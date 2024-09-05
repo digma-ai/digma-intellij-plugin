@@ -217,7 +217,7 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
     fun registerUserRequestedCourse() {
         identify(
             mapOf(
-                USER_REQUESTED_COURSE_PROPERTY_NAME to PersistenceService.getInstance().isUserRequestedCourse()
+                USER_REQUESTED_COURSE_PROPERTY_NAME to PersistenceService.getInstance().getUserRequestedCourseString()
             )
         )
     }
@@ -229,7 +229,7 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
             mapOf(
                 "email" to getEmailForEvent(),
                 INSTALL_STATUS_PROPERTY_NAME to getCurrentInstallStatus(),
-                USER_REQUESTED_COURSE_PROPERTY_NAME to PersistenceService.getInstance().isUserRequestedCourse()
+                USER_REQUESTED_COURSE_PROPERTY_NAME to PersistenceService.getInstance().getUserRequestedCourseString()
             )
         )
         postHog?.alias(UniqueGeneratedUserId.userId, email)
@@ -718,7 +718,7 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
                     ENVIRONMENT_ADDED_PROPERTY_NAME to PersistenceService.getInstance().isEnvironmentAdded(),
                     LOAD_WARNING_APPEARED_PROPERTY_NAME to PersistenceService.getInstance().isLoadWarningAppeared(),
                     JIRA_FIELD_COPIED_PROPERTY_NAME to PersistenceService.getInstance().isJiraFieldCopied(),
-                    USER_REQUESTED_COURSE_PROPERTY_NAME to PersistenceService.getInstance().isUserRequestedCourse(),
+                    USER_REQUESTED_COURSE_PROPERTY_NAME to PersistenceService.getInstance().getUserRequestedCourseString(),
                     MEANINGFUL_ACTIONS_DAYS_PROPERTY_NAME to EngagementScoreService.getInstance().getLatestRegisteredActiveDays(),
                     MEANINGFUL_ACTIONS_AVG_PROPERTY_NAME to EngagementScoreService.getInstance().getLatestRegisteredAverage()
                 )
@@ -745,7 +745,7 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
                     ENVIRONMENT_ADDED_PROPERTY_NAME to PersistenceService.getInstance().isEnvironmentAdded(),
                     LOAD_WARNING_APPEARED_PROPERTY_NAME to PersistenceService.getInstance().isLoadWarningAppeared(),
                     JIRA_FIELD_COPIED_PROPERTY_NAME to PersistenceService.getInstance().isJiraFieldCopied(),
-                    USER_REQUESTED_COURSE_PROPERTY_NAME to PersistenceService.getInstance().isUserRequestedCourse(),
+                    USER_REQUESTED_COURSE_PROPERTY_NAME to PersistenceService.getInstance().getUserRequestedCourseString(),
                     MEANINGFUL_ACTIONS_DAYS_PROPERTY_NAME to EngagementScoreService.getInstance().getLatestRegisteredActiveDays(),
                     MEANINGFUL_ACTIONS_AVG_PROPERTY_NAME to EngagementScoreService.getInstance().getLatestRegisteredAverage()
                 )
@@ -936,7 +936,7 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
         identify(
             mapOf(
                 LOAD_WARNING_APPEARED_PROPERTY_NAME + "_timestamp" to PersistenceService.getInstance().getLoadWarningAppearedTimestamp(),
-                USER_REQUESTED_COURSE_PROPERTY_NAME to PersistenceService.getInstance().isUserRequestedCourse()
+                USER_REQUESTED_COURSE_PROPERTY_NAME to PersistenceService.getInstance().getUserRequestedCourseString()
             ),
             mapOf(
                 LOAD_WARNING_APPEARED_PROPERTY_NAME to PersistenceService.getInstance().isLoadWarningAppeared(),
@@ -967,7 +967,7 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
         identify(
             mapOf(
                 ENVIRONMENT_ADDED_PROPERTY_NAME + "_timestamp" to PersistenceService.getInstance().getEnvironmentAddedTimestamp(),
-                USER_REQUESTED_COURSE_PROPERTY_NAME to PersistenceService.getInstance().isUserRequestedCourse()
+                USER_REQUESTED_COURSE_PROPERTY_NAME to PersistenceService.getInstance().getUserRequestedCourseString()
             ),
             mapOf(
                 ENVIRONMENT_ADDED_PROPERTY_NAME to PersistenceService.getInstance().isEnvironmentAdded()
@@ -998,7 +998,7 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
         identify(
             mapOf(
                 JIRA_FIELD_COPIED_PROPERTY_NAME + "_timestamp" to PersistenceService.getInstance().getJiraFieldCopiedTimestamp(),
-                USER_REQUESTED_COURSE_PROPERTY_NAME to PersistenceService.getInstance().isUserRequestedCourse()
+                USER_REQUESTED_COURSE_PROPERTY_NAME to PersistenceService.getInstance().getUserRequestedCourseString()
             ),
             mapOf(
                 JIRA_FIELD_COPIED_PROPERTY_NAME to PersistenceService.getInstance().isJiraFieldCopied()
@@ -1085,7 +1085,7 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
             MEANINGFUL_ACTIONS_DAYS_PROPERTY_NAME to activeDays,
             MEANINGFUL_ACTIONS_AVG_PROPERTY_NAME to average,
             INSTALL_STATUS_PROPERTY_NAME to getCurrentInstallStatus(),
-            USER_REQUESTED_COURSE_PROPERTY_NAME to PersistenceService.getInstance().isUserRequestedCourse()
+            USER_REQUESTED_COURSE_PROPERTY_NAME to PersistenceService.getInstance().getUserRequestedCourseString()
         )
 
         capture("daily engagement score", details)

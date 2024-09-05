@@ -395,4 +395,8 @@ class PersistenceService {
         return state.userRequestedCourse
     }
 
+    fun getUserRequestedCourseString():String {
+        return state.userRequestedCourse.toString()
+    }
+
 }

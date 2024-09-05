@@ -37,6 +37,9 @@ class EngagementScoreData {
     @get:XMap(keyAttributeName = "day", valueAttributeName = "count")
     var meaningfulActionsCounters = mutableMapOf<String, Int>()
 
+    var latestRegisteredActiveDays: Long = 0
+    var latestRegisteredAverage: Long = 0
+
 
     fun put(date: LocalDate, count: Int) {
         meaningfulActionsCounters[date.toString()] = count

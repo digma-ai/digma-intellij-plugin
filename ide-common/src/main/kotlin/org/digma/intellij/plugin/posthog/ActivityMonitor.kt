@@ -50,6 +50,9 @@ private const val INSTALL_STATUS_PROPERTY_NAME = "install_status"
 private const val ENVIRONMENT_ADDED_PROPERTY_NAME = "environment_added"
 private const val LOAD_WARNING_APPEARED_PROPERTY_NAME = "load_warning_appeared"
 private const val JIRA_FIELD_COPIED_PROPERTY_NAME = "jira_field_copied"
+private const val USER_REQUESTED_COURSE_PROPERTY_NAME = "user_requested_course"
+private const val MEANINGFUL_ACTIONS_DAYS_PROPERTY_NAME = "meaningful_actions_days"
+private const val MEANINGFUL_ACTIONS_AVG_PROPERTY_NAME = "meaningful_actions_avg"
 
 enum class InstallStatus { Active, Uninstalled, Disabled }
 
@@ -155,6 +158,11 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
     }
 
 
+    private fun identify(properties: Map<String, Any?>, propertiesSetOnce: Map<String, Any?>? = null) {
+        postHog?.identify(UniqueGeneratedUserId.userId, properties, propertiesSetOnce)
+    }
+
+
     private fun capture(eventName: String) {
         capture(eventName, mapOf())
     }
@@ -206,12 +214,22 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
         )
     }
 
-    fun registerEmail(email: String, courseRequested: Boolean) {
-        postHog?.identify(
-            UniqueGeneratedUserId.userId, mapOf(
+    fun registerUserRequestedCourse() {
+        identify(
+            mapOf(
+                USER_REQUESTED_COURSE_PROPERTY_NAME to PersistenceService.getInstance().isUserRequestedCourse()
+            )
+        )
+    }
+
+
+    fun registerEmail(email: String) {
+
+        identify(
+            mapOf(
                 "email" to getEmailForEvent(),
                 INSTALL_STATUS_PROPERTY_NAME to getCurrentInstallStatus(),
-                "user_requested_course" to courseRequested.toString()
+                USER_REQUESTED_COURSE_PROPERTY_NAME to PersistenceService.getInstance().isUserRequestedCourse()
             )
         )
         postHog?.alias(UniqueGeneratedUserId.userId, email)
@@ -687,7 +705,7 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
         capture("project closed", mapOf("open.projects" to openProjects))
     }
 
-    fun registerPluginUninstalled(): String {
+    fun registerPluginUninstalled() {
 
         SessionMetadataProperties.getInstance().put(CURRENT_INSTALL_STATUS_KEY, InstallStatus.Uninstalled)
 
@@ -700,7 +718,9 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
                     ENVIRONMENT_ADDED_PROPERTY_NAME to PersistenceService.getInstance().isEnvironmentAdded(),
                     LOAD_WARNING_APPEARED_PROPERTY_NAME to PersistenceService.getInstance().isLoadWarningAppeared(),
                     JIRA_FIELD_COPIED_PROPERTY_NAME to PersistenceService.getInstance().isJiraFieldCopied(),
-                    "user_requested_course" to "false"
+                    USER_REQUESTED_COURSE_PROPERTY_NAME to PersistenceService.getInstance().isUserRequestedCourse(),
+                    MEANINGFUL_ACTIONS_DAYS_PROPERTY_NAME to EngagementScoreService.getInstance().getLatestRegisteredActiveDays(),
+                    MEANINGFUL_ACTIONS_AVG_PROPERTY_NAME to EngagementScoreService.getInstance().getLatestRegisteredAverage()
                 )
             )
         }
@@ -710,10 +730,9 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
                 INSTALL_STATUS_PROPERTY_NAME + "_timestamp" to SessionMetadataProperties.getInstance().getCreatedAsString(CURRENT_INSTALL_STATUS_KEY)
             )
         )
-        return UniqueGeneratedUserId.userId
     }
 
-    fun registerPluginDisabled(): String {
+    fun registerPluginDisabled() {
 
         SessionMetadataProperties.getInstance().put(CURRENT_INSTALL_STATUS_KEY, InstallStatus.Disabled)
 
@@ -726,7 +745,9 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
                     ENVIRONMENT_ADDED_PROPERTY_NAME to PersistenceService.getInstance().isEnvironmentAdded(),
                     LOAD_WARNING_APPEARED_PROPERTY_NAME to PersistenceService.getInstance().isLoadWarningAppeared(),
                     JIRA_FIELD_COPIED_PROPERTY_NAME to PersistenceService.getInstance().isJiraFieldCopied(),
-                    "user_requested_course" to "false"
+                    USER_REQUESTED_COURSE_PROPERTY_NAME to PersistenceService.getInstance().isUserRequestedCourse(),
+                    MEANINGFUL_ACTIONS_DAYS_PROPERTY_NAME to EngagementScoreService.getInstance().getLatestRegisteredActiveDays(),
+                    MEANINGFUL_ACTIONS_AVG_PROPERTY_NAME to EngagementScoreService.getInstance().getLatestRegisteredAverage()
                 )
             )
         }
@@ -736,7 +757,6 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
                 INSTALL_STATUS_PROPERTY_NAME + "_timestamp" to SessionMetadataProperties.getInstance().getCreatedAsString(CURRENT_INSTALL_STATUS_KEY)
             )
         )
-        return UniqueGeneratedUserId.userId
     }
 
 
@@ -913,11 +933,10 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
             )
         )
 
-        postHog?.identify(
-            UniqueGeneratedUserId.userId,
+        identify(
             mapOf(
                 LOAD_WARNING_APPEARED_PROPERTY_NAME + "_timestamp" to PersistenceService.getInstance().getLoadWarningAppearedTimestamp(),
-                "user_requested_course" to "false"
+                USER_REQUESTED_COURSE_PROPERTY_NAME to PersistenceService.getInstance().isUserRequestedCourse()
             ),
             mapOf(
                 LOAD_WARNING_APPEARED_PROPERTY_NAME to PersistenceService.getInstance().isLoadWarningAppeared(),
@@ -945,11 +964,10 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
         )
         registerUserAction(eventName, eventDetails)
 
-        postHog?.identify(
-            UniqueGeneratedUserId.userId,
+        identify(
             mapOf(
                 ENVIRONMENT_ADDED_PROPERTY_NAME + "_timestamp" to PersistenceService.getInstance().getEnvironmentAddedTimestamp(),
-                "user_requested_course" to "false"
+                USER_REQUESTED_COURSE_PROPERTY_NAME to PersistenceService.getInstance().isUserRequestedCourse()
             ),
             mapOf(
                 ENVIRONMENT_ADDED_PROPERTY_NAME to PersistenceService.getInstance().isEnvironmentAdded()
@@ -977,11 +995,10 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
             mutableDetails
         )
 
-        postHog?.identify(
-            UniqueGeneratedUserId.userId,
+        identify(
             mapOf(
                 JIRA_FIELD_COPIED_PROPERTY_NAME + "_timestamp" to PersistenceService.getInstance().getJiraFieldCopiedTimestamp(),
-                "user_requested_course" to "false"
+                USER_REQUESTED_COURSE_PROPERTY_NAME to PersistenceService.getInstance().isUserRequestedCourse()
             ),
             mapOf(
                 JIRA_FIELD_COPIED_PROPERTY_NAME to PersistenceService.getInstance().isJiraFieldCopied()
@@ -1061,5 +1078,26 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
     fun registerBackendDataFound() {
         capture("backend-data-found")
     }
+
+    fun registerEngagementScore(activeDays: Long, average: Long) {
+
+        val details = mapOf(
+            MEANINGFUL_ACTIONS_DAYS_PROPERTY_NAME to activeDays,
+            MEANINGFUL_ACTIONS_AVG_PROPERTY_NAME to average,
+            INSTALL_STATUS_PROPERTY_NAME to getCurrentInstallStatus(),
+            USER_REQUESTED_COURSE_PROPERTY_NAME to PersistenceService.getInstance().isUserRequestedCourse()
+        )
+
+        capture("daily engagement score", details)
+
+        identify(
+            mapOf(
+                MEANINGFUL_ACTIONS_DAYS_PROPERTY_NAME to activeDays,
+                MEANINGFUL_ACTIONS_AVG_PROPERTY_NAME to average
+            )
+        )
+
+    }
+
 
 }

@@ -210,7 +210,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                 val email = payload?.email
                 PersistenceService.getInstance().setUserEmail(email)
                 if (email != null) {
-                    ActivityMonitor.getInstance(project).registerEmail(email, false)
+                    ActivityMonitor.getInstance(project).registerEmail(email)
                 }
 
                 payload?.productKey?.let {

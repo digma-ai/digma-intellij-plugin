@@ -1,6 +1,16 @@
 # Changelog
 
-## [2.0.383] - 2024-09-03
+## [2.0.384] - 2024-09-05
+
+- Fix tab switch by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2481
+- Update ui by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2484
+- posthog engagment score Closes #2472 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2483
+- test skip ci [skip ci] by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2485
+- fix error when moving dragging traces between splits by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2486
+- add properties to engagement score by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2489
+- change requested course to string by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2491
+
+## 2.0.383 - 2024-09-03
 
 - user activation from backend Closes #2290 Closes #2439 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2455
 - shorten delay and reload per project by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2473

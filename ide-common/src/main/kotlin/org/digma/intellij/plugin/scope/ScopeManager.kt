@@ -10,8 +10,6 @@ import org.digma.intellij.plugin.common.CodeObjectsUtil
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
-import org.digma.intellij.plugin.navigation.MainContentViewSwitcher
-import org.digma.intellij.plugin.navigation.View
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
@@ -31,7 +29,6 @@ class ScopeManager(private val project: Project) {
 
     fun changeToHome(
         isCalledFromReact: Boolean = false,
-        forceNavigation: Boolean = false,
         scopeContext: ScopeContext? = null,
         environmentId: String? = null
     ) {
@@ -44,14 +41,6 @@ class ScopeManager(private val project: Project) {
         }
 
         fireScopeChangedEvent(null, CodeLocation(listOf(), listOf()), false, scopeContext,environmentId)
-
-        if (!forceNavigation) {
-            val contentViewSwitcher = MainContentViewSwitcher.getInstance(project)
-            if (contentViewSwitcher.getSelectedView() != View.Assets) {
-                contentViewSwitcher.showInsights()
-            }
-        }
-
 
         EDT.ensureEDT {
             //don't do that on first wizard launch to let user complete the installation wizard.
@@ -70,8 +59,6 @@ class ScopeManager(private val project: Project) {
     //preferredView is the preferred view to show after changing scope.
     fun changeScope(
         scope: Scope,
-        changeView: Boolean = true,
-        preferredView: View? = null,
         scopeContext: ScopeContext? = null,
         environmentId: String? = null
     ) {
@@ -81,7 +68,7 @@ class ScopeManager(private val project: Project) {
 
         try {
             when (scope) {
-                is SpanScope -> changeToSpanScope(scope, changeView, preferredView, scopeContext, environmentId)
+                is SpanScope -> changeToSpanScope(scope, scopeContext, environmentId)
 
                 else -> {
                     ErrorReporter.getInstance().reportError(
@@ -99,8 +86,6 @@ class ScopeManager(private val project: Project) {
 
     private fun changeToSpanScope(
         scope: SpanScope,
-        changeView: Boolean = true,
-        preferredView: View? = null,
         scopeContext: ScopeContext? = null,
         environmentId: String? = null
     ) {
@@ -141,10 +126,6 @@ class ScopeManager(private val project: Project) {
 
         fireScopeChangedEvent(scope, codeLocation, hasErrors, scopeContext, environmentId)
 
-        if (changeView) {
-            changeViewAfterScopeChange(scope, preferredView)
-        }
-
         EDT.ensureEDT {
             MainToolWindowCardsController.getInstance(project).closeCoveringViewsIfNecessary()
             ToolWindowShower.getInstance(project).showToolWindow()
@@ -159,22 +140,6 @@ class ScopeManager(private val project: Project) {
             !errors.isNullOrBlank() && errors != "[]"
         } catch (e: Throwable) {
             false
-        }
-    }
-
-
-    private fun changeViewAfterScopeChange(scope: SpanScope, preferredView: View?) {
-
-        //in both these cases, if there are no insights, show analytics
-        if (preferredView == null || preferredView == View.Insights) {
-            val insightsStats = AnalyticsService.getInstance(project).getInsightsStats(scope.spanCodeObjectId, null, null)
-            if (insightsStats.issuesInsightsCount == 0) {
-                MainContentViewSwitcher.getInstance(project).showAnalytics()
-            } else {
-                MainContentViewSwitcher.getInstance(project).showInsights()
-            }
-        } else {
-            MainContentViewSwitcher.getInstance(project).showView(preferredView)
         }
     }
 

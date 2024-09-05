@@ -58,12 +58,6 @@ public class JaegerUIMessageRouterHandler extends BaseMessageRouterHandler {
                 JaegerUIService.getInstance(project).navigateToCode(goToSpanMessage);
             }
 
-            case "GO_TO_INSIGHTS" -> {
-                //it's the same message as go to span
-                GoToSpanMessage goToSpanMessage = getObjectMapper().treeToValue(requestJsonNode, GoToSpanMessage.class);
-                JaegerUIService.getInstance(project).goToInsight(goToSpanMessage);
-            }
-
             default -> {
                 return false;
             }

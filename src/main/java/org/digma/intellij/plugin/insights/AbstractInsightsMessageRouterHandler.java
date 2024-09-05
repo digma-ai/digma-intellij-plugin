@@ -12,7 +12,7 @@ import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.rest.insights.issues.GetIssuesRequestPayload;
 import org.digma.intellij.plugin.model.rest.navigation.*;
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator;
-import org.digma.intellij.plugin.posthog.*;
+import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.ui.insights.InsightsService;
 import org.digma.intellij.plugin.ui.insights.model.*;
 import org.digma.intellij.plugin.ui.jcef.BaseCommonMessageRouterHandler;
@@ -39,8 +39,6 @@ public abstract class AbstractInsightsMessageRouterHandler extends BaseCommonMes
     public boolean doOnQuery(@NotNull Project project, @NotNull CefBrowser browser, @NotNull JsonNode requestJsonNode, @NotNull String rawRequest, @NotNull String action) throws Exception {
 
         switch (action) {
-
-            case "INSIGHTS/GO_TO_ASSET" -> goToInsight(requestJsonNode);
 
             case "INSIGHTS/OPEN_LIVE_VIEW" -> openLiveView(requestJsonNode);
 
@@ -255,14 +253,6 @@ public abstract class AbstractInsightsMessageRouterHandler extends BaseCommonMes
         var methodName = pair.getSecond();
         return String.format("%s.%s", classFqn, methodName);
 
-    }
-
-    private void goToInsight(JsonNode jsonNode) throws JsonProcessingException {
-        Log.log(LOGGER::debug, getProject(), "got INSIGHTS/GO_TO_ASSET message");
-        var spanId = getObjectMapper().readTree(jsonNode.get("payload").toString()).get("spanCodeObjectId").asText();
-        Log.log(LOGGER::debug, getProject(), "got span id {}", spanId);
-        InsightsService.getInstance(getProject()).showInsight(spanId);
-        ActivityMonitor.getInstance(getProject()).registerSpanLinkClicked(spanId, UserActionOrigin.Insights);
     }
 
     private void openHistogram(JsonNode jsonNode) throws JsonProcessingException {

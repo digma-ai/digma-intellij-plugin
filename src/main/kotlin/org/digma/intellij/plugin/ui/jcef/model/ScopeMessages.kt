@@ -20,15 +20,11 @@ data class ChangeScopeMessage
 @ConstructorProperties(
     "span",
     "environmentId",
-    "forceNavigation",
     "context"
 )
 constructor(
     val span: ChangeScopeSpan? = null,
     val environmentId: String? = null,
-    @get:JsonProperty("forceNavigation")
-    @param:JsonProperty("forceNavigation")
-    val forceNavigation: Boolean? = null,
     val context: ScopeContext? = null
 )
 

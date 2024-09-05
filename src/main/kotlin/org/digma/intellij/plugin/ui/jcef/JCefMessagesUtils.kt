@@ -12,7 +12,6 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.model.rest.environment.Env
 import org.digma.intellij.plugin.model.rest.insights.SpanEnvironment
 import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
-import org.digma.intellij.plugin.navigation.View
 import org.digma.intellij.plugin.scope.ScopeContext
 import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.ui.common.isJaegerButtonEnabled
@@ -46,8 +45,6 @@ import org.digma.intellij.plugin.ui.jcef.model.SetStateMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetUserEmailMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetUserFinishedDigmathon
 import org.digma.intellij.plugin.ui.jcef.model.SetUserInfoMessage
-import org.digma.intellij.plugin.ui.jcef.model.SetViewMessage
-import org.digma.intellij.plugin.ui.jcef.model.SetViewMessagePayload
 import org.digma.intellij.plugin.ui.jcef.model.UICodeFontRequest
 import org.digma.intellij.plugin.ui.jcef.model.UIFontRequest
 import org.digma.intellij.plugin.ui.jcef.model.UIThemeRequest
@@ -237,13 +234,6 @@ fun sendIsJaegerButtonEnabledMessage(cefBrowser: CefBrowser) {
     )
 }
 
-
-fun sendCurrentViewsState(cefBrowser: CefBrowser, action: String, views: List<View>, createHistoryStep: Boolean) {
-    serializeAndExecuteWindowPostMessageJavaScript(
-        cefBrowser,
-        SetViewMessage(action, SetViewMessagePayload(views, createHistoryStep))
-    )
-}
 
 fun sendSetInsightStatsMessage(
     cefBrowser: CefBrowser,

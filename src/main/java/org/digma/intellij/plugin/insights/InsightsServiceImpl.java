@@ -8,7 +8,6 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.posthog.*;
-import org.digma.intellij.plugin.scope.*;
 import org.digma.intellij.plugin.ui.common.*;
 import org.digma.intellij.plugin.ui.recentactivity.RecentActivityService;
 import org.jetbrains.annotations.*;
@@ -30,14 +29,6 @@ public abstract class InsightsServiceImpl implements Disposable {
     @Override
     public void dispose() {
 
-    }
-
-    public void showInsight(@NotNull String spanId) {
-        Log.log(logger::debug, project, "showInsight called {}", spanId);
-        //this is called from message INSIGHTS/GO_TO_ASSET, which is called from the Issues tab and
-        // analytics tab, in both cases we don't want to change the view so send changeView=false
-        // to method changeScope
-        ScopeManager.getInstance(project).changeScope(new SpanScope(spanId), false, null, null, null);
     }
 
 

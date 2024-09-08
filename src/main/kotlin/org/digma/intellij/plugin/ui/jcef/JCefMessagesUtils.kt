@@ -31,8 +31,6 @@ import org.digma.intellij.plugin.ui.jcef.model.RunConfigurationAttributesPayload
 import org.digma.intellij.plugin.ui.jcef.model.SetApiUrlMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetDigmathonProductKey
 import org.digma.intellij.plugin.ui.jcef.model.SetDigmathonState
-import org.digma.intellij.plugin.ui.jcef.model.SetEnvironmentMessage
-import org.digma.intellij.plugin.ui.jcef.model.SetEnvironmentMessagePayload
 import org.digma.intellij.plugin.ui.jcef.model.SetEnvironmentsMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetEnvironmentsMessagePayload
 import org.digma.intellij.plugin.ui.jcef.model.SetInsightStatsMessage
@@ -177,13 +175,6 @@ fun sendEnvironmentsList(cefBrowser: CefBrowser, environments: List<Env>) {
     } catch (e: Throwable) {
         ErrorReporter.getInstance().reportError("sendEnvironmentsList", e)
     }
-}
-
-fun sendCurrentEnvironment(cefBrowser: CefBrowser, environment: Env) {
-    serializeAndExecuteWindowPostMessageJavaScript(
-        cefBrowser,
-        SetEnvironmentMessage(SetEnvironmentMessagePayload(environment))
-    )
 }
 
 

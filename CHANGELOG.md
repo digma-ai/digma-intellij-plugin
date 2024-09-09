@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.384] - 2024-09-05
+## [2.0.385] - 2024-09-09
+
+- Update ui by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2492
+
+## 2.0.384 - 2024-09-05
 
 - Fix tab switch by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2481
 - Update ui by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2484

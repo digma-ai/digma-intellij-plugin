@@ -12,7 +12,6 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.model.rest.environment.Env
 import org.digma.intellij.plugin.model.rest.insights.SpanEnvironment
 import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
-import org.digma.intellij.plugin.navigation.View
 import org.digma.intellij.plugin.scope.ScopeContext
 import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.ui.common.isJaegerButtonEnabled
@@ -32,8 +31,6 @@ import org.digma.intellij.plugin.ui.jcef.model.RunConfigurationAttributesPayload
 import org.digma.intellij.plugin.ui.jcef.model.SetApiUrlMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetDigmathonProductKey
 import org.digma.intellij.plugin.ui.jcef.model.SetDigmathonState
-import org.digma.intellij.plugin.ui.jcef.model.SetEnvironmentMessage
-import org.digma.intellij.plugin.ui.jcef.model.SetEnvironmentMessagePayload
 import org.digma.intellij.plugin.ui.jcef.model.SetEnvironmentsMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetEnvironmentsMessagePayload
 import org.digma.intellij.plugin.ui.jcef.model.SetInsightStatsMessage
@@ -46,8 +43,6 @@ import org.digma.intellij.plugin.ui.jcef.model.SetStateMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetUserEmailMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetUserFinishedDigmathon
 import org.digma.intellij.plugin.ui.jcef.model.SetUserInfoMessage
-import org.digma.intellij.plugin.ui.jcef.model.SetViewMessage
-import org.digma.intellij.plugin.ui.jcef.model.SetViewMessagePayload
 import org.digma.intellij.plugin.ui.jcef.model.UICodeFontRequest
 import org.digma.intellij.plugin.ui.jcef.model.UIFontRequest
 import org.digma.intellij.plugin.ui.jcef.model.UIThemeRequest
@@ -182,13 +177,6 @@ fun sendEnvironmentsList(cefBrowser: CefBrowser, environments: List<Env>) {
     }
 }
 
-fun sendCurrentEnvironment(cefBrowser: CefBrowser, environment: Env) {
-    serializeAndExecuteWindowPostMessageJavaScript(
-        cefBrowser,
-        SetEnvironmentMessage(SetEnvironmentMessagePayload(environment))
-    )
-}
-
 
 fun sendObservabilityEnabledMessage(cefBrowser: CefBrowser, isObservabilityEnabled: Boolean) {
     serializeAndExecuteWindowPostMessageJavaScript(
@@ -237,13 +225,6 @@ fun sendIsJaegerButtonEnabledMessage(cefBrowser: CefBrowser) {
     )
 }
 
-
-fun sendCurrentViewsState(cefBrowser: CefBrowser, action: String, views: List<View>, createHistoryStep: Boolean) {
-    serializeAndExecuteWindowPostMessageJavaScript(
-        cefBrowser,
-        SetViewMessage(action, SetViewMessagePayload(views, createHistoryStep))
-    )
-}
 
 fun sendSetInsightStatsMessage(
     cefBrowser: CefBrowser,

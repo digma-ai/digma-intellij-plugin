@@ -304,11 +304,6 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
 
     }
 
-    fun registerSpanLinkClicked(spanId: String, origin: UserActionOrigin) {
-        registerUserActionWithOrigin(
-            "span link clicked", origin, mapOf("span id" to spanId)
-        )
-    }
 
 
     fun registerLensClicked(lens: String) {

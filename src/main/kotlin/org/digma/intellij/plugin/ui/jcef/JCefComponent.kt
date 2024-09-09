@@ -224,14 +224,7 @@ private constructor(
         project.messageBus.connect(parentDisposable).subscribe(
             EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC, object : EnvironmentChanged {
                 override fun environmentChanged(newEnv: Env?) {
-                    try {
-                        newEnv?.let {
-                            sendCurrentEnvironment(jbCefBrowser.cefBrowser, it)
-                        }
-                    } catch (e: Throwable) {
-                        Log.warnWithException(logger, project, e, "error in environmentChanged")
-                        ErrorReporter.getInstance().reportError(project, "JCefComponent.environmentChanged", e)
-                    }
+                    //UI doesn't need environmentChanged event
                 }
 
                 override fun environmentsListChanged(newEnvironments: MutableList<Env>?) {

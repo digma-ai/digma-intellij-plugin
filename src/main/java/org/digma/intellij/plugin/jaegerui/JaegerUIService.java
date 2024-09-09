@@ -11,12 +11,9 @@ import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.jaegerui.model.incoming.*;
 import org.digma.intellij.plugin.jaegerui.model.outgoing.*;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.navigation.View;
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator;
-import org.digma.intellij.plugin.posthog.*;
 import org.digma.intellij.plugin.psi.*;
 import org.digma.intellij.plugin.reload.*;
-import org.digma.intellij.plugin.scope.*;
 import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.model.TraceSample;
 import org.jetbrains.annotations.*;
@@ -129,23 +126,10 @@ public class JaegerUIService implements Disposable, ReloadableJCefContainer {
 
         Log.log(logger::debug, project, "calling showInsightsForSpanOrMethodAndNavigateToCode from goToSpan for {}", span);
 
-        ActivityMonitor.getInstance(project).registerSpanLinkClicked(goToSpanMessage.payload().spanId(), UserActionOrigin.JaegerUI);
-
         CodeNavigator.getInstance(project).maybeNavigateToSpanOrMethod(span.spanCodeObjectId(), span.methodCodeObjectId());
 
     }
 
-
-    //show insight without navigating to source
-    public void goToInsight(GoToSpanMessage goToSpanMessage) {
-
-        Log.log(logger::trace, project, "goToInsight request {}", goToSpanMessage);
-
-        var span = goToSpanMessage.payload();
-        //if we're here then code location was not found
-        ActivityMonitor.getInstance(project).registerSpanLinkClicked(goToSpanMessage.payload().spanId(), UserActionOrigin.JaegerUI);
-        ScopeManager.getInstance(project).changeScope(new SpanScope(span.spanCodeObjectId()), true, View.getHighlights(), null, null);
-    }
 
     public Map<String, SpanData> getResolvedSpans(SpansMessage spansMessage) {
         var allSpans = new HashMap<String, SpanData>();

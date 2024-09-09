@@ -7,7 +7,6 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import org.cef.browser.*;
 import org.digma.intellij.plugin.analytics.*;
-import org.digma.intellij.plugin.dashboard.incoming.GoToSpan;
 import org.digma.intellij.plugin.dashboard.outgoing.*;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
@@ -21,7 +20,7 @@ import java.util.*;
 
 import static org.digma.intellij.plugin.common.JsonUtilsKt.objectNodeToMap;
 import static org.digma.intellij.plugin.ui.jcef.JCEFUtilsKt.getMapFromNode;
-import static org.digma.intellij.plugin.ui.jcef.JCefBrowserUtilsKt.*;
+import static org.digma.intellij.plugin.ui.jcef.JCefBrowserUtilsKt.serializeAndExecuteWindowPostMessageJavaScript;
 
 public class DashboardMessageRouterHandler extends BaseMessageRouterHandler {
 
@@ -47,10 +46,6 @@ public class DashboardMessageRouterHandler extends BaseMessageRouterHandler {
 
             case "DASHBOARD/GET_DATA" -> getData(browser, requestJsonNode);
 
-            case "DASHBOARD/GO_TO_SPAN" -> {
-                GoToSpan goToSpan = jsonToObject(requestJsonNode, GoToSpan.class);
-                DashboardService.getInstance(project).goToSpan(goToSpan);
-            }
             case "DASHBOARD/GET_SERVICES" -> {
                 pushServices(browser, requestJsonNode);
             }

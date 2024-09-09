@@ -26,7 +26,6 @@ class AssetsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHand
             "ASSETS/GET_CATEGORIES_DATA" -> pushAssetCategories(browser, requestJsonNode)
             "ASSETS/GET_DATA" -> pushAssetsFromGetData(browser, requestJsonNode)
             "ASSETS/GET_ASSET_FILTERS_DATA" -> pushAssetFilters(browser, requestJsonNode)
-            "ASSETS/GO_TO_ASSET" -> goToAsset(requestJsonNode)
 
             else -> return false
         }
@@ -96,19 +95,6 @@ class AssetsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHand
         val message = SetAssetsDataFiltersMessage(payload)
         Log.log(logger::trace, project, "sending ASSETS/SET_ASSET_FILTERS_DATA message")
         serializeAndExecuteWindowPostMessageJavaScript(browser, message)
-    }
-
-
-    @Throws(JsonProcessingException::class)
-    private fun goToAsset(requestJsonNode: JsonNode) {
-        Log.log(logger::trace, project, "got ASSETS/GO_TO_ASSET message")
-        val payload = getPayloadFromRequest(requestJsonNode)
-        payload?.let { pl ->
-            val spanId = pl.get("spanCodeObjectId").asText()
-            Log.log(logger::trace, project, "got span id {}", spanId)
-            AssetsService.getInstance(project).showAsset(spanId)
-        }
-
     }
 
 }

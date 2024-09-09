@@ -5,13 +5,11 @@ import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.navigation.View
 import org.digma.intellij.plugin.ui.assets.AssetsMessageRouterHandler
 import org.digma.intellij.plugin.ui.errors.ErrorsMessageRouterHandler
 import org.digma.intellij.plugin.ui.highlights.HighlightsMessageRouterHandler
 import org.digma.intellij.plugin.ui.insights.InsightsMessageRouterHandler
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
-import org.digma.intellij.plugin.ui.jcef.sendCurrentViewsState
 import org.digma.intellij.plugin.ui.navigation.NavigationMessageRouterHandler
 import org.digma.intellij.plugin.ui.tests.TestsMessageRouterHandler
 
@@ -65,7 +63,6 @@ class MainAppMessageRouterHandler(project: Project) : BaseMessageRouterHandler(p
     private fun onInitialize(browser: CefBrowser) {
         try {
             doCommonInitialize(browser)
-            sendCurrentViewsState(browser, MAIN_SET_VIEWS_ACTION, View.views, false)
         } catch (e: AnalyticsServiceException) {
             Log.warnWithException(logger, e, "error getting backend info")
         }

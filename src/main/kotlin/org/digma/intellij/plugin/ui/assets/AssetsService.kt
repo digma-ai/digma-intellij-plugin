@@ -11,11 +11,6 @@ import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.createObjectMapper
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.navigation.View
-import org.digma.intellij.plugin.posthog.ActivityMonitor
-import org.digma.intellij.plugin.posthog.UserActionOrigin
-import org.digma.intellij.plugin.scope.ScopeManager
-import org.digma.intellij.plugin.scope.SpanScope
 
 @Service(Service.Level.PROJECT)
 class AssetsService(private val project: Project) : Disposable {
@@ -64,14 +59,6 @@ class AssetsService(private val project: Project) : Disposable {
         val assets = AnalyticsService.getInstance(project).getAssets(queryParams)
         Log.log(logger::trace, project, "got assets [{}]", assets)
         return assets
-    }
-
-
-    fun showAsset(spanId: String) {
-        EDT.assertNonDispatchThread()
-        Log.log(logger::trace, project, "showAsset called for {}", spanId)
-        ActivityMonitor.getInstance(project).registerSpanLinkClicked(spanId, UserActionOrigin.Assets)
-        ScopeManager.getInstance(project).changeScope(SpanScope(spanId), preferredView = View.Highlights)
     }
 
 

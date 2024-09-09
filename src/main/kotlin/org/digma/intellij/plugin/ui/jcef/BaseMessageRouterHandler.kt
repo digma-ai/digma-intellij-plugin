@@ -17,7 +17,6 @@ import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.InsightStatsChangedEvent
 import org.digma.intellij.plugin.analytics.getAllEnvironments
 import org.digma.intellij.plugin.analytics.getEnvironmentById
-import org.digma.intellij.plugin.analytics.setCurrentEnvironmentById
 import org.digma.intellij.plugin.auth.AuthManager
 import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
 import org.digma.intellij.plugin.auth.account.LoginResult
@@ -32,7 +31,6 @@ import org.digma.intellij.plugin.documentation.DocumentationService
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
-import org.digma.intellij.plugin.navigation.MainContentViewSwitcher
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.scope.ScopeManager
 import org.digma.intellij.plugin.scope.SpanScope
@@ -253,10 +251,6 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                         serializeAndExecuteWindowPostMessageJavaScript(browser, message)
                     }
 
-                    JCEFGlobalConstants.GLOBAL_CHANGE_VIEW -> {
-                        changeView(requestJsonNode)
-                    }
-
                     JCEFGlobalConstants.GLOBAL_UPDATE_STATE -> {
                         updateState(requestJsonNode)
                     }
@@ -313,9 +307,6 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                         }
                     }
 
-                    JCEFGlobalConstants.GLOBAL_CHANGE_ENVIRONMENT -> {
-                        changeEnvironment(requestJsonNode)
-                    }
 
                     JCEFGlobalConstants.GLOBAL_FINISH_DIGMATHON_GAME -> {
                         DigmathonService.getInstance().setFinishDigmathonGameForUser()
@@ -347,16 +338,6 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
         //return success regardless of the background thread
         callback.success("")
         return true
-    }
-
-    private fun changeView(requestJsonNode: JsonNode) {
-        val payload = getPayloadFromRequest(requestJsonNode)
-        payload?.let {
-            val viewId = payload.get("view")?.asText()
-            viewId?.let { vuid ->
-                MainContentViewSwitcher.getInstance(project).showViewById(vuid, payload.get("isUserAction")?.asBoolean() ?: true)
-            }
-        }
     }
 
     private fun getState(browser: CefBrowser) {
@@ -423,25 +404,18 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                 val spanScope = SpanScope(spanId)
                 ScopeManager.getInstance(project).changeScope(
                     scope = spanScope,
-                    changeView = changeScopeMessage.forceNavigation?.not() ?: true,
                     scopeContext = changeScopeMessage.context,
                     environmentId = changeScopeMessage.environmentId
                 )
             } ?: ScopeManager.getInstance(project).changeToHome(
                 isCalledFromReact = true,
-                forceNavigation = changeScopeMessage.forceNavigation ?: false,
                 scopeContext = changeScopeMessage.context,
                 environmentId = changeScopeMessage.environmentId
             )
         }
     }
 
-    private fun changeEnvironment(requestJsonNode: JsonNode) {
-        val environment = getEnvironmentIdFromPayload(requestJsonNode)
-        environment?.let { envId ->
-            setCurrentEnvironmentById(project, envId)
-        }
-    }
+
 
     private fun login(requestJsonNode: JsonNode): LoginResult? {
         val payload = getPayloadFromRequest(requestJsonNode)

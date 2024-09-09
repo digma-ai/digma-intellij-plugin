@@ -18,10 +18,7 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult
 import org.digma.intellij.plugin.posthog.ActivityMonitor
-import org.digma.intellij.plugin.posthog.UserActionOrigin
 import org.digma.intellij.plugin.recentactivity.RecentActivityToolWindowShower
-import org.digma.intellij.plugin.scope.ScopeManager
-import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.ui.common.openJaegerFromRecentActivity
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
 import org.digma.intellij.plugin.ui.jcef.model.DigmathonProgressDataPayload
@@ -33,7 +30,6 @@ import org.digma.intellij.plugin.ui.recentactivity.model.AdditionToConfigResult
 import org.digma.intellij.plugin.ui.recentactivity.model.CloseLiveViewMessage
 import org.digma.intellij.plugin.ui.recentactivity.model.OpenRegistrationDialogMessage
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityEntrySpanForTracePayload
-import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityEntrySpanPayload
 import org.digma.intellij.plugin.ui.recentactivity.model.SetAddToConfigResult
 import org.digma.intellij.plugin.ui.recentactivity.model.SetEnvironmentCreatedMessage
 import java.time.Instant
@@ -93,20 +89,6 @@ class RecentActivityService(val project: Project, private val cs: CoroutineScope
             Log.debugWithException(logger, project, e, "AnalyticsServiceException for getRecentActivity: {}", e.nonNullMessage)
             ErrorReporter.getInstance().reportError(project, "RecentActivityService.getRecentActivities", e)
             null
-        }
-    }
-
-
-    fun processRecentActivityGoToSpanRequest(payload: RecentActivityEntrySpanPayload?) {
-
-        Log.log(logger::trace, project, "processRecentActivityGoToSpanRequest called with {}", payload)
-
-        payload?.let {
-            val spanId = payload.span.spanCodeObjectId
-            spanId?.let {
-                ScopeManager.getInstance(project).changeScope(SpanScope(spanId))
-                ActivityMonitor.getInstance(project).registerSpanLinkClicked(it, UserActionOrigin.RecentActivity)
-            }
         }
     }
 

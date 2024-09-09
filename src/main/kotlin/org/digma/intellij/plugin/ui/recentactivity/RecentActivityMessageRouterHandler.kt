@@ -15,7 +15,6 @@ import org.digma.intellij.plugin.ui.jcef.SetRunConfigurationMessageBuilder
 import org.digma.intellij.plugin.ui.jcef.getMapFromNode
 import org.digma.intellij.plugin.ui.jcef.jsonToObject
 import org.digma.intellij.plugin.ui.recentactivity.model.CloseLiveViewMessage
-import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityGoToSpanRequest
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityGoToTraceRequest
 
 class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHandler(project) {
@@ -44,11 +43,6 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
                     project.service<LiveViewUpdater>().appInitialized()
                     project.service<RecentActivityService>().appInitialized()
                 }
-            }
-
-            "RECENT_ACTIVITY/GO_TO_SPAN" -> {
-                val recentActivityGoToSpanRequest = jsonToObject(rawRequest, RecentActivityGoToSpanRequest::class.java)
-                project.service<RecentActivityService>().processRecentActivityGoToSpanRequest(recentActivityGoToSpanRequest.payload)
             }
 
             "RECENT_ACTIVITY/GO_TO_TRACE" -> {

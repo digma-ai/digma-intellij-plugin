@@ -8,11 +8,7 @@ import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.analytics.*;
 import org.digma.intellij.plugin.common.EDT;
-import org.digma.intellij.plugin.dashboard.incoming.GoToSpan;
-import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.posthog.*;
 import org.digma.intellij.plugin.reload.*;
-import org.digma.intellij.plugin.scope.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.InputStream;
@@ -101,16 +97,7 @@ public final class DashboardService implements Disposable, ReloadableJCefContain
         return AnalyticsService.getInstance(project).getDashboard(queryParams);
     }
 
-    public void goToSpan(GoToSpan goToSpan) {
 
-        Log.log(logger::debug, project, "goToSpan request {}", goToSpan);
-
-        ActivityMonitor.getInstance(project).registerSpanLinkClicked(goToSpan.payload().spanCodeObjectId(), UserActionOrigin.Dashboard);
-
-        var span = goToSpan.payload();
-
-        ScopeManager.getInstance(project).changeScope(new SpanScope(span.spanCodeObjectId()), false, null, null, span.environment());
-    }
 
 
     @Override

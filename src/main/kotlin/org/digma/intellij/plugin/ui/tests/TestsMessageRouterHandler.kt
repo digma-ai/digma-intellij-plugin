@@ -4,13 +4,11 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
-import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.CodeObjectsUtil
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.tests.FilterForLatestTests
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.UserActionOrigin
-import org.digma.intellij.plugin.scope.ScopeManager
 import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.teststab.TestsRunner
 import org.digma.intellij.plugin.ui.common.openJaegerFromRecentActivity
@@ -27,7 +25,6 @@ class TestsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHandl
             "TESTS/SPAN_GET_LATEST_DATA" -> handleQuerySpanGetLatestData(project, requestJsonNode)
             "TESTS/RUN_TEST" -> handleRunTest(project, requestJsonNode)
             "TESTS/GO_TO_TRACE" -> handleGoToTrace(project, requestJsonNode)
-            "TESTS/GO_TO_SPAN_OF_TEST" -> handleGoToSpanOfTest(project, requestJsonNode)
 
             else -> return false
         }
@@ -69,17 +66,6 @@ class TestsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHandl
         project.service<TestsRunner>().executeTestMethod(methodId)
     }
 
-    private fun handleGoToSpanOfTest(project: Project, requestJsonNode: JsonNode) {
-
-        val payloadNode: JsonNode = objectMapper.readTree(requestJsonNode.get("payload").toString())
-        val environment = payloadNode.get("environment").textValue()
-        val spanCodeObjectId = payloadNode.get("spanCodeObjectId").textValue()
-        ActivityMonitor.getInstance(project).registerSpanLinkClicked(spanCodeObjectId, UserActionOrigin.Tests)
-
-        Backgroundable.ensurePooledThreadWithoutReadAccess {
-            ScopeManager.getInstance(project).changeScope(SpanScope(spanCodeObjectId),false,null,null,environment)
-        }
-    }
 
 
     private fun handleGoToTrace(project: Project, requestJsonNode: JsonNode) {

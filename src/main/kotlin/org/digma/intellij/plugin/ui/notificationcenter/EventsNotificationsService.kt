@@ -204,7 +204,7 @@ class GoToCodeObjectInsightsAction(
 
         Backgroundable.ensurePooledThreadWithoutReadAccess {
             val scopeContext = ScopeContext("IDE/NOTIFICATION_LINK_CLICKED", null)
-            ScopeManager.getInstance(project).changeScope(SpanScope(codeObjectId), false, null, scopeContext, environmentId)
+            ScopeManager.getInstance(project).changeScope(SpanScope(codeObjectId), scopeContext, environmentId)
         }
 
         notification.expire()

@@ -35,8 +35,16 @@ class UserRegistrationManager(private val project: Project) {
         if (!PersistenceService.getInstance().isUserRequestedCourse()) {
             val courseRequested = registrationMap["scope"] == "promotion"
             if (courseRequested) {
-                PersistenceService.getInstance().setUserRequestedCourse(true)
+                PersistenceService.getInstance().setUserRequestedCourse()
                 ActivityMonitor.getInstance(project).registerUserRequestedCourse()
+            }
+        }
+
+        if (!PersistenceService.getInstance().isUserRequestedEarlyAccess()) {
+            val earlyAccessRequested = registrationMap["scope"] == "early-access"
+            if (earlyAccessRequested) {
+                PersistenceService.getInstance().setUserRequestedEarlyAccess()
+                ActivityMonitor.getInstance(project).registerUserRequestedEarlyAccess()
             }
         }
 

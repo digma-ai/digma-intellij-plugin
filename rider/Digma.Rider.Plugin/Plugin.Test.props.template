@@ -11,6 +11,7 @@
         <!-- when building 241 and above compileDotnet complains about this package version. so we set the version
                according to rider version. to reproduce remove this and build with 241 -->
         <PackageReference Include="System.Diagnostics.TraceSource" Version="@TRACE_SOURCE_VERSION@" />
+        <PackageReference Include="Microsoft.NETCore.Platforms" Version="3.1.0" PrivateAssets="All" />
     </ItemGroup>
 
 </Project>

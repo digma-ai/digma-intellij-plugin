@@ -328,6 +328,8 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
                 Log.log(logger::trace, project, "quite period completed in launchFullUpdateJob, launching full update")
                 //what ever happens resume must be called before this coroutine completes
                 try {
+                    //resume before launching full update to make sure we don't miss updates
+                    resume()
                     //if the coroutine was canceled don't call the update, probably the project was closed
                     if (isActive) {
                         Log.log(logger::info, project, "launching full update span discovery in launchFullUpdateJob")

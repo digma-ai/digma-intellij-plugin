@@ -189,6 +189,20 @@ open class JavaToolOptionsBuilder(
         return this
     }
 
+    open fun withDbStatementSanitizerDisabled(): JavaToolOptionsBuilder {
+
+        if (isDbSanitizerDisabled()) {
+            javaToolOptions
+                .append("-Dotel.instrumentation.jdbc.statement-sanitizer.enabled=false")
+                .append(" ")
+                //todo: probably not necessary
+//                .append("-Dotel.instrumentation.common.db-statement-sanitizer.enabled=true")
+//                .append(" ")
+        }
+
+        return this
+    }
+
 
     //not every flavor needs that, the default flavor does,other flavors need only a subset
     open fun withCommonProperties(): JavaToolOptionsBuilder {
@@ -200,6 +214,7 @@ open class JavaToolOptionsBuilder(
         withOtelExperimentalControllerTelemetryEnabled()
         withOtelExperimentalViewTelemetryEnabled()
         withOtelExperimentalSpanSuppressionStrategyNone()
+        withDbStatementSanitizerDisabled()
 
         return this
     }
@@ -327,6 +342,11 @@ open class JavaToolOptionsBuilder(
     @Suppress("MemberVisibilityCanBePrivate")
     fun isExtendedObservabilityConfigured(): Boolean {
         return !SettingsState.getInstance().extendedObservability.isNullOrBlank()
+    }
+
+    fun isDbSanitizerDisabled(): Boolean {
+        //todo: add settings property
+        return true
     }
 
 }

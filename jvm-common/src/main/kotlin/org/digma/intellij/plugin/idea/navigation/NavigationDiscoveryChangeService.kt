@@ -344,8 +344,8 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
         }
 
         //protect against high memory consumption, if so many files are changed at once pause collecting changed files and launch full update
-        //200 is just a number that seems reasonable to do a full update instead of updating separate files
-        if (changedFiles.size > 200) {
+        //100 is just a number that seems reasonable to do a full update instead of updating separate files
+        if (changedFiles.size > 100) {
 
             Log.log(logger::trace, project, "discovered too many changed files {}", changedFiles.size)
 
@@ -398,17 +398,18 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
         }
 
         //protect against high memory consumption, if so many files are changed at once pause collecting events and launch a full update
-        //200 is just a number that seems reasonable to do a full update instead of updating separate files
-        if (bulkEvents.size > 200) {
+        //100 is just a number that seems reasonable to do a full update instead of updating separate files
+        if (bulkEvents.size > 100 || events.size > 100) {
 
             Log.log(logger::trace, project, "discovered too many bulk change events {}", bulkEvents.size)
 
             pauseAndLaunchFullUpdate()
 
+            val size = if (bulkEvents.size > 200) bulkEvents.size else events.size
             ActivityMonitor.getInstance(project).registerCustomEvent(
                 "LargeBulkUpdate", mapOf(
                     "eventName" to "bulkEvents",
-                    "bulkEvents.size" to bulkEvents.size
+                    "bulkEvents.size" to size
                 )
             )
             return
@@ -461,13 +462,9 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
                 if (isRelevantFile(project, item.file)) {
 
                     //run a quick check if the event is for a java or kotlin file and abort processing if not.
-                    //if we can't find PsiFile continue processing, maybe it's a copy or delete or other event that we want to process
                     item.file?.let { vf ->
-                        val psiFile = findPsiFileForVirtualFile(vf)
-                        psiFile?.let { psf ->
-                            if (!isJavaOrKotlinFile(psf)) {
-                                return
-                            }
+                        if (!isJavaOrKotlinFile(vf)) {
+                            return
                         }
                     }
 

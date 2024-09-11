@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.idea.navigation
 
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.application.readAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
@@ -24,7 +25,6 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import org.digma.intellij.plugin.common.isProjectValid
-import org.digma.intellij.plugin.common.runInReadAccessWithResult
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.psi.isJvmSupportedFile
 import org.digma.intellij.plugin.log.Log
@@ -483,12 +483,12 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
 
 
     private interface ItemProcessor<T> {
-        fun process(item: T)
+        suspend fun process(item: T)
     }
 
 
     private inner class FileEventsProcessor : ItemProcessor<VFileEvent> {
-        override fun process(item: VFileEvent) {
+        override suspend fun process(item: VFileEvent) {
 
             try {
 
@@ -554,7 +554,7 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
 
 
     private inner class ChangedFileProcessor : ItemProcessor<String> {
-        override fun process(item: String) {
+        override suspend fun process(item: String) {
 
             try {
 
@@ -572,9 +572,10 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
     }
 
 
-    private fun updateNavigation(project: Project, file: VirtualFile) {
+    private suspend fun updateNavigation(project: Project, file: VirtualFile) {
         if (isValidRelevantFile(project, file)) {
-            val psiFile = runInReadAccessWithResult {
+
+            val psiFile = readAction {
                 PsiManager.getInstance(project).findFile(file)
             }
             psiFile?.let {

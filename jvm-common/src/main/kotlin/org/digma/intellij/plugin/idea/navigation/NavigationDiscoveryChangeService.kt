@@ -24,7 +24,6 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import org.digma.intellij.plugin.common.isProjectValid
-import org.digma.intellij.plugin.common.isValidVirtualFile
 import org.digma.intellij.plugin.common.runInReadAccessWithResult
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.psi.isJvmSupportedFile
@@ -56,7 +55,7 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
 
     private val logger = Logger.getInstance(this::class.java)
 
-    private val quitePeriod = 5.seconds
+    private val quitePeriod = 30.seconds
 
     //using LinkedHashSet to keep insertion order so we process files in the order they were changed.
     //there is only write operation to this set, never read or remove. before processing, the set is replaced with a new instance
@@ -77,9 +76,9 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
     private var lastChangedFileEventTime: Instant? = null
     private var lastBulkFileChangeEventTime: Instant? = null
 
-    private val changeFilesProcessingJob: Job = launchBulkProcessingLoop(changedFilesBulks, ChangedFileProcessor())
-    private val bulkEventsProcessingJob: Job = launchBulkProcessingLoop(bulkEventsBulks, FileEventsProcessor())
-    private val quitePeriodManagerJob: Job = launchQuitePeriodManager()
+    private var changeFilesProcessingJob: Job? = null
+    private var bulkEventsProcessingJob: Job? = null
+    private var quitePeriodManagerJob: Job? = null
     private var launchFullUpdateJob: Job? = null
 
     private val paused = AtomicBoolean(false)
@@ -88,6 +87,11 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
 
 
     companion object {
+
+        fun isEnabled(): Boolean {
+            return java.lang.Boolean.parseBoolean(System.getProperty("org.digma.intellij.plugin.enableNavigationDiscoveryChangedFilesUpdate", "true"))
+        }
+
         fun createChangedFilesSet(): MutableSet<String> {
             return LinkedHashSet()
         }
@@ -99,15 +103,24 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
 
 
     init {
-        PsiManager.getInstance(project).addPsiTreeChangeListener(NavigationDiscoveryPsiTreeChangeListener(), this)
-        VirtualFileManager.getInstance().addAsyncFileListener(NavigationDiscoveryAsyncFileChangeListener(), this)
+        if (isEnabled()) {
+
+            changeFilesProcessingJob = launchBulkProcessingLoop(changedFilesBulks, ChangedFileProcessor())
+            bulkEventsProcessingJob = launchBulkProcessingLoop(bulkEventsBulks, FileEventsProcessor())
+            quitePeriodManagerJob = launchQuitePeriodManager()
+
+            PsiManager.getInstance(project).addPsiTreeChangeListener(NavigationDiscoveryPsiTreeChangeListener(), this)
+            VirtualFileManager.getInstance().addAsyncFileListener(NavigationDiscoveryAsyncFileChangeListener(), this)
+        } else {
+            Log.log(logger::info, project, "I am disabled, not starting listeners")
+        }
     }
 
 
     override fun dispose() {
-        changeFilesProcessingJob.cancel()
-        bulkEventsProcessingJob.cancel()
-        quitePeriodManagerJob.cancel()
+        changeFilesProcessingJob?.cancel()
+        bulkEventsProcessingJob?.cancel()
+        quitePeriodManagerJob?.cancel()
     }
 
 
@@ -173,6 +186,7 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
 
 
     private fun <T> launchBulkProcessingLoop(queue: Queue<Iterable<T>>, itemProcessor: ItemProcessor<T>): Job {
+
         return cs.launch {
             Log.log(logger::trace, project, "Starting bulk processing loop for {}", itemProcessor::class.java)
             while (isActive && isProjectValid(project)) {
@@ -183,9 +197,9 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
                     if (bulk == null) {
                         delay(5.seconds)
                     } else {
+                        Log.log(logger::trace, project, "processing bulk of {}", itemProcessor::class.java)
                         bulk.forEach {
-                            if (!isActive) {
-                                // Cancelled, stop processing
+                            if (!isActive || isPaused()) {
                                 return@forEach
                             }
                             itemProcessor.process(it)
@@ -230,6 +244,8 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
             return
         }
 
+        pause()
+
         /*
         when the currently running coroutine completes another one can start.
         if another one wants to start while calling the buildNavigationDiscoveryFullUpdate it will be
@@ -239,8 +255,7 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
         but as said there is a very small chance for that to happen.
          */
 
-
-        //make sure not to launch twice because events keep coming until pause is called
+        //another safety lock to make sure not to launch twice because events keep coming.
         launchFullUpdateLock.withLock {
 
             if (launchFullUpdateJob?.isActive == true) {
@@ -257,7 +272,7 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
 
                     //pause and clear all collected events so no more update tasks will run until resume
                     Log.log(logger::trace, project, "pausing and clearing all collected events in launchFullUpdateJob")
-                    pause()
+
                     //replace the lists , never call clear or remove to avoid concurrent modifications
                     changedFiles = createChangedFilesSet()
                     bulkEvents = createBulkEventsList()
@@ -269,7 +284,7 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
                     //during this time the update tasks that already started will probably finish
                     Log.log(logger::trace, project, "waiting for quite period in launchFullUpdateJob")
                     var quitePeriod = ZERO
-                    while (isActive && quitePeriod < 10.seconds) {
+                    while (isActive && quitePeriod < 30.seconds) {
 
                         Log.log(logger::trace, project, "checking quite period in launchFullUpdateJob, current quite period {}", quitePeriod)
 
@@ -343,20 +358,28 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
             return
         }
 
-        //protect against high memory consumption, if so many files are changed at once pause collecting changed files and launch full update
-        //100 is just a number that seems reasonable to do a full update instead of updating separate files
+        //protect against high memory consumption, if so many files are changed at once, pause collecting changed files and launch full update.
+        //100 is just a number that seems reasonable to do a full update instead of updating separate files.
         if (changedFiles.size > 100) {
 
             Log.log(logger::trace, project, "discovered too many changed files {}", changedFiles.size)
 
-            pauseAndLaunchFullUpdate()
+            launchFullUpdateLock.withLock {
 
-            ActivityMonitor.getInstance(project).registerCustomEvent(
-                "LargeBulkUpdate", mapOf(
-                    "eventName" to "changeFiles",
-                    "changedFiles.size" to changedFiles.size
+                if (isPaused()) {
+                    return@withLock
+                }
+
+                pauseAndLaunchFullUpdate()
+
+                ActivityMonitor.getInstance(project).registerCustomEvent(
+                    "LargeBulkUpdate", mapOf(
+                        "eventName" to "changeFiles",
+                        "changedFiles.size" to changedFiles.size
+                    )
                 )
-            )
+            }
+
             return
         }
         Log.log(logger::trace, project, "adding changed file {}", virtualFile.url)
@@ -397,21 +420,29 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
             return
         }
 
-        //protect against high memory consumption, if so many files are changed at once pause collecting events and launch a full update
-        //100 is just a number that seems reasonable to do a full update instead of updating separate files
+        //protect against high memory consumption, if so many files are changed at once, pause collecting events and launch a full update.
+        //100 is just a number that seems reasonable to do a full update instead of updating separate files.
         if (bulkEvents.size > 100 || events.size > 100) {
 
             Log.log(logger::trace, project, "discovered too many bulk change events {}", bulkEvents.size)
 
-            pauseAndLaunchFullUpdate()
+            launchFullUpdateLock.withLock {
 
-            val size = if (bulkEvents.size > 200) bulkEvents.size else events.size
-            ActivityMonitor.getInstance(project).registerCustomEvent(
-                "LargeBulkUpdate", mapOf(
-                    "eventName" to "bulkEvents",
-                    "bulkEvents.size" to size
+                if (isPaused()) {
+                    return@withLock
+                }
+
+                pauseAndLaunchFullUpdate()
+
+                val size = if (bulkEvents.size > 100) bulkEvents.size else events.size
+                ActivityMonitor.getInstance(project).registerCustomEvent(
+                    "LargeBulkUpdate", mapOf(
+                        "eventName" to "bulkEvents",
+                        "bulkEvents.size" to size
+                    )
                 )
-            )
+            }
+
             return
         }
         bulkEvents.addAll(events)
@@ -579,18 +610,6 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
         }
     }
 
-
-    private fun findPsiFileForVirtualFile(virtualFile: VirtualFile): PsiFile? {
-        return try {
-            runInReadAccessWithResult {
-                virtualFile.takeIf { isValidVirtualFile(virtualFile) }?.let {
-                    PsiManager.getInstance(project).findFile(it)
-                }
-            }
-        } catch (e: Throwable) {
-            null
-        }
-    }
 
     private fun isJavaOrKotlinFile(psiFile: PsiFile): Boolean {
         return psiFile.language.displayName.equals("Java", true) ||

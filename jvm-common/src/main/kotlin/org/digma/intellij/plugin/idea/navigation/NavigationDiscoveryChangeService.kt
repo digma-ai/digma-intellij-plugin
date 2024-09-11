@@ -24,6 +24,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import org.apache.commons.codec.digest.DigestUtils
 import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.psi.isJvmSupportedFile
@@ -376,7 +377,7 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
                     "LargeBulkUpdate", mapOf(
                         "eventName" to "changeFiles",
                         "changedFiles.size" to changedFiles.size,
-                        "project.hash" to project.name.hashCode()
+                        "project.hash" to DigestUtils.md2Hex(project.name)
                     )
                 )
             }
@@ -440,7 +441,7 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
                     "LargeBulkUpdate", mapOf(
                         "eventName" to "bulkEvents",
                         "bulkEvents.size" to size,
-                        "project.hash" to project.name.hashCode()
+                        "project.hash" to DigestUtils.md2Hex(project.name)
                     )
                 )
             }

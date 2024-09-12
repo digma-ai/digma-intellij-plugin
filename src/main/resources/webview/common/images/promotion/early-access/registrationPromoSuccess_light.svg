@@ -1,8 +1,8 @@
 <svg width="265" height="260" viewBox="0 0 265 260" fill="none" xmlns="http://www.w3.org/2000/svg">
-<ellipse opacity="0.2" cx="130.5" cy="130.5" rx="123.5" ry="66.5" fill="url(#paint0_radial_13430_260502)"/>
-<rect x="64" y="64" width="132" height="132" rx="66" fill="#233332"/>
-<g clip-path="url(#clip0_13430_260502)">
-<path d="M101.84 126.986L122.635 151.123L158.16 108.883" stroke="#6EBD9C" stroke-width="5.28" stroke-linecap="round" stroke-linejoin="round"/>
+<ellipse opacity="0.4" cx="130.5" cy="130.5" rx="123.5" ry="66.5" fill="url(#paint0_radial_13443_263724)"/>
+<rect x="64" y="64" width="132" height="132" rx="66" fill="#D3FFF2"/>
+<g clip-path="url(#clip0_13443_263724)">
+<path d="M101.84 126.986L122.635 151.123L158.16 108.883" stroke="#2DDABB" stroke-width="5.28" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
 <g opacity="0.3">
 <path d="M244.724 84.4972C246.139 84.4972 247.282 85.572 247.282 86.899C247.282 88.2247 246.139 89.3008 244.724 89.3008C243.31 89.3008 242.167 88.2247 242.167 86.899C242.167 85.572 243.31 84.4972 244.724 84.4972Z" fill="#D5DCFF"/>
@@ -21,12 +21,13 @@
 <path d="M35.6553 242.663C36.4332 242.663 37.052 243.133 37.052 243.712C37.052 244.292 36.4332 244.762 35.6553 244.762C34.8774 244.762 34.2585 244.292 34.2585 243.712C34.2585 243.133 34.8774 242.663 35.6553 242.663Z" fill="#D5DCFF"/>
 </g>
 <defs>
-<radialGradient id="paint0_radial_13430_260502" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(130.5 130.5) rotate(90) scale(66.5 123.5)">
+<radialGradient id="paint0_radial_13443_263724" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(130.5 130.5) rotate(90) scale(66.5 123.5)">
 <stop stop-color="#6EBD9C"/>
 <stop offset="1" stop-color="#6EBD9C" stop-opacity="0"/>
 </radialGradient>
-<clipPath id="clip0_13430_260502">
+<clipPath id="clip0_13443_263724">
 <rect width="84.48" height="84.48" fill="white" transform="translate(87.76 87.7617)"/>
 </clipPath>
 </defs>
 </svg>
+	

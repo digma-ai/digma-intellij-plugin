@@ -10,7 +10,7 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter
 class ReloadAction : AnAction() {
     override fun actionPerformed(p0: AnActionEvent) {
         try {
-            service<ReloadService>().reloadAllProjects()
+            service<ReloadService>().reloadAllProjects(ReloadSource.RELOAD_ACTION)
         } catch (e: Throwable) {
             ErrorReporter.getInstance().reportError("ReloadAction.actionPerformed", e)
         }

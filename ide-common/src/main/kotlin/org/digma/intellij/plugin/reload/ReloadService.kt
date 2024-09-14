@@ -9,11 +9,13 @@ import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.util.Disposer
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import org.apache.commons.codec.digest.DigestUtils
 import org.digma.intellij.plugin.common.DisposableAdaptor
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.recentactivity.RecentActivityToolWindowShower
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
@@ -45,11 +47,11 @@ class ReloadService : DisposableAdaptor {
     }
 
 
-    fun reloadAllProjects() {
+    fun reloadAllProjects(source: ReloadSource) {
         ProjectManager.getInstance().openProjects.forEach {
             try {
                 if (isProjectValid(it)) {
-                    reload(it)
+                    reload(it, source)
                 }
             } catch (e: Throwable) {
                 Log.warnWithException(logger, it, e, "error in reload for project {}", it)
@@ -58,7 +60,7 @@ class ReloadService : DisposableAdaptor {
         }
     }
 
-    fun reload(project: Project) {
+    fun reload(project: Project, source: ReloadSource) {
 
         Log.log(logger::trace, "Reload for project {} called", project.name)
 
@@ -83,16 +85,23 @@ class ReloadService : DisposableAdaptor {
             //run the whole project reload on EDT, it may cause a short freeze, but we are aware of that.
             //it is necessary for finding the selected editor
             EDT.ensureEDT {
-                reloadImpl(project)
+                reloadImpl(project, source)
             }
         }
     }
 
-    private fun reloadImpl(project: Project) {
+    private fun reloadImpl(project: Project, source: ReloadSource) {
 
         if (!isProjectValid(project)) {
             return
         }
+
+        ActivityMonitor.getInstance(project).registerCustomEvent(
+            "ReloadJcef", mapOf(
+                "source" to source.toString(),
+                "project.hash" to DigestUtils.md2Hex(project.name)
+            )
+        )
 
         Log.log(logger::trace, "Reloading jcef for project {}", project.name)
 

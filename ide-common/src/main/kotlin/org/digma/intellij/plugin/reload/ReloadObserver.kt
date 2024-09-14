@@ -157,7 +157,7 @@ class ReloadObserver(cs: CoroutineScope) {
                     )
                     componentDetails.graphicsDeviceList = currentGraphicsDeviceList
 
-                    service<ReloadService>().reload(project)
+                    service<ReloadService>().reload(project, ReloadSource.RELOAD_OBSERVER)
                 } else {
                     Log.log(
                         logger::trace,
@@ -179,7 +179,7 @@ class ReloadObserver(cs: CoroutineScope) {
                 )
                 componentDetails.displayMode = currentDisplayMode
 
-                service<ReloadService>().reload(project)
+                service<ReloadService>().reload(project, ReloadSource.RELOAD_OBSERVER)
             } else {
                 Log.log(logger::trace, "no graphics changes for component {} in project {}", componentName, project.name)
             }

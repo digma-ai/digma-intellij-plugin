@@ -55,6 +55,9 @@ public class DashboardMessageRouterHandler extends BaseMessageRouterHandler {
             case "DASHBOARD/GET_REPORT_ASSETS_STATS" -> {
                 pushAssetsReportStats(browser, requestJsonNode);
             }
+            case "DASHBOARD/GET_METRICS_REPORT_DATA" -> {
+                pushMetricsData(browser, requestJsonNode);
+            }
             case "GLOBAL/GET_BACKEND_INFO" -> {
                 //do nothing, dashboard app sends that for some reason, but it's not necessary
             }
@@ -113,6 +116,20 @@ public class DashboardMessageRouterHandler extends BaseMessageRouterHandler {
             serializeAndExecuteWindowPostMessageJavaScript(browser, message);
         } catch (AnalyticsServiceException ex) {
             Log.log(logger::trace, getProject(), "sending DASHBOARD/GET_REPORT_ISSUES_STATS message with error");
+        }
+    }
+
+    private void pushMetricsData(CefBrowser browser, JsonNode requestJsonNode) {
+        var project = getProject();
+        var requestPayload = getPayloadFromRequestNonNull(requestJsonNode);
+        Log.log(logger::trace, project, "pushMetricsData called");
+        try {
+            var payload = AnalyticsService.getInstance(project).getServiceReport(requestPayload.toString());
+            var message = new SetMetricsReportMessage(payload);
+            Log.log(logger::trace, project, "sending DASHBOARD/GET_METRICS_REPORT_DATA message");
+            serializeAndExecuteWindowPostMessageJavaScript(browser, message);
+        } catch (AnalyticsServiceException ex) {
+            Log.log(logger::trace, getProject(), "sending DASHBOARD/GET_METRICS_REPORT_DATA message with error");
         }
     }
 

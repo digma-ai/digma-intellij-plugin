@@ -48,7 +48,7 @@ open class JavaToolOptionsBuilder(
                 throw JavaToolOptionsBuilderException("useAgent is true but can't find agent or extension paths")
             }
 
-            if (isExtendedObservabilityConfigured()) {
+            if (isExtendedObservabilityConfigured() || isExposePreparedStatementParams()) {
 
                 if (!otelAgentPathProvider.hasDigmaAgentPath()) {
                     throw JavaToolOptionsBuilderException("can't find digma-agent path")
@@ -191,13 +191,10 @@ open class JavaToolOptionsBuilder(
 
     open fun withDbStatementSanitizerDisabled(): JavaToolOptionsBuilder {
 
-        if (isDbSanitizerDisabled()) {
+        if (isExposePreparedStatementParams()) {
             javaToolOptions
-                .append("-Dotel.instrumentation.jdbc.statement-sanitizer.enabled=false")
+                .append("-Dorg.digma.otel.instrumentation.jdbc.ps.params.enabled=true")
                 .append(" ")
-                //todo: probably not necessary
-//                .append("-Dotel.instrumentation.common.db-statement-sanitizer.enabled=true")
-//                .append(" ")
         }
 
         return this
@@ -344,7 +341,7 @@ open class JavaToolOptionsBuilder(
         return !SettingsState.getInstance().extendedObservability.isNullOrBlank()
     }
 
-    fun isDbSanitizerDisabled(): Boolean {
+    fun isExposePreparedStatementParams(): Boolean {
         //todo: add settings property
         return true
     }

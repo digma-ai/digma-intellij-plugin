@@ -48,20 +48,15 @@ open class JavaToolOptionsBuilder(
                 throw JavaToolOptionsBuilderException("useAgent is true but can't find agent or extension paths")
             }
 
-            if (isExtendedObservabilityConfigured()) {
-
-                if (!otelAgentPathProvider.hasDigmaAgentPath()) {
-                    throw JavaToolOptionsBuilderException("can't find digma-agent path")
-                }
-
-                javaToolOptions
-                    .append("-javaagent:${otelAgentPathProvider.digmaAgentPath}")
-                    .append(" ")
-
-                withDigmaAgentDebug()
-
-
+            if (!otelAgentPathProvider.hasDigmaAgentPath()) {
+                throw JavaToolOptionsBuilderException("can't find digma-agent path")
             }
+
+            //digma agent must be before otel agent in the command line
+            javaToolOptions
+                .append("-javaagent:${otelAgentPathProvider.digmaAgentPath}")
+                .append(" ")
+
 
             javaToolOptions
                 .append("-javaagent:${otelAgentPathProvider.otelAgentPath}")
@@ -69,6 +64,7 @@ open class JavaToolOptionsBuilder(
                 .append("-Dotel.javaagent.extensions=${otelAgentPathProvider.digmaExtensionPath}")
                 .append(" ")
 
+            withDigmaAgentDebug()
             withOtelTracesExporterOtlpEndpoint()
         }
 
@@ -326,7 +322,7 @@ open class JavaToolOptionsBuilder(
 
     @Suppress("MemberVisibilityCanBePrivate")
     fun isExtendedObservabilityConfigured(): Boolean {
-        return !SettingsState.getInstance().extendedObservability.isNullOrBlank()
+        return SettingsState.getInstance().extendedObservability.isNullOrBlank().not()
     }
 
 }

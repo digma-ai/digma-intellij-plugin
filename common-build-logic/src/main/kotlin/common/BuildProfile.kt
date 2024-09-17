@@ -205,7 +205,9 @@ object BuildProfiles {
             isEAP = true,
             profile = Profile.p243,
             platformVersion = "243.12818-EAP-CANDIDATE-SNAPSHOT",
-            riderVersion = "2024.3-SNAPSHOT",
+            //todo: rdgen fails with 2024.3-SNAPSHOT
+            //riderVersion = "2024.3-SNAPSHOT",
+            riderVersion = "2024.2.4",
             pycharmVersion = "2024.2",
             riderTargetFramework = "net8.0",
             riderResharperVersionConstant = "PROFILE_2023_2",

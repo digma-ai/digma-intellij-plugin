@@ -19,6 +19,12 @@
      <depends optional="true" config-file="org.digma.intellij-with-python.xml">com.intellij.modules.python</depends>
      -->
 
+
+    <!-- see https://kotlin.github.io/analysis-api/declaring-k2-compatibility.html   -->
+    <extensions defaultExtensionNs="org.jetbrains.kotlin">
+        <supportsKotlinPluginMode supportsK2="true" />
+    </extensions>
+
     <depends optional="true" config-file="org.digma.intellij-with-jvm.xml">com.intellij.modules.java</depends>
     <depends optional="true" config-file="org.digma.intellij-with-kotlin.xml">org.jetbrains.kotlin</depends>
     <depends optional="true" config-file="org.digma.intellij-with-rider.xml">com.intellij.modules.rider</depends>

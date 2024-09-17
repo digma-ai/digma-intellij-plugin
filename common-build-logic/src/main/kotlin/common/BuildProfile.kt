@@ -201,20 +201,18 @@ object BuildProfiles {
             javaVersion = JavaVersion.VERSION_17.majorVersion,
         ),
 
-        //todo: next EAP, currently same versions as 242 until 243 starts.
-        // not built in github yet
         Profile.p243 to BuildProfile(
             isEAP = true,
             profile = Profile.p243,
-            platformVersion = "2024.2.1",
-            riderVersion = "2024.2.4",
+            platformVersion = "243.12818-EAP-CANDIDATE-SNAPSHOT",
+            riderVersion = "2024.3-SNAPSHOT",
             pycharmVersion = "2024.2",
             riderTargetFramework = "net8.0",
             riderResharperVersionConstant = "PROFILE_2023_2",
-            platformVersionCode = "242",
+            platformVersionCode = "243",
             pluginSinceBuild = "243",
             pluginUntilBuild = "243.*",
-            kotlinTarget = KotlinVersion.KOTLIN_1_9.version,
+            kotlinTarget = KotlinVersion.KOTLIN_2_0.version,
             javaVersion = JavaVersion.VERSION_17.majorVersion,
         )
 

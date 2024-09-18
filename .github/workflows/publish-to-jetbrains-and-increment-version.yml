@@ -65,13 +65,13 @@ jobs:
         env:
           CHANGELOG: ${{ steps.exportchangelog.outputs.changelog }}
         run: |
-          ./gradlew --no-configuration-cache patchChangelog --release-note="$CHANGELOG"
+          ./gradlew --no-daemon --no-configuration-cache patchChangelog --release-note="$CHANGELOG"
 
 
       - name: Increment version
         run: |
-          ./gradlew --no-configuration-cache  incrementSemanticVersionPatch 
-          ./gradlew --no-configuration-cache  printSemanticVersion -q
+          ./gradlew --no-daemon --no-configuration-cache  incrementSemanticVersionPatch 
+          ./gradlew --no-daemon --no-configuration-cache  printSemanticVersion -q
 
 
 

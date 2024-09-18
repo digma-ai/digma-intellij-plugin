@@ -42,10 +42,12 @@ tasks {
     withType<KotlinCompile> {
 
         doFirst {
+            //todo: migrate to 2.0.20, see https://kotlinlang.org/docs/gradle-compiler-options.html#target-the-jvm
             logger.lifecycle("compiling kotlin with jdk: ${kotlinJavaToolchain.javaVersion}")
             logger.lifecycle("Compiling kotlin with jvmTarget:${kotlinOptions.jvmTarget},apiVersion:${kotlinOptions.apiVersion},languageVersion:${kotlinOptions.languageVersion}")
         }
 
+        //todo: migrate to 2.0.20, see https://kotlinlang.org/docs/gradle-compiler-options.html#target-the-jvm
         kotlinOptions {
             verbose = true
             jvmTarget = project.currentProfile().javaVersion

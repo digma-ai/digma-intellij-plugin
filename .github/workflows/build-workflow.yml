@@ -52,11 +52,11 @@ jobs:
 
       - name: Build Plugin
         if: ${{ inputs.build-with-rider != 'true' }}
-        run: ./gradlew clean test buildPlugin --no-configuration-cache -PbuildProfile=${{ inputs.build-profile }} -PbuildSearchableOptions=true
+        run: ./gradlew clean test buildPlugin --no-daemon --no-configuration-cache -PbuildProfile=${{ inputs.build-profile }} -PbuildSearchableOptions=true
 
       - name: Build Plugin with Rider
         if: ${{ inputs.build-with-rider == 'true' }}
-        run: ./gradlew clean test buildPlugin --no-configuration-cache -PbuildWithRider=true -PbuildProfile=${{ inputs.build-profile }} -PbuildSearchableOptions=true
+        run: ./gradlew clean test buildPlugin --no-daemon --no-configuration-cache -PbuildWithRider=true -PbuildProfile=${{ inputs.build-profile }} -PbuildSearchableOptions=true
 
       - name: Prepare Plugin Artifact
         if: ${{ inputs.build-with-rider != 'true' }}

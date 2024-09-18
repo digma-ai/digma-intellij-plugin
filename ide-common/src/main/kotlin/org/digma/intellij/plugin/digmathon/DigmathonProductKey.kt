@@ -51,8 +51,7 @@ class DigmathonProductKey {
     private fun createCredentialAttributes(): CredentialAttributes {
         return CredentialAttributes(
             generateServiceName(MY_SERVICE, MY_KEY),
-            UniqueGeneratedUserId.userId,
-            this::class.java
+            UniqueGeneratedUserId.userId
         )
     }
 

@@ -58,6 +58,8 @@ dependencyResolutionManagement {
             //see also resolutionStrategy in buildSrc/src/main/kotlin/digma-base.gradle.kts
             //before changing this version search the project for mentions of the library and make the necessary changes.
             version("kotlin-stdlib", "1.7.0")
+//            version("kotlin-stdlib", "1.9.24")
+            library("kotlin-stdlib", "org.jetbrains.kotlin", "kotlin-stdlib").versionRef("kotlin-stdlib")
             library("kotlin-stdlib-jdk8", "org.jetbrains.kotlin", "kotlin-stdlib-jdk8").versionRef("kotlin-stdlib")
             library("kotlin-stdlib-jdk7", "org.jetbrains.kotlin", "kotlin-stdlib-jdk7").versionRef("kotlin-stdlib")
 

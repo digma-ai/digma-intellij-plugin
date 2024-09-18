@@ -82,6 +82,12 @@ object BuildProfiles {
         return thisNumber > otherNumber
     }
 
+    fun Profile.lowerThan(other:Profile):Boolean{
+        val thisNumber = this.name.substring(1).toInt()
+        val otherNumber = other.name.substring(1).toInt()
+        return thisNumber < otherNumber
+    }
+
 
     fun currentProfile(project: Project): BuildProfile {
 
@@ -206,7 +212,12 @@ object BuildProfiles {
             profile = Profile.p243,
             platformVersion = "243.12818-EAP-CANDIDATE-SNAPSHOT",
             //todo: rdgen fails with 2024.3-SNAPSHOT
-            //riderVersion = "2024.3-SNAPSHOT",
+            // see discussion with forever, probably the issue is rdgen, need to wait for better snapshot.
+            // and use new rdgen 2024.3 which is not released yet, rdgen 2024.3-pre1 didn't work too.
+            // so currently building with 2024.2.4 just to keep this profile usable and build idea for 243,
+            // for rider it may not work because we don't have a way to verify it, just need to install the plugin and test.
+            // see discussion with forever: https://jetbrains.slack.com/archives/CBZ36NH7C/p1726614964174159
+//            riderVersion = "2024.3-SNAPSHOT",
             riderVersion = "2024.2.4",
             pycharmVersion = "2024.2",
             riderTargetFramework = "net8.0",
@@ -214,7 +225,8 @@ object BuildProfiles {
             platformVersionCode = "243",
             pluginSinceBuild = "243",
             pluginUntilBuild = "243.*",
-            kotlinTarget = KotlinVersion.KOTLIN_2_0.version,
+//            kotlinTarget = KotlinVersion.KOTLIN_2_0.version,
+            kotlinTarget = KotlinVersion.KOTLIN_1_9.version,
             javaVersion = JavaVersion.VERSION_17.majorVersion,
         )
 

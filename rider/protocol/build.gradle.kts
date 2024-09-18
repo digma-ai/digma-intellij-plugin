@@ -1,3 +1,10 @@
+import com.jetbrains.rd.generator.gradle.RdGenTask
+import common.BuildProfile
+import common.BuildProfiles.Profile
+import common.BuildProfiles.greaterThan
+import common.BuildProfiles.lowerThan
+import common.currentProfile
+
 plugins {
     id("common-kotlin")
     id("rdgen-version")
@@ -8,7 +15,7 @@ group = "org.digma.plugins.rider.protocol"
 version = "0.0.3"
 
 dependencies {
-    implementation(libs.kotlin.stdlib.jdk8)
+    implementation(libs.kotlin.stdlib)
     implementation(libs.rdGen)
     implementation(
         project(
@@ -28,10 +35,17 @@ val ktOutput = File(project(":rider").projectDir, "src/main/kotlin/org/digma/int
 
 rdgen {
 
-    val modelDir = File(projectDir, "src/main/kotlin")
+    //this setup is good for up to 242, but not for 243 and later
+    //see https://github.com/ForNeVeR/rider-plugin-template
+    if (project.currentProfile().profile.lowerThan(Profile.p243)) {
+        val modelDir = File(projectDir, "src/main/kotlin")
+        classpath(sourceSets["main"].compileClasspath)
+        sources("${modelDir.canonicalPath}/rider/model")
+    }
+
+
     verbose = true
-    classpath(sourceSets["main"].compileClasspath)
-    sources("${modelDir.canonicalPath}/rider/model")
+
     hashFolder = project(":rider").layout.buildDirectory.asFile.get().canonicalPath
     packages = "rider.model"
 
@@ -57,8 +71,19 @@ rdgen {
 tasks {
 
     build {
-        dependsOn("rdgen")
+        finalizedBy("rdgen")
     }
+
+    //this setup is good for 243 and later
+    //see https://github.com/ForNeVeR/rider-plugin-template
+    if (project.currentProfile().profile.greaterThan(Profile.p242)) {
+        withType<RdGenTask> {
+            val classPath = sourceSets["main"].runtimeClasspath
+            dependsOn(classPath)
+            classpath(classPath)
+        }
+    }
+
 
     val cleanRdGen by registering(Delete::class) {
         delete(fileTree(ktOutput).matching {

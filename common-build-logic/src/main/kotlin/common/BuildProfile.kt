@@ -215,7 +215,7 @@ object BuildProfiles {
             // see discussion with forever, probably the issue is rdgen, need to wait for better snapshot.
             // and use new rdgen 2024.3 which is not released yet, rdgen 2024.3-pre1 didn't work too.
             // so currently building with 2024.2.4 just to keep this profile usable and build idea for 243,
-            // for rider it may not work because we don't have a way to verify it, just need to install the plugin and test.
+            // for rider it may not work because we don't have a way to verify it, just need to install the plugin and test it.
             // see discussion with forever: https://jetbrains.slack.com/archives/CBZ36NH7C/p1726614964174159
 //            riderVersion = "2024.3-SNAPSHOT",
             riderVersion = "2024.2.4",
@@ -225,9 +225,8 @@ object BuildProfiles {
             platformVersionCode = "243",
             pluginSinceBuild = "243",
             pluginUntilBuild = "243.*",
-//            kotlinTarget = KotlinVersion.KOTLIN_2_0.version,
-            kotlinTarget = KotlinVersion.KOTLIN_1_9.version,
-            javaVersion = JavaVersion.VERSION_17.majorVersion,
+            kotlinTarget = KotlinVersion.KOTLIN_2_0.version,
+            javaVersion = JavaVersion.VERSION_21.majorVersion,
         )
 
     )

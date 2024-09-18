@@ -1,5 +1,4 @@
 import com.jetbrains.rd.generator.gradle.RdGenTask
-import common.BuildProfile
 import common.BuildProfiles.Profile
 import common.BuildProfiles.greaterThan
 import common.BuildProfiles.lowerThan
@@ -15,7 +14,7 @@ group = "org.digma.plugins.rider.protocol"
 version = "0.0.3"
 
 dependencies {
-    implementation(libs.kotlin.stdlib)
+    implementation(libs.kotlin.stdlib.jdk8)
     implementation(libs.rdGen)
     implementation(
         project(

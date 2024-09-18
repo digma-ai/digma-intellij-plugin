@@ -1,9 +1,12 @@
+@file:Suppress("unused")
+
 package common
 
 import org.gradle.api.GradleException
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 //todo: some functions here are marked as not used but they are used. its an intellij issue.
@@ -74,12 +77,19 @@ fun Project.useBinaryInstaller(): Boolean = !this.currentProfile().isEAP
 
 object BuildProfiles {
 
+    @Suppress("EnumEntryName")
     enum class Profile { p231, p232, p233, p241, p242, p243 }
 
     fun Profile.greaterThan(other:Profile):Boolean{
         val thisNumber = this.name.substring(1).toInt()
         val otherNumber = other.name.substring(1).toInt()
         return thisNumber > otherNumber
+    }
+
+    fun Profile.lowerThan(other:Profile):Boolean{
+        val thisNumber = this.name.substring(1).toInt()
+        val otherNumber = other.name.substring(1).toInt()
+        return thisNumber < otherNumber
     }
 
 
@@ -137,7 +147,8 @@ object BuildProfiles {
             platformVersionCode = "231",
             pluginSinceBuild = "231",
             pluginUntilBuild = "231.*",
-            kotlinTarget = KotlinVersion.KOTLIN_1_8.version,
+            kotlinTarget = KotlinVersion.KOTLIN_1_8,
+            kotlinJvmTarget = JvmTarget.JVM_17,
             javaVersion = JavaVersion.VERSION_17.majorVersion
         ),
 
@@ -151,7 +162,8 @@ object BuildProfiles {
             platformVersionCode = "232",
             pluginSinceBuild = "232",
             pluginUntilBuild = "232.*",
-            kotlinTarget = KotlinVersion.KOTLIN_1_8.version,
+            kotlinTarget = KotlinVersion.KOTLIN_1_8,
+            kotlinJvmTarget = JvmTarget.JVM_17,
             javaVersion = JavaVersion.VERSION_17.majorVersion
         ),
 
@@ -166,7 +178,8 @@ object BuildProfiles {
             platformVersionCode = "233",
             pluginSinceBuild = "233",
             pluginUntilBuild = "233.*",
-            kotlinTarget = KotlinVersion.KOTLIN_1_9.version,
+            kotlinTarget = KotlinVersion.KOTLIN_1_9,
+            kotlinJvmTarget = JvmTarget.JVM_17,
             javaVersion = JavaVersion.VERSION_17.majorVersion
         ),
 
@@ -181,7 +194,8 @@ object BuildProfiles {
             platformVersionCode = "241",
             pluginSinceBuild = "241",
             pluginUntilBuild = "241.*",
-            kotlinTarget = KotlinVersion.KOTLIN_1_9.version,
+            kotlinTarget = KotlinVersion.KOTLIN_1_9,
+            kotlinJvmTarget = JvmTarget.JVM_17,
             javaVersion = JavaVersion.VERSION_17.majorVersion,
         ),
 
@@ -197,25 +211,32 @@ object BuildProfiles {
             platformVersionCode = "242",
             pluginSinceBuild = "242",
             pluginUntilBuild = "242.*",
-            kotlinTarget = KotlinVersion.KOTLIN_1_9.version,
+            kotlinTarget = KotlinVersion.KOTLIN_1_9,
+            kotlinJvmTarget = JvmTarget.JVM_17,
             javaVersion = JavaVersion.VERSION_17.majorVersion,
         ),
 
-        //todo: next EAP, currently same versions as 242 until 243 starts.
-        // not built in github yet
         Profile.p243 to BuildProfile(
             isEAP = true,
             profile = Profile.p243,
-            platformVersion = "2024.2.1",
+            platformVersion = "243.12818-EAP-CANDIDATE-SNAPSHOT",
+            //todo: rdgen fails with 2024.3-SNAPSHOT
+            // see discussion with forever, probably the issue is rdgen, need to wait for better snapshot.
+            // and use new rdgen 2024.3 which is not released yet, rdgen 2024.3-pre1 didn't work too.
+            // so currently building with 2024.2.4 just to keep this profile usable and build idea for 243,
+            // for rider it may not work because we don't have a way to verify it, just need to install the plugin and test it.
+            // see discussion with forever: https://jetbrains.slack.com/archives/CBZ36NH7C/p1726614964174159
+//            riderVersion = "2024.3-SNAPSHOT",
             riderVersion = "2024.2.4",
             pycharmVersion = "2024.2",
             riderTargetFramework = "net8.0",
             riderResharperVersionConstant = "PROFILE_2023_2",
-            platformVersionCode = "242",
+            platformVersionCode = "243",
             pluginSinceBuild = "243",
             pluginUntilBuild = "243.*",
-            kotlinTarget = KotlinVersion.KOTLIN_1_9.version,
-            javaVersion = JavaVersion.VERSION_17.majorVersion,
+            kotlinTarget = KotlinVersion.KOTLIN_2_0,
+            kotlinJvmTarget = JvmTarget.JVM_21,
+            javaVersion = JavaVersion.VERSION_21.majorVersion,
         )
 
     )
@@ -233,6 +254,7 @@ data class BuildProfile(
     val platformVersionCode: String,
     val pluginSinceBuild: String,
     val pluginUntilBuild: String,
-    val kotlinTarget: String,
+    val kotlinTarget: KotlinVersion,
+    val kotlinJvmTarget: JvmTarget,
     val javaVersion: String,
 )

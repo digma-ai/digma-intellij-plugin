@@ -37,6 +37,7 @@ fun deleteOutputs() {
     delete(dotnetProjectDir.dir("Digma.Rider/obj"))
     delete(dotnetProjectDir.dir("Digma.Rider.Tests/bin"))
     delete(dotnetProjectDir.dir("Digma.Rider.Tests/obj"))
+    delete(dotnetProjectDir.file("msbuild.log"))
 }
 
 
@@ -280,6 +281,7 @@ tasks {
         dependsOn(deleteNuGetConfig)
         dependsOn(deletePluginProps)
         dependsOn(deleteOutputs)
+        delete(layout.projectDirectory.file("msbuild.log"))
     }
 
 }

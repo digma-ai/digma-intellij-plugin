@@ -5,10 +5,7 @@ runs:
   steps:
 
     - name: Setup Java
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'corretto'
+      uses: ./github-actions/java-setup
 
     - name: Setup dotnet
       uses: actions/setup-dotnet@v4

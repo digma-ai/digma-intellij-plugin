@@ -37,11 +37,7 @@ jobs:
 
       # Setup Java 11 environment for the next steps
       - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: zulu
-          java-version: 17
-          cache: gradle
+        uses: ./github-actions/java-setup
 
       # Run IDEA prepared for UI testing
       - name: Run IDE

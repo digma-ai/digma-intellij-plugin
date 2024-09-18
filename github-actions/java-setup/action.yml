@@ -1,0 +1,11 @@
+name: 'Setup java'
+description: 'Setup the java jdk to use'
+runs:
+  using: "composite"
+  steps:
+
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'corretto'

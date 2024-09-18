@@ -1,9 +1,12 @@
+@file:Suppress("unused")
+
 package common
 
 import org.gradle.api.GradleException
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 //todo: some functions here are marked as not used but they are used. its an intellij issue.
@@ -74,6 +77,7 @@ fun Project.useBinaryInstaller(): Boolean = !this.currentProfile().isEAP
 
 object BuildProfiles {
 
+    @Suppress("EnumEntryName")
     enum class Profile { p231, p232, p233, p241, p242, p243 }
 
     fun Profile.greaterThan(other:Profile):Boolean{
@@ -143,7 +147,8 @@ object BuildProfiles {
             platformVersionCode = "231",
             pluginSinceBuild = "231",
             pluginUntilBuild = "231.*",
-            kotlinTarget = KotlinVersion.KOTLIN_1_8.version,
+            kotlinTarget = KotlinVersion.KOTLIN_1_8,
+            kotlinJvmTarget = JvmTarget.JVM_17,
             javaVersion = JavaVersion.VERSION_17.majorVersion
         ),
 
@@ -157,7 +162,8 @@ object BuildProfiles {
             platformVersionCode = "232",
             pluginSinceBuild = "232",
             pluginUntilBuild = "232.*",
-            kotlinTarget = KotlinVersion.KOTLIN_1_8.version,
+            kotlinTarget = KotlinVersion.KOTLIN_1_8,
+            kotlinJvmTarget = JvmTarget.JVM_17,
             javaVersion = JavaVersion.VERSION_17.majorVersion
         ),
 
@@ -172,7 +178,8 @@ object BuildProfiles {
             platformVersionCode = "233",
             pluginSinceBuild = "233",
             pluginUntilBuild = "233.*",
-            kotlinTarget = KotlinVersion.KOTLIN_1_9.version,
+            kotlinTarget = KotlinVersion.KOTLIN_1_9,
+            kotlinJvmTarget = JvmTarget.JVM_17,
             javaVersion = JavaVersion.VERSION_17.majorVersion
         ),
 
@@ -187,7 +194,8 @@ object BuildProfiles {
             platformVersionCode = "241",
             pluginSinceBuild = "241",
             pluginUntilBuild = "241.*",
-            kotlinTarget = KotlinVersion.KOTLIN_1_9.version,
+            kotlinTarget = KotlinVersion.KOTLIN_1_9,
+            kotlinJvmTarget = JvmTarget.JVM_17,
             javaVersion = JavaVersion.VERSION_17.majorVersion,
         ),
 
@@ -203,7 +211,8 @@ object BuildProfiles {
             platformVersionCode = "242",
             pluginSinceBuild = "242",
             pluginUntilBuild = "242.*",
-            kotlinTarget = KotlinVersion.KOTLIN_1_9.version,
+            kotlinTarget = KotlinVersion.KOTLIN_1_9,
+            kotlinJvmTarget = JvmTarget.JVM_17,
             javaVersion = JavaVersion.VERSION_17.majorVersion,
         ),
 
@@ -225,7 +234,8 @@ object BuildProfiles {
             platformVersionCode = "243",
             pluginSinceBuild = "243",
             pluginUntilBuild = "243.*",
-            kotlinTarget = KotlinVersion.KOTLIN_2_0.version,
+            kotlinTarget = KotlinVersion.KOTLIN_2_0,
+            kotlinJvmTarget = JvmTarget.JVM_21,
             javaVersion = JavaVersion.VERSION_21.majorVersion,
         )
 
@@ -244,6 +254,7 @@ data class BuildProfile(
     val platformVersionCode: String,
     val pluginSinceBuild: String,
     val pluginUntilBuild: String,
-    val kotlinTarget: String,
+    val kotlinTarget: KotlinVersion,
+    val kotlinJvmTarget: JvmTarget,
     val javaVersion: String,
 )

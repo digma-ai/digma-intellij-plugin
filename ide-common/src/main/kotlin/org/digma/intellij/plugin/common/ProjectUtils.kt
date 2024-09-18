@@ -7,7 +7,7 @@ import com.intellij.openapi.wm.IdeFocusManager
 
 fun findActiveProject(): Project? {
 
-    //best effort to find aa active project
+    //best effort to find an active project
 
     var project = ProjectUtil.getActiveProject()
     if (project == null || !isProjectValid(project)) {

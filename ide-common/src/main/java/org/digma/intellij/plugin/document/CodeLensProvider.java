@@ -169,7 +169,7 @@ public class CodeLensProvider implements Disposable {
         List<MethodWithCodeObjects> methods = new ArrayList<>();
 
         for (MethodInfo methodInfo : methodsInfo) {
-            List<String> relatedSpansCodeObjectIds = methodInfo.getSpans().stream().map(SpanInfo::getId).toList();
+            List<String> relatedSpansCodeObjectIds = methodInfo.getSpans().stream().map(SpanInfo::idWithType).toList();
             List<String> relatedEndpointCodeObjectIds = methodInfo.getEndpoints().stream().map(EndpointInfo::getId).toList();
 
             for (String id : methodInfo.allIdsWithType()) {

@@ -1,10 +1,10 @@
 package org.digma.intellij.plugin.idea.navigation
 
+import com.intellij.openapi.application.readAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.openapi.util.Computable
 import com.intellij.openapi.vfs.VirtualFile
-import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.common.executeCatchingIgnorePCE
 import org.digma.intellij.plugin.common.executeCatchingWithResultIgnorePCE
 import org.digma.intellij.plugin.common.isProjectValid
@@ -12,7 +12,6 @@ import org.digma.intellij.plugin.common.isValidVirtualFile
 import org.digma.intellij.plugin.common.runWIthRetryIgnorePCE
 import org.digma.intellij.plugin.common.runWIthRetryWithResultIgnorePCE
 import org.digma.intellij.plugin.idea.navigation.model.NavigationProcessContext
-import java.util.function.Supplier
 
 
 fun executeCatchingWithRetry(
@@ -53,7 +52,7 @@ fun isRelevantFile(project: Project, file: VirtualFile?): Boolean {
 
 //this method checks isInContent which needs read access. don't call it from EDT events like
 // onChange in psi tree listeners because it will cause short freezes, only call it on background processing
-fun isValidRelevantFile(project: Project, file: VirtualFile?): Boolean {
+suspend fun isValidRelevantFile(project: Project, file: VirtualFile?): Boolean {
     return isRelevantFile(project, file) &&
             isValidVirtualFile(file) &&
             file != null &&
@@ -63,8 +62,8 @@ fun isValidRelevantFile(project: Project, file: VirtualFile?): Boolean {
 
 //don't call this method on EDT events like onChange in psi tree listeners because it will
 // cause short freezes, only call it on background processing
-fun isInContent(project: Project, file: VirtualFile): Boolean {
-    return ReadActions.ensureReadAction(Supplier {
+suspend fun isInContent(project: Project, file: VirtualFile): Boolean {
+    return readAction {
         ProjectFileIndex.getInstance(project).isInContent(file)
-    })
+    }
 }

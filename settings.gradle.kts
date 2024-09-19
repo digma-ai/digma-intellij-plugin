@@ -19,7 +19,7 @@ pluginManagement {
 plugins {
     id("rdgen-version-settings")
     id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
-    id("org.jetbrains.intellij.platform.settings") version "2.0.0"
+    id("org.jetbrains.intellij.platform.settings") version "2.0.1"
 }
 
 /*
@@ -58,6 +58,7 @@ dependencyResolutionManagement {
             //see also resolutionStrategy in buildSrc/src/main/kotlin/digma-base.gradle.kts
             //before changing this version search the project for mentions of the library and make the necessary changes.
             version("kotlin-stdlib", "1.7.0")
+            library("kotlin-stdlib", "org.jetbrains.kotlin", "kotlin-stdlib").versionRef("kotlin-stdlib")
             library("kotlin-stdlib-jdk8", "org.jetbrains.kotlin", "kotlin-stdlib-jdk8").versionRef("kotlin-stdlib")
             library("kotlin-stdlib-jdk7", "org.jetbrains.kotlin", "kotlin-stdlib-jdk7").versionRef("kotlin-stdlib")
 

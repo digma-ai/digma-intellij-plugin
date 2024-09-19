@@ -43,15 +43,16 @@ tasks {
 
         doFirst {
             logger.lifecycle("compiling kotlin with jdk: ${kotlinJavaToolchain.javaVersion}")
-            logger.lifecycle("Compiling kotlin with jvmTarget:${kotlinOptions.jvmTarget},apiVersion:${kotlinOptions.apiVersion},languageVersion:${kotlinOptions.languageVersion}")
+            logger.lifecycle("Compiling kotlin with jvmTarget:${compilerOptions.jvmTarget.get()},apiVersion:${compilerOptions.apiVersion.get()},languageVersion:${compilerOptions.languageVersion.get()}")
         }
 
-        kotlinOptions {
+        compilerOptions {
             verbose = true
-            jvmTarget = project.currentProfile().javaVersion
-            apiVersion = project.currentProfile().kotlinTarget
-            languageVersion = project.currentProfile().kotlinTarget
+            apiVersion.set(project.currentProfile().kotlinTarget)
+            languageVersion.set(project.currentProfile().kotlinTarget)
+            jvmTarget.set(project.currentProfile().kotlinJvmTarget)
         }
+
     }
 
 }

@@ -101,3 +101,5 @@ nb-configuration.xml
 
 ## dotnet binlog
 msbuild.log
+
+/.kotlin

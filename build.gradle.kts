@@ -237,10 +237,14 @@ tasks {
 
 
     wrapper {
+        //todo: gradle 8.10.1 has a bug
+        // see https://github.com/gradle/gradle/issues/30497
+        // see https://github.com/gradle/gradle/issues/30472
+        // upgrade to 8.10.2 when its released
         //to upgrade gradle change the version here and run:
         //./gradlew wrapper --gradle-version 8.8
         //check that gradle/wrapper/gradle-wrapper.properties was changed
-        gradleVersion = "8.8"
+        gradleVersion = "8.10"
         distributionType = Wrapper.DistributionType.ALL
         distributionBase = Wrapper.PathBase.GRADLE_USER_HOME
         distributionPath = "wrapper/dists"
@@ -301,6 +305,9 @@ tasks {
             "kotlinx.coroutines.debug" to "",
             "org.digma.plugin.report.all.errors" to "true",
             "org.digma.plugin.auth.debug" to "true",
+
+            //see https://kotlin.github.io/analysis-api/testing-in-k2-locally.html
+            "idea.kotlin.plugin.use.k2" to "true"
 
 //            "idea.ProcessCanceledException" to "disabled"
 

@@ -387,8 +387,8 @@ class PersistenceService {
         return state.alreadyShowedNewRecentActivityNotification
     }
 
-    fun setUserRequestedCourse(courseRequested: Boolean) {
-        state.userRequestedCourse = courseRequested
+    fun setUserRequestedCourse() {
+        state.userRequestedCourse = true
     }
 
     fun isUserRequestedCourse():Boolean {
@@ -397,6 +397,18 @@ class PersistenceService {
 
     fun getUserRequestedCourseString():String {
         return state.userRequestedCourse.toString()
+    }
+
+    fun setUserRequestedEarlyAccess() {
+        state.userRequestedEarlyAccess = true
+    }
+
+    fun isUserRequestedEarlyAccess():Boolean {
+        return state.userRequestedEarlyAccess
+    }
+
+    fun getUserRequestedEarlyAccessString():String {
+        return state.userRequestedEarlyAccess.toString()
     }
 
 }

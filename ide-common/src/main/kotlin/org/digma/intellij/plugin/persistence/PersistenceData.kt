@@ -14,6 +14,7 @@ internal data class PersistenceData(
     var isLocalEngineInstalled: Boolean? = null,
     var userId: String? = null,
     var userRequestedCourse: Boolean = false,
+    var userRequestedEarlyAccess: Boolean = false,
 
     //lastInsightsEventTime is different from other timestamps in that it needs to be same format and
     // timezone as in the backend

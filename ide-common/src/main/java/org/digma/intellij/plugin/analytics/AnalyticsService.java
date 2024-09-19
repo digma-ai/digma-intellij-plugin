@@ -330,6 +330,11 @@ public class AnalyticsService implements Disposable {
                 analyticsProviderProxy.getIssuesReportStats(queryParams));
     }
 
+    public String getServiceReport(@NotNull String  queryParams) throws AnalyticsServiceException {
+        return executeCatching(() ->
+                analyticsProviderProxy.getServiceReport(queryParams));
+    }
+
     public void resetThrottlingStatus() throws AnalyticsServiceException {
         executeCatching(() -> {
             analyticsProviderProxy.resetThrottlingStatus();

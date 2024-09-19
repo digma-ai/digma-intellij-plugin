@@ -1090,12 +1090,13 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
 
     fun registerEngagementScore(activeDays: Long, average: Long) {
 
-        val details = mapOf(
+        val details = mapOf<String,Any>(
             MEANINGFUL_ACTIONS_DAYS_PROPERTY_NAME to activeDays,
             MEANINGFUL_ACTIONS_AVG_PROPERTY_NAME to average,
-            INSTALL_STATUS_PROPERTY_NAME to getCurrentInstallStatus(),
+            INSTALL_STATUS_PROPERTY_NAME to getCurrentInstallStatus().toString(),
             USER_REQUESTED_COURSE_PROPERTY_NAME to PersistenceService.getInstance().getUserRequestedCourseString(),
-            USER_REQUESTED_EARLY_ACCESS_PROPERTY_NAME to PersistenceService.getInstance().getUserRequestedEarlyAccessString()
+            USER_REQUESTED_EARLY_ACCESS_PROPERTY_NAME to PersistenceService.getInstance().getUserRequestedEarlyAccessString(),
+            "email" to (PersistenceService.getInstance().getUserRegistrationEmail() ?: PersistenceService.getInstance().getUserEmail() ?: "")
         )
 
         capture("daily engagement score", details)

@@ -1,6 +1,23 @@
 # Changelog
 
-## [2.0.385] - 2024-09-09
+## [2.0.386] - 2024-09-19
+
+- remove deprecated jcef messages Closes #2488 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2490
+- update-build-profiles-2024.2.1 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2495
+- update-build-profiles-rider-2024.2.4 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2496
+- Update ui by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2503
+- Improve navigation change service by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2504
+- Fixed lens request by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/2506
+- posthog-event-in-reload-jcef Closes #2507 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2508
+- always-add-digma-agent-to-javatooloptions by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2513
+- early access program notification Closes #2440 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2494
+- update ui by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2516
+- support  2024.3 EAP by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2517
+- add-email-to-daily-engagement-score by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2518
+- Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2523
+- Report by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2514
+
+## 2.0.385 - 2024-09-09
 
 - Update ui by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2492
 

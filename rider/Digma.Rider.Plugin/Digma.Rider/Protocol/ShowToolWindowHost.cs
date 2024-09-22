@@ -1,3 +1,4 @@
+using JetBrains.Application.Parts;
 using JetBrains.ProjectModel;
 using JetBrains.Util;
 using static Digma.Rider.Logging.Logger;
@@ -10,7 +11,12 @@ using JetBrains.RdBackend.Common.Features;
 
 namespace Digma.Rider.Protocol
 {
+#if (PROFILE_2024_3)
+    [SolutionComponent(Instantiation.ContainerAsyncPrimaryThread)]
+#else
     [SolutionComponent]
+#endif    
+
     public class ShowToolWindowHost
     {
         private readonly ILogger _logger;

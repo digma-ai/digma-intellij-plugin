@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using Digma.Rider.Discovery;
 using JetBrains.Annotations;
+using JetBrains.Application.Parts;
 using JetBrains.DocumentManagers;
 using JetBrains.ProjectModel;
 using JetBrains.ReSharper.Feature.Services.CSharp.CompleteStatement;
@@ -20,7 +21,12 @@ using static Digma.Rider.Logging.Logger;
 
 namespace Digma.Rider.Protocol
 {
+#if (PROFILE_2024_3)
+    [SolutionComponent(Instantiation.ContainerAsyncPrimaryThread)]
+#else
     [SolutionComponent]
+#endif    
+
     public class MethodNavigator
     {
         private readonly ITextControlManager _textControlManager;

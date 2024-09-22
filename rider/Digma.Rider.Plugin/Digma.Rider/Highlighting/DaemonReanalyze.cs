@@ -1,5 +1,6 @@
 using Digma.Rider.Protocol;
 using Digma.Rider.Util;
+using JetBrains.Application.Parts;
 using JetBrains.Lifetimes;
 using JetBrains.Platform.RdFramework.Impl;
 using JetBrains.ProjectModel;
@@ -16,7 +17,12 @@ using JetBrains.RdBackend.Common.Features;
 
 namespace Digma.Rider.Highlighting
 {
+#if (PROFILE_2024_3)
+    [SolutionComponent(Instantiation.ContainerAsyncPrimaryThread)]
+#else
     [SolutionComponent]
+#endif    
+
     public class DaemonReanalyze
     {
         public DaemonReanalyze(Lifetime lifetime, ISolution solution,

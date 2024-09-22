@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Digma.Rider.Protocol;
 using Digma.Rider.Util;
+using JetBrains.Application.Parts;
 using JetBrains.Application.Progress;
 using JetBrains.Application.Threading;
 using JetBrains.Collections;
@@ -32,7 +33,11 @@ namespace Digma.Rider.Discovery
     /// on various events.
     /// 
     /// </summary>
+#if (PROFILE_2024_3)
+    [PsiComponent(Instantiation.ContainerAsyncPrimaryThread)]
+#else
     [PsiComponent]
+#endif
     public class CodeObjectsCache: SimpleICache<RiderDocumentInfo>
     {
         private readonly ILogger _logger;

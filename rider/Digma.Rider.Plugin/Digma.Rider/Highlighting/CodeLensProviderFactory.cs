@@ -1,10 +1,16 @@
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Application.Parts;
 using JetBrains.ProjectModel;
 
 namespace Digma.Rider.Highlighting
 {
+#if (PROFILE_2024_3)
+    [SolutionComponent(Instantiation.ContainerAsyncPrimaryThread)]
+#else
     [SolutionComponent]
+#endif    
+
     public class CodeLensProviderFactory
     {
         private readonly LiveMethodInsightsProvider _liveMethodInsightsProvider;

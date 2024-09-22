@@ -73,6 +73,8 @@ class SettingsChangeTracker {
                 "non-localhost"
         } ?: ""
 
+        myTrackedSettings["apiToken"] = SettingsState.getInstance().apiToken?.takeIf { it.isNotBlank() }?.hashCode()?.toString() ?: ""
+
         myTrackedSettings["jaegerLinkMode"] = SettingsState.getInstance().jaegerLinkMode.name
         myTrackedSettings["springBootObservabilityMode"] = SettingsState.getInstance().springBootObservabilityMode.name
         myTrackedSettings["extendedObservability"] = SettingsState.getInstance().extendedObservability.toString()

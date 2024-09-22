@@ -13,7 +13,9 @@ class SettingsChangeTracker {
 
     fun start(activityMonitor: ActivityMonitor) {
 
-        activityMonitor.registerSettingsEvent("initial", myTrackedSettings)
+        withDebuggingEvents {
+            activityMonitor.registerSettingsEvent("initial", myTrackedSettings)
+        }
 
         SettingsState.getInstance().addChangeListener(
             {

@@ -20,6 +20,7 @@ import org.digma.intellij.plugin.common.generateThreadDump
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.posthog.withDebuggingEvents
 import java.util.Collections
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
@@ -32,6 +33,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.timer
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.toJavaDuration
 
@@ -574,7 +576,7 @@ fun <T> blockingOneShotTaskWithResult(name: String, timeoutMillis: Long, block: 
 
 class ScheduledTasksPerformanceMonitor {
 
-    private val frequencyDetector = FrequencyDetector(30.minutes.toJavaDuration())
+    private val frequencyDetector = FrequencyDetector(1.hours.toJavaDuration())
 
     //this is raw sampling report, not all issues are reported,
     // and it may be that we miss some issues if they don't happen all the time.
@@ -582,7 +584,7 @@ class ScheduledTasksPerformanceMonitor {
     fun reportPerformance(taskName: String, duration: Long) {
         try {
 
-            if (duration < 2000) {
+            if (duration < 4000) {
                 return
             }
 
@@ -708,21 +710,24 @@ class MyScheduledExecutorService(
             }
         }
 
-        //send statistics every 2 hours
-        if (managementRound % 60 == 0 && !isUnitTest) {
-            findActiveProject()?.let { project ->
-                ActivityMonitor.getInstance(project).registerSchedulerStatistics(
-                    mapOf(
-                        "core.pool.size" to scheduler.corePoolSize,
-                        "max.pool.size" to scheduler.maximumPoolSize,
-                        "task.queue.size" to scheduler.queue.size,
-                        "all.registered.recurring (including canceled)" to scheduler.registeredRecurringTasks,
-                        "max.pool.size.allowed" to SCHEDULER_MAX_SIZE,
-                        "max.queue.size.allowed" to SCHEDULER_MAX_QUEUE_SIZE_ALLOWED
+        withDebuggingEvents {
+            //send statistics every 2 hours
+            if (managementRound % 60 == 0 && !isUnitTest) {
+                findActiveProject()?.let { project ->
+                    ActivityMonitor.getInstance(project).registerSchedulerStatistics(
+                        mapOf(
+                            "core.pool.size" to scheduler.corePoolSize,
+                            "max.pool.size" to scheduler.maximumPoolSize,
+                            "task.queue.size" to scheduler.queue.size,
+                            "all.registered.recurring (including canceled)" to scheduler.registeredRecurringTasks,
+                            "max.pool.size.allowed" to SCHEDULER_MAX_SIZE,
+                            "max.queue.size.allowed" to SCHEDULER_MAX_QUEUE_SIZE_ALLOWED
+                        )
                     )
-                )
+                }
             }
         }
+
     }
 
     fun interruptAll() {

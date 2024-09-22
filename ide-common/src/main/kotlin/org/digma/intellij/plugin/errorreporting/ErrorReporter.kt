@@ -16,7 +16,7 @@ import org.digma.intellij.plugin.common.findActiveProject
 import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
-import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.hours
 import kotlin.time.toJavaDuration
 
 
@@ -31,7 +31,7 @@ open class ErrorReporter {
 
     private val logger: Logger = Logger.getInstance(this::class.java)
 
-    private val frequencyDetector = FrequencyDetector(60.minutes.toJavaDuration())
+    private val frequencyDetector = FrequencyDetector(3.hours.toJavaDuration())
 
     //must be public class
     class MyPauseInterceptor {

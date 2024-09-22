@@ -20,7 +20,7 @@ public class Log {
     public static final String API_LOGGER_NAME = "api.digma.org";
 
 
-    private static final FrequencyDetector FREQUENT_ERROR_DETECTOR = new FrequencyDetector(Duration.ofMinutes(30));
+    private static final FrequencyDetector FREQUENT_ERROR_DETECTOR = new FrequencyDetector(Duration.ofMinutes(60));
 
 
 

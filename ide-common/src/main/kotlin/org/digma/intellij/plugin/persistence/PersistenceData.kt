@@ -91,6 +91,8 @@ internal data class PersistenceData(
     var alreadyShowedNewAssetNotification: Boolean = false,
     var alreadyShowedNewInsightNotification: Boolean = false,
     var alreadyShowedNewIssueNotification: Boolean = false,
-    var alreadyShowedNewImportantIssueNotification: Boolean = false
+    var alreadyShowedNewImportantIssueNotification: Boolean = false,
+
+    var detectedFrameworks: String? = null
 
 )

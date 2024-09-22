@@ -6,14 +6,14 @@ import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.common.FrequencyDetector
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import java.util.Collections
-import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.hours
 import kotlin.time.toJavaDuration
 
 
 @Service(Service.Level.PROJECT)
 class ApiPerformanceMonitor(private val project: Project) {
 
-    private val frequencyDetector = FrequencyDetector(10.minutes.toJavaDuration())
+    private val frequencyDetector = FrequencyDetector(1.hours.toJavaDuration())
 
     private val durations = Collections.synchronizedMap(mutableMapOf<String, Pair<Long, Long>>())
 

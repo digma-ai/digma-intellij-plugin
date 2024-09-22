@@ -391,11 +391,11 @@ class PersistenceService {
         state.userRequestedCourse = true
     }
 
-    fun isUserRequestedCourse():Boolean {
+    fun isUserRequestedCourse(): Boolean {
         return state.userRequestedCourse
     }
 
-    fun getUserRequestedCourseString():String {
+    fun getUserRequestedCourseString(): String {
         return state.userRequestedCourse.toString()
     }
 
@@ -403,12 +403,20 @@ class PersistenceService {
         state.userRequestedEarlyAccess = true
     }
 
-    fun isUserRequestedEarlyAccess():Boolean {
+    fun isUserRequestedEarlyAccess(): Boolean {
         return state.userRequestedEarlyAccess
     }
 
-    fun getUserRequestedEarlyAccessString():String {
+    fun getUserRequestedEarlyAccessString(): String {
         return state.userRequestedEarlyAccess.toString()
+    }
+
+    fun getDetectedFrameworks(): MutableSet<String> {
+        return state.detectedFrameworks?.split(",")?.toMutableSet() ?: mutableSetOf()
+    }
+
+    fun setDetectedFrameworks(detectedFrameworks: Set<String>) {
+        state.detectedFrameworks = detectedFrameworks.joinToString(",")
     }
 
 }

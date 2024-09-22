@@ -30,6 +30,7 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.psi.isJvmSupportedFile
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.posthog.withDebuggingEvents
 import org.digma.intellij.plugin.psi.PsiUtils
 import java.util.LinkedList
 import java.util.Queue
@@ -375,13 +376,15 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
 
                 pauseAndLaunchFullUpdate()
 
-                ActivityMonitor.getInstance(project).registerCustomEvent(
-                    "LargeBulkUpdate", mapOf(
-                        "eventName" to "changeFiles",
-                        "changedFiles.size" to changedFiles.size,
-                        "project.hash" to DigestUtils.md2Hex(project.name)
+                withDebuggingEvents {
+                    ActivityMonitor.getInstance(project).registerCustomEvent(
+                        "LargeBulkUpdate", mapOf(
+                            "eventName" to "changeFiles",
+                            "changedFiles.size" to changedFiles.size,
+                            "project.hash" to DigestUtils.md2Hex(project.name)
+                        )
                     )
-                )
+                }
             }
 
             return
@@ -438,14 +441,16 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
 
                 pauseAndLaunchFullUpdate()
 
-                val size = if (bulkEvents.size > 100) bulkEvents.size else events.size
-                ActivityMonitor.getInstance(project).registerCustomEvent(
-                    "LargeBulkUpdate", mapOf(
-                        "eventName" to "bulkEvents",
-                        "bulkEvents.size" to size,
-                        "project.hash" to DigestUtils.md2Hex(project.name)
+                withDebuggingEvents {
+                    val size = if (bulkEvents.size > 100) bulkEvents.size else events.size
+                    ActivityMonitor.getInstance(project).registerCustomEvent(
+                        "LargeBulkUpdate", mapOf(
+                            "eventName" to "bulkEvents",
+                            "bulkEvents.size" to size,
+                            "project.hash" to DigestUtils.md2Hex(project.name)
+                        )
                     )
-                )
+                }
             }
 
             return

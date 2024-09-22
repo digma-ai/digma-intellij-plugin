@@ -206,13 +206,29 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
 
 
     fun registerFramework(framework: MonitoredFramework) {
-        capture("framework detected", mapOf("framework.name" to framework.name))
+
+        val detectedFrameworks = PersistenceService.getInstance().getDetectedFrameworks()
+        val alreadySeenBefore = detectedFrameworks.contains(framework.name)
+        if (!alreadySeenBefore) {
+            detectedFrameworks.add(framework.name)
+            PersistenceService.getInstance().setDetectedFrameworks(detectedFrameworks)
+        }
+
         postHog?.set(
             UniqueGeneratedUserId.userId, mapOf(
                 "framework.last" to framework.name,
-                "framework.${framework.name}.last-seen" to Instant.now().toString()
+                "framework.${framework.name}.last-seen" to Instant.now().toString(),
+                "detected frameworks" to detectedFrameworks.joinToString(",")
             )
         )
+
+        //don't register an event if we saw this framework before
+        if (alreadySeenBefore) {
+            return
+        }
+
+        capture("framework detected", mapOf("framework.name" to framework.name))
+
     }
 
     fun registerUserRequestedCourse() {
@@ -1090,7 +1106,7 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
 
     fun registerEngagementScore(activeDays: Long, average: Long) {
 
-        val details = mapOf<String,Any>(
+        val details = mapOf<String, Any>(
             MEANINGFUL_ACTIONS_DAYS_PROPERTY_NAME to activeDays,
             MEANINGFUL_ACTIONS_AVG_PROPERTY_NAME to average,
             INSTALL_STATUS_PROPERTY_NAME to getCurrentInstallStatus().toString(),

@@ -17,6 +17,7 @@ import org.digma.intellij.plugin.idea.navigation.model.NavigationDiscoveryTrigge
 import org.digma.intellij.plugin.idea.navigation.model.NavigationProcessContext
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.posthog.withDebuggingEvents
 import org.digma.intellij.plugin.process.ProcessManager
 import org.digma.intellij.plugin.session.SessionMetadataProperties
 import org.digma.intellij.plugin.session.getPluginLoadedKey
@@ -91,6 +92,16 @@ abstract class AbstractNavigationDiscovery(protected val project: Project) : Dis
                 navigationDiscoveryTrigger,
                 retry
             )
+
+            ActivityMonitor.getInstance(project).registerJvmNavigationDiscoveryEvent(
+                "$type-retry-exhausted",
+                mapOf(
+                    "navigationDiscoveryTrigger" to navigationDiscoveryTrigger,
+                    "message" to "navigation discovery had errors after $retry retries",
+                    "found.locations" to getNumFound(),
+                )
+            )
+
             return
         }
 
@@ -143,7 +154,9 @@ abstract class AbstractNavigationDiscovery(protected val project: Project) : Dis
             return
         }
 
-        registerStartEvent("$type-discovery-started", navigationDiscoveryTrigger, retry)
+        withDebuggingEvents {
+            registerStartEvent("$type-discovery-started", navigationDiscoveryTrigger, retry)
+        }
 
         val processName = "${this::class.simpleName}.buildNavigationUnderProgress"
 
@@ -151,15 +164,18 @@ abstract class AbstractNavigationDiscovery(protected val project: Project) : Dis
         val task = getTask(context, navigationDiscoveryTrigger, retry)
         val processResult = project.service<ProcessManager>().runTaskUnderProcess(task, context, true, 10, true)
 
-        registerFinishedEvent(
-            "$type-discovery-finished",
-            navigationDiscoveryTrigger,
-            processResult.success,
-            processResult.duration,
-            retry,
-            context.hasErrors(),
-            processResult.error
-        )
+        withDebuggingEvents {
+            registerFinishedEvent(
+                "$type-discovery-finished",
+                navigationDiscoveryTrigger,
+                processResult.success,
+                processResult.duration,
+                retry,
+                context.hasErrors(),
+                processResult.error
+            )
+        }
+
 
         //if process failed, schedule another retry immediately.
         //if process succeeded but there are errors schedule again in 2 minutes,hopefully with fewer errors

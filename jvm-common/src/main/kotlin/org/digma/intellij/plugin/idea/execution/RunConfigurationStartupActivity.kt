@@ -7,6 +7,7 @@ import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.posthog.withDebuggingEvents
 import org.digma.intellij.plugin.startup.DigmaProjectActivity
 
 class RunConfigurationStartupActivity : DigmaProjectActivity() {
@@ -15,24 +16,26 @@ class RunConfigurationStartupActivity : DigmaProjectActivity() {
 
 
         try {
-            val supported = mutableListOf<String>()
-            val nonSupported = mutableListOf<String>()
+            withDebuggingEvents {
+                val supported = mutableListOf<String>()
+                val nonSupported = mutableListOf<String>()
 
 
-            val allRunConfigs = RunManager.getInstance(project).allConfigurationsList
-            val tempRunConfigs =
-                RunManager.getInstance(project).tempConfigurationsList.map { runnerAndConfigurationSettings: RunnerAndConfigurationSettings -> runnerAndConfigurationSettings.configuration }
+                val allRunConfigs = RunManager.getInstance(project).allConfigurationsList
+                val tempRunConfigs =
+                    RunManager.getInstance(project).tempConfigurationsList.map { runnerAndConfigurationSettings: RunnerAndConfigurationSettings -> runnerAndConfigurationSettings.configuration }
 
-            collect(allRunConfigs, tempRunConfigs, supported, nonSupported)
+                collect(allRunConfigs, tempRunConfigs, supported, nonSupported)
 
 
-            val details = mapOf(
-                "supported configurations types found" to supported.isNotEmpty(),
-                "supported run configuration types" to supported.joinToString("; "),
-                "non supported run configuration types" to nonSupported.joinToString("; ")
-            )
+                val details = mapOf(
+                    "supported configurations types found" to supported.isNotEmpty(),
+                    "supported run configuration types" to supported.joinToString("; "),
+                    "non supported run configuration types" to nonSupported.joinToString("; ")
+                )
 
-            ActivityMonitor.getInstance(project).reportSupportedRunConfigDetected(details)
+                ActivityMonitor.getInstance(project).reportSupportedRunConfigDetected(details)
+            }
 
         } catch (e: Throwable) {
             ErrorReporter.getInstance().reportError(project, "RunConfigurationStartupActivity.runActivity", e)

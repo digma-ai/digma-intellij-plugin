@@ -59,7 +59,6 @@ class DockerService {
     }
 
 
-
     fun isDockerInstalled(): Boolean {
         return isInstalled(DOCKER_COMMAND)
     }
@@ -104,6 +103,7 @@ class DockerService {
 
         Backgroundable.runInNewBackgroundThread(project, "installing digma engine") {
 
+            var exitValue = ""
             try {
 
                 if (downloader.downloadComposeFile(true)) {
@@ -111,7 +111,7 @@ class DockerService {
 
                     if (dockerComposeCmd != null) {
 
-                        var exitValue = engine.up(project, downloader.composeFile, dockerComposeCmd)
+                        exitValue = engine.up(project, downloader.composeFile, dockerComposeCmd)
                         if (exitValue != "0") {
                             ActivityMonitor.getInstance(project).registerDigmaEngineEventError("installEngine", exitValue)
                             Log.log(logger::warn, "error installing engine {}", exitValue)
@@ -121,6 +121,12 @@ class DockerService {
                                 }
                             }
                         }
+
+                        if (exitValue != "0") {
+                            ActivityMonitor.getInstance(project).registerDigmaEngineEventError("installEngine", exitValue)
+                            Log.log(logger::warn, "error installing engine {}", exitValue)
+                        }
+
 
                         notifyResult(exitValue, resultTask)
                     } else {
@@ -140,7 +146,11 @@ class DockerService {
                 Log.warnWithException(logger, e, "Failed install docker engine {}", e)
                 notifyResult("Failed to install docker engine: $e", resultTask)
             } finally {
-                ActivityMonitor.getInstance(project).registerDigmaEngineEventEnd("installEngine", mapOf())
+                ActivityMonitor.getInstance(project).registerDigmaEngineEventEnd(
+                    "installEngine", mapOf(
+                        "exitValue" to exitValue
+                    )
+                )
             }
         }
     }
@@ -166,12 +176,13 @@ class DockerService {
             }
 
 
+            var exitValue = ""
             try {
                 if (downloader.downloadComposeFile(true)) {
                     val dockerComposeCmd = getDockerComposeCommand()
 
                     if (dockerComposeCmd != null) {
-                        val exitValue = engine.up(project, downloader.composeFile, dockerComposeCmd)
+                        exitValue = engine.up(project, downloader.composeFile, dockerComposeCmd)
                         //in upgrade there is no need to check if daemon is down because upgrade will not be triggered if the engine is not running.
                         if (exitValue != "0") {
                             ActivityMonitor.getInstance(project).registerDigmaEngineEventError("upgradeEngine", exitValue)
@@ -195,7 +206,11 @@ class DockerService {
                 Log.warnWithException(logger, e, "Failed install docker engine {}", e)
                 notifyResult("Failed to upgrade docker engine: $e", resultTask)
             } finally {
-                ActivityMonitor.getInstance(project).registerDigmaEngineEventEnd("upgradeEngine", mapOf())
+                ActivityMonitor.getInstance(project).registerDigmaEngineEventEnd(
+                    "upgradeEngine", mapOf(
+                        "exitValue" to exitValue
+                    )
+                )
             }
         }
     }
@@ -207,6 +222,7 @@ class DockerService {
 
         Backgroundable.runInNewBackgroundThread(project, "stopping digma engine") {
 
+            var exitValue = ""
             try {
                 if (downloader.downloadComposeFile()) {
 
@@ -214,7 +230,7 @@ class DockerService {
 
                     if (dockerComposeCmd != null) {
 
-                        val exitValue = engine.stop(project, downloader.composeFile, dockerComposeCmd)
+                        exitValue = engine.stop(project, downloader.composeFile, dockerComposeCmd)
                         if (exitValue != "0") {
                             ActivityMonitor.getInstance(project).registerDigmaEngineEventError("stopEngine", exitValue)
                             Log.log(logger::warn, "error stopping engine {}", exitValue)
@@ -236,7 +252,11 @@ class DockerService {
                 Log.warnWithException(logger, e, "Failed to stop docker engine {}", e)
                 notifyResult("Failed to stop docker engine: $e", resultTask)
             } finally {
-                ActivityMonitor.getInstance(project).registerDigmaEngineEventEnd("stopEngine", mapOf())
+                ActivityMonitor.getInstance(project).registerDigmaEngineEventEnd(
+                    "stopEngine", mapOf(
+                        "exitValue" to exitValue
+                    )
+                )
             }
         }
     }
@@ -248,6 +268,7 @@ class DockerService {
 
         Backgroundable.runInNewBackgroundThread(project, "starting digma engine") {
 
+            var exitValue = ""
             try {
                 if (downloader.downloadComposeFile()) {
                     val dockerComposeCmd = getDockerComposeCommand()
@@ -268,7 +289,7 @@ class DockerService {
                             Log.warnWithException(logger, e, "Failed to stop docker engine {}", e)
                         }
 
-                        var exitValue = engine.start(project, downloader.composeFile, dockerComposeCmd)
+                        exitValue = engine.start(project, downloader.composeFile, dockerComposeCmd)
                         if (exitValue != "0") {
                             ActivityMonitor.getInstance(project).registerDigmaEngineEventError("startEngine", exitValue)
                             Log.log(logger::warn, "error starting engine {}", exitValue)
@@ -277,6 +298,11 @@ class DockerService {
                                     engine.start(project, downloader.composeFile, dockerComposeCmd)
                                 }
                             }
+                        }
+
+                        if (exitValue != "0") {
+                            ActivityMonitor.getInstance(project).registerDigmaEngineEventError("startEngine", exitValue)
+                            Log.log(logger::warn, "error starting engine {}", exitValue)
                         }
 
                         notifyResult(exitValue, resultTask)
@@ -296,7 +322,11 @@ class DockerService {
                 Log.warnWithException(logger, e, "Failed to start docker engine {}", e)
                 notifyResult("Failed to start docker engine: $e", resultTask)
             } finally {
-                ActivityMonitor.getInstance(project).registerDigmaEngineEventEnd("startEngine", mapOf())
+                ActivityMonitor.getInstance(project).registerDigmaEngineEventEnd(
+                    "startEngine", mapOf(
+                        "exitValue" to exitValue
+                    )
+                )
             }
         }
 
@@ -313,12 +343,13 @@ class DockerService {
 
         Backgroundable.runInNewBackgroundThread(project, "uninstalling digma engine") {
 
+            var exitValue = ""
             try {
                 if (downloader.downloadComposeFile()) {
                     val dockerComposeCmd = getDockerComposeCommand()
 
                     if (dockerComposeCmd != null) {
-                        val exitValue = engine.remove(project, downloader.composeFile, dockerComposeCmd)
+                        exitValue = engine.remove(project, downloader.composeFile, dockerComposeCmd)
                         if (exitValue != "0") {
                             ActivityMonitor.getInstance(project).registerDigmaEngineEventError("removeEngine", exitValue)
                             Log.log(logger::warn, "error uninstalling engine {}", exitValue)
@@ -349,7 +380,11 @@ class DockerService {
                 Log.warnWithException(logger, e, "Failed to remove docker engine {}", e)
                 notifyResult("Failed to remove docker engine: $e", resultTask)
             } finally {
-                ActivityMonitor.getInstance(project).registerDigmaEngineEventEnd("removeEngine", mapOf())
+                ActivityMonitor.getInstance(project).registerDigmaEngineEventEnd(
+                    "removeEngine", mapOf(
+                        "exitValue" to exitValue
+                    )
+                )
             }
         }
     }
@@ -404,6 +439,9 @@ class DockerService {
                             AllIcons.General.Error
                         )
                     }
+                } else {
+                    ActivityMonitor.getInstance(project)
+                        .registerDigmaEngineEventInfo(eventName, mapOf("message" to "restart daemon success after user retry attempt"))
                 }
             } else {
                 ActivityMonitor.getInstance(project).registerDigmaEngineEventInfo(eventName, mapOf("message" to "retry canceled by user"))

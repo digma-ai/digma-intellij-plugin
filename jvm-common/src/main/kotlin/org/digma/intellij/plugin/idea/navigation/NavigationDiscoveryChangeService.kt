@@ -554,7 +554,13 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
                 }
 
             } catch (e: Throwable) {
-                Log.warnWithException(logger, project, e, "Exception in FileEventsProcessor.process for {}", item)
+                //some events fail in toString,avoid it.
+                val toString = try {
+                    item.toString()
+                }catch (e:Throwable){
+                    ""
+                }
+                Log.warnWithException(logger, project, e, "Exception in FileEventsProcessor.process for {}", toString)
                 ErrorReporter.getInstance().reportError(project, "NavigationDiscoveryChangeService.FileEventsProcessor.process", e, mapOf())
             }
         }

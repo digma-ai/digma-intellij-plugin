@@ -1,6 +1,16 @@
 # Changelog
 
-## [2.0.386] - 2024-09-19
+## [2.0.387] - 2024-09-23
+
+- Update Dashboard UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2524
+- close-wizard-on-url-change Closes #2519 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2525
+- add-api-token-to-settings-change-event by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2520
+- add-events-to-docker-service by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2526
+- events cleanup Closes #2345 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2527
+- bypass-possible-npe by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2529
+- update build profiles by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2528
+
+## 2.0.386 - 2024-09-19
 
 - remove deprecated jcef messages Closes #2488 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2490
 - update-build-profiles-2024.2.1 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2495

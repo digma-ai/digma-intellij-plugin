@@ -14,6 +14,7 @@ import com.intellij.openapi.vfs.*;
 import com.intellij.testFramework.*;
 import kotlin.*;
 import org.apache.commons.io.IOUtils;
+import org.digma.intellij.plugin.common.SlowOperationsUtilsKt;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.digma.intellij.plugin.vcs.VcsService;
@@ -191,7 +192,8 @@ public class EditorService implements Disposable {
         OpenFileDescriptor openFileDescriptor = new OpenFileDescriptor(project, fileToOpen, Math.max(offset, 0));
         FileEditorManager fileEditorManager = FileEditorManager.getInstance(project);
         boolean fileWasAlreadyOpen = fileEditorManager.isFileOpen(fileToOpen);
-        Editor editor = fileEditorManager.openTextEditor(openFileDescriptor, true);
+        Editor editor = SlowOperationsUtilsKt.allowSlowOperation(() -> fileEditorManager.openTextEditor(openFileDescriptor, true));
+
         return new Triple<>(fileToOpen, editor, fileWasAlreadyOpen);
     }
 

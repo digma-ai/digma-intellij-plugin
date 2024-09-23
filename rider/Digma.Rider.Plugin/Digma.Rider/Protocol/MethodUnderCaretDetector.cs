@@ -1,6 +1,7 @@
 using Digma.Rider.Discovery;
 using Digma.Rider.Util;
 using JetBrains.Annotations;
+using JetBrains.Application.Parts;
 using JetBrains.DocumentManagers;
 using JetBrains.DocumentManagers.Transactions;
 using JetBrains.Lifetimes;
@@ -18,7 +19,12 @@ namespace Digma.Rider.Protocol
 {
     
     
+#if (PROFILE_2024_3)
+    [SolutionComponent(Instantiation.ContainerAsyncPrimaryThread)]
+#else
     [SolutionComponent]
+#endif    
+
     public class MethodUnderCaretDetector
     {
         private readonly Lifetime _lifetime;

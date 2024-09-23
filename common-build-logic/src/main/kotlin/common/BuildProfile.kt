@@ -203,8 +203,8 @@ object BuildProfiles {
 
         Profile.p242 to BuildProfile(
             profile = Profile.p242,
-            platformVersion = "2024.2.1",
-            riderVersion = "2024.2.4",
+            platformVersion = "2024.2.2",
+            riderVersion = "2024.2.5",
             pycharmVersion = "2024.2",
             riderTargetFramework = "net8.0",
             riderResharperVersionConstant = "PROFILE_2023_2",
@@ -219,18 +219,12 @@ object BuildProfiles {
         Profile.p243 to BuildProfile(
             isEAP = true,
             profile = Profile.p243,
-            platformVersion = "243.12818-EAP-CANDIDATE-SNAPSHOT",
-            //todo: rdgen fails with 2024.3-SNAPSHOT
-            // see discussion with forever, probably the issue is rdgen, need to wait for better snapshot.
-            // and use new rdgen 2024.3 which is not released yet, rdgen 2024.3-pre1 didn't work too.
-            // so currently building with 2024.2.4 just to keep this profile usable and build idea for 243,
-            // for rider it may not work because we don't have a way to verify it, just need to install the plugin and test it.
-            // see discussion with forever: https://jetbrains.slack.com/archives/CBZ36NH7C/p1726614964174159
-//            riderVersion = "2024.3-SNAPSHOT",
-            riderVersion = "2024.2.4",
-            pycharmVersion = "2024.2",
+            platformVersion = "243.15521-EAP-CANDIDATE-SNAPSHOT",
+            //todo: Digma.Rider.Tests is disabled because it doesn't compile with 2024.3-EAP1-SNAPSHOT, there is mismatch with jetbrains packages try to build it with next snapshots.
+            riderVersion = "2024.3-EAP1-SNAPSHOT",
+            pycharmVersion = "243-EAP-SNAPSHOT",
             riderTargetFramework = "net8.0",
-            riderResharperVersionConstant = "PROFILE_2023_2",
+            riderResharperVersionConstant = "PROFILE_2023_2;PROFILE_2024_3",
             platformVersionCode = "243",
             pluginSinceBuild = "243",
             pluginUntilBuild = "243.*",

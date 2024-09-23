@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Digma.Rider.Discovery;
 using Digma.Rider.Util;
 using JetBrains.Annotations;
+using JetBrains.Application.Parts;
 using JetBrains.Lifetimes;
 using JetBrains.ProjectModel;
 using JetBrains.Rd.Tasks;
@@ -22,7 +23,12 @@ using JetBrains.RdBackend.Common.Features;
 
 namespace Digma.Rider.Protocol
 {
+#if (PROFILE_2024_3)
+    [SolutionComponent(Instantiation.ContainerAsyncPrimaryThread)]
+#else
     [SolutionComponent]
+#endif    
+
     public class LanguageServiceHost
     {
         private readonly Lifetime _lifetime;

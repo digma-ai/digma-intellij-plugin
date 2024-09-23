@@ -9,7 +9,10 @@ import com.intellij.openapi.util.Disposer
 import kotlinx.datetime.Clock
 import kotlinx.datetime.toKotlinInstant
 import org.digma.intellij.plugin.engagement.EngagementScoreService
+import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
+import org.digma.intellij.plugin.protocol.ACTION_ASSETS
+import org.digma.intellij.plugin.protocol.ProtocolCommandEvent
 import org.digma.intellij.plugin.scheduling.disposingPeriodicTask
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
 import org.digma.intellij.plugin.ui.jcef.sendGenericPluginEvent
@@ -26,6 +29,22 @@ class MainAppService(private val project: Project) : Disposable {
 
     init {
 
+        project.messageBus.connect(this).subscribe(ProtocolCommandEvent.PROTOCOL_COMMAND_TOPIC,
+            ProtocolCommandEvent { action ->
+
+                Log.log(logger::trace,"got protocol command {}",action)
+
+                jCefComponent?.let { jcefComp ->
+                    when (action) {
+                        ACTION_ASSETS -> {
+                            Log.log(logger::trace,"sending generic event to open assets page")
+                            sendGenericPluginEvent(project, jcefComp.jbCefBrowser.cefBrowser, "first asset notification link click")
+                        }
+                    }
+                } ?: Log.log(logger::trace,"jcef component is null")
+            })
+
+
         if ( //todo: check if user clicked don't show again
             !PersistenceService.getInstance().isUserRequestedEarlyAccess() &&
             PersistenceService.getInstance().getUserEmail() == null && PersistenceService.getInstance().getUserRegistrationEmail() == null
@@ -37,8 +56,8 @@ class MainAppService(private val project: Project) : Disposable {
                     val installTime = PersistenceService.getInstance().getFirstTimePluginLoadedTimestamp()
                     if (installTime != null) {
                         if (Clock.System.now() > (installTime.toKotlinInstant().plus(14.days))) {
-                            if (EngagementScoreService.getInstance().getLatestRegisteredActiveDays() >= 5){
-                                sendGenericPluginEvent(project,jcefComp.jbCefBrowser.cefBrowser,"SHOW_EARLY_ACCESS_PROMOTION")
+                            if (EngagementScoreService.getInstance().getLatestRegisteredActiveDays() >= 5) {
+                                sendGenericPluginEvent(project, jcefComp.jbCefBrowser.cefBrowser, "SHOW_EARLY_ACCESS_PROMOTION")
                                 Disposer.dispose(disposable)
                             }
                         }

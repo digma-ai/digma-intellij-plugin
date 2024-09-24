@@ -93,6 +93,8 @@ internal data class PersistenceData(
     var alreadyShowedNewIssueNotification: Boolean = false,
     var alreadyShowedNewImportantIssueNotification: Boolean = false,
 
-    var detectedFrameworks: String? = null
+    var detectedFrameworks: String? = null,
+
+    var engagementScorePersistenceFileFixed: Boolean = false
 
 )

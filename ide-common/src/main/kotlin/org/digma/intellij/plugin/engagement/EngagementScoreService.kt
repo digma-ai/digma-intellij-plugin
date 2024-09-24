@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.engagement
 
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
+import com.intellij.openapi.diagnostic.Logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -23,6 +24,8 @@ import kotlin.time.Duration.Companion.minutes
 
 @Service(Service.Level.APP)
 class EngagementScoreService(private val cs: CoroutineScope) : DisposableAdaptor {
+
+    val logger = Logger.getInstance(this::class.java)
 
     companion object {
 

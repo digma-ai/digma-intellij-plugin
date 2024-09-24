@@ -320,6 +320,16 @@ public class AnalyticsService implements Disposable {
                 analyticsProviderProxy.getServices(environment));
     }
 
+    public String getEndpoints(String service, @NotNull Map<String, Object> queryParams) throws AnalyticsServiceException {
+        return executeCatching(() ->
+                analyticsProviderProxy.getEndpoints(service, queryParams));
+    }
+
+    public String getEndpointIssues(String queryParams) throws AnalyticsServiceException {
+        return executeCatching(() ->
+                analyticsProviderProxy.getEndpointIssues(queryParams));
+    }
+
     public String getAssetsReportStats(@NotNull Map<String, Object> queryParams) throws AnalyticsServiceException {
         return executeCatching(() ->
                 analyticsProviderProxy.getAssetsReportStats(queryParams));

@@ -234,6 +234,17 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable, Base
     }
 
     @Override
+    public String getEndpoints(String service, Map<String, Object> queryParams) {
+        return execute(() -> client.analyticsProvider.getEndpoints(service, queryParams));
+    }
+
+    @Override
+    public String getEndpointIssues(String queryParams) {
+        return execute(() -> client.analyticsProvider.getEndpointIssues(queryParams));
+    }
+
+
+    @Override
     public String getIssuesReportStats(Map<String, Object> queryParams) {
         return execute(() -> client.analyticsProvider.getIssuesReportStats(queryParams));
     }
@@ -895,6 +906,19 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable, Base
         @GET("reports/assets/statistics")
         Call<String> getAssetsReportStats(@QueryMap Map<String, Object> fields);
 
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @GET("services/{service}/endpoints")
+        Call<String> getEndpoints(@Path("service") String service, @QueryMap Map<String, Object> fields);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("reports/endpoints/issues")
+        Call<String> getEndpointIssues(@Body String filters);
 
         @GET("services/getServices")
         Call<String> getServices(@Query("environment") String environment);

@@ -70,6 +70,10 @@ public interface AnalyticsProvider extends Closeable {
 
     String getServices(String environment);
 
+    String getEndpoints(String service, Map<String, Object> queryParams);
+
+    String getEndpointIssues(String queryParams);
+
     String getAssetsReportStats(Map<String, Object> queryParams);
 
     String getIssuesReportStats(Map<String, Object> queryParams);

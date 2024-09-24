@@ -58,6 +58,12 @@ public class DashboardMessageRouterHandler extends BaseMessageRouterHandler {
             case "DASHBOARD/GET_METRICS_REPORT_DATA" -> {
                 pushMetricsData(browser, requestJsonNode);
             }
+            case "DASHBOARD/GET_SERVICE_ENDPOINTS" -> {
+                 pushEndpoints(browser, requestJsonNode);
+            }
+            case "DASHBOARD/GET_ENDPOINTS_ISSUES" -> {
+                pushEndpointsIssues(browser, requestJsonNode);
+            }
             case "GLOBAL/GET_BACKEND_INFO" -> {
                 //do nothing, dashboard app sends that for some reason, but it's not necessary
             }
@@ -86,6 +92,36 @@ public class DashboardMessageRouterHandler extends BaseMessageRouterHandler {
             serializeAndExecuteWindowPostMessageJavaScript(browser, message);
         } catch (AnalyticsServiceException ex) {
             Log.log(logger::trace, getProject(), "sending DASHBOARD/GET_SERVICES message with error");
+        }
+    }
+
+    private void pushEndpoints(CefBrowser browser, JsonNode requestJsonNode) {
+        var project = getProject();
+        Log.log(logger::trace, project, "pushEndpoints called");
+        var requestPayload = getPayloadFromRequestNonNull(requestJsonNode);
+        var backendQueryParams = getMapFromNode(requestPayload, getObjectMapper());
+        var service = requestPayload.get("service").textValue();
+        try {
+            var payload = AnalyticsService.getInstance(project).getEndpoints(service, backendQueryParams);
+            var message = new SetEndpointsMessage(payload);
+            Log.log(logger::trace, project, "sending DASHBOARD/GET_SERVICE_ENDPOINTS message");
+            serializeAndExecuteWindowPostMessageJavaScript(browser, message);
+        } catch (AnalyticsServiceException ex) {
+            Log.log(logger::trace, getProject(), "sending DASHBOARD/GET_SERVICE_ENDPOINTS message with error");
+        }
+    }
+
+    private void pushEndpointsIssues(CefBrowser browser, JsonNode requestJsonNode) {
+        var project = getProject();
+        Log.log(logger::trace, project, "pushEndpointsIssues called");
+        var requestPayload = getPayloadFromRequestNonNull(requestJsonNode);
+        try {
+            var payload = AnalyticsService.getInstance(project).getEndpointIssues(requestPayload.toString());
+            var message = new SetEndpointIssuesMessage(payload);
+            Log.log(logger::trace, project, "sending DASHBOARD/GET_ENDPOINTS_ISSUES message");
+            serializeAndExecuteWindowPostMessageJavaScript(browser, message);
+        } catch (AnalyticsServiceException ex) {
+            Log.log(logger::trace, getProject(), "sending DASHBOARD/GET_ENDPOINTS_ISSUES message with error");
         }
     }
 

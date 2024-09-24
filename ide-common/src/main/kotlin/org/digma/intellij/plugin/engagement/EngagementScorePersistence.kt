@@ -26,13 +26,11 @@ class EngagementScorePersistenceService {
     }
 
     fun getLastEventTime(): LocalDate? {
-        return persistence.state.lastEventTime
+        return persistence.getLastEventTime()
     }
 
     fun getDaysForAverage(today: LocalDate): Map<String, Int> {
-        return persistence.state.meaningfulActionsCounters.filter {
-            LocalDate.parse(it.key) != today
-        }
+        return persistence.getDaysForAverage(today)
     }
 
     fun setLastEventTime(today: LocalDate) {
@@ -52,11 +50,11 @@ class EngagementScorePersistenceService {
     }
 
     fun getLatestRegisteredActiveDays(): Long {
-        return persistence.state.latestRegisteredActiveDays
+        return persistence.getLatestRegisteredActiveDays()
     }
 
     fun getLatestRegisteredAverage(): Long {
-        return persistence.state.latestRegisteredAverage
+        return persistence.getLatestRegisteredAverage()
     }
 
 }
@@ -75,15 +73,18 @@ private class EngagementScorePersistence : PersistentStateComponent<EngagementSc
 
     private val lock = ReentrantLock(true)
 
+    //don't use getState to get properties from EngagementScoreData, always use dedicated methods that use myPersistenceData.
+    // getState is called by the intellij framework and because it has a map it may happen that we write
+    // to the map while the framework is serializing. getState returns a copy to avoid corrupted serialization.
     override fun getState(): EngagementScoreData {
         lock.withLock {
-            return myPersistenceData
+            return EngagementScoreData(myPersistenceData)
         }
     }
 
     override fun loadState(state: EngagementScoreData) {
         lock.withLock {
-            myPersistenceData = state
+            myPersistenceData = EngagementScoreData(state)
         }
     }
 
@@ -94,7 +95,7 @@ private class EngagementScorePersistence : PersistentStateComponent<EngagementSc
             }
 
             oldEntries.forEach {
-                myPersistenceData.remove(it)
+                myPersistenceData.meaningfulActionsCounters.remove(it)
             }
         }
     }
@@ -117,14 +118,46 @@ private class EngagementScorePersistence : PersistentStateComponent<EngagementSc
         }
     }
 
-    fun increment(today: LocalDate) {
+    fun increment(date: LocalDate) {
         lock.withLock {
-            myPersistenceData.increment(today)
+            val count = myPersistenceData.meaningfulActionsCounters[date.toString()]
+            myPersistenceData.meaningfulActionsCounters[date.toString()] = count.increment()
         }
     }
 
+    fun getLastEventTime(): LocalDate? {
+        return myPersistenceData.lastEventTime
+    }
 
-    class EngagementScoreData {
+    fun getDaysForAverage(today: LocalDate): Map<String, Int> {
+        return myPersistenceData.meaningfulActionsCounters.filter {
+            LocalDate.parse(it.key) != today
+        }
+    }
+
+    fun getLatestRegisteredActiveDays(): Long {
+        return myPersistenceData.latestRegisteredActiveDays
+    }
+
+    fun getLatestRegisteredAverage(): Long {
+        return myPersistenceData.latestRegisteredAverage
+    }
+
+    fun remove(date: String) {
+        lock.withLock {
+            myPersistenceData.meaningfulActionsCounters.remove(date)
+        }
+    }
+
+    class EngagementScoreData() {
+
+        constructor(toCopy: EngagementScoreData) : this() {
+            this.lastEventTime = toCopy.lastEventTime
+            this.latestRegisteredAverage = toCopy.latestRegisteredAverage
+            this.latestRegisteredActiveDays = toCopy.latestRegisteredActiveDays
+            this.meaningfulActionsCounters.putAll(toCopy.meaningfulActionsCounters)
+        }
+
         @OptionTag(converter = LocalDateConverter::class)
         var lastEventTime: LocalDate? = null
 
@@ -135,28 +168,6 @@ private class EngagementScorePersistence : PersistentStateComponent<EngagementSc
 
         var latestRegisteredActiveDays: Long = 0
         var latestRegisteredAverage: Long = 0
-
-
-//        fun put(date: LocalDate, count: Int) {
-//            meaningfulActionsCounters[date.toString()] = count
-//        }
-//
-//        fun get(date: LocalDate): Int? {
-//            return meaningfulActionsCounters[date.toString()]
-//        }
-
-        fun increment(date: LocalDate) {
-            val count = meaningfulActionsCounters[date.toString()]
-            meaningfulActionsCounters[date.toString()] = count.increment()
-        }
-
-//        fun remove(date: LocalDate) {
-//            meaningfulActionsCounters.remove(date.toString())
-//        }
-
-        fun remove(date: String) {
-            meaningfulActionsCounters.remove(date)
-        }
     }
 }
 

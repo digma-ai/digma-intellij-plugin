@@ -12,7 +12,6 @@ import com.jetbrains.rd.util.ConcurrentHashMap
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.plus
-import org.jetbrains.annotations.ApiStatus.Internal
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -61,7 +60,6 @@ class EngagementScorePersistenceService {
 
 
 //don't use directly, use EngagementScorePersistenceService for thread safety
-@Internal
 @State(
     name = "org.digma.intellij.plugin.engagement.EngagementScorePersistence",
     storages = [Storage("DigmaEngagementScorePersistence.xml")]

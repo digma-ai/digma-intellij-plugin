@@ -70,7 +70,19 @@ class EngagementScoreServiceStartup : ProjectActivity {
             return
         }
 
+        Log.log(logger::trace, "fixing file {} with new lines", file)
+        if (logger.isTraceEnabled) {
+            linesToSave.forEach {
+                Log.log(logger::trace, "new line {}", it)
+            }
+        }
+
         val modifiedContent = linesToSave.joinToString(System.lineSeparator())
+
+        if (logger.isTraceEnabled) {
+            Log.log(logger::trace, "saving new content to file {}", modifiedContent)
+        }
+
         file.writeText(modifiedContent)
     }
 

@@ -6,6 +6,6 @@ import com.intellij.openapi.startup.ProjectActivity
 
 class EngagementScoreServiceStartup : ProjectActivity {
     override suspend fun execute(project: Project) {
-        service<EngagementScoreService>()
+        EngagementScoreService.getInstance()
     }
 }

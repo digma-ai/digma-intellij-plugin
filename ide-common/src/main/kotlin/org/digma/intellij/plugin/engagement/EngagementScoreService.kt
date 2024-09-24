@@ -10,7 +10,6 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.plus
 import kotlinx.datetime.todayIn
 import org.digma.intellij.plugin.common.DisposableAdaptor
 import org.digma.intellij.plugin.common.findActiveProject
@@ -50,7 +49,7 @@ class EngagementScoreService(private val cs: CoroutineScope) : DisposableAdaptor
         private val PERIOD_TO_TRACK = DatePeriod.parse("P21D")
         private val TIME_ZONE = TimeZone.currentSystemDefault()
 
-        fun today(): LocalDate {
+        private fun today(): LocalDate {
             return Clock.System.todayIn(TIME_ZONE)
         }
     }
@@ -60,7 +59,7 @@ class EngagementScoreService(private val cs: CoroutineScope) : DisposableAdaptor
 
         disposingPeriodicTask("DailyEngagementScore", 1.minutes.inWholeMilliseconds, 6.hours.inWholeMilliseconds, false) {
             try {
-                removeOldEntries()
+                service<EngagementScorePersistenceService>().removeOldEntries(today(), PERIOD_TO_TRACK)
                 if (isDailyEventTime()) {
                     sendEvent()
                 }
@@ -73,9 +72,7 @@ class EngagementScoreService(private val cs: CoroutineScope) : DisposableAdaptor
     private fun sendEvent() {
 
         //compute average that includes up to the last day, exclude today.
-        val daysForAverage = service<EngagementScorePersistence>().state.meaningfulActionsCounters.filter {
-            LocalDate.parse(it.key) != today()
-        }
+        val daysForAverage = service<EngagementScorePersistenceService>().getDaysForAverage(today())
 
         if (daysForAverage.isEmpty()) {
             return
@@ -109,9 +106,9 @@ class EngagementScoreService(private val cs: CoroutineScope) : DisposableAdaptor
             project?.let {
 
                 //update only if really sent the event
-                service<EngagementScorePersistence>().state.lastEventTime = today()
-                service<EngagementScorePersistence>().state.latestRegisteredActiveDays = activeDays
-                service<EngagementScorePersistence>().state.latestRegisteredAverage = average
+                service<EngagementScorePersistenceService>().setLastEventTime(today())
+                service<EngagementScorePersistenceService>().setLatestRegisteredActiveDays(activeDays)
+                service<EngagementScorePersistenceService>().setLatestRegisteredAverage(average)
 
                 ActivityMonitor.getInstance(it).registerEngagementScore(activeDays, average)
             }
@@ -119,36 +116,30 @@ class EngagementScoreService(private val cs: CoroutineScope) : DisposableAdaptor
     }
 
     private fun isDailyEventTime(): Boolean {
-        return service<EngagementScorePersistence>().state.lastEventTime?.let {
+        return service<EngagementScorePersistenceService>().getLastEventTime()?.let {
             today() > it
         } ?: true
     }
 
 
-    private fun removeOldEntries() {
-        val oldEntries = service<EngagementScorePersistence>().state.meaningfulActionsCounters.keys.filter {
-            LocalDate.parse(it).plus(PERIOD_TO_TRACK) < today()
-        }
 
-        oldEntries.forEach {
-            service<EngagementScorePersistence>().state.remove(it)
-        }
-    }
 
 
     fun addAction(action: String) {
-        if (MEANINGFUL_ACTIONS.contains(action)) {
-            service<EngagementScorePersistence>().state.increment(today())
+        cs.launch {
+            if (MEANINGFUL_ACTIONS.contains(action)) {
+                service<EngagementScorePersistenceService>().increment(today())
+            }
         }
     }
 
 
     fun getLatestRegisteredActiveDays(): Long {
-        return service<EngagementScorePersistence>().state.latestRegisteredActiveDays
+        return service<EngagementScorePersistenceService>().getLatestRegisteredActiveDays()
     }
 
     fun getLatestRegisteredAverage(): Long {
-        return service<EngagementScorePersistence>().state.latestRegisteredAverage
+        return service<EngagementScorePersistenceService>().getLatestRegisteredAverage()
     }
 
 }

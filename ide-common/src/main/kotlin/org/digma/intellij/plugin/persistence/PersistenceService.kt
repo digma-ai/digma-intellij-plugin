@@ -419,4 +419,12 @@ class PersistenceService {
         state.detectedFrameworks = detectedFrameworks.joinToString(",")
     }
 
+    fun isEngagementScorePersistenceFileFixed(): Boolean {
+        return state.engagementScorePersistenceFileFixed
+    }
+
+    fun setEngagementScorePersistenceFileFixed() {
+        state.engagementScorePersistenceFileFixed = true
+    }
+
 }

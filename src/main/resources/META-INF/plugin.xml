@@ -142,6 +142,7 @@
 
         <postStartupActivity implementation="org.digma.intellij.plugin.posthog.CountingProjectActivity"/>
 
+        <jbProtocolCommand implementation="org.digma.intellij.plugin.protocol.DigmaProtocolCommand"/>
 
     </extensions>
 

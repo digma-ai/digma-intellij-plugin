@@ -91,10 +91,10 @@ public class DashboardMessageRouterHandler extends BaseMessageRouterHandler {
         try {
             var payload = AnalyticsService.getInstance(project).getServices(env);
             var message = new SetServicesMessage(payload);
-            Log.log(logger::trace, project, "sending DASHBOARD/GET_SERVICES message");
+            Log.log(logger::trace, project, "sending DASHBOARD/SET_SERVICES message");
             serializeAndExecuteWindowPostMessageJavaScript(browser, message);
         } catch (AnalyticsServiceException ex) {
-            Log.log(logger::trace, getProject(), "sending DASHBOARD/GET_SERVICES message with error");
+            Log.log(logger::trace, getProject(), "sending DASHBOARD/SET_SERVICES message with error");
         }
     }
 
@@ -107,10 +107,10 @@ public class DashboardMessageRouterHandler extends BaseMessageRouterHandler {
         try {
             var payload = AnalyticsService.getInstance(project).getEndpoints(service, backendQueryParams);
             var message = new SetEndpointsMessage(payload);
-            Log.log(logger::trace, project, "sending DASHBOARD/GET_SERVICE_ENDPOINTS message");
+            Log.log(logger::trace, project, "sending DASHBOARD/SET_SERVICE_ENDPOINTS message");
             serializeAndExecuteWindowPostMessageJavaScript(browser, message);
         } catch (AnalyticsServiceException ex) {
-            Log.log(logger::trace, getProject(), "sending DASHBOARD/GET_SERVICE_ENDPOINTS message with error");
+            Log.log(logger::trace, getProject(), "sending DASHBOARD/SET_SERVICE_ENDPOINTS message with error");
         }
     }
 
@@ -121,10 +121,10 @@ public class DashboardMessageRouterHandler extends BaseMessageRouterHandler {
         try {
             var payload = AnalyticsService.getInstance(project).getEndpointIssues(requestPayload.toString());
             var message = new SetEndpointIssuesMessage(payload);
-            Log.log(logger::trace, project, "sending DASHBOARD/GET_ENDPOINTS_ISSUES message");
+            Log.log(logger::trace, project, "sending DASHBOARD/SET_ENDPOINTS_ISSUES message");
             serializeAndExecuteWindowPostMessageJavaScript(browser, message);
         } catch (AnalyticsServiceException ex) {
-            Log.log(logger::trace, getProject(), "sending DASHBOARD/GET_ENDPOINTS_ISSUES message with error");
+            Log.log(logger::trace, getProject(), "sending DASHBOARD/SET_ENDPOINTS_ISSUES message with error");
         }
     }
 

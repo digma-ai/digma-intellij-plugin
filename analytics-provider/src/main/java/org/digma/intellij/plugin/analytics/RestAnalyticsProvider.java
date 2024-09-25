@@ -244,6 +244,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable, Base
     }
 
     @Override
+    public String getEnvironmentsByService(String service) {
+        return execute(() -> client.analyticsProvider.getEnvironmentsByService(service));
+    }
+
+    @Override
     public String getAssetsReportStats(Map<String, Object> queryParams) {
         return execute(() -> client.analyticsProvider.getAssetsReportStats(queryParams));
     }
@@ -886,6 +891,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable, Base
         })
         @POST("reports/services/issues")
         Call<String> getServiceReport(@Body String filters);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @GET("services/{service}/environments")
+        Call<String> getEnvironmentsByService(@Path("service") String service);
 
 
         @Headers({

@@ -335,13 +335,17 @@ public class AnalyticsService implements Disposable {
                 analyticsProviderProxy.getServiceReport(queryParams));
     }
 
+    public String getEnvironmentsByService(String service) throws AnalyticsServiceException {
+        return executeCatching(() ->
+                analyticsProviderProxy.getEnvironmentsByService(service));
+    }
+
     public void resetThrottlingStatus() throws AnalyticsServiceException {
         executeCatching(() -> {
             analyticsProviderProxy.resetThrottlingStatus();
             return null;
         });
     }
-
 
     // return JSON as string (type LatestTestsOfSpanResponse)
     public String getLatestTestsOfSpan(TestsScopeRequest req, FilterForLatestTests filter, int pageSize) throws AnalyticsServiceException {

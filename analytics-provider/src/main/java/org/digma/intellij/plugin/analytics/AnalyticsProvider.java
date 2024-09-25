@@ -76,6 +76,8 @@ public interface AnalyticsProvider extends Closeable {
 
     String getServiceReport(String queryParams);
 
+    String getEnvironmentsByService(String service);
+
     String getNotifications(NotificationsRequest notificationsRequest);
 
     void setReadNotificationsTime(SetReadNotificationsRequest setReadNotificationsRequest);

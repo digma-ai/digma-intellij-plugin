@@ -1,6 +1,14 @@
 # Changelog
 
-## [2.0.388] - 2024-09-24
+## [2.0.389] - 2024-09-25
+
+- Update UI by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2535
+- Update UI by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2537
+- Protocol commands Closes #2511 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2539
+- remove delay in protocol command by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2540
+- Report endpoints by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2536
+
+## 2.0.388 - 2024-09-24
 
 - fix-fatal-error-invalid-virtual-file by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2530
 - fix-fatal-error-slow-operation-on-edt by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2531

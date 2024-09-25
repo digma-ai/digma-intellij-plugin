@@ -1,6 +1,12 @@
 # Changelog
 
-## [2.0.387] - 2024-09-23
+## [2.0.388] - 2024-09-24
+
+- fix-fatal-error-invalid-virtual-file by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2530
+- fix-fatal-error-slow-operation-on-edt by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2531
+- thread-safe-in-daily-engagement by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2534
+
+## 2.0.387 - 2024-09-23
 
 - Update Dashboard UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2524
 - close-wizard-on-url-change Closes #2519 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2525

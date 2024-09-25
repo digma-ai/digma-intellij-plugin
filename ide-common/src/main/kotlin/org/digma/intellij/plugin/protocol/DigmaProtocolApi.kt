@@ -4,8 +4,10 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import org.digma.intellij.plugin.common.DisposableAdaptor
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
@@ -23,13 +25,20 @@ class DigmaProtocolApi(val cs: CoroutineScope) : DisposableAdaptor {
 
     private val logger: Logger = Logger.getInstance(this::class.java)
 
+    private var mainAppInitialized = false
+
+    fun setMainAppInitialized() {
+        mainAppInitialized = true
+        Log.log(logger::trace, "main app initialized , thread={}", Thread.currentThread().name)
+    }
+
+
     /**
      * return null on success.
      * error message on failure
      */
     fun performAction(project: Project, parameters: Map<String, String>, waitForJcef: Boolean): String? {
         try {
-
 
             val action = getActionFromParameters(parameters) ?: return "DigmaProtocolCommand no action in request"
 
@@ -75,8 +84,9 @@ class DigmaProtocolApi(val cs: CoroutineScope) : DisposableAdaptor {
         }
 
         cs.launch {
+
             if (waitForJcef) {
-                delay(5000)
+                waitForJcef()
             }
 
             val scope = SpanScope(codeObjectId)
@@ -90,13 +100,32 @@ class DigmaProtocolApi(val cs: CoroutineScope) : DisposableAdaptor {
 
     private fun showAssetTab(project: Project, action: String, waitForJcef: Boolean): String? {
         cs.launch {
+
             if (waitForJcef) {
-                delay(5000)
+                waitForJcef()
             }
+
             project.messageBus.syncPublisher(ProtocolCommandEvent.PROTOCOL_COMMAND_TOPIC).protocolCommand(action)
         }
         return null
     }
 
+
+    private suspend fun waitForJcef() {
+
+        try {
+            withTimeout(5000) {
+                while (!mainAppInitialized) {
+                    delay(100)
+                }
+            }
+
+        } catch (e: TimeoutCancellationException) {
+            //ignore
+        }
+
+        //wait another second , it seems to be necessary to let jcef completely initialize
+        delay(1000)
+    }
 
 }

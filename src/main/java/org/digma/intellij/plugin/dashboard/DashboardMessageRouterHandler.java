@@ -64,6 +64,9 @@ public class DashboardMessageRouterHandler extends BaseMessageRouterHandler {
             case "DASHBOARD/GET_ENDPOINTS_ISSUES" -> {
                 pushEndpointsIssues(browser, requestJsonNode);
             }
+            case "DASHBOARD/GET_SERVICE_ENVIRONMENTS" -> {
+                pushEnvironmentsData(browser, requestJsonNode);
+            }
             case "GLOBAL/GET_BACKEND_INFO" -> {
                 //do nothing, dashboard app sends that for some reason, but it's not necessary
             }
@@ -166,6 +169,21 @@ public class DashboardMessageRouterHandler extends BaseMessageRouterHandler {
             serializeAndExecuteWindowPostMessageJavaScript(browser, message);
         } catch (AnalyticsServiceException ex) {
             Log.log(logger::trace, getProject(), "sending DASHBOARD/GET_METRICS_REPORT_DATA message with error");
+        }
+    }
+
+    private void pushEnvironmentsData(CefBrowser browser, JsonNode requestJsonNode) {
+        var project = getProject();
+        var requestPayload = getPayloadFromRequestNonNull(requestJsonNode);
+        var service = requestPayload.get("service").textValue();
+        Log.log(logger::trace, project, "pushEnvironmentsData called");
+        try {
+            var payload = AnalyticsService.getInstance(project).getEnvironmentsByService(service);
+            var message = new SetEnvironmentsMessage(payload);
+            Log.log(logger::trace, project, "sending DASHBOARD/GET_SERVICE_ENVIRONMENTS message");
+            serializeAndExecuteWindowPostMessageJavaScript(browser, message);
+        } catch (AnalyticsServiceException ex) {
+            Log.log(logger::trace, getProject(), "sending DASHBOARD/GET_SERVICE_ENVIRONMENTS message with error");
         }
     }
 

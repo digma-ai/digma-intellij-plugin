@@ -12,18 +12,15 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.JBProtocolCommand
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.util.text.nullize
 import org.digma.intellij.plugin.common.findActiveProject
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import java.nio.file.Path
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.Future
 
 const val DIGMA_COMMAND = "digma"
 const val DIGMA_PLUGIN_TARGET = "plugin"
-const val ACTION_NAME_KEY = "action"
+
 
 //jetbrains://idea/digma/plugin?action=assets
 //jetbrains://idea/digma/plugin?project=spring-petclinic&action=assets
@@ -41,6 +38,7 @@ class DigmaProtocolCommand : JBProtocolCommand(DIGMA_COMMAND) {
         }
     }
 
+    //returns null on success, message on failure
     private suspend fun executeImpl(target: String?, parameters: Map<String, String>, fragment: String?): String? {
 
         if (target != DIGMA_PLUGIN_TARGET) {
@@ -82,7 +80,7 @@ class DigmaProtocolCommand : JBProtocolCommand(DIGMA_COMMAND) {
 
             Log.log(logger::trace, "got project {}", project.name)
 
-            val action = parameters[ACTION_NAME_KEY]?.nullize(nullizeSpaces = true)
+            val action = getActionFromParameters(parameters)
 //                ?: return CompletableFuture.completedFuture("DigmaProtocolCommand no action in request")
                 ?: return "DigmaProtocolCommand no action in request"
 
@@ -98,14 +96,14 @@ class DigmaProtocolCommand : JBProtocolCommand(DIGMA_COMMAND) {
             }
 
             Log.log(logger::trace, "executing action {}", action)
-            project.service<DigmaProtocolApi>().performAction(project, action, waitForJcef)
+            val result = project.service<DigmaProtocolApi>().performAction(project, parameters, waitForJcef)
             Log.log(logger::trace, "after execute action {}", action)
 //            return CompletableFuture.completedFuture(null)
-            return null
+            return result
         }
 
 //        return CompletableFuture.completedFuture("DigmaProtocolCommand can not find project")
-        return "DigmaProtocolCommand can not find project"
+        return "DigmaProtocolCommand can not open any project"
 
     }
 

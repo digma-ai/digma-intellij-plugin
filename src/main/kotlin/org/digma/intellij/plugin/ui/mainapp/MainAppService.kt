@@ -11,7 +11,7 @@ import kotlinx.datetime.toKotlinInstant
 import org.digma.intellij.plugin.engagement.EngagementScoreService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
-import org.digma.intellij.plugin.protocol.ACTION_ASSETS
+import org.digma.intellij.plugin.protocol.ACTION_SHOW_ASSETS_TAB_PARAM_NAME
 import org.digma.intellij.plugin.protocol.ProtocolCommandEvent
 import org.digma.intellij.plugin.scheduling.disposingPeriodicTask
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
@@ -36,7 +36,7 @@ class MainAppService(private val project: Project) : Disposable {
 
                 jCefComponent?.let { jcefComp ->
                     when (action) {
-                        ACTION_ASSETS -> {
+                        ACTION_SHOW_ASSETS_TAB_PARAM_NAME -> {
                             Log.log(logger::trace,"sending generic event to open assets page")
                             sendGenericPluginEvent(project, jcefComp.jbCefBrowser.cefBrowser, "first asset notification link click")
                         }

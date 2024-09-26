@@ -32,7 +32,7 @@ class DigmaProtocolApi(val cs: CoroutineScope) : DisposableAdaptor {
     private val logger: Logger = Logger.getInstance(this::class.java)
 
     private var mainAppInitializedTime: Instant? = null
-    private val delayAfterInitialize = 5.seconds
+    private val delayAfterInitialize = 1.seconds
 
     fun setMainAppInitialized() {
         if (mainAppInitializedTime == null) {

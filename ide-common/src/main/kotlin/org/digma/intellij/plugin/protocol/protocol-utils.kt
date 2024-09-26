@@ -22,4 +22,8 @@ fun getEnvironmentIdFromParameters(parameters: Map<String, String>):String?{
     return parameters[ENVIRONMENT_ID_PARAM_NAME]?.nullize(nullizeSpaces = true)
 }
 
+fun getTargetTabFromParameters(parameters: Map<String, String>):String?{
+    return parameters[TARGET_TAB_PARAM_NAME]?.nullize(nullizeSpaces = true)
+}
+
 

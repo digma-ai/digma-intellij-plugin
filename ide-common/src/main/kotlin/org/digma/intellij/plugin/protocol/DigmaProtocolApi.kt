@@ -9,8 +9,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import org.digma.intellij.plugin.common.DisposableAdaptor
+import org.digma.intellij.plugin.common.objectToJsonNode
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.scope.ScopeContext
 import org.digma.intellij.plugin.scope.ScopeManager
 import org.digma.intellij.plugin.scope.SpanScope
 
@@ -19,6 +21,7 @@ const val ACTION_SHOW_ASSET_PARAM_NAME = "showAsset"
 const val CODE_OBJECT_ID_PARAM_NAME = "codeObjectId"
 const val ENVIRONMENT_ID_PARAM_NAME = "environmentId"
 const val ACTION_SHOW_ASSETS_TAB_PARAM_NAME = "showAssetsTab"
+const val TARGET_TAB_PARAM_NAME = "targetTab"
 
 @Service(Service.Level.PROJECT)
 class DigmaProtocolApi(val cs: CoroutineScope) : DisposableAdaptor {
@@ -70,12 +73,14 @@ class DigmaProtocolApi(val cs: CoroutineScope) : DisposableAdaptor {
 
         val codeObjectId = getCodeObjectIdFromParameters(parameters)
         val environmentId = getEnvironmentIdFromParameters(parameters)
+        val targetTab = getTargetTabFromParameters(parameters)
 
         Log.log(
             logger::trace,
-            "showing asset,  codeObjectId='{}', environment='{}', thread='{}'",
+            "showing asset,  codeObjectId='{}', environment='{}',targetTab='{}' thread='{}'",
             codeObjectId,
             environmentId,
+            targetTab,
             Thread.currentThread().name
         )
 
@@ -90,8 +95,18 @@ class DigmaProtocolApi(val cs: CoroutineScope) : DisposableAdaptor {
             }
 
             val scope = SpanScope(codeObjectId)
+            val contextPayload = objectToJsonNode(CustomUrlScopeContextPayload(targetTab))
+            val scopeContext = ScopeContext("IDE/CUSTOM_PROTOCOL_LINK_CLICKED", contextPayload)
 
-            ScopeManager.getInstance(project).changeScope(scope, null, environmentId)
+            Log.log(
+                logger::trace,
+                "calling ScopeManager.changeScope with scope='{}',scopeContext='{}',environmentId='{}', thread='{}'",
+                scope,
+                scopeContext,
+                environmentId,
+                Thread.currentThread().name)
+
+            ScopeManager.getInstance(project).changeScope(scope, scopeContext, environmentId)
         }
 
         return null

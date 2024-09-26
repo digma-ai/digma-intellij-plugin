@@ -219,7 +219,7 @@ object BuildProfiles {
         Profile.p243 to BuildProfile(
             isEAP = true,
             profile = Profile.p243,
-            platformVersion = "243.15521-EAP-CANDIDATE-SNAPSHOT",
+            platformVersion = "243.16718-EAP-CANDIDATE-SNAPSHOT",
             //todo: Digma.Rider.Tests is disabled because it doesn't compile with 2024.3-EAP1-SNAPSHOT, there is mismatch with jetbrains packages try to build it with next snapshots.
             riderVersion = "2024.3-EAP1-SNAPSHOT",
             pycharmVersion = "243-EAP-SNAPSHOT",

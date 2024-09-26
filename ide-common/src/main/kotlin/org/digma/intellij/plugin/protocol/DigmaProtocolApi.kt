@@ -140,7 +140,7 @@ class DigmaProtocolApi(val cs: CoroutineScope) : DisposableAdaptor {
         }
 
         //wait another second , it seems to be necessary to let jcef completely initialize
-        delay(1000)
+        delay(5000)
     }
 
 }

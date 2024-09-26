@@ -15,6 +15,7 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.scope.ScopeContext
 import org.digma.intellij.plugin.scope.ScopeManager
 import org.digma.intellij.plugin.scope.SpanScope
+import kotlin.time.Duration.Companion.seconds
 
 const val ACTION_PARAM_NAME = "action"
 const val ACTION_SHOW_ASSET_PARAM_NAME = "showAsset"
@@ -31,8 +32,10 @@ class DigmaProtocolApi(val cs: CoroutineScope) : DisposableAdaptor {
     private var mainAppInitialized = false
 
     fun setMainAppInitialized() {
-        mainAppInitialized = true
-        Log.log(logger::trace, "main app initialized , thread={}", Thread.currentThread().name)
+        if(!mainAppInitialized) {
+            Log.log(logger::trace, "main app initialized , thread={}", Thread.currentThread().name)
+            mainAppInitialized = true
+        }
     }
 
 
@@ -90,6 +93,7 @@ class DigmaProtocolApi(val cs: CoroutineScope) : DisposableAdaptor {
 
         cs.launch {
 
+
             if (waitForJcef) {
                 waitForJcef()
             }
@@ -128,6 +132,12 @@ class DigmaProtocolApi(val cs: CoroutineScope) : DisposableAdaptor {
 
     private suspend fun waitForJcef() {
 
+        if (mainAppInitialized){
+            return
+        }
+
+        Log.log(logger::trace,"waiting for jcef")
+
         try {
             withTimeout(5000) {
                 while (!mainAppInitialized) {
@@ -140,7 +150,9 @@ class DigmaProtocolApi(val cs: CoroutineScope) : DisposableAdaptor {
         }
 
         //wait another second , it seems to be necessary to let jcef completely initialize
-        delay(5000)
+        val extraWaitTime = 5.seconds
+        Log.log(logger::trace,"waiting another $extraWaitTime")
+        delay(extraWaitTime.inWholeMilliseconds)
     }
 
 }

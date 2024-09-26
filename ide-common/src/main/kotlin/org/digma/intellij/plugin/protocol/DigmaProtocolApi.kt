@@ -153,7 +153,7 @@ class DigmaProtocolApi(val cs: CoroutineScope) : DisposableAdaptor {
                 }
             }
         } catch (e: TimeoutCancellationException) {
-            //ignore
+            Log.log(logger::trace, "got timeout while waiting $delayAfterInitialize after jcef initialize")
         }
         Log.log(logger::trace, "done waiting $delayAfterInitialize after jcef initialize")
 
@@ -176,7 +176,7 @@ class DigmaProtocolApi(val cs: CoroutineScope) : DisposableAdaptor {
             }
 
         } catch (e: TimeoutCancellationException) {
-            //ignore
+            Log.log(logger::trace, "git timeout while waiting for jcef initialize")
         }
 
         Log.log(logger::trace, "done waiting for jcef initialize")

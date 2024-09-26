@@ -91,9 +91,7 @@ class DigmaProtocolCommand : JBProtocolCommand(DIGMA_COMMAND) {
                 ?: return "DigmaProtocolCommand no action in request"
 
 
-            var waitForJcef = false
             if (!ToolWindowShower.getInstance(project).isToolWindowVisible) {
-                waitForJcef = true
                 ApplicationManager.getApplication().invokeAndWait {
                     Log.log(logger::trace, "showing tool window")
                     ToolWindowShower.getInstance(project).showToolWindow()
@@ -102,7 +100,7 @@ class DigmaProtocolCommand : JBProtocolCommand(DIGMA_COMMAND) {
             }
 
             Log.log(logger::trace, "executing action {}", action)
-            val result = project.service<DigmaProtocolApi>().performAction(project, parameters, waitForJcef)
+            val result = project.service<DigmaProtocolApi>().performAction(project, parameters)
             Log.log(logger::trace, "after execute action {}", action)
             return result
         }

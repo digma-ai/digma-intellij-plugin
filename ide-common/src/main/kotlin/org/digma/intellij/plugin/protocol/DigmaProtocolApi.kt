@@ -8,6 +8,8 @@ import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import org.digma.intellij.plugin.common.DisposableAdaptor
 import org.digma.intellij.plugin.common.objectToJsonNode
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
@@ -15,6 +17,7 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.scope.ScopeContext
 import org.digma.intellij.plugin.scope.ScopeManager
 import org.digma.intellij.plugin.scope.SpanScope
+import kotlin.time.Duration.Companion.seconds
 
 const val ACTION_PARAM_NAME = "action"
 const val ACTION_SHOW_ASSET_PARAM_NAME = "showAsset"
@@ -28,11 +31,14 @@ class DigmaProtocolApi(val cs: CoroutineScope) : DisposableAdaptor {
 
     private val logger: Logger = Logger.getInstance(this::class.java)
 
-    private var mainAppInitialized = false
+    private var mainAppInitializedTime: Instant? = null
+    private val delayAfterInitialize = 1.seconds
 
     fun setMainAppInitialized() {
-        mainAppInitialized = true
-        Log.log(logger::trace, "main app initialized , thread={}", Thread.currentThread().name)
+        if (mainAppInitializedTime == null) {
+            Log.log(logger::trace, "main app initialized , thread={}", Thread.currentThread().name)
+            mainAppInitializedTime = Clock.System.now()
+        }
     }
 
 
@@ -40,7 +46,7 @@ class DigmaProtocolApi(val cs: CoroutineScope) : DisposableAdaptor {
      * return null on success.
      * error message on failure
      */
-    fun performAction(project: Project, parameters: Map<String, String>, waitForJcef: Boolean): String? {
+    fun performAction(project: Project, parameters: Map<String, String>): String? {
         try {
 
             val action = getActionFromParameters(parameters) ?: return "DigmaProtocolCommand no action in request"
@@ -49,11 +55,11 @@ class DigmaProtocolApi(val cs: CoroutineScope) : DisposableAdaptor {
 
             return when (action) {
                 ACTION_SHOW_ASSET_PARAM_NAME -> {
-                    showAsset(project, parameters, waitForJcef)
+                    showAsset(project, parameters)
                 }
 
                 ACTION_SHOW_ASSETS_TAB_PARAM_NAME -> {
-                    showAssetTab(project, action, waitForJcef)
+                    showAssetTab(project, action)
                 }
 
                 else -> {
@@ -69,7 +75,7 @@ class DigmaProtocolApi(val cs: CoroutineScope) : DisposableAdaptor {
     }
 
 
-    private fun showAsset(project: Project, parameters: Map<String, String>, waitForJcef: Boolean): String? {
+    private fun showAsset(project: Project, parameters: Map<String, String>): String? {
 
         val codeObjectId = getCodeObjectIdFromParameters(parameters)
         val environmentId = getEnvironmentIdFromParameters(parameters)
@@ -90,9 +96,7 @@ class DigmaProtocolApi(val cs: CoroutineScope) : DisposableAdaptor {
 
         cs.launch {
 
-            if (waitForJcef) {
-                waitForJcef()
-            }
+            delayAfterMainAppInitialized()
 
             val scope = SpanScope(codeObjectId)
             val contextPayload = objectToJsonNode(CustomUrlScopeContextPayload(targetTab))
@@ -104,7 +108,8 @@ class DigmaProtocolApi(val cs: CoroutineScope) : DisposableAdaptor {
                 scope,
                 scopeContext,
                 environmentId,
-                Thread.currentThread().name)
+                Thread.currentThread().name
+            )
 
             ScopeManager.getInstance(project).changeScope(scope, scopeContext, environmentId)
         }
@@ -113,12 +118,17 @@ class DigmaProtocolApi(val cs: CoroutineScope) : DisposableAdaptor {
     }
 
 
-    private fun showAssetTab(project: Project, action: String, waitForJcef: Boolean): String? {
+    private fun showAssetTab(project: Project, action: String): String? {
         cs.launch {
 
-            if (waitForJcef) {
-                waitForJcef()
-            }
+            delayAfterMainAppInitialized()
+
+            Log.log(
+                logger::trace,
+                "sending ProtocolCommandEvent with action='{}', thread='{}'",
+                action,
+                Thread.currentThread().name
+            )
 
             project.messageBus.syncPublisher(ProtocolCommandEvent.PROTOCOL_COMMAND_TOPIC).protocolCommand(action)
         }
@@ -126,21 +136,50 @@ class DigmaProtocolApi(val cs: CoroutineScope) : DisposableAdaptor {
     }
 
 
-    private suspend fun waitForJcef() {
+    private suspend fun delayAfterMainAppInitialized() {
+
+        waitForJcefInitialize()
+
+        //it shouldn't happen that timeToCallJcef will be null because we wait for mainAppInitializedTime to be non-null.
+        // unless we got timeout waiting for jcef to initialize
+        val timeToCallJcef = mainAppInitializedTime?.plus(delayAfterInitialize) ?: return
+
+        Log.log(logger::trace, "waiting $delayAfterInitialize after jcef initialize")
 
         try {
-            withTimeout(5000) {
-                while (!mainAppInitialized) {
+            withTimeout(10000) {
+                while (Clock.System.now() < timeToCallJcef) {
+                    delay(100)
+                }
+            }
+        } catch (e: TimeoutCancellationException) {
+            Log.log(logger::trace, "got timeout while waiting $delayAfterInitialize after jcef initialize")
+        }
+        Log.log(logger::trace, "done waiting $delayAfterInitialize after jcef initialize")
+
+    }
+
+
+    private suspend fun waitForJcefInitialize() {
+
+        if (mainAppInitializedTime != null) {
+            return
+        }
+
+        Log.log(logger::trace, "waiting for jcef initialize")
+
+        try {
+            withTimeout(10000) {
+                while (mainAppInitializedTime == null) {
                     delay(100)
                 }
             }
 
         } catch (e: TimeoutCancellationException) {
-            //ignore
+            Log.log(logger::trace, "git timeout while waiting for jcef initialize")
         }
 
-        //wait another second , it seems to be necessary to let jcef completely initialize
-        delay(1000)
+        Log.log(logger::trace, "done waiting for jcef initialize")
     }
 
 }

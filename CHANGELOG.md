@@ -1,6 +1,17 @@
 # Changelog
 
-## [2.0.389] - 2024-09-25
+## [2.0.390] - 2024-10-02
+
+- Fix report by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2538
+- Add tab parameter to custom url by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2543
+- Long delay in protocol command by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2545
+- update eap profile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2546
+- Digmathon by @doppleware in https://github.com/digma-ai/digma-intellij-plugin/pull/2549
+- Update UI: by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2547
+- Update by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2550
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2551
+
+## 2.0.389 - 2024-09-25
 
 - Update UI by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2535
 - Update UI by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2537

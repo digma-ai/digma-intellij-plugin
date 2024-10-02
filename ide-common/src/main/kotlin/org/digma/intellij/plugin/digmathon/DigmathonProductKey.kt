@@ -15,7 +15,7 @@ private const val MY_KEY = "product-key-2024.5"
 
 class DigmathonProductKey {
 
-    private val myHash = "89e0f23f9a0a670b2bb7393a1280aa59eaf7c59c22b77d869b5c9c7af021785f"
+    private val myHash = "61b57e7add3b98cd68cd1cee92e70b977c493eb4f6b18202ea8bd1ce2219876d"
 
     @Throws(InvalidProductKeyException::class)
     fun validateAndSave(productKey: String) {

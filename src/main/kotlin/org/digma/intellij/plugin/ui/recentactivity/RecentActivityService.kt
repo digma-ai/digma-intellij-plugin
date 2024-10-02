@@ -129,7 +129,7 @@ class RecentActivityService(val project: Project, private val cs: CoroutineScope
         } catch (e: AnalyticsServiceException) {
             Log.warnWithException(logger, project, e, "Error creation {}", e.message)
             ErrorReporter.getInstance().reportError(project, "RecentActivityService.createEnvironment", e)
-            ""
+            "{}"
         }
         refreshEnvironmentsNowOnBackground(project)
         val msg = SetEnvironmentCreatedMessage(response)

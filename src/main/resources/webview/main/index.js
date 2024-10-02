@@ -1604,21 +1604,25 @@
   gap: 4px;
   display: flex;
   color: ${({theme:e})=>e.colors.v3.text.secondary};
-`},53972:function(e,t,n){"use strict";var r=this&&this.__createBinding||(Object.create?function(e,t,n,r){void 0===r&&(r=n);var o=Object.getOwnPropertyDescriptor(t,n);o&&!("get"in o?!t.__esModule:o.writable||o.configurable)||(o={enumerable:!0,get:function(){return t[n]}}),Object.defineProperty(e,r,o)}:function(e,t,n,r){void 0===r&&(r=n),e[r]=t[n]}),o=this&&this.__setModuleDefault||(Object.create?function(e,t){Object.defineProperty(e,"default",{enumerable:!0,value:t})}:function(e,t){e.default=t}),i=this&&this.__importStar||function(e){if(e&&e.__esModule)return e;var t={};if(null!=e)for(var n in e)"default"!==n&&Object.prototype.hasOwnProperty.call(e,n)&&r(t,e,n);return o(t,e),t};Object.defineProperty(t,"__esModule",{value:!0}),t.InsightsInfo=void 0;const a=n(74848),s=n(99239),l=n(38492),c=n(3715),u=n(2022),d=i(n(71144));t.InsightsInfo=({isOpen:e,children:t,description:n,documentationLink:r,onClose:o})=>(0,a.jsx)(d.InfoTooltip,{isOpen:e,onDismiss:o,isDisabled:!n,placement:"top",title:(0,a.jsxs)(d.Container,{children:[(0,a.jsx)(d.Header,{children:(0,a.jsx)(d.CloseButton,{onClick:()=>{(0,l.sendUserActionTrackingEvent)(u.trackingEvents.INSIGHTS_INFO_OPEN_DOCS_CLICKED),o()},icon:e=>(0,a.jsx)(c.CrossIcon,{...e,size:12}),size:"small",buttonType:"secondaryBorderless"})}),(0,a.jsxs)(d.Content,{children:[(0,a.jsx)(d.Description,{children:n&&(0,a.jsx)(n,{})}),r&&(0,a.jsx)(d.StyledLink,{onClick:()=>{r&&((0,l.sendUserActionTrackingEvent)(u.trackingEvents.INSIGHTS_INFO_OPEN_DOCS_CLICKED),(0,s.openURLInDefaultBrowser)(r),o())},children:"Open Docs"})]})]}),hideArrow:!0,fullWidth:!0,children:t})},71144:function(e,t,n){"use strict";var r=this&&this.__importDefault||function(e){return e&&e.__esModule?e:{default:e}};Object.defineProperty(t,"__esModule",{value:!0}),t.InfoTooltip=t.StyledLink=t.Content=t.Description=t.Header=t.Container=t.CloseButton=void 0;const o=r(n(59616)),i=n(49086),a=n(63932),s=n(869),l=n(57493);t.CloseButton=(0,o.default)(s.NewIconButton)`
+`},53972:function(e,t,n){"use strict";var r=this&&this.__createBinding||(Object.create?function(e,t,n,r){void 0===r&&(r=n);var o=Object.getOwnPropertyDescriptor(t,n);o&&!("get"in o?!t.__esModule:o.writable||o.configurable)||(o={enumerable:!0,get:function(){return t[n]}}),Object.defineProperty(e,r,o)}:function(e,t,n,r){void 0===r&&(r=n),e[r]=t[n]}),o=this&&this.__setModuleDefault||(Object.create?function(e,t){Object.defineProperty(e,"default",{enumerable:!0,value:t})}:function(e,t){e.default=t}),i=this&&this.__importStar||function(e){if(e&&e.__esModule)return e;var t={};if(null!=e)for(var n in e)"default"!==n&&Object.prototype.hasOwnProperty.call(e,n)&&r(t,e,n);return o(t,e),t};Object.defineProperty(t,"__esModule",{value:!0}),t.InsightsInfo=void 0;const a=n(74848),s=n(99239),l=n(38492),c=n(3715),u=n(57493),d=n(2022),p=i(n(71144));t.InsightsInfo=({isOpen:e,children:t,description:n,documentationLink:r,onClose:o})=>(0,a.jsx)(u.Tooltip,{isOpen:e,onDismiss:o,isDisabled:!n,placement:"top",title:(0,a.jsxs)(p.Container,{children:[(0,a.jsx)(p.Header,{children:(0,a.jsx)(p.CloseButton,{onClick:()=>{(0,l.sendUserActionTrackingEvent)(d.trackingEvents.INSIGHTS_INFO_OPEN_DOCS_CLICKED),o()},children:(0,a.jsx)(p.CloseButtonIconContainer,{children:(0,a.jsx)(c.CrossIcon,{color:"currentColor",size:12})})})}),(0,a.jsxs)(p.Content,{children:[(0,a.jsx)(p.Description,{children:n&&(0,a.jsx)(n,{})}),r&&(0,a.jsx)(p.StyledLink,{onClick:()=>{r&&((0,l.sendUserActionTrackingEvent)(d.trackingEvents.INSIGHTS_INFO_OPEN_DOCS_CLICKED),(0,s.openURLInDefaultBrowser)(r),o())},children:"Open Docs"})]})]}),hideArrow:!0,children:t})},71144:function(e,t,n){"use strict";var r=this&&this.__importDefault||function(e){return e&&e.__esModule?e:{default:e}};Object.defineProperty(t,"__esModule",{value:!0}),t.StyledLink=t.Content=t.Description=t.Header=t.Container=t.CloseButtonIconContainer=t.CloseButton=void 0;const o=r(n(59616)),i=n(49086),a=n(63932);t.CloseButton=o.default.button`
   display: flex;
   background: none;
   border: none;
   cursor: pointer;
   padding: 0;
+`,t.CloseButtonIconContainer=o.default.div`
+  color: ${({theme:e})=>e.colors.v3.text.tertiary};
+  display: flex;
+  padding-top: 4px;
+  padding-right: 4px;
 `,t.Container=o.default.div`
   display: flex;
   flex-direction: column;
   border-radius: 4px;
 `,t.Header=o.default.div`
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: end;
-  height: 20px;
 `,t.Description=o.default.div`
   ${i.footnoteRegularTypography}
   color: ${({theme:e})=>e.colors.v3.text.secondary};
@@ -1626,13 +1630,11 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 0 12px 12px;
+  padding: 0 8px 8px;
 `,t.StyledLink=(0,o.default)(a.Link)`
   ${i.subscriptRegularTypography}
   text-decoration: underline;
   padding: 4px 0;
-`,t.InfoTooltip=(0,o.default)(l.Tooltip)`
-  max-width: 256px;
 `},17567:function(e,t,n){"use strict";var r=this&&this.__createBinding||(Object.create?function(e,t,n,r){void 0===r&&(r=n);var o=Object.getOwnPropertyDescriptor(t,n);o&&!("get"in o?!t.__esModule:o.writable||o.configurable)||(o={enumerable:!0,get:function(){return t[n]}}),Object.defineProperty(e,r,o)}:function(e,t,n,r){void 0===r&&(r=n),e[r]=t[n]}),o=this&&this.__setModuleDefault||(Object.create?function(e,t){Object.defineProperty(e,"default",{enumerable:!0,value:t})}:function(e,t){e.default=t}),i=this&&this.__importStar||function(e){if(e&&e.__esModule)return e;var t={};if(null!=e)for(var n in e)"default"!==n&&Object.prototype.hasOwnProperty.call(e,n)&&r(t,e,n);return o(t,e),t};Object.defineProperty(t,"__esModule",{value:!0}),t.KeyValue=void 0;const a=n(74848),s=n(96540),l=n(7740),c=n(57493),u=i(n(92299));t.KeyValue=(0,s.forwardRef)((({className:e,label:t,children:n,info:r,title:o=""},i)=>(0,a.jsxs)(u.Container,{className:e,ref:i,children:[(0,a.jsxs)(u.KeyContainer,{children:[(0,a.jsx)(c.Tooltip,{title:t,children:(0,a.jsx)(u.Key,{children:t})}),r&&(0,a.jsx)(l.Info,{title:r})]}),(0,a.jsx)(c.Tooltip,{title:o,isDisabled:!o,children:(0,a.jsx)(u.Value,{children:n})})]})))},92299:function(e,t,n){"use strict";var r=this&&this.__importDefault||function(e){return e&&e.__esModule?e:{default:e}};Object.defineProperty(t,"__esModule",{value:!0}),t.Value=t.Key=t.KeyContainer=t.Container=void 0;const o=r(n(59616)),i=n(49086);t.Container=o.default.div`
   display: flex;
   flex-direction: column;
@@ -4745,7 +4747,7 @@
   min-height: 16px;
   color: ${({theme:e})=>e.colors.v3.status.high};
   ${i.footnoteRegularTypography}
-`},49660:function(e,t,n){"use strict";var r=this&&this.__createBinding||(Object.create?function(e,t,n,r){void 0===r&&(r=n);var o=Object.getOwnPropertyDescriptor(t,n);o&&!("get"in o?!t.__esModule:o.writable||o.configurable)||(o={enumerable:!0,get:function(){return t[n]}}),Object.defineProperty(e,r,o)}:function(e,t,n,r){void 0===r&&(r=n),e[r]=t[n]}),o=this&&this.__setModuleDefault||(Object.create?function(e,t){Object.defineProperty(e,"default",{enumerable:!0,value:t})}:function(e,t){e.default=t}),i=this&&this.__importStar||function(e){if(e&&e.__esModule)return e;var t={};if(null!=e)for(var n in e)"default"!==n&&Object.prototype.hasOwnProperty.call(e,n)&&r(t,e,n);return o(t,e),t};Object.defineProperty(t,"__esModule",{value:!0}),t.Toggle=void 0;const a=n(74848),s=n(96540),l=i(n(49488));t.Toggle=(0,s.forwardRef)((({size:e="large",options:t,value:n,onValueChange:r,className:o})=>(0,a.jsx)(l.Container,{className:o,children:t.map((t=>(0,a.jsxs)(l.OptionButton,{$size:e,$selected:n===t.value,onClick:()=>(e=>{r(e)})(t.value),children:[t.label,t.icon&&(0,a.jsx)(t.icon,{color:"currentColor"})]},t.value)))})))},49488:function(e,t,n){"use strict";var r=this&&this.__importDefault||function(e){return e&&e.__esModule?e:{default:e}};Object.defineProperty(t,"__esModule",{value:!0}),t.OptionButton=t.Container=void 0;const o=r(n(59616)),i=n(49086);t.Container=o.default.div`
+`},49660:function(e,t,n){"use strict";var r=this&&this.__createBinding||(Object.create?function(e,t,n,r){void 0===r&&(r=n);var o=Object.getOwnPropertyDescriptor(t,n);o&&!("get"in o?!t.__esModule:o.writable||o.configurable)||(o={enumerable:!0,get:function(){return t[n]}}),Object.defineProperty(e,r,o)}:function(e,t,n,r){void 0===r&&(r=n),e[r]=t[n]}),o=this&&this.__setModuleDefault||(Object.create?function(e,t){Object.defineProperty(e,"default",{enumerable:!0,value:t})}:function(e,t){e.default=t}),i=this&&this.__importStar||function(e){if(e&&e.__esModule)return e;var t={};if(null!=e)for(var n in e)"default"!==n&&Object.prototype.hasOwnProperty.call(e,n)&&r(t,e,n);return o(t,e),t};Object.defineProperty(t,"__esModule",{value:!0}),t.Toggle=void 0;const a=n(74848),s=i(n(49488));t.Toggle=({size:e="large",options:t,value:n,onValueChange:r,className:o})=>(0,a.jsx)(s.Container,{className:o,children:t.map((t=>(0,a.jsxs)(s.OptionButton,{$size:e,$selected:n===t.value,onClick:()=>(e=>{r(e)})(t.value),children:[t.label,t.icon&&(0,a.jsx)(t.icon,{color:"currentColor"})]},t.value)))})},49488:function(e,t,n){"use strict";var r=this&&this.__importDefault||function(e){return e&&e.__esModule?e:{default:e}};Object.defineProperty(t,"__esModule",{value:!0}),t.OptionButton=t.Container=void 0;const o=r(n(59616)),i=n(49086);t.Container=o.default.div`
   display: flex;
   border-radius: 4px;
   padding: 3px;

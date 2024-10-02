@@ -129,7 +129,14 @@ class RecentActivityService(val project: Project, private val cs: CoroutineScope
         } catch (e: AnalyticsServiceException) {
             Log.warnWithException(logger, project, e, "Error creation {}", e.message)
             ErrorReporter.getInstance().reportError(project, "RecentActivityService.createEnvironment", e)
-            ""
+            "{\n" +
+            "    \"errors\": [" +
+                    "{\n" +
+            "        \"errorCode\": \"Communication Error\",\n" +
+            "        \"errorDescription\": \"Failed to create environment. Try again.\" \n" +
+            "        }" +
+                "]" +
+            "}"
         }
         refreshEnvironmentsNowOnBackground(project)
         val msg = SetEnvironmentCreatedMessage(response)

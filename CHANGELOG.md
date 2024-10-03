@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.390] - 2024-10-02
+## [2.0.391] - 2024-10-03
+
+- Change the flow of window opening by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2552
+
+## 2.0.390 - 2024-10-02
 
 - Fix report by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2538
 - Add tab parameter to custom url by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2543

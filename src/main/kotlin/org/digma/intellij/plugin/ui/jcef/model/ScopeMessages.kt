@@ -20,12 +20,14 @@ data class ChangeScopeMessage
 @ConstructorProperties(
     "span",
     "environmentId",
-    "context"
+    "context",
+    "openMainPanel"
 )
 constructor(
     val span: ChangeScopeSpan? = null,
     val environmentId: String? = null,
-    val context: ScopeContext? = null
+    val context: ScopeContext? = null,
+    val openMainPanel: Boolean? = null
 )
 
 

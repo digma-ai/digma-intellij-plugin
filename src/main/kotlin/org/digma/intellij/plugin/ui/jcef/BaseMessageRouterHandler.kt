@@ -399,7 +399,6 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
         payload?.let { pl ->
 
             val changeScopeMessage = jsonToObject(pl, ChangeScopeMessage::class.java)
-            val openMainPanel = pl.get("openMainPanel")?.asBoolean() ?: false;
             changeScopeMessage.span?.spanCodeObjectId?.let { spanId ->
                 val spanScope = SpanScope(spanId)
                 ScopeManager.getInstance(project).changeScope(
@@ -408,7 +407,7 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                     environmentId = changeScopeMessage.environmentId
                 )
             } ?: ScopeManager.getInstance(project).changeToHome(
-                openMainPanel = openMainPanel,
+                openMainPanel = changeScopeMessage.openMainPanel ?: false,
                 scopeContext = changeScopeMessage.context,
                 environmentId = changeScopeMessage.environmentId
             )

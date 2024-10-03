@@ -28,7 +28,7 @@ class ScopeManager(private val project: Project) {
     }
 
     fun changeToHome(
-        isCalledFromReact: Boolean = false,
+        openMainPanel: Boolean = false,
         scopeContext: ScopeContext? = null,
         environmentId: String? = null
     ) {
@@ -47,7 +47,7 @@ class ScopeManager(private val project: Project) {
             if (!PersistenceService.getInstance().isFirstWizardLaunch()) {
                 MainToolWindowCardsController.getInstance(project).closeCoveringViewsIfNecessary()
 
-                if (!isCalledFromReact) {
+                if (openMainPanel) {
                     // if react called changeToHome it's ok not to show the tool window, usually its on connection events.
                     ToolWindowShower.getInstance(project).showToolWindow()
                 }

@@ -232,6 +232,10 @@ public class AnalyticsService implements Disposable {
         return errors;
     }
 
+    public String getGlobalErrors(String payload) throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.getGlobalErrors(payload));
+    }
+
     public String getErrorDetails(String errorUid) throws AnalyticsServiceException {
         return executeCatching(() -> analyticsProviderProxy.getErrorDetails(errorUid));
     }

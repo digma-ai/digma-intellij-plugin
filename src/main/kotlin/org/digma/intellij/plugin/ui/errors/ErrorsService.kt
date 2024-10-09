@@ -38,6 +38,15 @@ class ErrorsService(val project: Project) : Disposable {
         }
     }
 
+    fun getGlobalErrorsData(payload: String): String? {
+        try {
+            return AnalyticsService.getInstance(project).getGlobalErrors(payload)
+        } catch (e: Throwable) {
+            Log.warnWithException(logger, project, e, "error fetching errors")
+            return null
+        }
+    }
+
     fun getErrorDetails(errorId: String): String {
         try {
             return AnalyticsService.getInstance(project).getErrorDetails(errorId)

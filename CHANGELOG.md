@@ -1,6 +1,15 @@
 # Changelog
 
-## [2.0.391] - 2024-10-03
+## [2.0.392] - 2024-10-10
+
+- Update-UI by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2553
+- Update-UI by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2554
+- Update-UI: by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2555
+- Add new messages for getting global errors by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2556
+- Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2557
+- Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2558
+
+## 2.0.391 - 2024-10-03
 
 - Change the flow of window opening by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2552
 

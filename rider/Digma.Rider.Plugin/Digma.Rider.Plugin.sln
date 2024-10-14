@@ -3,8 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Digma.Rider", "Digma.Rider\Digma.Rider.csproj", "{3CF7B92B-8AE6-482B-80CF-30D260710C94}"
 EndProject
 ## TODO: Digma.Rider.Tests is disabled because it doesn't compile with 2024.3-EAP1-SNAPSHOT, there is mismatch with jetbrains packages try to build it with next snapshots.
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Digma.Rider.Tests", "Digma.Rider.Tests\Digma.Rider.Tests.csproj", "{A200887A-A5D9-46D0-B8D0-BF0C8996A2AE}"
-EndProject
+##Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Digma.Rider.Tests", "Digma.Rider.Tests\Digma.Rider.Tests.csproj", "{A200887A-A5D9-46D0-B8D0-BF0C8996A2AE}"
+##EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

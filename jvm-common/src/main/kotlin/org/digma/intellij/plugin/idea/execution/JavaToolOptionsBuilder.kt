@@ -279,7 +279,7 @@ open class JavaToolOptionsBuilder(
             javaToolOptions
                 .append("-Dquarkus.otel.resource.attributes=\"$envPart\"")
                 .append(" ")
-                .append("-Dquarkus.otel.bsp.schedule.delay=0.001S") // set delay to 1 millisecond
+                .append("-Dquarkus.otel.bsp.schedule.delay=1") // set delay to 1 millisecond
                 .append(" ")
                 .append("-Dquarkus.otel.bsp.max.export.batch.size=1") // by setting size of 1 it kind of disable
                 .append(" ")

@@ -203,8 +203,8 @@ object BuildProfiles {
 
         Profile.p242 to BuildProfile(
             profile = Profile.p242,
-            platformVersion = "2024.2.2",
-            riderVersion = "2024.2.5",
+            platformVersion = "2024.2.3",
+            riderVersion = "2024.2.6",
             pycharmVersion = "2024.2",
             riderTargetFramework = "net8.0",
             riderResharperVersionConstant = "PROFILE_2023_2",

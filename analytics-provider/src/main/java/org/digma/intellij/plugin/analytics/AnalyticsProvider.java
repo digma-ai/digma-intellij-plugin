@@ -46,6 +46,8 @@ public interface AnalyticsProvider extends Closeable {
 
     String getGlobalErrors(String payload);
 
+    String getErrorTimeseries(String errorId, Map<String, Object> payload);
+
     void setInsightCustomStartTime(CustomStartTimeInsightRequest customStartTimeInsightRequest);
 
     String getErrorDetails(String errorSourceId);

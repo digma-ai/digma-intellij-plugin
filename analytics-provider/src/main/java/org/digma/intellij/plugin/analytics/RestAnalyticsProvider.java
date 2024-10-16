@@ -172,6 +172,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable, Base
     }
 
     @Override
+    public String getGlobalErrorsFilters(String payload) {
+        return execute(() -> client.analyticsProvider.getGlobalErrorsFilters(payload));
+    }
+
+    @Override
     public void setInsightCustomStartTime(CustomStartTimeInsightRequest customStartTimeInsightRequest) {
         execute(() -> client.analyticsProvider.setInsightCustomStartTime(customStartTimeInsightRequest));
     }
@@ -807,6 +812,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable, Base
         })
         @POST("errors")
         Call<String> getGlobalErrors(@Body String payload);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("errors/filters")
+        Call<String> getGlobalErrorsFilters(@Body String payload);
 
         @Headers({
                 "Content-Type:application/json"

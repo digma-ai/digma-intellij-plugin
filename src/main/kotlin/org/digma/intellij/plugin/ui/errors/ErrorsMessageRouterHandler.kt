@@ -12,6 +12,7 @@ import org.digma.intellij.plugin.ui.errors.model.SetErrorsDataMessage
 import org.digma.intellij.plugin.ui.errors.model.SetErrorsDetailsMessage
 import org.digma.intellij.plugin.ui.errors.model.SetFilesUrlsMessage
 import org.digma.intellij.plugin.ui.errors.model.SetGlobalErrorsDataMessage
+import org.digma.intellij.plugin.ui.errors.model.SetGlobalErrorsFiltersDataMessage
 import org.digma.intellij.plugin.ui.jcef.BaseCommonMessageRouterHandler
 import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
 
@@ -24,6 +25,7 @@ class ErrorsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHand
         when (action) {
             "ERRORS/GET_ERRORS_DATA" -> getErrorsData(project, browser, requestJsonNode)
             "ERRORS/GET_GLOBAL_ERRORS_DATA" -> getGlobalErrorsData(project, browser, requestJsonNode)
+            "ERRORS/GET_GLOBAL_ERRORS_FILTERS_DATA" -> getGlobalErrorsFiltersData(project, browser, requestJsonNode)
             "ERRORS/GET_ERROR_DETAILS" -> getErrorDetails(project, browser, requestJsonNode)
             "ERRORS/OPEN_RAW_ERROR_STACK_TRACE_IN_EDITOR" -> openStackTrace(project, requestJsonNode)
             "ERRORS/GO_TO_CODE_LOCATION" -> navigateToCode(project, requestJsonNode)
@@ -58,6 +60,14 @@ class ErrorsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHand
         getPayloadFromRequest(requestJsonNode)?.let { payload ->
             val errorsData = ErrorsService.getInstance(project).getGlobalErrorsData(payload.toString())
             val setErrorsDataMessage = SetGlobalErrorsDataMessage(errorsData)
+            serializeAndExecuteWindowPostMessageJavaScript(browser, setErrorsDataMessage, project)
+        }
+    }
+
+    private fun getGlobalErrorsFiltersData(project: Project, browser: CefBrowser, requestJsonNode: JsonNode) {
+        getPayloadFromRequest(requestJsonNode)?.let { payload ->
+            val errorsData = ErrorsService.getInstance(project).getGlobalErrorsFiltersData(payload.toString())
+            val setErrorsDataMessage = SetGlobalErrorsFiltersDataMessage(errorsData)
             serializeAndExecuteWindowPostMessageJavaScript(browser, setErrorsDataMessage, project)
         }
     }

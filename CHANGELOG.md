@@ -1,6 +1,13 @@
 # Changelog
 
-## [2.0.392] - 2024-10-10
+## [2.0.393] - 2024-10-16
+
+- fix quarkus export delay by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2559
+- Update eap profile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2560
+- Add new messages for filters load by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2561
+- Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2563
+
+## 2.0.392 - 2024-10-10
 
 - Update-UI by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2553
 - Update-UI by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2554

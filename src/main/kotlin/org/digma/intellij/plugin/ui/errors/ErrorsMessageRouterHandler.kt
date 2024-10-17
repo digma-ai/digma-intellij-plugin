@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.ui.errors.model.SetErrorTimeseriesDataMessage
+import org.digma.intellij.plugin.ui.errors.model.SetErrorTimeSeriesDataMessage
 import org.digma.intellij.plugin.ui.errors.model.SetErrorsDataMessage
 import org.digma.intellij.plugin.ui.errors.model.SetErrorsDetailsMessage
 import org.digma.intellij.plugin.ui.errors.model.SetFilesUrlsMessage
@@ -29,7 +29,8 @@ class ErrorsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHand
             "ERRORS/GET_ERRORS_DATA" -> getErrorsData(project, browser, requestJsonNode)
             "ERRORS/GET_GLOBAL_ERRORS_DATA" -> getGlobalErrorsData(project, browser, requestJsonNode)
             "ERRORS/GET_GLOBAL_ERRORS_FILTERS_DATA" -> getGlobalErrorsFiltersData(project, browser, requestJsonNode)
-            "ERRORS/GET_ERROR_TIMESERIES_DATA" -> getErrorTimeseriesData(project, browser, requestJsonNode)
+            "ERRORS/GET_ERROR_TIMESERIES_DATA" -> getErrorTimeSeriesData(project, browser, requestJsonNode)
+            "ERRORS/GET_ERROR_TIME_SERIES_DATA" -> getErrorTimeSeriesData(project, browser, requestJsonNode)
             "ERRORS/GET_ERROR_DETAILS" -> getErrorDetails(project, browser, requestJsonNode)
             "ERRORS/OPEN_RAW_ERROR_STACK_TRACE_IN_EDITOR" -> openStackTrace(project, requestJsonNode)
             "ERRORS/GO_TO_CODE_LOCATION" -> navigateToCode(project, requestJsonNode)
@@ -68,13 +69,13 @@ class ErrorsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHand
         }
     }
 
-    private fun getErrorTimeseriesData(project: Project, browser: CefBrowser, requestJsonNode: JsonNode) {
+    private fun getErrorTimeSeriesData(project: Project, browser: CefBrowser, requestJsonNode: JsonNode) {
         getPayloadFromRequest(requestJsonNode)?.let { payload ->
             val errorId = payload.get("errorId")?.takeIf { it !is NullNode }?.asText()
             if (errorId != null) {
                 var queryMap = getMapFromNode(payload.get("scope"), objectMapper)
                 val errorsData = ErrorsService.getInstance(project).getErrorTimeseries(errorId, queryMap)
-                val setErrorsDataMessage = SetErrorTimeseriesDataMessage(errorsData)
+                val setErrorsDataMessage = SetErrorTimeSeriesDataMessage(errorsData)
                 serializeAndExecuteWindowPostMessageJavaScript(browser, setErrorsDataMessage, project)
             }
         }

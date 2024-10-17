@@ -240,6 +240,10 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.getErrorTimeseries(error_id, payload));
     }
 
+    public String getGlobalErrorsFilters(String payload) throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.getGlobalErrorsFilters(payload));
+    }
+
     public String getErrorDetails(String errorUid) throws AnalyticsServiceException {
         return executeCatching(() -> analyticsProviderProxy.getErrorDetails(errorUid));
     }

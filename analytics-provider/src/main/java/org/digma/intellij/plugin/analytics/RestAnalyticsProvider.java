@@ -172,6 +172,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable, Base
     }
 
     @Override
+    public String getGlobalErrorsFilters(String payload) {
+        return execute(() -> client.analyticsProvider.getGlobalErrorsFilters(payload));
+    }
+
+    @Override
     public String getErrorTimeseries(String errorId, Map<String, Object> payload) {
         return execute(() -> client.analyticsProvider.getErrorTimeseries( errorId, payload));
     }
@@ -819,6 +824,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable, Base
         })
         @GET("errors/{errorId}/timeseries")
         Call<String> getErrorTimeseries(@Path("errorId") String errorSourceId, @QueryMap Map<String, Object> fields);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("errors/filters")
+        Call<String> getGlobalErrorsFilters(@Body String payload);
 
         @Headers({
                 "Content-Type:application/json"

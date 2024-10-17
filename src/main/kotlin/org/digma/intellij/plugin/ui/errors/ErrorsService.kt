@@ -47,6 +47,15 @@ class ErrorsService(val project: Project) : Disposable {
         }
     }
 
+    fun getGlobalErrorsFiltersData(payload: String): String? {
+        try {
+            return AnalyticsService.getInstance(project).getGlobalErrorsFilters(payload)
+        } catch (e: Throwable) {
+            Log.warnWithException(logger, project, e, "error fetching errors/filters")
+            return null
+        }
+    }
+
     fun getErrorTimeseries( errorId: String, payload:Map<String, Any>): String? {
         try {
             return AnalyticsService.getInstance(project).getErrorTimeseries(errorId, payload)

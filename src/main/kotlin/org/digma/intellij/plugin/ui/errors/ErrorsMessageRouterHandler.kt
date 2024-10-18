@@ -29,7 +29,6 @@ class ErrorsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHand
             "ERRORS/GET_ERRORS_DATA" -> getErrorsData(project, browser, requestJsonNode)
             "ERRORS/GET_GLOBAL_ERRORS_DATA" -> getGlobalErrorsData(project, browser, requestJsonNode)
             "ERRORS/GET_GLOBAL_ERRORS_FILTERS_DATA" -> getGlobalErrorsFiltersData(project, browser, requestJsonNode)
-            "ERRORS/GET_ERROR_TIMESERIES_DATA" -> getErrorTimeSeriesData(project, browser, requestJsonNode)
             "ERRORS/GET_ERROR_TIME_SERIES_DATA" -> getErrorTimeSeriesData(project, browser, requestJsonNode)
             "ERRORS/GET_ERROR_DETAILS" -> getErrorDetails(project, browser, requestJsonNode)
             "ERRORS/OPEN_RAW_ERROR_STACK_TRACE_IN_EDITOR" -> openStackTrace(project, requestJsonNode)

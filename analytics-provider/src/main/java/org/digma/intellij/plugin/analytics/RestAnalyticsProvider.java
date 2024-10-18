@@ -177,6 +177,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable, Base
     }
 
     @Override
+    public String getErrorTimeseries(String errorId, Map<String, Object> payload) {
+        return execute(() -> client.analyticsProvider.getErrorTimeseries( errorId, payload));
+    }
+
+    @Override
     public void setInsightCustomStartTime(CustomStartTimeInsightRequest customStartTimeInsightRequest) {
         execute(() -> client.analyticsProvider.setInsightCustomStartTime(customStartTimeInsightRequest));
     }
@@ -812,6 +817,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable, Base
         })
         @POST("errors")
         Call<String> getGlobalErrors(@Body String payload);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @GET("errors/{errorId}/timeseries")
+        Call<String> getErrorTimeseries(@Path("errorId") String errorSourceId, @QueryMap Map<String, Object> fields);
 
         @Headers({
                 "Accept: application/+json",

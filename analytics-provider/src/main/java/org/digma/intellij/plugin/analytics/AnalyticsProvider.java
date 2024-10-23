@@ -48,6 +48,10 @@ public interface AnalyticsProvider extends Closeable {
 
     String getErrorTimeseries(String errorId, Map<String, Object> payload);
 
+    void pinError(String errorId, String environment);
+
+    void unpinError(String errorId, String environment);
+
     String getGlobalErrorsFilters(String payload);
 
     void setInsightCustomStartTime(CustomStartTimeInsightRequest customStartTimeInsightRequest);

@@ -11,6 +11,8 @@ import org.digma.intellij.plugin.jaegerui.JaegerUIService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.service.EditorService
+import org.digma.intellij.plugin.ui.errors.model.ActionError
+import org.digma.intellij.plugin.ui.errors.model.ErrorActionResult
 
 
 @Service(Service.Level.PROJECT)
@@ -44,6 +46,26 @@ class ErrorsService(val project: Project) : Disposable {
         } catch (e: Throwable) {
             Log.warnWithException(logger, project, e, "error fetching errors")
             return null
+        }
+    }
+
+    fun pinError(errorId: String, environment: String): ErrorActionResult {
+        try {
+            AnalyticsService.getInstance(project).pinError(errorId, environment)
+            return ErrorActionResult(errorId, true, null)
+        } catch (e: Throwable) {
+            Log.warnWithException(logger, project, e, "error fetching errors")
+            return ErrorActionResult(errorId, false, ActionError(e.message))
+        }
+    }
+
+    fun unpinError(errorId: String, environment: String): ErrorActionResult {
+        try {
+            AnalyticsService.getInstance(project).unpinError(errorId, environment)
+            return ErrorActionResult(errorId, true, null)
+        } catch (e: Throwable) {
+            Log.warnWithException(logger, project, e, "error fetching errors")
+            return ErrorActionResult(errorId, false, ActionError(e.message))
         }
     }
 

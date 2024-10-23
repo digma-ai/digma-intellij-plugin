@@ -182,6 +182,17 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable, Base
     }
 
     @Override
+    public void pinError(String errorId, String environment) {
+        execute(() -> client.analyticsProvider.pinError(errorId, environment));
+    }
+
+    @Override
+    public void unpinError(String errorId, String environment) {
+        execute(() -> client.analyticsProvider.unpinError(errorId, environment));
+    }
+
+
+    @Override
     public void setInsightCustomStartTime(CustomStartTimeInsightRequest customStartTimeInsightRequest) {
         execute(() -> client.analyticsProvider.setInsightCustomStartTime(customStartTimeInsightRequest));
     }
@@ -824,6 +835,20 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable, Base
         })
         @GET("errors/{errorId}/timeseries")
         Call<String> getErrorTimeseries(@Path("errorId") String errorSourceId, @QueryMap Map<String, Object> fields);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("errors/{errorId}/pin")
+        Call<Void> pinError(@Path("errorId") String errorSourceId, @Query("environment") String environment);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("errors/{errorId}/unpin")
+        Call<Void> unpinError(@Path("errorId") String errorSourceId, @Query("environment") String environment);
 
         @Headers({
                 "Accept: application/+json",

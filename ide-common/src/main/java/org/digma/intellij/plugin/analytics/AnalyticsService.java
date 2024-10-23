@@ -240,6 +240,20 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.getErrorTimeseries(error_id, payload));
     }
 
+    public void pinError(String error_id, String environment) throws AnalyticsServiceException {
+        executeCatching(() -> {
+            analyticsProviderProxy.pinError(error_id, environment);
+            return null;
+        });
+    }
+
+    public void unpinError(String error_id, String environment) throws AnalyticsServiceException {
+        executeCatching(() -> {
+            analyticsProviderProxy.unpinError(error_id, environment);
+            return null;
+        });
+    }
+
     public String getGlobalErrorsFilters(String payload) throws AnalyticsServiceException {
         return executeCatching(() -> analyticsProviderProxy.getGlobalErrorsFilters(payload));
     }
@@ -247,7 +261,6 @@ public class AnalyticsService implements Disposable {
     public String getErrorDetails(String errorUid) throws AnalyticsServiceException {
         return executeCatching(() -> analyticsProviderProxy.getErrorDetails(errorUid));
     }
-
 
     public void setInsightCustomStartTime(String insightId) throws AnalyticsServiceException {
         var env = getCurrentEnvironmentId();

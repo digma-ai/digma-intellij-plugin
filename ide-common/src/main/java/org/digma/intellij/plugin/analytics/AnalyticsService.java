@@ -254,6 +254,20 @@ public class AnalyticsService implements Disposable {
         });
     }
 
+    public void dismissError(String error_id, String environment) throws AnalyticsServiceException {
+        executeCatching(() -> {
+            analyticsProviderProxy.dismissError(error_id, environment);
+            return null;
+        });
+    }
+
+    public void undismissError(String error_id, String environment) throws AnalyticsServiceException {
+        executeCatching(() -> {
+            analyticsProviderProxy.undismissError(error_id, environment);
+            return null;
+        });
+    }
+
     public String getGlobalErrorsFilters(String payload) throws AnalyticsServiceException {
         return executeCatching(() -> analyticsProviderProxy.getGlobalErrorsFilters(payload));
     }

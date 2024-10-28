@@ -54,7 +54,7 @@ class ErrorsService(val project: Project) : Disposable {
             AnalyticsService.getInstance(project).pinError(errorId, environment)
             return ErrorActionResult(errorId, true, null)
         } catch (e: Throwable) {
-            Log.warnWithException(logger, project, e, "error fetching errors")
+            Log.warnWithException(logger, project, e, "exception during pin error")
             return ErrorActionResult(errorId, false, ActionError(e.message))
         }
     }
@@ -64,7 +64,27 @@ class ErrorsService(val project: Project) : Disposable {
             AnalyticsService.getInstance(project).unpinError(errorId, environment)
             return ErrorActionResult(errorId, true, null)
         } catch (e: Throwable) {
-            Log.warnWithException(logger, project, e, "error fetching errors")
+            Log.warnWithException(logger, project, e, "exception during unpin error")
+            return ErrorActionResult(errorId, false, ActionError(e.message))
+        }
+    }
+
+    fun dismissError(errorId: String, environment: String): ErrorActionResult {
+        try {
+            AnalyticsService.getInstance(project).dismissError(errorId, environment)
+            return ErrorActionResult(errorId, true, null)
+        } catch (e: Throwable) {
+            Log.warnWithException(logger, project, e, "exception during dismiss error")
+            return ErrorActionResult(errorId, false, ActionError(e.message))
+        }
+    }
+
+    fun undismissError(errorId: String, environment: String): ErrorActionResult {
+        try {
+            AnalyticsService.getInstance(project).undismissError(errorId, environment)
+            return ErrorActionResult(errorId, true, null)
+        } catch (e: Throwable) {
+            Log.warnWithException(logger, project, e, "exception during undismiss error")
             return ErrorActionResult(errorId, false, ActionError(e.message))
         }
     }

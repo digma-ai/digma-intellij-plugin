@@ -11,7 +11,9 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.ui.errors.model.SetErrorTimeSeriesDataMessage
 import org.digma.intellij.plugin.ui.errors.model.SetErrorsDataMessage
 import org.digma.intellij.plugin.ui.errors.model.SetErrorsDetailsMessage
+import org.digma.intellij.plugin.ui.errors.model.SetErrorsDismissMessage
 import org.digma.intellij.plugin.ui.errors.model.SetErrorsPinMessage
+import org.digma.intellij.plugin.ui.errors.model.SetErrorsUndismissMessage
 import org.digma.intellij.plugin.ui.errors.model.SetErrorsUnpinMessage
 import org.digma.intellij.plugin.ui.errors.model.SetFilesUrlsMessage
 import org.digma.intellij.plugin.ui.errors.model.SetGlobalErrorsDataMessage
@@ -38,6 +40,8 @@ class ErrorsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHand
             "ERRORS/GO_TO_TRACE" -> goToTrace(project, requestJsonNode)
             "ERRORS/PIN_ERROR" -> pinError(project, browser, requestJsonNode)
             "ERRORS/UNPIN_ERROR" -> unpinError(project, browser, requestJsonNode)
+            "ERRORS/DISMISS_ERROR" -> dismissError(project, browser, requestJsonNode)
+            "ERRORS/UNDISMISS_ERROR" -> undismissError(project, browser, requestJsonNode)
 
             else -> return false
         }
@@ -89,6 +93,28 @@ class ErrorsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHand
 
             val pinResult = ErrorsService.getInstance(project).unpinError(errorId, environment)
             val setErrorsDataMessage = SetErrorsUnpinMessage(pinResult)
+            serializeAndExecuteWindowPostMessageJavaScript(browser, setErrorsDataMessage, project)
+        }
+    }
+
+    private fun dismissError(project: Project, browser: CefBrowser, requestJsonNode: JsonNode) {
+        getPayloadFromRequest(requestJsonNode)?.let { payload: JsonNode ->
+            val errorId = payload.get("id")?.takeIf { it !is NullNode }?.asText() ?: ""
+            val environment = payload.get("environment")?.takeIf { it !is NullNode }?.asText() ?: ""
+
+            val pinResult = ErrorsService.getInstance(project).dismissError(errorId, environment)
+            val setErrorsDataMessage = SetErrorsDismissMessage(pinResult)
+            serializeAndExecuteWindowPostMessageJavaScript(browser, setErrorsDataMessage, project)
+        }
+    }
+
+    private fun undismissError(project: Project, browser: CefBrowser, requestJsonNode: JsonNode) {
+        getPayloadFromRequest(requestJsonNode)?.let { payload: JsonNode ->
+            val errorId = payload.get("id")?.takeIf { it !is NullNode }?.asText() ?: ""
+            val environment = payload.get("environment")?.takeIf { it !is NullNode }?.asText() ?: ""
+
+            val pinResult = ErrorsService.getInstance(project).undismissError(errorId, environment)
+            val setErrorsDataMessage = SetErrorsUndismissMessage(pinResult)
             serializeAndExecuteWindowPostMessageJavaScript(browser, setErrorsDataMessage, project)
         }
     }

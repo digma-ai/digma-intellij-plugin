@@ -52,6 +52,10 @@ public interface AnalyticsProvider extends Closeable {
 
     void unpinError(String errorId, String environment);
 
+    void dismissError(String errorId, String environment);
+
+    void undismissError(String errorId, String environment);
+
     String getGlobalErrorsFilters(String payload);
 
     void setInsightCustomStartTime(CustomStartTimeInsightRequest customStartTimeInsightRequest);

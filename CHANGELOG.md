@@ -1,6 +1,13 @@
 # Changelog
 
-## [2.0.394] - 2024-10-23
+## [2.0.395] - 2024-10-30
+
+- Added messages for pin/unpin by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2569
+- Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2571
+- Added messages for dismiss by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2572
+- Update UI by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2573
+
+## 2.0.394 - 2024-10-23
 
 - Add new messages load data from error time line by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2562
 - Update Recent Activity UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2564

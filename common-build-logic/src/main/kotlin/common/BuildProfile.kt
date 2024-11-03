@@ -186,7 +186,7 @@ object BuildProfiles {
 
         Profile.p241 to BuildProfile(
             profile = Profile.p241,
-            platformVersion = "2024.1.5",
+            platformVersion = "2024.1.7",
             riderVersion = "2024.1.5",
             pycharmVersion = "2024.1.5",
             riderTargetFramework = "net8.0",
@@ -203,8 +203,8 @@ object BuildProfiles {
 
         Profile.p242 to BuildProfile(
             profile = Profile.p242,
-            platformVersion = "2024.2.3",
-            riderVersion = "2024.2.6",
+            platformVersion = "2024.2.4",
+            riderVersion = "2024.2.7",
             pycharmVersion = "2024.2",
             riderTargetFramework = "net8.0",
             riderResharperVersionConstant = "PROFILE_2023_2",
@@ -219,9 +219,9 @@ object BuildProfiles {
         Profile.p243 to BuildProfile(
             isEAP = true,
             profile = Profile.p243,
-            platformVersion = "243.19420-EAP-CANDIDATE-SNAPSHOT",
+            platformVersion = "243.21565-EAP-CANDIDATE-SNAPSHOT",
             //todo: Digma.Rider.Tests is disabled because it doesn't compile with 2024.3-EAP1-SNAPSHOT, there is mismatch with jetbrains packages try to build it with next snapshots.
-            riderVersion = "2024.3-EAP4-SNAPSHOT",
+            riderVersion = "2024.3-EAP5-SNAPSHOT",
             pycharmVersion = "243-EAP-SNAPSHOT",
             riderTargetFramework = "net8.0",
             riderResharperVersionConstant = "PROFILE_2023_2;PROFILE_2024_3",

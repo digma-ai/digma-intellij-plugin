@@ -8,6 +8,7 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
 import java.io.File
+import java.io.FileNotFoundException
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -27,7 +28,9 @@ class EngagementScoreServiceStartup : ProjectActivity {
                     }
                 }
             }
-        } catch (e: Throwable) {
+        } catch (e: FileNotFoundException) {
+            //ignore, the file does not exist on new install
+        }catch (e: Throwable) {
             Log.warnWithException(logger, project, e, "error fixing file")
             ErrorReporter.getInstance().reportError("EngagementScoreServiceStartup.fixFile", e)
         }

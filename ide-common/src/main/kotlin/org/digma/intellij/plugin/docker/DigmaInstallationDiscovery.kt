@@ -6,6 +6,7 @@ import com.intellij.execution.process.ProcessOutput
 import com.intellij.execution.util.ExecUtil
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import org.apache.commons.lang3.time.StopWatch
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.common.readTree
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
@@ -24,9 +25,17 @@ internal fun discoverActualRunningEngine(project: Project): DigmaInstallationSta
 //this method should be called only if we know that local engine is not installed
 internal fun discoverActualRunningEngine(hasConnection: Boolean): DigmaInstallationStatus {
 
+    var stopWatch = StopWatch.createStarted()
     val isLocalEngineRunning = isLocalEngineRunning()
+    Log.log(logger::trace,"isLocalEngineRunning took {}",stopWatch.time)
+
+    stopWatch = StopWatch.createStarted()
     val isAnyEngineRunning = isAnyEngineRunning()
+    Log.log(logger::trace,"isAnyEngineRunning took {}",stopWatch.time)
+
+    stopWatch = StopWatch.createStarted()
     val isExtensionRunning = isExtensionRunning()
+    Log.log(logger::trace,"isExtensionRunning took {}",stopWatch.time)
 
     val connectionType: ConnectionType? = if (hasConnection) {
         if (SettingsUtils.isSettingsPointsToRemoteIp()) {

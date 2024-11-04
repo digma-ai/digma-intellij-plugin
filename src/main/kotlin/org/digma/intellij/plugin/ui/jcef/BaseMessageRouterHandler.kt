@@ -361,21 +361,15 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
 
 
     protected fun doCommonInitialize(browser: CefBrowser) {
-        try {
-            Log.log(logger::trace, project, "sending {} message", JCEFGlobalConstants.GLOBAL_SET_BACKEND_INFO)
-            sendBackendAboutInfo(browser, project)
-        } catch (e: Exception) {
-            Log.debugWithException(logger, project, e, "error calling about")
-        }
 
-        val insightsStats = AnalyticsService.getInstance(project).getInsightsStats(null, null, null)
-
-        updateDigmaEngineStatus(project, browser)
-
-        sendEnvironmentsList(browser, getAllEnvironments(project))
+        Log.log(logger::trace, project, "sending {} message", JCEFGlobalConstants.GLOBAL_SET_BACKEND_INFO)
+        sendBackendAboutInfo(browser, project)
 
         sendUserInfoMessage(browser, DigmaDefaultAccountHolder.getInstance().account?.userId, project)
 
+        sendEnvironmentsList(browser, getAllEnvironments(project))
+
+        val insightsStats = AnalyticsService.getInstance(project).getInsightsStats(null, null, null)
         sendScopeChangedMessage(
             browser,
             null,

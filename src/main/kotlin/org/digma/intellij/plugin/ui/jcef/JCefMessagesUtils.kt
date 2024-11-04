@@ -5,13 +5,15 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.jcef.JBCefBrowser
 import org.cef.browser.CefBrowser
-import org.digma.intellij.plugin.analytics.AnalyticsService
+import org.digma.intellij.plugin.analytics.BackendInfoHolder
 import org.digma.intellij.plugin.docker.DigmaInstallationStatus
 import org.digma.intellij.plugin.docker.LocalInstallationFacade
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import org.digma.intellij.plugin.model.rest.AboutResult
 import org.digma.intellij.plugin.model.rest.environment.Env
 import org.digma.intellij.plugin.model.rest.insights.SpanEnvironment
 import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
+import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
 import org.digma.intellij.plugin.scope.ScopeContext
 import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.ui.common.isJaegerButtonEnabled
@@ -120,7 +122,7 @@ fun updateDigmaEngineStatus(cefBrowser: CefBrowser, status: DigmaInstallationSta
 }
 
 fun sendBackendAboutInfo(cefBrowser: CefBrowser, project: Project) {
-    val about = AnalyticsService.getInstance(project).about
+    val about = BackendInfoHolder.getInstance(project).getAbout() ?: AboutResult("unknown", BackendDeploymentType.Unknown, false, null)
     val message = BackendInfoMessage(about)
     serializeAndExecuteWindowPostMessageJavaScript(cefBrowser, message, project)
 }

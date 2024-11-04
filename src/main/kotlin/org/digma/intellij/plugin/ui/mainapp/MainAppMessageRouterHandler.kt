@@ -4,14 +4,13 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
-import org.digma.intellij.plugin.analytics.AnalyticsServiceException
-import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.protocol.DigmaProtocolApi
 import org.digma.intellij.plugin.ui.assets.AssetsMessageRouterHandler
 import org.digma.intellij.plugin.ui.errors.ErrorsMessageRouterHandler
 import org.digma.intellij.plugin.ui.highlights.HighlightsMessageRouterHandler
 import org.digma.intellij.plugin.ui.insights.InsightsMessageRouterHandler
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
+import org.digma.intellij.plugin.ui.jcef.updateDigmaEngineStatus
 import org.digma.intellij.plugin.ui.navigation.NavigationMessageRouterHandler
 import org.digma.intellij.plugin.ui.tests.TestsMessageRouterHandler
 
@@ -63,11 +62,9 @@ class MainAppMessageRouterHandler(project: Project) : BaseMessageRouterHandler(p
 
 
     private fun onInitialize(browser: CefBrowser) {
-        try {
-            doCommonInitialize(browser)
-        } catch (e: AnalyticsServiceException) {
-            Log.warnWithException(logger, e, "error getting backend info")
-        }
+        doCommonInitialize(browser)
+        updateDigmaEngineStatus(project, browser)
+
         project.service<DigmaProtocolApi>().setMainAppInitialized()
     }
 

@@ -99,9 +99,9 @@ private constructor(
                     //ApiClientChangedEvent is certain to be fired after the api client was changed and surely must set the correct info to the UI.
                     Backgroundable.executeOnPooledThread {
                         try {
+                            sendBackendAboutInfo(jbCefBrowser.cefBrowser, project)
                             sendUserInfoMessage(jbCefBrowser.cefBrowser, DigmaDefaultAccountHolder.getInstance().account?.userId, project)
                             updateDigmaEngineStatus(project, jbCefBrowser.cefBrowser)
-                            sendBackendAboutInfo(jbCefBrowser.cefBrowser, project)
                         } catch (e: Throwable) {
                             Log.warnWithException(logger, project, e, "error in ApiClientChangedEvent")
                             ErrorReporter.getInstance().reportError(project, "JCefComponent.apiClientChanged", e)
@@ -176,9 +176,9 @@ private constructor(
                     connectionEventAlarm.cancelAllRequests()
                     connectionEventAlarm.addRequest({
                         try {
+                            sendBackendAboutInfo(jbCefBrowser.cefBrowser, project)
                             val status = service<LocalInstallationFacade>().getCurrentDigmaInstallationStatusOnConnectionGained()
                             updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
-                            sendBackendAboutInfo(jbCefBrowser.cefBrowser, project)
                         } catch (e: Exception) {
                             Log.warnWithException(logger, project, e, "error in connectionGained")
                             ErrorReporter.getInstance().reportError(project, "JCefComponent.connectionGained", e)

@@ -90,7 +90,7 @@ dependencies {
 
         //todo: this is a workaround for plugin 2.1.0, this module should be bundled.
         // check in next version if it is still necessary.
-        if (project.currentProfile().profile.greaterThan(BuildProfiles.Profile.p233)) {
+        if (project.currentProfile().profile.greaterThan(BuildProfiles.Profile.p241)) {
             bundledModule("intellij.platform.collaborationTools")
         }
     }

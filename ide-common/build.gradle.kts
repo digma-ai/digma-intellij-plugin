@@ -45,7 +45,7 @@ dependencies {
         //todo: this is a workaround for plugin 2.1.0, this module should come as transitive dependency of Git4Idea.
         // check in next version if it is still necessary. discussed here:
         // https://jetbrains-platform.slack.com/archives/C05C80200LS/p1727279837850189
-        if (project.currentProfile().profile.greaterThan(BuildProfiles.Profile.p233)) {
+        if (project.currentProfile().profile.greaterThan(BuildProfiles.Profile.p241)) {
             bundledModule("intellij.platform.vcs.dvcs.impl")
         }
     }

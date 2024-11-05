@@ -85,6 +85,10 @@ dependencies {
 
         pluginVerifier()
         zipSigner()
+
+        //todo: this is a workaround for plugin 2.1.0, this module should be bundled.
+        // check in next version if it is still necessary.
+        bundledModule("intellij.platform.collaborationTools")
     }
 }
 

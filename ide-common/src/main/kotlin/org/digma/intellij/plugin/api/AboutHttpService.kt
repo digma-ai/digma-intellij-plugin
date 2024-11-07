@@ -13,6 +13,10 @@ import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http.FullHttpRequest
 import io.netty.handler.codec.http.HttpRequest
 import io.netty.handler.codec.http.QueryStringDecoder
+import org.digma.intellij.plugin.analytics.getBackendDeploymentType
+import org.digma.intellij.plugin.analytics.getBackendVersion
+import org.digma.intellij.plugin.analytics.isCentralized
+import org.digma.intellij.plugin.semanticversion.SemanticVersionUtil
 import org.jetbrains.ide.RestService
 import java.io.OutputStream
 
@@ -74,6 +78,11 @@ fun writeAboutJson(writer: JsonGenerator) {
     if (!build.isSnapshot) {
         writer.writeStringField("buildNumber", build.asStringWithoutProductCode())
     }
+
+    writer.writeStringField("pluginVersion", SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("unknown"))
+    writer.writeStringField("backendVersion", getBackendVersion())
+    writer.writeStringField("backendDeploymentType", getBackendDeploymentType())
+    writer.writeBooleanField("isCentralized", isCentralized())
 
     writer.array("openProjects") {
         for (project in ProjectManager.getInstance().openProjects) {

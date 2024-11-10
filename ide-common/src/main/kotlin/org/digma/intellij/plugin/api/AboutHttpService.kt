@@ -11,25 +11,19 @@ import com.intellij.util.io.jackson.array
 import com.intellij.util.io.jackson.obj
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http.FullHttpRequest
-import io.netty.handler.codec.http.HttpRequest
 import io.netty.handler.codec.http.QueryStringDecoder
 import org.digma.intellij.plugin.analytics.getBackendDeploymentType
 import org.digma.intellij.plugin.analytics.getBackendVersion
 import org.digma.intellij.plugin.analytics.isCentralized
 import org.digma.intellij.plugin.semanticversion.SemanticVersionUtil
-import org.jetbrains.ide.RestService
 import java.io.OutputStream
 
 /**
  * {get} /digma/about The application info
  */
-internal class AboutHttpService : RestService() {
+internal class AboutHttpService : AbstractHttpService() {
 
     override fun getServiceName() = "digma/about"
-
-    override fun isOriginAllowed(request: HttpRequest): OriginCheckResult {
-        return OriginCheckResult.ALLOW
-    }
 
 
     override fun execute(urlDecoder: QueryStringDecoder, request: FullHttpRequest, context: ChannelHandlerContext): String? {
@@ -40,53 +34,46 @@ internal class AboutHttpService : RestService() {
     }
 
 
-    override fun isHostTrusted(request: FullHttpRequest, urlDecoder: QueryStringDecoder): Boolean {
-        return true
-    }
-
-    @Deprecated("Use {@link #isHostTrusted(FullHttpRequest, QueryStringDecoder)}", ReplaceWith("true"))
-    override fun isHostTrusted(request: FullHttpRequest): Boolean {
-        return true
-    }
-}
-
-fun writeApplicationInfoJson(out: OutputStream) {
-    JsonFactory().createGenerator(out).useDefaultPrettyPrinter().use { writer ->
-        writer.obj {
-            writeAboutJson(writer)
+    private fun writeApplicationInfoJson(out: OutputStream) {
+        JsonFactory().createGenerator(out).useDefaultPrettyPrinter().use { writer ->
+            writer.obj {
+                writeAboutJson(writer)
+            }
         }
     }
-}
 
 
-fun writeAboutJson(writer: JsonGenerator) {
-    writer.writeStringField("source", "Digma Plugin")
-    var appName = ApplicationInfo.getInstance().fullApplicationName
-    @Suppress("UnstableApiUsage")
-    if (!PlatformUtils.isIdeaUltimate()) {
-        val productName = ApplicationNamesInfo.getInstance().productName
-        appName = appName
-            .replace("$productName ($productName)", productName)
-            .removePrefix("JetBrains ")
-    }
-    writer.writeStringField("name", appName)
-    writer.writeStringField("productName", ApplicationNamesInfo.getInstance().productName)
-    writer.writeStringField("edition", ApplicationNamesInfo.getInstance().editionName)
+    private fun writeAboutJson(writer: JsonGenerator) {
+        writer.writeStringField("source", "Digma Plugin")
+        var appName = ApplicationInfo.getInstance().fullApplicationName
+        @Suppress("UnstableApiUsage")
+        if (!PlatformUtils.isIdeaUltimate()) {
+            val productName = ApplicationNamesInfo.getInstance().productName
+            appName = appName
+                .replace("$productName ($productName)", productName)
+                .removePrefix("JetBrains ")
+        }
+        writer.writeStringField("name", appName)
+        writer.writeStringField("productName", ApplicationNamesInfo.getInstance().productName)
+        writer.writeStringField("edition", ApplicationNamesInfo.getInstance().editionName)
 
-    val build = ApplicationInfo.getInstance().build
-    writer.writeNumberField("baselineVersion", build.baselineVersion)
-    if (!build.isSnapshot) {
-        writer.writeStringField("buildNumber", build.asStringWithoutProductCode())
-    }
+        val build = ApplicationInfo.getInstance().build
+        writer.writeNumberField("baselineVersion", build.baselineVersion)
+        if (!build.isSnapshot) {
+            writer.writeStringField("buildNumber", build.asStringWithoutProductCode())
+        }
 
-    writer.writeStringField("pluginVersion", SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("unknown"))
-    writer.writeStringField("backendVersion", getBackendVersion())
-    writer.writeStringField("backendDeploymentType", getBackendDeploymentType())
-    writer.writeBooleanField("isCentralized", isCentralized())
+        writer.writeStringField("pluginVersion", SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("unknown"))
+        writer.writeStringField("backendVersion", getBackendVersion())
+        writer.writeStringField("backendDeploymentType", getBackendDeploymentType())
+        writer.writeBooleanField("isCentralized", isCentralized())
 
-    writer.array("openProjects") {
-        for (project in ProjectManager.getInstance().openProjects) {
-            writer.writeString(project.name)
+        writer.array("openProjects") {
+            for (project in ProjectManager.getInstance().openProjects) {
+                writer.writeString(project.name)
+            }
         }
     }
+
 }
+

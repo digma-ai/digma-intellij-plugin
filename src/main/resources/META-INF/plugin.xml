@@ -22,7 +22,7 @@
 
     <!-- see https://kotlin.github.io/analysis-api/declaring-k2-compatibility.html   -->
     <extensions defaultExtensionNs="org.jetbrains.kotlin">
-        <supportsKotlinPluginMode supportsK2="true" />
+        <supportsKotlinPluginMode supportsK2="true"/>
     </extensions>
 
     <depends optional="true" config-file="org.digma.intellij-with-jvm.xml">com.intellij.modules.java</depends>
@@ -127,7 +127,8 @@
                 implementation="org.digma.intellij.plugin.activation.UserActivationStartup"/>
         <postStartupActivity
                 implementation="org.digma.intellij.plugin.engagement.EngagementScoreServiceStartup"/>
-
+        <postStartupActivity
+                implementation="org.digma.intellij.plugin.dashboard.DashboardServiceStarter"/>
 
 
         <errorHandler implementation="org.digma.intellij.plugin.ui.reports.DigmaErrorReportSubmitter"/>
@@ -142,11 +143,10 @@
 
         <postStartupActivity implementation="org.digma.intellij.plugin.posthog.CountingProjectActivity"/>
 
-        <jbProtocolCommand implementation="org.digma.intellij.plugin.protocol.DigmaProtocolCommand"/>
         <httpRequestHandler implementation="org.digma.intellij.plugin.api.AboutHttpService"/>
+        <httpRequestHandler implementation="org.digma.intellij.plugin.api.ShowAssetsHttpService"/>
 
     </extensions>
-
 
 
     <projectListeners>

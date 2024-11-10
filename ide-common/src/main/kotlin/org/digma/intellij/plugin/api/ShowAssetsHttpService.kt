@@ -8,9 +8,9 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import java.util.Objects
 
-//http://localhost:63342/api/digma/show?action=GoToSpan&spanUid=995822fa-9d0d-11ef-9d3e-0adc1d604f09&targetTab=assets&projectName=spring-petclinic
-//http://localhost:63342/api/digma/show?action=GoToHome&environment_id&targetTab=&projectName=
-//http://localhost:63342/api/digma/show?action=OpenReport=&projectName=
+//http://localhost:63344/api/digma/show?action=GoToSpan&spanUid=995822fa-9d0d-11ef-9d3e-0adc1d604f09&targetTab=assets&projectName=spring-petclinic
+//http://localhost:63344/api/digma/show?action=GoToHome&environment_id=LOCAL%23ID%2325A68508-B8A3-4DF2-ACA3-ECDAAB203793&targetTab=assets&projectName=spring-petclinic
+//http://localhost:63344/api/digma/show?action=OpenReport&projectName=spring-petclinic
 class ShowAssetsHttpService : AbstractHttpService() {
 
     override fun getServiceName() = "digma/show"

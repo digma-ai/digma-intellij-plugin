@@ -4,6 +4,7 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.wm.WindowManager
 import com.intellij.ui.AppIcon
 import io.netty.handler.codec.http.QueryStringDecoder
 import kotlinx.datetime.Clock
@@ -106,56 +107,14 @@ class ApiProjectService(val project: Project) : DisposableAdaptor {
     }
 
 
-
-    private fun ideToFront(){
+    private fun ideToFront() {
         EDT.ensureEDT {
-
             AppIcon.getInstance().requestAttention(project, true)
-
-//            WindowManager.getInstance().suggestParentWindow(project)?.requestFocus()
-//
-//
-//            val projectFrame = WindowManager.getInstance().getFrame(project)
-//            if (projectFrame != null) {
-//                val frameState = projectFrame.extendedState
-//                if (BitUtil.isSet(frameState, Frame.ICONIFIED)) {
-//                    projectFrame.extendedState = BitUtil.set(frameState, Frame.ICONIFIED, false)
-//                }
-//                projectFrame.toFront()
-//                IdeFocusManager.getGlobalInstance().doWhenFocusSettlesDown {
-////                    val mostRecentFocusOwner = projectFrame.mostRecentFocusOwner
-////                    val mostRecentFocusOwner = ToolWindowManager.getInstance(project).getToolWindow(PluginId.TOOL_WINDOW_ID)?.component
-//                    val mostRecentFocusOwner = projectFrame.focusOwner
-//                    if (mostRecentFocusOwner != null) {
-//                        IdeFocusManager.getGlobalInstance().requestFocus(mostRecentFocusOwner, true)
-//                    }
-//
-//                }
-//
-//
-//                projectFrame.requestFocus()
-
-////                val dialog = DummyDialog(project)
-//                val dialog = object: DialogWrapper(project){
-//                    override fun createCenterPanel(): JComponent {
-//                        return JLabel("aaaaaaaaaa")
-//                    }
-//                }
-//                dialog.show()
-//                dialog.toFront()
-//                dialog.doCancelAction()
-//                dialog.close(1,true)
-
-
-//                ShowSettingsUtil.getInstance().showSettingsDialog(project, ProjectSettings.DISPLAY_NAME)
-//            }
-//        WindowManager.getInstance().getFocusedComponent(project)
-//            val projectComponent = WindowManager.getInstance().getIdeFrame(project)?.component
-//            projectComponent?.let {
-//                IdeFocusManager.getGlobalInstance().toFront(it)
-//            }
+            val ideFrame = WindowManager.getInstance().getIdeFrame(project)
+            if (ideFrame != null) {
+                AppIcon.getInstance().requestFocus(ideFrame)
+            }
         }
     }
-
 
 }

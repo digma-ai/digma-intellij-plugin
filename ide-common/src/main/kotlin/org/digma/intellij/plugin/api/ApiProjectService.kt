@@ -65,7 +65,7 @@ class ApiProjectService(val project: Project) : DisposableAdaptor {
         }
 
         if (!result) {
-            Log.log(logger::warn, "Digma tool window did not open within 10 seconds, will try to execute the action anyway.")
+            Log.log(logger::warn, "Digma did not initialize within 10 seconds, will try to execute the action anyway.")
         }
 
         ideToFront()

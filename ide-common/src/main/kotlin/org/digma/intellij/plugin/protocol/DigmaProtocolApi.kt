@@ -100,8 +100,7 @@ class DigmaProtocolApi(val cs: CoroutineScope) : DisposableAdaptor {
 
             val scope = SpanScope(codeObjectId)
             val contextPayload = objectToJsonNode(CustomUrlScopeContextPayload(targetTab))
-            //todo: fix the event name
-            val scopeContext = ScopeContext("IDE/CUSTOM_PROTOCOL_LINK_CLICKED", contextPayload)
+            val scopeContext = ScopeContext("IDE/REST_API_CALL", contextPayload)
 
             Log.log(
                 logger::trace,

@@ -27,8 +27,7 @@ class GoToHomeCommand : AbstractApiCommand(){
         )
 
         val contextPayload = objectToJsonNode(GoToHomeContextPayload(targetTab!!))
-        //todo: fix the event name
-        val scopeContext = ScopeContext("IDE/CUSTOM_PROTOCOL_LINK_CLICKED", contextPayload)
+        val scopeContext = ScopeContext("IDE/REST_API_CALL", contextPayload)
 
         ScopeManager.getInstance(project).changeToHome(true, scopeContext, environmentId)
     }

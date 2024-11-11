@@ -34,8 +34,7 @@ class GoToSpanCommand : AbstractApiCommand() {
 
         val scope = SpanScope(spanInfoByUid.spanCodeObjectId)
         val contextPayload = objectToJsonNode(GoToSpanScopeContextPayload(targetTab!!))
-        //todo: fix the event name
-        val scopeContext = ScopeContext("IDE/CUSTOM_PROTOCOL_LINK_CLICKED", contextPayload)
+        val scopeContext = ScopeContext("IDE/REST_API_CALL", contextPayload)
 
         Log.log(
             logger::trace,

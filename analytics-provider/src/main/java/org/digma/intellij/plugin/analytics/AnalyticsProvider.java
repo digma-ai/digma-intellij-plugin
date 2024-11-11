@@ -5,7 +5,7 @@ import org.digma.intellij.plugin.model.rest.activation.DiscoveredDataResponse;
 import org.digma.intellij.plugin.model.rest.assets.AssetDisplayInfo;
 import org.digma.intellij.plugin.model.rest.codelens.*;
 import org.digma.intellij.plugin.model.rest.codespans.CodeContextSpans;
-import org.digma.intellij.plugin.model.rest.common.SpanHistogramQuery;
+import org.digma.intellij.plugin.model.rest.common.*;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.env.*;
 import org.digma.intellij.plugin.model.rest.environment.Env;
@@ -172,4 +172,6 @@ public interface AnalyticsProvider extends Closeable {
     List<SpanEnvironment> getSpanEnvironmentsStats(String spanCodeObjectId);
 
     DiscoveredDataResponse getDiscoveredData();
+
+    SpanInfoByUid resolveSpanByUid(String uid);
 }

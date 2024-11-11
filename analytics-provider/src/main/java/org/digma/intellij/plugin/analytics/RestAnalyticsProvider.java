@@ -11,7 +11,7 @@ import org.digma.intellij.plugin.model.rest.activation.DiscoveredDataResponse;
 import org.digma.intellij.plugin.model.rest.assets.AssetDisplayInfo;
 import org.digma.intellij.plugin.model.rest.codelens.*;
 import org.digma.intellij.plugin.model.rest.codespans.CodeContextSpans;
-import org.digma.intellij.plugin.model.rest.common.SpanHistogramQuery;
+import org.digma.intellij.plugin.model.rest.common.*;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.env.*;
 import org.digma.intellij.plugin.model.rest.environment.Env;
@@ -487,6 +487,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable, Base
     @Override
     public DiscoveredDataResponse getDiscoveredData() {
         return execute(client.analyticsProvider::getDiscoveredData);
+    }
+
+    @Override
+    public SpanInfoByUid resolveSpanByUid(String uid){
+        return execute(() -> client.analyticsProvider.resolveSpanByUid(uid));
     }
 
     @Override
@@ -1284,5 +1289,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable, Base
         })
         @GET("CodeAnalytics/discovered-data")
         Call<DiscoveredDataResponse> getDiscoveredData();
+
+        @Headers({
+                "Content-Type:application/json"
+        })
+        @GET("spans/spanCodeObjectId/{uid}")
+        Call<SpanInfoByUid> resolveSpanByUid(@Path("uid") String uid);
     }
 }

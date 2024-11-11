@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.intellij.openapi.project.Project
 import org.apache.maven.artifact.versioning.ComparableVersion
 import org.cef.browser.CefBrowser
-import org.digma.intellij.plugin.analytics.getVersion
+import org.digma.intellij.plugin.analytics.getBackendVersion
 import org.digma.intellij.plugin.common.newerThan
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.highlights.HighlightsRequest
@@ -20,7 +20,7 @@ class HighlightsMessageRouterHandler(project: Project) : BaseCommonMessageRouter
 
     override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
 
-        val version = getVersion(project)
+        val version = getBackendVersion(project)
         val comparableVersion = ComparableVersion(version)
         if (version == "unknown" || comparableVersion.newerThan(ComparableVersion("0.3.7"))) {
             when (action) {

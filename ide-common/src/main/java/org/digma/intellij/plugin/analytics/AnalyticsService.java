@@ -5,6 +5,7 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.JBColor;
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.maven.artifact.versioning.ComparableVersion;
 import org.digma.intellij.plugin.auth.AuthManager;
 import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
@@ -14,7 +15,7 @@ import org.digma.intellij.plugin.model.rest.activation.DiscoveredDataResponse;
 import org.digma.intellij.plugin.model.rest.assets.AssetDisplayInfo;
 import org.digma.intellij.plugin.model.rest.codelens.*;
 import org.digma.intellij.plugin.model.rest.codespans.CodeContextSpans;
-import org.digma.intellij.plugin.model.rest.common.SpanHistogramQuery;
+import org.digma.intellij.plugin.model.rest.common.*;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.env.*;
 import org.digma.intellij.plugin.model.rest.environment.Env;
@@ -32,7 +33,7 @@ import org.digma.intellij.plugin.model.rest.version.*;
 import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.ui.*;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.*;
 
 import java.io.Closeable;
 import java.lang.reflect.*;
@@ -379,7 +380,7 @@ public class AnalyticsService implements Disposable {
                 analyticsProviderProxy.getIssuesReportStats(queryParams));
     }
 
-    public String getServiceReport(@NotNull String  queryParams) throws AnalyticsServiceException {
+    public String getServiceReport(@NotNull String queryParams) throws AnalyticsServiceException {
         return executeCatching(() ->
                 analyticsProviderProxy.getServiceReport(queryParams));
     }
@@ -559,6 +560,34 @@ public class AnalyticsService implements Disposable {
     public HttpResponse lowLevelCall(HttpRequest request) throws AnalyticsServiceException {
         return executeCatching(() -> analyticsProviderProxy.lowLevelCall(request));
     }
+
+
+    @Nullable
+    public SpanInfoByUid resolveSpanByUid(String uid) throws AnalyticsServiceException {
+
+        if (backendVersionOlderThen("0.3.155")) {
+            return null;
+        }
+
+        return executeCatching(() -> analyticsProviderProxy.resolveSpanByUid(uid));
+
+    }
+
+
+    private boolean backendVersionOlderThen(String version) {
+        String backendVersion = BackendInfoHolder.getInstance(project).getAbout().getApplicationVersion();
+
+        //dev environment may return unknown
+        if ("unknown".equalsIgnoreCase(backendVersion)) {
+            return false;
+        }
+
+        ComparableVersion currentBackendVersion = new ComparableVersion(backendVersion);
+        ComparableVersion requiredBackendVersion = new ComparableVersion(version);
+
+        return currentBackendVersion.compareTo(requiredBackendVersion) < 0;
+    }
+
 
     @Override
     public void dispose() {

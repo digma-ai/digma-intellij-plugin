@@ -21,7 +21,7 @@ class GoToSpanCommand : AbstractApiCommand() {
 
         Log.log(
             logger::trace,
-            "gotToSpan called with spanUid={}, targetTab={}, projectName={}, thread={}",
+            "GoToSpan called with spanUid={}, targetTab={}, projectName={}, thread={}",
             spanUid,
             targetTab,
             project.name,

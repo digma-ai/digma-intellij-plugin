@@ -11,7 +11,7 @@ class OpenReportCommand : AbstractApiCommand(){
 
         Log.log(
             logger::trace,
-            "openReport called with projectName={}, thread={}",
+            "OpenReport called with projectName={}, thread={}",
             project.name,
             Thread.currentThread().name
         )

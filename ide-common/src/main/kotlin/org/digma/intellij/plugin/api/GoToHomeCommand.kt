@@ -19,7 +19,7 @@ class GoToHomeCommand : AbstractApiCommand(){
 
         Log.log(
             logger::trace,
-            "gotToHome called with environmentId={}, targetTab={}, projectName={}, thread={}",
+            "GoToHome called with environmentId={}, targetTab={}, projectName={}, thread={}",
             environmentId,
             targetTab,
             project.name,

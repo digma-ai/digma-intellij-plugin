@@ -193,6 +193,16 @@ public class ExceptionUtils {
 
     }
 
+    public static boolean is404NotFoundException(@NotNull Throwable exception) {
+        if (exception.getMessage() != null &&
+                exception.getMessage().trim().toLowerCase().contains("404")){
+            return true;
+        }
+
+        var realCause = findRootCause(exception);
+        return realCause.getMessage() != null &&
+                realCause.getMessage().trim().toLowerCase().contains("404");
+    }
 
     public static boolean isSslConnectionException(@NotNull Throwable e) {
         return findSslException(e) != null;

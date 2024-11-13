@@ -30,6 +30,9 @@ fun <T> runInReadAccessWithResultAndRetryIgnorePCE(computable: Computable<T>): T
 
 
 fun runInReadAccessInSmartMode(project: Project, runnable: Runnable) {
+    if (project.isDisposed){
+        throw RuntimeException("project is disposed")
+    }
     if (isReadAccessAllowed()) {
         runnable.run()
     } else {
@@ -39,6 +42,9 @@ fun runInReadAccessInSmartMode(project: Project, runnable: Runnable) {
 
 
 fun <T> runInReadAccessInSmartModeWithResult(project: Project, computable: Computable<T>): T {
+    if (project.isDisposed){
+        throw RuntimeException("project is disposed")
+    }
     return if (isReadAccessAllowed()) {
         computable.compute()
     } else {
@@ -49,6 +55,9 @@ fun <T> runInReadAccessInSmartModeWithResult(project: Project, computable: Compu
 
 fun runInReadAccessInSmartModeWithRetryIgnorePCE(project: Project, runnable: Runnable) {
     runWIthRetryIgnorePCE({
+        if (project.isDisposed){
+            throw RuntimeException("project is disposed")
+        }
         if (isReadAccessAllowed()) {
             runnable.run()
         } else {
@@ -59,6 +68,9 @@ fun runInReadAccessInSmartModeWithRetryIgnorePCE(project: Project, runnable: Run
 
 fun <T> runInReadAccessInSmartModeWithResultAndRetryIgnorePCE(project: Project, computable: Computable<T>): T {
     return runWIthRetryWithResultIgnorePCE({
+        if (project.isDisposed){
+            throw RuntimeException("project is disposed")
+        }
         if (isReadAccessAllowed()) {
             computable.compute()
         } else {

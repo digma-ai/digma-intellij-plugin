@@ -316,7 +316,7 @@ tasks {
             "org.digma.plugin.auth.debug" to "true",
 
             //see https://kotlin.github.io/analysis-api/testing-in-k2-locally.html
-            "idea.kotlin.plugin.use.k2" to "true"
+            "idea.kotlin.plugin.use.k2" to "true",
 
 //            "idea.ProcessCanceledException" to "disabled"
 
@@ -330,6 +330,10 @@ tasks {
             //can also change the url from where the jar is downloaded when IDE starts
             //"org.digma.otel.extensionUrl" to "some url
             //"org.digma.otel.digmaAgentUrl" to "some url
+
+
+            //custom compose file url
+            //"org.digma.plugin.custom.docker-compose.url" to "https://raw.githubusercontent.com/digma-ai/digma/refs/heads/0.2.73/docker/docker-compose.yml"
 
         )
 

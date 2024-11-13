@@ -11,6 +11,7 @@ import com.intellij.util.concurrency.AppExecutorUtil
 import com.jetbrains.rd.util.AtomicInteger
 import org.apache.commons.lang3.time.StopWatch
 import org.digma.intellij.plugin.analytics.ApiErrorHandler
+import org.digma.intellij.plugin.analytics.isCentralized
 import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
 import org.digma.intellij.plugin.common.FrequencyDetector
 import org.digma.intellij.plugin.common.findActiveProject
@@ -260,11 +261,16 @@ private fun paused(passable: Boolean): Boolean {
     return try {
         //will fail in tests
         passable &&
-                (ApiErrorHandler.getInstance().isNoConnectionMode() || DigmaDefaultAccountHolder.getInstance().account == null)
+                (ApiErrorHandler.getInstance().isNoConnectionMode() || isNoAccountInCentralized())
     } catch (e: Throwable) {
         false
     }
 }
+
+private fun isNoAccountInCentralized():Boolean{
+    return isCentralized() && DigmaDefaultAccountHolder.getInstance().account == null
+}
+
 
 /**
  * starts a periodic task , canceling the task when Disposable is disposed.

@@ -1,13 +1,9 @@
 package org.digma.intellij.plugin.dashboard;
 
-import com.intellij.openapi.fileEditor.FileEditor;
-import com.intellij.openapi.fileEditor.FileEditorPolicy;
-import com.intellij.openapi.fileEditor.FileEditorProvider;
+import com.intellij.openapi.fileEditor.*;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.ui.jcef.JBCefApp;
-import org.jetbrains.annotations.NonNls;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.*;
 
 
 public class DashboardFileEditorProvider implements FileEditorProvider {
@@ -16,7 +12,7 @@ public class DashboardFileEditorProvider implements FileEditorProvider {
 
     @Override
     public boolean accept(@NotNull Project project, @NotNull VirtualFile file) {
-        return JBCefApp.isSupported() && DashboardVirtualFile.isDashboardVirtualFile(file);
+        return DashboardVirtualFile.isDashboardVirtualFile(file);
     }
 
     @Override

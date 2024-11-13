@@ -3,7 +3,6 @@ package org.digma.intellij.plugin.jaegerui;
 import com.intellij.openapi.fileEditor.*;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.ui.jcef.JBCefApp;
 import org.jetbrains.annotations.*;
 
 public class JaegerUIFileEditorProvider implements FileEditorProvider {
@@ -13,7 +12,7 @@ public class JaegerUIFileEditorProvider implements FileEditorProvider {
 
     @Override
     public boolean accept(@NotNull Project project, @NotNull VirtualFile file) {
-        return JBCefApp.isSupported() && JaegerUIVirtualFile.isJaegerUIVirtualFile(file);
+        return JaegerUIVirtualFile.isJaegerUIVirtualFile(file);
     }
 
     @Override

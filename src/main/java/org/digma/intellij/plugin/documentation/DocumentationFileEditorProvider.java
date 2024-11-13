@@ -3,7 +3,6 @@ package org.digma.intellij.plugin.documentation;
 import com.intellij.openapi.fileEditor.*;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.ui.jcef.JBCefApp;
 import org.jetbrains.annotations.*;
 
 public class DocumentationFileEditorProvider implements FileEditorProvider {
@@ -13,7 +12,7 @@ public class DocumentationFileEditorProvider implements FileEditorProvider {
 
     @Override
     public boolean accept(@NotNull Project project, @NotNull VirtualFile file) {
-        return JBCefApp.isSupported() && DocumentationVirtualFile.isDocumentationVirtualFile(file);
+        return DocumentationVirtualFile.isDocumentationVirtualFile(file);
     }
 
     @Override

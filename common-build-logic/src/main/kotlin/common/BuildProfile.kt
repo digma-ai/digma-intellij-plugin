@@ -78,7 +78,7 @@ fun Project.useBinaryInstaller(): Boolean = !this.currentProfile().isEAP
 object BuildProfiles {
 
     @Suppress("EnumEntryName")
-    enum class Profile { p231, p232, p233, p241, p242, p243 }
+    enum class Profile { p231, p232, p233, p241, p242, p243, p251 }
 
     fun Profile.greaterThan(other:Profile):Boolean{
         val thisNumber = this.name.substring(1).toInt()
@@ -112,8 +112,8 @@ object BuildProfiles {
     //update this list as new profiles are added or removed
     private val profileAliases = mapOf(
         "lowest" to Profile.p231.name,
-        "latest" to Profile.p242.name,
-        "eap" to Profile.p243.name,
+        "latest" to Profile.p243.name,
+        "eap" to Profile.p251.name,
     )
 
 
@@ -217,12 +217,27 @@ object BuildProfiles {
         ),
 
         Profile.p243 to BuildProfile(
+            profile = Profile.p243,
+            platformVersion = "2024.3",
+            riderVersion = "2024.3",
+            pycharmVersion = "2024.3",
+            riderTargetFramework = "net8.0",
+            riderResharperVersionConstant = "PROFILE_2023_2;PROFILE_2024_3",
+            platformVersionCode = "243",
+            pluginSinceBuild = "243",
+            pluginUntilBuild = "243.*",
+            kotlinTarget = KotlinVersion.KOTLIN_2_0,
+            kotlinJvmTarget = JvmTarget.JVM_21,
+            javaVersion = JavaVersion.VERSION_21.majorVersion,
+        ),
+
+        //todo: next EAP
+        Profile.p251 to BuildProfile(
             isEAP = true,
             profile = Profile.p243,
-            platformVersion = "243.21565-EAP-CANDIDATE-SNAPSHOT",
-            //todo: Digma.Rider.Tests is disabled because it doesn't compile with 2024.3-EAP1-SNAPSHOT, there is mismatch with jetbrains packages try to build it with next snapshots.
-            riderVersion = "2024.3-EAP5-SNAPSHOT",
-            pycharmVersion = "243-EAP-SNAPSHOT",
+            platformVersion = "2024.3",
+            riderVersion = "2024.3",
+            pycharmVersion = "2024.3",
             riderTargetFramework = "net8.0",
             riderResharperVersionConstant = "PROFILE_2023_2;PROFILE_2024_3",
             platformVersionCode = "243",

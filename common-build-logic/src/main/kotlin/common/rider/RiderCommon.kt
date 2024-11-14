@@ -24,8 +24,7 @@ fun rdGenVersionByProfile(profile: BuildProfiles.Profile): String {
         BuildProfiles.Profile.p233 -> "2023.3.2"
         BuildProfiles.Profile.p241 -> "2023.3.2"
         BuildProfiles.Profile.p242 -> "2024.1.1"
-        //todo: for rider 2024.3 needs a new rdgen, 2024.3
-        // update the version when new one comes out
-        BuildProfiles.Profile.p243 -> "2024.3-pre2"
+        BuildProfiles.Profile.p243 -> "2024.3.1"
+        BuildProfiles.Profile.p251 -> "2024.3.1"
     }
 }

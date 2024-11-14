@@ -6,7 +6,7 @@ import java.util.Objects
 data class CodeLens(
     val id: String,
     val codeMethod: String, //method this code lens should appear on
-    val scopeCodeObjectId: String,
+    val scopeCodeObjectId: String?,
     val lensTitle: String,
     val importance: Int,
 ) {

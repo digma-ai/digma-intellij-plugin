@@ -205,7 +205,7 @@ public class CodeLensProvider implements Disposable {
                 String title = priorityEmoji + decorator.getTitle();
 
                 //title is used as id of CodeLens
-                CodeLens codeLens = new CodeLens(decorator.getTitle(), codeObjectId, decorator.getCodeObjectId(), title, importance);
+                CodeLens codeLens = new CodeLens(decorator.getTitle(), codeObjectId, decorator.getScopeCodeObjectId(), title, importance);
                 codeLens.setLensDescription(decorator.getDescription());
                 codeLens.setLensMoreText("Go to " + title);
 
@@ -219,7 +219,7 @@ public class CodeLensProvider implements Disposable {
 
     private static CodeLens buildCodeLensOfActive(String methodId, Decorator liveDecorator) {
         var title = Unicodes.getLIVE_CIRCLE();
-        CodeLens codeLens = new CodeLens(liveDecorator.getTitle(), methodId, liveDecorator.getCodeObjectId(), title, 1);
+        CodeLens codeLens = new CodeLens(liveDecorator.getTitle(), methodId, liveDecorator.getScopeCodeObjectId(), title, 1);
         codeLens.setLensDescription(liveDecorator.getDescription());
 
         return codeLens;

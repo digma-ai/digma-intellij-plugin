@@ -148,6 +148,7 @@ class CodeLensHost(project: Project) : LifetimedProjectComponent(project) {
     private fun CodeLens.toRiderCodeLensInfo(psiUri: String) = RiderCodeLensInfo(
         id = id,
         codeObjectId = codeMethod,
+        scopeCodeObjectId = scopeCodeObjectId,
         lensTitle = lensTitle,
         lensDescription = lensDescription,
         moreText = lensMoreText,

@@ -1,6 +1,25 @@
 # Changelog
 
-## [2.0.395] - 2024-10-30
+## [2.0.396] - 2024-11-21
+
+- update build profiles by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2576
+- ignore-FileNotFoundException-in-fixFile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2577
+- reduce engine status calls Closes #2575 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2581
+- fix-docker-command-on-windows Closes #2578 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2583
+- Update UI by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2574
+- Upgrade intellij platform gradle plugin 2.1.0 Closes #2582 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2586
+- Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2585
+- Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2593
+- External requests api Closes #2587 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2591
+- fix-force-update-for-old-backend Closes #2589 Closes #2592 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2594
+- add-project-disposed-checks by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2598
+- fix-file-editor-providers-accept Closes #2596 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2597
+- Update build profile 243 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2599
+- fix code lens scope for error hotspot Closes #2541 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2600
+- stop-reporting-AutoRefreshStatistics-event by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2601
+- Update UI by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2588
+
+## 2.0.395 - 2024-10-30
 
 - Added messages for pin/unpin by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/2569
 - Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2571

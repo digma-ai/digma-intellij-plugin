@@ -9,6 +9,7 @@ import com.intellij.openapi.util.Disposer
 import org.apache.maven.artifact.versioning.ComparableVersion
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
+import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.analytics.ApiClientChangedEvent
 import org.digma.intellij.plugin.common.DisposableAdaptor
 import org.digma.intellij.plugin.common.ExceptionUtils
@@ -182,8 +183,31 @@ class AggressiveUpdateService(val project: Project) : DisposableAdaptor {
 
             //if getVersions failed try to get server version from getAbout.
             //if there is no connection getAbout will throw an AnalyticsServiceException
-            val about = AnalyticsService.getInstance(project).about
-            Versions.fromAboutResponse(about)
+            try {
+                val about = AnalyticsService.getInstance(project).about
+                Versions.fromAboutResponse(about)
+            }catch (e: AnalyticsServiceException){
+                //if getAbout throws 404 we assume the backend version is very old and return
+                // Versions with very old backend version so that force update will show for the user to update the backend.
+                // todo: this is a workaround for users with very old backend version that didn't update the backend for long time but
+                //  did update the plugin. in that case the plugin will not work because many apis changed. we want to force update the backend
+                //  for those users.
+                //  can be removed at some point. maybe around mid 2025
+                if (ExceptionUtils.is404NotFoundException(e)) {
+                    Versions(
+                        currentPluginVersion = getPluginVersion(),
+                        latestRecommendedPluginVersion = null,
+                        forcePluginVersion = null,
+                        currentBackendVersion = "0.1.0",
+                        minimalRequiredBackendVersionInLocalSettings = InternalFileSettings.getAggressiveUpdateServiceMinimalBackendVersion(),
+                        latestRecommendedBackendVersion = null,
+                        forceBackendVersion = null,
+                        backendDeploymentType = BackendDeploymentType.DockerCompose
+                    )
+                }else{
+                    throw e
+                }
+            }
         }
     }
 

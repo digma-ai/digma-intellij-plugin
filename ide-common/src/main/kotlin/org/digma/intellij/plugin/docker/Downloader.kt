@@ -75,11 +75,10 @@ class Downloader {
     }
 
 
-
-    private fun downloadNow() {
+    private fun downloadNow(url: String = COMPOSE_FILE_URL) {
         ensureDirectoryExist()
         Log.log(logger::info, "trying to download latest compose file")
-        downloadAndCopyFile(URL(COMPOSE_FILE_URL), composeFile)
+        downloadAndCopyFile(URL(url), composeFile)
     }
 
     private fun downloadAndCopyFile(url: URL, toFile: File) {
@@ -129,6 +128,14 @@ class Downloader {
 
 
     fun downloadComposeFile(forceDownloadLatest: Boolean = false): Boolean {
+
+        val customDownloadUrl: String? = System.getProperty("org.digma.plugin.custom.docker-compose.url")
+        if (customDownloadUrl != null) {
+            Log.log(logger::warn, "downloading compose file from {}", customDownloadUrl)
+            unpack()
+            downloadNow(customDownloadUrl)
+            return true
+        }
 
         if (composeFile.exists() && !forceDownloadLatest) {
             Log.log(logger::warn, "compose file already exists {}", composeFile)

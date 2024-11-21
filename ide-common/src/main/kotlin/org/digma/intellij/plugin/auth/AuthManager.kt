@@ -560,7 +560,7 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
                                 val timeSinceLastStatistics = (now - statisticsStartTime).inWholeMilliseconds.toDuration(DurationUnit.MILLISECONDS)
 
                                 //detect too many refresh in a short time. in correct functioning there should never be more than 5 refresh in 1 hour
-                                if (refreshCounter > 5 && timeSinceLastStatistics < 1.hours) {
+                                if (refreshCounter > 5 && timeSinceLastStatistics <= 1.hours) {
                                     ErrorReporter.getInstance().reportError(
                                         "AuthManager.autoRefreshJob", "too many refresh", mapOf(
                                             "period.minutes" to timeSinceLastStatistics.inWholeMinutes,
@@ -571,13 +571,15 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
 
                                 //send statistics approximately every 1 hour , this will help detect incorrect functioning on this job.
                                 if (timeSinceLastStatistics >= 1.hours) {
-                                    statisticsStartTime = now
-                                    reportAuthPosthogEvent(
-                                        "AutoRefreshStatistics", "AutoRefreshJob", null, mapOf(
-                                            "period.minutes" to timeSinceLastStatistics.inWholeMinutes,
-                                            "refresh.counter" to refreshCounter
+                                    withAuthManagerDebug {
+                                        reportAuthPosthogEvent(
+                                            "AutoRefreshStatistics", "AutoRefreshJob", null, mapOf(
+                                                "period.minutes" to timeSinceLastStatistics.inWholeMinutes,
+                                                "refresh.counter" to refreshCounter
+                                            )
                                         )
-                                    )
+                                    }
+                                    statisticsStartTime = now
                                     refreshCounter = 0
                                 }
 

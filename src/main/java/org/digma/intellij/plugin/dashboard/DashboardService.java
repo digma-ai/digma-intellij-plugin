@@ -8,6 +8,7 @@ import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.analytics.*;
 import org.digma.intellij.plugin.common.EDT;
+import org.digma.intellij.plugin.events.OpenDashboardRequest;
 import org.digma.intellij.plugin.reload.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -25,6 +26,19 @@ public final class DashboardService implements Disposable, ReloadableJCefContain
     public DashboardService(Project project) {
         this.project = project;
         ApplicationManager.getApplication().getService(ReloadService.class).register(this, this);
+
+
+        project.getMessageBus().connect(this).subscribe(OpenDashboardRequest.getOPEN_DASHBOARD_REQUEST_TOPIC(), new OpenDashboardRequest() {
+            @Override
+            public void openReportRequest(@NotNull String dashboardName) {
+                openReport(dashboardName);
+            }
+
+            @Override
+            public void openDashboardRequest(@NotNull String dashboardName) {
+                openDashboard(dashboardName);
+            }
+        });
     }
 
     @Override
@@ -96,8 +110,6 @@ public final class DashboardService implements Disposable, ReloadableJCefContain
     public String getDashboard(@NotNull Map<String, String> queryParams) throws AnalyticsServiceException {
         return AnalyticsService.getInstance(project).getDashboard(queryParams);
     }
-
-
 
 
     @Override

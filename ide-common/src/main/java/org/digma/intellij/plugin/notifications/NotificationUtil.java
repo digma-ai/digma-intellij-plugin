@@ -33,6 +33,14 @@ public class NotificationUtil {
                 .notify(project);
     }
 
+    public static void notifyFadingInfo(Project project, String content) {
+
+        NotificationGroupManager.getInstance()
+                .getNotificationGroup(DIGMA_FADING_BALLOON_NOTIFICATION_GROUP)
+                .createNotification(content, NotificationType.INFORMATION)
+                .notify(project);
+    }
+
     public static void notifyChangingEnvironment(Project project, String oldEnv,String newEnv) {
 
         var content = "Digma: Changing environment " + oldEnv + " to " + newEnv;

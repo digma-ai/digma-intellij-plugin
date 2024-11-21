@@ -23,6 +23,7 @@ import org.digma.intellij.plugin.document.CodeLensUtils.psiFileToKey
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.lens.CodeLens
+import org.digma.intellij.plugin.notifications.NotificationUtil
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.scope.ScopeContext
@@ -222,12 +223,17 @@ class CodeLensService(private val project: Project) : Disposable {
                         selectedEditor?.caretModel?.moveToOffset(it.textOffset)
                     }
                 }
-                Backgroundable.ensurePooledThreadWithoutReadAccess {
-                    val contextPayload = objectToJsonNode(ChangeScopeMessagePayload(lens))
-                    val scopeContext = ScopeContext("IDE/CODE_LENS_CLICKED", contextPayload)
-                    ScopeManager.getInstance(project).changeScope(SpanScope(lens.scopeCodeObjectId), scopeContext, null)
-                }
 
+                val scopeCodeObjectId = lens.scopeCodeObjectId
+                if (scopeCodeObjectId == null){
+                    NotificationUtil.notifyFadingInfo(project,"No asset found for method: ${lens.codeMethod}")
+                }else{
+                    Backgroundable.ensurePooledThreadWithoutReadAccess {
+                        val contextPayload = objectToJsonNode(ChangeScopeMessagePayload(lens))
+                        val scopeContext = ScopeContext("IDE/CODE_LENS_CLICKED", contextPayload)
+                        ScopeManager.getInstance(project).changeScope(SpanScope(scopeCodeObjectId), scopeContext, null)
+                    }
+                }
             } catch (e: Exception) {
                 Log.warnWithException(logger, project, e, "error in ClickHandler {}", e)
                 ErrorReporter.getInstance().reportError(project, "${this::class.simpleName}.ClickHandler.invoke", e)

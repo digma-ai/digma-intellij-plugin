@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.ui.jcef
 
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
 import org.cef.callback.CefSchemeHandlerFactory
@@ -39,15 +40,13 @@ abstract class BaseSchemeHandlerFactory : CefSchemeHandlerFactory {
         val url = getUrl(request)
 
         if (url != null) {
-
             val host = url.host
             val file = url.file
 
-
-            if (ApiProxyResourceHandler.isApiProxyCall(url)) {
-                return ApiProxyResourceHandler(project)
+            val proxyHandler = createProxyHandler(project, url)
+            if (proxyHandler != null) {
+                return proxyHandler
             }
-
 
             if (getDomain() == host && getSchema() == schemeName) {
                 var resourceName = getResourceFolderName() + file
@@ -73,7 +72,9 @@ abstract class BaseSchemeHandlerFactory : CefSchemeHandlerFactory {
         }
     }
 
-
+    protected open fun createProxyHandler(project: Project, url: URL): CefResourceHandler?{
+        return null
+    }
     abstract fun createResourceHandler(resourceName: String, resourceExists: Boolean, browser: CefBrowser): CefResourceHandler
     abstract fun getSchema(): String
     abstract fun getDomain(): String

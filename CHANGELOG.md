@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.396] - 2024-11-21
+## [2.0.397] - 2024-11-23
+
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2603
+
+## 2.0.396 - 2024-11-21
 
 - update build profiles by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2576
 - ignore-FileNotFoundException-in-fixFile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2577

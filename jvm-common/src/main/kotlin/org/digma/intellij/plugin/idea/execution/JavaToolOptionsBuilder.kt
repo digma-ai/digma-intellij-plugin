@@ -299,20 +299,19 @@ open class JavaToolOptionsBuilder(
     open fun build(): String {
 
         //always disable extended observability extension because we changed to digma-agent
-        disableExtendedObservabilityExtension()
+        //disableExtendedObservabilityExtension()
 
         return javaToolOptions.toString()
     }
 
 
-    private fun disableExtendedObservabilityExtension() {
-        //todo: need to disable the extended observability extension completely in the otel agent extension
-        // project after some time that we use digma-agent and all users upgraded the plugin.
-        // can't disable it yet because some users may still use older version of the plugin and are using extended observability.
-        javaToolOptions
-            .append("-Dotel.instrumentation.digma-methods.enabled=false")
-            .append(" ")
-    }
+//don't need to disable digma-methods, it is not included in the extension anymore
+//    private fun disableExtendedObservabilityExtension() {
+//        // can't disable it yet because some users may still use older version of the plugin and are using extended observability.
+//        javaToolOptions
+//            .append("-Dotel.instrumentation.digma-methods.enabled=false")
+//            .append(" ")
+//    }
 
 
     open fun getExporterUrl(): String {

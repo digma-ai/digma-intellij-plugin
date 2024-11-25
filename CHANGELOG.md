@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.397] - 2024-11-23
+## [2.0.398] - 2024-11-25
+
+- upgrade otel agent Closes #2602 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2604
+
+## 2.0.397 - 2024-11-23
 
 - Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2603
 

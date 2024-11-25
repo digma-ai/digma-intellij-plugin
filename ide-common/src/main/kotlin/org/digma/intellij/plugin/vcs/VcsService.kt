@@ -86,15 +86,18 @@ class VcsService(project: Project) : BaseVcsService(project) {
         return try {
             future.get(5, TimeUnit.SECONDS)
         } catch (e: TimeoutException) {
-            ErrorReporter.getInstance()
-                .reportError(
-                    project, "VcsService.getCommitIdForCurrentProject.timeout", e, mapOf(
-                        SEVERITY_PROP_NAME to SEVERITY_LOW
-                    )
-                )
-            Log.warnWithException(LOGGER, project, e, "error in getCommitIdForCurrentProject")
+            //don't report timeout, it happens too often and there is nothing we can do about it
+//            ErrorReporter.getInstance()
+//                .reportError(
+//                    project, "VcsService.getCommitIdForCurrentProject.timeout", e, mapOf(
+//                        SEVERITY_PROP_NAME to SEVERITY_LOW
+//                    )
+//                )
+            future.cancel(true)
+            Log.debugWithException(LOGGER, project, e, "error in getCommitIdForCurrentProject")
             null
         } catch (e: java.lang.Exception) {
+            future.cancel(true)
             ErrorReporter.getInstance().reportError(project, "VcsService.getCommitIdForCurrentProject", e)
             Log.warnWithException(LOGGER, project, e, "error in getCommitIdForCurrentProject")
             null

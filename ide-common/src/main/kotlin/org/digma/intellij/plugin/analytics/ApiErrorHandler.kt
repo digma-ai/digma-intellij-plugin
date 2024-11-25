@@ -422,9 +422,11 @@ class ApiErrorHandler : DisposableAdaptor {
     }
 
     private fun fireConnectionLost(project: Project) {
-        project.messageBus
-            .syncPublisher(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC)
-            .connectionLost()
+        if (isProjectValid(project)) {
+            project.messageBus
+                .syncPublisher(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC)
+                .connectionLost()
+        }
     }
 
 
@@ -435,9 +437,11 @@ class ApiErrorHandler : DisposableAdaptor {
     }
 
     private fun fireConnectionGained(project: Project) {
-        project.messageBus
-            .syncPublisher(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC)
-            .connectionGained()
+        if (isProjectValid(project)) {
+            project.messageBus
+                .syncPublisher(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC)
+                .connectionGained()
+        }
     }
 
     private fun doForAllProjects(consumer: Consumer<Project>) {

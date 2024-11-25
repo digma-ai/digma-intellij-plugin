@@ -41,7 +41,7 @@
     <script>
       @GLOBAL_ENV_VARS@
 
-      window.apiBaseUrl = "${jaeger_url}";
+      window.apiBaseUrl = "";
       window.initialRoutePath = "${initial_route}";
       window.embeddedMode = true;
       window.isUserDefinedJaegerQueryURL = ${isUserChangedJaegerQueryUrl};

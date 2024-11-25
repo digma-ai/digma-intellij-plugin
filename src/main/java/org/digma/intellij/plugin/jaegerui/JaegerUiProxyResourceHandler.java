@@ -30,7 +30,7 @@ public class JaegerUiProxyResourceHandler implements CefResourceHandler {
     }
 
     public static boolean isJaegerQueryCall(URL url) {
-        return url.getPath().startsWith(JaegerUIConstants.JAEGER_API_PROXY_PATH);
+        return url.getPath().startsWith("/api/");
     }
 
     @Override
@@ -45,6 +45,10 @@ public class JaegerUiProxyResourceHandler implements CefResourceHandler {
                     .url(apiUrl)
                     .build();
             okHttp3Response = okHttpClient.newCall(okHttp3Request).execute();
+            var authFailureReason = getAuthFailureReason(okHttp3Response);
+            if (authFailureReason != null && !authFailureReason.isBlank()) {
+                okHttp3Response = buildAuthFailureResponse(okHttp3Request, okHttp3Response, authFailureReason);
+            }
             callback.Continue();
             return true;
         } catch (Exception e) {
@@ -54,11 +58,35 @@ public class JaegerUiProxyResourceHandler implements CefResourceHandler {
         }
     }
 
+    @Nullable
+    private static String getAuthFailureReason(Response response){
+        final var headerName = "X-Auth-Fail-Reason";
+        var reason = response.header(headerName);
+        if(reason == null && response.priorResponse() != null)
+            reason = response.priorResponse().header(headerName);
+        return reason;
+    }
+
+    private static Response buildAuthFailureResponse(Request okHttp3Request, Response response, String authFailureReason) {
+        return new Response(
+                okHttp3Request,
+                response.protocol(),
+                "Authentication failed", 401,
+                response.handshake(),
+                Headers.of(),
+                ResponseBody.create(
+                        "Authentication failed: " + authFailureReason,
+                        MediaType.parse("text/html")
+                ),
+                null, null, null,
+                0, 0, null);
+    }
+
     @NotNull
     private URL getApiUrl(CefRequest cefRequest) throws MalformedURLException {
         var requestUrl = new URL(cefRequest.getURL());
         return new URL(jaegerQueryUrl.getProtocol(), jaegerQueryUrl.getHost(), jaegerQueryUrl.getPort(),
-                requestUrl.getPath().substring(JaegerUIConstants.JAEGER_API_PROXY_PATH.length()) + "?" + requestUrl.getQuery());
+                requestUrl.getPath() + "?" + requestUrl.getQuery());
     }
 
     @NotNull

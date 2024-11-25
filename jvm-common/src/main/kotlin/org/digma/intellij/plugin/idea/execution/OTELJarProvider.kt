@@ -8,16 +8,12 @@ import java.io.FileOutputStream
 import java.net.URL
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
-import java.util.Properties
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.io.path.deleteIfExists
 
 private const val JARS_DIR_PREFIX = "digma-otel-jars"
 private const val RESOURCE_LOCATION = "otelJars"
 
-private const val OTEL_AGENT_JAR_PROP_NAME = "otel-agent"
-private const val DIGMA_EXTENSION_JAR_PROP_NAME = "digma-extension"
-private const val DIGMA_AGENT_JAR_PROP_NAME = "digma-agent"
 private const val OTEL_AGENT_JAR_NAME = "opentelemetry-javaagent.jar"
 private const val DIGMA_AGENT_EXTENSION_JAR_NAME = "digma-otel-agent-extension.jar"
 private const val DIGMA_AGENT_JAR_NAME = "digma-agent.jar"
@@ -49,19 +45,16 @@ class OTELJarProvider {
 
     private val downloadDir: File = File(System.getProperty("java.io.tmpdir"), JARS_DIR_PREFIX)
 
-    private val jarsUrls = Properties()
-
     private val lock = ReentrantLock(true)
 
 
     init {
 
-        jarsUrls.load(this::class.java.getResourceAsStream("/jars-urls.properties"))
-
         //unpack and download on service initialization.
         //will happen per IDE session
         Thread {
-            unpackFilesAndDownloadLatest()
+            unpackFiles()
+            downloadCustomJars()
         }.start()
     }
 
@@ -114,8 +107,8 @@ class OTELJarProvider {
 
         Log.log(logger::info, "otel jars do not exists, unpacking..")
 
-        unpackFilesAndDownloadLatest()
-
+        unpackFiles()
+        downloadCustomJars()
     }
 
     private fun filesExist(): Boolean {
@@ -126,7 +119,7 @@ class OTELJarProvider {
     }
 
 
-    private fun unpackFilesAndDownloadLatest() {
+    private fun unpackFiles() {
 
         Log.log(logger::info, "unpacking otel agent jars")
 
@@ -148,8 +141,6 @@ class OTELJarProvider {
                 Log.warnWithException(logger, e, "could not unpack otel jars, hopefully download will succeed.")
             }
         }
-
-        tryDownloadLatest()
     }
 
 
@@ -167,22 +158,28 @@ class OTELJarProvider {
     }
 
 
-    private fun tryDownloadLatest() {
+    private fun downloadCustomJars() {
 
-        Log.log(logger::info, "trying to download latest otel jars")
+        Log.log(logger::info, "trying to download custom otel jars")
 
         val runnable = Runnable {
 
             try {
-                val otelUrl = System.getProperty("org.digma.otel.agentUrl", jarsUrls.getProperty(OTEL_AGENT_JAR_PROP_NAME))
-                val extensionUrl = System.getProperty("org.digma.otel.extensionUrl", jarsUrls.getProperty(DIGMA_EXTENSION_JAR_PROP_NAME))
-                val digmaAgentUrl = System.getProperty("org.digma.otel.digmaAgentUrl", jarsUrls.getProperty(DIGMA_AGENT_JAR_PROP_NAME))
 
-                downloadAndCopyJar(URL(otelUrl), getOtelAgentJar())
-                downloadAndCopyJar(URL(extensionUrl), getDigmaAgentExtensionJar())
-                downloadAndCopyJar(URL(digmaAgentUrl), getDigmaAgentJar())
+                System.getProperty("org.digma.otel.agentUrl")?.let {
+                    downloadAndCopyJar(URL(it), getOtelAgentJar())
+                }
+
+                System.getProperty("org.digma.otel.extensionUrl")?.let {
+                    downloadAndCopyJar(URL(it), getDigmaAgentExtensionJar())
+                }
+
+                System.getProperty("org.digma.otel.digmaAgentUrl")?.let {
+                    downloadAndCopyJar(URL(it), getDigmaAgentJar())
+                }
+
             } catch (e: Exception) {
-                Log.warnWithException(logger, e, "could not download latest otel jars")
+                Log.warnWithException(logger, e, "could not download custom otel jars")
             }
         }
 

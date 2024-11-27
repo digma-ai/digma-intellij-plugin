@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.400] - 2024-11-27
+## [2.0.401] - 2024-11-27
+
+- Jaeger auth support by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/2612
+- Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2613
+
+## 2.0.400 - 2024-11-27
 
 - upgrade-digma-agent-to-2.0.4 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2610
 - Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2611

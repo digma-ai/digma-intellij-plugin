@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.399] - 2024-11-26
+## [2.0.400] - 2024-11-27
+
+- upgrade-digma-agent-to-2.0.4 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2610
+- Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2611
+
+## 2.0.399 - 2024-11-26
 
 - init-docker-service-early-on-startup by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2605
 - stop-reporting-timeout-for-vcsservice by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2606

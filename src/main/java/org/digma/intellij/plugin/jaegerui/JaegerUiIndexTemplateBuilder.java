@@ -11,7 +11,8 @@ import java.util.*;
 
 public class JaegerUiIndexTemplateBuilder extends BaseIndexTemplateBuilder {
 
-    private static final String JAEGER_URL_PARAM_NAME = "jaeger_url";
+    private static final String JAEGER_URL_FOR_LINK_PARAM_NAME = "BASE_URL_STRING_TO_OPEN_LINKS";
+    private static final String JAEGER_URL_FOR_API_PARAM_NAME = "BASE_URL_STRING_TO_FORWARD_API_CALLS";
     private static final String JAEGER_QUERY_URL_CHANGED_FROM_DEFAULT_PARAM_NAME = "isUserChangedJaegerQueryUrl";
     private static final String INITIAL_ROUTE_PARAM_NAME = "initial_route";
 
@@ -27,7 +28,8 @@ public class JaegerUiIndexTemplateBuilder extends BaseIndexTemplateBuilder {
     public void addAppSpecificEnvVariable(@NotNull Project project, @NotNull Map<String, Object> data) {
 
         var didUserChangeJaegerQueryUrl = !(SettingsState.DEFAULT_JAEGER_QUERY_URL.equalsIgnoreCase(SettingsState.getInstance().getJaegerQueryUrl()));
-        data.put(JAEGER_URL_PARAM_NAME, jaegerUIVirtualFile.getJaegerBaseUrl());
+        data.put(JAEGER_URL_FOR_LINK_PARAM_NAME, jaegerUIVirtualFile.getJaegerBaseUrl());
+        data.put(JAEGER_URL_FOR_API_PARAM_NAME, JaegerUIConstants.JAEGER_API_URL);
         data.put(JAEGER_QUERY_URL_CHANGED_FROM_DEFAULT_PARAM_NAME, String.valueOf(didUserChangeJaegerQueryUrl));
 
 

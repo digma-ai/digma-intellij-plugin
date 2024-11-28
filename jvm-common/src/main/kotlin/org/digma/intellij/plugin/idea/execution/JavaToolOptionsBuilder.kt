@@ -61,8 +61,13 @@ open class JavaToolOptionsBuilder(
             javaToolOptions
                 .append("-javaagent:${otelAgentPathProvider.otelAgentPath}")
                 .append(" ")
-                .append("-Dotel.javaagent.extensions=${otelAgentPathProvider.digmaExtensionPath}")
-                .append(" ")
+
+            val useExtension: String? = System.getProperty("org.digma.plugin.useOtelExtension")
+            if (useExtension == null || useExtension == "true") {
+                javaToolOptions
+                    .append("-Dotel.javaagent.extensions=${otelAgentPathProvider.digmaExtensionPath}")
+                    .append(" ")
+            }
 
             withDigmaAgentDebug()
             withOtelTracesExporterOtlpEndpoint()

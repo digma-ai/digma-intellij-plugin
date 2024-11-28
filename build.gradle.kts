@@ -322,7 +322,8 @@ tasks {
             //see org.digma.intellij.plugin.idea.execution.OtelAgentPathProvider
             //don't forget to comment when done testing !
             //"digma.agent.override.path" to "/home/shalom/workspace/digma/digma-agent/build/libs/digma-agent-2.0.4.jar"
-            //"digma.otel.extension.override.path" to "/home/shalom/workspace/digma/otel-java-instrumentation/agent-extension/build/libs/digma-otel-agent-extension-0.8.12.jar"
+            "digma.otel.extension.override.path" to "/home/shalom/workspace/digma/otel-java-instrumentation/agent-extension/build/libs/digma-otel-agent-extension-2.10.1.jar"
+//            "digma.otel.extension.override.path" to "/home/shalom/Downloads/digma-otel-agent-extension-old.jar"
             //can also change the url from where the jar is downloaded when IDE starts
             //"org.digma.otel.extensionUrl" to "some url
             //"org.digma.otel.digmaAgentUrl" to "some url

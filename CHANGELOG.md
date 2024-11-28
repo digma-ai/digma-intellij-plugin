@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.401] - 2024-11-27
+## [2.0.402] - 2024-11-28
+
+- fix-linkage-error-in-otel-extension by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2615
+
+## 2.0.401 - 2024-11-27
 
 - Jaeger auth support by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/2612
 - Update Main UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2613

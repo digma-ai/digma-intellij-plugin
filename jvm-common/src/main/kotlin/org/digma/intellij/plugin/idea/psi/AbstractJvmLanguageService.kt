@@ -93,6 +93,12 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
     }
 
 
+    init {
+        Log.log(logger::trace,"Initializing language service $javaClass")
+    }
+
+
+
     //It's a different search for each jvm language.
     abstract fun findClassByClassName(className: String, scope: GlobalSearchScope): UClass?
 

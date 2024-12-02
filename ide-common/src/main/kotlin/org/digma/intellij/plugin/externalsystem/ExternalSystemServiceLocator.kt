@@ -36,6 +36,21 @@ fun findMavenRunConfigurationInstrumentationService(): RunConfigurationInstrumen
 
 }
 
+fun findKotlinRunConfigurationInstrumentationService(): RunConfigurationInstrumentationService? {
+
+    return try {
+        val serviceClassName = "org.digma.intellij.plugin.idea.execution.services.KotlinRunConfigurationInstrumentationService"
+        val serviceClass = Class.forName(serviceClassName)
+        @Suppress("IncorrectServiceRetrieving")
+        ApplicationManager.getApplication().getService(serviceClass) as RunConfigurationInstrumentationService?
+    } catch (e: Throwable) {
+        ErrorReporter.getInstance().reportError("ExternalSystemServiceLocator.findGradleService", e, mapOf(SEVERITY_PROP_NAME to SEVERITY_MEDIUM))
+        null
+    }
+
+}
+
+
 
 fun findGradleService(): BuildSystemHelperService? {
     return try {

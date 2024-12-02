@@ -1,13 +1,14 @@
 package org.digma.intellij.plugin.idea.execution.handlers
 
-import com.intellij.openapi.components.service
 import org.digma.intellij.plugin.execution.RunConfigurationInstrumentationService
-import org.digma.intellij.plugin.idea.execution.services.KotlinRunConfigurationInstrumentationService
+import org.digma.intellij.plugin.externalsystem.findKotlinRunConfigurationInstrumentationService
 
 class KotlinRunConfigurationInstrumentationHandler : BaseRunConfigurationInstrumentationHandler() {
 
-    override fun getService(): RunConfigurationInstrumentationService {
-        return service<KotlinRunConfigurationInstrumentationService>()
+    private val kotlinInstrumentationService: RunConfigurationInstrumentationService? = findKotlinRunConfigurationInstrumentationService()
+
+    override fun getService(): RunConfigurationInstrumentationService? {
+        return kotlinInstrumentationService
     }
 
 

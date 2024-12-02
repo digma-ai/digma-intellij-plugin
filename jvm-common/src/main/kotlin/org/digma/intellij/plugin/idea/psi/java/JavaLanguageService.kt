@@ -141,6 +141,9 @@ class JavaLanguageService(project: Project) : AbstractJvmLanguageService(project
         )
     }
 
+    override fun getEndpointFrameworksRelevantOnlyForLanguage(project: Project): Collection<EndpointDiscovery> {
+        return listOf()
+    }
 
     override fun getInstrumentationProvider(): InstrumentationProvider {
         return JavaInstrumentationProvider(project, this)

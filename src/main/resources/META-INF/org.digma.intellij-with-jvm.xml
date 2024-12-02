@@ -4,10 +4,6 @@
     <xi:include href="/META-INF/org.digma.intellij-with-codevision.xml" xpointer="xpointer(/idea-plugin/*)"/>
     <xi:include href="/META-INF/org.digma.intellij-with-jvm-run-configuration.xml" xpointer="xpointer(/idea-plugin/*)"/>
 
-
-    <depends>org.jetbrains.idea.maven</depends>
-    <depends>org.jetbrains.plugins.gradle</depends>
-
     <extensions defaultExtensionNs="com.intellij">
 
         <!-- Note about light services:

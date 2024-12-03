@@ -47,6 +47,7 @@ fun startRequestRegisterTimers(parentDisposable: Disposable) {
             try {
                 if (UserActivationService.getInstance().isFirstAssetsReceived() &&
                     !isUserRegistered() &&
+                    //Roni Dover changed : use long period to disable this notification
                     daysSinceFirstAsset() > 14000 &&
                     moreThen24HoursSinceLastNotified()
                 ) {

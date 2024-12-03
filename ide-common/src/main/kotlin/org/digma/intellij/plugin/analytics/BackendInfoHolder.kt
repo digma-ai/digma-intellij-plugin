@@ -7,6 +7,7 @@ import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.auth.AuthManager
 import org.digma.intellij.plugin.common.DisposableAdaptor
 import org.digma.intellij.plugin.common.ExceptionUtils
+import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.AboutResult
@@ -95,12 +96,14 @@ class BackendInfoHolder(val project: Project) : DisposableAdaptor {
     //must be called in background coroutine
     private fun update() {
         try {
-            Log.log(logger::trace, "updating backend info")
-            aboutRef.set(AnalyticsService.getInstance(project).about)
-            aboutRef.get()?.let {
-                ActivityMonitor.getInstance(project).registerServerInfo(it)
+            if (isProjectValid(project)) {
+                Log.log(logger::trace, "updating backend info")
+                aboutRef.set(AnalyticsService.getInstance(project).about)
+                aboutRef.get()?.let {
+                    ActivityMonitor.getInstance(project).registerServerInfo(it)
+                }
+                Log.log(logger::trace, "backend info updated {}", aboutRef.get())
             }
-            Log.log(logger::trace, "backend info updated {}", aboutRef.get())
         } catch (e: Throwable) {
             Log.warnWithException(logger, project, e, "error in update")
             val isConnectionException = ExceptionUtils.isAnyConnectionException(e)

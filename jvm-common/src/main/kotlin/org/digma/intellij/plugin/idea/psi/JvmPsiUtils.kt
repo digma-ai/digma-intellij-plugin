@@ -4,15 +4,12 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiFile
-import com.intellij.psi.PsiIdentifier
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.impl.source.PsiExtensibleClass
 import org.digma.intellij.plugin.common.isReadAccessAllowed
 import org.digma.intellij.plugin.common.runInReadAccessWithResult
 import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.psi.PsiUtils
-import org.jetbrains.kotlin.asJava.namedUnwrappedElement
-import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.UMethod
@@ -44,7 +41,7 @@ fun getClassSimpleName(uClass: UClass): String {
         val simpleName = if (uClass.sourcePsi is PsiClass) {
             (uClass.sourcePsi as PsiClass).name
         } else {
-            uClass.getChildOfType<PsiIdentifier>()?.text ?: uClass.namedUnwrappedElement?.name
+            null
         }
 
         if (simpleName != null) {

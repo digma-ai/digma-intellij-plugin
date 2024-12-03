@@ -15,8 +15,6 @@
                 serviceImplementation="org.digma.intellij.plugin.idea.execution.services.JarRunConfigurationInstrumentationService"/>
         <applicationService
                 serviceImplementation="org.digma.intellij.plugin.idea.execution.services.JavaServerRunConfigurationInstrumentationService"/>
-        <applicationService
-                serviceImplementation="org.digma.intellij.plugin.idea.execution.services.KotlinRunConfigurationInstrumentationService"/>
 
         <applicationService
                 serviceImplementation="org.digma.intellij.plugin.idea.execution.JavaToolOptionsDemoBuilder"/>

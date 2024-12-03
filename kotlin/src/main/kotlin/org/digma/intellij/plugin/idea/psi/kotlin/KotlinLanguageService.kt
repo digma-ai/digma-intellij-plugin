@@ -187,6 +187,10 @@ class KotlinLanguageService(project: Project) : AbstractJvmLanguageService(proje
     }
 
 
+    override fun getEndpointFrameworksRelevantOnlyForLanguage(project: Project): Collection<EndpointDiscovery> {
+        return listOf(KtorFrameworkEndpointDiscovery(project))
+    }
+
     override fun getInstrumentationProvider(): InstrumentationProvider {
         return KotlinInstrumentationProvider(project, this)
     }

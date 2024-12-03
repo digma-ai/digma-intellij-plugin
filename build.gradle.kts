@@ -84,6 +84,7 @@ dependencies {
         pluginModule(implementation(project(":gradle-support")))
         pluginModule(implementation(project(":maven-support")))
         pluginModule(implementation(project(":rider")))
+        pluginModule(implementation(project(":kotlin")))
 
         pluginVerifier()
         zipSigner()
@@ -298,7 +299,7 @@ tasks {
 
 //        jvmArgs("-XX:ReservedCodeCacheSize=512M")
 
-        maxHeapSize = "6g"
+        maxHeapSize = "4g"
 
         systemProperties(
             "idea.log.trace.categories" to "#org.digma",

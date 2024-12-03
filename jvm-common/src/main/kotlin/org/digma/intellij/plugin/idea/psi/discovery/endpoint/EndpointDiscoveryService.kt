@@ -28,20 +28,27 @@ class EndpointDiscoveryService(private val project: Project) {
      */
     fun getAllEndpointDiscovery(): List<EndpointDiscovery> {
 
-        val micronautFramework = MicronautFrameworkEndpointDiscovery(project)
-        val jaxrsJavaxFramework = JaxrsJavaxFrameworkEndpointDiscovery(project)
-        val jaxrsJakartaFramework = JaxrsJakartaFrameworkEndpointDiscovery(project)
-        val grpcFramework = GrpcFrameworkEndpointDiscovery(project)
-        val springBootFramework = SpringBootFrameworkEndpointDiscovery(project)
-        val ktorFramework = KtorFrameworkEndpointDiscovery(project)
-        return listOf(
-            micronautFramework,
-            jaxrsJavaxFramework,
-            jaxrsJakartaFramework,
-            grpcFramework,
-            springBootFramework,
-            ktorFramework
-        )
+        //some frameworks are common to all jvm languages and some frameworks are only for a specific language,
+        // for example ktor is relevant only for kotlin and should be used only if kotlin plugin is enabled
+
+        val endpointDiscoveryList = mutableListOf<EndpointDiscovery>()
+        endpointDiscoveryList.add(MicronautFrameworkEndpointDiscovery(project))
+        endpointDiscoveryList.add(JaxrsJavaxFrameworkEndpointDiscovery(project))
+        endpointDiscoveryList.add(JaxrsJakartaFrameworkEndpointDiscovery(project))
+        endpointDiscoveryList.add(GrpcFrameworkEndpointDiscovery(project))
+        endpointDiscoveryList.add(SpringBootFrameworkEndpointDiscovery(project))
+
+        SupportedJvmLanguages.values().forEach { lang ->
+            val languageService = LanguageService.findLanguageServiceByName(project, lang.language.languageServiceClassName)
+            if (languageService != null &&
+                languageService is JvmLanguageService
+            ) {
+
+                endpointDiscoveryList.addAll(languageService.getEndpointFrameworksRelevantOnlyForLanguage(project))
+            }
+        }
+
+        return endpointDiscoveryList
     }
 
 

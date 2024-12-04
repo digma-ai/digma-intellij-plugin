@@ -53,7 +53,19 @@ class UpdateVersionPanel(
         }
 
         updateTextProperty.set(buildText(updateState))
-        isVisible = updateState.shouldUpdateAny()
+        if (updateState.shouldUpdateAny()) {
+            isVisible = true
+            ActivityMonitor.getInstance(project).registerCustomEvent(
+                "update button shown",
+                mapOf(
+                    "shouldUpdateBackend" to updateState.shouldUpdateBackend,
+                    "shouldUpdatePlugin" to updateState.shouldUpdatePlugin,
+                    "backendDeploymentType" to updateState.backendDeploymentType
+                )
+            )
+        }else{
+            isVisible = false
+        }
         Log.log(logger::debug, "state changed , isVisible={}, text={}", isVisible, updateTextProperty.get())
     }
 

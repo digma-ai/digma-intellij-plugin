@@ -63,6 +63,8 @@ class UpdateVersionPanel(
                     "backendDeploymentType" to updateState.backendDeploymentType
                 )
             )
+        }else{
+            isVisible = false
         }
         Log.log(logger::debug, "state changed , isVisible={}, text={}", isVisible, updateTextProperty.get())
     }

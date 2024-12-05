@@ -32,7 +32,7 @@ class AnalyticsUrlProvider : DisposableAdaptor, BaseUrlProvider {
     to call analyticsProvider.about, that will fail without a token and the logout will fail to create a LoginHandler and
     will return a NoOpLoginHandler. luckily NoOpLoginHandler knows how to logout because our logout is only deleting the account.
     but for the good order and for future needs it's better that we succeed to create LoginHandler.
-    So the token is provided by AnalyticsUrlProvider and it is synced with the settings every time the settings change.
+    So the token is provided by AnalyticsUrlProvider, and it is synced with the settings every time the settings change.
      */
     private var myApiToken = SettingsState.getInstance().apiToken
 
@@ -69,6 +69,9 @@ class AnalyticsUrlProvider : DisposableAdaptor, BaseUrlProvider {
                         refreshEnvironmentsNowOnBackground(project)
                         project.messageBus.syncPublisher(ApiClientChangedEvent.API_CLIENT_CHANGED_TOPIC).apiClientChanged(myApiUrl)
                     }
+                }else if (state.apiToken != myApiToken){
+                    //there is no need to do anything if only the token has changed, only update the local member
+                    myApiToken = state.apiToken
                 }
             }
         }, this)

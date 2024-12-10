@@ -11,12 +11,14 @@ data class VersionResponse
 @ConstructorProperties(
     "plugin",
     "backend",
+    "ui",
     "errors",
     "forceUpdate"
 )
 constructor(
     val plugin: PluginVersionResponse,
     val backend: BackendVersionResponse,
+    val ui: UIVersionResponse? = null,
     val errors: List<String>,
     val forceUpdate: ForceUpdate? = null
 )
@@ -50,14 +52,27 @@ constructor(
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+data class UIVersionResponse
+@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+@ConstructorProperties(
+    "isNewMatchingVersionAvailable",
+    "latestMatchingVersion"
+)
+constructor(
+    val isNewMatchingVersionAvailable: Boolean = false,
+    val latestMatchingVersion: String? = ""
+)
+
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class ForceUpdate
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 @ConstructorProperties(
     "minPluginVersionRequired",
-    "minBackendVersionRequired"
+    "minBackendVersionRequired",
+    "minUiVersionRequired"
 )
-constructor(val minPluginVersionRequired: String?, val minBackendVersionRequired: String?)
-
+constructor(val minPluginVersionRequired: String?, val minBackendVersionRequired: String?, val minUIVersionRequired: String?)
 
 
 enum class BackendDeploymentType {

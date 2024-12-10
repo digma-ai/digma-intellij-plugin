@@ -55,7 +55,7 @@ dependencies {
 
 tasks {
 
-    val downloadComposeFile = register("downloadComposeFile", Download::class.java) {
+    val downloadComposeFile by registering(Download::class) {
         src(
             listOf(
                 "https://get.digma.ai/"
@@ -64,11 +64,37 @@ tasks {
 
         val dir = File(project.sourceSets.main.get().output.resourcesDir, "docker-compose")
         dest(File(dir, "docker-compose.yml"))
-        overwrite(false)
-        onlyIfModified(true)
+        retries(3)
     }
 
+
+    val uiVersionFile = project.rootProject.file("ui-version")
+    val uiVersion = uiVersionFile.readText()
+    //the directory inside the jar to package to
+    val uiBundleDir = File(project.sourceSets.main.get().output.resourcesDir, "ui-bundle")
+    val uiBundleFile = File(uiBundleDir, "digma-ui-$uiVersion.zip")
+
+    val downloadUiBundle by registering(Download::class) {
+
+        inputs.files(uiVersionFile)
+        outputs.files(uiBundleFile)
+
+        src(
+            listOf(
+                "https://github.com/digma-ai/digma-ui/releases/download/v$uiVersion/dist-jetbrains-v$uiVersion.zip"
+            )
+        )
+        dest(uiBundleFile)
+        retries(3)
+    }
+
+    val createUiBundleVersionFile by registering(Copy::class) {
+        from(uiVersionFile)
+        into(uiBundleDir)
+    }
+
+
     processResources {
-        dependsOn(downloadComposeFile)
+        dependsOn(downloadComposeFile, downloadUiBundle, createUiBundleVersionFile)
     }
 }

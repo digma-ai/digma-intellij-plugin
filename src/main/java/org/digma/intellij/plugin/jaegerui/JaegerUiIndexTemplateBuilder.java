@@ -19,7 +19,7 @@ public class JaegerUiIndexTemplateBuilder extends BaseIndexTemplateBuilder {
     private final JaegerUIVirtualFile jaegerUIVirtualFile;
 
     public JaegerUiIndexTemplateBuilder(JaegerUIVirtualFile file) {
-        super(JaegerUIConstants.JAEGER_UI_RESOURCE_FOLDER_NAME, JaegerUIConstants.JAEGER_UI_INDEX_TEMPLATE_NAME);
+        super(JaegerUIConstants.JAEGER_UI_TEMPLATE_FOLDER_NAME, JaegerUIConstants.JAEGER_UI_INDEX_TEMPLATE_NAME);
         this.jaegerUIVirtualFile = file;
     }
 

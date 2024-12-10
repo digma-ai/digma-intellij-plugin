@@ -157,9 +157,9 @@ public class MainToolWindowCardsController implements Disposable {
 
     public void updateStateChanged(@NotNull PublicUpdateState updateState) {
         if (updateState.getUpdateState() == CurrentUpdateState.OK) {
-            closeUpdateBackendPanel();
+            closeAggressiveUpdatePanel();
         } else {
-            showUpdateBackendPanel();
+            showAggressiveUpdatePanel();
         }
     }
 
@@ -296,25 +296,25 @@ public class MainToolWindowCardsController implements Disposable {
         }
     }
 
-    private void showUpdateBackendPanel() {
+    private void showAggressiveUpdatePanel() {
 
-        Log.log(LOGGER::debug, "showUpdateBackendPanel called");
+        Log.log(LOGGER::debug, "showAggressiveUpdatePanel called");
 
         //replace the card even if wizard is on. it will not show until wizard content is removed.
 
         //this may happen on startup,showMainPanel is called from the tool window factory,
         // but there may be a connection lost before the content was built and before this controller was initialized
         if (isConnectionLost.get()) {
-            Log.log(LOGGER::debug, "Not showing MainPanel because connection lost, showing NoConnection");
+            Log.log(LOGGER::debug, "Not showing AggressiveUpdatePanel because connection lost, showing NoConnection");
             showNoConnection();
         } else {
             EDT.ensureEDT(() -> showCard(MainWindowCard.UPDATE_MODE));
         }
     }
 
-    private void closeUpdateBackendPanel() {
+    private void closeAggressiveUpdatePanel() {
 
-        Log.log(LOGGER::debug, "closeUpdateBackendPanel called");
+        Log.log(LOGGER::debug, "closeAggressiveUpdatePanel called");
 
 
         //replace the card even if wizard is on. it will not show until wizard content is removed.

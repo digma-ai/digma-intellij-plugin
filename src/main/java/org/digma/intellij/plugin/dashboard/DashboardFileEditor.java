@@ -21,13 +21,14 @@ import static org.digma.intellij.plugin.ui.jcef.JCefMessagesUtilsKt.*;
 
 public class DashboardFileEditor extends UserDataHolderBase implements FileEditor {
 
-    static final String RESOURCE_FOLDER_NAME = "/webview/dashboard";
+    static final String RESOURCE_FOLDER_NAME = "dashboard";
+    static final String TEMPLATE_FOLDER_NAME = "/webview/dashboard";
     static final String DOMAIN_NAME = "dashboard";
     static final String SCHEMA_NAME = "http";
 
     private final VirtualFile file;
-    private  JBCefBrowser jbCefBrowser = null;
-    private  CefMessageRouter cefMessageRouter = null;
+    private JBCefBrowser jbCefBrowser = null;
+    private CefMessageRouter cefMessageRouter = null;
     private boolean disposed = false;
 
     public DashboardFileEditor(Project project, VirtualFile file) {
@@ -36,7 +37,7 @@ public class DashboardFileEditor extends UserDataHolderBase implements FileEdito
         if (JBCefApp.isSupported()) {
 
             jbCefBrowser = JBCefBrowserBuilderCreator.create()
-                    .setUrl("http://" + DOMAIN_NAME + "/index.html")
+                    .setUrl("http://" + DOMAIN_NAME + "/" + RESOURCE_FOLDER_NAME + "/index.html")
                     .build();
 
             var jbCefClient = jbCefBrowser.getJBCefClient();
@@ -106,7 +107,7 @@ public class DashboardFileEditor extends UserDataHolderBase implements FileEdito
     public @Nullable JComponent getPreferredFocusedComponent() {
         if (jbCefBrowser != null) {
             return jbCefBrowser.getComponent();
-        }else{
+        } else {
             return null;
         }
     }

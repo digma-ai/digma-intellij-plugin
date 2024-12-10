@@ -7,6 +7,8 @@ import org.cef.handler.CefResourceHandler
 import org.cef.network.CefRequest
 
 class CustomSchemeHandlerFactory(
+    private var domainNameName: String,
+    private var templateFolderName: String,
     private var resourceFolderName: String,
     private var indexTemplateData: Map<String, Any>?
 ) : CefSchemeHandlerFactory {
@@ -17,6 +19,6 @@ class CustomSchemeHandlerFactory(
         schemeName: String?,
         request: CefRequest?
     ): CefResourceHandler {
-        return CustomResourceHandler(resourceFolderName, indexTemplateData)
+        return CustomResourceHandler(domainNameName,templateFolderName,resourceFolderName, indexTemplateData)
     }
 }

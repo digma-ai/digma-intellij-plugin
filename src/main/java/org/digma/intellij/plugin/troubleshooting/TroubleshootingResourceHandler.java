@@ -10,6 +10,7 @@ import org.cef.misc.StringRef;
 import org.cef.network.CefRequest;
 import org.cef.network.CefResponse;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.updates.ui.UIResourcesService;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,7 +37,7 @@ class TroubleshootingResourceHandler implements CefResourceHandler {
         if (TroubleshootingService.getInstance(project).isIndexHtml(path)) {
             inputStream = TroubleshootingService.getInstance(project).buildIndexFromTemplate(path);
         } else {
-            inputStream = getClass().getResourceAsStream(path);
+            inputStream = UIResourcesService.getInstance().getResourceAsStream(path);
         }
 
         if (inputStream == null) {

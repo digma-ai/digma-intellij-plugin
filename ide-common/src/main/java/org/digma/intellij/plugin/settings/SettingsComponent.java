@@ -13,6 +13,7 @@ import org.digma.intellij.plugin.analytics.BackendInfoHolder;
 import org.digma.intellij.plugin.auth.account.*;
 import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
+import org.digma.intellij.plugin.updates.ui.UIVersioningService;
 import org.jetbrains.annotations.*;
 
 import javax.swing.*;
@@ -167,6 +168,8 @@ class SettingsComponent {
 
         var backendVersionLabel = createBackendVersionLabel();
 
+        var uiVersionLabel = createUiVersionLabel();
+
         var importExportPanel = createImportExportPanel();
 
         var resetPluginButton = createResetPluginButton();
@@ -186,6 +189,7 @@ class SettingsComponent {
                 .addComponent(resetToDefaultsButton)
                 .addLabeledComponent(new JBLabel("User id"), userIdLabel)
                 .addLabeledComponent(new JBLabel("Backend version"), backendVersionLabel)
+                .addLabeledComponent(new JBLabel("UI version"), uiVersionLabel)
                 .addComponent(importExportPanel)
                 .addComponent(resetPluginButton)
                 .addComponent(pluginResetWarning)
@@ -382,6 +386,11 @@ class SettingsComponent {
             }
         }
         return backendVersionLabel;
+    }
+
+    @NotNull
+    private static JBLabel createUiVersionLabel() {
+        return new JBLabel(UIVersioningService.getInstance().getCurrentUiVersion()+" ("+UIVersioningService.getInstance().getCurrentUiBundlePath()+")");
     }
 
 

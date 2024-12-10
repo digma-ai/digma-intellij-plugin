@@ -1,15 +1,14 @@
 package org.digma.intellij.plugin.dashboard;
 
 import com.intellij.openapi.project.Project;
-import org.cef.browser.CefBrowser;
-import org.cef.browser.CefFrame;
+import org.cef.browser.*;
 import org.cef.callback.CefSchemeHandlerFactory;
 import org.cef.handler.CefResourceHandler;
 import org.cef.network.CefRequest;
+import org.digma.intellij.plugin.updates.ui.UIResourcesService;
 import org.jetbrains.annotations.Nullable;
 
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.*;
 
 
 public class DashboardSchemeHandlerFactory implements CefSchemeHandlerFactory {
@@ -29,13 +28,12 @@ public class DashboardSchemeHandlerFactory implements CefSchemeHandlerFactory {
             var file = url.getFile();
             if (DashboardFileEditor.DOMAIN_NAME.equals(host) &&
                     DashboardFileEditor.SCHEMA_NAME.equals(schemeName)) {
-                var resourceName = DashboardFileEditor.RESOURCE_FOLDER_NAME + file;
-                var resource = getClass().getResource(resourceName);
-                if (resource != null) {
+
+                String resourceName = file.replaceAll("^/+", "");
+                boolean resourceExists = UIResourcesService.getInstance().isResourceExists(resourceName);
+                if (resourceExists){
                     return new DashboardResourceHandler(project, resourceName, dashboardVirtualFile);
-                } else if (getClass().getResource("/webview/common" + file) != null) {
-                    return new DashboardResourceHandler(project, "/webview/common" + file, dashboardVirtualFile);
-                } else {
+                }else{
                     return new DashboardResourceHandler(project, DashboardFileEditor.RESOURCE_FOLDER_NAME + "/index.html", dashboardVirtualFile);
                 }
             }

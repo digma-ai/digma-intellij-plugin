@@ -12,7 +12,7 @@ class DocumentationIndexTemplateBuilder extends BaseIndexTemplateBuilder {
     private final DocumentationVirtualFile documentationVirtualFile;
 
     public DocumentationIndexTemplateBuilder(DocumentationVirtualFile documentationVirtualFile) {
-        super(DocumentationConstants.DOCUMENTATION_RESOURCE_FOLDER_NAME, DocumentationConstants.DOCUMENTATION_INDEX_TEMPLATE_NAME);
+        super(DocumentationConstants.DOCUMENTATION_TEMPLATE_FOLDER_NAME, DocumentationConstants.DOCUMENTATION_INDEX_TEMPLATE_NAME);
         this.documentationVirtualFile = documentationVirtualFile;
     }
 

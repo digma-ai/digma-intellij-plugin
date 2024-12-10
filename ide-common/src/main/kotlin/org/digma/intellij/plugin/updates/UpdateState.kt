@@ -6,10 +6,11 @@ data class UpdateState(
     val backendDeploymentType: BackendDeploymentType,
     val shouldUpdateBackend: Boolean,
     val shouldUpdatePlugin: Boolean,
+    val shouldUpdateUi: Boolean,
 ) {
 
     fun shouldUpdateAny(): Boolean {
-        return shouldUpdateBackend || shouldUpdatePlugin
+        return shouldUpdateBackend || shouldUpdatePlugin || shouldUpdateUi
     }
 
 }

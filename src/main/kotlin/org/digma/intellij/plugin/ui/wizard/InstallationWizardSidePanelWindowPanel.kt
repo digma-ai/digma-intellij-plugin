@@ -87,7 +87,9 @@ import java.util.concurrent.atomic.AtomicReference
 import javax.swing.JPanel
 import kotlin.time.Duration.Companion.seconds
 
-private const val RESOURCE_FOLDER_NAME = "installationwizard"
+private const val DOMAIN_NAME = "installationwizard"
+private const val RESOURCE_FOLDER_NAME = "installation-wizard"
+private const val TEMPLATE_FOLDER_NAME = "installationwizard"
 private const val ENV_VARIABLE_IDE: String = "ide"
 private const val USER_EMAIL_VARIABLE: String = "userEmail"
 private const val IS_OBSERVABILITY_ENABLED_VARIABLE: String = "isObservabilityEnabled"
@@ -118,7 +120,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
     }
 
     val jbCefBrowser = JBCefBrowserBuilderCreator.create()
-        .setUrl("https://$RESOURCE_FOLDER_NAME/index.html")
+        .setUrl("https://$DOMAIN_NAME/$RESOURCE_FOLDER_NAME/index.html")
         .build()
     val indexTemplateData = mutableMapOf<String, Any>(
         ENV_VARIABLE_IDE to ApplicationNamesInfo.getInstance().productName, //Available values: "IDEA", "Rider", "PyCharm"
@@ -145,8 +147,8 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
             CefApp.getInstance()
                 .registerSchemeHandlerFactory(
                     "https",
-                    RESOURCE_FOLDER_NAME,
-                    CustomSchemeHandlerFactory(RESOURCE_FOLDER_NAME, indexTemplateData)
+                    DOMAIN_NAME,
+                    CustomSchemeHandlerFactory(DOMAIN_NAME, TEMPLATE_FOLDER_NAME,RESOURCE_FOLDER_NAME, indexTemplateData)
                 )
         }
     }

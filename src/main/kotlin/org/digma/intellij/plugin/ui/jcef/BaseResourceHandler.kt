@@ -10,6 +10,7 @@ import org.cef.misc.StringRef
 import org.cef.network.CefRequest
 import org.cef.network.CefResponse
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.updates.ui.UIResourcesService
 import java.io.IOException
 import java.io.InputStream
 import kotlin.math.min
@@ -33,7 +34,7 @@ abstract class BaseResourceHandler(private val path: String, protected val brows
         inputStream = if (isIndexHtml(path)) {
             buildIndexFromTemplate(path)
         } else {
-            javaClass.getResourceAsStream(path)
+            UIResourcesService.getInstance().getResourceAsStream(path)
         }
 
         if (inputStream == null) {

@@ -20,7 +20,8 @@ public final class TroubleshootingService implements Disposable {
 
     private final Project project;
 
-    static final String RESOURCE_FOLDER_NAME = "/webview/troubleshooting";
+    static final String RESOURCE_FOLDER_NAME = "troubleshooting";
+    static final String TEMPLATE_FOLDER_NAME = "/webview/troubleshooting";
     static final String DOMAIN_NAME = "troubleshooting";
     static final String SCHEMA_NAME = "http";
 
@@ -40,7 +41,7 @@ public final class TroubleshootingService implements Disposable {
         if (JBCefApp.isSupported()) {
 
             jbCefBrowser = JBCefBrowserBuilderCreator.create()
-                    .setUrl("http://" + DOMAIN_NAME + "/index.html")
+                    .setUrl("http://" + DOMAIN_NAME + "/" + RESOURCE_FOLDER_NAME + "/index.html")
                     .build();
 
             var jbCefClient = jbCefBrowser.getJBCefClient();

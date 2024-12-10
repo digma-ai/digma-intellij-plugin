@@ -23,6 +23,7 @@ import org.digma.intellij.plugin.scheduling.disposingPeriodicTask
 import org.digma.intellij.plugin.scheduling.oneShotTask
 import org.digma.intellij.plugin.settings.InternalFileSettings
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
+import org.digma.intellij.plugin.updates.ui.UIVersioningService
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -174,6 +175,7 @@ class UpdatesService(private val project: Project) : Disposable {
             stateBackendVersion.deploymentType,
             shouldUpdateBackend(),
             shouldUpdatePlugin(),
+            UIVersioningService.getInstance().isNewUIBundleAvailable()
         )
         Log.log(logger::debug, "current state is {}", state)
         return state

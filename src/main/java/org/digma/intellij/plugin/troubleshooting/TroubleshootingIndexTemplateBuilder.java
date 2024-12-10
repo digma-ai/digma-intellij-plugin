@@ -35,7 +35,7 @@ class TroubleshootingIndexTemplateBuilder {
     private final Configuration freemarketConfiguration = new Configuration(Configuration.VERSION_2_3_30);
 
     public TroubleshootingIndexTemplateBuilder() {
-        freemarketConfiguration.setClassForTemplateLoading(this.getClass(), TroubleshootingService.RESOURCE_FOLDER_NAME);
+        freemarketConfiguration.setClassForTemplateLoading(this.getClass(), TroubleshootingService.TEMPLATE_FOLDER_NAME);
         freemarketConfiguration.setDefaultEncoding(StandardCharsets.UTF_8.name());
         freemarketConfiguration.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
         freemarketConfiguration.setNumberFormat("computer");

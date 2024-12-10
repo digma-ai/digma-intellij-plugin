@@ -10,18 +10,21 @@ import org.cef.network.CefRequest
 import org.cef.network.CefResponse
 import org.digma.intellij.plugin.ui.common.isJaegerButtonEnabled
 import org.digma.intellij.plugin.ui.jcef.addCommonEnvVariables
+import org.digma.intellij.plugin.updates.ui.UIResourcesService
 import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.io.InputStream
 import java.io.StringWriter
+import java.net.URI
 import java.net.URLConnection
 
 const val INDEX_TEMPLATE_FILE_NAME: String = "indextemplate.ftl"
 const val BASE_PACKAGE_PATH: String = "webview/"
 const val IS_JAEGER_ENABLED: String = "isJaegerEnabled"
-const val COMMON_FILES_FOLDER_NAME: String = "common"
 
 class CustomResourceHandler(
+    private var domainNameName: String,
+    private var templateFolderName: String,
     private var resourceFolderName: String,
     private var indexTemplateData: Map<String, Any>?
 ) : CefResourceHandler {
@@ -31,31 +34,24 @@ class CustomResourceHandler(
         cefRequest: CefRequest,
         cefCallback: CefCallback
     ): Boolean {
-        val resourceUrlPrefix = "https://$resourceFolderName"
+        val resourceUrlPrefix = "https://$domainNameName/$resourceFolderName"
         val processedUrl = cefRequest.url
         return if (processedUrl != null) {
-            when {
-                processedUrl.equals("$resourceUrlPrefix/index.html", true) -> {
-                    val html = loadFreemarkerTemplate(resourceFolderName, indexTemplateData)
+
+            if (processedUrl.equals("$resourceUrlPrefix/index.html", true)) {
+                val html = loadFreemarkerTemplate(templateFolderName, indexTemplateData)
+                state = StringData(html)
+            } else {
+                val url = URI(processedUrl).toURL()
+                val host = url.host
+                val file = url.path
+                val resourceName = file.removePrefix("/")
+                val inputStream = UIResourcesService.getInstance().getResourceAsStream(resourceName)
+                if (inputStream == null) {
+                    val html = loadFreemarkerTemplate(templateFolderName, indexTemplateData)
                     state = StringData(html)
-                }
-
-                processedUrl.contains("fonts") || processedUrl.contains("images") -> {
-                    val pathToResource =
-                        processedUrl.replace(resourceUrlPrefix, "${BASE_PACKAGE_PATH}${COMMON_FILES_FOLDER_NAME}")
-                    val newUrl = javaClass.classLoader.getResource(pathToResource)
-                    if (newUrl != null) {
-                        state = OpenedConnection(newUrl.openConnection())
-                    }
-                }
-
-                else -> {
-                    val pathToResource =
-                        processedUrl.replace(resourceUrlPrefix, "${BASE_PACKAGE_PATH}${resourceFolderName}")
-                    val newUrl = javaClass.classLoader.getResource(pathToResource)
-                    if (newUrl != null) {
-                        state = OpenedConnection(newUrl.openConnection())
-                    }
+                } else {
+                    state = OpenedConnection(inputStream, resourceName)
                 }
             }
             cefCallback.Continue()
@@ -112,11 +108,10 @@ fun readResponse(
     return CustomResourceHandlerUtil.readResponse(inputStream, dataOut, designedBytesToRead, bytesRead, callback)
 }
 
-data class OpenedConnection(val connection: URLConnection) : ResourceHandlerState {
-    private val inputStream: InputStream = connection.getInputStream()
+data class OpenedConnection(private val inputStream: InputStream, private val resourceName: String) : ResourceHandlerState {
     override fun getResponseHeaders(cefResponse: CefResponse, responseLength: IntRef, redirectUrl: StringRef) {
         try {
-            cefResponse.mimeType = URLConnection.guessContentTypeFromName(connection.url.file)
+            cefResponse.mimeType = URLConnection.guessContentTypeFromName(resourceName)
             responseLength.set(inputStream.available())
             cefResponse.status = 200
         } catch (e: IOException) {
@@ -183,12 +178,12 @@ object ClosedConnection : ResourceHandlerState {
 }
 
 private fun loadFreemarkerTemplate(
-    resourceFolderName: String,
+    templateFolderName: String,
     indexTemplateData: Map<String, Any>?
 ): String {
     val cfg = Configuration(Configuration.VERSION_2_3_30)
     cfg.numberFormat = "computer" // no comma on integer bigger than 999
-    cfg.setClassForTemplateLoading(CustomResourceHandler::class.java, "/$BASE_PACKAGE_PATH$resourceFolderName")
+    cfg.setClassForTemplateLoading(CustomResourceHandler::class.java, "/$BASE_PACKAGE_PATH$templateFolderName")
     val data: MutableMap<String, Any> = mutableMapOf<String, Any>(
         IS_JAEGER_ENABLED to isJaegerButtonEnabled()
     ).also {

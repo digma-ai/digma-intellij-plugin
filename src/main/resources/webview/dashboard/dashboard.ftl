@@ -5,7 +5,7 @@
     <style>
       @font-face {
         font-family: "JetBrains Mono";
-        src: url("/fonts/JetBrainsMono-Medium.ttf") format("truetype");
+        src: url("/assets/fonts/JetBrainsMono-Medium.ttf") format("truetype");
         font-weight: 500;
         font-style: normal;
       }
@@ -33,6 +33,6 @@
 
         window.dashboardEnvironment = "${dashboardEnvironment}";
     </script>
-    <script src="/index.js"></script>
+    <script src="./index.js"></script>
   </body>
 </html>

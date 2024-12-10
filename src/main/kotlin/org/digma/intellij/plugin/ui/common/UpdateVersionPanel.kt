@@ -13,6 +13,7 @@ import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import org.digma.intellij.plugin.updates.AggressiveUpdateService
 import org.digma.intellij.plugin.updates.UpdateState
 import org.digma.intellij.plugin.updates.UpdatesService
+import org.digma.intellij.plugin.updates.ui.UIVersioningService
 import javax.swing.BorderFactory
 import javax.swing.Box
 import javax.swing.BoxLayout
@@ -117,7 +118,8 @@ class UpdateVersionPanel(
                     mapOf(
                         "shouldUpdateBackend" to updateState.shouldUpdateBackend,
                         "shouldUpdatePlugin" to updateState.shouldUpdatePlugin,
-                        "backendDeploymentType" to updateState.backendDeploymentType
+                        "backendDeploymentType" to updateState.backendDeploymentType,
+                        "shouldUpdateUi" to updateState.shouldUpdateUi
                     )
                 )
 
@@ -127,6 +129,8 @@ class UpdateVersionPanel(
                     UpdateBackendAction().updateBackend(project, updateState.backendDeploymentType, updateButton)
                 } else if (updateState.shouldUpdatePlugin) {
                     ShowSettingsUtil.getInstance().showSettingsDialog(project, "Plugins")
+                }else if (updateState.shouldUpdateUi){
+                    UIVersioningService.getInstance().updateToLatestDownloaded()
                 }
 
                 this.isVisible = false
@@ -142,8 +146,10 @@ class UpdateVersionPanel(
     private fun buildText(updateState: UpdateState): String {
         return if (updateState.shouldUpdateBackend) {
             asHtml("<b>Update Recommended |</b> Digma analysis backend")
-        } else {
+        } else if(updateState.shouldUpdatePlugin){
             asHtml("<b>Update Recommended |</b> Digma IDE plugin")
+        }else{
+            asHtml("<b>Update Recommended |</b> Digma UI ${UIVersioningService.getInstance().getCurrentUiVersion()} -> ${UIVersioningService.getInstance().getLatestDownloadedVersion()}")
         }
     }
 

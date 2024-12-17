@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.paths
 
+import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.application.ApplicationNamesInfo
 import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.diagnostic.Logger
@@ -44,6 +45,12 @@ class DigmaPathManager {
                 val ideDir = File(baseDir, ideName)
                 ideDir.mkdirs()
                 Log.log(logger::trace, "getLocalFilesDirectoryPath created ide dir {}", ideDir.absolutePath)
+                val ideInfo = File(ideDir,"ide.info")
+                if (!ideInfo.exists()) {
+                    val ideInfoText = "${ApplicationNamesInfo.getInstance().fullProductNameWithEdition} ${ApplicationInfo.getInstance().fullVersion} (${PathManager.getHomePath()})"
+                    ideInfo.writeText(ideInfoText)
+                }
+
                 ideDir.absolutePath
             } catch (e: Throwable) {
                 ErrorReporter.getInstance().reportError("DigmaPathManager.getLocalFilesDirectoryPath", e)
@@ -56,7 +63,7 @@ class DigmaPathManager {
 
 
         private fun getUserHome(): String {
-            //user.home should never be null, but just in case,use temp dir
+            //user.home should never be null, but just in case it is use temp dir
             return System.getProperty("user.home") ?: System.getProperty("java.io.tmpdir")
         }
 

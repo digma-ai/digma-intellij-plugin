@@ -47,18 +47,8 @@ abstract class BaseSchemeHandlerFactory : CefSchemeHandlerFactory {
             }
 
             if (getDomain() == host && getSchema() == schemeName) {
-                var resourceName = file.removePrefix("/")
-                var resourceExists = UIResourcesService.getInstance().isResourceExists(resourceName)
-
-                //we need this specially for jaeger ui because paths are absolute
-                if (!resourceExists){
-                    val tryResourceNameUnderAppFolder = "${getResourceFolderName()}/$resourceName"
-                    resourceExists = UIResourcesService.getInstance().isResourceExists(tryResourceNameUnderAppFolder    )
-                    if (resourceExists){
-                        resourceName = tryResourceNameUnderAppFolder
-                    }
-                }
-
+                val resourceName = file.removePrefix("/")
+                val resourceExists = UIResourcesService.getInstance().isResourceExists(resourceName)
                 return createResourceHandler(resourceName, resourceExists, browser)
             }
         }

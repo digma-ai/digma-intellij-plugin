@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.updates.ui
 
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
@@ -19,6 +20,7 @@ import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.reload.ReloadService
 import org.digma.intellij.plugin.reload.ReloadSource
 import org.digma.intellij.plugin.scheduling.disposingPeriodicTask
+import org.digma.intellij.plugin.settings.InternalFileSettings
 import java.io.File
 import java.net.HttpURLConnection
 import java.net.URI
@@ -26,7 +28,9 @@ import java.net.URL
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import kotlin.io.path.deleteIfExists
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 @Service(Service.Level.APP)
 class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
@@ -67,7 +71,9 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
             }
         }
 
-
+        fun getDefaultDelayBetweenUpdatesSeconds(): Duration {
+            return InternalFileSettings.getUIVersioningServiceMonitorDelaySeconds(300).seconds
+        }
     }
 
 
@@ -81,7 +87,9 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
     }
 
     fun isNewUIBundleAvailable(): Boolean {
-        return getLatestDownloadedVersion() != null
+        return getLatestDownloadedVersion()?.let {
+            buildUiBundleLocalFile(it).exists()
+        } ?: false
     }
 
     fun getCurrentUiBundlePath(): String {
@@ -90,7 +98,7 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
 
 
     fun getUiVersionForVersionRequest(): String {
-        return getLatestDownloadedVersion() ?: getCurrentUiVersion()
+        return getCurrentUiVersion()
     }
 
     fun getCurrentUiVersion(): String {
@@ -220,9 +228,12 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
 
 
     private fun startMonitoring() {
-        disposingPeriodicTask("UIVersioningService.periodic", 1.minutes.inWholeMilliseconds, 5.minutes.inWholeMilliseconds, true) {
+
+        val delayMillis = getDefaultDelayBetweenUpdatesSeconds().inWholeMilliseconds
+        disposingPeriodicTask("UIVersioningService.periodic", 1.minutes.inWholeMilliseconds, delayMillis, true) {
             findActiveProject()?.let { project ->
                 try {
+
                     val versionsResponse = AnalyticsService.getInstance(project).getVersions(buildVersionRequest())
 
                     Log.log(logger::trace, "got version response {}", versionsResponse)
@@ -232,7 +243,7 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
                         val currentUiVersion = getCurrentUiVersion()
                         if (!requiredUiVersion.isNullOrBlank() && ComparableVersion(requiredUiVersion).newerThan(ComparableVersion(currentUiVersion))) {
                             Log.log(logger::info, "got ui force update to {}", requiredUiVersion)
-                            //if there is already a latest downloaded version delete it before downloading the new one
+                            //if there is already a latest downloaded version, delete it before downloading the new one
                             // and reset the property
                             getLatestDownloadedVersion()?.let {
                                 deleteUiBundle(it)
@@ -247,14 +258,33 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
                         val currentUiVersion = getCurrentUiVersion()
                         if (!requiredUiVersion.isNullOrBlank() && ComparableVersion(requiredUiVersion).newerThan(ComparableVersion(currentUiVersion))) {
                             Log.log(logger::info, "got ui update to {}", requiredUiVersion)
-                            //if there is already a latest downloaded version delete it before downloading the new one
-                            // and reset the property
-                            getLatestDownloadedVersion()?.let {
-                                deleteUiBundle(it)
-                                setLatestDownloadedVersion(null)
-                            }
-                            if (downloadUiBundle(requiredUiVersion)) {
-                                setLatestDownloadedVersion(requiredUiVersion)
+
+                            //if LatestDownloadedVersion equals requiredUiVersion then it was already downloaded in the previous round,
+                            // so no need to download it again.
+                            if (getLatestDownloadedVersion() != requiredUiVersion) {
+                                Log.log(
+                                    logger::info,
+                                    "requiredUiVersion {} is different from latest downloaded {}, downloading.. ",
+                                    requiredUiVersion,
+                                    getLatestDownloadedVersion()
+                                )
+                                //if there is already a latest downloaded version, delete it before downloading the new one
+                                // and reset the property
+                                getLatestDownloadedVersion()?.let {
+                                    deleteUiBundle(it)
+                                    setLatestDownloadedVersion(null)
+                                }
+                                if (downloadUiBundle(requiredUiVersion)) {
+                                    setLatestDownloadedVersion(requiredUiVersion)
+                                    fireNewUIVersionAvailable()
+                                }
+                            } else {
+                                Log.log(
+                                    logger::info,
+                                    "requiredUiVersion {} is the same as latest downloaded {}, no need to download again ",
+                                    requiredUiVersion,
+                                    getLatestDownloadedVersion()
+                                )
                             }
                         }
                     }
@@ -267,6 +297,10 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
         }
     }
 
+    private fun fireNewUIVersionAvailable() {
+        ApplicationManager.getApplication().messageBus.syncPublisher(NewUIVersionAvailableEvent.NEW_UI_VERSION_AVAILABLE_EVENT_TOPIC).newUIVersionAvailable()
+    }
+
 
     fun updateToLatestDownloaded() {
         val latestDownloadedUiVersion = getLatestDownloadedVersion()
@@ -277,8 +311,16 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
                 updateToDownloadedVersion(latestDownloadedUiVersion)
                 setLatestDownloadedVersion(null)
             } else {
-                //something is wrong, we have the property latestDownloadedVersion but there is no file, maybe it was deleted.
+                //something is wrong, we have the property latestDownloadedVersion, but there is no file, maybe it was deleted.
                 //reset latestDownloadedVersion
+                ErrorReporter.getInstance().reportError(
+                    "UIVersioningService.updateToLatestDownloaded",
+                    "updateToLatestDownloaded called but ui bundle file does not exist", mapOf(
+                        "current ui version" to getCurrentUiVersion(),
+                        "latest downloaded version" to getLatestDownloadedVersion().toString(),
+                        "bundled version" to bundledUiVersion,
+                    )
+                )
                 Log.log(
                     logger::warn,
                     "latest downloaded version property exists but file does not exist, not updating"

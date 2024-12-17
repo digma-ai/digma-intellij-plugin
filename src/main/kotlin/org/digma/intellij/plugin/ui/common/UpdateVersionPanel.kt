@@ -55,15 +55,17 @@ class UpdateVersionPanel(
 
         updateTextProperty.set(buildText(updateState))
         if (updateState.shouldUpdateAny()) {
-            isVisible = true
-            ActivityMonitor.getInstance(project).registerCustomEvent(
-                "update button shown",
-                mapOf(
-                    "shouldUpdateBackend" to updateState.shouldUpdateBackend,
-                    "shouldUpdatePlugin" to updateState.shouldUpdatePlugin,
-                    "backendDeploymentType" to updateState.backendDeploymentType
+            if (!isVisible) {
+                isVisible = true
+                ActivityMonitor.getInstance(project).registerCustomEvent(
+                    "update button shown",
+                    mapOf(
+                        "shouldUpdateBackend" to updateState.shouldUpdateBackend,
+                        "shouldUpdatePlugin" to updateState.shouldUpdatePlugin,
+                        "backendDeploymentType" to updateState.backendDeploymentType
+                    )
                 )
-            )
+            }
         }else{
             isVisible = false
         }

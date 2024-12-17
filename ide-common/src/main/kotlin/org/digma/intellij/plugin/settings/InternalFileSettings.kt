@@ -48,5 +48,9 @@ object InternalFileSettings {
         return getProperty("UpdateService.monitor.delay.seconds")?.toInt() ?: defaultValue
     }
 
+    fun getUIVersioningServiceMonitorDelaySeconds(defaultValue: Int): Int {
+        return getProperty("UIVersioningService.monitor.delay.seconds")?.toInt() ?: defaultValue
+    }
+
 
 }

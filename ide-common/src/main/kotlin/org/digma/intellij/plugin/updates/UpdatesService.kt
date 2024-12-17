@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.updates
 
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
@@ -23,6 +24,7 @@ import org.digma.intellij.plugin.scheduling.disposingPeriodicTask
 import org.digma.intellij.plugin.scheduling.oneShotTask
 import org.digma.intellij.plugin.settings.InternalFileSettings
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
+import org.digma.intellij.plugin.updates.ui.NewUIVersionAvailableEvent
 import org.digma.intellij.plugin.updates.ui.UIVersioningService
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration
@@ -101,7 +103,7 @@ class UpdatesService(private val project: Project) : Disposable {
 
 
 
-        project.messageBus.connect().subscribe(
+        project.messageBus.connect(this).subscribe(
             AggressiveUpdateStateChangedEvent.UPDATE_STATE_CHANGED_TOPIC, object : AggressiveUpdateStateChangedEvent {
                 override fun stateChanged(updateState: PublicUpdateState) {
                     oneShotTask("UpdatesService.aggressiveUpdateStateChanged") {
@@ -122,6 +124,15 @@ class UpdatesService(private val project: Project) : Disposable {
                     }
                 }
             })
+
+        //make sure to update the state and panel as soon as possible after a new ui version is available
+        ApplicationManager.getApplication().messageBus.connect(this).subscribe(
+            NewUIVersionAvailableEvent.NEW_UI_VERSION_AVAILABLE_EVENT_TOPIC,object: NewUIVersionAvailableEvent{
+                override fun newUIVersionAvailable() {
+                    checkForNewerVersions()
+                }
+            }
+        )
 
     }
 

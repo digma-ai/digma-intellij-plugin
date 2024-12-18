@@ -33,6 +33,6 @@
 
         window.dashboardEnvironment = "${dashboardEnvironment}";
     </script>
-    <script src="./index.c34fd47244abbbe0b4e9.js"></script>
+    <script src="./index.888427e1af38fc20e7d0.js"></script>
   </body>
 </html>

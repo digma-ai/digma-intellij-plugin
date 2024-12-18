@@ -155,10 +155,14 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
             if (latestDownloadedUiVersion != null) {
                 Log.log(
                     logger::info,
-                    "updating ui to latest downloaded version {}", latestDownloadedUiVersion
+                    "got latest downloaded ui version on startup {}, trying to update..", latestDownloadedUiVersion
                 )
                 val latestDownloadedUi = buildUiBundleLocalFile(latestDownloadedUiVersion)
                 if (latestDownloadedUi.exists()) {
+                    Log.log(
+                        logger::info,
+                        "updating ui to latest downloaded version on startup {}", latestDownloadedUiVersion
+                    )
                     deleteUiBundle(getCurrentUiVersion())
                     setCurrentUiVersion(latestDownloadedUiVersion)
                     setLatestDownloadedVersion(null)

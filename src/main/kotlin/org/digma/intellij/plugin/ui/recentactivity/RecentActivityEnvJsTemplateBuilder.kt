@@ -1,13 +1,12 @@
 package org.digma.intellij.plugin.ui.recentactivity
 
 import com.intellij.openapi.project.Project
-import org.digma.intellij.plugin.ui.jcef.BaseIndexTemplateBuilder
+import org.digma.intellij.plugin.ui.jcef.BaseEnvJsTemplateBuilder
 
 private const val RECENT_EXPIRATION_LIMIT_VARIABLE = "recentActivityExpirationLimit"
 
 
-class RecentActivityIndexTemplateBuilder :
-    BaseIndexTemplateBuilder(RECENT_ACTIVITY_TEMPLATE_FOLDER_NAME, RECENT_ACTIVITY_INDEX_TEMPLATE_NAME) {
+class RecentActivityEnvJsTemplateBuilder(templatePath: String) : BaseEnvJsTemplateBuilder(templatePath) {
 
     override fun addAppSpecificEnvVariable(project: Project, data: MutableMap<String, Any>) {
         data[RECENT_EXPIRATION_LIMIT_VARIABLE] = RECENT_EXPIRATION_LIMIT_MILLIS

@@ -54,15 +54,16 @@ const val USER_ID = "userId"
 const val USER_FINISHED_DIGMATHON = "isDigmathonGameFinished"
 const val IS_LOGGING_ENABLED = "isLoggingEnabled"
 
+const val TEMPLATES_ROOT_FOLDER = "/webview"
 
-abstract class BaseIndexTemplateBuilder(resourceFolderName: String, private val indexTemplateName: String) {
+abstract class BaseEnvJsTemplateBuilder(private val templatePath: String) {
 
     private val logger = Logger.getInstance(this::class.java)
 
     private val freemarkerConfiguration = Configuration(Configuration.VERSION_2_3_30)
 
     init {
-        freemarkerConfiguration.setClassForTemplateLoading(this.javaClass, resourceFolderName)
+        freemarkerConfiguration.setClassForTemplateLoading(this.javaClass, TEMPLATES_ROOT_FOLDER)
         freemarkerConfiguration.setDefaultEncoding(StandardCharsets.UTF_8.name())
         freemarkerConfiguration.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER)
         freemarkerConfiguration.setNumberFormat("computer")
@@ -97,7 +98,7 @@ abstract class BaseIndexTemplateBuilder(resourceFolderName: String, private val 
 
             addAppSpecificEnvVariable(project, data)
 
-            val template: Template = freemarkerConfiguration.getTemplate(indexTemplateName)
+            val template: Template = freemarkerConfiguration.getTemplate(templatePath)
             val stringWriter = StringWriter()
             template.process(data, stringWriter)
             ByteArrayInputStream(stringWriter.toString().toByteArray(StandardCharsets.UTF_8))
@@ -117,7 +118,7 @@ abstract class BaseIndexTemplateBuilder(resourceFolderName: String, private val 
 
 }
 
-
+//todo: move to the build function after refactoring all apps
 fun addCommonEnvVariables(env: MutableMap<String, Any>) {
     env[ENV_VARIABLE_THEME] = if (JBColor.isBright()) Theme.LIGHT.themeName else Theme.DARK.themeName
     env[ENV_VARIABLE_FONT] = UIUtil.getLabelFont().fontName

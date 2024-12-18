@@ -20,7 +20,7 @@ public class JaegerUiSchemeHandlerFactory extends BaseSchemeHandlerFactory {
     @Nullable
     @Override
     public CefResourceHandler createProxyHandler(@NotNull Project project, @NotNull URL url) {
-        var jaegerQueryUrl = GetJaegerQueryUrlOrNull();
+        var jaegerQueryUrl = getJaegerQueryUrlOrNull();
         if (jaegerQueryUrl != null &&
                 JaegerUiProxyResourceHandler.isJaegerQueryCall(url)) {
             return new JaegerUiProxyResourceHandler(jaegerQueryUrl);
@@ -30,12 +30,8 @@ public class JaegerUiSchemeHandlerFactory extends BaseSchemeHandlerFactory {
 
     @NotNull
     @Override
-    public CefResourceHandler createResourceHandler(@NotNull String resourceName, boolean resourceExists, @NotNull CefBrowser browser) {
-        if (resourceExists) {
-            return new JaegerUiResourceHandler(browser, resourceName);
-        } else {
-            return new JaegerUiResourceHandler(browser, JaegerUIConstants.JAEGER_UI_RESOURCE_FOLDER_NAME + "/index.html");
-        }
+    public CefResourceHandler createResourceHandler(@NotNull CefBrowser browser, @NotNull String resourcePath) {
+        return new JaegerUiResourceHandler(browser, resourcePath);
     }
 
     @NotNull
@@ -50,13 +46,9 @@ public class JaegerUiSchemeHandlerFactory extends BaseSchemeHandlerFactory {
         return JaegerUIConstants.JAEGER_UI_DOMAIN_NAME;
     }
 
-    @NotNull
-    @Override
-    public String getResourceFolderName() {
-        return JaegerUIConstants.JAEGER_UI_RESOURCE_FOLDER_NAME;
-    }
 
-    private static URL GetJaegerQueryUrlOrNull(){
+
+    private static URL getJaegerQueryUrlOrNull(){
         var urlStr = SettingsState.getInstance().getJaegerQueryUrl();
         if(urlStr == null)
             return null;

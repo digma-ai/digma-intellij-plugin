@@ -36,6 +36,6 @@
   window.wizardFirstLaunch = ${wizardFirstLaunch?string('true', 'false')};
   window.wizardSkipInstallationStep = ${wizardSkipInstallationStep?string('true', 'false')};
 </script>
-<script src="./index.js"></script>
+<script src="./index.e9a226f99761feda2f6c.js"></script>
 </body>
 </html>

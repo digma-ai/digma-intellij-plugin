@@ -9,8 +9,8 @@ import org.cef.handler.CefResourceHandler
 import org.cef.network.CefRequest
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.updates.ui.UIResourcesService
 import java.net.MalformedURLException
+import java.net.URI
 import java.net.URL
 
 
@@ -48,8 +48,7 @@ abstract class BaseSchemeHandlerFactory : CefSchemeHandlerFactory {
 
             if (getDomain() == host && getSchema() == schemeName) {
                 val resourceName = file.removePrefix("/")
-                val resourceExists = UIResourcesService.getInstance().isResourceExists(resourceName)
-                return createResourceHandler(resourceName, resourceExists, browser)
+                return createResourceHandler(browser, resourceName)
             }
         }
         return null
@@ -58,7 +57,7 @@ abstract class BaseSchemeHandlerFactory : CefSchemeHandlerFactory {
 
     private fun getUrl(request: CefRequest): URL? {
         return try {
-            URL(request.url)
+            URI(request.url).toURL()
         } catch (e: MalformedURLException) {
             null
         }
@@ -68,9 +67,8 @@ abstract class BaseSchemeHandlerFactory : CefSchemeHandlerFactory {
         return null
     }
 
-    abstract fun createResourceHandler(resourceName: String, resourceExists: Boolean, browser: CefBrowser): CefResourceHandler
+    abstract fun createResourceHandler(browser: CefBrowser, resourcePath: String): CefResourceHandler
     abstract fun getSchema(): String
     abstract fun getDomain(): String
-    abstract fun getResourceFolderName(): String //todo: remove
 
 }

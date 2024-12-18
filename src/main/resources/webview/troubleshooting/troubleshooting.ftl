@@ -29,6 +29,6 @@
       window.isDockerComposeInstalled = ${isDockerComposeInstalled?string('true', 'false')};
       window.isLoggingEnabled = ${isLoggingEnabled?string('true', 'false')};
     </script>
-    <script src="./index.js"></script>
+    <script src="./index.d450f964fd53c21c10ea.js"></script>
   </body>
 </html>

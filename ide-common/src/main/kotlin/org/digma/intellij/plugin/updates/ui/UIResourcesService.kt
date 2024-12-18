@@ -78,7 +78,16 @@ class UIResourcesService {
 
     private fun getUIBundlePath():String{
         //todo: support also downloading from url
-        return System.getProperty("org.digma.plugin.ui.bundle.path") ?:UIVersioningService.getInstance().getCurrentUiBundlePath()
+
+        val localUiFilePath = System.getProperty("org.digma.plugin.ui.bundle.path")
+        return if (localUiFilePath != null){
+            Log.log(logger::trace,"Using local UI bundle from {}",localUiFilePath)
+            localUiFilePath
+        }else{
+            val uiBundlePath = UIVersioningService.getInstance().getCurrentUiBundlePath()
+            Log.log(logger::trace,"Using UI bundle from {}",uiBundlePath)
+            uiBundlePath
+        }
     }
 
 }

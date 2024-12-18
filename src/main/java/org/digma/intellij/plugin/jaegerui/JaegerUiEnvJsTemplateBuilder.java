@@ -2,14 +2,14 @@ package org.digma.intellij.plugin.jaegerui;
 
 import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.settings.SettingsState;
-import org.digma.intellij.plugin.ui.jcef.BaseIndexTemplateBuilder;
+import org.digma.intellij.plugin.ui.jcef.BaseEnvJsTemplateBuilder;
 import org.jetbrains.annotations.*;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-public class JaegerUiIndexTemplateBuilder extends BaseIndexTemplateBuilder {
+public class JaegerUiEnvJsTemplateBuilder extends BaseEnvJsTemplateBuilder {
 
     private static final String JAEGER_URL_FOR_LINK_PARAM_NAME = "BASE_URL_STRING_TO_OPEN_LINKS";
     private static final String JAEGER_URL_FOR_API_PARAM_NAME = "BASE_URL_STRING_TO_FORWARD_API_CALLS";
@@ -18,8 +18,8 @@ public class JaegerUiIndexTemplateBuilder extends BaseIndexTemplateBuilder {
 
     private final JaegerUIVirtualFile jaegerUIVirtualFile;
 
-    public JaegerUiIndexTemplateBuilder(JaegerUIVirtualFile file) {
-        super(JaegerUIConstants.JAEGER_UI_TEMPLATE_FOLDER_NAME, JaegerUIConstants.JAEGER_UI_INDEX_TEMPLATE_NAME);
+    public JaegerUiEnvJsTemplateBuilder(JaegerUIVirtualFile file, String templatePath) {
+        super(templatePath);
         this.jaegerUIVirtualFile = file;
     }
 

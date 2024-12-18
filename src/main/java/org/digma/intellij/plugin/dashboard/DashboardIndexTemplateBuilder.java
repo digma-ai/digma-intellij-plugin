@@ -9,14 +9,14 @@ import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.common.JaegerUtilKt;
-import org.digma.intellij.plugin.ui.jcef.BaseIndexTemplateBuilderKt;
+import org.digma.intellij.plugin.ui.jcef.BaseEnvJsTemplateBuilderKt;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 
 import static org.digma.intellij.plugin.analytics.EnvUtilsKt.getCurrentEnvironmentId;
-import static org.digma.intellij.plugin.ui.jcef.BaseIndexTemplateBuilderKt.IS_LOGGING_ENABLED;
+import static org.digma.intellij.plugin.ui.jcef.BaseEnvJsTemplateBuilderKt.IS_LOGGING_ENABLED;
 import static org.digma.intellij.plugin.ui.jcef.JCEFUtilsKt.getIsLoggingEnabledSystemProperty;
 
 public class DashboardIndexTemplateBuilder {
@@ -49,7 +49,7 @@ public class DashboardIndexTemplateBuilder {
         try {
             var data = new HashMap<String, Object>();
 
-            BaseIndexTemplateBuilderKt.addCommonEnvVariables(data);
+            BaseEnvJsTemplateBuilderKt.addCommonEnvVariables(data);
 
             data.put(ENV_VARIABLE_IDE, ApplicationNamesInfo.getInstance().getProductName());
             data.put(IS_JAEGER_ENABLED, JaegerUtilKt.isJaegerButtonEnabled());

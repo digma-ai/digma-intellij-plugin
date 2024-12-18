@@ -1,18 +1,18 @@
 package org.digma.intellij.plugin.documentation;
 
 import com.intellij.openapi.project.Project;
-import org.digma.intellij.plugin.ui.jcef.BaseIndexTemplateBuilder;
+import org.digma.intellij.plugin.ui.jcef.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 
-class DocumentationIndexTemplateBuilder extends BaseIndexTemplateBuilder {
+class DocumentationEnvJsTemplateBuilder extends BaseEnvJsTemplateBuilder {
 
     private static final String DOCUMENTATION_PAGE = "documentationPage";
     private final DocumentationVirtualFile documentationVirtualFile;
 
-    public DocumentationIndexTemplateBuilder(DocumentationVirtualFile documentationVirtualFile) {
-        super(DocumentationConstants.DOCUMENTATION_TEMPLATE_FOLDER_NAME, DocumentationConstants.DOCUMENTATION_INDEX_TEMPLATE_NAME);
+    public DocumentationEnvJsTemplateBuilder(DocumentationVirtualFile documentationVirtualFile,String templatePath) {
+        super(templatePath);
         this.documentationVirtualFile = documentationVirtualFile;
     }
 

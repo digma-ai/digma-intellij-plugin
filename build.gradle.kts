@@ -311,6 +311,7 @@ tasks {
             "kotlinx.coroutines.debug" to "",
             "org.digma.plugin.report.all.errors" to "true",
             "org.digma.plugin.auth.debug" to "true",
+            "org.digma.plugin.DigmaPathManager.dev.runIde" to "true",
 
             //see https://kotlin.github.io/analysis-api/testing-in-k2-locally.html
             "idea.kotlin.plugin.use.k2" to "true",

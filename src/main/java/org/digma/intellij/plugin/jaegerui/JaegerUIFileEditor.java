@@ -27,7 +27,9 @@ public class JaegerUIFileEditor extends UserDataHolderBase implements FileEditor
     public JaegerUIFileEditor(Project project, JaegerUIVirtualFile file) {
         this.file = file;
         jCefComponent = createJcefComponent(project, file);
-        ApplicationManager.getApplication().getService(ReloadObserver.class).register(project, "JaegerUI." + file.getName(), jCefComponent.getComponent(), this);
+        if (jCefComponent != null) {
+            ApplicationManager.getApplication().getService(ReloadObserver.class).register(project, "JaegerUI." + file.getName(), jCefComponent.getComponent(), this);
+        }
     }
 
     @Nullable

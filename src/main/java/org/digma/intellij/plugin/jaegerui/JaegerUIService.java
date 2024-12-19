@@ -47,6 +47,8 @@ public class JaegerUIService implements Disposable, ReloadableJCefContainer {
 
     public void openEmbeddedJaeger(@NotNull String traceId, @NotNull String spanName, @Nullable String spanCodeObjectId, boolean sendSearchQuery) {
 
+        Log.log(logger::trace, "openEmbeddedJaeger called, traceId {}, spanName {}", traceId, spanName);
+
         if (showExisting(traceId, spanName)) {
             return;
         }
@@ -65,6 +67,8 @@ public class JaegerUIService implements Disposable, ReloadableJCefContainer {
 
 
     public void openEmbeddedJaeger(@NotNull List<TraceSample> traceSamples, @NotNull String spanName, @Nullable String spanCodeObjectId, boolean sendSearchQuery) {
+
+        Log.log(logger::trace, "openEmbeddedJaeger called, traceSamples {}, spanName {}", traceSamples, spanName);
 
         if (showExisting(traceSamples, spanName, spanCodeObjectId)) {
             return;
@@ -228,6 +232,8 @@ public class JaegerUIService implements Disposable, ReloadableJCefContainer {
 
     @Override
     public void reload() {
+
+        Log.log(logger::trace, "reload called, reloading all jaeger ui files");
 
         var files = Arrays.stream(FileEditorManager.getInstance(project).getOpenFiles()).filter(JaegerUIVirtualFile::isJaegerUIVirtualFile).toList();
 

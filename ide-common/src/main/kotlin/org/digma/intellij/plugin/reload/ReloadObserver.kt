@@ -28,7 +28,7 @@ import kotlin.time.Duration.Companion.seconds
 
 /**
  * Observes property change events on jcef components and decides if to reload the jcef apps.
- * will do nothing if it's not macOS
+ * Will do nothing if it's not macOS
  */
 @Service(Service.Level.APP)
 class ReloadObserver(cs: CoroutineScope) {

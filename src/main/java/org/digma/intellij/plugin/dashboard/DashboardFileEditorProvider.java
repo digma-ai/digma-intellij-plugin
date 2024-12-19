@@ -17,7 +17,8 @@ public class DashboardFileEditorProvider implements FileEditorProvider {
 
     @Override
     public @NotNull FileEditor createEditor(@NotNull Project project, @NotNull VirtualFile file) {
-        return new DashboardFileEditor(project, file);
+        //unchecked cast must succeed or we have a bug
+        return new DashboardFileEditor(project, (DashboardVirtualFile) file);
     }
 
     @Override

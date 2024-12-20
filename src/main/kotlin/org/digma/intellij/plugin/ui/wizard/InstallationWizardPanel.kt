@@ -174,6 +174,7 @@ class InstallationWizardPanel(private val project: Project, private val wizardSk
         }
 
         fun stop() {
+            Log.log(logger::trace, "stopping DigmaStatusUpdater")
             myDisposable?.let {
                 Disposer.dispose(it)
             }

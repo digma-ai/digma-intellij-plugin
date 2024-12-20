@@ -9,6 +9,7 @@ import org.digma.intellij.plugin.jaegerui.JaegerUiSchemeHandlerFactory
 import org.digma.intellij.plugin.ui.mainapp.MainAppSchemeHandlerFactory
 import org.digma.intellij.plugin.ui.recentactivity.RecentActivitySchemeHandlerFactory
 import org.digma.intellij.plugin.ui.troubleshooting.TroubleshootingSchemeHandlerFactory
+import org.digma.intellij.plugin.ui.wizard.InstallationWizardSchemeHandlerFactory
 
 
 fun allSchemaHandlerFactories(): List<BaseSchemeHandlerFactory> {
@@ -18,7 +19,8 @@ fun allSchemaHandlerFactories(): List<BaseSchemeHandlerFactory> {
         JaegerUiSchemeHandlerFactory(),
         MainAppSchemeHandlerFactory(),
         RecentActivitySchemeHandlerFactory(),
-        TroubleshootingSchemeHandlerFactory()
+        TroubleshootingSchemeHandlerFactory(),
+        InstallationWizardSchemeHandlerFactory()
     )
 }
 

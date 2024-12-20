@@ -53,6 +53,7 @@ import java.util.Objects
 import java.util.WeakHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
+import java.util.function.Supplier
 import javax.swing.JComponent
 
 
@@ -63,6 +64,8 @@ private constructor(
     val name: String,
     val jbCefBrowser: JBCefBrowser
 ) : Disposable {
+
+    private var isLocalEngineOperationRunningProvider: Supplier<Boolean>? = null
 
     private val logger: Logger = Logger.getInstance(JCefComponent::class.java)
 
@@ -88,7 +91,8 @@ private constructor(
 
 
         project.messageBus.connect(parentDisposable)
-            .subscribe(ApiClientChangedEvent.API_CLIENT_CHANGED_TOPIC,
+            .subscribe(
+                ApiClientChangedEvent.API_CLIENT_CHANGED_TOPIC,
                 ApiClientChangedEvent {
 
                     //there are multiple events fired when changing api url , or when changing login info, some run in background threads,
@@ -118,13 +122,15 @@ private constructor(
                 })
 
         ApplicationManager.getApplication().messageBus.connect(parentDisposable)
-            .subscribe(DigmathonProductKeyStateChangedEvent.PRODUCT_KEY_STATE_CHANGED_TOPIC,
+            .subscribe(
+                DigmathonProductKeyStateChangedEvent.PRODUCT_KEY_STATE_CHANGED_TOPIC,
                 DigmathonProductKeyStateChangedEvent { productKey ->
                     sendDigmathonProductKey(productKey, jbCefBrowser.cefBrowser)
                 })
 
         ApplicationManager.getApplication().messageBus.connect(parentDisposable)
-            .subscribe(DigmathonActivationEvent.DIGMATHON_ACTIVATION_TOPIC,
+            .subscribe(
+                DigmathonActivationEvent.DIGMATHON_ACTIVATION_TOPIC,
                 DigmathonActivationEvent { isActive -> sendDigmathonState(isActive, jbCefBrowser.cefBrowser) })
 
         ApplicationUISettingsChangeNotifier.getInstance(project).addSettingsChangeListener(object : SettingsChangeListener {
@@ -154,6 +160,8 @@ private constructor(
             }
         }, parentDisposable)
 
+
+
         project.messageBus.connect(parentDisposable).subscribe(
             AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC, object : AnalyticsServiceConnectionEvent {
 
@@ -162,8 +170,16 @@ private constructor(
                     connectionEventAlarm.cancelAllRequests()
                     connectionEventAlarm.addRequest({
                         try {
-                            val status = service<LocalInstallationFacade>().getCurrentDigmaInstallationStatusOnConnectionLost()
-                            updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
+
+                            //if there is local engine operation running, do not update the status.
+                            //isLocalEngineOperationRunningProvider is provided only by installation wizard, it's not relevant for other apps.
+                            //while the installation wizard is installing or stopping or starting the engine, it's better not to update the ui
+                            // on connection lost
+                            if (isLocalEngineOperationRunningProvider == null || isLocalEngineOperationRunningProvider?.get() == false) {
+                                val status = service<LocalInstallationFacade>().getCurrentDigmaInstallationStatusOnConnectionLost()
+                                updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
+                            }
+
                         } catch (e: Exception) {
                             Log.warnWithException(logger, project, e, "error in connectionLost")
                             ErrorReporter.getInstance().reportError(project, "JCefComponent.connectionLost", e)
@@ -177,8 +193,15 @@ private constructor(
                     connectionEventAlarm.addRequest({
                         try {
                             sendBackendAboutInfo(jbCefBrowser.cefBrowser, project)
-                            val status = service<LocalInstallationFacade>().getCurrentDigmaInstallationStatusOnConnectionGained()
-                            updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
+
+                            //if there is local engine operation running, do not update the status.
+                            //isLocalEngineOperationRunningProvider is provided only by installation wizard, it's not relevant for other apps.
+                            //while the installation wizard is installing or stopping or starting the engine, it's better not to update the ui
+                            // on connection gained
+                            if (isLocalEngineOperationRunningProvider == null || isLocalEngineOperationRunningProvider?.get() == false) {
+                                val status = service<LocalInstallationFacade>().getCurrentDigmaInstallationStatusOnConnectionGained()
+                                updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
+                            }
                         } catch (e: Exception) {
                             Log.warnWithException(logger, project, e, "error in connectionGained")
                             ErrorReporter.getInstance().reportError(project, "JCefComponent.connectionGained", e)
@@ -365,6 +388,10 @@ private constructor(
 
     fun getComponent(): JComponent {
         return jbCefBrowser.component
+    }
+
+    fun setLocalEngineOperationRunningProvider(supplier: Supplier<Boolean>) {
+        this.isLocalEngineOperationRunningProvider = supplier
     }
 
 

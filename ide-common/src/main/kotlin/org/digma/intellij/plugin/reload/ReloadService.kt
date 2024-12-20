@@ -17,7 +17,6 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.recentactivity.RecentActivityToolWindowShower
-import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
@@ -105,17 +104,18 @@ class ReloadService : DisposableAdaptor {
 
         Log.log(logger::trace, "Reloading jcef for project {}", project.name)
 
-        EDT.ensureEDT {
-            try {
-                if (isProjectValid(project)) {
-                    MainToolWindowCardsController.getInstance(project).wizardFinished()
-                    //MainToolWindowCardsController.getInstance(project).troubleshootingFinished()
-                }
-            } catch (e: Throwable) {
-                Log.warnWithException(logger, project, e, "error in reload for project {}", project)
-                ErrorReporter.getInstance().reportError("ReloadService.reload", e)
-            }
-        }
+        //todo: maybe we want to close the wizard or troubleshooting on reload?
+//        EDT.ensureEDT {
+//            try {
+//                if (isProjectValid(project)) {
+//                    MainToolWindowCardsController.getInstance(project).wizardFinished()
+//                    MainToolWindowCardsController.getInstance(project).troubleshootingFinished()
+//                }
+//            } catch (e: Throwable) {
+//                Log.warnWithException(logger, project, e, "error in reload for project {}", project)
+//                ErrorReporter.getInstance().reportError("ReloadService.reload", e)
+//            }
+//        }
 
         //because of the way we reload jaeger ui and dashboard by closing and opening the files again,
         // we want to try and restore the selected editor

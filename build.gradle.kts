@@ -355,7 +355,8 @@ tasks {
             "webview/documentation/env.js",
             "webview/dashboard/env.js",
             "webview/troubleshooting/env.js",
-            "webview/main/env.js"
+            "webview/main/env.js",
+            "webview/installation-wizard/env.js"
         )
 
 

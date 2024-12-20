@@ -152,8 +152,17 @@ class InstallationWizardPanel(private val project: Project, private val wizardSk
                             }
                         }
 
-                        sendIsDigmaEngineInstalled(LocalInstallationFacade.getInstance().isLocalEngineInstalled(), browser)
-                        sendIsDigmaEngineRunning(LocalInstallationFacade.getInstance().isLocalEngineRunning(project), browser)
+                        val isLocalEngineInstalled = LocalInstallationFacade.getInstance().isLocalEngineInstalled()
+                        val isLocalEngineRunning = LocalInstallationFacade.getInstance().isLocalEngineRunning(project)
+                        Log.log(
+                            logger::trace,
+                            project,
+                            "updating wizard with isLocalEngineInstalled={},isLocalEngineRunning={}",
+                            isLocalEngineInstalled,
+                            isLocalEngineRunning
+                        )
+                        sendIsDigmaEngineInstalled(isLocalEngineInstalled, browser)
+                        sendIsDigmaEngineRunning(isLocalEngineRunning, browser)
 
 
                     } catch (e: Exception) {

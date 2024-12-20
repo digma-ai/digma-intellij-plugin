@@ -109,7 +109,7 @@ class ReloadService : DisposableAdaptor {
             try {
                 if (isProjectValid(project)) {
                     MainToolWindowCardsController.getInstance(project).wizardFinished()
-                    MainToolWindowCardsController.getInstance(project).troubleshootingFinished()
+                    //MainToolWindowCardsController.getInstance(project).troubleshootingFinished()
                 }
             } catch (e: Throwable) {
                 Log.warnWithException(logger, project, e, "error in reload for project {}", project)

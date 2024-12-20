@@ -242,7 +242,7 @@ public class MainToolWindowCardsController implements Disposable {
         if (troubleshooting.isOn()) {
             toolWindow.getContentManager().removeContent(troubleshooting.troubleshootingContent, true);
             toolWindow.getContentManager().addContent(mainContent);
-            //dispose the wizard panel which will dispose the jcef browser
+            //dispose the troubleshooting panel which will dispose the jcef browser
             troubleshooting.troubleshootingPanel.dispose();
             troubleshooting.troubleshootingContent = null;
             troubleshooting.troubleshootingPanel = null;

@@ -354,6 +354,7 @@ tasks {
             "webview/jaeger-ui/env.js",
             "webview/documentation/env.js",
             "webview/dashboard/env.js",
+            "webview/troubleshooting/env.js",
             "webview/main/env.js"
         )
 

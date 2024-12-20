@@ -13,11 +13,11 @@ import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.psi.LanguageService;
-import org.digma.intellij.plugin.troubleshooting.TroubleshootingPanel;
 import org.digma.intellij.plugin.ui.*;
 import org.digma.intellij.plugin.ui.common.MainContentPanel;
 import org.digma.intellij.plugin.ui.common.statuspanels.*;
 import org.digma.intellij.plugin.ui.panels.DisposablePanel;
+import org.digma.intellij.plugin.ui.troubleshooting.TroubleshootingPanel;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;

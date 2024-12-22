@@ -41,6 +41,9 @@ class UIResourcesService {
     }
 
     fun isResourceExists(resourcePath: String): Boolean {
+
+        Log.log(logger::info, "request for isResourceExists {}",resourcePath)
+
         waitForUiStartupToComplete()
 
         val uiBundlePath = getUIBundlePath()
@@ -52,6 +55,9 @@ class UIResourcesService {
     }
 
     fun getResourceAsStream(resourcePath: String): InputStream? {
+
+        Log.log(logger::info, "request for getResourceAsStream {}",resourcePath)
+
         waitForUiStartupToComplete()
 
         val uiBundlePath = getUIBundlePath()

@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.ui.recentactivity
 
+const val RECENT_ACTIVITY_APP_NAME = "RecentActivity"
 const val RECENT_ACTIVITY_DOMAIN_NAME = "recentactivity"
 const val RECENT_ACTIVITY_APP_SCHEMA = "https"
 const val RECENT_ACTIVITY_RESOURCE_FOLDER_NAME = "recent-activity"

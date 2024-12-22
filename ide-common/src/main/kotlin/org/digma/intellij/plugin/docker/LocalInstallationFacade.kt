@@ -131,6 +131,10 @@ class LocalInstallationFacade {
         return operationInProgress.get() == OP.INSTALL
     }
 
+    fun isAnyOperationRunning(): Boolean {
+        return operationInProgress.get() != null
+    }
+
 
     fun isLocalEngineInstalled(): Boolean {
         if (operationInProgress.get() == OP.INSTALL) {

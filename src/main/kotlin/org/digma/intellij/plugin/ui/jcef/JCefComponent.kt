@@ -48,12 +48,12 @@ import org.digma.intellij.plugin.ui.jcef.state.StateChangedEvent
 import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier
 import org.digma.intellij.plugin.ui.settings.SettingsChangeListener
 import org.digma.intellij.plugin.ui.settings.Theme
+import org.digma.intellij.plugin.ui.wizard.INSTALLATION_WIZARD_APP_NAME
 import java.lang.ref.WeakReference
 import java.util.Objects
 import java.util.WeakHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
-import java.util.function.Supplier
 import javax.swing.JComponent
 
 
@@ -64,8 +64,6 @@ private constructor(
     val name: String,
     val jbCefBrowser: JBCefBrowser
 ) : Disposable {
-
-    private var isLocalEngineOperationRunningProvider: Supplier<Boolean>? = null
 
     private val logger: Logger = Logger.getInstance(JCefComponent::class.java)
 
@@ -165,17 +163,24 @@ private constructor(
         project.messageBus.connect(parentDisposable).subscribe(
             AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC, object : AnalyticsServiceConnectionEvent {
 
+
+
+                private fun shouldUpdateEngineStatus(): Boolean {
+                    //in installation wizard there is no need to update the status on connection lost if there is any engine operation
+                    // running (like install,stop,start,remove) because it may confuse the UI.
+                    //the installation wizard app will be updated when the operation is completed.
+                    //for other apps it is ok to update the status.
+                    return !(name == INSTALLATION_WIZARD_APP_NAME && service<LocalInstallationFacade>().isAnyOperationRunning())
+                }
+
+
                 override fun connectionLost() {
                     //delay before reporting digma status to let all containers go down
                     connectionEventAlarm.cancelAllRequests()
                     connectionEventAlarm.addRequest({
                         try {
 
-                            //if there is local engine operation running, do not update the status.
-                            //isLocalEngineOperationRunningProvider is provided only by installation wizard, it's not relevant for other apps.
-                            //while the installation wizard is installing or stopping or starting the engine, it's better not to update the ui
-                            // on connection lost
-                            if (isLocalEngineOperationRunningProvider == null || isLocalEngineOperationRunningProvider?.get() == false) {
+                            if (shouldUpdateEngineStatus()) {
                                 val status = service<LocalInstallationFacade>().getCurrentDigmaInstallationStatusOnConnectionLost()
                                 updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
                             }
@@ -194,11 +199,7 @@ private constructor(
                         try {
                             sendBackendAboutInfo(jbCefBrowser.cefBrowser, project)
 
-                            //if there is local engine operation running, do not update the status.
-                            //isLocalEngineOperationRunningProvider is provided only by installation wizard, it's not relevant for other apps.
-                            //while the installation wizard is installing or stopping or starting the engine, it's better not to update the ui
-                            // on connection gained
-                            if (isLocalEngineOperationRunningProvider == null || isLocalEngineOperationRunningProvider?.get() == false) {
+                            if (shouldUpdateEngineStatus()) {
                                 val status = service<LocalInstallationFacade>().getCurrentDigmaInstallationStatusOnConnectionGained()
                                 updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
                             }
@@ -388,10 +389,6 @@ private constructor(
 
     fun getComponent(): JComponent {
         return jbCefBrowser.component
-    }
-
-    fun setLocalEngineOperationRunningProvider(supplier: Supplier<Boolean>) {
-        this.isLocalEngineOperationRunningProvider = supplier
     }
 
 

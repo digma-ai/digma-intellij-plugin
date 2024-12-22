@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.dashboard;
 
 public interface DashboardConstants {
 
+    String DASHBOARD_APP_NAME = "Dashboard";
     String DASHBOARD_DOMAIN_NAME = "dashboard";
     String DASHBOARD_SCHEMA = "http";
     String DASHBOARD_RESOURCE_FOLDER_NAME = "dashboard";

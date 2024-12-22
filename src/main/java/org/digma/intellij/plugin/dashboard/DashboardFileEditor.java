@@ -13,6 +13,7 @@ import org.jetbrains.annotations.*;
 import javax.swing.*;
 import java.beans.PropertyChangeListener;
 
+import static org.digma.intellij.plugin.dashboard.DashboardConstants.DASHBOARD_APP_NAME;
 import static org.digma.intellij.plugin.ui.jcef.JBcefBrowserPropertiesKt.JCEF_DASHBOARD_FILE_PROPERTY_NAME;
 
 public class DashboardFileEditor extends UserDataHolderBase implements FileEditor {
@@ -28,7 +29,7 @@ public class DashboardFileEditor extends UserDataHolderBase implements FileEdito
         this.file = file;
         jCefComponent = createJcefComponent(project, file);
         if (jCefComponent != null) {
-            ApplicationManager.getApplication().getService(ReloadObserver.class).register(project, "Dashboard." + file.getName(), jCefComponent.getComponent(), this);
+            ApplicationManager.getApplication().getService(ReloadObserver.class).register(project, DASHBOARD_APP_NAME + "." + file.getName(), jCefComponent.getComponent(), this);
         }
     }
 
@@ -36,7 +37,7 @@ public class DashboardFileEditor extends UserDataHolderBase implements FileEdito
     private JCefComponent createJcefComponent(Project project, DashboardVirtualFile file) {
 
         if (JBCefApp.isSupported()) {
-            return new JCefComponent.JCefComponentBuilder(project, "Dashboard", this,
+            return new JCefComponent.JCefComponentBuilder(project, DASHBOARD_APP_NAME, this,
                     DashboardConstants.DASHBOARD_URL,
                     new DashboardMessageRouterHandler(project))
                     .withArg(JCEF_DASHBOARD_FILE_PROPERTY_NAME, file)

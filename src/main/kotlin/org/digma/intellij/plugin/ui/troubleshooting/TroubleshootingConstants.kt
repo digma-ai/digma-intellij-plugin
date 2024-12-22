@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.ui.troubleshooting
 
+const val TROUBLESHOOTING_APP_NAME = "Troubleshooting"
 const val TROUBLESHOOTING_DOMAIN_NAME = "troubleshooting"
 const val TROUBLESHOOTING_SCHEMA = "http"
 const val TROUBLESHOOTING_RESOURCE_FOLDER_NAME = "troubleshooting" //folder in ui zip bundle

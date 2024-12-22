@@ -29,14 +29,11 @@ import org.digma.intellij.plugin.ui.wizard.model.ConnectionCheckMessageRequest
 import org.digma.intellij.plugin.ui.wizard.model.ConnectionCheckResult
 import org.digma.intellij.plugin.ui.wizard.model.FinishRequest
 import org.digma.intellij.plugin.ui.wizard.model.SetObservabilityRequest
-import java.util.concurrent.atomic.AtomicBoolean
 
 class InstallationWizardMessageRouterHandler(
     project: Project,
-    private val digmaStatusUpdater: InstallationWizardPanel.DigmaStatusUpdater,
-    private val localEngineOperationRunning: AtomicBoolean
-) :
-    BaseMessageRouterHandler(project) {
+    private val digmaStatusUpdater: InstallationWizardPanel.DigmaStatusUpdater
+) : BaseMessageRouterHandler(project) {
 
     override fun getOriginForTroubleshootingEvent(): String {
         return "wizard"
@@ -101,8 +98,6 @@ class InstallationWizardMessageRouterHandler(
 
 
             JCEFGlobalConstants.INSTALLATION_WIZARD_INSTALL_DIGMA_ENGINE -> {
-
-                localEngineOperationRunning.set(true)
 
                 service<LocalInstallationFacade>().installEngine(project) { exitValue ->
 
@@ -196,13 +191,10 @@ class InstallationWizardMessageRouterHandler(
                     }
 
                     updateDigmaEngineStatus(project, browser)
-                    localEngineOperationRunning.set(false)
-
                 }
             }
 
             JCEFGlobalConstants.INSTALLATION_WIZARD_UNINSTALL_DIGMA_ENGINE -> {
-                localEngineOperationRunning.set(true)
                 service<LocalInstallationFacade>().removeEngine(project) { exitValue ->
 
                     EDT.assertNonDispatchThread()
@@ -237,12 +229,10 @@ class InstallationWizardMessageRouterHandler(
                     }
 
                     updateDigmaEngineStatus(project, browser)
-                    localEngineOperationRunning.set(false)
                 }
             }
 
             JCEFGlobalConstants.INSTALLATION_WIZARD_START_DIGMA_ENGINE -> {
-                localEngineOperationRunning.set(true)
                 service<LocalInstallationFacade>().startEngine(project) { exitValue ->
 
                     EDT.assertNonDispatchThread()
@@ -313,13 +303,11 @@ class InstallationWizardMessageRouterHandler(
 
 
                     updateDigmaEngineStatus(project, browser)
-                    localEngineOperationRunning.set(false)
 
                 }
             }
 
             JCEFGlobalConstants.INSTALLATION_WIZARD_STOP_DIGMA_ENGINE -> {
-                localEngineOperationRunning.set(true)
                 service<LocalInstallationFacade>().stopEngine(project) { exitValue ->
 
                     EDT.assertNonDispatchThread()
@@ -352,7 +340,6 @@ class InstallationWizardMessageRouterHandler(
                     }
 
                     updateDigmaEngineStatus(project, browser)
-                    localEngineOperationRunning.set(false)
                 }
             }
 

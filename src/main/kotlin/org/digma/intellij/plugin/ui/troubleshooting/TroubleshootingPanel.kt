@@ -26,7 +26,7 @@ class TroubleshootingPanel(private val project: Project) : DisposablePanel(), Re
         jCefComponent = build()
         jCefComponent?.let {
             service<ReloadService>().register(this, parentDisposable)
-            service<ReloadObserver>().register(project, "Troubleshooting", it.getComponent(), parentDisposable)
+            service<ReloadObserver>().register(project, TROUBLESHOOTING_APP_NAME, it.getComponent(), parentDisposable)
         }
         Disposer.register(TroubleshootingService.getInstance(project)) {
             dispose()
@@ -51,7 +51,7 @@ class TroubleshootingPanel(private val project: Project) : DisposablePanel(), Re
     private fun createJcefComponent(): JCefComponent? {
         return if (JBCefApp.isSupported()) {
             JCefComponent.JCefComponentBuilder(
-                project, "Troubleshooting", parentDisposable,
+                project, TROUBLESHOOTING_APP_NAME, parentDisposable,
                 TROUBLESHOOTING_URL,
                 TroubleshootingMessageRouterHandler(project)
             ).build()
@@ -68,7 +68,7 @@ class TroubleshootingPanel(private val project: Project) : DisposablePanel(), Re
         jCefComponent = build()
         jCefComponent?.let {
             service<ReloadService>().register(this, parentDisposable)
-            service<ReloadObserver>().register(project, "Troubleshooting", it.getComponent(), parentDisposable)
+            service<ReloadObserver>().register(project, TROUBLESHOOTING_APP_NAME, it.getComponent(), parentDisposable)
         }
     }
 

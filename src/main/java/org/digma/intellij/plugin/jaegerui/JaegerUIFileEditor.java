@@ -13,6 +13,7 @@ import org.jetbrains.annotations.*;
 import javax.swing.*;
 import java.beans.PropertyChangeListener;
 
+import static org.digma.intellij.plugin.jaegerui.JaegerUIConstants.JAEGER_UI_APP_NAME;
 import static org.digma.intellij.plugin.ui.jcef.JBcefBrowserPropertiesKt.JCEF_JAEGER_UI_FILE_PROPERTY_NAME;
 
 public class JaegerUIFileEditor extends UserDataHolderBase implements FileEditor {
@@ -28,7 +29,7 @@ public class JaegerUIFileEditor extends UserDataHolderBase implements FileEditor
         this.file = file;
         jCefComponent = createJcefComponent(project, file);
         if (jCefComponent != null) {
-            ApplicationManager.getApplication().getService(ReloadObserver.class).register(project, "JaegerUI." + file.getName(), jCefComponent.getComponent(), this);
+            ApplicationManager.getApplication().getService(ReloadObserver.class).register(project, JAEGER_UI_APP_NAME + "." + file.getName(), jCefComponent.getComponent(), this);
         }
     }
 
@@ -36,7 +37,7 @@ public class JaegerUIFileEditor extends UserDataHolderBase implements FileEditor
     private JCefComponent createJcefComponent(Project project, JaegerUIVirtualFile file) {
 
         if (JBCefApp.isSupported()) {
-            return new JCefComponent.JCefComponentBuilder(project, "JaegerUI", this,
+            return new JCefComponent.JCefComponentBuilder(project, JAEGER_UI_APP_NAME, this,
                     JaegerUIConstants.JAEGER_UI_URL,
                     new JaegerUIMessageRouterHandler(project))
                     .withArg(JCEF_JAEGER_UI_FILE_PROPERTY_NAME, file)

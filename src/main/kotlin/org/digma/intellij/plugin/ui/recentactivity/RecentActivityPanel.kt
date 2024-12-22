@@ -7,11 +7,11 @@ import com.intellij.ui.jcef.JBCefApp
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.reload.ReloadObserver
 import org.digma.intellij.plugin.reload.ReloadService
+import org.digma.intellij.plugin.reload.ReloadableJCefContainer
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
 import org.digma.intellij.plugin.ui.jcef.JCefComponent.JCefComponentBuilder
 import org.digma.intellij.plugin.ui.list.listBackground
 import org.digma.intellij.plugin.ui.panels.DisposablePanel
-import org.digma.intellij.plugin.reload.ReloadableJCefContainer
 import java.awt.BorderLayout
 import java.awt.Insets
 import javax.swing.JComponent
@@ -27,7 +27,7 @@ class RecentActivityPanel(private val project: Project) : DisposablePanel(), Rel
         jCefComponent = build()
         jCefComponent?.let {
             service<ReloadService>().register(this, parentDisposable)
-            service<ReloadObserver>().register(project, "RecentActivity", it.getComponent(), parentDisposable)
+            service<ReloadObserver>().register(project, RECENT_ACTIVITY_APP_NAME, it.getComponent(), parentDisposable)
         }
         Disposer.register(project.service<RecentActivityService>()) {
             dispose()
@@ -64,7 +64,7 @@ class RecentActivityPanel(private val project: Project) : DisposablePanel(), Rel
         jCefComponent = build()
         jCefComponent?.let {
             service<ReloadService>().register(this, parentDisposable)
-            service<ReloadObserver>().register(project, "RecentActivity", it.getComponent(), parentDisposable)
+            service<ReloadObserver>().register(project, RECENT_ACTIVITY_APP_NAME, it.getComponent(), parentDisposable)
         }
     }
 
@@ -76,7 +76,7 @@ class RecentActivityPanel(private val project: Project) : DisposablePanel(), Rel
     private fun createJcefComponent(): JCefComponent? {
         return if (JBCefApp.isSupported()) {
             JCefComponentBuilder(
-                project, "RecentActivity", parentDisposable,
+                project, RECENT_ACTIVITY_APP_NAME, parentDisposable,
                 RECENT_ACTIVITY_URL,
                 RecentActivityMessageRouterHandler(project)
             )

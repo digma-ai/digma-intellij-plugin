@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.ui.wizard
 
-import com.google.common.base.Supplier
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
@@ -24,7 +23,6 @@ import org.digma.intellij.plugin.ui.list.listBackground
 import org.digma.intellij.plugin.ui.panels.DisposablePanel
 import java.awt.BorderLayout
 import java.awt.Insets
-import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 import javax.swing.JComponent
 import javax.swing.JLabel
@@ -38,15 +36,13 @@ class InstallationWizardPanel(private val project: Project, private val wizardSk
 
     private val digmaStatusUpdater = DigmaStatusUpdater()
 
-    private val localEngineOperationRunning = AtomicBoolean(false)
-
     private var parentDisposable = Disposer.newDisposable()
 
     init {
         jCefComponent = build()
         jCefComponent?.let {
             service<ReloadService>().register(this, parentDisposable)
-            service<ReloadObserver>().register(project, "InstallationWizard", it.getComponent(), parentDisposable)
+            service<ReloadObserver>().register(project, INSTALLATION_WIZARD_APP_NAME, it.getComponent(), parentDisposable)
         }
         Disposer.register(InstallationWizardService.getInstance(project)) {
             dispose()
@@ -62,7 +58,6 @@ class InstallationWizardPanel(private val project: Project, private val wizardSk
     private fun build(): JCefComponent? {
 
         val jCefComponent = createJcefComponent()
-        jCefComponent?.setLocalEngineOperationRunningProvider(Supplier { localEngineOperationRunning.get() })
 
         val jcefUiComponent: JComponent = jCefComponent?.getComponent() ?: JLabel("JCEF not supported")
 
@@ -77,9 +72,9 @@ class InstallationWizardPanel(private val project: Project, private val wizardSk
     private fun createJcefComponent(): JCefComponent? {
         return if (JBCefApp.isSupported()) {
             JCefComponent.JCefComponentBuilder(
-                project, "InstallationWizard", parentDisposable,
+                project, INSTALLATION_WIZARD_APP_NAME, parentDisposable,
                 INSTALLATION_WIZARD_URL,
-                InstallationWizardMessageRouterHandler(project, digmaStatusUpdater, localEngineOperationRunning)
+                InstallationWizardMessageRouterHandler(project, digmaStatusUpdater)
             )
                 .withArg(JCEF_WIZARD_SKIP_INSTALLATION_STEP_PROPERTY_NAME, wizardSkipInstallationStep)
                 .build()
@@ -96,7 +91,7 @@ class InstallationWizardPanel(private val project: Project, private val wizardSk
         jCefComponent = build()
         jCefComponent?.let {
             service<ReloadService>().register(this, parentDisposable)
-            service<ReloadObserver>().register(project, "InstallationWizard", it.getComponent(), parentDisposable)
+            service<ReloadObserver>().register(project, INSTALLATION_WIZARD_APP_NAME, it.getComponent(), parentDisposable)
         }
     }
 

@@ -6,8 +6,7 @@ import com.intellij.openapi.diagnostic.Logger
 import org.digma.intellij.plugin.log.Log
 import java.io.File
 import java.io.InputStream
-import java.util.concurrent.Semaphore
-import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.CountDownLatch
 import java.util.zip.ZipFile
 
 @Service(Service.Level.APP)
@@ -16,8 +15,7 @@ class UIResourcesService {
 
     private val logger = Logger.getInstance(this::class.java)
 
-    private val uiVersioningServiceStartupLock = Semaphore(0)
-    private val startupCompleted: AtomicBoolean = AtomicBoolean(false)
+    private val uiVersioningServiceStartupLock = CountDownLatch(1)
 
     companion object {
         @JvmStatic
@@ -27,20 +25,19 @@ class UIResourcesService {
     }
 
     fun startupCompleted() {
-        Log.log(logger::info,"startup completed")
-        startupCompleted.set(true)
-        uiVersioningServiceStartupLock.release()
+        Log.log(logger::info, "startup completed")
+        uiVersioningServiceStartupLock.countDown()
     }
 
     private fun waitForUiStartupToComplete() {
 
-        if (startupCompleted.get()){
+        if (uiVersioningServiceStartupLock.count == 0L) {
             return
         }
 
-        Log.log(logger::info,"waiting for startup to complete")
-        uiVersioningServiceStartupLock.acquire()
-        Log.log(logger::info,"done waiting for startup to complete")
+        Log.log(logger::info, "waiting for startup to complete")
+        uiVersioningServiceStartupLock.await()
+        Log.log(logger::info, "done waiting for startup to complete")
     }
 
     fun isResourceExists(resourcePath: String): Boolean {
@@ -76,16 +73,16 @@ class UIResourcesService {
     }
 
 
-    private fun getUIBundlePath():String{
+    private fun getUIBundlePath(): String {
         //todo: support also downloading from url
 
         val localUiFilePath = System.getProperty("org.digma.plugin.ui.bundle.path")
-        return if (localUiFilePath != null){
-            Log.log(logger::trace,"Using local UI bundle from {}",localUiFilePath)
+        return if (localUiFilePath != null) {
+            Log.log(logger::trace, "Using local UI bundle from {}", localUiFilePath)
             localUiFilePath
-        }else{
+        } else {
             val uiBundlePath = UIVersioningService.getInstance().getCurrentUiBundlePath()
-            Log.log(logger::trace,"Using UI bundle from {}",uiBundlePath)
+            Log.log(logger::trace, "Using UI bundle from {}", uiBundlePath)
             uiBundlePath
         }
     }

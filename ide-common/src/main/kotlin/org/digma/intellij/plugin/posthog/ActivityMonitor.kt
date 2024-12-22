@@ -719,6 +719,16 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
         postHog?.capture(UniqueGeneratedUserId.userId, "plugin first-init")
     }
 
+    fun registerUIUpdate(eventName: String, details: Map<String, Any>) {
+        //here use postHog.capture directly, this event is called from UIVersioningService while its initializing,
+        // it cannot call the common capture method because it may cause a circular dependency between UIVersioningService
+        // and ActivityMonitor because the capture method will call UIVersioningService.getInstance().getCurrentUiVersion().
+        //although UIVersioningService initialize fast enough, there may be a race condition if the capture method calls
+        // UIVersioningService.getInstance().getCurrentUiVersion() before UIVersioningService constructor completes.
+        // also, this event doesn't need all the common properties.
+        postHog?.capture(UniqueGeneratedUserId.userId, eventName,details)
+    }
+
     fun registerProjectOpened(openProjects: Int) {
         capture("project opened", mapOf("open.projects" to openProjects))
     }

@@ -5,6 +5,7 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import org.apache.maven.artifact.versioning.ComparableVersion
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.common.DisposableAdaptor
@@ -81,9 +82,16 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
 
         UI_BUNDLES_LOCAL_DIR.mkdirs()
 
-        doStartup()
-        //startMonitoring is called from constructor, it will be called only once per IDE session
-        startMonitoring()
+        //run the startup in a coroutine to avoid long initialization of the service so that it will be available for other services
+        // that may call it on startup.
+        //there are not so many services that depend on this service, but in any case make sure it initializes fast.
+        //UIResourcesService depends on this service, but it will wait for startup to complete before calling it.
+        //ActivityMonitor also depends on this service.
+        cs.launch {
+            doStartup()
+            //startMonitoring is called from constructor, it will be called only once per IDE session
+            startMonitoring()
+        }
     }
 
     fun isNewUIBundleAvailable(): Boolean {
@@ -128,7 +136,7 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
     }
 
     //this method will make sure we have a UI bundle available for work.
-    //if there is a new version that was already downloaded it will update to use the new version
+    //if there is a new version that was already downloaded, it will update to use the new version.
     private fun validateUiBundleExists() {
 
         try {
@@ -165,7 +173,7 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
                     )
 
                     findActiveProject()?.let {
-                        ActivityMonitor.getInstance(it).registerCustomEvent(
+                        ActivityMonitor.getInstance(it).registerUIUpdate(
                             "ui update on startup", mapOf(
                                 "update to version" to latestDownloadedUiVersion,
                                 "current ui version" to getCurrentUiVersion(),
@@ -390,7 +398,7 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
             Log.log(logger::trace, "updating ui to downloaded version {}, isForceUpdate {}", uiVersion, isForceUpdate)
 
             findActiveProject()?.let {
-                ActivityMonitor.getInstance(it).registerCustomEvent(
+                ActivityMonitor.getInstance(it).registerUIUpdate(
                     "ui update", mapOf(
                         "update to version" to uiVersion,
                         "current ui version" to getCurrentUiVersion(),

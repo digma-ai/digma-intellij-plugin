@@ -31,7 +31,7 @@ class UIResourcesService {
 
     private fun waitForUiStartupToComplete() {
 
-        if (uiVersioningServiceStartupLock.count == 0L) {
+        if (uiVersioningServiceStartupLock.count <= 0L) {
             return
         }
 

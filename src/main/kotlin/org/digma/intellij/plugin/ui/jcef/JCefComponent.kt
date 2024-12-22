@@ -181,8 +181,11 @@ private constructor(
                         try {
 
                             if (shouldUpdateEngineStatus()) {
+                                Log.log(logger::trace, "updating digma installation status on connection lost")
                                 val status = service<LocalInstallationFacade>().getCurrentDigmaInstallationStatusOnConnectionLost()
                                 updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
+                            }else{
+                                Log.log(logger::trace, "NOT updating digma installation status on connection lost because operation is running by installation wizard")
                             }
 
                         } catch (e: Exception) {
@@ -200,8 +203,11 @@ private constructor(
                             sendBackendAboutInfo(jbCefBrowser.cefBrowser, project)
 
                             if (shouldUpdateEngineStatus()) {
+                                Log.log(logger::trace, "updating digma installation status on connection gained")
                                 val status = service<LocalInstallationFacade>().getCurrentDigmaInstallationStatusOnConnectionGained()
                                 updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
+                            }else{
+                                Log.log(logger::trace, "NOT updating digma installation status on connection gained because operation is running by installation wizard")
                             }
                         } catch (e: Exception) {
                             Log.warnWithException(logger, project, e, "error in connectionGained")

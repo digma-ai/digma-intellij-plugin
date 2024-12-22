@@ -10,6 +10,7 @@ import org.cef.misc.StringRef
 import org.cef.network.CefRequest
 import org.cef.network.CefResponse
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.updates.ui.UIResourcesService
 import java.io.IOException
 import java.io.InputStream
 import kotlin.math.min
@@ -23,17 +24,21 @@ abstract class BaseResourceHandler(private val path: String, protected val brows
     private var resourceType: CefRequest.ResourceType? = null
 
 
-    abstract fun isIndexHtml(path: String): Boolean
+    private fun isEnvJs(path: String): Boolean{
+        return path.equals("${getResourceFolderName()}/env.js", true)
+    }
 
-    abstract fun buildIndexFromTemplate(path: String): InputStream?
-
+    abstract fun buildEnvJsFromTemplate(path: String): InputStream?
+    abstract fun getResourceFolderName(): String
 
     override fun processRequest(request: CefRequest, callback: CefCallback): Boolean {
 
-        inputStream = if (isIndexHtml(path)) {
-            buildIndexFromTemplate(path)
-        } else {
-            javaClass.getResourceAsStream(path)
+        inputStream = if (isEnvJs(path)) {
+            buildEnvJsFromTemplate(path)
+        } else if (UIResourcesService.getInstance().isResourceExists(path)){
+            UIResourcesService.getInstance().getResourceAsStream(path)
+        }else{
+            UIResourcesService.getInstance().getResourceAsStream("${getResourceFolderName()}/index.html")
         }
 
         if (inputStream == null) {

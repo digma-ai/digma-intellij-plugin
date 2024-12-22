@@ -69,9 +69,11 @@ class Downloader {
             return
         }
 
-        val outputStream = FileOutputStream(composeFile)
-        Log.log(logger::info, "unpacking {} to {}", COMPOSE_FILE_NAME, composeFile)
-        com.intellij.openapi.util.io.StreamUtil.copy(inputStream, outputStream)
+        FileOutputStream(composeFile).use {
+            Log.log(logger::info, "unpacking {} to {}", COMPOSE_FILE_NAME, composeFile)
+            com.intellij.openapi.util.io.StreamUtil.copy(inputStream, it)
+        }
+
     }
 
 
@@ -103,6 +105,7 @@ class Downloader {
                         "download from $url",
                         mapOf("responseCode" to responseCode.toString())
                     )
+                    throw RuntimeException("could not download file from $url")
                 } else {
                     connection.inputStream.use {
                         Files.copy(it, tempFile, StandardCopyOption.REPLACE_EXISTING)

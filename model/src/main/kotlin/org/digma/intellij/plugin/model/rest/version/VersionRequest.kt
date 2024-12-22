@@ -10,4 +10,5 @@ constructor(
     val pluginVersion: String,
     val platformType: String,
     val platformVersion: String,
+    val uiVersion: String
 )

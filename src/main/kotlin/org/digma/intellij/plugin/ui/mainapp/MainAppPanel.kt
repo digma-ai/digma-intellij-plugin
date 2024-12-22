@@ -7,6 +7,7 @@ import com.intellij.ui.jcef.JBCefApp
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.reload.ReloadObserver
 import org.digma.intellij.plugin.reload.ReloadService
+import org.digma.intellij.plugin.reload.ReloadableJCefContainer
 import org.digma.intellij.plugin.ui.insights.InsightsService
 import org.digma.intellij.plugin.ui.jcef.DownloadHandlerAdapter
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
@@ -14,7 +15,6 @@ import org.digma.intellij.plugin.ui.list.listBackground
 import org.digma.intellij.plugin.ui.navigation.CodeButtonCaretContextService
 import org.digma.intellij.plugin.ui.navigation.NavigationService
 import org.digma.intellij.plugin.ui.panels.DisposablePanel
-import org.digma.intellij.plugin.reload.ReloadableJCefContainer
 import org.digma.intellij.plugin.ui.tests.TestsUpdater
 import java.awt.BorderLayout
 import java.awt.Insets
@@ -31,7 +31,7 @@ class MainAppPanel(private val project: Project) : DisposablePanel(), Reloadable
         jCefComponent = build()
         jCefComponent?.let {
             service<ReloadService>().register(this, parentDisposable)
-            service<ReloadObserver>().register(project, "MainApp", it.getComponent(), parentDisposable)
+            service<ReloadObserver>().register(project, MAIN_APP_APP_NAME, it.getComponent(), parentDisposable)
         }
         Disposer.register(MainAppService.getInstance(project)) {
             dispose()
@@ -69,7 +69,7 @@ class MainAppPanel(private val project: Project) : DisposablePanel(), Reloadable
         jCefComponent = build()
         jCefComponent?.let {
             service<ReloadService>().register(this, parentDisposable)
-            service<ReloadObserver>().register(project, "MainApp", it.getComponent(), parentDisposable)
+            service<ReloadObserver>().register(project, MAIN_APP_APP_NAME, it.getComponent(), parentDisposable)
         }
     }
 
@@ -81,7 +81,7 @@ class MainAppPanel(private val project: Project) : DisposablePanel(), Reloadable
     private fun createJcefComponent(): JCefComponent? {
         return if (JBCefApp.isSupported()) {
             JCefComponent.JCefComponentBuilder(
-                project, "Main", parentDisposable,
+                project, MAIN_APP_APP_NAME, parentDisposable,
                 MAIN_APP_URL,
                 MainAppMessageRouterHandler(project)
             )

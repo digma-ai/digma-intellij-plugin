@@ -9,10 +9,10 @@ import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.analytics.*;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.events.OpenDashboardRequest;
+import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.reload.*;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.InputStream;
 import java.util.*;
 
 import static org.digma.intellij.plugin.dashboard.DashboardVirtualFile.DASHBOARD_EDITOR_KEY;
@@ -26,7 +26,6 @@ public final class DashboardService implements Disposable, ReloadableJCefContain
     public DashboardService(Project project) {
         this.project = project;
         ApplicationManager.getApplication().getService(ReloadService.class).register(this, this);
-
 
         project.getMessageBus().connect(this).subscribe(OpenDashboardRequest.getOPEN_DASHBOARD_REQUEST_TOPIC(), new OpenDashboardRequest() {
             @Override
@@ -50,22 +49,11 @@ public final class DashboardService implements Disposable, ReloadableJCefContain
         return project.getService(DashboardService.class);
     }
 
-    public boolean isIndexHtml(String path) {
-        return path.endsWith("index.html");
-    }
-
-    public InputStream buildIndexFromTemplate(String path, DashboardVirtualFile dashboardVirtualFile) {
-
-        if (!isIndexHtml(path)) {
-            //should not happen
-            return null;
-        }
-
-        return new DashboardIndexTemplateBuilder().build(project, dashboardVirtualFile);
-    }
 
 
     public void openDashboard(@NotNull String dashboardName) {
+
+        Log.log(logger::trace, "openDashboard called, dashboard name {}", dashboardName);
 
         if (showExisting(dashboardName)) {
             return;
@@ -79,6 +67,8 @@ public final class DashboardService implements Disposable, ReloadableJCefContain
     }
 
     public void openReport(@NotNull String reportName) {
+
+        Log.log(logger::trace, "openReport called, report name {}", reportName);
 
         if (showExisting(reportName)) {
             return;
@@ -114,6 +104,8 @@ public final class DashboardService implements Disposable, ReloadableJCefContain
 
     @Override
     public void reload() {
+
+        Log.log(logger::trace, "reload called, reloading all dashboard files");
 
         var files = Arrays.stream(FileEditorManager.getInstance(project).getOpenFiles()).filter(DashboardVirtualFile::isDashboardVirtualFile).toList();
 

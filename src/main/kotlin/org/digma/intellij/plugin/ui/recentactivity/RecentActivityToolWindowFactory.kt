@@ -1,7 +1,6 @@
 package org.digma.intellij.plugin.ui.recentactivity
 
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
@@ -31,7 +30,7 @@ class RecentActivityToolWindowFactory : ToolWindowFactory {
 
         RecentActivityService.getInstance(project)
 
-        project.service<RecentActivityToolWindowShower>().toolWindow = toolWindow
+        RecentActivityToolWindowShower.getInstance(project).toolWindow = toolWindow
 
         val recentActivityPanel = RecentActivityPanel(project)
 
@@ -58,7 +57,7 @@ class RecentActivityToolWindowFactory : ToolWindowFactory {
         cardsPanel.border = JBUI.Borders.empty()
 
         val noConnectionPanel = createNoConnectionPanel(project, parentDisposable)
-        val updateBackendPanel = createAggressiveUpdatePanel(project, parentDisposable, "recent activity")
+        val aggressiveUpdatePanel = createAggressiveUpdatePanel(project, parentDisposable, "recent activity")
 
 
         cardsPanel.add(mainPanel, RecentActivityToolWindowCardsController.RecentActivityWindowCard.MAIN.name)
@@ -67,8 +66,8 @@ class RecentActivityToolWindowFactory : ToolWindowFactory {
         cardsPanel.add(noConnectionPanel, RecentActivityToolWindowCardsController.RecentActivityWindowCard.NO_CONNECTION.name)
         cardLayout.addLayoutComponent(noConnectionPanel, RecentActivityToolWindowCardsController.RecentActivityWindowCard.NO_CONNECTION.name)
 
-        cardsPanel.add(updateBackendPanel, RecentActivityToolWindowCardsController.RecentActivityWindowCard.UPDATE_MODE.name)
-        cardLayout.addLayoutComponent(updateBackendPanel, RecentActivityToolWindowCardsController.RecentActivityWindowCard.UPDATE_MODE.name)
+        cardsPanel.add(aggressiveUpdatePanel, RecentActivityToolWindowCardsController.RecentActivityWindowCard.UPDATE_MODE.name)
+        cardLayout.addLayoutComponent(aggressiveUpdatePanel, RecentActivityToolWindowCardsController.RecentActivityWindowCard.UPDATE_MODE.name)
 
         //start at MAIN
         cardLayout.show(cardsPanel, RecentActivityToolWindowCardsController.RecentActivityWindowCard.MAIN.name)

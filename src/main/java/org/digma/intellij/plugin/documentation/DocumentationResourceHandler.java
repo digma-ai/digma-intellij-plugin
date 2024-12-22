@@ -16,26 +16,27 @@ public class DocumentationResourceHandler extends BaseResourceHandler {
         super(path, browser);
     }
 
+    @NotNull
     @Override
-    public boolean isIndexHtml(@NotNull String path) {
-        return path.toLowerCase().endsWith("index.html");
+    public String getResourceFolderName() {
+        return DocumentationConstants.DOCUMENTATION_RESOURCE_FOLDER_NAME;
     }
 
     @Nullable
     @Override
-    public InputStream buildIndexFromTemplate(@NotNull String path) {
+    public InputStream buildEnvJsFromTemplate(@NotNull String path) {
         Project project = JBcefBrowserPropertiesKt.getProject(getBrowser());
         if (project == null) {
             Log.log(getLogger()::warn, "project is null , should never happen");
-            ErrorReporter.getInstance().reportError(null, "DocumentationResourceHandler.buildIndexFromTemplate", "project is null", Collections.emptyMap());
+            ErrorReporter.getInstance().reportError(null, "DocumentationResourceHandler.buildEnvJsFromTemplate", "project is null", Collections.emptyMap());
             return null;
         }
         DocumentationVirtualFile file = (DocumentationVirtualFile) JBcefBrowserPropertiesKt.getProperty(getBrowser(), JBcefBrowserPropertiesKt.JCEF_DOCUMENTATION_FILE_PROPERTY_NAME);
         if (file == null) {
             Log.log(getLogger()::warn, "DocumentationVirtualFile is null , should never happen");
-            ErrorReporter.getInstance().reportError(null, "DocumentationResourceHandler.buildIndexFromTemplate", "DocumentationVirtualFile is null", Collections.emptyMap());
+            ErrorReporter.getInstance().reportError(null, "DocumentationResourceHandler.buildEnvJsFromTemplate", "DocumentationVirtualFile is null", Collections.emptyMap());
             return null;
         }
-        return new DocumentationIndexTemplateBuilder(file).build(project);
+        return new DocumentationEnvJsTemplateBuilder(file,path).build(project);
     }
 }

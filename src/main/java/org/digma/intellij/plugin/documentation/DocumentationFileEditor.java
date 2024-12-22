@@ -1,16 +1,19 @@
 package org.digma.intellij.plugin.documentation;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileEditor.*;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.*;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.jcef.JBCefApp;
+import org.digma.intellij.plugin.reload.ReloadObserver;
 import org.digma.intellij.plugin.ui.jcef.*;
 import org.jetbrains.annotations.*;
 
 import javax.swing.*;
 import java.beans.PropertyChangeListener;
 
+import static org.digma.intellij.plugin.documentation.DocumentationConstants.DOCUMENTATION_APP_NAME;
 import static org.digma.intellij.plugin.ui.jcef.JBcefBrowserPropertiesKt.JCEF_DOCUMENTATION_FILE_PROPERTY_NAME;
 
 public class DocumentationFileEditor extends UserDataHolderBase implements FileEditor {
@@ -25,16 +28,19 @@ public class DocumentationFileEditor extends UserDataHolderBase implements FileE
     public DocumentationFileEditor(Project project, DocumentationVirtualFile file) {
         this.file = file;
         jCefComponent = createJcefComponent(project, file);
+        if (jCefComponent != null) {
+            ApplicationManager.getApplication().getService(ReloadObserver.class).register(project, DOCUMENTATION_APP_NAME + "." + file.getName(), jCefComponent.getComponent(), this);
+        }
     }
 
     @Nullable
     private JCefComponent createJcefComponent(Project project, DocumentationVirtualFile file) {
 
         if (JBCefApp.isSupported()) {
-            return new JCefComponent.JCefComponentBuilder(project, "Documentation", this,
+            return new JCefComponent.JCefComponentBuilder(project, DOCUMENTATION_APP_NAME, this,
                     DocumentationConstants.DOCUMENTATION_URL,
                     new DocumentationMessageRouterHandler(project))
-                    .withArg(JCEF_DOCUMENTATION_FILE_PROPERTY_NAME,file)
+                    .withArg(JCEF_DOCUMENTATION_FILE_PROPERTY_NAME, file)
                     .withDownloadAdapter(new DownloadHandlerAdapter())
                     .build();
 

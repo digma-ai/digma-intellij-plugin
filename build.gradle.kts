@@ -311,11 +311,12 @@ tasks {
             "kotlinx.coroutines.debug" to "",
             "org.digma.plugin.report.all.errors" to "true",
             "org.digma.plugin.auth.debug" to "true",
+            "org.digma.plugin.DigmaPathManager.dev.runIde" to "true",
 
             //see https://kotlin.github.io/analysis-api/testing-in-k2-locally.html
             "idea.kotlin.plugin.use.k2" to "true",
 
-//            "idea.ProcessCanceledException" to "disabled"
+            //"idea.ProcessCanceledException" to "disabled"
 
 
             //to use a local file for digma-agent or digma extension,
@@ -331,6 +332,8 @@ tasks {
 
             //custom compose file url
             //"org.digma.plugin.custom.docker-compose.url" to "https://raw.githubusercontent.com/digma-ai/digma/refs/heads/0.2.73/docker/docker-compose.yml"
+            //ui bundle path
+            //"org.digma.plugin.ui.bundle.path" to "/home/shalom/Downloads/digma-ui-4.0.12.zip"
 
         )
 
@@ -347,10 +350,13 @@ tasks {
         exclude("**/webview/global-env-vars.txt")
 
         val filesToFilter = listOf(
-            "webview/recentactivity/recentActivityTemplate.ftl",
-            "webview/jaegerui/jaegeruitemplate.ftl",
-            "webview/documentation/documentation.ftl",
-            "webview/main/maintemplate.ftl"
+            "webview/recent-activity/env.js",
+            "webview/jaeger-ui/env.js",
+            "webview/documentation/env.js",
+            "webview/dashboard/env.js",
+            "webview/troubleshooting/env.js",
+            "webview/main/env.js",
+            "webview/installation-wizard/env.js"
         )
 
 

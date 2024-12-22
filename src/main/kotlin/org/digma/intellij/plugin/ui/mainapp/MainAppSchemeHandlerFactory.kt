@@ -8,6 +8,7 @@ import org.digma.intellij.plugin.ui.jcef.BaseSchemeHandlerFactory
 import java.net.URL
 
 class MainAppSchemeHandlerFactory : BaseSchemeHandlerFactory() {
+
     override fun createProxyHandler(project: Project, url: URL): CefResourceHandler? {
         if (ApiProxyResourceHandler.isApiProxyCall(url)) {
             return ApiProxyResourceHandler(project)
@@ -15,12 +16,8 @@ class MainAppSchemeHandlerFactory : BaseSchemeHandlerFactory() {
         return null
     }
 
-    override fun createResourceHandler(resourceName: String, resourceExists: Boolean, browser: CefBrowser): CefResourceHandler {
-        return if (resourceExists) {
-            MainAppResourceHandler(browser, resourceName)
-        } else {
-            MainAppResourceHandler(browser, "$MAIN_APP_RESOURCE_FOLDER_NAME/index.html")
-        }
+    override fun createResourceHandler(browser: CefBrowser, resourcePath: String): CefResourceHandler {
+        return MainAppResourceHandler(browser, resourcePath)
     }
 
     override fun getSchema(): String {
@@ -29,9 +26,5 @@ class MainAppSchemeHandlerFactory : BaseSchemeHandlerFactory() {
 
     override fun getDomain(): String {
         return MAIN_APP_DOMAIN_NAME
-    }
-
-    override fun getResourceFolderName(): String {
-        return MAIN_APP_RESOURCE_FOLDER_NAME
     }
 }

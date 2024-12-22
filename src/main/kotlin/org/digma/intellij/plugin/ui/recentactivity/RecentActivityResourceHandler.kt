@@ -10,18 +10,17 @@ import java.io.InputStream
 class RecentActivityResourceHandler(browser: CefBrowser, path: String) :
     BaseResourceHandler(path, browser) {
 
-
-    override fun isIndexHtml(path: String): Boolean {
-        return path.endsWith("index.html", true)
+    override fun getResourceFolderName(): String {
+        return RECENT_ACTIVITY_RESOURCE_FOLDER_NAME
     }
 
-    override fun buildIndexFromTemplate(path: String): InputStream? {
+    override fun buildEnvJsFromTemplate(path: String): InputStream? {
         val project = getProject(browser)
         if (project == null) {
             Log.log(logger::warn, "project is null , should never happen")
-            ErrorReporter.getInstance().reportError(null, "RecentActivityResourceHandler.buildIndexFromTemplate", "project is null", mapOf())
+            ErrorReporter.getInstance().reportError(null, "RecentActivityResourceHandler.buildEnvJsFromTemplate", "project is null", mapOf())
             return null
         }
-        return RecentActivityIndexTemplateBuilder().build(project)
+        return RecentActivityEnvJsTemplateBuilder(path).build(project)
     }
 }

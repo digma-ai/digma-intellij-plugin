@@ -10,10 +10,8 @@ import org.cef.network.CefRequest
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import java.net.MalformedURLException
+import java.net.URI
 import java.net.URL
-
-
-private const val COMMON_FILES_FOLDER: String = "/webview/common"
 
 
 abstract class BaseSchemeHandlerFactory : CefSchemeHandlerFactory {
@@ -41,7 +39,7 @@ abstract class BaseSchemeHandlerFactory : CefSchemeHandlerFactory {
 
         if (url != null) {
             val host = url.host
-            val file = url.file
+            val file = url.path
 
             val proxyHandler = createProxyHandler(project, url)
             if (proxyHandler != null) {
@@ -49,15 +47,8 @@ abstract class BaseSchemeHandlerFactory : CefSchemeHandlerFactory {
             }
 
             if (getDomain() == host && getSchema() == schemeName) {
-                var resourceName = getResourceFolderName() + file
-                var resource = javaClass.getResource(resourceName)
-
-                if (resource === null) {
-                    resourceName = "$COMMON_FILES_FOLDER$file"
-                    resource = javaClass.getResource(resourceName)
-                }
-
-                return createResourceHandler(resourceName, resource !== null, browser)
+                val resourceName = file.removePrefix("/")
+                return createResourceHandler(browser, resourceName)
             }
         }
         return null
@@ -66,18 +57,18 @@ abstract class BaseSchemeHandlerFactory : CefSchemeHandlerFactory {
 
     private fun getUrl(request: CefRequest): URL? {
         return try {
-            URL(request.url)
+            URI(request.url).toURL()
         } catch (e: MalformedURLException) {
             null
         }
     }
 
-    protected open fun createProxyHandler(project: Project, url: URL): CefResourceHandler?{
+    protected open fun createProxyHandler(project: Project, url: URL): CefResourceHandler? {
         return null
     }
-    abstract fun createResourceHandler(resourceName: String, resourceExists: Boolean, browser: CefBrowser): CefResourceHandler
+
+    abstract fun createResourceHandler(browser: CefBrowser, resourcePath: String): CefResourceHandler
     abstract fun getSchema(): String
     abstract fun getDomain(): String
-    abstract fun getResourceFolderName(): String
 
 }

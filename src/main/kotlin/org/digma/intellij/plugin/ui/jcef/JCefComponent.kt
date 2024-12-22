@@ -48,6 +48,7 @@ import org.digma.intellij.plugin.ui.jcef.state.StateChangedEvent
 import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier
 import org.digma.intellij.plugin.ui.settings.SettingsChangeListener
 import org.digma.intellij.plugin.ui.settings.Theme
+import org.digma.intellij.plugin.ui.wizard.INSTALLATION_WIZARD_APP_NAME
 import java.lang.ref.WeakReference
 import java.util.Objects
 import java.util.WeakHashMap
@@ -88,7 +89,8 @@ private constructor(
 
 
         project.messageBus.connect(parentDisposable)
-            .subscribe(ApiClientChangedEvent.API_CLIENT_CHANGED_TOPIC,
+            .subscribe(
+                ApiClientChangedEvent.API_CLIENT_CHANGED_TOPIC,
                 ApiClientChangedEvent {
 
                     //there are multiple events fired when changing api url , or when changing login info, some run in background threads,
@@ -118,13 +120,15 @@ private constructor(
                 })
 
         ApplicationManager.getApplication().messageBus.connect(parentDisposable)
-            .subscribe(DigmathonProductKeyStateChangedEvent.PRODUCT_KEY_STATE_CHANGED_TOPIC,
+            .subscribe(
+                DigmathonProductKeyStateChangedEvent.PRODUCT_KEY_STATE_CHANGED_TOPIC,
                 DigmathonProductKeyStateChangedEvent { productKey ->
                     sendDigmathonProductKey(productKey, jbCefBrowser.cefBrowser)
                 })
 
         ApplicationManager.getApplication().messageBus.connect(parentDisposable)
-            .subscribe(DigmathonActivationEvent.DIGMATHON_ACTIVATION_TOPIC,
+            .subscribe(
+                DigmathonActivationEvent.DIGMATHON_ACTIVATION_TOPIC,
                 DigmathonActivationEvent { isActive -> sendDigmathonState(isActive, jbCefBrowser.cefBrowser) })
 
         ApplicationUISettingsChangeNotifier.getInstance(project).addSettingsChangeListener(object : SettingsChangeListener {
@@ -154,16 +158,36 @@ private constructor(
             }
         }, parentDisposable)
 
+
+
         project.messageBus.connect(parentDisposable).subscribe(
             AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC, object : AnalyticsServiceConnectionEvent {
+
+
+
+                private fun shouldUpdateEngineStatus(): Boolean {
+                    //in installation wizard there is no need to update the status on connection lost if there is any engine operation
+                    // running (like install,stop,start,remove) because it may confuse the UI.
+                    //the installation wizard app will be updated when the operation is completed.
+                    //for other apps it is ok to update the status.
+                    return !(name == INSTALLATION_WIZARD_APP_NAME && service<LocalInstallationFacade>().isAnyOperationRunning())
+                }
+
 
                 override fun connectionLost() {
                     //delay before reporting digma status to let all containers go down
                     connectionEventAlarm.cancelAllRequests()
                     connectionEventAlarm.addRequest({
                         try {
-                            val status = service<LocalInstallationFacade>().getCurrentDigmaInstallationStatusOnConnectionLost()
-                            updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
+
+                            if (shouldUpdateEngineStatus()) {
+                                Log.log(logger::trace, "updating digma installation status on connection lost")
+                                val status = service<LocalInstallationFacade>().getCurrentDigmaInstallationStatusOnConnectionLost()
+                                updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
+                            }else{
+                                Log.log(logger::trace, "NOT updating digma installation status on connection lost because operation is running by installation wizard")
+                            }
+
                         } catch (e: Exception) {
                             Log.warnWithException(logger, project, e, "error in connectionLost")
                             ErrorReporter.getInstance().reportError(project, "JCefComponent.connectionLost", e)
@@ -177,8 +201,14 @@ private constructor(
                     connectionEventAlarm.addRequest({
                         try {
                             sendBackendAboutInfo(jbCefBrowser.cefBrowser, project)
-                            val status = service<LocalInstallationFacade>().getCurrentDigmaInstallationStatusOnConnectionGained()
-                            updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
+
+                            if (shouldUpdateEngineStatus()) {
+                                Log.log(logger::trace, "updating digma installation status on connection gained")
+                                val status = service<LocalInstallationFacade>().getCurrentDigmaInstallationStatusOnConnectionGained()
+                                updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
+                            }else{
+                                Log.log(logger::trace, "NOT updating digma installation status on connection gained because operation is running by installation wizard")
+                            }
                         } catch (e: Exception) {
                             Log.warnWithException(logger, project, e, "error in connectionGained")
                             ErrorReporter.getInstance().reportError(project, "JCefComponent.connectionGained", e)

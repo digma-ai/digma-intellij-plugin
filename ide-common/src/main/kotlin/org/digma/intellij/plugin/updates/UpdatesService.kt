@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.updates
 
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
@@ -23,7 +24,11 @@ import org.digma.intellij.plugin.scheduling.disposingPeriodicTask
 import org.digma.intellij.plugin.scheduling.oneShotTask
 import org.digma.intellij.plugin.settings.InternalFileSettings
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
+import org.digma.intellij.plugin.updates.ui.NewUIVersionAvailableEvent
+import org.digma.intellij.plugin.updates.ui.UIVersioningService
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -31,6 +36,8 @@ import kotlin.time.Duration.Companion.seconds
 class UpdatesService(private val project: Project) : Disposable {
 
     private val logger = Logger.getInstance(UpdatesService::class.java)
+
+    private val checkLock = ReentrantLock(true)
 
     companion object {
         @JvmStatic
@@ -100,7 +107,7 @@ class UpdatesService(private val project: Project) : Disposable {
 
 
 
-        project.messageBus.connect().subscribe(
+        project.messageBus.connect(this).subscribe(
             AggressiveUpdateStateChangedEvent.UPDATE_STATE_CHANGED_TOPIC, object : AggressiveUpdateStateChangedEvent {
                 override fun stateChanged(updateState: PublicUpdateState) {
                     oneShotTask("UpdatesService.aggressiveUpdateStateChanged") {
@@ -122,6 +129,15 @@ class UpdatesService(private val project: Project) : Disposable {
                 }
             })
 
+        //make sure to update the state and panel as soon as possible after a new ui version is available
+        ApplicationManager.getApplication().messageBus.connect(this).subscribe(
+            NewUIVersionAvailableEvent.NEW_UI_VERSION_AVAILABLE_EVENT_TOPIC,object: NewUIVersionAvailableEvent{
+                override fun newUIVersionAvailable() {
+                    checkForNewerVersions()
+                }
+            }
+        )
+
     }
 
     override fun dispose() {
@@ -131,40 +147,44 @@ class UpdatesService(private val project: Project) : Disposable {
     //this method may throw exception, always catch and report
     private fun checkForNewerVersions() {
 
-        Log.log(logger::trace, "checking for new versions")
-        val versionsResp: VersionResponse = AnalyticsService.getInstance(project).getVersions(buildVersionRequest())
-        Log.log(logger::debug, "got version response {}", versionsResp)
+        checkLock.withLock {
 
-        if (versionsResp.errors.isNotEmpty()) {
-            val currErrors = versionsResp.errors.toList()
+            Log.log(logger::trace, "checking for new versions")
+            val versionsResp: VersionResponse = AnalyticsService.getInstance(project).getVersions(buildVersionRequest())
+            Log.log(logger::debug, "got version response {}", versionsResp)
 
-            if (currErrors != prevBackendErrorsList) {
-                currErrors.forEach {
-                    ErrorReporter.getInstance().reportBackendError(project, "UpdatesService.checkForNewerVersions", it)
+            if (versionsResp.errors.isNotEmpty()) {
+                val currErrors = versionsResp.errors.toList()
+
+                if (currErrors != prevBackendErrorsList) {
+                    currErrors.forEach {
+                        ErrorReporter.getInstance().reportBackendError(project, "UpdatesService.checkForNewerVersions", it)
+                    }
                 }
+
+                prevBackendErrorsList = currErrors
+                return
             }
 
-            prevBackendErrorsList = currErrors
-            return
+            stateBackendVersion = versionsResp.backend
+            statePluginVersion.latestVersion = versionsResp.plugin.latestVersion
+
+            //the panel is going to show the update button if shouldUpdatePlugin is true.
+            //when user clicks the button we will open the intellij plugins settings.
+            //sometimes the plugin list is not refreshed and user will not be able to update the plugin,
+            // so we refresh plugins metadata before showing the button. waiting maximum 10 seconds for
+            // the refresh to complete, and show the button anyway.
+            if (shouldUpdatePlugin()) {
+                //refreshPluginsMetadata returns a future that doesn't throw exception from get.
+                val future = refreshPluginsMetadata()
+                future.get(10, TimeUnit.SECONDS)
+            }
+
+            EDT.ensureEDT {
+                affectedPanel?.reset()
+            }
         }
 
-        stateBackendVersion = versionsResp.backend
-        statePluginVersion.latestVersion = versionsResp.plugin.latestVersion
-
-        //the panel is going to show the update button if shouldUpdatePlugin is true.
-        //when user clicks the button we will open the intellij plugins settings.
-        //sometimes the plugin list is not refreshed and user will not be able to update the plugin,
-        // so we refresh plugins metadata before showing the button. waiting maximum 10 seconds for
-        // the refresh to complete, and show the button anyway.
-        if (shouldUpdatePlugin()) {
-            //refreshPluginsMetadata returns a future that doesn't throw exception from get.
-            val future = refreshPluginsMetadata()
-            future.get(10, TimeUnit.SECONDS)
-        }
-
-        EDT.ensureEDT {
-            affectedPanel?.reset()
-        }
     }
 
 
@@ -174,6 +194,7 @@ class UpdatesService(private val project: Project) : Disposable {
             stateBackendVersion.deploymentType,
             shouldUpdateBackend(),
             shouldUpdatePlugin(),
+            UIVersioningService.getInstance().isNewUIBundleAvailable()
         )
         Log.log(logger::debug, "current state is {}", state)
         return state

@@ -427,4 +427,20 @@ class PersistenceService {
         state.engagementScorePersistenceFileFixed = true
     }
 
+    fun getCurrentUiVersion(): String? {
+        return state.currentUiVersion
+    }
+
+    fun setCurrentUiVersion(uiVersion: String) {
+        state.currentUiVersion = uiVersion
+    }
+
+    fun getLatestDownloadedUiVersion(): String? {
+        return state.latestDownloadedUiVersion
+    }
+
+    fun setLatestDownloadedUiVersion(uiVersion: String?) {
+        state.latestDownloadedUiVersion = uiVersion
+    }
+
 }

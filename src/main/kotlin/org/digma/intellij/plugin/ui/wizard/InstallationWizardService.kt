@@ -5,7 +5,6 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.jcef.JBCefBrowser
 
-//todo: refactor installation wizard to be managed by a service
 @Service(Service.Level.PROJECT)
 class InstallationWizardService(
     private val project: Project

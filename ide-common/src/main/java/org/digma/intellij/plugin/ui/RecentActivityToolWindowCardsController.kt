@@ -93,9 +93,9 @@ class RecentActivityToolWindowCardsController(private val project: Project) {
 
     fun updateStateChanged(updateState: PublicUpdateState) {
         if (updateState.updateState == CurrentUpdateState.OK) {
-            closeUpdateBackendPanel()
+            closeAggressiveUpdatePanel()
         } else {
-            showUpdateBackendPanel()
+            showAggressiveUpdatePanel()
         }
     }
 
@@ -112,19 +112,19 @@ class RecentActivityToolWindowCardsController(private val project: Project) {
         }
     }
 
-    private fun showUpdateBackendPanel() {
-        Log.log(logger::debug, "showUpdateBackendPanel called")
+    private fun showAggressiveUpdatePanel() {
+        Log.log(logger::debug, "showAggressiveUpdatePanel called")
 
         if (isConnectionLost.get()) {
-            Log.log(logger::debug, "Not showing MainPanel because connection lost, showing NoConnection")
+            Log.log(logger::debug, "Not showing AggressiveUpdatePanel because connection lost, showing NoConnection")
             showNoConnection()
         } else {
             EDT.ensureEDT { showCard(RecentActivityWindowCard.UPDATE_MODE) }
         }
     }
 
-    private fun closeUpdateBackendPanel() {
-        Log.log(logger::debug, "closeUpdateBackendPanel called")
+    private fun closeAggressiveUpdatePanel() {
+        Log.log(logger::debug, "closeAggressiveUpdatePanel called")
 
         //this may happen on startup,showMainPanel is called from the tool window factory,
         // but there may be a connection lost before the content was built and before this controller was initialized

@@ -3,26 +3,31 @@ package org.digma.intellij.plugin.ui.jcef
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
+import org.digma.intellij.plugin.dashboard.DashboardSchemeHandlerFactory
 import org.digma.intellij.plugin.documentation.DocumentationSchemeHandlerFactory
 import org.digma.intellij.plugin.jaegerui.JaegerUiSchemeHandlerFactory
 import org.digma.intellij.plugin.ui.mainapp.MainAppSchemeHandlerFactory
 import org.digma.intellij.plugin.ui.recentactivity.RecentActivitySchemeHandlerFactory
+import org.digma.intellij.plugin.ui.troubleshooting.TroubleshootingSchemeHandlerFactory
+import org.digma.intellij.plugin.ui.wizard.InstallationWizardSchemeHandlerFactory
 
 
 fun allSchemaHandlerFactories(): List<BaseSchemeHandlerFactory> {
     return listOf(
         DocumentationSchemeHandlerFactory(),
+        DashboardSchemeHandlerFactory(),
         JaegerUiSchemeHandlerFactory(),
         MainAppSchemeHandlerFactory(),
-        RecentActivitySchemeHandlerFactory()
+        RecentActivitySchemeHandlerFactory(),
+        TroubleshootingSchemeHandlerFactory(),
+        InstallationWizardSchemeHandlerFactory()
     )
 }
 
 
-fun getIsLoggingEnabledSystemProperty():Boolean{
+fun getIsLoggingEnabledSystemProperty(): Boolean {
     return java.lang.Boolean.getBoolean("org.digma.plugin.enable.JCEFLogging")
 }
-
 
 
 fun getQueryMapFromPayload(requestJsonNode: JsonNode, objectMapper: ObjectMapper): MutableMap<String, Any> {

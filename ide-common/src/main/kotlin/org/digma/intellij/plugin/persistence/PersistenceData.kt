@@ -95,6 +95,9 @@ internal data class PersistenceData(
 
     var detectedFrameworks: String? = null,
 
-    var engagementScorePersistenceFileFixed: Boolean = false
+    var engagementScorePersistenceFileFixed: Boolean = false,
+
+    var currentUiVersion: String? = null,
+    var latestDownloadedUiVersion: String? = null
 
 )

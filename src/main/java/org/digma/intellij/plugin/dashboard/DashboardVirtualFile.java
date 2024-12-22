@@ -33,8 +33,8 @@ public class DashboardVirtualFile extends LightVirtualFile implements DigmaVirtu
         return file;
     }
 
-    public void setDashboardName(String documentationPage) {
-        this.dashboardName = documentationPage;
+    public void setDashboardName(String dashboardName) {
+        this.dashboardName = dashboardName;
     }
 
     public String getDashboardName() {

@@ -7,15 +7,10 @@ import org.jetbrains.annotations.NotNull;
 
 public class DocumentationSchemeHandlerFactory extends BaseSchemeHandlerFactory {
 
-
     @NotNull
     @Override
-    public CefResourceHandler createResourceHandler(@NotNull String resourceName, boolean resourceExists, @NotNull CefBrowser browser) {
-        if (resourceExists) {
-            return new DocumentationResourceHandler(browser, resourceName);
-        } else {
-            return new DocumentationResourceHandler(browser, DocumentationConstants.DOCUMENTATION_RESOURCE_FOLDER_NAME + "/index.html");
-        }
+    public CefResourceHandler createResourceHandler(@NotNull CefBrowser browser, @NotNull String resourcePath) {
+        return new DocumentationResourceHandler(browser, resourcePath);
     }
 
     @NotNull
@@ -30,9 +25,4 @@ public class DocumentationSchemeHandlerFactory extends BaseSchemeHandlerFactory 
         return DocumentationConstants.DOCUMENTATION_DOMAIN_NAME;
     }
 
-    @NotNull
-    @Override
-    public String getResourceFolderName() {
-        return DocumentationConstants.DOCUMENTATION_RESOURCE_FOLDER_NAME;
-    }
 }

@@ -37,6 +37,7 @@ import org.digma.intellij.plugin.session.LAST_LENS_CLICKED_KEY
 import org.digma.intellij.plugin.session.LATEST_UNKNOWN_RUN_CONFIG_TASKS_KEY
 import org.digma.intellij.plugin.session.SessionMetadataProperties
 import org.digma.intellij.plugin.session.getCurrentInstallStatus
+import org.digma.intellij.plugin.updates.ui.UIVersioningService
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.time.Duration
@@ -190,6 +191,7 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
         mutableDetails["ide.build"] = ApplicationInfo.getInstance().build.asString()
         mutableDetails["server.version"] = serverInfo?.applicationVersion.toString()
         mutableDetails["server.deploymentType"] = serverInfo?.deploymentType.toString()
+        mutableDetails["ui.version"] = UIVersioningService.getInstance().getCurrentUiVersion()
         mutableDetails["site"] = serverInfo?.site.toString()
 
         Log.log(logger::trace, "sending event {}, posthog is alive: {}", eventName, postHog != null)
@@ -717,6 +719,7 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
         postHog?.capture(UniqueGeneratedUserId.userId, "plugin first-init")
     }
 
+
     fun registerProjectOpened(openProjects: Int) {
         capture("project opened", mapOf("open.projects" to openProjects))
     }
@@ -1123,6 +1126,35 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
                 MEANINGFUL_ACTIONS_AVG_PROPERTY_NAME to average
             )
         )
+
+    }
+
+    fun registerUIUpdate(
+        bundledVersion: String,
+        currentVersion: String,
+        latestDownloadedUiVersion: String,
+        updateToVersion: String,
+        isOnStartup: Boolean,
+        isForceUpdate: Boolean
+    ) {
+
+        //here use postHog.capture directly, this event is called from UIVersioningService while its initializing,
+        // it cannot call the common capture method because it may cause a circular dependency between UIVersioningService
+        // and ActivityMonitor because the capture method will call UIVersioningService.getInstance().getCurrentUiVersion().
+        //although UIVersioningService initialize fast enough, there may be a race condition if the capture method calls
+        // UIVersioningService.getInstance().getCurrentUiVersion() before UIVersioningService constructor completes.
+        // also, this event doesn't need all the common properties.
+
+        val details = mapOf(
+            "bundledVersion" to bundledVersion,
+            "currentVersion" to currentVersion,
+            "latestDownloadedUiVersion" to latestDownloadedUiVersion,
+            "updateToVersion" to updateToVersion,
+            "isOnStartup" to isOnStartup,
+            "isForceUpdate" to isForceUpdate
+        )
+
+        postHog?.capture(UniqueGeneratedUserId.userId, "ui update", details)
 
     }
 

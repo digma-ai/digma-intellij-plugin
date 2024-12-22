@@ -13,29 +13,30 @@ import java.util.Collections;
 public class JaegerUiResourceHandler extends BaseResourceHandler {
 
     public JaegerUiResourceHandler(@NotNull CefBrowser browser, @NotNull String path) {
-        super(path,browser);
+        super(path, browser);
     }
 
+    @NotNull
     @Override
-    public boolean isIndexHtml(@NotNull String path) {
-        return path.toLowerCase().endsWith("index.html");
+    public String getResourceFolderName() {
+        return JaegerUIConstants.JAEGER_UI_RESOURCE_FOLDER_NAME;
     }
 
     @Nullable
     @Override
-    public InputStream buildIndexFromTemplate(@NotNull String path) {
+    public InputStream buildEnvJsFromTemplate(@NotNull String path) {
         Project project = JBcefBrowserPropertiesKt.getProject(getBrowser());
         if (project == null) {
             Log.log(getLogger()::warn, "project is null , should never happen");
-            ErrorReporter.getInstance().reportError(null, "JaegerUiResourceHandler.buildIndexFromTemplate", "project is null", Collections.emptyMap());
+            ErrorReporter.getInstance().reportError(null, "JaegerUiResourceHandler.buildEnvJsFromTemplate", "project is null", Collections.emptyMap());
             return null;
         }
-        JaegerUIVirtualFile file = (JaegerUIVirtualFile) JBcefBrowserPropertiesKt.getProperty(getBrowser(),JBcefBrowserPropertiesKt.JCEF_JAEGER_UI_FILE_PROPERTY_NAME);
-        if (file == null){
+        JaegerUIVirtualFile file = (JaegerUIVirtualFile) JBcefBrowserPropertiesKt.getProperty(getBrowser(), JBcefBrowserPropertiesKt.JCEF_JAEGER_UI_FILE_PROPERTY_NAME);
+        if (file == null) {
             Log.log(getLogger()::warn, "JaegerUIVirtualFile is null , should never happen");
-            ErrorReporter.getInstance().reportError(null, "JaegerUiResourceHandler.buildIndexFromTemplate", "JaegerUIVirtualFile is null", Collections.emptyMap());
+            ErrorReporter.getInstance().reportError(null, "JaegerUiResourceHandler.buildEnvJsFromTemplate", "JaegerUIVirtualFile is null", Collections.emptyMap());
             return null;
         }
-        return new JaegerUiIndexTemplateBuilder(file).build(project);
+        return new JaegerUiEnvJsTemplateBuilder(file, path).build(project);
     }
 }

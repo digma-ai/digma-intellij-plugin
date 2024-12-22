@@ -13,11 +13,12 @@ import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.psi.LanguageService;
-import org.digma.intellij.plugin.troubleshooting.TroubleshootingPanel;
 import org.digma.intellij.plugin.ui.*;
 import org.digma.intellij.plugin.ui.common.MainContentPanel;
 import org.digma.intellij.plugin.ui.common.statuspanels.*;
 import org.digma.intellij.plugin.ui.panels.DisposablePanel;
+import org.digma.intellij.plugin.ui.troubleshooting.TroubleshootingPanel;
+import org.digma.intellij.plugin.ui.wizard.InstallationWizardPanel;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -26,7 +27,6 @@ import java.util.Collections;
 import java.util.function.*;
 
 import static org.digma.intellij.plugin.ui.common.MainToolWindowPanelKt.createMainToolWindowPanel;
-import static org.digma.intellij.plugin.ui.wizard.InstallationWizardSidePanelWindowPanelKt.createInstallationWizardSidePanelWindowPanel;
 
 
 /**
@@ -85,7 +85,7 @@ public final class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
         // necessary to move more code. but anyway the Supplier is fine here.
         //when ever we need to show the wizard it will be created new and disposed when finished, its probably not a
         // good idea to keep it in memory after its finished.
-        Function<Boolean, DisposablePanel> wizardPanelBuilder = wizardSkipInstallationStep -> createInstallationWizardSidePanelWindowPanel(project, wizardSkipInstallationStep);
+        Function<Boolean, DisposablePanel> wizardPanelBuilder = wizardSkipInstallationStep -> new InstallationWizardPanel(project, wizardSkipInstallationStep);
 
         Supplier<DisposablePanel> troubleshootingPanelBuilder = () -> new TroubleshootingPanel(project);
 

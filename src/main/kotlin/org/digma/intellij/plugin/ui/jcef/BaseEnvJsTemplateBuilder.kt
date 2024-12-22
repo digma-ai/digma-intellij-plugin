@@ -75,7 +75,9 @@ abstract class BaseEnvJsTemplateBuilder(private val templatePath: String) {
 
             val data = mutableMapOf<String, Any>()
 
-            addCommonEnvVariables(data)
+            data[ENV_VARIABLE_THEME] = if (JBColor.isBright()) Theme.LIGHT.themeName else Theme.DARK.themeName
+            data[ENV_VARIABLE_FONT] = UIUtil.getLabelFont().fontName
+            data[ENV_VARIABLE_CODE_FONT] = AppEditorFontOptions.getInstance().fontPreferences.fontFamily
             data[ENV_VARIABLE_IDE] = ApplicationNamesInfo.getInstance().productName
             data[IS_JAEGER_ENABLED] = isJaegerButtonEnabled()
             data[USER_EMAIL_VARIABLE] = PersistenceService.getInstance().getUserEmail() ?: ""
@@ -115,12 +117,4 @@ abstract class BaseEnvJsTemplateBuilder(private val templatePath: String) {
      */
     open fun addAppSpecificEnvVariable(project: Project, data: MutableMap<String, Any>) {}
 
-
-}
-
-//todo: move to the build function after refactoring all apps
-fun addCommonEnvVariables(env: MutableMap<String, Any>) {
-    env[ENV_VARIABLE_THEME] = if (JBColor.isBright()) Theme.LIGHT.themeName else Theme.DARK.themeName
-    env[ENV_VARIABLE_FONT] = UIUtil.getLabelFont().fontName
-    env[ENV_VARIABLE_CODE_FONT] = AppEditorFontOptions.getInstance().fontPreferences.fontFamily
 }

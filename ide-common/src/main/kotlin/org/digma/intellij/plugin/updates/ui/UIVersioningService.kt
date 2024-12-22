@@ -174,12 +174,12 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
 
                     findActiveProject()?.let {
                         ActivityMonitor.getInstance(it).registerUIUpdate(
-                            "ui update on startup", mapOf(
-                                "update to version" to latestDownloadedUiVersion,
-                                "current ui version" to getCurrentUiVersion(),
-                                "latest downloaded version" to latestDownloadedUiVersion,
-                                "bundled version" to bundledUiVersion
-                            )
+                            bundledUiVersion,
+                            getCurrentUiVersion(),
+                            latestDownloadedUiVersion,
+                            latestDownloadedUiVersion,
+                            isOnStartup = true,
+                            isForceUpdate = false
                         )
                     }
 
@@ -331,7 +331,8 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
     }
 
     private fun fireNewUIVersionAvailable() {
-        ApplicationManager.getApplication().messageBus.syncPublisher(NewUIVersionAvailableEvent.NEW_UI_VERSION_AVAILABLE_EVENT_TOPIC).newUIVersionAvailable()
+        ApplicationManager.getApplication().messageBus.syncPublisher(NewUIVersionAvailableEvent.NEW_UI_VERSION_AVAILABLE_EVENT_TOPIC)
+            .newUIVersionAvailable()
     }
 
 
@@ -360,7 +361,7 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
                 )
                 setLatestDownloadedVersion(null)
             }
-        }else{
+        } else {
             ErrorReporter.getInstance().reportError(
                 "UIVersioningService.updateToLatestDownloaded",
                 "updateToLatestDownloaded called but latestDownloadedUiVersion property is null", mapOf(
@@ -399,20 +400,19 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
 
             findActiveProject()?.let {
                 ActivityMonitor.getInstance(it).registerUIUpdate(
-                    "ui update", mapOf(
-                        "update to version" to uiVersion,
-                        "current ui version" to getCurrentUiVersion(),
-                        "latest downloaded version" to getLatestDownloadedVersion().toString(),
-                        "bundled version" to bundledUiVersion,
-                        "isForceUpdate" to isForceUpdate
-                    )
+                    bundledUiVersion,
+                    getCurrentUiVersion(),
+                    getLatestDownloadedVersion().toString(),
+                    uiVersion,
+                    false,
+                    isForceUpdate
                 )
             }
 
             deleteUiBundle(getCurrentUiVersion())
             setCurrentUiVersion(uiVersion)
             service<ReloadService>().reloadAllProjects(ReloadSource.UI_UPDATE)
-        }else{
+        } else {
             ErrorReporter.getInstance().reportError(
                 "UIVersioningService.updateToDownloadedVersion", "updateToDownloadedVersion called but ui bundle file does not exist",
                 mapOf(

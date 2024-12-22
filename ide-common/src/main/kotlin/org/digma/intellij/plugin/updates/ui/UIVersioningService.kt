@@ -163,15 +163,36 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
                         logger::info,
                         "updating ui to latest downloaded version on startup {}", latestDownloadedUiVersion
                     )
+
+                    findActiveProject()?.let {
+                        ActivityMonitor.getInstance(it).registerCustomEvent(
+                            "ui update on startup", mapOf(
+                                "update to version" to latestDownloadedUiVersion,
+                                "current ui version" to getCurrentUiVersion(),
+                                "latest downloaded version" to latestDownloadedUiVersion,
+                                "bundled version" to bundledUiVersion
+                            )
+                        )
+                    }
+
+
                     deleteUiBundle(getCurrentUiVersion())
                     setCurrentUiVersion(latestDownloadedUiVersion)
                     setLatestDownloadedVersion(null)
                 } else {
                     //something is wrong, we have the property latestDownloadedVersion but there is no file, maybe it was deleted.
                     //reset latestDownloadedVersion
+                    ErrorReporter.getInstance().reportError(
+                        "UIVersioningService.validateUiBundleExists",
+                        "latestDownloadedUiVersion has value on startup but ui bundle file does not exist", mapOf(
+                            "current ui version" to getCurrentUiVersion(),
+                            "latest downloaded version" to latestDownloadedUiVersion,
+                            "bundled version" to bundledUiVersion,
+                        )
+                    )
                     Log.log(
                         logger::warn,
-                        "latest downloaded version property exists but file does not exist, not updating"
+                        "latestDownloadedUiVersion property exists but file does not exist, not updating"
                     )
 
                     setLatestDownloadedVersion(null)
@@ -321,7 +342,7 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
                     "UIVersioningService.updateToLatestDownloaded",
                     "updateToLatestDownloaded called but ui bundle file does not exist", mapOf(
                         "current ui version" to getCurrentUiVersion(),
-                        "latest downloaded version" to getLatestDownloadedVersion().toString(),
+                        "latest downloaded version" to latestDownloadedUiVersion,
                         "bundled version" to bundledUiVersion,
                     )
                 )
@@ -331,6 +352,18 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
                 )
                 setLatestDownloadedVersion(null)
             }
+        }else{
+            ErrorReporter.getInstance().reportError(
+                "UIVersioningService.updateToLatestDownloaded",
+                "updateToLatestDownloaded called but latestDownloadedUiVersion property is null", mapOf(
+                    "current ui version" to getCurrentUiVersion(),
+                    "bundled version" to bundledUiVersion,
+                )
+            )
+            Log.log(
+                logger::warn,
+                "updateToLatestDownloaded called but latestDownloadedUiVersion property is null"
+            )
         }
     }
 
@@ -340,7 +373,7 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
         // in that case, don't delete the current UI and report an error
         if (uiVersion == getCurrentUiVersion()) {
             ErrorReporter.getInstance().reportError(
-                "UIVersioningService.updateToDownloadedVersion", "trying to force update ui to same version as current version",
+                "UIVersioningService.updateToDownloadedVersion", "trying to update ui to same version as current version",
                 mapOf(
                     "current ui version" to getCurrentUiVersion(),
                     "latest downloaded version" to getLatestDownloadedVersion().toString(),
@@ -359,6 +392,7 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
             findActiveProject()?.let {
                 ActivityMonitor.getInstance(it).registerCustomEvent(
                     "ui update", mapOf(
+                        "update to version" to uiVersion,
                         "current ui version" to getCurrentUiVersion(),
                         "latest downloaded version" to getLatestDownloadedVersion().toString(),
                         "bundled version" to bundledUiVersion,
@@ -369,9 +403,19 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
 
             deleteUiBundle(getCurrentUiVersion())
             setCurrentUiVersion(uiVersion)
+            service<ReloadService>().reloadAllProjects(ReloadSource.UI_UPDATE)
+        }else{
+            ErrorReporter.getInstance().reportError(
+                "UIVersioningService.updateToDownloadedVersion", "updateToDownloadedVersion called but ui bundle file does not exist",
+                mapOf(
+                    "update to version" to uiVersion,
+                    "current ui version" to getCurrentUiVersion(),
+                    "latest downloaded version" to getLatestDownloadedVersion().toString(),
+                    "bundled version" to bundledUiVersion,
+                    "isForceUpdate" to isForceUpdate
+                )
+            )
         }
-
-        service<ReloadService>().reloadAllProjects(ReloadSource.UI_UPDATE)
     }
 
 

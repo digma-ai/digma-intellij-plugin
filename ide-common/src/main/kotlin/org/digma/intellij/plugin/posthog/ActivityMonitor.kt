@@ -37,6 +37,7 @@ import org.digma.intellij.plugin.session.LAST_LENS_CLICKED_KEY
 import org.digma.intellij.plugin.session.LATEST_UNKNOWN_RUN_CONFIG_TASKS_KEY
 import org.digma.intellij.plugin.session.SessionMetadataProperties
 import org.digma.intellij.plugin.session.getCurrentInstallStatus
+import org.digma.intellij.plugin.updates.ui.UIVersioningService
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.time.Duration
@@ -190,6 +191,7 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
         mutableDetails["ide.build"] = ApplicationInfo.getInstance().build.asString()
         mutableDetails["server.version"] = serverInfo?.applicationVersion.toString()
         mutableDetails["server.deploymentType"] = serverInfo?.deploymentType.toString()
+        mutableDetails["ui.version"] = UIVersioningService.getInstance().getCurrentUiVersion()
         mutableDetails["site"] = serverInfo?.site.toString()
 
         Log.log(logger::trace, "sending event {}, posthog is alive: {}", eventName, postHog != null)

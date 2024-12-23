@@ -95,8 +95,7 @@ public class JaegerUiProxyResourceHandler implements CefResourceHandler {
         cefRequest.getHeaderMap(headers);
         var digmaCredentials = CredentialsHolder.INSTANCE.getDigmaCredentials();
         if (digmaCredentials != null){
-            var digmaCredentialsJson = JsonUtilsKt.objectToJson(digmaCredentials);
-            headers.put("Cookie", "auth_token="+digmaCredentialsJson);
+            headers.put("Cookie", "auth_token_a="+digmaCredentials.getAccessToken());
         }
         return headers;
     }

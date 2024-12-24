@@ -1,6 +1,17 @@
 # Changelog
 
-## [2.0.402] - 2024-11-28
+## [2.0.403] - 2024-12-24
+
+- Separate kotlin plugin classes Closes #1545 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2618
+- add-project-valid-check by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2620
+- update button shown event by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2626
+- change token in AnalyticsUrlProvider when settings change by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2627
+- Update Dashboard UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2628
+- update to 2024.3.1 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2629
+- ui versioning Closes #2622 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2631
+- Renamed auth cookie by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/2634
+
+## 2.0.402 - 2024-11-28
 
 - fix-linkage-error-in-otel-extension by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2615
 

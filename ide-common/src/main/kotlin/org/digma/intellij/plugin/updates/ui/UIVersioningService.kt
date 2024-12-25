@@ -187,6 +187,10 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
                     deleteUiBundle(getCurrentUiVersion())
                     setCurrentUiVersion(latestDownloadedUiVersion)
                     setLatestDownloadedVersion(null)
+
+                    findActiveProject()?.let {
+                        ActivityMonitor.getInstance(it).setUIVersion(getCurrentUiVersion())
+                    }
                 } else {
                     //something is wrong, we have the property latestDownloadedVersion but there is no file, maybe it was deleted.
                     //reset latestDownloadedVersion
@@ -220,6 +224,9 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
                 if (unpackUiBundle()) {
                     deleteUiBundle(getCurrentUiVersion())
                     setCurrentUiVersion(bundledUiVersion)
+                    findActiveProject()?.let {
+                        ActivityMonitor.getInstance(it).setUIVersion(getCurrentUiVersion())
+                    }
                 } else {
                     Log.log(logger::warn, "could not unpack bundled ui version {}", bundledUiVersion)
                 }
@@ -240,13 +247,16 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
                 )
                 unpackUiBundle()
                 setCurrentUiVersion(bundledUiVersion)
+                findActiveProject()?.let {
+                    ActivityMonitor.getInstance(it).setUIVersion(getCurrentUiVersion())
+                }
             }
 
         } catch (e: Throwable) {
             Log.warnWithException(logger, e, "failed validating ui bundle file")
             ErrorReporter.getInstance().reportError("UIVersioningService.validateUiBundleExistsAndUpdatePath", e)
 
-            //we don't know what went wrong, So as fallback use the packaged ui bundle
+            //we don't know what went wrong, So use the packaged ui bundle as fallback
             deleteUiBundle(getCurrentUiVersion())
             getLatestDownloadedVersion()?.let {
                 deleteUiBundle(it)
@@ -255,6 +265,9 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
 
             unpackUiBundle()
             setCurrentUiVersion(bundledUiVersion)
+            findActiveProject()?.let {
+                ActivityMonitor.getInstance(it).setUIVersion(getCurrentUiVersion())
+            }
 
         }
     }
@@ -411,6 +424,11 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
 
             deleteUiBundle(getCurrentUiVersion())
             setCurrentUiVersion(uiVersion)
+
+            findActiveProject()?.let {
+                ActivityMonitor.getInstance(it).setUIVersion(getCurrentUiVersion())
+            }
+
             service<ReloadService>().reloadAllProjects(ReloadSource.UI_UPDATE)
         } else {
             ErrorReporter.getInstance().reportError(
@@ -501,11 +519,6 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
                 val responseCode: Int = connection.getResponseCode()
 
                 if (responseCode != HttpURLConnection.HTTP_OK) {
-                    ErrorReporter.getInstance().reportError(
-                        null, "UIVersioningService.downloadAndCopyUiBundleFile",
-                        "download from $url",
-                        mapOf("responseCode" to responseCode.toString())
-                    )
                     Log.log(logger::warn, "error downloading ui bundle {}, response code {}", url, responseCode)
                     throw RuntimeException("could not download file from $url, response code $responseCode")
                 } else {
@@ -532,7 +545,11 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
             return true
 
         } catch (e: Exception) {
-            ErrorReporter.getInstance().reportError("UIVersioningService.downloadAndCopyUiBundleFile", e)
+            ErrorReporter.getInstance().reportError(
+                "UIVersioningService.downloadAndCopyUiBundleFile", e, mapOf(
+                    "download url" to url
+                )
+            )
             Log.warnWithException(logger, e, "could not download file {}", url)
             return false
         } finally {

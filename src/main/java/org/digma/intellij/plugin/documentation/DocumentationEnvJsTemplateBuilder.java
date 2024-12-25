@@ -1,7 +1,7 @@
 package org.digma.intellij.plugin.documentation;
 
 import com.intellij.openapi.project.Project;
-import org.digma.intellij.plugin.ui.jcef.*;
+import org.digma.intellij.plugin.ui.jcef.BaseEnvJsTemplateBuilder;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;

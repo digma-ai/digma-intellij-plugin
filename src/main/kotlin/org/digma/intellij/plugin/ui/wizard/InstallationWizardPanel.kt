@@ -12,7 +12,6 @@ import org.digma.intellij.plugin.docker.DigmaInstallationStatus
 import org.digma.intellij.plugin.docker.LocalInstallationFacade
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.reload.ReloadObserver
 import org.digma.intellij.plugin.reload.ReloadService
 import org.digma.intellij.plugin.reload.ReloadableJCefContainer
 import org.digma.intellij.plugin.scheduling.disposingPeriodicTask
@@ -40,10 +39,7 @@ class InstallationWizardPanel(private val project: Project, private val wizardSk
 
     init {
         jCefComponent = build()
-        jCefComponent?.let {
-            service<ReloadService>().register(this, parentDisposable)
-            service<ReloadObserver>().register(project, INSTALLATION_WIZARD_APP_NAME, it.getComponent(), parentDisposable)
-        }
+
         Disposer.register(InstallationWizardService.getInstance(project)) {
             dispose()
         }
@@ -52,6 +48,11 @@ class InstallationWizardPanel(private val project: Project, private val wizardSk
             InstallationWizardService.getInstance(project).setJcefBrowser(it.jbCefBrowser)
         }
 
+        //parent disposable for ReloadService should be the same lifetime as the jCefComponent because InstallationWizardPanel does not live
+        // for the lifetime of the project, it is closed by user.
+        //parent disposable for ReloadObserver needs to be a disposable that is the lifetime of the jCefComponent.
+        service<ReloadService>().register(this, parentDisposable)
+        jCefComponent?.registerForReloadObserver(INSTALLATION_WIZARD_APP_NAME)
     }
 
 
@@ -89,10 +90,7 @@ class InstallationWizardPanel(private val project: Project, private val wizardSk
         removeAll()
         parentDisposable = Disposer.newDisposable()
         jCefComponent = build()
-        jCefComponent?.let {
-            service<ReloadService>().register(this, parentDisposable)
-            service<ReloadObserver>().register(project, INSTALLATION_WIZARD_APP_NAME, it.getComponent(), parentDisposable)
-        }
+        jCefComponent?.registerForReloadObserver(INSTALLATION_WIZARD_APP_NAME)
     }
 
     override fun getProject(): Project {

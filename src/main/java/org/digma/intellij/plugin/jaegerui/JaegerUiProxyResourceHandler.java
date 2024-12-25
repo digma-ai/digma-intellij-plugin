@@ -14,7 +14,7 @@ import org.digma.intellij.plugin.ui.jcef.JCefException;
 import org.jetbrains.annotations.*;
 
 import java.net.*;
-import java.util.*;
+import java.util.HashMap;
 import java.util.stream.Collectors;
 
 public class JaegerUiProxyResourceHandler implements CefResourceHandler {

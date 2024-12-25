@@ -910,6 +910,7 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
         val ideVersion = ideInfo.fullVersion
         val ideBuildNumber = ideInfo.build.asString()
         val pluginVersion = SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("unknown")
+        val uiVersion = UIVersioningService.getInstance().getCurrentUiVersion()
         val isJcefSupported = JBCefApp.isSupported()
 
         postHog?.set(
@@ -920,6 +921,7 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
                 "ide.version" to ideVersion,
                 "ide.build" to ideBuildNumber,
                 "plugin.version" to pluginVersion,
+                "ui.version" to uiVersion,
                 "user.type" to if (UniqueGeneratedUserId.isDevUser) "internal" else "external",
                 "jcef.supported" to isJcefSupported,
                 INSTALL_STATUS_PROPERTY_NAME to getCurrentInstallStatus()
@@ -1156,6 +1158,16 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
 
         postHog?.capture(UniqueGeneratedUserId.userId, "ui update", details)
 
+    }
+
+
+    fun setUIVersion(uiVersion: String) {
+        postHog?.set(
+            UniqueGeneratedUserId.userId,
+            mapOf(
+                "ui.version" to uiVersion
+            )
+        )
     }
 
 

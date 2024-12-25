@@ -74,13 +74,15 @@ class ReloadObserver(cs: CoroutineScope) {
 
     fun register(project: Project, appName: String, jcefUiComponent: JComponent, parentDisposable: Disposable) {
 
+        Log.log(logger::trace, "register called for component {} in project {}", appName, project.name)
+
         if (GraphicsEnvironment.isHeadless()) {
             Log.log(logger::trace, "GraphicsEnvironment is headless, not registering components")
             return
         }
 
         if (!SystemInfo.isMac) {
-            Log.log(logger::trace, "system is not mac, not registering components")
+            Log.log(logger::trace, "system is not mac, not registering component {}", appName)
             return
         }
 
@@ -89,9 +91,9 @@ class ReloadObserver(cs: CoroutineScope) {
         jcefUiComponent.addPropertyChangeListener(jcefPropertyChangeListener)
 
         Disposer.register(parentDisposable) {
+            Log.log(logger::trace, "registration removed for component {} in project {}", appName, project.name)
             jcefUiComponent.removePropertyChangeListener(jcefPropertyChangeListener)
         }
-
     }
 
 
@@ -185,6 +187,7 @@ class ReloadObserver(cs: CoroutineScope) {
             }
 
         } catch (e: Throwable) {
+            Log.warnWithException(logger,e,"error in ReloadObserver.checkChangesAndReload")
             ErrorReporter.getInstance().reportError("ReloadObserver.checkChangesAndReload", e)
         }
     }

@@ -1,7 +1,14 @@
 package org.digma.intellij.plugin.ui.common
 
 import com.intellij.ui.JBColor
-import java.awt.*
+import java.awt.AlphaComposite
+import java.awt.Color
+import java.awt.Component
+import java.awt.Cursor
+import java.awt.Dimension
+import java.awt.Graphics
+import java.awt.Graphics2D
+import java.awt.RenderingHints
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import javax.swing.SwingUtilities

@@ -1,14 +1,14 @@
 package org.digma.intellij.plugin.ui.wizard
 
-import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.jcef.JBCefBrowser
+import org.digma.intellij.plugin.common.DisposableAdaptor
 
 @Service(Service.Level.PROJECT)
 class InstallationWizardService(
     private val project: Project
-) : Disposable {
+) : DisposableAdaptor {
     private var jbCefBrowser: JBCefBrowser? = null
 
 
@@ -18,9 +18,6 @@ class InstallationWizardService(
         }
     }
 
-    override fun dispose() {
-        //nothing to do
-    }
 
     fun setJcefBrowser(jbCefBrowser: JBCefBrowser) {
         this.jbCefBrowser = jbCefBrowser

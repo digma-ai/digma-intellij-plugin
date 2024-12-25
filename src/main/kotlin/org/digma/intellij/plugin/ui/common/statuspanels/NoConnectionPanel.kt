@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.ui.common.statuspanels
 
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.components.service
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
 import com.intellij.ui.JBColor
@@ -10,6 +11,7 @@ import org.digma.intellij.plugin.analytics.BackendInfoHolder
 import org.digma.intellij.plugin.analytics.refreshEnvironmentsNowOnBackground
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
+import org.digma.intellij.plugin.docker.DockerComposePersistenceFeatureService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.UserActionOrigin
 import org.digma.intellij.plugin.scheduling.oneShotTask
@@ -93,6 +95,14 @@ fun createNoConnectionPanel(project: Project, parentDisposable: Disposable):JPan
             ToolWindowShower.getInstance(project).showToolWindow()
         }
     }
+
+    service<DockerComposePersistenceFeatureService>().updateInProgress.afterChange {
+        setupLink.isEnabled = !it
+    }
+    setupLink.isEnabled = service<DockerComposePersistenceFeatureService>().updateInProgress.get()
+
+
+
     buttonsPanel.add(setupLink, BorderLayout.EAST)
     mainPanel.add(buttonsPanel,constraints)
 

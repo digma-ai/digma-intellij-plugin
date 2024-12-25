@@ -49,6 +49,10 @@ class DockerService {
     }
 
 
+    fun getComposeFilePath(): String {
+        return composeFileProvider.getComposeFile().absolutePath
+    }
+
 
     fun isDockerInstalled(): Boolean {
         return isInstalled(DOCKER_COMMAND)

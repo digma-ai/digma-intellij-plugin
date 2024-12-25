@@ -49,6 +49,12 @@ class LocalInstallationFacade {
 
     fun installEngine(project: Project, resultTask: Consumer<String>) {
 
+        if (service<DockerComposePersistenceFeatureService>().updateInProgress.get()) {
+            Log.log(logger::trace, "installEngine rejected because DockerComposePersistenceFeature update in progress")
+            resultTask.accept("install engine rejected because DockerComposePersistenceFeature update in progress")
+            return
+        }
+
         Log.log(logger::trace, "installEngine requested")
         if (isLocalEngineInstalled()) {
             Log.log(logger::trace, "installEngine rejected because already installed")
@@ -71,6 +77,12 @@ class LocalInstallationFacade {
 
     fun stopEngine(project: Project, resultTask: Consumer<String>) {
 
+        if (service<DockerComposePersistenceFeatureService>().updateInProgress.get()) {
+            Log.log(logger::trace, "stopEngine rejected because DockerComposePersistenceFeature update in progress")
+            resultTask.accept("stop engine rejected because DockerComposePersistenceFeature update in progress")
+            return
+        }
+
         Log.log(logger::trace, "stopEngine requested")
         doOperation(OP.STOP, resultTask) {
             DockerService.getInstance().stopEngine(project, myResultTask)
@@ -78,6 +90,12 @@ class LocalInstallationFacade {
     }
 
     fun startEngine(project: Project, resultTask: Consumer<String>) {
+
+        if (service<DockerComposePersistenceFeatureService>().updateInProgress.get()) {
+            Log.log(logger::trace, "startEngine rejected because DockerComposePersistenceFeature update in progress")
+            resultTask.accept("start engine rejected because DockerComposePersistenceFeature update in progress")
+            return
+        }
 
         Log.log(logger::trace, "startEngine requested")
         if (isLocalEngineRunning(project)) {
@@ -92,6 +110,12 @@ class LocalInstallationFacade {
     }
 
     fun removeEngine(project: Project, resultTask: Consumer<String>) {
+
+        if (service<DockerComposePersistenceFeatureService>().updateInProgress.get()) {
+            Log.log(logger::trace, "removeEngine rejected because DockerComposePersistenceFeature update in progress")
+            resultTask.accept("remove engine rejected because DockerComposePersistenceFeature update in progress")
+            return
+        }
 
         Log.log(logger::trace, "removeEngine requested")
         doOperation(OP.REMOVE, resultTask) {

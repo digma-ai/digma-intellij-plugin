@@ -114,6 +114,13 @@ class BackendInfoHolder(val project: Project) : DisposableAdaptor {
     }
 
 
+    //do not call this method unless it is really necessary to update on current thread.
+    //never call it on EDT.
+    fun updateOnCurrentThread() {
+        update()
+    }
+
+
     fun getAbout(): AboutResult? {
         if (aboutRef.get() == null) {
             return getAboutInBackgroundNow()

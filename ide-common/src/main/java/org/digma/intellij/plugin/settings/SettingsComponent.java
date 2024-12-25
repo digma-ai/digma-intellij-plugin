@@ -12,6 +12,7 @@ import com.intellij.util.ui.FormBuilder;
 import org.digma.intellij.plugin.analytics.BackendInfoHolder;
 import org.digma.intellij.plugin.auth.account.*;
 import org.digma.intellij.plugin.common.*;
+import org.digma.intellij.plugin.docker.*;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.updates.ui.UIVersioningService;
 import org.jetbrains.annotations.*;
@@ -382,7 +383,11 @@ class SettingsComponent {
         if (someProject != null) {
             var about = BackendInfoHolder.getInstance(someProject).getAbout();
             if (about != null) {
-                backendVersionLabel.setText(about.getApplicationVersion());
+                if (LocalInstallationFacade.getInstance().isLocalEngineInstalled()) {
+                    backendVersionLabel.setText(about.getApplicationVersion() + " (" + DockerService.getInstance().getComposeFilePath() + ")");
+                }else{
+                    backendVersionLabel.setText(about.getApplicationVersion());
+                }
             }
         }
         return backendVersionLabel;

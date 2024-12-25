@@ -36,7 +36,7 @@ class DockerService {
     private val logger = Logger.getInstance(this::class.java)
 
     private val engine = Engine()
-    private val downloader = Downloader()
+    private val composeFileProvider = ComposeFileProvider()
 
     companion object {
 
@@ -50,12 +50,13 @@ class DockerService {
 
 
     init {
+        migrateDockerComposeFile(composeFileProvider.getComposeFilePath(), logger)
+    }
 
-        if (PersistenceService.getInstance().isLocalEngineInstalled()) {
-            //this will happen on IDE start,
-            // DockerService is an application service so Downloader will be singleton per application
-            downloader.downloadComposeFile()
-        }
+
+    //this method should not be used to get the file itself, it is mainly for logging and debugging.
+    fun getComposeFilePath(): String {
+        return composeFileProvider.getComposeFilePath()
     }
 
 
@@ -106,18 +107,18 @@ class DockerService {
             var exitValue = ""
             try {
 
-                if (downloader.downloadComposeFile(true)) {
+                if (composeFileProvider.ensureComposeFileExists()) {
                     val dockerComposeCmd = getDockerComposeCommand()
 
                     if (dockerComposeCmd != null) {
 
-                        exitValue = engine.up(project, downloader.composeFile, dockerComposeCmd)
+                        exitValue = engine.up(project, composeFileProvider.getComposeFile(), dockerComposeCmd)
                         if (exitValue != "0") {
                             ActivityMonitor.getInstance(project).registerDigmaEngineEventError("installEngine", exitValue)
                             Log.log(logger::warn, "error installing engine {}", exitValue)
                             if (isDockerDaemonDownExitValue(exitValue)) {
                                 exitValue = doRetryFlowWhenDockerDaemonIsDown(project, exitValue) {
-                                    engine.up(project, downloader.composeFile, dockerComposeCmd)
+                                    engine.up(project, composeFileProvider.getComposeFile(), dockerComposeCmd)
                                 }
                             }
                         }
@@ -166,9 +167,17 @@ class DockerService {
             //the engine should be up otherwise the upgrade would not be triggered.
             //ignore errors, we'll try to upgrade anyway after that.
             try {
-                val dockerComposeCmd = getDockerComposeCommand()
-                dockerComposeCmd?.let {
-                    engine.down(project, downloader.composeFile, it, false)
+                if (composeFileProvider.ensureComposeFileExists()) {
+                    val dockerComposeCmd = getDockerComposeCommand()
+                    dockerComposeCmd?.let {
+                        engine.down(project, composeFileProvider.getComposeFile(), it, false)
+                    }
+                } else {
+                    ActivityMonitor.getInstance(project).registerDigmaEngineEventError(
+                        "upgradeEngine",
+                        "Failed to stop engine before upgrade because compose file not found"
+                    )
+                    Log.log(logger::warn, "Failed to download compose file")
                 }
             } catch (e: Throwable) {
                 ErrorReporter.getInstance().reportError(project, "DockerService.upgradeEngine", e)
@@ -178,11 +187,11 @@ class DockerService {
 
             var exitValue = ""
             try {
-                if (downloader.downloadComposeFile(true)) {
+                if (composeFileProvider.downloadLatestComposeFile()) {
                     val dockerComposeCmd = getDockerComposeCommand()
 
                     if (dockerComposeCmd != null) {
-                        exitValue = engine.up(project, downloader.composeFile, dockerComposeCmd)
+                        exitValue = engine.up(project, composeFileProvider.getComposeFile(), dockerComposeCmd)
                         //in upgrade there is no need to check if daemon is down because upgrade will not be triggered if the engine is not running.
                         if (exitValue != "0") {
                             ActivityMonitor.getInstance(project).registerDigmaEngineEventError("upgradeEngine", exitValue)
@@ -196,7 +205,7 @@ class DockerService {
                         notifyResult(NO_DOCKER_COMPOSE_COMMAND, resultTask)
                     }
                 } else {
-                    ActivityMonitor.getInstance(project).registerDigmaEngineEventError("upgradeEngine", "Failed to download compose file")
+                    ActivityMonitor.getInstance(project).registerDigmaEngineEventError("upgradeEngine", "Failed to download latest compose file")
                     Log.log(logger::warn, "Failed to download compose file")
                     notifyResult("Failed to download compose file", resultTask)
                 }
@@ -224,13 +233,13 @@ class DockerService {
 
             var exitValue = ""
             try {
-                if (downloader.downloadComposeFile()) {
+                if (composeFileProvider.ensureComposeFileExists()) {
 
                     val dockerComposeCmd = getDockerComposeCommand()
 
                     if (dockerComposeCmd != null) {
 
-                        exitValue = engine.stop(project, downloader.composeFile, dockerComposeCmd)
+                        exitValue = engine.stop(project, composeFileProvider.getComposeFile(), dockerComposeCmd)
                         if (exitValue != "0") {
                             ActivityMonitor.getInstance(project).registerDigmaEngineEventError("stopEngine", exitValue)
                             Log.log(logger::warn, "error stopping engine {}", exitValue)
@@ -270,7 +279,7 @@ class DockerService {
 
             var exitValue = ""
             try {
-                if (downloader.downloadComposeFile()) {
+                if (composeFileProvider.ensureComposeFileExists()) {
                     val dockerComposeCmd = getDockerComposeCommand()
 
                     if (dockerComposeCmd != null) {
@@ -282,20 +291,20 @@ class DockerService {
                             //so running down and then up solves it.
                             //in any case it's better to stop before start because we don't know the state of the engine, maybe its
                             // partially up and start will fail.
-                            engine.down(project, downloader.composeFile, dockerComposeCmd, false)
+                            engine.down(project, composeFileProvider.getComposeFile(), dockerComposeCmd, false)
                             Thread.sleep(2000)
                         } catch (e: Exception) {
                             ErrorReporter.getInstance().reportError(project, "DockerService.startEngine", e)
                             Log.warnWithException(logger, e, "Failed to stop docker engine {}", e)
                         }
 
-                        exitValue = engine.start(project, downloader.composeFile, dockerComposeCmd)
+                        exitValue = engine.start(project, composeFileProvider.getComposeFile(), dockerComposeCmd)
                         if (exitValue != "0") {
                             ActivityMonitor.getInstance(project).registerDigmaEngineEventError("startEngine", exitValue)
                             Log.log(logger::warn, "error starting engine {}", exitValue)
                             if (isDockerDaemonDownExitValue(exitValue)) {
                                 exitValue = doRetryFlowWhenDockerDaemonIsDown(project, exitValue) {
-                                    engine.start(project, downloader.composeFile, dockerComposeCmd)
+                                    engine.start(project, composeFileProvider.getComposeFile(), dockerComposeCmd)
                                 }
                             }
                         }
@@ -345,11 +354,11 @@ class DockerService {
 
             var exitValue = ""
             try {
-                if (downloader.downloadComposeFile()) {
+                if (composeFileProvider.ensureComposeFileExists()) {
                     val dockerComposeCmd = getDockerComposeCommand()
 
                     if (dockerComposeCmd != null) {
-                        exitValue = engine.remove(project, downloader.composeFile, dockerComposeCmd)
+                        exitValue = engine.remove(project, composeFileProvider.getComposeFile(), dockerComposeCmd)
                         if (exitValue != "0") {
                             ActivityMonitor.getInstance(project).registerDigmaEngineEventError("removeEngine", exitValue)
                             Log.log(logger::warn, "error uninstalling engine {}", exitValue)
@@ -363,7 +372,7 @@ class DockerService {
 
                     try {
                         //always delete file here, it's an uninstallation
-                        downloader.deleteFile()
+                        composeFileProvider.deleteFile()
                     } catch (e: Exception) {
                         Log.log(logger::warn, "Failed to delete compose file")
                         ActivityMonitor.getInstance(project).registerDigmaEngineEventError("removeEngine", "failed to delete compose file: $e")

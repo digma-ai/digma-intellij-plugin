@@ -74,7 +74,7 @@ private fun isLocalEngineRunning(): Boolean {
             return false
         }
 
-        val projectName = COMPOSE_FILE_DIR
+        val projectName = COMPOSE_FILE_DIR_NAME
 
         val dockerCmd = getDockerCommand()
 
@@ -104,7 +104,7 @@ private fun isAnyEngineRunning(): Boolean {
             return false
         }
 
-        val projectName = COMPOSE_FILE_DIR
+        val projectName = COMPOSE_FILE_DIR_NAME
 
         val dockerCmd = getDockerCommand()
 

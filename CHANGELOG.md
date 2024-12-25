@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.403] - 2024-12-24
+## [2.0.404] - 2024-12-25
+
+- improve auto reload registration by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2635
+
+## 2.0.403 - 2024-12-24
 
 - Separate kotlin plugin classes Closes #1545 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2618
 - add-project-valid-check by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2620

@@ -3,7 +3,11 @@ package org.digma.intellij.plugin.ui.list
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.JBUI.Borders.empty
 import org.digma.intellij.plugin.ui.common.Laf
-import java.awt.*
+import java.awt.BorderLayout
+import java.awt.Color
+import java.awt.Graphics
+import java.awt.Graphics2D
+import java.awt.RenderingHints
 import javax.swing.JComponent
 import javax.swing.JPanel
 

@@ -10,6 +10,7 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
+import com.intellij.ui.AncestorListenerAdapter
 import com.intellij.ui.jcef.JBCefBrowser
 import com.intellij.util.Alarm
 import org.apache.maven.artifact.versioning.ComparableVersion
@@ -40,6 +41,7 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.environment.Env
 import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
 import org.digma.intellij.plugin.observability.ObservabilityChanged
+import org.digma.intellij.plugin.reload.ReloadObserver
 import org.digma.intellij.plugin.scope.ScopeChangedEvent
 import org.digma.intellij.plugin.scope.ScopeContext
 import org.digma.intellij.plugin.scope.SpanScope
@@ -55,17 +57,20 @@ import java.util.WeakHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 import javax.swing.JComponent
+import javax.swing.event.AncestorEvent
 
 
 class JCefComponent
 private constructor(
     private val project: Project,
-    parentDisposable: Disposable,
+    private val parentDisposable: Disposable,
     val name: String,
     val jbCefBrowser: JBCefBrowser
 ) : Disposable {
 
     private val logger: Logger = Logger.getInstance(JCefComponent::class.java)
+
+    private var registeredForReloadObserver = false
 
     init {
         val connectionEventAlarm = Alarm(Alarm.ThreadToUse.POOLED_THREAD, parentDisposable)
@@ -184,8 +189,11 @@ private constructor(
                                 Log.log(logger::trace, "updating digma installation status on connection lost")
                                 val status = service<LocalInstallationFacade>().getCurrentDigmaInstallationStatusOnConnectionLost()
                                 updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
-                            }else{
-                                Log.log(logger::trace, "NOT updating digma installation status on connection lost because operation is running by installation wizard")
+                            } else {
+                                Log.log(
+                                    logger::trace,
+                                    "NOT updating digma installation status on connection lost because operation is running by installation wizard"
+                                )
                             }
 
                         } catch (e: Exception) {
@@ -206,8 +214,11 @@ private constructor(
                                 Log.log(logger::trace, "updating digma installation status on connection gained")
                                 val status = service<LocalInstallationFacade>().getCurrentDigmaInstallationStatusOnConnectionGained()
                                 updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
-                            }else{
-                                Log.log(logger::trace, "NOT updating digma installation status on connection gained because operation is running by installation wizard")
+                            } else {
+                                Log.log(
+                                    logger::trace,
+                                    "NOT updating digma installation status on connection gained because operation is running by installation wizard"
+                                )
                             }
                         } catch (e: Exception) {
                             Log.warnWithException(logger, project, e, "error in connectionGained")
@@ -383,6 +394,22 @@ private constructor(
         )
 
     }
+
+
+    //this method needs to be called once per instance of JCefComponent
+    fun registerForReloadObserver(registrationName: String) {
+        //need to register for ReloadObserver after the component has been added to the parent so that all graphics configuration is set.
+        //the event is called multiple times for the same component, but we need to register only once.
+        getComponent().addAncestorListener(object : AncestorListenerAdapter() {
+            override fun ancestorAdded(event: AncestorEvent) {
+                if (!registeredForReloadObserver) {
+                    registeredForReloadObserver = true
+                    service<ReloadObserver>().register(project, registrationName, getComponent(), parentDisposable)
+                }
+            }
+        })
+    }
+
 
     override fun dispose() {
         try {

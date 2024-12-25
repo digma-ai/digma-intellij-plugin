@@ -1,12 +1,10 @@
 package org.digma.intellij.plugin.dashboard;
 
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileEditor.*;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.*;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.jcef.JBCefApp;
-import org.digma.intellij.plugin.reload.ReloadObserver;
 import org.digma.intellij.plugin.ui.jcef.*;
 import org.jetbrains.annotations.*;
 
@@ -29,7 +27,7 @@ public class DashboardFileEditor extends UserDataHolderBase implements FileEdito
         this.file = file;
         jCefComponent = createJcefComponent(project, file);
         if (jCefComponent != null) {
-            ApplicationManager.getApplication().getService(ReloadObserver.class).register(project, DASHBOARD_APP_NAME + "." + file.getName(), jCefComponent.getComponent(), this);
+            jCefComponent.registerForReloadObserver(DASHBOARD_APP_NAME + "." + file.getName());
         }
     }
 

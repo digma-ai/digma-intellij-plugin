@@ -5,7 +5,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.ui.jcef.JBCefApp
 import com.intellij.util.ui.JBUI
-import org.digma.intellij.plugin.reload.ReloadObserver
 import org.digma.intellij.plugin.reload.ReloadService
 import org.digma.intellij.plugin.reload.ReloadableJCefContainer
 import org.digma.intellij.plugin.ui.insights.InsightsService
@@ -29,13 +28,16 @@ class MainAppPanel(private val project: Project) : DisposablePanel(), Reloadable
 
     init {
         jCefComponent = build()
-        jCefComponent?.let {
-            service<ReloadService>().register(this, parentDisposable)
-            service<ReloadObserver>().register(project, MAIN_APP_APP_NAME, it.getComponent(), parentDisposable)
-        }
+
         Disposer.register(MainAppService.getInstance(project)) {
             dispose()
         }
+
+        //parent disposable for ReloadService may be a project service. it can be kept as long as the project is opened because
+        // MainAppPanel lives for the lifetime of the project.
+        //parent disposable for ReloadObserver needs to be a disposable that is the lifetime of the jCefComponent.
+        service<ReloadService>().register(this, MainAppService.getInstance(project))
+        jCefComponent?.registerForReloadObserver(MAIN_APP_APP_NAME)
     }
 
 
@@ -67,10 +69,7 @@ class MainAppPanel(private val project: Project) : DisposablePanel(), Reloadable
         removeAll()
         parentDisposable = Disposer.newDisposable()
         jCefComponent = build()
-        jCefComponent?.let {
-            service<ReloadService>().register(this, parentDisposable)
-            service<ReloadObserver>().register(project, MAIN_APP_APP_NAME, it.getComponent(), parentDisposable)
-        }
+        jCefComponent?.registerForReloadObserver(MAIN_APP_APP_NAME)
     }
 
     override fun getProject(): Project {

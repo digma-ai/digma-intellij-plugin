@@ -5,7 +5,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.ui.jcef.JBCefApp
 import com.intellij.util.ui.JBUI
-import org.digma.intellij.plugin.reload.ReloadObserver
 import org.digma.intellij.plugin.reload.ReloadService
 import org.digma.intellij.plugin.reload.ReloadableJCefContainer
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
@@ -24,13 +23,16 @@ class TroubleshootingPanel(private val project: Project) : DisposablePanel(), Re
 
     init {
         jCefComponent = build()
-        jCefComponent?.let {
-            service<ReloadService>().register(this, parentDisposable)
-            service<ReloadObserver>().register(project, TROUBLESHOOTING_APP_NAME, it.getComponent(), parentDisposable)
-        }
+
         Disposer.register(TroubleshootingService.getInstance(project)) {
             dispose()
         }
+
+        //parent disposable for ReloadService should be the same lifetime as the jCefComponent because TroubleshootingPanel does not live
+        // for the lifetime of the project, it is closed by user.
+        //parent disposable for ReloadObserver needs to be a disposable that is the lifetime of the jCefComponent.
+        service<ReloadService>().register(this, parentDisposable)
+        jCefComponent?.registerForReloadObserver(TROUBLESHOOTING_APP_NAME)
     }
 
 
@@ -66,10 +68,7 @@ class TroubleshootingPanel(private val project: Project) : DisposablePanel(), Re
         removeAll()
         parentDisposable = Disposer.newDisposable()
         jCefComponent = build()
-        jCefComponent?.let {
-            service<ReloadService>().register(this, parentDisposable)
-            service<ReloadObserver>().register(project, TROUBLESHOOTING_APP_NAME, it.getComponent(), parentDisposable)
-        }
+        jCefComponent?.registerForReloadObserver(TROUBLESHOOTING_APP_NAME)
     }
 
     override fun getProject(): Project {

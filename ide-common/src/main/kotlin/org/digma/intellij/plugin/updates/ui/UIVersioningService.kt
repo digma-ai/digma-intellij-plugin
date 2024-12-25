@@ -519,11 +519,6 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
                 val responseCode: Int = connection.getResponseCode()
 
                 if (responseCode != HttpURLConnection.HTTP_OK) {
-                    ErrorReporter.getInstance().reportError(
-                        null, "UIVersioningService.downloadAndCopyUiBundleFile",
-                        "download from $url",
-                        mapOf("responseCode" to responseCode.toString())
-                    )
                     Log.log(logger::warn, "error downloading ui bundle {}, response code {}", url, responseCode)
                     throw RuntimeException("could not download file from $url, response code $responseCode")
                 } else {
@@ -550,7 +545,11 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
             return true
 
         } catch (e: Exception) {
-            ErrorReporter.getInstance().reportError("UIVersioningService.downloadAndCopyUiBundleFile", e)
+            ErrorReporter.getInstance().reportError(
+                "UIVersioningService.downloadAndCopyUiBundleFile", e, mapOf(
+                    "download url" to url
+                )
+            )
             Log.warnWithException(logger, e, "could not download file {}", url)
             return false
         } finally {

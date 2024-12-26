@@ -432,7 +432,8 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
                 "ide.build" to ideBuildNumber,
                 "plugin.version" to pluginVersion,
                 "server.version" to serverInfo?.applicationVersion.toString(),
-                "user.type" to if (UniqueGeneratedUserId.isDevUser) "internal" else "external"
+                "user.type" to if (UniqueGeneratedUserId.isDevUser) "internal" else "external",
+                "backend.connection.status" to if(BackendConnectionMonitor.getInstance(project).isConnectionOk()) "connected" else "disconnected"
             )
 
 

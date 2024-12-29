@@ -99,8 +99,7 @@ class ComposeFileProvider {
             }
 
             Log.log(logger::info, "compose file does not exist, downloading latest compose file")
-            ensureDirectoryExist(COMPOSE_FILE_DIR)
-            return downloadAndCopyFile(URI(COMPOSE_FILE_URL).toURL(), composeFile)
+            return downloadLatestComposeFile()
 
         } catch (e: Throwable) {
             Log.warnWithException(logger, e, "could not ensure compose file exists")
@@ -152,7 +151,6 @@ class ComposeFileProvider {
     }
 
 
-    //downloadLatestComposeFile is used only for upgrading the local engine
     fun downloadLatestComposeFile(): Boolean {
 
         try {

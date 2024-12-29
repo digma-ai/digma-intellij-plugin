@@ -443,4 +443,11 @@ class PersistenceService {
         state.latestDownloadedUiVersion = uiVersion
     }
 
+    fun isFirstRunAfterPersistDockerCompose(): Boolean {
+        return state.isFirstRunAfterPersistDockerCompose
+    }
+    fun setIsFirstRunAfterPersistDockerComposeDone() {
+        state.isFirstRunAfterPersistDockerCompose = false
+    }
+
 }

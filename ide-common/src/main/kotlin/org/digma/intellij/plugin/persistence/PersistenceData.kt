@@ -98,6 +98,7 @@ internal data class PersistenceData(
     var engagementScorePersistenceFileFixed: Boolean = false,
 
     var currentUiVersion: String? = null,
-    var latestDownloadedUiVersion: String? = null
+    var latestDownloadedUiVersion: String? = null,
+    var isFirstRunAfterPersistDockerCompose: Boolean = true
 
 )

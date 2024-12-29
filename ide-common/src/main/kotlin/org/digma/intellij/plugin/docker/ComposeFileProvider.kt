@@ -24,7 +24,7 @@ const val COMPOSE_FILE_DIR_NAME = "digma-docker"
  * the latest docker-compose.yml is bundled with the plugin in build time.
  * on first request for the file It will unpack the file from the resource to the local file system if it does not exist.
  * after unpacking the file it will be available for running docker operations and will not be unpacked again, unless it was deleted somehow.
- * the file is saved to a persistence folder on user's machine and should not be deleted by the user. its is like an installation file
+ * the file is saved to a persistence folder on user's machine and should not be deleted by the user. its like an installation file
  * of the plugin and usually users will not delete it.
  * when upgrading the local engine the docker service will call downloadLatestComposeFile to download the latest compose file. the file will be downloaded
  * and override the existing file, from now on the new file will be used for docker operations.

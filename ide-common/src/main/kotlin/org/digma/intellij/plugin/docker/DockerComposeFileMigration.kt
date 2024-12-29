@@ -8,23 +8,24 @@ import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import java.io.File
 
-
+//TODO: this migration should be removed in the future when we are sure that all users have the latest version of the plugin.
+// we can do that around May 2025.
 fun migrateDockerComposeFile(newDockerComposeFilePath: String, logger: Logger) {
 
     /*
-    in version 2.0.404 of the plugin we changed the location of the docker-conmpose.yml file.
+    in version 2.0.405 of the plugin we changed the location of the docker-conmpose.yml file.
     from $TEMP/digma-docker/docker-compose.yml
      to
     ${DigmaPathManager.getLocalFilesDirectoryPath()}/digma-docker/docker-compose.yml
 
     the directory is the same name and so the docker project is the same project.
-    this migration will just move the old file to the new location and because its the same project name in docker nothing will change
-    and the local engine will continue as usual
+    this migration will just move the old file to the new location, and because it's the same project name in docker, nothing will change
+    and the local engine will continue as usual.
 
      when this plugin version is installed we try to find the old compose file and just copy it to the new location.
      after that local engine will continue to work as usual.
 
-     if the file is not found the plugin will just use the new file that is bundled with this plugin version. the result is the same
+     if the file is not found the plugin will download the latest and use it. the result is the same
      as if this migration didn't happen because in the old way if the file from $TEMP/digma-docker/docker-compose.yml was deleted the
      plugin would download the latest anyway.
 
@@ -32,12 +33,13 @@ fun migrateDockerComposeFile(newDockerComposeFilePath: String, logger: Logger) {
         - if local engine is not installed, nothing to do.
 
         - if local engine is installed and not running:
-        the next time user starts the engine the new file that is bundled with this plugin version will be used.
-        this may be an update to the engine if the previous engine was older than the compose file that is bundled with this plugin version.
+        the next time user starts the engine the new file that was downloaded will be used.
+        this may be an update to the engine if the previous engine was older than the latest.
 
         - if local engine is installed and running:
-        the next time user will try to stop the engine the new file that is bundled with this plugin version will be used.
-        this may not succeed if the engine was installed with a much older version than what is bundled with this plugin version.
+        the next time user will try to stop the engine the new file that was downloaded will be used.
+        this may not succeed if the engine was installed with a much older version than the latest. but this will happen only if the
+        installed engine is very old, we don't expect that to happen.
 
      if the steps above succeed local engine will continue to work as usual.
 

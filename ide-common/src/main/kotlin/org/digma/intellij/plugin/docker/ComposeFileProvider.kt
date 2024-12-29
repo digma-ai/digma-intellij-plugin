@@ -6,7 +6,6 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.paths.DigmaPathManager
 import java.io.File
-import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URI
 import java.net.URL
@@ -16,22 +15,17 @@ import kotlin.io.path.deleteIfExists
 
 private const val COMPOSE_FILE_URL = "https://get.digma.ai/"
 const val COMPOSE_FILE_NAME = "docker-compose.yml"
-private const val RESOURCE_LOCATION = "docker-compose"
 const val COMPOSE_FILE_DIR_NAME = "digma-docker"
 
 /**
  * ComposeFileProvider is responsible for providing the docker-compose.yml file.
- * the latest docker-compose.yml is bundled with the plugin in build time.
- * on first request for the file It will unpack the file from the resource to the local file system if it does not exist.
- * after unpacking the file it will be available for running docker operations and will not be unpacked again, unless it was deleted somehow.
- * the file is saved to a persistence folder on user's machine and should not be deleted by the user. its like an installation file
+ * on first request for the file, if the file does not exist, It will be downloaded and saved to the local file system.
+ * after that the file it will be available for running docker operations and will not be downloaded again, unless it was deleted somehow.
+ * the file is saved to a persistence folder on user's machine and should not be deleted by the user. it's like an installation file
  * of the plugin and usually users will not delete it.
  * when upgrading the local engine the docker service will call downloadLatestComposeFile to download the latest compose file. the file will be downloaded
  * and override the existing file, from now on the new file will be used for docker operations.
- * if after upgrade the file is deleted somehow, the plugin will use the bundled file from the resource again. this may cause a downgrade of the local
- * engine, but we don't expect that to happen. (TODO: an improvement to this case can be to track upgrades, mark a flag in persistence that there was
- * an upgrade and if the file is deleted after upgrade, download the latest again. this may also cause an issue if the latest backend is not
- * compatible with this plugin version or the docker images are different then what is currently running).
+ * whenever the file is not found the latest will be downloaded and saved.
  * This class also supports using a custom docker compose file for development purposes only. the custom file is downloaded from a custom url provided
  * with a system property. engine upgrade will not work when using a custom docker compose file.
  */
@@ -72,7 +66,7 @@ class ComposeFileProvider {
     //it should not create the file or unpack it.
     //use the method getComposeFile() to get the file for running docker operations
     fun getComposeFilePath(): String {
-        if(usingCustomComposeFile()) {
+        if (usingCustomComposeFile()) {
             return customComposeFile.absolutePath
         }
         return composeFile.absolutePath
@@ -95,7 +89,7 @@ class ComposeFileProvider {
     fun ensureComposeFileExists(): Boolean {
         try {
             if (usingCustomComposeFile()) {
-                Log.log(logger::info, "using custom compose file {}", getCustomComposeFileUrl())
+                Log.log(logger::info, "using custom compose file from {}", getCustomComposeFileUrl())
                 return ensureCustomComposeFileExists()
             }
 
@@ -104,9 +98,8 @@ class ComposeFileProvider {
                 return true
             }
 
-            Log.log(logger::info, "compose file does not exist, unpacking bundled file")
-            unpack()
-            return true
+            Log.log(logger::info, "compose file does not exist, downloading latest compose file")
+            return downloadLatestComposeFile()
 
         } catch (e: Throwable) {
             Log.warnWithException(logger, e, "could not ensure compose file exists")
@@ -123,85 +116,46 @@ class ComposeFileProvider {
         }
 
         return getCustomComposeFileUrl()?.let { url ->
-            CUSTOM_COMPOSE_FILE_DIR.mkdirs()
-            downloadAndCopyFile(URI(url).toURL(), customComposeFile)
-            customComposeFileDownloaded = customComposeFile.exists()
-            customComposeFile.exists()
+            Log.log(logger::info, "downloading custom compose file from {}", url)
+            ensureDirectoryExist(CUSTOM_COMPOSE_FILE_DIR)
+            val downloadResult = downloadAndCopyFile(URI(url).toURL(), customComposeFile)
+            if (downloadResult) {
+                customComposeFile.deleteOnExit()
+                Log.log(logger::info, "custom compose file downloaded to {}", customComposeFile)
+            } else {
+                Log.log(logger::warn, "could not download custom compose file from {}", url)
+            }
+            customComposeFileDownloaded = downloadResult
+            downloadResult
         } ?: false
 
     }
 
 
-
-    private fun unpack() {
-        Log.log(logger::info, "unpacking docker-compose.yml")
-
+    private fun ensureDirectoryExist(dir: File) {
         try {
-            ensureDirectoryExist()
-
-            if (COMPOSE_FILE_DIR.exists()) {
-                copyComposeFileFromResource()
-                Log.log(logger::info, "docker-compose.yml unpacked to {}", COMPOSE_FILE_DIR)
+            if (!dir.exists()) {
+                if (!dir.mkdirs()) {
+                    Log.log(logger::warn, "could not create directory for docker-compose.yml {}", dir)
+                    ErrorReporter.getInstance().reportError(
+                        null, "ComposeFileProvider.ensureDirectoryExist",
+                        "ensureDirectoryExist,could not create directory for docker-compose.yml in $dir",
+                        mapOf("error hint" to "could not create directory for docker-compose.yml in $dir")
+                    )
+                }
             }
-        } catch (e: Exception) {
-            ErrorReporter.getInstance().reportError("ComposeFileProvider.unpack", e)
-            Log.warnWithException(logger, e, "could not unpack docker-compose.yml")
+        } catch (e: Throwable) {
+            Log.warnWithException(logger, e, "could not ensure directory exists {}", dir)
+            ErrorReporter.getInstance().reportError("ComposeFileProvider.ensureDirectoryExist", e)
         }
     }
 
 
-    private fun ensureDirectoryExist() {
-        if (!COMPOSE_FILE_DIR.exists()) {
-            if (!COMPOSE_FILE_DIR.mkdirs()) {
-                Log.log(logger::warn, "could not create directory for docker-compose.yml {}", COMPOSE_FILE_DIR)
-                ErrorReporter.getInstance().reportError(
-                    null, "ComposeFileProvider.ensureDirectoryExist",
-                    "ensureDirectoryExist,could not create directory for docker-compose.yml in $COMPOSE_FILE_DIR",
-                    mapOf("error hint" to "could not create directory for docker-compose.yml in $COMPOSE_FILE_DIR")
-                )
-            }
-        }
-    }
-
-
-    private fun copyComposeFileFromResource() {
-        val resourceLocation = "/$RESOURCE_LOCATION/$COMPOSE_FILE_NAME"
-        val inputStream = this::class.java.getResourceAsStream(resourceLocation)
-        if (inputStream == null) {
-            Log.log(logger::warn, "could not find file in resource for {}", resourceLocation)
-            ErrorReporter.getInstance().reportError(
-                null, "ComposeFileProvider.copyFileFromResource",
-                "could not extract docker-compose.yml from resource", mapOf(
-                    "resource location" to resourceLocation
-                )
-            )
-            return
-        }
-
-        FileOutputStream(composeFile).use {
-            Log.log(logger::info, "unpacking {} to {}", COMPOSE_FILE_NAME, composeFile)
-            com.intellij.openapi.util.io.StreamUtil.copy(inputStream, it)
-        }
-
-    }
-
-
-
-    //downloadLatestComposeFile is used only for upgrading the local engine
     fun downloadLatestComposeFile(): Boolean {
 
         try {
-            //try to delete the current file, don't fail if delete fails
-            deleteFile()
-        } catch (e: Throwable) {
-            Log.warnWithException(logger, e, "could not delete compose file")
-            ErrorReporter.getInstance().reportError("ComposeFileProvider.downloadLatestComposeFile", e)
-        }
-
-        try {
-            ensureDirectoryExist()
-            downloadAndCopyFile(URI(COMPOSE_FILE_URL).toURL(), composeFile)
-            return composeFile.exists()
+            ensureDirectoryExist(COMPOSE_FILE_DIR)
+            return downloadAndCopyFile(URI(COMPOSE_FILE_URL).toURL(), composeFile)
         } catch (e: Throwable) {
             Log.warnWithException(logger, e, "could not download latest compose file")
             ErrorReporter.getInstance().reportError("ComposeFileProvider.downloadLatestComposeFile", e)
@@ -210,8 +164,7 @@ class ComposeFileProvider {
     }
 
 
-
-    private fun downloadAndCopyFile(url: URL, toFile: File) {
+    private fun downloadAndCopyFile(url: URL, toFile: File): Boolean {
 
         val tempFile = kotlin.io.path.createTempFile("tempComposeFile", ".yml")
 
@@ -244,6 +197,8 @@ class ComposeFileProvider {
                 }
             }, Throwable::class.java, 5000, 3)
 
+            return true
+
         } catch (e: Exception) {
             Log.log(logger::warn, "could not download file {}, {}", url, e)
 
@@ -253,6 +208,7 @@ class ComposeFileProvider {
                     "toFile" to toFile.toString()
                 )
             )
+            return false
 
         } finally {
             tempFile.deleteIfExists()
@@ -262,11 +218,10 @@ class ComposeFileProvider {
 
     fun deleteFile() {
         Retries.simpleRetry({
-            val file = if(usingCustomComposeFile()) customComposeFile else composeFile
+            val file = if (usingCustomComposeFile()) customComposeFile else composeFile
             Files.deleteIfExists(file.toPath())
         }, Throwable::class.java, 100, 5)
     }
-
 
 
 }

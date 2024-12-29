@@ -136,9 +136,9 @@ class DockerService {
                         notifyResult(NO_DOCKER_COMPOSE_COMMAND, resultTask)
                     }
                 } else {
-                    ActivityMonitor.getInstance(project).registerDigmaEngineEventError("installEngine", "Failed to download compose file")
-                    Log.log(logger::warn, "Failed to download compose file")
-                    notifyResult("Failed to download compose file", resultTask)
+                    ActivityMonitor.getInstance(project).registerDigmaEngineEventError("installEngine", "Failed to download docker compose file")
+                    Log.log(logger::warn, "Failed to download docker compose file")
+                    notifyResult("Failed to download docker compose file", resultTask)
                 }
 
             } catch (e: Throwable) {
@@ -177,7 +177,7 @@ class DockerService {
                         "upgradeEngine",
                         "Failed to stop engine before upgrade because compose file not found"
                     )
-                    Log.log(logger::warn, "Failed to download compose file")
+                    Log.log(logger::warn, "Failed to download docker compose file")
                 }
             } catch (e: Throwable) {
                 ErrorReporter.getInstance().reportError(project, "DockerService.upgradeEngine", e)
@@ -206,8 +206,8 @@ class DockerService {
                     }
                 } else {
                     ActivityMonitor.getInstance(project).registerDigmaEngineEventError("upgradeEngine", "Failed to download latest compose file")
-                    Log.log(logger::warn, "Failed to download compose file")
-                    notifyResult("Failed to download compose file", resultTask)
+                    Log.log(logger::warn, "Failed to download docker compose file")
+                    notifyResult("Failed to download docker compose file", resultTask)
                 }
             } catch (e: Exception) {
                 ErrorReporter.getInstance().reportError(project, "DockerService.upgradeEngine", e)
@@ -251,9 +251,9 @@ class DockerService {
                         notifyResult(NO_DOCKER_COMPOSE_COMMAND, resultTask)
                     }
                 } else {
-                    ActivityMonitor.getInstance(project).registerDigmaEngineEventError("stopEngine", "Failed to download compose file")
-                    Log.log(logger::warn, "Failed to download compose file")
-                    notifyResult("Failed to download compose file", resultTask)
+                    ActivityMonitor.getInstance(project).registerDigmaEngineEventError("stopEngine", "Failed to download docker compose file")
+                    Log.log(logger::warn, "Failed to download docker compose file")
+                    notifyResult("Failed to download docker compose file", resultTask)
                 }
             } catch (e: Throwable) {
                 ErrorReporter.getInstance().reportError(project, "DockerService.stopEngine", e)
@@ -321,9 +321,9 @@ class DockerService {
                         notifyResult(NO_DOCKER_COMPOSE_COMMAND, resultTask)
                     }
                 } else {
-                    ActivityMonitor.getInstance(project).registerDigmaEngineEventError("startEngine", "Failed to download compose file")
-                    Log.log(logger::warn, "Failed to download compose file")
-                    notifyResult("Failed to download compose file", resultTask)
+                    ActivityMonitor.getInstance(project).registerDigmaEngineEventError("startEngine", "Failed to download docker compose file")
+                    Log.log(logger::warn, "Failed to download docker compose file")
+                    notifyResult("Failed to download docker compose file", resultTask)
                 }
             } catch (e: Throwable) {
                 ErrorReporter.getInstance().reportError(project, "DockerService.startEngine", e)
@@ -379,9 +379,9 @@ class DockerService {
                     }
 
                 } else {
-                    ActivityMonitor.getInstance(project).registerDigmaEngineEventError("removeEngine", "Failed to download compose file")
-                    Log.log(logger::warn, "Failed to download compose file")
-                    notifyResult("Failed to download compose file", resultTask)
+                    ActivityMonitor.getInstance(project).registerDigmaEngineEventError("removeEngine", "Failed to download docker compose file")
+                    Log.log(logger::warn, "Failed to download docker compose file")
+                    notifyResult("Failed to download docker compose file", resultTask)
                 }
             } catch (e: Throwable) {
                 ErrorReporter.getInstance().reportError(project, "DockerService.removeEngine", e)

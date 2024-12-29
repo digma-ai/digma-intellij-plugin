@@ -55,19 +55,6 @@ dependencies {
 
 tasks {
 
-    val downloadComposeFile by registering(Download::class) {
-        src(
-            listOf(
-                "https://get.digma.ai/"
-            )
-        )
-
-        val dir = File(project.sourceSets.main.get().output.resourcesDir, "docker-compose")
-        dest(File(dir, "docker-compose.yml"))
-        retries(3)
-    }
-
-
     val uiVersionFile = project.rootProject.file("ui-version")
     val uiVersion = uiVersionFile.readText()
     //the directory inside the jar to package to
@@ -95,6 +82,6 @@ tasks {
 
 
     processResources {
-        dependsOn(downloadComposeFile, downloadUiBundle, createUiBundleVersionFile)
+        dependsOn(downloadUiBundle, createUiBundleVersionFile)
     }
 }

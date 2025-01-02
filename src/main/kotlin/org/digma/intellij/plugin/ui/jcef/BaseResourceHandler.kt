@@ -13,7 +13,6 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.updates.ui.UIResourcesService
 import java.io.IOException
 import java.io.InputStream
-import kotlin.math.min
 
 abstract class BaseResourceHandler(private val path: String, protected val browser: CefBrowser) : CefResourceHandler {
 
@@ -24,7 +23,7 @@ abstract class BaseResourceHandler(private val path: String, protected val brows
     private var resourceType: CefRequest.ResourceType? = null
 
 
-    private fun isEnvJs(path: String): Boolean{
+    private fun isEnvJs(path: String): Boolean {
         return path.equals("${getResourceFolderName()}/env.js", true)
     }
 
@@ -35,9 +34,9 @@ abstract class BaseResourceHandler(private val path: String, protected val brows
 
         inputStream = if (isEnvJs(path)) {
             buildEnvJsFromTemplate(path)
-        } else if (UIResourcesService.getInstance().isResourceExists(path)){
+        } else if (UIResourcesService.getInstance().isResourceExists(path)) {
             UIResourcesService.getInstance().getResourceAsStream(path)
-        }else{
+        } else {
             UIResourcesService.getInstance().getResourceAsStream("${getResourceFolderName()}/index.html")
         }
 
@@ -105,23 +104,18 @@ abstract class BaseResourceHandler(private val path: String, protected val brows
     override fun readResponse(dataOut: ByteArray, bytesToRead: Int, bytesRead: IntRef, callback: CefCallback): Boolean {
         return try {
 
-            val available = inputStream!!.available()
-            if (available == 0) {
+            val read = inputStream?.read(dataOut, 0, bytesToRead)
+            if (read == null || read <= 0) {
                 bytesRead.set(0)
-                this.inputStream!!.close()
+                inputStream?.close()
                 return false
             }
-            val toRead = min(available.toDouble(), bytesToRead.toDouble()).toInt()
-            val read = inputStream!!.read(dataOut, 0, toRead)
             bytesRead.set(read)
             true
-        } catch (npe: NullPointerException) {
-            //protection against NPE for inputStream, that should not happen unless we have a bug
-            Log.warnWithException(logger, npe, "Unexpected NPE in readResponse, probably inputStream is null")
-            false
         } catch (e: Exception) {
+            bytesRead.set(0)
             Log.warnWithException(logger, e, "exception readResponse")
-            throw JCefException(e)
+            false
         }
     }
 

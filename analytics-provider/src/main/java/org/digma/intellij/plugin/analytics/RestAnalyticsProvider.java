@@ -495,24 +495,23 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable, Base
     }
 
     @Override
-    public HttpResponse lowLevelCall(HttpRequest request) {
+    public HttpResponse proxyCall(HttpRequest request) {
 
-        okhttp3.Response okHttp3Response;
         try {
             var okHttp3Request = toOkHttp3Request(request);
-            okHttp3Response = client.okHttpClient.newCall(okHttp3Request).execute();
+            okhttp3.Response okHttp3Response = client.okHttpClient.newCall(okHttp3Request).execute();
+            //handle only authentication error so the plugin will login or redirect the ui to login.
+            //any other error should be propagated to the UI
+            if (okHttp3Response.code() == HTTPConstants.UNAUTHORIZED) {
+                try (ResponseBody errorBody = okHttp3Response.body()) {
+                    throw createUnsuccessfulResponseException(okHttp3Response.code(), errorBody);
+                }
+            }
+
+            return toHttpResponse(okHttp3Response);
+
         } catch (Exception e) {
             throw new AnalyticsProviderException(e);
-        }
-
-        if (okHttp3Response.isSuccessful()) {
-            return toHttpResponse(okHttp3Response);
-        } else {
-            try (ResponseBody errorBody = okHttp3Response.body()) {
-                throw createUnsuccessfulResponseException(okHttp3Response.code(), errorBody);
-            } catch (IOException e) {
-                throw new AnalyticsProviderException(e.getMessage(), e);
-            }
         }
     }
 

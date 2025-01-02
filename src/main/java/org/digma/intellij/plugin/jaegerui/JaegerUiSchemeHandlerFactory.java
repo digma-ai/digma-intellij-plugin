@@ -25,7 +25,7 @@ public class JaegerUiSchemeHandlerFactory extends BaseSchemeHandlerFactory {
                 JaegerUiProxyResourceHandler.isJaegerQueryCall(url)) {
             return new JaegerUiProxyResourceHandler(jaegerQueryUrl);
         }
-        return null;
+        return super.createProxyHandler(project, url);
     }
 
     @NotNull

@@ -14,6 +14,7 @@ import org.digma.intellij.plugin.model.rest.lowlevel.HttpRequest
 import org.digma.intellij.plugin.model.rest.lowlevel.HttpRequestBody
 import org.digma.intellij.plugin.model.rest.lowlevel.HttpResponse
 import org.digma.intellij.plugin.settings.SettingsState
+import java.net.URI
 import java.net.URL
 
 class ApiProxyResourceHandler(val project: Project) : CefResourceHandler {
@@ -30,9 +31,18 @@ class ApiProxyResourceHandler(val project: Project) : CefResourceHandler {
 
     override fun processRequest(request: CefRequest, callback: CefCallback): Boolean {
         try {
-            val apiBaseUrl = URL(SettingsState.getInstance().apiUrl)
-            val requestUrl = URL(request.url)
-            val apiUrl = URL(apiBaseUrl.protocol, apiBaseUrl.host, apiBaseUrl.port, requestUrl.path.removePrefix(URL_PREFIX) + "?" + requestUrl.query)
+            val apiBaseUrl = URI(SettingsState.getInstance().apiUrl).toURL()
+            val requestUrl = URI(request.url).toURL()
+            val apiUrl =
+                URI(
+                    apiBaseUrl.protocol,
+                    null,
+                    apiBaseUrl.host,
+                    apiBaseUrl.port,
+                    requestUrl.path.removePrefix(URL_PREFIX),
+                    requestUrl.query,
+                    null
+                ).toURL()
 
             val body =
                 if (request.postData != null) HttpRequestBody("application/json", request.postData.toString())
@@ -41,7 +51,14 @@ class ApiProxyResourceHandler(val project: Project) : CefResourceHandler {
             request.getHeaderMap(headers)
             val httpRequest = HttpRequest(request.method, apiUrl, headers.toMutableMap(), body)
 
-            apiResponse = AnalyticsService.getInstance(project).lowLevelCall(httpRequest)
+            apiResponse = AnalyticsService.getInstance(project).proxyCall(httpRequest)
+
+            if (apiResponse == null) {
+                Log.log(LOGGER::warn, "apiResponse is null , canceling request " + request.url)
+                callback.cancel()
+                return false
+            }
+
             callback.Continue()
             return true
         } catch (e: Throwable) {
@@ -52,34 +69,36 @@ class ApiProxyResourceHandler(val project: Project) : CefResourceHandler {
     }
 
     override fun getResponseHeaders(response: CefResponse, responseLength: IntRef, redirectUrl: StringRef) {
-        if (apiResponse == null)
-            return
+        apiResponse?.let { res ->
+            response.status = res.status
+            response.setHeaderMap(res.headers.toMap())
+            response.mimeType = res.contentType
 
-        response.status = apiResponse!!.status
-        response.setHeaderMap(apiResponse!!.headers.toMap())
-        response.mimeType = apiResponse!!.contentType
-
-        if (apiResponse!!.contentLength != null) {
-            responseLength.set(apiResponse!!.contentLength!!.toInt())
+            res.contentLength?.let { length ->
+                responseLength.set(length.toInt())
+            }
         }
     }
 
+
     override fun readResponse(dataOut: ByteArray, bytesToRead: Int, bytesRead: IntRef, callback: CefCallback): Boolean {
-        try {
+        return try {
             val inputStream = apiResponse?.contentStream
             val read = inputStream?.read(dataOut, 0, bytesToRead)
-            if (read == null || read == -1) {
+            if (read == null || read <= 0) {
                 bytesRead.set(0)
                 inputStream?.close()
                 return false
             }
             bytesRead.set(read)
-            return true
+            true
         } catch (e: Exception) {
+            bytesRead.set(0)
             Log.warnWithException(logger, e, "exception readResponse")
-            throw JCefException(e)
+            false
         }
     }
+
 
     override fun cancel() {
         apiResponse?.contentStream?.close()

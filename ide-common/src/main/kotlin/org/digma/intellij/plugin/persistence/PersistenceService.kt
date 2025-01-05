@@ -446,8 +446,17 @@ class PersistenceService {
     fun isFirstRunAfterPersistDockerCompose(): Boolean {
         return state.isFirstRunAfterPersistDockerCompose
     }
+
     fun setIsFirstRunAfterPersistDockerComposeDone() {
         state.isFirstRunAfterPersistDockerCompose = false
+    }
+
+    fun getLastUnpackedOtelJarsPluginVersion(): String? {
+        return state.lastUnpackedOtelJarsPluginVersion
+    }
+
+    fun setLastUnpackedOtelJarsPluginVersion(pluginVersion: String) {
+        state.lastUnpackedOtelJarsPluginVersion = pluginVersion
     }
 
 }

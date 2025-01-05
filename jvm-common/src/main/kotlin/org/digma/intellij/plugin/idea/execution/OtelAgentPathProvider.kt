@@ -18,10 +18,10 @@ class OtelAgentPathProvider(configuration: RunConfiguration) {
     init {
 
         //paths can be overrider with system properties for development purposes
-        val tmpOtelAgentPath = System.getProperty("digma.otel.agent.override.path", service<OTELJarProvider>().getOtelAgentJarPath())
+        val tmpOtelAgentPath = System.getProperty("digma.otel.agent.override.path", OTELJarProvider.getInstance().getOtelAgentJarPath())
         val tmpDigmaExtensionPath =
-            System.getProperty("digma.otel.extension.override.path", service<OTELJarProvider>().getDigmaAgentExtensionJarPath())
-        val tmpDigmaAgentPath = System.getProperty("digma.agent.override.path", service<OTELJarProvider>().getDigmaAgentJarPath())
+            System.getProperty("digma.otel.extension.override.path", OTELJarProvider.getInstance().getDigmaAgentExtensionJarPath())
+        val tmpDigmaAgentPath = System.getProperty("digma.agent.override.path", OTELJarProvider.getInstance().getDigmaAgentJarPath())
 
         if (tmpOtelAgentPath != null && tmpDigmaExtensionPath != null && tmpDigmaAgentPath != null) {
             if (isWsl(configuration)) {

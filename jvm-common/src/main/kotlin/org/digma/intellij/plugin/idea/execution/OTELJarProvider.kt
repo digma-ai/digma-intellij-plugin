@@ -1,17 +1,26 @@
 package org.digma.intellij.plugin.idea.execution
 
+import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.common.Retries
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.paths.DigmaPathManager
+import org.digma.intellij.plugin.persistence.PersistenceService
+import org.digma.intellij.plugin.semanticversion.SemanticVersionUtil
 import java.io.File
 import java.io.FileOutputStream
+import java.net.URI
 import java.net.URL
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 import kotlin.io.path.deleteIfExists
 
-private const val JARS_DIR_PREFIX = "digma-otel-jars"
+private const val JARS_DIR = "digma-otel-jars"
 private const val RESOURCE_LOCATION = "otelJars"
 
 private const val OTEL_AGENT_JAR_NAME = "opentelemetry-javaagent.jar"
@@ -20,18 +29,28 @@ private const val DIGMA_AGENT_JAR_NAME = "digma-agent.jar"
 
 
 /**
- * Downloads and provides the instrumentation jars.
+ * provides the otel instrumentation jars and digma agent jar.
+ * the jars packaged in build time to the plugin zip. the urls to download from are in file jvm-common/src/main/resources/jars-urls.properties.
  *
- * jars urls and path may be overridden for development to another download url or a local path,
- * for example when developing the digma-agent or otel extension.
- * system properties can be injected in runIde task or in idea custom properties.
+ * on startup the jars are unpacked to a persistence folder provided by the DigmaPathManager. the files are unpacked once and will not be unpacked
+ * again unless the plugin version changes or any of the files is missing.
  *
- * to override the download url see the method tryDownloadLatest, it will try to get the url from system
- * property if exists. this is useful for example for downloading a different version of some of the jars.
+ * it is possible to provide urls for custom jars by setting system properties. usually it is meant for development purposes but can also be used
+ * for testing different versions of the jars even on user installation.
+ * if provided, the custom jars are downloaded every time on startup. they need to download on every startup because the system properties may change
+ * between IDE sessions.
+ * the directory for custom jars is in the system temp directory and the jars will not override the persistence files.
+ * the system properties are:
+ * otel agent - org.digma.otel.agentUrl
+ * digma otel extension - org.digma.otel.extensionUrl
+ * digma agent - org.digma.otel.digmaAgentUrl
  *
- * to override the final path see org.digma.intellij.plugin.idea.execution.OtelAgentPathProvider, it will
- * first check if system property exists and use it instead of the default. this is useful when developing
- * the digma agent or otel extension and you want to use the local build jar.
+ * it is also possible to provide path to local files by setting system properties. this is useful for development purposes when the jars are built
+ * locally and the plugin is run from the IDE. see class OtelAgentPathProvider.
+ * the system properties are:
+ * otel agent - digma.otel.agent.override.path
+ * digma otel extension - digma.otel.extension.override.path
+ * digma agent - digma.agent.override.path
  *
  */
 
@@ -39,23 +58,66 @@ private const val DIGMA_AGENT_JAR_NAME = "digma-agent.jar"
 // we want it to register only in Idea.
 // see: org.digma.intellij-with-jvm.xml
 @Suppress("LightServiceMigrationCode")
-class OTELJarProvider {
+class OTELJarProvider(cs: CoroutineScope) {
 
     private val logger: Logger = Logger.getInstance(this::class.java)
 
-    private val downloadDir: File = File(System.getProperty("java.io.tmpdir"), JARS_DIR_PREFIX)
+    private val customFilesDownloadDir: File = File(System.getProperty("java.io.tmpdir"), JARS_DIR)
+    private val downloadDir: File = File(DigmaPathManager.getLocalFilesDirectoryPath(), JARS_DIR)
+
+
+    private val otelAgentJar: File = File(downloadDir, OTEL_AGENT_JAR_NAME)
+    private val digmaAgentExtensionJar: File = File(downloadDir, DIGMA_AGENT_EXTENSION_JAR_NAME)
+    private val digmaAgentJar: File = File(downloadDir, DIGMA_AGENT_JAR_NAME)
+
+    private val customOtelAgentJar: File = File(customFilesDownloadDir, OTEL_AGENT_JAR_NAME)
+    private val customDigmaAgentExtensionJar: File = File(customFilesDownloadDir, DIGMA_AGENT_EXTENSION_JAR_NAME)
+    private val customDigmaAgentJar: File = File(customFilesDownloadDir, DIGMA_AGENT_JAR_NAME)
+
 
     private val lock = ReentrantLock(true)
 
 
+    companion object {
+        fun getInstance(): OTELJarProvider {
+            return service<OTELJarProvider>()
+        }
+    }
+
     init {
 
-        //unpack and download on service initialization.
-        //will happen per IDE session
-        Thread {
-            unpackFiles()
+        customOtelAgentJar.deleteOnExit()
+        customDigmaAgentExtensionJar.deleteOnExit()
+        customDigmaAgentJar.deleteOnExit()
+
+
+        cs.launch {
+
+            //on startup check if we need to unpack the jars. it will run on IDE startup when the first project is opened
+            //usually this operation will finish before the first file is requested. if a file is requested before the operation is finished it will
+            // still be ok because ensureFilesExist will check if the files exist and if not will unpack them.
+            //we need to support an upgrade of the plugin because it may have different jars versions. when unpacking the jars we register a property of the current
+            // plugin version. if the plugin version changes we unpack the jars again.
+
+            val currentPluginVersion = SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("unknown")
+            val lastUnpackedPluginVersion = PersistenceService.getInstance().getLastUnpackedOtelJarsPluginVersion()
+
+            if (!persistenceFilesExist() || "unknown" == currentPluginVersion || currentPluginVersion != lastUnpackedPluginVersion) {
+                Log.log(
+                    logger::info,
+                    "unpacking otel jars because they don't exist or plugin version has changed. currentPluginVersion: {}, lastUnpackedPluginVersion: {}",
+                    currentPluginVersion,
+                    lastUnpackedPluginVersion
+                )
+                PersistenceService.getInstance().setLastUnpackedOtelJarsPluginVersion(currentPluginVersion)
+                unpackFiles()
+            } else {
+                Log.log(logger::info, "otel jars exist and plugin version is the same. not unpacking")
+            }
+
+            //always download custom files on startup if configured because the system properties may change between IDE sessions.
             downloadCustomJars()
-        }.start()
+        }
     }
 
 
@@ -69,8 +131,13 @@ class OTELJarProvider {
     }
 
     private fun getOtelAgentJar(): File {
-        return File(downloadDir, OTEL_AGENT_JAR_NAME)
+        return if (getCustomOtelAgentJarUrl() != null) {
+            customOtelAgentJar
+        } else {
+            otelAgentJar
+        }
     }
+
 
     fun getDigmaAgentExtensionJarPath(): String? {
         ensureFilesExist()
@@ -82,7 +149,11 @@ class OTELJarProvider {
     }
 
     private fun getDigmaAgentExtensionJar(): File {
-        return File(downloadDir, DIGMA_AGENT_EXTENSION_JAR_NAME)
+        return if (getCustomDigmaAgentExtensionJarUrl() != null) {
+            customDigmaAgentExtensionJar
+        } else {
+            digmaAgentExtensionJar
+        }
     }
 
     fun getDigmaAgentJarPath(): String? {
@@ -95,7 +166,11 @@ class OTELJarProvider {
     }
 
     private fun getDigmaAgentJar(): File {
-        return File(downloadDir, DIGMA_AGENT_JAR_NAME)
+        return if (getCustomDigmaAgentJarUrl() != null) {
+            customDigmaAgentJar
+        } else {
+            digmaAgentJar
+        }
     }
 
 
@@ -111,6 +186,7 @@ class OTELJarProvider {
         downloadCustomJars()
     }
 
+    //checks if the files necessary for this session exist, some files may be the regular files and some may be custom files.
     private fun filesExist(): Boolean {
         val otelJar = getOtelAgentJar()
         val digmaExtensionJar = getDigmaAgentExtensionJar()
@@ -118,12 +194,18 @@ class OTELJarProvider {
         return otelJar.exists() && digmaExtensionJar.exists() && digmaAgentJar.exists()
     }
 
+    //check only if the persistenceFiles Exist
+    private fun persistenceFilesExist(): Boolean {
+        return otelAgentJar.exists() && digmaAgentExtensionJar.exists() && digmaAgentJar.exists()
+    }
+
+
 
     private fun unpackFiles() {
 
-        Log.log(logger::info, "unpacking otel agent jars")
+        lock.withLock {
 
-        withLock {
+            Log.log(logger::info, "unpacking otel agent jars")
             try {
                 if (!downloadDir.exists()) {
                     if (!downloadDir.mkdirs()) {
@@ -132,58 +214,73 @@ class OTELJarProvider {
                 }
 
                 if (downloadDir.exists()) {
-                    copyFileFromResource(OTEL_AGENT_JAR_NAME)
-                    copyFileFromResource(DIGMA_AGENT_EXTENSION_JAR_NAME)
-                    copyFileFromResource(DIGMA_AGENT_JAR_NAME)
+                    copyFileFromResource(OTEL_AGENT_JAR_NAME, otelAgentJar)
+                    copyFileFromResource(DIGMA_AGENT_EXTENSION_JAR_NAME, digmaAgentExtensionJar)
+                    copyFileFromResource(DIGMA_AGENT_JAR_NAME, digmaAgentJar)
                     Log.log(logger::info, "otel agent jars unpacked to {}", downloadDir)
                 }
+                Log.log(logger::info, "unpacking otel agent jars completed")
             } catch (e: Exception) {
-                Log.warnWithException(logger, e, "could not unpack otel jars, hopefully download will succeed.")
+                Log.warnWithException(logger, e, "could not unpack otel jars.")
+                ErrorReporter.getInstance().reportError("OTELJarProvider.unpackFiles", e)
             }
         }
     }
 
 
-    private fun copyFileFromResource(fileName: String) {
+    private fun copyFileFromResource(fileName: String, toFile: File) {
+        Log.log(logger::info, "extracting resource file {} to {}", fileName, toFile)
         val inputStream = this::class.java.getResourceAsStream("/$RESOURCE_LOCATION/$fileName")
         if (inputStream == null) {
             Log.log(logger::warn, "could not find file in resource folder {}", fileName)
             return
         }
 
-        val file = File(downloadDir, fileName)
-        val outputStream = FileOutputStream(file)
-        Log.log(logger::info, "unpacking {} to {}", fileName, file)
+        val outputStream = FileOutputStream(toFile)
         com.intellij.openapi.util.io.StreamUtil.copy(inputStream, outputStream)
+        Log.log(logger::info, "resource file {} extracted to {}", fileName, toFile)
     }
 
 
     private fun downloadCustomJars() {
 
-        Log.log(logger::info, "trying to download custom otel jars")
-
-        val runnable = Runnable {
-
+        lock.withLock {
             try {
 
-                System.getProperty("org.digma.otel.agentUrl")?.let {
-                    downloadAndCopyJar(URL(it), getOtelAgentJar())
+                Log.log(logger::info, "downloading custom otel jars")
+
+                if (!customFilesDownloadDir.exists()) {
+                    if (!customFilesDownloadDir.mkdirs()) {
+                        Log.log(logger::warn, "could not create directory for custom otel jars {}", customFilesDownloadDir)
+                        ErrorReporter.getInstance().reportError(
+                            "OTELJarProvider.downloadCustomJars", "could not create directory for custom otel jars",
+                            mapOf()
+                        )
+                    }
                 }
 
-                System.getProperty("org.digma.otel.extensionUrl")?.let {
-                    downloadAndCopyJar(URL(it), getDigmaAgentExtensionJar())
+                getCustomOtelAgentJarUrl()?.let {
+                    Log.log(logger::info, "downloading custom otel agent jar from {} to {}", it, customOtelAgentJar)
+                    downloadAndCopyJar(URI(it).toURL(), customOtelAgentJar)
                 }
 
-                System.getProperty("org.digma.otel.digmaAgentUrl")?.let {
-                    downloadAndCopyJar(URL(it), getDigmaAgentJar())
+                getCustomDigmaAgentExtensionJarUrl()?.let {
+                    Log.log(logger::info, "downloading custom digma otel extension jar from {} to {}", it, customDigmaAgentExtensionJar)
+                    downloadAndCopyJar(URI(it).toURL(), customDigmaAgentExtensionJar)
                 }
+
+                getCustomDigmaAgentJarUrl()?.let {
+                    Log.log(logger::info, "downloading digma agent jar from {} to {}", it, customDigmaAgentJar)
+                    downloadAndCopyJar(URI(it).toURL(), customDigmaAgentJar)
+                }
+
+                Log.log(logger::info, "downloading custom otel jars completed")
 
             } catch (e: Exception) {
                 Log.warnWithException(logger, e, "could not download custom otel jars")
+                ErrorReporter.getInstance().reportError("OTELJarProvider.downloadCustomJars", e)
             }
         }
-
-        Thread(runnable).start()
     }
 
 
@@ -193,9 +290,9 @@ class OTELJarProvider {
 
         try {
 
-            Retries.simpleRetry({
+            Log.log(logger::info, "downloading {} to {}", url, toFile)
 
-                Log.log(logger::info, "downloading {}", url)
+            Retries.simpleRetry({
 
                 val connection = url.openConnection()
                 connection.connectTimeout = 5000
@@ -205,35 +302,37 @@ class OTELJarProvider {
                     Files.copy(it, tempFile, StandardCopyOption.REPLACE_EXISTING)
                 }
 
-                withLock {
-                    Log.log(logger::info, "copying downloaded file {} to {}", tempFile, toFile)
-                    try {
-                        Files.move(tempFile, toFile.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
-                    } catch (e: Exception) {
-                        //ATOMIC_MOVE is not always supported so try again on exception
-                        Files.move(tempFile, toFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
-                    }
+                Log.log(logger::info, "copying downloaded file {} to {}", tempFile, toFile)
+                try {
+                    Files.move(tempFile, toFile.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
+                } catch (e: Exception) {
+                    //ATOMIC_MOVE is not always supported so try again on exception
+                    Files.move(tempFile, toFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
                 }
 
             }, Throwable::class.java, 5000, 3)
 
+            Log.log(logger::info, "url {} downloaded to {}", url, toFile)
+
         } catch (e: Exception) {
-            Log.log(logger::warn, "could not download file {}, {}", url, e)
+            Log.warnWithException(logger, e, "could not download file from url {}", url)
+            ErrorReporter.getInstance().reportError("OTELJarProvider.downloadAndCopyJar", e)
         } finally {
             tempFile.deleteIfExists()
         }
     }
 
 
-    private fun withLock(function: () -> Unit) {
-        try {
-            lock.lock()
-            function()
-        } finally {
-            if (lock.isHeldByCurrentThread) {
-                lock.unlock()
-            }
-        }
+    private fun getCustomOtelAgentJarUrl(): String? {
+        return System.getProperty("org.digma.otel.agentUrl")
+    }
+
+    private fun getCustomDigmaAgentExtensionJarUrl(): String? {
+        return System.getProperty("org.digma.otel.extensionUrl")
+    }
+
+    private fun getCustomDigmaAgentJarUrl(): String? {
+        return System.getProperty("org.digma.otel.digmaAgentUrl")
     }
 
 }

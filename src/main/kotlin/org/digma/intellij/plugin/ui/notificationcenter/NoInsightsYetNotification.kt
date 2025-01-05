@@ -19,7 +19,7 @@ import kotlin.time.Duration.Companion.minutes
 //parentDisposable is the service
 fun startNoInsightsYetNotificationTimer(parentDisposable: Disposable) {
 
-    if (service<UserActivationService>().isFirstInsightReceived()) {
+    if (service<UserActivationService>().isBackendAssetFound() || service<PersistenceService>().isNoInsightsYetNotificationPassed()) {
         return
     }
 
@@ -46,7 +46,7 @@ private fun scheduleShowNotification(parentDisposable: Disposable, firstConnecti
     )
 
     parentDisposable.disposingOneShotDelayedTask("NoInsightsYetNotificationTimer.showNoInsightsYetNotification", 30.minutes.inWholeMilliseconds) {
-        if (!service<UserActivationService>().isFirstInsightReceived()) {
+        if (!service<UserActivationService>().isBackendAssetFound()) {
             Log.log(AppNotificationCenter.logger::info, "in NoInsightsYetNotificationTimer, showing notification")
             showNoInsightsYetNotification()
         } else {

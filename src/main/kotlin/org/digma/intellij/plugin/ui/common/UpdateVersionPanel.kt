@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.ui.common
 
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.observable.properties.AtomicProperty
 import com.intellij.openapi.options.ShowSettingsUtil
@@ -11,6 +12,7 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import org.digma.intellij.plugin.updates.AggressiveUpdateService
+import org.digma.intellij.plugin.updates.UpdateButtonClickedEvent
 import org.digma.intellij.plugin.updates.UpdateState
 import org.digma.intellij.plugin.updates.UpdatesService
 import org.digma.intellij.plugin.updates.ui.UIVersioningService
@@ -44,7 +46,20 @@ class UpdateVersionPanel(
         layout = BoxLayout(this, BoxLayout.X_AXIS)
         isVisible = false
         buildItemsInPanel()
+
+
+        //when user clicks on the update button in one project , all visible panels in other projects need to hide.
+        ApplicationManager.getApplication().messageBus.connect().subscribe(UpdateButtonClickedEvent.UPDATE_BUTTON_CLICKED_EVENT_TOPIC,
+            object : UpdateButtonClickedEvent{
+                override fun updateButtonClicked() {
+                    Log.log(logger::debug, "update button clicked on project {}, setting isVisible to false",project.name)
+                    isVisible = false
+                }
+            })
+
         changeState()
+
+
     }
 
     private fun changeState() {
@@ -136,6 +151,10 @@ class UpdateVersionPanel(
                 }
 
                 this.isVisible = false
+
+
+                ApplicationManager.getApplication().messageBus.syncPublisher(UpdateButtonClickedEvent.UPDATE_BUTTON_CLICKED_EVENT_TOPIC).updateButtonClicked()
+
             }, 100)
         }
 

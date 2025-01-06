@@ -38,6 +38,7 @@ import org.digma.intellij.plugin.docker.LocalInstallationFacade
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.model.rest.UNKNOWN_APPLICATION_VERSION
 import org.digma.intellij.plugin.model.rest.environment.Env
 import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
 import org.digma.intellij.plugin.observability.ObservabilityChanged
@@ -349,11 +350,11 @@ private constructor(
                     try {
 
                         val spanEnvironments = if (scope?.at("/span/spanCodeObjectId")?.asText(null) != null) {
-                            val version = BackendInfoHolder.getInstance(project).getAbout()?.applicationVersion
+                            val version = BackendInfoHolder.getInstance(project).getAbout().applicationVersion
 
                             val currentBackendVersion = ComparableVersion(version)
                             val spanEnvironmentsVersion = ComparableVersion("0.3.94")
-                            if (currentBackendVersion.newerThan(spanEnvironmentsVersion)) {
+                            if (version == UNKNOWN_APPLICATION_VERSION || currentBackendVersion.newerThan(spanEnvironmentsVersion)) {
                                 AnalyticsService.getInstance(project).getSpanEnvironmentsStats(scope.at("/span/spanCodeObjectId").asText())
                             } else {
                                 listOf()

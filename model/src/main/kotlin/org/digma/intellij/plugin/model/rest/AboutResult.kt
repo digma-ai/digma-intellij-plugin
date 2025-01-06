@@ -6,6 +6,8 @@ import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
 import java.beans.ConstructorProperties
 
 
+const val UNKNOWN_APPLICATION_VERSION = "unknown"
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class AboutResult @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 @ConstructorProperties("applicationVersion", "deploymentType", "isCentralize","site")
@@ -14,4 +16,10 @@ constructor(
     val deploymentType: BackendDeploymentType? = BackendDeploymentType.Unknown,
     val isCentralize: Boolean?,
     val site: String?
-)
+){
+
+    companion object{
+        @JvmStatic
+        val UNKNOWN = AboutResult(UNKNOWN_APPLICATION_VERSION, BackendDeploymentType.Unknown, false, null)
+    }
+}

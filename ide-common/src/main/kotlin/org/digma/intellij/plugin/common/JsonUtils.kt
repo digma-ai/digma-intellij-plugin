@@ -11,6 +11,10 @@ fun objectToJson(value: Any): String {
     return sharedObjectMapper.writeValueAsString(value)
 }
 
+fun <T> jsonToObject(jsonStr: String, type: Class<T>): T {
+    return sharedObjectMapper.readValue(jsonStr, type)
+}
+
 
 fun objectToJsonNoException(value: Any?): String {
     return try {

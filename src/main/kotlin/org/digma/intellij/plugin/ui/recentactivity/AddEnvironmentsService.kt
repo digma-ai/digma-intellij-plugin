@@ -27,6 +27,7 @@ import org.digma.intellij.plugin.idea.execution.mapToFlatString
 import org.digma.intellij.plugin.idea.execution.stringToMap
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.model.rest.UNKNOWN_APPLICATION_VERSION
 import org.digma.intellij.plugin.model.rest.environment.EnvType
 
 //app level service so includes pending environments from all projects
@@ -73,8 +74,8 @@ class AddEnvironmentsService {
             return false
         }
 
-        val backendVersion = BackendInfoHolder.getInstance(project).getAbout()?.applicationVersion
-        if (backendVersion == null) {
+        val backendVersion = BackendInfoHolder.getInstance(project).getAbout().applicationVersion
+        if (backendVersion == UNKNOWN_APPLICATION_VERSION) {
             Log.log(logger::info, "can not load backend version, not adding environment to current run config")
             return false
         }

@@ -7,7 +7,7 @@ import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.wm.*;
 import com.intellij.ui.content.ContentFactory;
 import com.intellij.util.ui.JBUI;
-import org.digma.intellij.plugin.analytics.AnalyticsService;
+import org.digma.intellij.plugin.analytics.*;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.persistence.PersistenceService;
@@ -50,6 +50,8 @@ public final class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
 
         //initialize AnalyticsService early so the UI can detect the connection status when created
         AnalyticsService.getInstance(project);
+        //initialize BackendInfoHolder early so it will populate its info soon
+        BackendInfoHolder.getInstance(project);
 
         Log.log(LOGGER::debug, "createToolWindowContent for project  {}", project);
 

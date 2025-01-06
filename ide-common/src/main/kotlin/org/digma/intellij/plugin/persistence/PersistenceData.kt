@@ -101,5 +101,6 @@ internal data class PersistenceData(
     var latestDownloadedUiVersion: String? = null,
     var isFirstRunAfterPersistDockerCompose: Boolean = true,
     var lastUnpackedOtelJarsPluginVersion: String? = null,
+    var aboutAsJson: String? = null
 
 )

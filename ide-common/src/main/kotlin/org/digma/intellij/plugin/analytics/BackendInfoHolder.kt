@@ -8,40 +8,74 @@ import org.digma.intellij.plugin.auth.AuthManager
 import org.digma.intellij.plugin.common.DisposableAdaptor
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.common.isProjectValid
+import org.digma.intellij.plugin.common.jsonToObject
+import org.digma.intellij.plugin.common.objectToJson
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.AboutResult
+import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
-import org.digma.intellij.plugin.scheduling.blockingOneShotTask
 import org.digma.intellij.plugin.scheduling.disposingPeriodicTask
 import org.digma.intellij.plugin.scheduling.oneShotTask
 import java.util.concurrent.atomic.AtomicReference
-import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * keep the backend info and tracks it on connection events.
- * Its necessary because there is code that runs on EDT that may need the backend info. it's possible
- * in that case to do it on background but then the EDT will wait for the api call, and we don't want that.
  */
 @Service(Service.Level.PROJECT)
 class BackendInfoHolder(val project: Project) : DisposableAdaptor {
 
     private val logger: Logger = Logger.getInstance(BackendInfoHolder::class.java)
 
-    private var aboutRef: AtomicReference<AboutResult?> = AtomicReference(null)
+    /**
+     * aboutRef should always have an AboutResult object.
+     * on startup there are many calls to isCentralized and getAbout. if the AboutResult is null callers will not
+     * have the correct info. trying to load the info in background may cause issues and may take few seconds
+     * because it may hit initialization of services and that may take too much time. we have experience that this initialization may take
+     * few seconds and may cause thread interruptions.
+     * the solution to the above is to save the about info as json string in persistence every time it is refreshed. and on startup load it from
+     * persistence. when loading from persistence on startup the info may not be up to date, maybe the backend was updated. but the correct info
+     * will be populated very soon in the periodic task.
+     * if there is no connection or the first periodic task didn't update the ref yet then at least we have info from the last IDE session which in
+     * most cases is probably correct.
+     * loading from persistence is very fast and we will have info very early on startup to all requesters.
+     */
+    private var aboutRef: AtomicReference<AboutResult> = AtomicReference(loadAboutInfoFromPersistence())
 
     companion object {
         @JvmStatic
         fun getInstance(project: Project): BackendInfoHolder {
             return project.service<BackendInfoHolder>()
         }
+
+        private fun saveAboutInfoToPersistence(aboutResult: AboutResult) {
+            try {
+                val aboutAsJson = objectToJson(aboutResult)
+                PersistenceService.getInstance().saveAboutAsJson(aboutAsJson)
+            }catch (e:Throwable){
+                ErrorReporter.getInstance().reportError("BackendInfoHolder.saveAboutInfoToPersistence",e)
+            }
+        }
+
+        private fun loadAboutInfoFromPersistence(): AboutResult {
+            return try {
+                val aboutAsJson = PersistenceService.getInstance().getAboutAsJson()
+                aboutAsJson?.let {
+                    jsonToObject(it, AboutResult::class.java)
+                } ?: AboutResult.UNKNOWN
+            }catch (e:Throwable){
+                ErrorReporter.getInstance().reportError("BackendInfoHolder.loadAboutInfoFromPersistence",e)
+                AboutResult.UNKNOWN
+            }
+        }
+
     }
 
 
     init {
 
+        //schedule a periodic task that will update the backend info as soon as possible and then again every 1 minute
         val registered = disposingPeriodicTask("BackendInfoHolder.periodic", 1.minutes.inWholeMilliseconds, false) {
             update()
         }
@@ -98,10 +132,10 @@ class BackendInfoHolder(val project: Project) : DisposableAdaptor {
         try {
             if (isProjectValid(project)) {
                 Log.log(logger::trace, "updating backend info")
-                aboutRef.set(AnalyticsService.getInstance(project).about)
-                aboutRef.get()?.let {
-                    ActivityMonitor.getInstance(project).registerServerInfo(it)
-                }
+                val about = AnalyticsService.getInstance(project).about
+                aboutRef.set(about)
+                ActivityMonitor.getInstance(project).registerServerInfo(about)
+                saveAboutInfoToPersistence(about)
                 Log.log(logger::trace, "backend info updated {}", aboutRef.get())
             }
         } catch (e: Throwable) {
@@ -110,59 +144,27 @@ class BackendInfoHolder(val project: Project) : DisposableAdaptor {
             if (!isConnectionException) {
                 ErrorReporter.getInstance().reportError(project, "BackendInfoHolder.update", e)
             }
+
+            //if update fails run another try immediately. maybe it was a momentary error from AnalyticsService.
+            // if that will not succeed then the next execution in 1 minute will hopefully succeed
+            updateInBackground()
+
         }
     }
 
 
-    fun getAbout(): AboutResult? {
-        if (aboutRef.get() == null) {
-            return getAboutInBackgroundNow()
-        }
-
-        return aboutRef.get()
-    }
 
 
-    private fun getAboutInBackgroundNow(): AboutResult? {
-        if (aboutRef.get() == null) {
-            return getAboutInBackgroundNowWithTimeout()
-        }
+
+    fun getAbout(): AboutResult {
         return aboutRef.get()
     }
 
 
     fun isCentralized(): Boolean {
-        return aboutRef.get()?.let {
-            it.isCentralize ?: false
-        } ?: getIsCentralizedInBackgroundNow()
+        return aboutRef.get().isCentralize ?: false
     }
 
-
-    private fun getIsCentralizedInBackgroundNow(): Boolean {
-        return getAboutInBackgroundNowWithTimeout()?.isCentralize ?: false
-    }
-
-
-    private fun getAboutInBackgroundNowWithTimeout(): AboutResult? {
-        updateAboutInBackgroundNowWithTimeout(3.seconds)
-        return aboutRef.get()
-    }
-
-
-    private fun updateAboutInBackgroundNowWithTimeout(timeout: Duration) {
-
-        Log.log(logger::trace, "updating backend info in background with timeout")
-
-        val result = blockingOneShotTask("BackendInfoHolder.updateAboutInBackgroundNowWithTimeout", timeout.inWholeMilliseconds) {
-            update()
-        }
-
-        if (result) {
-            Log.log(logger::trace, "backend info updated in background with timeout {}", aboutRef.get())
-        } else {
-            Log.log(logger::trace, "backend info updated in background failed")
-        }
-    }
 
     fun refresh() {
         updateInBackground()

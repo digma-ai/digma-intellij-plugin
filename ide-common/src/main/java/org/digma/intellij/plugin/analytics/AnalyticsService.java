@@ -47,6 +47,7 @@ import static org.digma.intellij.plugin.analytics.EnvironmentRefreshSchedulerKt.
 import static org.digma.intellij.plugin.common.JsonUtilsKt.objectToJsonNoException;
 import static org.digma.intellij.plugin.common.StringUtilsKt.argsToString;
 import static org.digma.intellij.plugin.log.Log.API_LOGGER_NAME;
+import static org.digma.intellij.plugin.model.rest.AboutResultKt.UNKNOWN_APPLICATION_VERSION;
 
 
 public class AnalyticsService implements Disposable {
@@ -578,7 +579,7 @@ public class AnalyticsService implements Disposable {
         String backendVersion = BackendInfoHolder.getInstance(project).getAbout().getApplicationVersion();
 
         //dev environment may return unknown
-        if ("unknown".equalsIgnoreCase(backendVersion)) {
+        if (UNKNOWN_APPLICATION_VERSION.equalsIgnoreCase(backendVersion)) {
             return false;
         }
 

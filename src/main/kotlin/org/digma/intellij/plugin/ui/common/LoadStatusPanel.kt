@@ -13,6 +13,7 @@ import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.newerThan
 import org.digma.intellij.plugin.icons.AppIcons
 import org.digma.intellij.plugin.loadstatus.LoadStatusService
+import org.digma.intellij.plugin.model.rest.UNKNOWN_APPLICATION_VERSION
 import org.digma.intellij.plugin.persistence.NotificationsPersistenceState
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.UserActionOrigin
@@ -142,7 +143,11 @@ class LoadStatusPanel(val project: Project) : DigmaResettablePanel() {
     private fun shouldDisplayCloseButton(): Boolean
     {
 
-        val version = BackendInfoHolder.getInstance(project).getAbout()?.applicationVersion ?: return false
+        val version = BackendInfoHolder.getInstance(project).getAbout().applicationVersion
+        if(version == UNKNOWN_APPLICATION_VERSION){
+            return false
+        }
+
 
         val currentBackendVersion = ComparableVersion(version)
         val closeButtonBackendVersion = ComparableVersion("0.3.25")

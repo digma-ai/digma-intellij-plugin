@@ -14,6 +14,7 @@ import org.digma.intellij.plugin.common.newerThan
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.AboutResult
+import org.digma.intellij.plugin.model.rest.UNKNOWN_APPLICATION_VERSION
 import org.digma.intellij.plugin.model.rest.activation.DiscoveredDataResponse
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
@@ -309,7 +310,7 @@ class UserActivationService : DisposableAdaptor {
 
 
     private fun isBackendVersion03116OrHigher(about: AboutResult): Boolean {
-        if (about.applicationVersion == "unknown") {
+        if (about.applicationVersion == UNKNOWN_APPLICATION_VERSION) {
             return true
         }
         val currentServerVersion = ComparableVersion(about.applicationVersion)

@@ -35,17 +35,31 @@ class ApiProxyResourceHandler(val project: Project) : CefResourceHandler {
         fun isApiProxyCall(url: URL): Boolean {
             return url.path.startsWith(URL_PREFIX)
         }
-    }
 
+        fun buildApiBaseUrl():URL{
+            return URI(SettingsState.getInstance().apiUrl).toURL()
+        }
 
-    override fun processRequest(request: CefRequest, callback: CefCallback): Boolean {
+        fun buildProxyUrl(apiBaseUrl: URL, cefRawRequestUrl: String):URL{
 
-        Log.log(logger::trace, "processing request {}, [request id:{}]", request.url, request.identifier)
+            //This method should be tested.
+            //should always be used to build the proxy url when needed,
+            //it should make sure to preserve encoding of path and query.
+            // see unit test :  org.digma.intellij.plugin.ui.jcef.proxy.ApiProxyTests.testUrls
 
-        try {
-            val apiBaseUrl = URI(SettingsState.getInstance().apiUrl).toURL()
-            val requestUrl = URI(request.url).toURL()
+            val requestUrl = URI(cefRawRequestUrl).toURL()
             val apiUrl =
+
+                /*
+                this constructor of java.net.URI expects that path and query be decoded strings, it will remove illegal url characters
+                and replace them , will actually encode the string. if the string is already encoded we will end up with double encoding.
+                '%23' will become %2523.
+                other constructors of java.net.URI do not behave the same and do not double encode.
+                but we still want to use this constructor because we need to build one url from two,using the URL class api is comfortable.
+                our solution is to decode path and query before sending to this constructor.
+                and make sure that this code is tested because it may change between JVM versions.
+                 */
+
                 URI(
                     apiBaseUrl.protocol,
                     null,
@@ -57,6 +71,19 @@ class ApiProxyResourceHandler(val project: Project) : CefResourceHandler {
                     requestUrl.query?.let { URLDecoder.decode(it, StandardCharsets.UTF_8) },
                     null
                 ).toURL()
+
+            return apiUrl
+        }
+    }
+
+
+    override fun processRequest(request: CefRequest, callback: CefCallback): Boolean {
+
+        Log.log(logger::trace, "processing request {}, [request id:{}]", request.url, request.identifier)
+
+        try {
+
+            val apiUrl = buildProxyUrl(buildApiBaseUrl(),request.url)
 
             Log.log(logger::trace, "proxying to api url {}, [request id:{}]", apiUrl, request.identifier)
 

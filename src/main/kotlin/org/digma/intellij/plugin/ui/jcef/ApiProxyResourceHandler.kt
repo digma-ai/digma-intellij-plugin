@@ -19,8 +19,6 @@ import org.digma.intellij.plugin.model.rest.lowlevel.HttpResponse
 import org.digma.intellij.plugin.settings.SettingsState
 import java.net.URI
 import java.net.URL
-import java.net.URLDecoder
-import java.nio.charset.StandardCharsets
 import java.util.Vector
 
 class ApiProxyResourceHandler(val project: Project) : CefResourceHandler {
@@ -36,11 +34,11 @@ class ApiProxyResourceHandler(val project: Project) : CefResourceHandler {
             return url.path.startsWith(URL_PREFIX)
         }
 
-        fun buildApiBaseUrl():URL{
+        fun buildApiBaseUrl(): URL {
             return URI(SettingsState.getInstance().apiUrl).toURL()
         }
 
-        fun buildProxyUrl(apiBaseUrl: URL, cefRawRequestUrl: String):URL{
+        fun buildProxyUrl(apiBaseUrl: URL, cefRawRequestUrl: String): URL {
 
             //This method should be tested.
             //should always be used to build the proxy url when needed,
@@ -48,31 +46,15 @@ class ApiProxyResourceHandler(val project: Project) : CefResourceHandler {
             // see unit test :  org.digma.intellij.plugin.ui.jcef.proxy.ApiProxyTests.testUrls
 
             val requestUrl = URI(cefRawRequestUrl).toURL()
-            val apiUrl =
+            var apiUrl = apiBaseUrl.toString()
+            if (requestUrl.path != null) {
+                apiUrl = apiUrl.removeSuffix("/").plus(requestUrl.path.removePrefix(URL_PREFIX))
+            }
+            if (requestUrl.query != null) {
+                apiUrl = apiUrl.plus("?").plus(requestUrl.query)
+            }
 
-                /*
-                this constructor of java.net.URI expects that path and query be decoded strings, it will remove illegal url characters
-                and replace them , will actually encode the string. if the string is already encoded we will end up with double encoding.
-                '%23' will become %2523.
-                other constructors of java.net.URI do not behave the same and do not double encode.
-                but we still want to use this constructor because we need to build one url from two,using the URL class api is comfortable.
-                our solution is to decode path and query before sending to this constructor.
-                and make sure that this code is tested because it may change between JVM versions.
-                 */
-
-                URI(
-                    apiBaseUrl.protocol,
-                    null,
-                    apiBaseUrl.host,
-                    apiBaseUrl.port,
-                    requestUrl.path?.let {
-                        URLDecoder.decode(it.removePrefix(URL_PREFIX), StandardCharsets.UTF_8)
-                    },
-                    requestUrl.query?.let { URLDecoder.decode(it, StandardCharsets.UTF_8) },
-                    null
-                ).toURL()
-
-            return apiUrl
+            return URI(apiUrl).toURL()
         }
     }
 
@@ -83,7 +65,7 @@ class ApiProxyResourceHandler(val project: Project) : CefResourceHandler {
 
         try {
 
-            val apiUrl = buildProxyUrl(buildApiBaseUrl(),request.url)
+            val apiUrl = buildProxyUrl(buildApiBaseUrl(), request.url)
 
             Log.log(logger::trace, "proxying to api url {}, [request id:{}]", apiUrl, request.identifier)
 

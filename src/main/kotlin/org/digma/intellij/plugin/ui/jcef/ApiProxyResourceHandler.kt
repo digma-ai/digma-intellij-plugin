@@ -19,6 +19,8 @@ import org.digma.intellij.plugin.model.rest.lowlevel.HttpResponse
 import org.digma.intellij.plugin.settings.SettingsState
 import java.net.URI
 import java.net.URL
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
 import java.util.Vector
 
 class ApiProxyResourceHandler(val project: Project) : CefResourceHandler {
@@ -49,8 +51,10 @@ class ApiProxyResourceHandler(val project: Project) : CefResourceHandler {
                     null,
                     apiBaseUrl.host,
                     apiBaseUrl.port,
-                    requestUrl.path.removePrefix(URL_PREFIX),
-                    requestUrl.query,
+                    requestUrl.path?.let {
+                        URLDecoder.decode(it.removePrefix(URL_PREFIX), StandardCharsets.UTF_8)
+                    },
+                    requestUrl.query?.let { URLDecoder.decode(it, StandardCharsets.UTF_8) },
                     null
                 ).toURL()
 
@@ -60,7 +64,11 @@ class ApiProxyResourceHandler(val project: Project) : CefResourceHandler {
 
                 //todo: we don't support multi part form data yet
 
-                Log.log(logger::warn, "encountered multi part post data. it is not supported by Digma api proxy, [request id:{}]", request.identifier)
+                Log.log(
+                    logger::warn,
+                    "encountered multi part post data. it is not supported by Digma api proxy, [request id:{}]",
+                    request.identifier
+                )
 
                 HttpResponse(
                     500,

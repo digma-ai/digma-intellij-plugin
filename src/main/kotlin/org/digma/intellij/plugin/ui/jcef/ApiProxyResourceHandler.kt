@@ -43,7 +43,9 @@ class ApiProxyResourceHandler(val project: Project) : CefResourceHandler {
             //This method should be tested.
             //should always be used to build the proxy url when needed,
             //it should make sure to preserve encoding of path and query.
-            // see unit test :  org.digma.intellij.plugin.ui.jcef.proxy.ApiProxyTests.testUrls
+            //see unit test :  org.digma.intellij.plugin.ui.jcef.proxy.ApiProxyTests.testUrls
+            //some constructors of URI and URL will encode the path and query, some don't.
+            //here we make sure to preserve the path and query as they were received from jcef
 
             val requestUrl = URI(cefRawRequestUrl).toURL()
             var apiUrl = apiBaseUrl.toString()

@@ -558,8 +558,8 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.getDiscoveredData());
     }
 
-    public HttpResponse lowLevelCall(HttpRequest request) throws AnalyticsServiceException {
-        return executeCatching(() -> analyticsProviderProxy.lowLevelCall(request));
+    public HttpResponse proxyCall(HttpRequest request) throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.proxyCall(request));
     }
 
 

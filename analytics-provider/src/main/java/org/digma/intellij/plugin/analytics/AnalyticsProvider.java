@@ -153,7 +153,7 @@ public interface AnalyticsProvider extends Closeable {
 
     InsightsStatsResult getInsightsStats(Map<String, Object> queryParams);
 
-    HttpResponse lowLevelCall(HttpRequest request);
+    HttpResponse proxyCall(HttpRequest request);
 
     String getHighlightsPerformance(Map<String, Object> queryParams);
 

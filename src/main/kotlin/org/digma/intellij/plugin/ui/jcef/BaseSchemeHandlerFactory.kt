@@ -38,14 +38,14 @@ abstract class BaseSchemeHandlerFactory : CefSchemeHandlerFactory {
         val url = getUrl(request)
 
         if (url != null) {
-            val host = url.host
-            val file = url.path
 
             val proxyHandler = createProxyHandler(project, url)
             if (proxyHandler != null) {
                 return proxyHandler
             }
 
+            val host = url.host
+            val file = url.path
             if (getDomain() == host && getSchema() == schemeName) {
                 val resourceName = file.removePrefix("/")
                 return createResourceHandler(browser, resourceName)
@@ -64,6 +64,9 @@ abstract class BaseSchemeHandlerFactory : CefSchemeHandlerFactory {
     }
 
     protected open fun createProxyHandler(project: Project, url: URL): CefResourceHandler? {
+        if (ApiProxyResourceHandler.isApiProxyCall(url)) {
+            return ApiProxyResourceHandler(project)
+        }
         return null
     }
 

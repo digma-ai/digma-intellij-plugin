@@ -178,7 +178,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable, Base
 
     @Override
     public String getErrorTimeseries(String errorId, Map<String, Object> payload) {
-        return execute(() -> client.analyticsProvider.getErrorTimeseries( errorId, payload));
+        return execute(() -> client.analyticsProvider.getErrorTimeseries(errorId, payload));
     }
 
     @Override
@@ -490,36 +490,42 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable, Base
     }
 
     @Override
-    public SpanInfoByUid resolveSpanByUid(String uid){
+    public SpanInfoByUid resolveSpanByUid(String uid) {
         return execute(() -> client.analyticsProvider.resolveSpanByUid(uid));
     }
 
     @Override
-    public HttpResponse lowLevelCall(HttpRequest request) {
+    public HttpResponse proxyCall(HttpRequest request) {
 
-        okhttp3.Response okHttp3Response;
         try {
             var okHttp3Request = toOkHttp3Request(request);
-            okHttp3Response = client.okHttpClient.newCall(okHttp3Request).execute();
+            okhttp3.Response okHttp3Response = client.okHttpClient.newCall(okHttp3Request).execute();
+            //handle only authentication error so the plugin will login or redirect the ui to login.
+            //any other error should be propagated to the UI
+            if (okHttp3Response.code() == HTTPConstants.UNAUTHORIZED) {
+                try (ResponseBody errorBody = okHttp3Response.body()) {
+                    throw createUnsuccessfulResponseException(okHttp3Response.code(), errorBody);
+                }
+            }
+
+            return toHttpResponse(okHttp3Response);
+
         } catch (Exception e) {
             throw new AnalyticsProviderException(e);
-        }
-
-        if (okHttp3Response.isSuccessful()) {
-            return toHttpResponse(okHttp3Response);
-        } else {
-            try (ResponseBody errorBody = okHttp3Response.body()) {
-                throw createUnsuccessfulResponseException(okHttp3Response.code(), errorBody);
-            } catch (IOException e) {
-                throw new AnalyticsProviderException(e.getMessage(), e);
-            }
         }
     }
 
     private Request toOkHttp3Request(HttpRequest request) {
-        var okHttp3Body = request.getBody() != null
-                ? RequestBody.create(MediaType.parse(request.getBody().getContentType()), request.getBody().getContent())
-                : null;
+        RequestBody okHttp3Body = null;
+        if (request.getBody() != null) {
+            var contentType = request.getHeader("Content-Type");
+            if (contentType == null) {
+                okHttp3Body = RequestBody.create(null, request.getBody().getContent());
+            } else {
+                okHttp3Body = RequestBody.create(MediaType.parse(contentType), request.getBody().getContent());
+            }
+        }
+
         var okHttp3RequestBuilder = new Request.Builder()
                 .method(request.getMethod(), okHttp3Body)
                 .url(request.getUrl());
@@ -532,8 +538,12 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable, Base
         var headers = response.headers().toMultimap().entrySet().stream()
                 .filter(i -> !i.getValue().isEmpty())
                 .collect(HashMap<String, String>::new, (m, i) -> m.put(i.getKey(), i.getValue().get(0)), Map::putAll);
+
         var contentLength = body != null ? body.contentLength() : null;
-        MediaType mediaType = body != null ? body.contentType() : null;
+        var contentTypeHeaderName = response.headers().names().stream().filter(s -> s != null && s.equalsIgnoreCase("content-type")).findFirst().orElse(null);
+        var contentTypeHeader = contentTypeHeaderName != null ? response.header(contentTypeHeaderName) : null;
+        MediaType mediaType = (body != null && body.contentType() != null) ? body.contentType() :
+                (contentTypeHeader != null) ? MediaType.parse(contentTypeHeader) : null;
         var contentType = mediaType != null ? mediaType.toString() : null;
         var contentStream = body != null ? body.byteStream() : null;
 

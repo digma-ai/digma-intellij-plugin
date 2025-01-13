@@ -333,7 +333,7 @@ tasks {
             //custom compose file url
             //"org.digma.plugin.custom.docker-compose.url" to "https://raw.githubusercontent.com/digma-ai/digma/refs/heads/0.2.73/docker/docker-compose.yml"
             //ui bundle path
-            //"org.digma.plugin.ui.bundle.path" to "/home/shalom/Downloads/digma-ui-4.0.12.zip"
+            ////"org.digma.plugin.ui.bundle.path" to "/home/shalom/Downloads/digma-ui-5.1.1.zip"
 
         )
 

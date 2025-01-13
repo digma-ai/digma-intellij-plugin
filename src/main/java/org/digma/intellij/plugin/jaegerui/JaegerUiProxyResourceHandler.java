@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.jaegerui;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.intellij.openapi.diagnostic.Logger;
 import com.posthog.java.shaded.okhttp3.*;
 import org.cef.callback.CefCallback;
@@ -8,7 +7,6 @@ import org.cef.handler.CefResourceHandler;
 import org.cef.misc.*;
 import org.cef.network.*;
 import org.digma.intellij.plugin.auth.account.CredentialsHolder;
-import org.digma.intellij.plugin.common.JsonUtilsKt;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.ui.jcef.JCefException;
 import org.jetbrains.annotations.*;
@@ -24,7 +22,7 @@ public class JaegerUiProxyResourceHandler implements CefResourceHandler {
     private final URL jaegerQueryUrl;
     private Response okHttp3Response;
 
-    public JaegerUiProxyResourceHandler(URL jaegerQueryUrl){
+    public JaegerUiProxyResourceHandler(URL jaegerQueryUrl) {
         this.jaegerQueryUrl = jaegerQueryUrl;
         okHttpClient = new OkHttpClient.Builder().build();
     }
@@ -59,10 +57,10 @@ public class JaegerUiProxyResourceHandler implements CefResourceHandler {
     }
 
     @Nullable
-    private static String getAuthFailureReason(Response response){
+    private static String getAuthFailureReason(Response response) {
         final var headerName = "X-Auth-Fail-Reason";
         var reason = response.header(headerName);
-        if(reason == null && response.priorResponse() != null)
+        if (reason == null && response.priorResponse() != null)
             reason = response.priorResponse().header(headerName);
         return reason;
     }
@@ -90,12 +88,12 @@ public class JaegerUiProxyResourceHandler implements CefResourceHandler {
     }
 
     @NotNull
-    private static HashMap<String, String> getHeaders(CefRequest cefRequest) throws JsonProcessingException {
+    private static HashMap<String, String> getHeaders(CefRequest cefRequest) {
         var headers = new HashMap<String, String>();
         cefRequest.getHeaderMap(headers);
         var digmaCredentials = CredentialsHolder.INSTANCE.getDigmaCredentials();
-        if (digmaCredentials != null){
-            headers.put("Cookie", "auth_token_a="+digmaCredentials.getAccessToken());
+        if (digmaCredentials != null) {
+            headers.put("Cookie", "auth_token_a=" + digmaCredentials.getAccessToken());
         }
         return headers;
     }
@@ -117,18 +115,19 @@ public class JaegerUiProxyResourceHandler implements CefResourceHandler {
         cefResponse.setHeaderMap(headersMap);
 
         var body = okHttp3Response.body();
-        if (body != null){
+        if (body != null) {
             cefResponse.setMimeType(body.contentType().toString());
-            responseLength.set((int)body.contentLength());
+            responseLength.set((int) body.contentLength());
         }
     }
+
 
     @Override
     public boolean readResponse(byte[] dataOut, int bytesToRead, IntRef bytesRead, CefCallback cefCallback) {
         try{
             var inputStream = okHttp3Response.body().byteStream();
             var read = inputStream.read(dataOut, 0, bytesToRead);
-            if (read == -1) {
+            if (read <= 0) {
                 bytesRead.set(0);
                 inputStream.close();
                 return false;
@@ -143,6 +142,8 @@ public class JaegerUiProxyResourceHandler implements CefResourceHandler {
 
     @Override
     public void cancel() {
-        okHttp3Response.close();
+        if (okHttp3Response != null) {
+            okHttp3Response.close();
+        }
     }
 }

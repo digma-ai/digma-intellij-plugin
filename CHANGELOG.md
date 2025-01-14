@@ -1,6 +1,17 @@
 # Changelog
 
-## [2.0.404] - 2024-12-25
+## [2.0.405] - 2025-01-14
+
+- add-connection-status-to-error-event by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2638
+- Persist docker compose Closes #2621 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2636
+- no bundled compose file by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2640
+- otel jars persistence Closes #2637 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2642
+- fix-NoInsightsYetNotification Closes #2616 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2643
+- close update panel on all projects when button clicked Closes #2630 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2645
+- fix interrupted exception in BackendInfoHolder Closes #2639 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2647
+- api proxy Closes #2249 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2641
+
+## 2.0.404 - 2024-12-25
 
 - improve auto reload registration by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2635
 

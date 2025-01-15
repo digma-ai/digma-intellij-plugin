@@ -54,19 +54,19 @@ open class JavaToolOptionsBuilder(
 
             //digma agent must be before otel agent in the command line
             javaToolOptions
-                .append("-javaagent:${otelAgentPathProvider.digmaAgentPath}")
+                .append("-javaagent:${quote(otelAgentPathProvider.digmaAgentPath)}")
                 .append(" ")
 
 
             javaToolOptions
-                .append("-javaagent:${otelAgentPathProvider.otelAgentPath}")
+                .append("-javaagent:${quote(otelAgentPathProvider.otelAgentPath)}")
                 .append(" ")
 
             val useExtension: String? = System.getProperty("org.digma.plugin.useOtelExtension")
             if (useExtension == null || useExtension == "true") {
                 if (otelAgentPathProvider.digmaExtensionPath != null) {
                     javaToolOptions
-                        .append("-Dotel.javaagent.extensions=${otelAgentPathProvider.digmaExtensionPath}")
+                        .append("-Dotel.javaagent.extensions=${quote(otelAgentPathProvider.digmaExtensionPath)}")
                         .append(" ")
                 }
             }
@@ -272,7 +272,7 @@ open class JavaToolOptionsBuilder(
     ): JavaToolOptionsBuilder {
         if (!parametersExtractor.isOtelServiceNameAlreadyDefined()) {
             javaToolOptions
-                .append("-Dotel.service.name=${serviceNameProvider.provideServiceName(moduleResolver)}")
+                .append("-Dotel.service.name=${quote(serviceNameProvider.provideServiceName(moduleResolver))}")
                 .append(" ")
         }
         return this
@@ -284,7 +284,7 @@ open class JavaToolOptionsBuilder(
         if (isTest) {
             val envPart = "$DIGMA_ENVIRONMENT_NAME_RESOURCE_ATTRIBUTE=$LOCAL_TESTS_ENV"
             javaToolOptions
-                .append("-Dquarkus.otel.resource.attributes=\"$envPart\"")
+                .append("-Dquarkus.otel.resource.attributes=${quote(envPart)}")
                 .append(" ")
                 .append("-Dquarkus.otel.bsp.schedule.delay=1") // set delay to 1 millisecond
                 .append(" ")
@@ -331,6 +331,13 @@ open class JavaToolOptionsBuilder(
         return SettingsState.getInstance().extendedObservability.isNullOrBlank().not()
     }
 
+
+    //use quote() to quote string in system properties that may contain spaces and other special characters
+    private fun quote(str:String?): String? {
+        return str?.let {
+            "\"".plus(it).plus("\"")
+        }
+    }
 }
 
 

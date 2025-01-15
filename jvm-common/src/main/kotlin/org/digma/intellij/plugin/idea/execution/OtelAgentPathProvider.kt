@@ -11,6 +11,8 @@ import org.digma.intellij.plugin.common.FileUtils
 
 class OtelAgentPathProvider(configuration: RunConfiguration) {
 
+    //Note that these paths may contain spaces. consider that when using these paths.
+    //for example when used in java tool options as system properties they need to be quoted.
     val otelAgentPath: String?
     val digmaExtensionPath: String?
     val digmaAgentPath: String?

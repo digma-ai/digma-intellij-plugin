@@ -160,7 +160,7 @@ class BackendInfoHolder(val project: Project) : DisposableAdaptor {
                 Log.log(logger::trace, "backend info updated {}", aboutRef.get())
             }
         } catch (e: Throwable) {
-            Log.warnWithException(logger, project, e, "error in update")
+            Log.warnWithException(logger, project, e, "error in update {}",e)
             val isConnectionException = ExceptionUtils.isAnyConnectionException(e)
             if (!isConnectionException) {
                 ErrorReporter.getInstance().reportError(project, "BackendInfoHolder.update", e)

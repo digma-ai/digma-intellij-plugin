@@ -156,7 +156,7 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
 
             /*
             The following code is support for plugin downgrade.
-            but we don't detect plugin downgrade we eep track of the plugin version that installed the current ui.
+            but we don't detect plugin downgrade we keep track of the plugin version that installed the current ui.
             this service keeps track of the plugin version every time setCurrentUiVersion() is called.
             on startup , this code will check if the current plugin version is older than the plugin version that installed
             the current ui version, this definitely means that there was a plugin downgrade and we need to revert to the bundled ui.

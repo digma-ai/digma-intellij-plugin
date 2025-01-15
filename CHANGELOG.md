@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.405] - 2025-01-14
+## [2.0.406] - 2025-01-15
+
+- fix system properties with spaces in java tool options - https://github.com/digma-ai/digma-intellij-plugin/issues/2650
+- fix-update-loop-in-backend-info-holder by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2652
+
+## 2.0.405 - 2025-01-14
 
 - add-connection-status-to-error-event by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2638
 - Persist docker compose Closes #2621 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2636

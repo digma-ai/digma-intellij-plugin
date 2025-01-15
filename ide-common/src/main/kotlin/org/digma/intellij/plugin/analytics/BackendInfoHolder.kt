@@ -136,9 +136,11 @@ class BackendInfoHolder(val project: Project) : DisposableAdaptor {
         try {
             updateImpl()
         } catch (e: Throwable) {
+            Log.log(logger::trace, "update failed  trying again in 5 seconds")
             //if update fails run another try after 2 seconds. maybe it was a momentary error from AnalyticsService.
             // if that will not succeed there will be another periodic update soon
             disposingOneShotDelayedTask("BackendInfoHolder.update-fallack", 5.seconds.inWholeMilliseconds) {
+                Log.log(logger::trace, "calling updateImpl after 5 seconds delay")
                 updateImpl()
             }
         }

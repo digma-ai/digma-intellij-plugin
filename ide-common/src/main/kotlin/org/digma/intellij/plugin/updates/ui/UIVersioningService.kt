@@ -170,6 +170,16 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
                 no change  - ui is already 3 installed y plugin version 5
              downgrade plugin to version 5
                 ui will not be reverted because it was installed by plugin version 5
+
+             example 2
+             plugin version 5 bundled with ui version 1
+                then upgraded to ui 2
+             upgrade plugin to version 6 that bundles ui 3
+                ui version 3 will be used
+             downgrade plugin to version 5
+                ui will revert to version 1 because the current ui was installed by a newer plugin, and we don't know if
+                ui 3 is compatible with plugin 5
+
              */
             val needToUnpackAfterPluginDowngrade = PersistenceService.getInstance().getLastUiUpdatePluginVersion()?.let { lastUiUpdatePluginVersion ->
                 val currentPluginVersion = SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("unknown")

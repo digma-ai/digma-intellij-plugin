@@ -26,6 +26,7 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * keep the backend info and tracks it on connection events.
  */
+//TODO: convert backend info to application service
 @Service(Service.Level.PROJECT)
 class BackendInfoHolder(val project: Project) : DisposableAdaptor {
 

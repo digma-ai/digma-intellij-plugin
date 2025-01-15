@@ -15,10 +15,13 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.AboutResult
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.scheduling.disposingOneShotDelayedTask
 import org.digma.intellij.plugin.scheduling.disposingPeriodicTask
 import org.digma.intellij.plugin.scheduling.oneShotTask
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.jvm.Throws
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * keep the backend info and tracks it on connection events.
@@ -127,8 +130,24 @@ class BackendInfoHolder(val project: Project) : DisposableAdaptor {
     }
 
 
-    //must be called in background coroutine
+    //must be called in background coroutine.
+    //if failed update will try again after 5 seconds
     private fun update() {
+        try {
+            updateImpl()
+        } catch (e: Throwable) {
+            //if update fails run another try after 2 seconds. maybe it was a momentary error from AnalyticsService.
+            // if that will not succeed there will be another periodic update soon
+            disposingOneShotDelayedTask("BackendInfoHolder.update-fallack", 5.seconds.inWholeMilliseconds) {
+                updateImpl()
+            }
+        }
+    }
+
+
+    //Note that updateImpl rethrows exceptions
+    @Throws(Throwable::class)
+    private fun updateImpl(){
         try {
             if (isProjectValid(project)) {
                 Log.log(logger::trace, "updating backend info")
@@ -144,11 +163,7 @@ class BackendInfoHolder(val project: Project) : DisposableAdaptor {
             if (!isConnectionException) {
                 ErrorReporter.getInstance().reportError(project, "BackendInfoHolder.update", e)
             }
-
-            //if update fails run another try immediately. maybe it was a momentary error from AnalyticsService.
-            // if that will not succeed then the next execution in 1 minute will hopefully succeed
-            updateInBackground()
-
+            throw e;
         }
     }
 

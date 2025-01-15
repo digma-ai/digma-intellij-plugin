@@ -167,7 +167,7 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
                 then upgraded to ui 2
                 then upgraded to ui 3
              upgrade plugin to version 6 that bundles ui 3
-                no change  - ui is already 3
+                no change  - ui is already 3 installed y plugin version 5
              downgrade plugin to version 5
                 ui will not be reverted because it was installed by plugin version 5
              */

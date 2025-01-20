@@ -71,7 +71,7 @@ class AppNotificationCenter : Disposable {
                     //also register as child of this service, so it is disposed with service
                     Disposer.register(getInstance(), it)
                     startAggressiveUpdateNotificationTimer(
-                        getInstance().aggressiveUpdateTimerDisposable!!,
+                        it,
                         project,
                         getInstance().currentlyShowingAggressiveUpdateNotifications
                     )

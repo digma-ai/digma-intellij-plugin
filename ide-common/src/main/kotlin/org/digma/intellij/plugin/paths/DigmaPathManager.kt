@@ -20,19 +20,25 @@ class DigmaPathManager {
         private val logger = Logger.getInstance(this::class.java)
 
         /**
-         * returns the base directory to save files belonging to digma installation
+         * returns the base directory to save files belonging to digma installation.
+         * it will return the directory path for the current running IDE.
+         * the path is made of '$USER_HOME/$DIGMA_DIR/$IDE_NAME'
          */
         fun getLocalFilesDirectoryPath(): String {
 
             Log.log(logger::trace, "getLocalFilesDirectoryPath called")
 
+            //ideName should be unique per ide installation. it will be the name of a sub folder of the
+            // user's base directory for digma.
             val ideName = createIdeName()
 
             return try {
+                //baseDir is the base directory for digma that should return the same directory in every IDE. it's a per-user directory.
                 val baseDir = getBaseDirectory()
                 val ideDir = File(baseDir, ideName)
                 ideDir.mkdirs()
                 Log.log(logger::trace, "getLocalFilesDirectoryPath created ide dir {}", ideDir.absolutePath)
+                //ide.info file is just for info, user can check it to see which IDE this folder belongs to.
                 val ideInfo = File(ideDir, "ide.info")
                 if (!ideInfo.exists()) {
                     val ideInfoText =

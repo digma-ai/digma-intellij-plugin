@@ -459,6 +459,14 @@ class PersistenceService {
         state.lastUnpackedOtelJarsPluginVersion = pluginVersion
     }
 
+    fun getLastUiUpdatePluginVersion(): String? {
+        return state.lastUiUpdatePluginVersion
+    }
+
+    fun setLastUiUpdatePluginVersion(pluginVersion: String) {
+        state.lastUiUpdatePluginVersion = pluginVersion
+    }
+
     fun saveAboutAsJson(aboutAsJson: String) {
         state.aboutAsJson = aboutAsJson
     }

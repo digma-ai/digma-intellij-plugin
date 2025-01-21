@@ -13,6 +13,7 @@ import org.digma.intellij.plugin.common.Retries
 import org.digma.intellij.plugin.common.buildVersionRequest
 import org.digma.intellij.plugin.common.findActiveProject
 import org.digma.intellij.plugin.common.newerThan
+import org.digma.intellij.plugin.common.olderThan
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.paths.DigmaPathManager
@@ -21,6 +22,7 @@ import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.reload.ReloadService
 import org.digma.intellij.plugin.reload.ReloadSource
 import org.digma.intellij.plugin.scheduling.disposingPeriodicTask
+import org.digma.intellij.plugin.semanticversion.SemanticVersionUtil
 import org.digma.intellij.plugin.settings.InternalFileSettings
 import java.io.File
 import java.net.HttpURLConnection
@@ -114,6 +116,9 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
     }
 
     private fun setCurrentUiVersion(uiVersion: String) {
+        //on every change to current version keep also the plugin version it will help to identify a plugin downgrade
+        val currentPluginVersion = SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("unknown")
+        PersistenceService.getInstance().setLastUiUpdatePluginVersion(currentPluginVersion)
         return PersistenceService.getInstance().setCurrentUiVersion(uiVersion)
     }
 
@@ -141,10 +146,68 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
 
         try {
 
-            //update this property so it has a value on the first installation of the ui versioning feature
+            //update this property so it has a value on the first installation of the ui versioning feature.
+            //if it doesn't have a value its means that this is the first update to a version that includes the feature,
+            // or it's a new installation. in both cases it's ok to set the current version to the bundled version. from now on
+            // current version will always be updated to the used ui version.
             if (PersistenceService.getInstance().getCurrentUiVersion() == null) {
                 setCurrentUiVersion(bundledUiVersion)
             }
+
+            /*
+            The following code is support for plugin downgrade.
+            but we don't detect plugin downgrade we keep track of the plugin version that installed the current ui.
+            this service keeps track of the plugin version every time setCurrentUiVersion() is called.
+            on startup , this code will check if the current plugin version is older than the plugin version that installed
+            the current ui version, this definitely means that there was a plugin downgrade and we need to revert to the bundled ui.
+            the ui will not be reverted if it was installed by the current plugin version. it may be a downgrade of the plugin ,we don't know.
+            but if this plugin version installed the current ui it will not be downgraded.
+             for example
+             plugin version 5 bundled with ui version 1
+                then upgraded to ui 2
+                then upgraded to ui 3
+             upgrade plugin to version 6 that bundles ui 3
+                no change  - ui is already 3 installed y plugin version 5
+             downgrade plugin to version 5
+                ui will not be reverted because it was installed by plugin version 5
+
+             example 2
+             plugin version 5 bundled with ui version 1
+                then upgraded to ui 2
+             upgrade plugin to version 6 that bundles ui 3
+                ui version 3 will be used
+             downgrade plugin to version 5
+                ui will revert to version 1 because the current ui was installed by a newer plugin, and we don't know if
+                ui 3 is compatible with plugin 5
+
+             */
+            val needToUnpackAfterPluginDowngrade = PersistenceService.getInstance().getLastUiUpdatePluginVersion()?.let { lastUiUpdatePluginVersion ->
+                val currentPluginVersion = SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("unknown")
+                ComparableVersion(currentPluginVersion).olderThan(ComparableVersion(lastUiUpdatePluginVersion))
+            } ?: false
+            if (needToUnpackAfterPluginDowngrade) {
+                Log.log(
+                    logger::info,
+                    "there was a plugin downgrade, using bundled ui. current version: {}, bundled version: {}",
+                    getCurrentUiVersion(),
+                    bundledUiVersion
+                )
+                if (unpackUiBundle()) {
+                    deleteUiBundle(getCurrentUiVersion())
+                    getLatestDownloadedVersion()?.let {
+                        deleteUiBundle(it)
+                        setLatestDownloadedVersion(null)
+                    }
+                    setCurrentUiVersion(bundledUiVersion)
+                    findActiveProject()?.let {
+                        ActivityMonitor.getInstance(it).setUIVersion(getCurrentUiVersion())
+                    }
+                } else {
+                    Log.log(logger::warn, "could not unpack bundled ui version {}", bundledUiVersion)
+                }
+                return
+            }
+
 
             //Note:always use the methods getCurrentUiVersion() and getLatestDownloadedVersion() and don't assign to local variables
             // because values may change concurrently
@@ -160,7 +223,9 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
 
             //if we have the latest downloaded file, switch to use it and delete the old version
             val latestDownloadedUiVersion = getLatestDownloadedVersion()
-            if (latestDownloadedUiVersion != null) {
+            if (latestDownloadedUiVersion != null &&
+                ComparableVersion(latestDownloadedUiVersion).newerThan(ComparableVersion(getCurrentUiVersion()))
+            ) {
                 Log.log(
                     logger::info,
                     "got latest downloaded ui version on startup {}, trying to update..", latestDownloadedUiVersion
@@ -209,11 +274,17 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
 
                     setLatestDownloadedVersion(null)
                 }
+            } else {
+                //in any case if we didn't use latest downloaded reset it if it exists
+                getLatestDownloadedVersion()?.let {
+                    deleteUiBundle(it)
+                    setLatestDownloadedVersion(null)
+                }
             }
 
 
-            //maybe user updated the plugin, and the bundled ui is newer then the current ui version.
-            //this is a valid check even if we had a latestDownloadedVersion and we switched to it above
+            //this is support for plugin update that have a newer ui bundled with it.
+            //this is a valid check even if we had a latestDownloadedVersion and we switched to it above.
             if (ComparableVersion(bundledUiVersion).newerThan(ComparableVersion(getCurrentUiVersion()))) {
                 Log.log(
                     logger::info,

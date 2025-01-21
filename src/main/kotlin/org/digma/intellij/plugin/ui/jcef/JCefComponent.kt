@@ -170,7 +170,6 @@ private constructor(
             AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC, object : AnalyticsServiceConnectionEvent {
 
 
-
                 private fun shouldUpdateEngineStatus(): Boolean {
                     //in installation wizard there is no need to update the status on connection lost if there is any engine operation
                     // running (like install,stop,start,remove) because it may confuse the UI.
@@ -401,14 +400,29 @@ private constructor(
     fun registerForReloadObserver(registrationName: String) {
         //need to register for ReloadObserver after the component has been added to the parent so that all graphics configuration is set.
         //the event is called multiple times for the same component, but we need to register only once.
-        getComponent().addAncestorListener(object : AncestorListenerAdapter() {
+        val listener = object : AncestorListenerAdapter() {
             override fun ancestorAdded(event: AncestorEvent) {
-                if (!registeredForReloadObserver) {
-                    registeredForReloadObserver = true
-                    service<ReloadObserver>().register(project, registrationName, getComponent(), parentDisposable)
+                try {
+                    if (!registeredForReloadObserver) {
+                        registeredForReloadObserver = true
+                        service<ReloadObserver>().register(project, registrationName, getComponent(), parentDisposable)
+                    }
+                } catch (e: Throwable) {
+                    Log.warnWithException(logger, project, e, "error in registerForReloadObserver.ancestorAdded")
+                    ErrorReporter.getInstance().reportError(project, "JCefComponent.registerForReloadObserver.ancestorAdded", e)
                 }
             }
-        })
+        }
+
+        try {
+            getComponent().addAncestorListener(listener)
+            Disposer.register(parentDisposable) {
+                getComponent().removeAncestorListener(listener)
+            }
+        } catch (e: Throwable) {
+            Log.warnWithException(logger, project, e, "error in registerForReloadObserver.ancestorAdded")
+            ErrorReporter.getInstance().reportError(project, "JCefComponent.registerForReloadObserver", e)
+        }
     }
 
 

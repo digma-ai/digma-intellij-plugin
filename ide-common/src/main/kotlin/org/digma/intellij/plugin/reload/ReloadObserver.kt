@@ -72,6 +72,7 @@ class ReloadObserver(cs: CoroutineScope) {
     }
 
 
+    //this method may throw exceptions
     fun register(project: Project, appName: String, jcefUiComponent: JComponent, parentDisposable: Disposable) {
 
         Log.log(logger::trace, "register called for component {} in project {}", appName, project.name)

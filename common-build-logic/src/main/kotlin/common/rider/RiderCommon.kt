@@ -7,8 +7,8 @@ fun rdGenVersion(profile: String): String {
 
     val profileToUse: BuildProfiles.Profile = when (profile) {
         "lowest" -> BuildProfiles.Profile.p231
-        "latest" -> BuildProfiles.Profile.p242
-        "eap" -> BuildProfiles.Profile.p243
+        "latest" -> BuildProfiles.Profile.p243
+        "eap" -> BuildProfiles.Profile.p251
         else -> BuildProfiles.Profile.valueOf(profile)
     }
 

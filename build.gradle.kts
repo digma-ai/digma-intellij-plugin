@@ -21,7 +21,7 @@ plugins {
     id("plugin-project")
     id("org.jetbrains.changelog") version "2.2.0"
     id("org.jetbrains.qodana") version "0.1.13"
-    id("org.jetbrains.kotlinx.kover") version "0.7.5"
+    id("org.jetbrains.kotlinx.kover") version "0.9.1"
 
 }
 
@@ -250,7 +250,7 @@ tasks {
         //to upgrade gradle change the version here and run:
         //./gradlew wrapper --gradle-version 8.8
         //check that gradle/wrapper/gradle-wrapper.properties was changed
-        gradleVersion = "8.11"
+        gradleVersion = "8.12.1"
         distributionType = Wrapper.DistributionType.ALL
         distributionBase = Wrapper.PathBase.GRADLE_USER_HOME
         distributionPath = "wrapper/dists"

@@ -41,7 +41,7 @@ public abstract class InsightsServiceImpl implements Disposable {
 
             try {
                 switch (insightType) {
-                    case "SpanDurations" -> {
+                    case "SpanDurations", "SpanPerformanceAnomaly" -> {
                         String htmlContent = AnalyticsService.getInstance(project).getHtmlGraphForSpanPercentiles(spanCodeObjectId, Laf.INSTANCE.getColorHex(Laf.Colors.getPLUGIN_BACKGROUND()));
                         DigmaHTMLEditorProvider.openEditor(project, "Percentiles Graph of Span " + title, htmlContent);
                     }

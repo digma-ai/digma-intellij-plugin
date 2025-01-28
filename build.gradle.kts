@@ -250,7 +250,7 @@ tasks {
         //to upgrade gradle change the version here and run:
         //./gradlew wrapper --gradle-version 8.8
         //check that gradle/wrapper/gradle-wrapper.properties was changed
-        gradleVersion = "8.11"
+        gradleVersion = "8.12.1"
         distributionType = Wrapper.DistributionType.ALL
         distributionBase = Wrapper.PathBase.GRADLE_USER_HOME
         distributionPath = "wrapper/dists"

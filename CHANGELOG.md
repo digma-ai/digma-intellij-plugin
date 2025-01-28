@@ -1,6 +1,12 @@
 # Changelog
 
-## [2.0.406] - 2025-01-15
+## [2.0.407] - 2025-01-28
+
+- support plugin downgrade in ui versioning Closes #2651 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2655
+- remove-listener-on-dispose by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2656
+- Support 2025.1 eap by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2659
+
+## 2.0.406 - 2025-01-15
 
 - fix system properties with spaces in java tool options - https://github.com/digma-ai/digma-intellij-plugin/issues/2650
 - fix-update-loop-in-backend-info-holder by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2652

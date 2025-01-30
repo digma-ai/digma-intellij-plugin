@@ -21,3 +21,4 @@ window.isDigmathonGameFinished = ${isDigmathonGameFinished?string('true', 'false
 window.productKey = "${productKey}";
 window.userId = "${userId}";
 window.isLoggingEnabled = ${isLoggingEnabled?string('true', 'false')};
+window.jaegerApiPath = "${jaegerApiProxyPath}";

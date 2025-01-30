@@ -8,6 +8,7 @@ import org.cef.callback.CefSchemeHandlerFactory
 import org.cef.handler.CefResourceHandler
 import org.cef.network.CefRequest
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import org.digma.intellij.plugin.jaegerui.JaegerUiProxyResourceHandler
 import org.digma.intellij.plugin.log.Log
 import java.net.MalformedURLException
 import java.net.URI
@@ -64,10 +65,19 @@ abstract class BaseSchemeHandlerFactory : CefSchemeHandlerFactory {
     }
 
     protected open fun createProxyHandler(project: Project, url: URL): CefResourceHandler? {
-        if (ApiProxyResourceHandler.isApiProxyCall(url)) {
-            return ApiProxyResourceHandler(project)
+
+        //check requests to jaeger backend starting with JaegerUiProxyResourceHandler.JAEGER_UI_API_PATH
+        // and proxy them to jaeger backend.
+        //or requests to digma api starting with ApiProxyResourceHandler.URL_PREFIX
+        // and proxy them to digma backend.
+        val jaegerQueryUrl = JaegerUiProxyResourceHandler.getJaegerQueryUrlOrNull()
+        return if (jaegerQueryUrl != null && JaegerUiProxyResourceHandler.isJaegerQueryCall(url)) {
+            JaegerUiProxyResourceHandler(jaegerQueryUrl)
+        }else if (ApiProxyResourceHandler.isApiProxyCall(url)) {
+            ApiProxyResourceHandler(project)
+        }else{
+            null
         }
-        return null
     }
 
     abstract fun createResourceHandler(browser: CefBrowser, resourcePath: String): CefResourceHandler

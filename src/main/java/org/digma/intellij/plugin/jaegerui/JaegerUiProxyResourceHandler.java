@@ -7,7 +7,9 @@ import org.cef.handler.CefResourceHandler;
 import org.cef.misc.*;
 import org.cef.network.*;
 import org.digma.intellij.plugin.auth.account.CredentialsHolder;
+import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.jcef.JCefException;
 import org.jetbrains.annotations.*;
 
@@ -16,6 +18,14 @@ import java.util.HashMap;
 import java.util.stream.Collectors;
 
 public class JaegerUiProxyResourceHandler implements CefResourceHandler {
+
+    //the jaeger backend api starts with /api , the proxy just keeps it as is.
+    //if necessary removes /jaeger prefix from the path.
+
+    public static final String JAEGER_API_PATH_PREFIX = "/jaeger";
+    public static final String JAEGER_API_PATH_TO_PROXY = JAEGER_API_PATH_PREFIX + "/api";
+    public static final String JAEGER_API_PATH_TO_PROXY_ONLY_FROM_JAEGER_UI_APP = "/api/";
+
 
     private static final Logger LOGGER = Logger.getInstance(JaegerUiProxyResourceHandler.class);
     private final OkHttpClient okHttpClient;
@@ -27,9 +37,33 @@ public class JaegerUiProxyResourceHandler implements CefResourceHandler {
         okHttpClient = new OkHttpClient.Builder().build();
     }
 
-    public static boolean isJaegerQueryCall(URL url) {
-        return url.getPath().startsWith("/api/");
+    //this method is called from JaegerUiSchemeHandlerFactory only. it is to support
+    // jaeger ui that still doesn't support
+    public static boolean isJaegerQueryCallFromJaegerUI(URL url) {
+        return url.getPath().startsWith(JAEGER_API_PATH_TO_PROXY_ONLY_FROM_JAEGER_UI_APP);
     }
+
+    //this method is called from BaseSchemeHandlerFactory only.
+    //it supports all jcef apps.
+    public static boolean isJaegerQueryCall(URL url) {
+        return url.getPath().startsWith(JAEGER_API_PATH_TO_PROXY);
+    }
+
+
+    public static URL getJaegerQueryUrlOrNull() {
+        var urlStr = SettingsState.getInstance().getJaegerQueryUrl();
+        if (urlStr == null)
+            return null;
+
+        try {
+            return new URL(urlStr);
+        } catch (MalformedURLException e) {
+            Log.warnWithException(LOGGER, e, "JaegerQueryUrl parsing failed");
+            ErrorReporter.getInstance().reportError("JaegerUiProxyResourceHandler.getJaegerQueryUrlOrNull", e);
+        }
+        return null;
+    }
+
 
     @Override
     public boolean processRequest(CefRequest cefRequest, CefCallback callback) {
@@ -83,8 +117,14 @@ public class JaegerUiProxyResourceHandler implements CefResourceHandler {
     @NotNull
     private URL getApiUrl(CefRequest cefRequest) throws MalformedURLException {
         var requestUrl = new URL(cefRequest.getURL());
+        var path = requestUrl.getPath() == null ? "" : requestUrl.getPath();
+        if (isJaegerQueryCall(requestUrl)) {
+            //remove the /jaeger prefix and keep /api
+            path = path.replaceFirst(JAEGER_API_PATH_PREFIX, "");
+        }
+        var query = (requestUrl.getQuery() == null || requestUrl.getQuery().isBlank()) ? "" : "?" + requestUrl.getQuery();
         return new URL(jaegerQueryUrl.getProtocol(), jaegerQueryUrl.getHost(), jaegerQueryUrl.getPort(),
-                requestUrl.getPath() + "?" + requestUrl.getQuery());
+                path + query);
     }
 
     @NotNull
@@ -124,7 +164,7 @@ public class JaegerUiProxyResourceHandler implements CefResourceHandler {
 
     @Override
     public boolean readResponse(byte[] dataOut, int bytesToRead, IntRef bytesRead, CefCallback cefCallback) {
-        try{
+        try {
             var inputStream = okHttp3Response.body().byteStream();
             var read = inputStream.read(dataOut, 0, bytesToRead);
             if (read <= 0) {

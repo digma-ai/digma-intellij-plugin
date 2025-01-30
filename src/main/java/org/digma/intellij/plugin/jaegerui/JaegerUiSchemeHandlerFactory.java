@@ -10,7 +10,7 @@ import org.jetbrains.annotations.*;
 import java.net.URL;
 
 import static org.digma.intellij.plugin.jaegerui.JaegerUIConstants.JAEGER_UI_SCHEMA;
-import static org.digma.intellij.plugin.jaegerui.JaegerUiProxyResourceHandler.getJaegerQueryUrlOrNull;
+import static org.digma.intellij.plugin.jaegerui.JaegerProxyResourceHandler.getJaegerQueryUrlOrNull;
 
 public class JaegerUiSchemeHandlerFactory extends BaseSchemeHandlerFactory {
 
@@ -23,8 +23,8 @@ public class JaegerUiSchemeHandlerFactory extends BaseSchemeHandlerFactory {
         //it is backward support for jaeger ui that still sends requests to /api/ instead of /jaeger/api/
         var jaegerQueryUrl = getJaegerQueryUrlOrNull();
         if (jaegerQueryUrl != null &&
-                JaegerUiProxyResourceHandler.isJaegerQueryCallFromJaegerUI(url)) {
-            return new JaegerUiProxyResourceHandler(jaegerQueryUrl);
+                JaegerProxyResourceHandler.isJaegerQueryCallFromJaegerUI(url)) {
+            return new JaegerProxyResourceHandler(jaegerQueryUrl);
         }
         return super.createProxyHandler(project, url);
     }

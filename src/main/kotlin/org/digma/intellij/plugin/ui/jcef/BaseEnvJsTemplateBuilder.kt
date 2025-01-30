@@ -17,7 +17,7 @@ import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.docker.LocalInstallationFacade
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
-import org.digma.intellij.plugin.jaegerui.JaegerUiProxyResourceHandler
+import org.digma.intellij.plugin.jaegerui.JaegerProxyResourceHandler
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.environment.Env
 import org.digma.intellij.plugin.persistence.PersistenceService
@@ -99,7 +99,7 @@ abstract class BaseEnvJsTemplateBuilder(private val templatePath: String) {
             data[USER_ID] = UniqueGeneratedUserId.userId
             data[USER_FINISHED_DIGMATHON] = DigmathonService.getInstance().isUserFinishedDigmathon
             data[IS_LOGGING_ENABLED] = getIsLoggingEnabledSystemProperty()
-            data[JAEGER_API_PROXY_PATH] = JaegerUiProxyResourceHandler.JAEGER_API_PATH_TO_PROXY
+            data[JAEGER_API_PROXY_PATH] = JaegerProxyResourceHandler.JAEGER_API_PATH_TO_PROXY
 
             addAppSpecificEnvVariable(project, data)
 

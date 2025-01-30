@@ -17,7 +17,7 @@ import java.net.*;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 
-public class JaegerUiProxyResourceHandler implements CefResourceHandler {
+public class JaegerProxyResourceHandler implements CefResourceHandler {
 
     //the jaeger backend api starts with /api , the proxy just keeps it as is.
     //if necessary removes /jaeger prefix from the path.
@@ -27,12 +27,12 @@ public class JaegerUiProxyResourceHandler implements CefResourceHandler {
     public static final String JAEGER_API_PATH_TO_PROXY_ONLY_FROM_JAEGER_UI_APP = "/api/";
 
 
-    private static final Logger LOGGER = Logger.getInstance(JaegerUiProxyResourceHandler.class);
+    private static final Logger LOGGER = Logger.getInstance(JaegerProxyResourceHandler.class);
     private final OkHttpClient okHttpClient;
     private final URL jaegerQueryUrl;
     private Response okHttp3Response;
 
-    public JaegerUiProxyResourceHandler(URL jaegerQueryUrl) {
+    public JaegerProxyResourceHandler(URL jaegerQueryUrl) {
         this.jaegerQueryUrl = jaegerQueryUrl;
         okHttpClient = new OkHttpClient.Builder().build();
     }
@@ -59,7 +59,7 @@ public class JaegerUiProxyResourceHandler implements CefResourceHandler {
             return new URL(urlStr);
         } catch (MalformedURLException e) {
             Log.warnWithException(LOGGER, e, "JaegerQueryUrl parsing failed");
-            ErrorReporter.getInstance().reportError("JaegerUiProxyResourceHandler.getJaegerQueryUrlOrNull", e);
+            ErrorReporter.getInstance().reportError("JaegerProxyResourceHandler.getJaegerQueryUrlOrNull", e);
         }
         return null;
     }

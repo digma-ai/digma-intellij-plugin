@@ -17,7 +17,6 @@ import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.docker.LocalInstallationFacade
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
-import org.digma.intellij.plugin.jaegerui.JaegerProxyResourceHandler
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.environment.Env
 import org.digma.intellij.plugin.persistence.PersistenceService

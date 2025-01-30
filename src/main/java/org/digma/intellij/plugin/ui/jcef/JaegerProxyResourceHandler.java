@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.jaegerui;
+package org.digma.intellij.plugin.ui.jcef;
 
 import com.intellij.openapi.diagnostic.Logger;
 import com.posthog.java.shaded.okhttp3.*;
@@ -10,7 +10,6 @@ import org.digma.intellij.plugin.auth.account.CredentialsHolder;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.settings.SettingsState;
-import org.digma.intellij.plugin.ui.jcef.JCefException;
 import org.jetbrains.annotations.*;
 
 import java.net.*;

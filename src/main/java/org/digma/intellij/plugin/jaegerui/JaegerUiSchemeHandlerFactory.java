@@ -4,13 +4,13 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import org.cef.browser.CefBrowser;
 import org.cef.handler.CefResourceHandler;
-import org.digma.intellij.plugin.ui.jcef.BaseSchemeHandlerFactory;
+import org.digma.intellij.plugin.ui.jcef.*;
 import org.jetbrains.annotations.*;
 
 import java.net.URL;
 
 import static org.digma.intellij.plugin.jaegerui.JaegerUIConstants.JAEGER_UI_SCHEMA;
-import static org.digma.intellij.plugin.jaegerui.JaegerProxyResourceHandler.getJaegerQueryUrlOrNull;
+import static org.digma.intellij.plugin.ui.jcef.JaegerProxyResourceHandler.getJaegerQueryUrlOrNull;
 
 public class JaegerUiSchemeHandlerFactory extends BaseSchemeHandlerFactory {
 

@@ -39,7 +39,7 @@ public class JaegerProxyResourceHandler implements CefResourceHandler {
     }
 
     //this method is called from JaegerUiSchemeHandlerFactory only. it is to support
-    // jaeger ui that still doesn't support
+    // jaeger ui that still sends requests to /api/ instead of /jaeger/api/
     public static boolean isJaegerQueryCallFromJaegerUI(URL url) {
         return url.getPath().startsWith(JAEGER_API_PATH_TO_PROXY_ONLY_FROM_JAEGER_UI_APP);
     }

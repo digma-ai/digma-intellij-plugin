@@ -6,7 +6,7 @@ import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.log.Log
 
-val logger = Logger.getInstance("org.digma.intellij.plugin.ui.jcef.JCefBrowserUtils")
+private val logger = Logger.getInstance("org.digma.intellij.plugin.ui.jcef.JCefBrowserUtils")
 
 
 fun serializeObjectToJson(value: Any): String {

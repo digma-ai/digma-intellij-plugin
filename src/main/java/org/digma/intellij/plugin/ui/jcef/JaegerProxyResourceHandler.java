@@ -16,6 +16,8 @@ import java.net.*;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 
+import static org.digma.intellij.plugin.ui.jcef.ProxyUtilsKt.postDataToByteArray;
+
 public class JaegerProxyResourceHandler implements CefResourceHandler {
 
     //the jaeger backend api starts with /api , the proxy just keeps it as is.
@@ -67,6 +69,9 @@ public class JaegerProxyResourceHandler implements CefResourceHandler {
     @Override
     public boolean processRequest(CefRequest cefRequest, CefCallback callback) {
         try {
+
+            Log.log(LOGGER::trace, "processing request {}, [request id:{}]", cefRequest.getURL(), cefRequest.getIdentifier());
+
             var apiUrl = getApiUrl(cefRequest);
             var headers = getHeaders(cefRequest);
             var body = getBody(cefRequest, headers);
@@ -83,7 +88,8 @@ public class JaegerProxyResourceHandler implements CefResourceHandler {
             callback.Continue();
             return true;
         } catch (Exception e) {
-            Log.warnWithException(LOGGER, e, "processRequest failed");
+            Log.warnWithException(LOGGER, e, "processRequest failed for request {}, [request id:{}]", cefRequest.getURL(),cefRequest.getIdentifier());
+            ErrorReporter.getInstance().reportError("JaegerProxyResourceHandler.processRequest", e);
             callback.cancel();
             return false;
         }
@@ -140,7 +146,7 @@ public class JaegerProxyResourceHandler implements CefResourceHandler {
     @Nullable
     private static RequestBody getBody(CefRequest cefRequest, HashMap<String, String> headers) {
         return cefRequest.getPostData() != null
-                ? RequestBody.create(cefRequest.getPostData().toString(), MediaType.parse(headers.get("Content-Type")))
+                ? RequestBody.create(postDataToByteArray(cefRequest, cefRequest.getPostData()), MediaType.parse(headers.get("Content-Type")))
                 : null;
     }
 

@@ -4,14 +4,13 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import org.cef.browser.CefBrowser;
 import org.cef.handler.CefResourceHandler;
-import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.settings.SettingsState;
-import org.digma.intellij.plugin.ui.jcef.BaseSchemeHandlerFactory;
+import org.digma.intellij.plugin.ui.jcef.*;
 import org.jetbrains.annotations.*;
 
-import java.net.*;
+import java.net.URL;
 
 import static org.digma.intellij.plugin.jaegerui.JaegerUIConstants.JAEGER_UI_SCHEMA;
+import static org.digma.intellij.plugin.ui.jcef.JaegerProxyResourceHandler.getJaegerQueryUrlOrNull;
 
 public class JaegerUiSchemeHandlerFactory extends BaseSchemeHandlerFactory {
 
@@ -20,10 +19,12 @@ public class JaegerUiSchemeHandlerFactory extends BaseSchemeHandlerFactory {
     @Nullable
     @Override
     public CefResourceHandler createProxyHandler(@NotNull Project project, @NotNull URL url) {
+        //this method checks only for jaeger calls from jaeger ui app only and not from other jcef apps.
+        //it is backward support for jaeger ui that still sends requests to /api/ instead of /jaeger/api/
         var jaegerQueryUrl = getJaegerQueryUrlOrNull();
         if (jaegerQueryUrl != null &&
-                JaegerUiProxyResourceHandler.isJaegerQueryCall(url)) {
-            return new JaegerUiProxyResourceHandler(jaegerQueryUrl);
+                JaegerProxyResourceHandler.isJaegerQueryCallFromJaegerUI(url)) {
+            return new JaegerProxyResourceHandler(jaegerQueryUrl);
         }
         return super.createProxyHandler(project, url);
     }
@@ -44,20 +45,5 @@ public class JaegerUiSchemeHandlerFactory extends BaseSchemeHandlerFactory {
     @Override
     public String getDomain() {
         return JaegerUIConstants.JAEGER_UI_DOMAIN_NAME;
-    }
-
-
-
-    private static URL getJaegerQueryUrlOrNull(){
-        var urlStr = SettingsState.getInstance().getJaegerQueryUrl();
-        if(urlStr == null)
-            return null;
-
-        try {
-            return new URL(urlStr);
-        } catch (MalformedURLException e) {
-            Log.warnWithException(LOGGER, e, "JaegerQueryUrl parsing failed");
-        }
-        return null;
     }
 }

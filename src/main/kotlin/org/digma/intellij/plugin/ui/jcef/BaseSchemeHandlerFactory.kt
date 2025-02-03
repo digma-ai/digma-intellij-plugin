@@ -64,10 +64,19 @@ abstract class BaseSchemeHandlerFactory : CefSchemeHandlerFactory {
     }
 
     protected open fun createProxyHandler(project: Project, url: URL): CefResourceHandler? {
-        if (ApiProxyResourceHandler.isApiProxyCall(url)) {
-            return ApiProxyResourceHandler(project)
+
+        //check requests to jaeger backend starting with JaegerProxyResourceHandler.JAEGER_UI_API_PATH
+        // and proxy them to jaeger backend.
+        //or requests to digma api starting with ApiProxyResourceHandler.URL_PREFIX
+        // and proxy them to digma backend.
+        val jaegerQueryUrl = JaegerProxyResourceHandler.getJaegerQueryUrlOrNull()
+        return if (jaegerQueryUrl != null && JaegerProxyResourceHandler.isJaegerQueryCall(url)) {
+            JaegerProxyResourceHandler(jaegerQueryUrl)
+        }else if (ApiProxyResourceHandler.isApiProxyCall(url)) {
+            ApiProxyResourceHandler(project)
+        }else{
+            null
         }
-        return null
     }
 
     abstract fun createResourceHandler(browser: CefBrowser, resourcePath: String): CefResourceHandler

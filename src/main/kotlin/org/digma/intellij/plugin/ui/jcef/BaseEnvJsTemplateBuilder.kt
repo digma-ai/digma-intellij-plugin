@@ -53,6 +53,7 @@ const val DIGMATHON_PRODUCT_KEY = "productKey"
 const val USER_ID = "userId"
 const val USER_FINISHED_DIGMATHON = "isDigmathonGameFinished"
 const val IS_LOGGING_ENABLED = "isLoggingEnabled"
+const val JAEGER_API_PROXY_PATH = "jaegerApiProxyPath"
 
 const val TEMPLATES_ROOT_FOLDER = "/webview"
 
@@ -97,6 +98,7 @@ abstract class BaseEnvJsTemplateBuilder(private val templatePath: String) {
             data[USER_ID] = UniqueGeneratedUserId.userId
             data[USER_FINISHED_DIGMATHON] = DigmathonService.getInstance().isUserFinishedDigmathon
             data[IS_LOGGING_ENABLED] = getIsLoggingEnabledSystemProperty()
+            data[JAEGER_API_PROXY_PATH] = JaegerProxyResourceHandler.JAEGER_API_PATH_TO_PROXY
 
             addAppSpecificEnvVariable(project, data)
 

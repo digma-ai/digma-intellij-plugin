@@ -31,6 +31,6 @@ constructor(
     val sortOrder: String,
     @JsonRawValue val insightTypes: String?,
     @JsonRawValue val services: String?,
-    @JsonRawValue val criticalityFilter: String,
+    @JsonRawValue val criticalityFilter: String?,
     val page: Number
 )

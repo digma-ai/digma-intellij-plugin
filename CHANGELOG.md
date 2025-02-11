@@ -1,6 +1,13 @@
 # Changelog
 
-## [2.0.407] - 2025-01-28
+## [2.0.408] - 2025-02-11
+
+- revert intellij plugin to 2.1.0 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2663
+- Add jaeger proxy to all jcef apps Closes #2662 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2664
+- Add issues criticality filter param by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2665
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2666
+
+## 2.0.407 - 2025-01-28
 
 - support plugin downgrade in ui versioning Closes #2651 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2655
 - remove-listener-on-dispose by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2656

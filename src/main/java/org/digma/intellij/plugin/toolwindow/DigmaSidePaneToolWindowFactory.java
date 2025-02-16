@@ -26,6 +26,7 @@ import java.awt.*;
 import java.util.Collections;
 import java.util.function.*;
 
+import static org.digma.intellij.plugin.ui.common.JcefRemoteUtilsKt.*;
 import static org.digma.intellij.plugin.ui.common.MainToolWindowPanelKt.createMainToolWindowPanel;
 
 
@@ -46,6 +47,21 @@ public final class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
      */
     @Override
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
+
+        Log.log(LOGGER::info, project, "creating main tool window for project  {}", project);
+
+        //patch for jcef issue:
+        //https://github.com/digma-ai/digma-intellij-plugin/issues/2668
+        //https://github.com/digma-ai/digma-intellij-plugin/issues/2669
+        //https://youtrack.jetbrains.com/issue/IDEA-367610/jcef-initialization-crash-in-latest-2025.1-EAP-NullPointerException-Cannot-read-field-jsQueryFunction-because-config-is-null
+        if (is2025EAPWithJCEFRemoteEnabled()){
+            Log.log(LOGGER::info, project, "Jcef remote enabled for EAP , creating user message panel", project);
+            sendPosthogEvent("Main");
+            var messagePanel = create2025EAPMessagePanel(project);
+            var content = ContentFactory.getInstance().createContent(messagePanel, null, false);
+            toolWindow.getContentManager().addContent(content);
+            return;
+        }
 
 
         //initialize AnalyticsService early so the UI can detect the connection status when created

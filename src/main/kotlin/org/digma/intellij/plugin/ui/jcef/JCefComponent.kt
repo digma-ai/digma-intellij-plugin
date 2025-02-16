@@ -17,6 +17,7 @@ import org.apache.maven.artifact.versioning.ComparableVersion
 import org.cef.CefApp
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefMessageRouter
+import org.cef.browser.CefMessageRouter.CefMessageRouterConfig
 import org.cef.handler.CefDownloadHandler
 import org.cef.handler.CefLifeSpanHandlerAdapter
 import org.digma.intellij.plugin.activation.UserClickedNotificationEvent
@@ -478,7 +479,7 @@ private constructor(
 
 
             val jbCefClient = jbCefBrowser.jbCefClient
-            val cefMessageRouter = CefMessageRouter.create()
+            val cefMessageRouter = CefMessageRouter.create(CefMessageRouterConfig())
             cefMessageRouter.addHandler(messageRouterHandler, true)
             jbCefClient.cefClient.addMessageRouter(cefMessageRouter)
 

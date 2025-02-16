@@ -48,6 +48,11 @@ public final class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
 
 
+        var jcefRemoteEnabled = Boolean.getBoolean("jcef.remote.enabled");
+        Log.log(LOGGER::info, "jcef.remote.enabled: {}", jcefRemoteEnabled);
+
+
+
         //initialize AnalyticsService early so the UI can detect the connection status when created
         AnalyticsService.getInstance(project);
         //initialize BackendInfoHolder early so it will populate its info soon

@@ -316,6 +316,8 @@ tasks {
             //see https://kotlin.github.io/analysis-api/testing-in-k2-locally.html
             "idea.kotlin.plugin.use.k2" to "true",
 
+//            "jcef.remote.enabled" to true,
+
             //"idea.ProcessCanceledException" to "disabled"
 
 

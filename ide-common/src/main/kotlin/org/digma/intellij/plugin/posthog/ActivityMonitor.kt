@@ -901,6 +901,32 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
     }
 
 
+    fun register251EAPPatchEvent(appName: String) {
+
+        val osType = System.getProperty("os.name")
+        val ideInfo = ApplicationInfo.getInstance()
+        val ideName = ideInfo.versionName
+        val ideVersion = ideInfo.fullVersion
+        val ideBuildNumber = ideInfo.build.asString()
+        val pluginVersion = SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("unknown")
+        val uiVersion = UIVersioningService.getInstance().getCurrentUiVersion()
+        val isJcefSupported = JBCefApp.isSupported()
+
+        registerCustomEvent("2025EAPWithJCEFRemote patch activated", mapOf(
+            "app.name" to appName,
+            "os.type" to osType,
+            "ide.name" to ideName,
+            "ide.version" to ideVersion,
+            "ide.build" to ideBuildNumber,
+            "plugin.version" to pluginVersion,
+            "ui.version" to uiVersion,
+            "user.type" to if (UniqueGeneratedUserId.isDevUser) "internal" else "external",
+            "jcef.supported" to isJcefSupported,
+            INSTALL_STATUS_PROPERTY_NAME to getCurrentInstallStatus()
+        ))
+    }
+
+
     private fun registerSessionDetails() {
 
         SessionMetadataProperties.getInstance().put(CURRENT_INSTALL_STATUS_KEY, InstallStatus.Active)

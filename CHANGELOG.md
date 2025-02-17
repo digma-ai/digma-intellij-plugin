@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.408] - 2025-02-11
+## [2.0.409] - 2025-02-17
+
+- update build profiles by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2667
+- Message for eap users Closes #2669 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2670
+
+## 2.0.408 - 2025-02-11
 
 - revert intellij plugin to 2.1.0 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2663
 - Add jaeger proxy to all jcef apps Closes #2662 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2664

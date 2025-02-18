@@ -9,9 +9,11 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.externalSystem.autoimport.ProjectRefreshAction
 import com.intellij.openapi.project.Project
+import org.apache.maven.artifact.versioning.ComparableVersion
 import org.digma.intellij.plugin.buildsystem.BuildSystem
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
+import org.digma.intellij.plugin.common.newerThan
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.buildsystem.JvmBuildSystemHelperService
 import org.digma.intellij.plugin.idea.deps.ModuleExt
@@ -44,6 +46,7 @@ class SpringBootMicrometerConfigureDepsService(private val project: Project) : D
         val OtelExporterOtlpCoordinates = UnifiedCoordinates("io.opentelemetry", "opentelemetry-exporter-otlp", "1.26.0")
         val DigmaSpringBootMicrometerAutoconfCoordinates =
             UnifiedCoordinates("io.github.digma-ai", "digma-spring-boot-micrometer-tracing-autoconf", "0.7.7")
+        val JerseyMicrometerCoordinates = UnifiedCoordinates("org.glassfish.jersey.ext", "jersey-micrometer", "0.0.0")//we don't use the version
 
         @JvmStatic
         fun getInstance(project: Project): SpringBootMicrometerConfigureDepsService {
@@ -181,6 +184,17 @@ class SpringBootMicrometerConfigureDepsService(private val project: Project) : D
         }
         if (!moduleExt.metadata.hasDigmaSpringBootMicrometerAutoconf) {
             uniDeps.add(buildUnifiedDependency(DigmaSpringBootMicrometerAutoconfCoordinates, moduleBuildSystem, false))
+        }
+
+        val springBoot33Version = ComparableVersion("3.3.0")
+        if (ComparableVersion(moduleExt.metadata.springBootVersion).newerThan(springBoot33Version) ||
+            ComparableVersion(moduleExt.metadata.springBootVersion) == springBoot33Version
+        ) {
+            if (moduleExt.metadata.hasSpringBootStarterJersey){
+                if (!moduleExt.metadata.hasJerseyMicrometer){
+                    uniDeps.add(buildUnifiedDependency(JerseyMicrometerCoordinates, moduleBuildSystem, true))
+                }
+            }
         }
 
 

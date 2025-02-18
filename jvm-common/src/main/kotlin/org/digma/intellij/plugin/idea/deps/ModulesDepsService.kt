@@ -8,15 +8,16 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.LibraryOrderEntry
 import com.intellij.openapi.roots.ModuleRootManager
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.MonitoredFramework
+import org.digma.intellij.plugin.scheduling.disposingPeriodicTask
 import org.digma.intellij.plugin.startup.DigmaProjectActivity
 import org.jetbrains.annotations.NotNull
-import java.util.Timer
-import java.util.TimerTask
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
-import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 @Suppress("LightServiceMigrationCode")
 class ModulesDepsService(private val project: Project) : Disposable {
@@ -98,6 +99,8 @@ class ModulesDepsService(private val project: Project) : Disposable {
             var micronautVersion: String? = null
             var dropwizardVersion: String? = null
             var springVersion: String? = null
+            var hasJerseyMicrometer = false
+            var hasSpringBootStarterJersey = false
 
 
             for (currLib in libDeps) {
@@ -143,6 +146,16 @@ class ModulesDepsService(private val project: Project) : Disposable {
                     hasDigmaSpringBootMicrometerAutoconf = checkDigmaSpringBootMicrometerAutoconf(libCoord)
                 }
 
+                if (!hasJerseyMicrometer) {
+                    hasJerseyMicrometer = checkJerseyMicrometer(libCoord)
+                }
+
+                if (!hasSpringBootStarterJersey) {
+                    hasSpringBootStarterJersey = checkSpringBootStarterJersey(libCoord)
+                }
+
+
+
                 // Micronaut
                 if (micronautVersion == null) {
                     val hasMicronaut = checkMicronaut(libCoord)
@@ -172,7 +185,8 @@ class ModulesDepsService(private val project: Project) : Disposable {
                 hasOpenTelemetryAnnotations, quarkusVersion, hasQuarkusOpenTelemetry,
                 springBootVersion, hasSpringBootStarterActuator, hasSpringBootStarterAop,
                 hasMicrometerTracingBridgeOtel, hasDatasourceMicrometerSpringBoot, hasOtelExporterOtlp,
-                hasDigmaSpringBootMicrometerAutoconf, micronautVersion, dropwizardVersion, springVersion
+                hasDigmaSpringBootMicrometerAutoconf,hasJerseyMicrometer,hasSpringBootStarterJersey,
+                micronautVersion, dropwizardVersion, springVersion
             )
         }
 
@@ -218,9 +232,21 @@ class ModulesDepsService(private val project: Project) : Disposable {
         }
 
         @JvmStatic
+        fun checkJerseyMicrometer(libCoord: UnifiedCoordinates): Boolean {
+            return libCoord.groupId == SpringBootMicrometerConfigureDepsService.JerseyMicrometerCoordinates.groupId &&
+                    libCoord.artifactId == SpringBootMicrometerConfigureDepsService.JerseyMicrometerCoordinates.artifactId
+        }
+
+        @JvmStatic
         fun checkSpringBootStarterAop(libCoord: UnifiedCoordinates): Boolean {
             return libCoord.groupId == "org.springframework.boot" &&
                     libCoord.artifactId == "spring-boot-starter-aop"
+        }
+
+        @JvmStatic
+        fun checkSpringBootStarterJersey(libCoord: UnifiedCoordinates): Boolean {
+            return libCoord.groupId == "org.springframework.boot" &&
+                    libCoord.artifactId == "spring-boot-starter-jersey"
         }
 
         @JvmStatic
@@ -249,45 +275,27 @@ class ModulesDepsService(private val project: Project) : Disposable {
 
     }
 
-    // delay for first check for update since startup
-    private val delayMilliseconds = TimeUnit.SECONDS.toMillis(5)
-
-    private val periodMilliseconds =
-        TimeUnit.MINUTES.toMillis(1) // production value is 1 minutes
-//        TimeUnit.SECONDS.toMillis(12) // use short period (few seconds) when debugging
-
-    private val timer = Timer()
-
     @NotNull
     private var mapName2Module: ConcurrentMap<String, ModuleExt> = ConcurrentHashMap()
 
     init {
-        //todo: change to coroutines
-        val fetchTask = object : TimerTask() {
-            override fun run() {
-                try {
-                    periodicAction()
-                } catch (e: Exception) {
-                    ErrorReporter.getInstance().reportError(project, "ModulesDepsService.periodicAction", e)
-                }
+
+        disposingPeriodicTask("", 5.seconds.inWholeMilliseconds, 1.minutes.inWholeMilliseconds, false) {
+            try {
+                periodicAction()
+            } catch (e: Exception) {
+                ErrorReporter.getInstance().reportError(project, "ModulesDepsService.periodicAction", e)
             }
         }
-
-        timer.schedule(
-            fetchTask, delayMilliseconds, periodMilliseconds
-        )
     }
 
     override fun dispose() {
-        timer.cancel()
     }
 
-    fun periodicAction() {
+    private fun periodicAction() {
         val newMap = createModuleMap()
         notifyOfNewDetections(newMap.values)
         mapName2Module = newMap
-
-//        println("mapName2Module = ${mapName2Module}")
     }
 
     private fun createModuleMap(): ConcurrentMap<String, ModuleExt> {
@@ -426,6 +434,8 @@ data class ModuleMetadata(
     val hasDatasourceMicrometerSpringBoot: Boolean,
     val hasOtelExporterOtlp: Boolean,
     val hasDigmaSpringBootMicrometerAutoconf: Boolean,
+    val hasJerseyMicrometer: Boolean,
+    val hasSpringBootStarterJersey: Boolean,
     // other
     val micronautVersion: String?,
     val dropwizardVersion: String?,

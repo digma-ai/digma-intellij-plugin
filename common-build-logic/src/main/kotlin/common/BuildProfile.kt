@@ -234,8 +234,8 @@ object BuildProfiles {
         Profile.p251 to BuildProfile(
             isEAP = true,
             profile = Profile.p243,
-            platformVersion = "251.20015-EAP-CANDIDATE-SNAPSHOT",
-            riderVersion = "2025.1-EAP3-SNAPSHOT",
+            platformVersion = "251.22821-EAP-CANDIDATE-SNAPSHOT",
+            riderVersion = "2025.1-EAP5-SNAPSHOT",
             pycharmVersion = "251-EAP-SNAPSHOT",
             riderTargetFramework = "net8.0",
             riderResharperVersionConstant = "PROFILE_2023_2;PROFILE_2024_3",

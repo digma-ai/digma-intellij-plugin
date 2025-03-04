@@ -113,7 +113,6 @@ class ApiProxyResourceHandler(val project: Project) : CefResourceHandler {
 
 
     override fun processRequest(request: CefRequest, callback: CefCallback): Boolean {
-        Thread.sleep(10000)
         Log.log(logger::trace, "processing request {}, [request id:{}]", request.url, request.identifier)
 
         try {

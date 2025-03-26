@@ -9,6 +9,7 @@ import org.cef.misc.StringRef
 import org.cef.network.CefRequest
 import org.cef.network.CefResponse
 import org.digma.intellij.plugin.analytics.AnalyticsService
+import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.lowlevel.HttpRequest
@@ -116,75 +117,94 @@ class ApiProxyResourceHandler(val project: Project) : CefResourceHandler {
 
         Log.log(logger::trace, "processing request {}, [request id:{}]", request.url, request.identifier)
 
-        try {
+        if ((request.postData?.elementCount ?: -1) > 1) {
+            Log.log(
+                logger::warn,
+                "encountered multi part post data. it is not supported by Digma api proxy, [request id:{}]",
+                request.identifier
+            )
 
-            val apiUrl = buildProxyUrl(buildApiBaseUrl(), request.url)
-
-            Log.log(logger::trace, "proxying to api url {}, [request id:{}]", apiUrl, request.identifier)
-
-            apiResponse = if ((request.postData?.elementCount ?: -1) > 1) {
-
-                //todo: we don't support multi part form data yet
-
-                Log.log(
-                    logger::warn,
-                    "encountered multi part post data. it is not supported by Digma api proxy, [request id:{}]",
-                    request.identifier
-                )
-
-                HttpResponse(
-                    500,
-                    mutableMapOf(),
-                    null,
-                    "text/plain",
-                    "encountered multi part post data. it is not supported by Digma api proxy.".byteInputStream()
-                )
-            } else if (hasFileElements(request.postData)) {
-
-                //todo: we don't support multi part form data yet or file elements in the post data
-
-                Log.log(
-                    logger::warn,
-                    "encountered file element in post data. it is not supported by Digma api proxy, [request id:{}]",
-                    request.identifier
-                )
-
-                HttpResponse(
-                    500,
-                    mutableMapOf(),
-                    null,
-                    "text/plain",
-                    "encountered file element in post data. it is not supported by Digma api proxy.".byteInputStream()
-                )
-            } else {
-                val body: HttpRequestBody? =
-                    request.postData?.let {
-                        HttpRequestBody(postDataToByteArray(request, it))
-                    }
-
-                Log.log(logger::trace, "body for request is {}, [request id:{}]", body, request.identifier)
-
-                val headers = mutableMapOf<String, String>()
-                request.getHeaderMap(headers)
-                val httpRequest = HttpRequest(request.method, apiUrl, headers.toMutableMap(), body)
-
-                Log.log(logger::trace, "sending request {}, [request id:{}]", httpRequest, request.identifier)
-                AnalyticsService.getInstance(project).proxyCall(httpRequest)
-            }
-
-            Log.log(logger::trace, "got api response {}, [request id:{}]", apiResponse, request.identifier)
-
-            if (apiResponse == null) {
-                Log.log(logger::warn, "apiResponse is null , canceling request {}, [request id:{}]", request.url, request.identifier)
-                callback.cancel()
-                return false
-            }
-
+            apiResponse = HttpResponse(
+                500,
+                mutableMapOf(),
+                null,
+                "text/plain",
+                "encountered multi part post data. it is not supported by Digma api proxy.".byteInputStream()
+            )
             callback.Continue()
             return true
-        } catch (e: Throwable) {
+        }
 
-            Log.warnWithException(logger, e, "processRequest {} failed, [request id:{}]", request.url, request.identifier)
+
+        if (hasFileElements(request.postData)) {
+
+            //todo: we don't support multi part form data yet or file elements in the post data
+
+            Log.log(
+                logger::warn,
+                "encountered file element in post data. it is not supported by Digma api proxy, [request id:{}]",
+                request.identifier
+            )
+
+            apiResponse = HttpResponse(
+                500,
+                mutableMapOf(),
+                null,
+                "text/plain",
+                "encountered file element in post data. it is not supported by Digma api proxy.".byteInputStream()
+            )
+            callback.Continue()
+            return true
+        }
+
+
+        //the request is valid only in the scope of this method , so take the data we need before starting a background thread
+        val postData = request.postData?.let {
+            postDataToByteArray(request, it)
+        }
+        val requestId = request.identifier
+        val requestUrl = request.url
+        val requestMethod = request.method
+        val headers = mutableMapOf<String, String>()
+        request.getHeaderMap(headers)
+
+        Backgroundable.executeOnPooledThread {
+            proxyRequest(requestId, requestUrl, requestMethod, postData, headers, callback)
+        }
+
+        return true
+    }
+
+
+    private fun proxyRequest(
+        requestId: Long,
+        requestUrl: String,
+        requestMethod: String,
+        postData: ByteArray?,
+        headers: Map<String, String>,
+        callback: CefCallback
+    ) {
+        try {
+
+            val apiUrl = buildProxyUrl(buildApiBaseUrl(), requestUrl)
+
+            Log.log(logger::trace, "proxying to api url {}, [request id:{}]", apiUrl, requestId)
+
+            val body: HttpRequestBody? =
+                postData?.let {
+                    HttpRequestBody(postData)
+                }
+
+            Log.log(logger::trace, "body for request is {}, [request id:{}]", body, requestId)
+
+            val httpRequest = HttpRequest(requestMethod, apiUrl, headers.toMutableMap(), body)
+
+            Log.log(logger::trace, "sending request {}, [request id:{}]", httpRequest, requestId)
+            apiResponse = AnalyticsService.getInstance(project).proxyCall(httpRequest)
+            Log.log(logger::trace, "got api response {}, [request id:{}]", apiResponse, requestId)
+
+        } catch (e: Throwable) {
+            Log.warnWithException(logger, e, "processRequest {} failed, [request id:{}]", requestUrl, requestId)
             ErrorReporter.getInstance().reportError("ApiProxyResourceHandler.processRequest", e)
 
             apiResponse = HttpResponse(
@@ -194,12 +214,10 @@ class ApiProxyResourceHandler(val project: Project) : CefResourceHandler {
                 "text/plain",
                 "encountered exception in proxy [$e]. please check the logs".byteInputStream()
             )
-
+        } finally {
             callback.Continue()
-            return true
         }
     }
-
 
 
     override fun getResponseHeaders(response: CefResponse, responseLength: IntRef, redirectUrl: StringRef) {

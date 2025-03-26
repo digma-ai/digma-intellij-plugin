@@ -66,7 +66,11 @@ public class JaegerProxyResourceHandler implements CefResourceHandler {
     }
 
 
-    @Override
+//    @Override
+//    public boolean processRequest(CefRequest cefRequest, CefCallback callback) {
+//
+//    }
+
     public boolean processRequest(CefRequest cefRequest, CefCallback callback) {
         try {
 
@@ -94,6 +98,10 @@ public class JaegerProxyResourceHandler implements CefResourceHandler {
             return false;
         }
     }
+
+
+
+
 
     @Nullable
     private static String getAuthFailureReason(Response response) {

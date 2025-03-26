@@ -7,13 +7,14 @@ import org.cef.handler.CefResourceHandler;
 import org.cef.misc.*;
 import org.cef.network.*;
 import org.digma.intellij.plugin.auth.account.CredentialsHolder;
+import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.settings.SettingsState;
 import org.jetbrains.annotations.*;
 
 import java.net.*;
-import java.util.HashMap;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.digma.intellij.plugin.ui.jcef.ProxyUtilsKt.postDataToByteArray;
@@ -66,21 +67,29 @@ public class JaegerProxyResourceHandler implements CefResourceHandler {
     }
 
 
-//    @Override
-//    public boolean processRequest(CefRequest cefRequest, CefCallback callback) {
-//
-//    }
-
+    @Override
     public boolean processRequest(CefRequest cefRequest, CefCallback callback) {
+
+        var url = cefRequest.getURL();
+        var requestId = cefRequest.getIdentifier();
+        var headers = getHeaders(cefRequest);
+        byte[] postData = cefRequest.getPostData() != null ? postDataToByteArray(cefRequest, cefRequest.getPostData()) : null;
+        var method = cefRequest.getMethod();
+
+        Backgroundable.executeOnPooledThread(() -> processRequest(url, requestId, headers, postData, method, callback));
+        return true;
+    }
+
+    public void processRequest(String requestUrl, Long requestId, Map<String, String> headers, byte[] postData, String method, CefCallback callback) {
         try {
 
-            Log.log(LOGGER::trace, "processing request {}, [request id:{}]", cefRequest.getURL(), cefRequest.getIdentifier());
+            Log.log(LOGGER::trace, "processing request {}, [request id:{}]", requestUrl, requestId);
 
-            var apiUrl = getApiUrl(cefRequest);
-            var headers = getHeaders(cefRequest);
-            var body = getBody(cefRequest, headers);
+            var apiUrl = getApiUrl(requestUrl);
+
+            var body = getBody(postData, headers);
             var okHttp3Request = new Request.Builder()
-                    .method(cefRequest.getMethod(), body)
+                    .method(method, body)
                     .headers(Headers.of(headers))
                     .url(apiUrl)
                     .build();
@@ -89,18 +98,30 @@ public class JaegerProxyResourceHandler implements CefResourceHandler {
             if (authFailureReason != null && !authFailureReason.isBlank()) {
                 okHttp3Response = buildAuthFailureResponse(okHttp3Request, okHttp3Response, authFailureReason);
             }
-            callback.Continue();
-            return true;
         } catch (Exception e) {
-            Log.warnWithException(LOGGER, e, "processRequest failed for request {}, [request id:{}]", cefRequest.getURL(),cefRequest.getIdentifier());
+            Log.warnWithException(LOGGER, e, "processRequest failed for request {}, [request id:{}]", requestUrl, requestId);
             ErrorReporter.getInstance().reportError("JaegerProxyResourceHandler.processRequest", e);
-            callback.cancel();
-            return false;
+
+            var okHttp3Request = new Request.Builder()
+                    .method(method, null)
+                    .headers(Headers.of(headers))
+                    .url(requestUrl)
+                    .build();
+
+            okHttp3Response = new Response.Builder().
+                    request(okHttp3Request).
+                    protocol(Protocol.HTTP_1_1).
+                    message("Internal proxy error " + e).
+                    body(ResponseBody.create(
+                            "Internal proxy error " + e,
+                            MediaType.get("text/plain"))).
+                    code(500).
+                    build();
+
+        } finally {
+            callback.Continue();
         }
     }
-
-
-
 
 
     @Nullable
@@ -128,8 +149,8 @@ public class JaegerProxyResourceHandler implements CefResourceHandler {
     }
 
     @NotNull
-    private URL getApiUrl(CefRequest cefRequest) throws MalformedURLException {
-        var requestUrl = new URL(cefRequest.getURL());
+    private URL getApiUrl(String orgRequestUrl) throws MalformedURLException {
+        var requestUrl = new URL(orgRequestUrl);
         var path = requestUrl.getPath() == null ? "" : requestUrl.getPath();
         if (isJaegerQueryCall(requestUrl)) {
             //remove the /jaeger prefix and keep /api
@@ -152,9 +173,9 @@ public class JaegerProxyResourceHandler implements CefResourceHandler {
     }
 
     @Nullable
-    private static RequestBody getBody(CefRequest cefRequest, HashMap<String, String> headers) {
-        return cefRequest.getPostData() != null
-                ? RequestBody.create(postDataToByteArray(cefRequest, cefRequest.getPostData()), MediaType.parse(headers.get("Content-Type")))
+    private static RequestBody getBody(byte[] postData, Map<String, String> headers) {
+        return postData != null
+                ? RequestBody.create(postData, MediaType.parse(headers.get("Content-Type")))
                 : null;
     }
 

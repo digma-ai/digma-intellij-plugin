@@ -1,6 +1,16 @@
 # Changelog
 
-## [2.0.409] - 2025-02-17
+## [2.0.410] - 2025-03-27
+
+- Micrometer deps Closes #2671 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2672
+- update eap profile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2673
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2677
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2678
+- update profiles and plugin version by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2682
+- update profiles by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2683
+- Fix freeze in api and jaeger proxy Closes #2684 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2685
+
+## 2.0.409 - 2025-02-17
 
 - update build profiles by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2667
 - Message for eap users Closes #2669 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2670

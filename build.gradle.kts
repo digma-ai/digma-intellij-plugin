@@ -58,6 +58,7 @@ dependencies {
 
     implementation(libs.commons.lang3)
     implementation(libs.freemarker)
+    implementation(libs.okhttp)
     implementation(project(":model"))
     implementation(project(":analytics-provider"))
 

@@ -1,6 +1,12 @@
 # Changelog
 
-## [2.0.410] - 2025-03-27
+## [2.0.411] - 2025-04-04
+
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2686
+- update eap profile and gradle plugin by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2688
+- backend info features by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2691
+
+## 2.0.410 - 2025-03-27
 
 - Micrometer deps Closes #2671 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2672
 - update eap profile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2673

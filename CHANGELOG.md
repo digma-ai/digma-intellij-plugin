@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.411] - 2025-04-04
+## [2.0.412] - 2025-04-07
+
+- update-digma-agent by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2692
+
+## 2.0.411 - 2025-04-04
 
 - Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/2686
 - update eap profile and gradle plugin by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2688

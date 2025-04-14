@@ -26,7 +26,7 @@ namespace Digma.Rider.Util
             // namespace assume 'global'
             var namespaceDeclaration =
                 functionDeclaration.GetParentOfType<ICSharpNamespaceDeclaration>();
-            return namespaceDeclaration == null ? "global" : namespaceDeclaration.QualifiedName;
+            return namespaceDeclaration == null ? "" : namespaceDeclaration.QualifiedName;
         }
 
         public static string GetClassName(ICSharpFunctionDeclaration functionDeclaration)

@@ -232,11 +232,10 @@ object BuildProfiles {
         ),
 
         Profile.p251 to BuildProfile(
-            isEAP = true,
-            profile = Profile.p243,
-            platformVersion = "251.23774.318-EAP-SNAPSHOT",
-            riderVersion = "2025.1-RC1-SNAPSHOT",
-            pycharmVersion = "251-EAP-SNAPSHOT",
+            profile = Profile.p251,
+            platformVersion = "2025.1",
+            riderVersion = "2025.1",
+            pycharmVersion = "2025.1",
             riderTargetFramework = "net8.0",
             riderResharperVersionConstant = "PROFILE_2023_2;PROFILE_2024_3",
             platformVersionCode = "251",
@@ -246,6 +245,23 @@ object BuildProfiles {
             kotlinJvmTarget = JvmTarget.JVM_21,
             javaVersion = JavaVersion.VERSION_21.majorVersion,
         )
+
+        //todo: 252 EAP
+//        Profile.p252 to BuildProfile(
+//            isEAP = true,
+//            profile = Profile.p252,
+//            platformVersion = "251.23774.318-EAP-SNAPSHOT",
+//            riderVersion = "2025.1-RC1-SNAPSHOT",
+//            pycharmVersion = "251-EAP-SNAPSHOT",
+//            riderTargetFramework = "net8.0",
+//            riderResharperVersionConstant = "PROFILE_2023_2;PROFILE_2024_3",
+//            platformVersionCode = "251",
+//            pluginSinceBuild = "252",
+//            pluginUntilBuild = "252.*",
+//            kotlinTarget = KotlinVersion.KOTLIN_2_0,
+//            kotlinJvmTarget = JvmTarget.JVM_21,
+//            javaVersion = JavaVersion.VERSION_21.majorVersion,
+//        )
 
     )
 

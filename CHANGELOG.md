@@ -1,6 +1,13 @@
 # Changelog
 
-## [2.0.412] - 2025-04-07
+## [2.0.413] - 2025-04-21
+
+- update eap profile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2695
+- remove-jcef-workaround-for-eap-251 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2694
+- remove global fallback in rider namespace by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2693
+- update build profiles by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2696
+
+## 2.0.412 - 2025-04-07
 
 - update-digma-agent by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2692
 

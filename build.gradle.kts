@@ -216,7 +216,7 @@ intellijPlatform {
                 }
                 select {
                     types =
-                        listOf(IntelliJPlatformType.IntellijIdeaCommunity, IntelliJPlatformType.IntellijIdeaUltimate)
+                        listOf(IntelliJPlatformType.IntellijIdeaCommunity)
                     channels = listOf(channel)
                     sinceBuild = project.currentProfile().pluginSinceBuild
                     untilBuild = project.currentProfile().pluginUntilBuild

@@ -74,6 +74,8 @@ abstract class BaseSchemeHandlerFactory : CefSchemeHandlerFactory {
             JaegerProxyResourceHandler(jaegerQueryUrl)
         }else if (ApiProxyResourceHandler.isApiProxyCall(url)) {
             ApiProxyResourceHandler(project)
+        }else if (PluginApiResourceHandler.isPluginApiCall(url)) {
+            PluginApiResourceHandler(project)
         }else{
             null
         }

@@ -5,14 +5,12 @@ import com.intellij.execution.RunManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
-import org.digma.intellij.plugin.analytics.getAllEnvironments
 import org.digma.intellij.plugin.digmathon.DigmathonService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.UserActionOrigin
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
 import org.digma.intellij.plugin.ui.jcef.SetRunConfigurationMessageBuilder
-import org.digma.intellij.plugin.ui.jcef.getMapFromNode
 import org.digma.intellij.plugin.ui.jcef.jsonToObject
 import org.digma.intellij.plugin.ui.recentactivity.model.CloseLiveViewMessage
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityGoToTraceRequest
@@ -34,8 +32,6 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
             "RECENT_ACTIVITY/INITIALIZE" -> {
                 try {
                     doCommonInitialize(browser)
-                    val environments = getAllEnvironments(project)
-                    project.service<RecentActivityUpdater>().updateLatestActivities(environments)
                 } finally {
                     //if there is an exception it will be handled by BaseMessageRouterHandler.
                     // but at least set these two variables.
@@ -84,19 +80,6 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
                 setRunConfigurationMessageBuilder.sendRunConfigurationAttributes()
             }
 
-            "RECENT_ACTIVITY/CREATE_ENVIRONMENT" -> {
-                val request: MutableMap<String, Any> = getMapFromNode(requestJsonNode.get("payload"), objectMapper)
-                project.service<RecentActivityService>().createEnvironment(request)
-                project.service<RecentActivityUpdater>().updateLatestActivities()
-            }
-
-            "RECENT_ACTIVITY/DELETE_ENVIRONMENT" -> {
-                val environmentId = getEnvironmentIdFromPayload(requestJsonNode)
-                environmentId?.let {
-                    project.service<RecentActivityService>().deleteEnvironmentV2(environmentId)
-                    project.service<RecentActivityUpdater>().updateLatestActivities()
-                }
-            }
 
             "RECENT_ACTIVITY/GET_DIGMATHON_PROGRESS_DATA" -> {
                 RecentActivityService.getInstance(project)

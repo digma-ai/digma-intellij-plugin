@@ -35,6 +35,9 @@ fun executeWindowPostMessageJavaScript(browser: CefBrowser, message: String, pro
     )
 }
 
+fun <T> jsonToObject(jsonBytes: ByteArray, type: Class<T>): T {
+    return CommonObjectMapper.objectMapper.readValue(jsonBytes, type)
+}
 
 fun <T> jsonToObject(jsonStr: String, type: Class<T>): T {
     return CommonObjectMapper.objectMapper.readValue(jsonStr, type)

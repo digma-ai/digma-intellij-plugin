@@ -9,6 +9,7 @@ import org.cef.handler.CefResourceHandler
 import org.cef.network.CefRequest
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.ui.jcef.pluginapi.PluginApiResourceHandler
 import java.net.MalformedURLException
 import java.net.URI
 import java.net.URL

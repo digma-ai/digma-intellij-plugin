@@ -1,5 +1,7 @@
 package org.digma.intellij.plugin.ui.jcef.pluginapi
 
+import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.intellij.execution.runners.ExecutionUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
@@ -8,6 +10,7 @@ import org.digma.intellij.plugin.PluginId
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.icons.AppIcons
 import org.digma.intellij.plugin.ui.jcef.jsonToObject
+import java.beans.ConstructorProperties
 import javax.swing.Icon
 
 class RecentActivityBadgeCommand : Command() {
@@ -54,7 +57,14 @@ class RecentActivityBadgeCommand : Command() {
     }
 }
 
-data class BadgeRequest(val status: Boolean)
+data class BadgeRequest
+@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+@ConstructorProperties("status")
+constructor(
+    @get:JsonProperty("status")
+    @param:JsonProperty("status")
+    val status: Boolean
+)
 
 
 private class RecentActivityToolWindowIconChanger(val project: Project) {

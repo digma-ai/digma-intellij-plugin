@@ -34,6 +34,7 @@ class PluginApiResourceHandler(val project: Project) : CefResourceHandler {
     override fun processRequest(request: CefRequest, callback: CefCallback): Boolean {
         Log.log(logger::trace, "processing request {}, [request id:{}]", request.url, request.identifier)
 
+        //todo: we don't support multi part form data yet or file elements in the post data
         if ((request.postData?.elementCount ?: -1) > 1) {
             Log.log(
                 logger::warn,
@@ -49,9 +50,6 @@ class PluginApiResourceHandler(val project: Project) : CefResourceHandler {
 
 
         if (hasFileElements(request.postData)) {
-
-            //todo: we don't support multi part form data yet or file elements in the post data
-
             Log.log(
                 logger::warn,
                 "encountered file element in post data. it is not supported by Digma plugin api handler, [request id:{}]",
@@ -95,15 +93,21 @@ class PluginApiResourceHandler(val project: Project) : CefResourceHandler {
 
             val apiUrl = URI(requestUrl).toURL()
 
-            apiResponse = getCommand(apiUrl)?.let { command ->
-                Log.log(logger::trace, "executing command {}, [request id:{}]", command, requestId)
-                command.execute(project, requestId, requestMethod, postData, headers)
+            val command = getCommand(apiUrl)
+            if (command == null) {
+                Log.log(logger::trace, "command not found for url {}, [request id:{}]", requestUrl, requestId)
+                val error = ErrorData("command not found for url [$requestUrl]")
+                apiResponse = PluginApiHttpResponse.createErrorResponse(404, error)
+                return
             }
+
+            Log.log(logger::trace, "executing command {}, [request id:{}]", command.javaClass.name, requestId)
+            apiResponse = command.execute(project, requestId, requestMethod, postData, headers)
             Log.log(logger::trace, "got api response {}, [request id:{}]", apiResponse, requestId)
 
         } catch (e: Throwable) {
             Log.warnWithException(logger, e, "processRequest {} failed, [request id:{}]", requestUrl, requestId)
-            ErrorReporter.Companion.getInstance().reportError("ApiProxyResourceHandler.processRequest", e)
+            ErrorReporter.Companion.getInstance().reportError("PluginApiResourceHandler.processRequest", e)
 
             val error = ErrorData("encountered exception in plugin api handler [$e]. please check the logs.")
             apiResponse = PluginApiHttpResponse.createErrorResponse(500, error)

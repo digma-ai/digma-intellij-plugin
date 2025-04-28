@@ -34,7 +34,7 @@ abstract class Command {
             val query = apiUrl.query ?: return null // get query string or return null if none
 
             val commandName = query.split("&")
-                .mapNotNull { it.split("=", limit = 2).takeIf { it.size == 2 } }
+                .mapNotNull { it -> it.split("=", limit = 2).takeIf { it.size == 2 } }
                 .firstOrNull { it[0] == CommandQueryName }
                 ?.let { URLDecoder.decode(it[1], StandardCharsets.UTF_8) }
 

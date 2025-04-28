@@ -3,7 +3,6 @@ package org.digma.intellij.plugin.ui.jcef.pluginapi
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.intellij.openapi.project.Project
-import org.digma.intellij.plugin.common.objectToJson
 import org.digma.intellij.plugin.ui.jcef.jsonToObject
 import org.digma.intellij.plugin.ui.recentactivity.RecentActivityToolWindowIconChanger
 import java.beans.ConstructorProperties
@@ -24,17 +23,7 @@ class RecentActivityBadgeCommand : Command() {
             if (badgeRequest == null) {
                 // Return 400 Bad Request, with a small error body
                 val error = ErrorData("Invalid or missing badge request")
-                val errorJson = objectToJson(error).toByteArray()
-                return PluginApiHttpResponse(
-                    status = 400,
-                    headers = mutableMapOf(
-                        "Content-Type" to "application/json",
-                        "Content-Length" to errorJson.size.toString()
-                    ),
-                    contentLength = errorJson.size.toLong(),
-                    contentType = "application/json",
-                    contentStream = errorJson.inputStream()
-                )
+                return PluginApiHttpResponse.createErrorResponse(400, error)
             }
 
             val recentActivityToolWindowIconChanger = RecentActivityToolWindowIconChanger.getInstance(project)
@@ -52,21 +41,9 @@ class RecentActivityBadgeCommand : Command() {
                 contentStream = null
             )
         } catch (e: Throwable) {
-            val errorMessage = e.message ?: e.toString()
-            val error = ErrorData(errorMessage)
-            val errorJson = objectToJson(error).toByteArray()
-            return PluginApiHttpResponse(
-                status = 500,
-                headers = mutableMapOf(
-                    "Content-Type" to "application/json",
-                    "Content-Length" to errorJson.size.toString()
-                ),
-                contentLength = errorJson.size.toLong(),
-                contentType = "application/json",
-                contentStream = errorJson.inputStream()
-            )
+            val error = ErrorData(e.message ?: e.toString())
+            return PluginApiHttpResponse.createErrorResponse(500, error)
         }
-
     }
 }
 

@@ -41,13 +41,8 @@ class PluginApiResourceHandler(val project: Project) : CefResourceHandler {
                 request.identifier
             )
 
-            apiResponse = PluginApiHttpResponse(
-                500,
-                mutableMapOf(),
-                null,
-                "text/plain",
-                "encountered multi part post data. it is not supported by Digma plugin api handler.".byteInputStream()
-            )
+            val error = ErrorData("encountered multi part post data. it is not supported by Digma plugin api handler.")
+            apiResponse = PluginApiHttpResponse.createErrorResponse(500, error)
             callback.Continue()
             return true
         }
@@ -63,13 +58,8 @@ class PluginApiResourceHandler(val project: Project) : CefResourceHandler {
                 request.identifier
             )
 
-            apiResponse = PluginApiHttpResponse(
-                500,
-                mutableMapOf(),
-                null,
-                "text/plain",
-                "encountered file element in post data. it is not supported by Digma plugin api handler.".byteInputStream()
-            )
+            val error = ErrorData("encountered file element in post data. it is not supported by Digma plugin api handler.")
+            apiResponse = PluginApiHttpResponse.createErrorResponse(500, error)
             callback.Continue()
             return true
         }
@@ -115,13 +105,8 @@ class PluginApiResourceHandler(val project: Project) : CefResourceHandler {
             Log.warnWithException(logger, e, "processRequest {} failed, [request id:{}]", requestUrl, requestId)
             ErrorReporter.Companion.getInstance().reportError("ApiProxyResourceHandler.processRequest", e)
 
-            apiResponse = PluginApiHttpResponse(
-                500,
-                mutableMapOf(),
-                null,
-                "text/plain",
-                "encountered exception in proxy [$e]. please check the logs".byteInputStream()
-            )
+            val error = ErrorData("encountered exception in plugin api handler [$e]. please check the logs.")
+            apiResponse = PluginApiHttpResponse.createErrorResponse(500, error)
         } finally {
             callback.Continue()
         }

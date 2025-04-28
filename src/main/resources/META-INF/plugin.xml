@@ -116,7 +116,6 @@
 
         <postStartupActivity implementation="org.digma.intellij.plugin.posthog.ActivityMonitorStarter"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.posthog.FirstInitStartupActivity"/>
-        <postStartupActivity implementation="org.digma.intellij.plugin.ui.recentactivity.RecentActivitiesStartup"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.posthog.ContainerEngineStartupActivity"/>
         <postStartupActivity
                 implementation="org.digma.intellij.plugin.ui.notificationcenter.NotificationsStartupActivity"/>

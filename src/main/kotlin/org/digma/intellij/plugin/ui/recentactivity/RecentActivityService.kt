@@ -9,14 +9,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import org.digma.intellij.plugin.activation.UserActivationService
-import org.digma.intellij.plugin.analytics.AnalyticsService
-import org.digma.intellij.plugin.analytics.AnalyticsServiceException
-import org.digma.intellij.plugin.analytics.refreshEnvironmentsNowOnBackground
 import org.digma.intellij.plugin.common.EDT
-import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.recentactivity.RecentActivityToolWindowShower
 import org.digma.intellij.plugin.ui.common.openJaegerFromRecentActivity
@@ -31,7 +25,6 @@ import org.digma.intellij.plugin.ui.recentactivity.model.CloseLiveViewMessage
 import org.digma.intellij.plugin.ui.recentactivity.model.OpenRegistrationDialogMessage
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityEntrySpanForTracePayload
 import org.digma.intellij.plugin.ui.recentactivity.model.SetAddToConfigResult
-import org.digma.intellij.plugin.ui.recentactivity.model.SetEnvironmentCreatedMessage
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.atomic.AtomicBoolean
@@ -65,33 +58,6 @@ class RecentActivityService(val project: Project, private val cs: CoroutineScope
     }
 
 
-    fun getRecentActivities(environmentsIds: List<String>): RecentActivityResult? {
-
-        return try {
-
-            Log.log(logger::trace, project, "getRecentActivities called with envs: {}", environmentsIds)
-
-            val recentActivityData = AnalyticsService.getInstance(project).getRecentActivity(environmentsIds)
-
-            if (recentActivityData.entries.isNotEmpty()) {
-                if (UserActivationService.getInstance().isFirstRecentActivityReceived()) {
-                    UserActivationService.getInstance().recentActivityReceivedInProject(project)
-                } else {
-                    UserActivationService.getInstance().setFirstRecentActivityReceived(project)
-                }
-            }
-
-            Log.log(logger::trace, project, "got recent activity {}", recentActivityData)
-
-            recentActivityData
-
-        } catch (e: AnalyticsServiceException) {
-            Log.debugWithException(logger, project, e, "AnalyticsServiceException for getRecentActivity: {}", e.nonNullMessage)
-            ErrorReporter.getInstance().reportError(project, "RecentActivityService.getRecentActivities", e)
-            null
-        }
-    }
-
 
     fun processRecentActivityGoToTraceRequest(payload: RecentActivityEntrySpanForTracePayload?) {
 
@@ -107,7 +73,7 @@ class RecentActivityService(val project: Project, private val cs: CoroutineScope
 
     fun startLiveView(codeObjectId: String) {
         EDT.ensureEDT {
-            project.service<RecentActivityToolWindowShower>().showToolWindow()
+            RecentActivityToolWindowShower.getInstance(project).showToolWindow()
         }
         project.service<LiveViewUpdater>().sendLiveData(codeObjectId)
     }
@@ -122,38 +88,6 @@ class RecentActivityService(val project: Project, private val cs: CoroutineScope
         }
     }
 
-    fun createEnvironment(request: MutableMap<String, Any>) {
-        val response = try {
-            val result = AnalyticsService.getInstance(project).createEnvironment(request)
-            result
-        } catch (e: AnalyticsServiceException) {
-            Log.warnWithException(logger, project, e, "Error creation {}", e.message)
-            ErrorReporter.getInstance().reportError(project, "RecentActivityService.createEnvironment", e)
-            "{\n" +
-            "    \"errors\": [" +
-                    "{\n" +
-            "        \"errorCode\": \"Communication Error\",\n" +
-            "        \"errorDescription\": \"Failed to create environment. Try again.\" \n" +
-            "        }" +
-                "]" +
-            "}"
-        }
-        refreshEnvironmentsNowOnBackground(project)
-        val msg = SetEnvironmentCreatedMessage(response)
-        jCefComponent?.let {
-            serializeAndExecuteWindowPostMessageJavaScript(it.jbCefBrowser.cefBrowser, msg)
-        }
-    }
-
-    fun deleteEnvironmentV2(id: String) {
-        try {
-            AnalyticsService.getInstance(project).deleteEnvironmentV2(id)
-            refreshEnvironmentsNowOnBackground(project)
-        } catch (e: AnalyticsServiceException) {
-            Log.warnWithException(logger, project, e, "Error delete {}", e.message)
-            ErrorReporter.getInstance().reportError(project, "RecentActivityService.deleteEnvironmentV2", e)
-        }
-    }
 
     fun addVarRunToConfig(environment: String) {
         val result = service<AddEnvironmentsService>().addToCurrentRunConfig(project, environment)
@@ -164,8 +98,6 @@ class RecentActivityService(val project: Project, private val cs: CoroutineScope
         jCefComponent?.let {
             serializeAndExecuteWindowPostMessageJavaScript(it.jbCefBrowser.cefBrowser, msg)
         }
-
-        project.service<RecentActivityUpdater>().updateLatestActivities()
     }
 
 
@@ -176,7 +108,7 @@ class RecentActivityService(val project: Project, private val cs: CoroutineScope
 
     fun openRegistrationDialog() {
 
-        project.service<RecentActivityToolWindowShower>().showToolWindow()
+        RecentActivityToolWindowShower.getInstance(project).showToolWindow()
 
         //maybe the recent activity is not open yet. it will be opened as a result of calling
         // showToolWindow, but takes some time before the app is ready to accept messages.

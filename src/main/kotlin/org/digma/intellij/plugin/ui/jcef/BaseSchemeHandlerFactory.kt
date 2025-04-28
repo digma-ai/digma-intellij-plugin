@@ -9,6 +9,7 @@ import org.cef.handler.CefResourceHandler
 import org.cef.network.CefRequest
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.ui.jcef.pluginapi.PluginApiResourceHandler
 import java.net.MalformedURLException
 import java.net.URI
 import java.net.URL
@@ -74,6 +75,8 @@ abstract class BaseSchemeHandlerFactory : CefSchemeHandlerFactory {
             JaegerProxyResourceHandler(jaegerQueryUrl)
         }else if (ApiProxyResourceHandler.isApiProxyCall(url)) {
             ApiProxyResourceHandler(project)
+        }else if (PluginApiResourceHandler.isPluginApiCall(url)) {
+            PluginApiResourceHandler(project)
         }else{
             null
         }

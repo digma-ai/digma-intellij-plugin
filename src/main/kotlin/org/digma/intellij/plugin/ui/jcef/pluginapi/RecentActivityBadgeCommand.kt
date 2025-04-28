@@ -8,6 +8,7 @@ import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowManager
 import org.digma.intellij.plugin.PluginId
 import org.digma.intellij.plugin.common.EDT
+import org.digma.intellij.plugin.common.objectToJson
 import org.digma.intellij.plugin.icons.AppIcons
 import org.digma.intellij.plugin.ui.jcef.jsonToObject
 import java.beans.ConstructorProperties
@@ -23,13 +24,45 @@ class RecentActivityBadgeCommand : Command() {
         headers: Map<String, String>
     ): PluginApiHttpResponse {
 
-        val badgeRequest = postData?.let { jsonToObject(it, BadgeRequest::class.java) }
+        try {
+            val badgeRequest = postData?.let { jsonToObject(it, BadgeRequest::class.java) }
 
-        if (badgeRequest == null) {
-            // Return 400 Bad Request, with a small error body
-            val errorJson = """{"error":"Invalid or missing badge request"}""".toByteArray()
+            if (badgeRequest == null) {
+                // Return 400 Bad Request, with a small error body
+                val error = ErrorData("Invalid or missing badge request")
+                val errorJson = objectToJson(error).toByteArray()
+                return PluginApiHttpResponse(
+                    status = 400,
+                    headers = mutableMapOf(
+                        "Content-Type" to "application/json",
+                        "Content-Length" to errorJson.size.toString()
+                    ),
+                    contentLength = errorJson.size.toLong(),
+                    contentType = "application/json",
+                    contentStream = errorJson.inputStream()
+                )
+            }
+
+            val recentActivityToolWindowIconChanger = RecentActivityToolWindowIconChanger(project)
+            if (badgeRequest.status) {
+                recentActivityToolWindowIconChanger.showBadge()
+            } else {
+                recentActivityToolWindowIconChanger.hideBadge()
+            }
+
             return PluginApiHttpResponse(
-                status = 400,
+                status = 200,
+                headers = headers.toMutableMap(),
+                contentLength = 0,
+                contentType = null,
+                contentStream = null
+            )
+        } catch (e: Throwable) {
+            val errorMessage = e.message ?: e.toString()
+            val error = ErrorData(errorMessage)
+            val errorJson = objectToJson(error).toByteArray()
+            return PluginApiHttpResponse(
+                status = 500,
                 headers = mutableMapOf(
                     "Content-Type" to "application/json",
                     "Content-Length" to errorJson.size.toString()
@@ -40,20 +73,6 @@ class RecentActivityBadgeCommand : Command() {
             )
         }
 
-        val recentActivityToolWindowIconChanger = RecentActivityToolWindowIconChanger(project)
-        if (badgeRequest.status) {
-            recentActivityToolWindowIconChanger.showBadge()
-        } else {
-            recentActivityToolWindowIconChanger.hideBadge()
-        }
-
-        return PluginApiHttpResponse(
-            status = 200,
-            headers = headers.toMutableMap(),
-            contentLength = 0,
-            contentType = null,
-            contentStream = null
-        )
     }
 }
 

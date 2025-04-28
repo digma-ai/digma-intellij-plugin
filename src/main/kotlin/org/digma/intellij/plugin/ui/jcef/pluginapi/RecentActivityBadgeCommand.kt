@@ -23,7 +23,7 @@ class RecentActivityBadgeCommand : Command() {
         val badgeRequest = postData?.let { jsonToObject(it, BadgeRequest::class.java) }
 
         if (badgeRequest == null) {
-            // Return 400 Bad Request, with a small error body if you want
+            // Return 400 Bad Request, with a small error body
             val errorJson = """{"error":"Invalid or missing badge request"}""".toByteArray()
             return PluginApiHttpResponse(
                 status = 400,

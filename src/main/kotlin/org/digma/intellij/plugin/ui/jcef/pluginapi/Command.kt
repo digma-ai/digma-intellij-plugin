@@ -4,15 +4,18 @@ import com.intellij.openapi.project.Project
 import java.net.URL
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
-import kotlin.reflect.full.createInstance
 
 const val CommandQueryName = "pluginCommand"
 
 abstract class Command {
 
-    enum class Commands(val commandName: String, val className: String) {
-        RECENT_ACTIVITY_BADGE("RecentActivityBadge","org.digma.intellij.plugin.ui.jcef.pluginapi.RecentActivityBadgeCommand");
+    enum class Commands(val commandName: String) {
+        RECENT_ACTIVITY_BADGE("RecentActivityBadge");
 
+
+        fun createInstance():Command{
+            return RecentActivityBadgeCommand()
+        }
 
         companion object {
             private val NAME_MAP = values().associateBy { it.commandName.lowercase() }
@@ -40,11 +43,7 @@ abstract class Command {
             }
 
             val commandEnum = Commands.fromCommandName(commandName) ?: return null
-            val commandClassName = commandEnum.className
-            val commandClass = Class.forName(commandClassName)
-            val instance = commandClass.kotlin.createInstance()
-
-            return instance as? Command
+            return commandEnum.createInstance()
         }
     }
 

@@ -104,8 +104,8 @@ private class RecentActivityToolWindowIconChanger(val project: Project) {
         val toolWindow = ToolWindowManager.getInstance(project).getToolWindow(PluginId.OBSERVABILITY_WINDOW_ID)
 
         if (actualIcon == null) {
-            //capture the actual icon first time we got a non-null tool window.
-            // and make sure it is initialized at least to default icon
+            //capture the actual icon the first time we got a non-null tool window.
+            // and make sure it is initialized at least to the default icon
             actualIcon = toolWindow?.icon ?: defaultIcon
         }
 

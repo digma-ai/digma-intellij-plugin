@@ -53,6 +53,7 @@ fun postDataToByteArray(request: CefRequest, postData: CefPostData): ByteArray? 
 
         //if postData has no elements or all elements are empty, we return null
         if (allBytes.isEmpty()) {
+            Log.log(logger::trace, "post data is empty for {}, returning null. [request id:{}]", request.url, request.identifier)
             null
         }
         allBytes

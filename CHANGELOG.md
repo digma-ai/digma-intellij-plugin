@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.413] - 2025-04-21
+## [2.0.414] - 2025-04-29
+
+- Recent activity remove messages Closes #2700 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2703
+
+## 2.0.413 - 2025-04-21
 
 - update eap profile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2695
 - remove-jcef-workaround-for-eap-251 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2694

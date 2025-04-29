@@ -65,7 +65,14 @@ class PluginApiResourceHandler(val project: Project) : CefResourceHandler {
 
         //the request is valid only in the scope of this method, so take the data we need before starting a background thread
         val postData = request.postData?.let {
-            postDataToByteArray(request, it)
+            val bytes = postDataToByteArray(request, it)
+            //check if the post data is empty, if so we don't need to send it to the server
+            if (bytes.isEmpty()) {
+                Log.log(logger::trace,"encountered empty post data, returning null, [request id:{}]",request.identifier)
+                null
+            } else {
+                bytes
+            }
         }
         val requestId = request.identifier
         val requestUrl = request.url

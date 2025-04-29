@@ -74,9 +74,13 @@ public class JaegerProxyResourceHandler implements CefResourceHandler {
         var requestId = cefRequest.getIdentifier();
         var headers = getHeaders(cefRequest);
         byte[] postData = cefRequest.getPostData() != null ? postDataToByteArray(cefRequest, cefRequest.getPostData()) : null;
+        if(postData != null && postData.length == 0){
+            postData = null;
+        }
         var method = cefRequest.getMethod();
 
-        Backgroundable.executeOnPooledThread(() -> processRequest(url, requestId, headers, postData, method, callback));
+        var finalPostData = postData; //lambda needs a final variable
+        Backgroundable.executeOnPooledThread(() -> processRequest(url, requestId, headers, finalPostData, method, callback));
         return true;
     }
 

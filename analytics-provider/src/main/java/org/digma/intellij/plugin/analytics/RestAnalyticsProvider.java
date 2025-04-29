@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.io.CharStreams;
 import okhttp3.*;
+import okhttp3.internal.http.HttpMethod;
 import okhttp3.logging.HttpLoggingInterceptor;
 import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.model.rest.AboutResult;
@@ -527,8 +528,14 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable, Base
         }
 
         var okHttp3RequestBuilder = new Request.Builder()
-                .method(request.getMethod(), okHttp3Body)
                 .url(request.getUrl());
+        if (HttpMethod.permitsRequestBody(request.getMethod().toUpperCase())) {
+            okHttp3RequestBuilder = okHttp3RequestBuilder.method(request.getMethod(), okHttp3Body);
+        }else if(request.getMethod().equalsIgnoreCase("GET")){
+            okHttp3RequestBuilder = okHttp3RequestBuilder.get();
+        } else if (request.getMethod().equalsIgnoreCase("head")) {
+            okHttp3RequestBuilder = okHttp3RequestBuilder.head();
+        }
         request.getHeaders().forEach(okHttp3RequestBuilder::header);
         return okHttp3RequestBuilder.build();
     }

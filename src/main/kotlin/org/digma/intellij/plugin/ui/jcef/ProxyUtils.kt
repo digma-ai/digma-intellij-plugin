@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.ui.jcef
 
 import com.intellij.openapi.diagnostic.Logger
+import okhttp3.internal.http.HttpMethod
 import org.cef.network.CefPostData
 import org.cef.network.CefPostDataElement
 import org.cef.network.CefRequest
@@ -14,6 +15,12 @@ private val logger = Logger.getInstance("org.digma.intellij.plugin.ui.jcef.Proxy
 //this method will create a byte array containing all byte arrays from all elements.
 // when calling this method we make sure there are no file elements and that the number of elements not more than 1
 fun postDataToByteArray(request: CefRequest, postData: CefPostData): ByteArray? {
+
+    //return null for get and head requests
+    if (!HttpMethod.permitsRequestBody(request.method.uppercase())) {
+        Log.log(logger::trace, "method {} does not support post data, returning null. [request id:{}]", request.method, request.identifier)
+        return null
+    }
 
     Log.log(logger::trace, "collecting post data for {}, [request id:{}]", request.url, request.identifier)
 
@@ -50,15 +57,7 @@ fun postDataToByteArray(request: CefRequest, postData: CefPostData): ByteArray? 
                 request.identifier
             )
         }
-
-        //if postData has no elements or all elements are empty, we return null
-        if (allBytes.isEmpty()) {
-            Log.log(logger::trace, "post data is empty for {}, returning null. [request id:{}]", request.url, request.identifier)
-            null
-        }else{
-            allBytes
-        }
-
+        allBytes
 
     } catch (e: Throwable) {
         Log.warnWithException(logger, e, "postDataToByteArray for {} failed, [request id:{}]", request.url, request.identifier)

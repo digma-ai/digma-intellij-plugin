@@ -15,7 +15,6 @@ import javax.swing.JPanel
 
 
 fun is2025EAPWithJCEFRemoteEnabled(): Boolean {
-
     return if (ApplicationInfo.getInstance().build.baselineVersion == 251){
         //just touch it so it will initialize static variables
         val isJcefSupported = JBCefApp.isSupported()
@@ -61,8 +60,8 @@ fun create2025EAPMessagePanel(project:Project): JPanel {
 
 fun getMessageHtml(): String {
 
-    val title = "Digma 2025.1 EAP workaround"
-    val paragraph = "The latest Jetbrains 2025.1 EAP has an issue with JCEF that prevents Digma from working," +
+    val title = "Digma 2025.* workaround"
+    val paragraph = "The latest Jetbrains 2025.* has an issue with JCEF that prevents Digma from working," +
             "Please add the following system properties to fix, and restart your IDE:"
     val paragraph2 = "Open the Idea help menu, search for 'Edit Custom Properties', add 'jcef.remote.enabled=false' and restart your IDE"
 

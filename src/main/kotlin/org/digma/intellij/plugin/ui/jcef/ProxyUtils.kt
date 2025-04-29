@@ -44,7 +44,7 @@ fun postDataToByteArray(request: CefRequest, postData: CefPostData): ByteArray {
         if (logger.isTraceEnabled) {
             Log.log(
                 logger::trace,
-                "built post data {}, for {}, [request id:{}]",
+                "built post data [{}], for {}, [request id:{}]",
                 String(allBytes, Charsets.UTF_8),
                 request.url,
                 request.identifier

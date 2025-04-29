@@ -55,8 +55,10 @@ fun postDataToByteArray(request: CefRequest, postData: CefPostData): ByteArray? 
         if (allBytes.isEmpty()) {
             Log.log(logger::trace, "post data is empty for {}, returning null. [request id:{}]", request.url, request.identifier)
             null
+        }else{
+            allBytes
         }
-        allBytes
+
 
     } catch (e: Throwable) {
         Log.warnWithException(logger, e, "postDataToByteArray for {} failed, [request id:{}]", request.url, request.identifier)

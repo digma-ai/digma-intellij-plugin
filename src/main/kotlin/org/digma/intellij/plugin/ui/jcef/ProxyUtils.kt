@@ -13,7 +13,7 @@ private val logger = Logger.getInstance("org.digma.intellij.plugin.ui.jcef.Proxy
 
 //this method will create a byte array containing all byte arrays from all elements.
 // when calling this method we make sure there are no file elements and that the number of elements not more than 1
-fun postDataToByteArray(request: CefRequest, postData: CefPostData): ByteArray {
+fun postDataToByteArray(request: CefRequest, postData: CefPostData): ByteArray? {
 
     Log.log(logger::trace, "collecting post data for {}, [request id:{}]", request.url, request.identifier)
 
@@ -44,11 +44,16 @@ fun postDataToByteArray(request: CefRequest, postData: CefPostData): ByteArray {
         if (logger.isTraceEnabled) {
             Log.log(
                 logger::trace,
-                "built post data [{}], for {}, [request id:{}]",
+                "the bytes built from post data is [{}], for url {}, [request id:{}]",
                 String(allBytes, Charsets.UTF_8),
                 request.url,
                 request.identifier
             )
+        }
+
+        //if postData has no elements or all elements are empty, we return null
+        if (allBytes.isEmpty()) {
+            null
         }
         allBytes
 

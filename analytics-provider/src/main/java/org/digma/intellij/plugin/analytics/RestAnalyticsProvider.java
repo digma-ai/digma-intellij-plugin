@@ -531,7 +531,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable, Base
                 .url(request.getUrl());
         if (HttpMethod.permitsRequestBody(request.getMethod().toUpperCase())) {
             okHttp3RequestBuilder = okHttp3RequestBuilder.method(request.getMethod(), okHttp3Body);
-        }else if(request.getMethod().equalsIgnoreCase("GET")){
+        }else if(request.getMethod().equalsIgnoreCase("get")){
             okHttp3RequestBuilder = okHttp3RequestBuilder.get();
         } else if (request.getMethod().equalsIgnoreCase("head")) {
             okHttp3RequestBuilder = okHttp3RequestBuilder.head();

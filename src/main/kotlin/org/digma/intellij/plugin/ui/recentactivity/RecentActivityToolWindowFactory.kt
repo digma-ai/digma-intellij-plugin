@@ -12,6 +12,9 @@ import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.recentactivity.RecentActivityToolWindowShower
 import org.digma.intellij.plugin.ui.RecentActivityToolWindowCardsController
+import org.digma.intellij.plugin.ui.common.create2025EAPMessagePanel
+import org.digma.intellij.plugin.ui.common.is2025EAPWithJCEFRemoteEnabled
+import org.digma.intellij.plugin.ui.common.sendPosthogEvent
 import org.digma.intellij.plugin.ui.common.statuspanels.createAggressiveUpdatePanel
 import org.digma.intellij.plugin.ui.common.statuspanels.createNoConnectionPanel
 import java.awt.CardLayout
@@ -24,6 +27,19 @@ class RecentActivityToolWindowFactory : ToolWindowFactory {
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
 
         Log.log(logger::info, project, "creating recent activity tool window for project  {}", project)
+
+        //patch for jcef issue:
+        //https://github.com/digma-ai/digma-intellij-plugin/issues/2668
+        //https://github.com/digma-ai/digma-intellij-plugin/issues/2669
+        //https://youtrack.jetbrains.com/issue/IDEA-367610/jcef-initialization-crash-in-latest-2025.1-EAP-NullPointerException-Cannot-read-field-jsQueryFunction-because-config-is-null
+        if (is2025EAPWithJCEFRemoteEnabled()){
+            Log.log(logger::info, project, "Jcef remote enabled for EAP , creating user message panel", project)
+            sendPosthogEvent("Recent Activity")
+            val messagePanel = create2025EAPMessagePanel(project)
+            val content = ContentFactory.getInstance().createContent(messagePanel, null, false)
+            toolWindow.contentManager.addContent(content)
+            return
+        }
 
         //initialize AnalyticsService early so the UI can detect the connection status when created
         AnalyticsService.getInstance(project)

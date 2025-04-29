@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.414] - 2025-04-29
+## [2.0.415] - 2025-04-29
+
+- show jcef workaround message by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2705
+
+## 2.0.414 - 2025-04-29
 
 - Recent activity remove messages Closes #2700 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2703
 

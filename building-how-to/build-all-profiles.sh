@@ -25,23 +25,23 @@ echo "############ building with default ################"
 ./gradlew clean buildPlugin
 for i in {1..5}; do echo; done
 
-echo "############ building with 231 ################"
-./gradlew clean buildPlugin -PbuildProfile=p231
+echo "############ building with 241 ################"
+./gradlew clean buildPlugin -PbuildProfile=p241
 for i in {1..5}; do echo; done
 
-echo "############ building with 232 ################"
-./gradlew clean buildPlugin -PbuildProfile=p232
+echo "############ building with 242 ################"
+./gradlew clean buildPlugin -PbuildProfile=p242
 for i in {1..5}; do echo; done
 
-echo "############ building with 233 ################"
-./gradlew clean buildPlugin -PbuildProfile=p233
+echo "############ building with 243 ################"
+./gradlew clean buildPlugin -PbuildProfile=p243
 for i in {1..5}; do echo; done
 
 echo "############ building with 241 ################"
 ./gradlew clean buildPlugin -PbuildProfile=p241
 for i in {1..5}; do echo; done
 
-echo "############ building with 232 ################"
+echo "############ building with 242 ################"
 ./gradlew clean buildPlugin -PbuildProfile=p242
 for i in {1..5}; do echo; done
 
@@ -51,16 +51,16 @@ echo "############ building with ultimate default ################"
 ./gradlew clean buildPlugin -PbuildWIthUltimate=true
 for i in {1..5}; do echo; done
 
-echo "############ building with ultimate 231 ################"
-./gradlew clean buildPlugin -PbuildWIthUltimate=true -PbuildProfile=p231
+echo "############ building with ultimate 241 ################"
+./gradlew clean buildPlugin -PbuildWIthUltimate=true -PbuildProfile=p241
 for i in {1..5}; do echo; done
 
-echo "############ building with ultimate 232 ################"
-./gradlew clean buildPlugin -PbuildWIthUltimate=true -PbuildProfile=p232
+echo "############ building with ultimate 242 ################"
+./gradlew clean buildPlugin -PbuildWIthUltimate=true -PbuildProfile=p242
 for i in {1..5}; do echo; done
 
-echo "############ building with ultimate 233 ################"
-./gradlew clean buildPlugin -PbuildWIthUltimate=true -PbuildProfile=p233
+echo "############ building with ultimate 243 ################"
+./gradlew clean buildPlugin -PbuildWIthUltimate=true -PbuildProfile=p243
 for i in {1..5}; do echo; done
 
 echo "############ building with ultimate 241 ################"
@@ -79,16 +79,16 @@ echo "############ building with rider default ################"
 ./gradlew clean buildPlugin -PbuildWithRider=true
 for i in {1..5}; do echo; done
 
-echo "############ building with rider 231 ################"
-./gradlew clean buildPlugin -PbuildWithRider=true -PbuildProfile=p231
+echo "############ building with rider 241 ################"
+./gradlew clean buildPlugin -PbuildWithRider=true -PbuildProfile=p241
 for i in {1..5}; do echo; done
 
-echo "############ building with rider 232 ################"
-./gradlew clean buildPlugin -PbuildWithRider=true -PbuildProfile=p232
+echo "############ building with rider 242 ################"
+./gradlew clean buildPlugin -PbuildWithRider=true -PbuildProfile=p242
 for i in {1..5}; do echo; done
 
-echo "############ building with rider 233 ################"
-./gradlew clean buildPlugin -PbuildWithRider=true -PbuildProfile=p233
+echo "############ building with rider 243 ################"
+./gradlew clean buildPlugin -PbuildWithRider=true -PbuildProfile=p243
 for i in {1..5}; do echo; done
 
 echo "############ building with rider 241 ################"

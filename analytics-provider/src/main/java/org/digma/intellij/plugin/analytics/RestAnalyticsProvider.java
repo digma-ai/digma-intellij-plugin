@@ -512,7 +512,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable, Base
             return toHttpResponse(okHttp3Response);
 
         } catch (Exception e) {
-            throw new AnalyticsProviderException(e);
+            throw new AnalyticsProviderException("Error in proxy call: " + request, e);
         }
     }
 

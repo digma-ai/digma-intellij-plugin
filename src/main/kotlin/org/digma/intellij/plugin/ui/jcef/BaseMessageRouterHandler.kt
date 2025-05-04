@@ -317,7 +317,7 @@ abstract class BaseMessageRouterHandler(protected val project: Project) : Common
                         val handled = doOnQuery(project, browser, requestJsonNode, request, action)
                         if (!handled) {
                             //will be caught bellow and reported by ErrorReporter
-                            throw UnknownActionException("got unknown action $action")
+                            throw UnknownActionException("got unknown action $action in ${this.javaClass.name}")
                         }
                     }
 

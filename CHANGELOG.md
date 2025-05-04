@@ -1,6 +1,13 @@
 # Changelog
 
-## [2.0.415] - 2025-04-29
+## [2.0.416] - 2025-05-04
+
+- don't allow post data for get and head in api proxy by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2706
+- drop support for 2023 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2707
+- allow empty body in post request in api proxy Closes #2709 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2711
+- fix-AssetCodeLocation by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2712
+
+## 2.0.415 - 2025-04-29
 
 - show jcef workaround message by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2705
 

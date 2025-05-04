@@ -20,13 +20,13 @@ data class AssetCodeLocation
     "spanCodeObjectId",
     "methodCodeObjectId",
     "displayName",
-    "endpointAssetCodeLocation"
+    "endpoint"
 )
 constructor(
     val spanCodeObjectId: String,
     val methodCodeObjectId: String? = null,
     val displayName: String,
-    val endpointAssetCodeLocation: EndpointAssetCodeLocation? = null,
+    val endpoint: EndpointAssetCodeLocation? = null,
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)

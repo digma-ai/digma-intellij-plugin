@@ -99,7 +99,7 @@ private fun buildFromCodeLocation(project: Project, codeLocation: AssetCodeLocat
     }
 
 
-    val endpointCodeObjectId = codeLocation.endpointAssetCodeLocation?.endpointCodeObjectId
+    val endpointCodeObjectId = codeLocation.endpoint?.endpointCodeObjectId
     if (endpointCodeObjectId != null) {
 
         val endpointInfos = LanguageService.getEndpointInfos(project, endpointCodeObjectId)

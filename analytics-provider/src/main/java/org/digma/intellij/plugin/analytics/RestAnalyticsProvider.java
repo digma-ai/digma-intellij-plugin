@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.io.CharStreams;
 import okhttp3.*;
+import okhttp3.internal.http.HttpMethod;
 import okhttp3.logging.HttpLoggingInterceptor;
 import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.model.rest.AboutResult;
@@ -516,16 +517,6 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable, Base
     }
 
     private Request toOkHttp3Request(HttpRequest request) {
-        RequestBody okHttp3Body = null;
-        if (request.getBody() != null) {
-            var contentType = request.getHeader("Content-Type");
-            if (contentType == null) {
-                okHttp3Body = RequestBody.create(null, request.getBody().getContent());
-            } else {
-                okHttp3Body = RequestBody.create(MediaType.parse(contentType), request.getBody().getContent());
-            }
-        }
-
         var okHttp3RequestBuilder = new Request.Builder()
                 .url(request.getUrl());
         if("get".equalsIgnoreCase(request.getMethod())){
@@ -533,6 +524,18 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable, Base
         } else if ("head".equalsIgnoreCase(request.getMethod())) {
             okHttp3RequestBuilder = okHttp3RequestBuilder.head();
         }else{
+            RequestBody okHttp3Body = null;
+            if (request.getBody() != null) {
+                var contentType = request.getHeader("Content-Type");
+                if (contentType == null) {
+                    okHttp3Body = RequestBody.create(null, request.getBody().getContent());
+                } else {
+                    okHttp3Body = RequestBody.create(MediaType.parse(contentType), request.getBody().getContent());
+                }
+            }else if(HttpMethod.requiresRequestBody(request.getMethod())){
+                //okhttp forces a body even for empty requests, the check above assumes the method is in uppercase
+                okHttp3Body = RequestBody.create(null, new byte[0]);
+            }
             okHttp3RequestBuilder = okHttp3RequestBuilder.method(request.getMethod(), okHttp3Body);
         }
         request.getHeaders().forEach(okHttp3RequestBuilder::header);

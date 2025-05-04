@@ -196,7 +196,8 @@ class ApiProxyResourceHandler(val project: Project) : CefResourceHandler {
 
             Log.log(logger::trace, "body for request is {}, [request id:{}]", body, requestId)
 
-            val httpRequest = HttpRequest(requestMethod, apiUrl, headers.toMutableMap(), body)
+            //change method to upper case because okhttp expects upper case method
+            val httpRequest = HttpRequest(requestMethod.uppercase(), apiUrl, headers.toMutableMap(), body)
 
             Log.log(logger::trace, "sending request {}, [request id:{}]", httpRequest, requestId)
             apiResponse = AnalyticsService.getInstance(project).proxyCall(httpRequest)

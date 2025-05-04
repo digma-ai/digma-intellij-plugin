@@ -1,6 +1,4 @@
 import com.jetbrains.plugin.structure.base.utils.isFile
-import common.BuildProfiles
-import common.BuildProfiles.greaterThan
 import common.DIGMA_NO_INFO_LOGGING
 import common.currentProfile
 import common.withCurrentProfile
@@ -19,7 +17,7 @@ plugins {
 }
 
 private val dotnetPluginId = "Digma.Rider.Plugin"
-private val buildConfiguration = "Debug"
+private val buildConfiguration = "Debug" //todo: change to release
 private val solutionFile = "Digma.Rider.Plugin.sln"
 private val dotnetProjectDir = layout.projectDirectory.dir(dotnetPluginId)
 private val nugetConfigFile = dotnetProjectDir.file("nuget.config").asFile
@@ -53,9 +51,9 @@ dependencies {
 
     intellijPlatform {
         //can't use binary installer for rider because we need the maven artifact that contains resharper sdk.
-        //when building with rider two artifacts will be downloaded, a maven artifact for this project, and a binary release
-        // for the other projects like ide-common. ide-common doesn't need the maven artifact so it can build with binary artifact.
-        //when running Rider with runIde it will use a binary installer because the main root project uses installer.
+        //when building with rider, two artifacts will be downloaded, a maven artifact for this project, and a binary release
+        // for the other projects like ide-common. ide-common doesn't need the maven artifact, so it can build with binary artifact.
+        //when running Rider with runIde, it will use a binary installer because the main root project uses an installer.
         //only this module needs the maven artifact for the resharper SDK.
         rider(project.currentProfile().riderVersion, false)
 //        bundledPlugin("rider-plugins-appender")
@@ -174,16 +172,16 @@ tasks {
         val tokens = mutableMapOf<String, String>()
 
         //up to p233 the version should be 4.0.0, and 4.3.0 after p233
-        val traceSourceVersion = if (project.currentProfile().profile.greaterThan(BuildProfiles.Profile.p233)) {
-            "4.3.0"
-        } else {
-            "4.0.0"
-        }
+//        val traceSourceVersion = if (project.currentProfile().profile.greaterThan(BuildProfiles.Profile.p233)) {
+//            "4.3.0"
+//        } else {
+//            "4.0.0"
+//        }
 
         withCurrentProfile {
             tokens["DOTNET_SDK_PATH"] = "$riderSdkPath".replace(Regex("/*$"), "")
             tokens["DOTNET_SDK_TEST_PROJECT"] = Path.of(riderSdkTestProjectFilePath).toString()
-            tokens["TRACE_SOURCE_VERSION"] = traceSourceVersion
+//            tokens["TRACE_SOURCE_VERSION"] = traceSourceVersion
         }
 
         duplicatesStrategy = DuplicatesStrategy.INCLUDE
@@ -223,13 +221,13 @@ tasks {
 
             //the dotnet command will generate a binlog.
             //to view the binlog run:
-            //dotnet msbuild rider/build/dotnet/msbuild.binlog  /flp:v=diag
-            //it will create msbuild.log file in the current directory.
+            //dotnet msbuild rider/build/dotnet/msbuild.binlog /flp:v=diag,
+            //it will create the msbuild.log file in the current directory.
             //the command will also create msbuild.log in the rider directory, this is the /fl.
-            //for diagnostics add argument "/v:diag"
+            //for diagnostics add the argument "/v:diag"
 
-            //about /r: in development we sometimes need to build with different profiles, for example 232 and then 241.
-            // sometimes the compileDotnet task will fail and looks like its using the wrong assemblies. /r(estore) fixes it.
+            //about /r: in development we sometimes need to build with different profiles, for example, 232 and then 241.
+            // sometimes the compileDotnet task will fail and looks like it's using the wrong assemblies. /r(estore) fixes it.
 
             withSilenceLogging {
                 logger.lifecycle("compileDotNet:Plugin.props: ${pluginPropsFile.readText()}")

@@ -78,7 +78,7 @@ fun Project.useBinaryInstaller(): Boolean = !this.currentProfile().isEAP
 object BuildProfiles {
 
     @Suppress("EnumEntryName")
-    enum class Profile { p231, p232, p233, p241, p242, p243, p251 }
+    enum class Profile { p241, p242, p243, p251, p252 }
 
     fun Profile.greaterThan(other:Profile):Boolean{
         val thisNumber = this.name.substring(1).toInt()
@@ -104,16 +104,16 @@ object BuildProfiles {
 
             Profile.valueOf(profileToUse)
 
-        } ?: Profile.p231
+        } ?: Profile.p241
 
         return profiles[selectedProfile] ?: throw GradleException("can not find profile $selectedProfile")
     }
 
     //update this list as new profiles are added or removed
     private val profileAliases = mapOf(
-        "lowest" to Profile.p231.name,
-        "latest" to Profile.p243.name,
-        "eap" to Profile.p251.name,
+        "lowest" to Profile.p241.name,
+        "latest" to Profile.p251.name,
+        "eap" to Profile.p252.name,
     )
 
 
@@ -137,60 +137,14 @@ object BuildProfiles {
 
         //see building-how-to/*
 
-        Profile.p231 to BuildProfile(
-            profile = Profile.p231,
-            platformVersion = "2023.1.7",
-            riderVersion = "2023.1.7",
-            pycharmVersion = "2023.1.7",
-            riderTargetFramework = "net472",
-            riderResharperVersionConstant = "PROFILE_2023_1",
-            platformVersionCode = "231",
-            pluginSinceBuild = "231",
-            pluginUntilBuild = "231.*",
-            kotlinTarget = KotlinVersion.KOTLIN_1_8,
-            kotlinJvmTarget = JvmTarget.JVM_17,
-            javaVersion = JavaVersion.VERSION_17.majorVersion
-        ),
-
-        Profile.p232 to BuildProfile(
-            profile = Profile.p232,
-            platformVersion = "2023.2.7",
-            riderVersion = "2023.2.5",
-            pycharmVersion = "2023.2.7",
-            riderTargetFramework = "net472",
-            riderResharperVersionConstant = "PROFILE_2023_2",
-            platformVersionCode = "232",
-            pluginSinceBuild = "232",
-            pluginUntilBuild = "232.*",
-            kotlinTarget = KotlinVersion.KOTLIN_1_8,
-            kotlinJvmTarget = JvmTarget.JVM_17,
-            javaVersion = JavaVersion.VERSION_17.majorVersion
-        ),
-
-
-        Profile.p233 to BuildProfile(
-            profile = Profile.p233,
-            platformVersion = "2023.3.7",
-            riderVersion = "2023.3.6",
-            pycharmVersion = "2023.3.7",
-            riderTargetFramework = "net472",
-            riderResharperVersionConstant = "PROFILE_2023_2",
-            platformVersionCode = "233",
-            pluginSinceBuild = "233",
-            pluginUntilBuild = "233.*",
-            kotlinTarget = KotlinVersion.KOTLIN_1_9,
-            kotlinJvmTarget = JvmTarget.JVM_17,
-            javaVersion = JavaVersion.VERSION_17.majorVersion
-        ),
-
 
         Profile.p241 to BuildProfile(
             profile = Profile.p241,
             platformVersion = "2024.1.7",
-            riderVersion = "2024.1.5",
+            riderVersion = "2024.1.6",
             pycharmVersion = "2024.1.5",
             riderTargetFramework = "net8.0",
-            riderResharperVersionConstant = "PROFILE_2023_2",
+            riderResharperVersionConstant = "",
             platformVersionCode = "241",
             pluginSinceBuild = "241",
             pluginUntilBuild = "241.*",
@@ -207,7 +161,7 @@ object BuildProfiles {
             riderVersion = "2024.2.7",
             pycharmVersion = "2024.2",
             riderTargetFramework = "net8.0",
-            riderResharperVersionConstant = "PROFILE_2023_2",
+            riderResharperVersionConstant = "",
             platformVersionCode = "242",
             pluginSinceBuild = "242",
             pluginUntilBuild = "242.*",
@@ -222,7 +176,7 @@ object BuildProfiles {
             riderVersion = "2024.3.6",
             pycharmVersion = "2024.3",
             riderTargetFramework = "net8.0",
-            riderResharperVersionConstant = "PROFILE_2023_2;PROFILE_2024_3",
+            riderResharperVersionConstant = "PROFILE_2024_3",
             platformVersionCode = "243",
             pluginSinceBuild = "243",
             pluginUntilBuild = "243.*",
@@ -234,34 +188,34 @@ object BuildProfiles {
         Profile.p251 to BuildProfile(
             profile = Profile.p251,
             platformVersion = "2025.1",
-            riderVersion = "2025.1",
+            riderVersion = "2025.1.1",
             pycharmVersion = "2025.1",
             riderTargetFramework = "net8.0",
-            riderResharperVersionConstant = "PROFILE_2023_2;PROFILE_2024_3",
+            riderResharperVersionConstant = "PROFILE_2024_3",
             platformVersionCode = "251",
             pluginSinceBuild = "251",
             pluginUntilBuild = "251.*",
             kotlinTarget = KotlinVersion.KOTLIN_2_0,
             kotlinJvmTarget = JvmTarget.JVM_21,
             javaVersion = JavaVersion.VERSION_21.majorVersion,
-        )
+        ),
 
-        //todo: 252 EAP
-//        Profile.p252 to BuildProfile(
-//            isEAP = true,
-//            profile = Profile.p252,
-//            platformVersion = "251.23774.318-EAP-SNAPSHOT",
-//            riderVersion = "2025.1-RC1-SNAPSHOT",
-//            pycharmVersion = "251-EAP-SNAPSHOT",
-//            riderTargetFramework = "net8.0",
-//            riderResharperVersionConstant = "PROFILE_2023_2;PROFILE_2024_3",
-//            platformVersionCode = "251",
-//            pluginSinceBuild = "252",
-//            pluginUntilBuild = "252.*",
-//            kotlinTarget = KotlinVersion.KOTLIN_2_0,
-//            kotlinJvmTarget = JvmTarget.JVM_21,
-//            javaVersion = JavaVersion.VERSION_21.majorVersion,
-//        )
+        //todo: 252 EAP, currently it it build with 251 until eap 252 starts
+        Profile.p252 to BuildProfile(
+            isEAP = true,
+            profile = Profile.p252,
+            platformVersion = "251.23774.318-EAP-SNAPSHOT",
+            riderVersion = "2025.1-RC1-SNAPSHOT",
+            pycharmVersion = "251-EAP-SNAPSHOT",
+            riderTargetFramework = "net8.0",
+            riderResharperVersionConstant = "PROFILE_2024_3",
+            platformVersionCode = "252",
+            pluginSinceBuild = "252",
+            pluginUntilBuild = "252.*",
+            kotlinTarget = KotlinVersion.KOTLIN_2_0,
+            kotlinJvmTarget = JvmTarget.JVM_21,
+            javaVersion = JavaVersion.VERSION_21.majorVersion,
+        )
 
     )
 

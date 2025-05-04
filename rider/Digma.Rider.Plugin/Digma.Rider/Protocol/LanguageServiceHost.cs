@@ -15,11 +15,7 @@ using JetBrains.Util;
 using JetBrains.Util.Extension;
 using static Digma.Rider.Logging.Logger;
 
-#if (PROFILE_2023_2) // FIX_WHEN_MIN_IS_232
 using JetBrains.ReSharper.Feature.Services.Protocol;
-#else
-using JetBrains.RdBackend.Common.Features;
-#endif
 
 namespace Digma.Rider.Protocol
 {

@@ -48,7 +48,7 @@ dependencyResolutionManagement {
             //rdgen version is independent of rider version.
             //we change the rdgen version depending on the rider version we build for. see in rider and protocol
             // modules and in plugins resolutionStrategy
-            version("rider-rdgen", "2023.2.0")
+            version("rider-rdgen", "2023.3.2")
             library("rdGen", "com.jetbrains.rd", "rd-gen").versionRef("rider-rdgen")
 
             //kotlin stdlib is not packaged with the plugin because intellij platform already contains it.

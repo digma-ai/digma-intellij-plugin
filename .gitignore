@@ -103,3 +103,4 @@ nb-configuration.xml
 msbuild.log
 
 /.kotlin
+/.junie

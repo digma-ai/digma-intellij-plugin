@@ -75,8 +75,8 @@ class InstallationWizardPanel(private val project: Project, private val wizardSk
             JCefComponent.JCefComponentBuilder(
                 project, INSTALLATION_WIZARD_APP_NAME, parentDisposable,
                 INSTALLATION_WIZARD_URL,
-                InstallationWizardMessageRouterHandler(project, digmaStatusUpdater)
-            )
+                InstallationWizardMessageRouterHandler(project, digmaStatusUpdater),
+                InstallationWizardSchemeHandlerFactory())
                 .withArg(JCEF_WIZARD_SKIP_INSTALLATION_STEP_PROPERTY_NAME, wizardSkipInstallationStep)
                 .build()
         } else {

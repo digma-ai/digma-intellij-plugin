@@ -77,8 +77,8 @@ class RecentActivityPanel(private val project: Project) : DisposablePanel(), Rel
             JCefComponentBuilder(
                 project, RECENT_ACTIVITY_APP_NAME, parentDisposable,
                 RECENT_ACTIVITY_URL,
-                RecentActivityMessageRouterHandler(project)
-            )
+                RecentActivityMessageRouterHandler(project),
+                RecentActivitySchemeHandlerFactory())
                 .build()
         } else {
             null

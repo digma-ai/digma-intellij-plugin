@@ -37,7 +37,8 @@ public class DashboardFileEditor extends UserDataHolderBase implements FileEdito
         if (JBCefApp.isSupported()) {
             return new JCefComponent.JCefComponentBuilder(project, DASHBOARD_APP_NAME, this,
                     DashboardConstants.DASHBOARD_URL,
-                    new DashboardMessageRouterHandler(project))
+                    new DashboardMessageRouterHandler(project),
+                    new DashboardSchemeHandlerFactory())
                     .withArg(JCEF_DASHBOARD_FILE_PROPERTY_NAME, file)
                     .withDownloadAdapter(new DownloadHandlerAdapter())
                     .build();

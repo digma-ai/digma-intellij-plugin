@@ -912,7 +912,7 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
         val uiVersion = UIVersioningService.getInstance().getCurrentUiVersion()
         val isJcefSupported = JBCefApp.isSupported()
 
-        registerCustomEvent("2025EAPWithJCEFRemote patch activated", mapOf(
+        registerCustomEvent("2025WithJCEFRemote patch activated", mapOf(
             "app.name" to appName,
             "os.type" to osType,
             "ide.name" to ideName,

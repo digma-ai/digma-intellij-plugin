@@ -33,7 +33,7 @@ class RecentActivityToolWindowFactory : ToolWindowFactory {
         //https://github.com/digma-ai/digma-intellij-plugin/issues/2669
         //https://youtrack.jetbrains.com/issue/IDEA-367610/jcef-initialization-crash-in-latest-2025.1-EAP-NullPointerException-Cannot-read-field-jsQueryFunction-because-config-is-null
         if (is2025EAPWithJCEFRemoteEnabled()){
-            Log.log(logger::info, project, "Jcef remote enabled for EAP , creating user message panel", project)
+            Log.log(logger::info, project, "Jcef remote is enabled , creating user message panel", project)
             sendPosthogEvent("Recent Activity")
             val messagePanel = create2025EAPMessagePanel(project)
             val content = ContentFactory.getInstance().createContent(messagePanel, null, false)

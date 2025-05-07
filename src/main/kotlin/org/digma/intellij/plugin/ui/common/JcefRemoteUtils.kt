@@ -27,7 +27,7 @@ class DisableJcefRemoteProjectActivity : ProjectActivity {
     /*
         Note: this is aggressive! we change the behavior that jetbrains devs want for intellij 2025, without user consent.
 
-        to try to set jcef.remote.enabled=false early on startup.
+        try to set jcef.remote.enabled=false early on startup.
         in 251 and above JBCefApp will set jcef.remote.enabled=true for Mac and Windows and probably for
         linux that don't use wayland.
         after JBCefApp is initialized, it is not possible to change that anymore because it will

@@ -25,7 +25,7 @@ https://youtrack.jetbrains.com/issue/IJPL-187065/Out-of-process-JCEF-http-reques
 class DisableJcefRemoteProjectActivity : ProjectActivity {
 
     /*
-        Note: this is aggressive! we change the behavior that jetbrains devs want for intellij 2025 without user consent.
+        Note: this is aggressive! we change the behavior that jetbrains devs want for intellij 2025, without user consent.
 
         to try to set jcef.remote.enabled=false early on startup.
         in 251 and above JBCefApp will set jcef.remote.enabled=true for Mac and Windows and probably for

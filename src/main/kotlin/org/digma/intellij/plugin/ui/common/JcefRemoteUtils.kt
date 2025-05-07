@@ -25,7 +25,8 @@ https://youtrack.jetbrains.com/issue/IJPL-187065/Out-of-process-JCEF-http-reques
 class DisableJcefRemoteProjectActivity : ProjectActivity {
 
     /*
-        try to set jcef.remote.enabled=false early on startup.
+        Note: this is aggressive! we change the behavior that jetbrains devs want for intellij 2025
+        to try to set jcef.remote.enabled=false early on startup.
         in 251 and above JBCefApp will set jcef.remote.enabled=true for Mac and Windows and probably for
         linux that don't use wayland.
         after JBCefApp is initialized, it is not possible to change that anymore because it will
@@ -42,20 +43,30 @@ class DisableJcefRemoteProjectActivity : ProjectActivity {
     */
 
     override suspend fun execute(project: Project) {
-        if (ApplicationInfo.getInstance().build.baselineVersion >= 251) {
-            if (System.getProperty("jcef.remote.enabled") == null) {
-                if (SystemInfo.isMac || SystemInfo.isWindows ||
-                    (SystemInfo.isLinux && !SystemInfo.isWayland)
-                ) {
-                    System.setProperty("jcef.remote.enabled", "false")
-                }
+        tryDisableJcefRemote()
+    }
+}
+
+
+fun tryDisableJcefRemote(){
+    if (ApplicationInfo.getInstance().build.baselineVersion >= 251) {
+        if (System.getProperty("jcef.remote.enabled") == null) {
+            if (SystemInfo.isMac || SystemInfo.isWindows ||
+                (SystemInfo.isLinux && !SystemInfo.isWayland)
+            ) {
+                System.setProperty("jcef.remote.enabled", "false")
             }
         }
     }
 }
 
 
+
 fun is2025EAPWithJCEFRemoteEnabled(): Boolean {
+
+    //try to disable jcef remote before checking it, this is called from our tool windows
+    tryDisableJcefRemote()
+
     return if (ApplicationInfo.getInstance().build.baselineVersion >= 251) {
         //just touch JBCefApp so it will initialize static variables and will probably set jcef.remote.enabled=true
         val isJcefSupported = JBCefApp.isSupported()

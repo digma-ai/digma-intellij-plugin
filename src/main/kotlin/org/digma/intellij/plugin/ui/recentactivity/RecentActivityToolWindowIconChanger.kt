@@ -8,6 +8,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowManager
 import org.digma.intellij.plugin.PluginId
+import org.digma.intellij.plugin.analytics.ApiClientChangedEvent
 import org.digma.intellij.plugin.analytics.getAllEnvironments
 import org.digma.intellij.plugin.common.DisposableAdaptor
 import org.digma.intellij.plugin.common.EDT
@@ -59,6 +60,12 @@ class RecentActivityToolWindowIconChanger(val project: Project): DisposableAdapt
             Log.log(logger::warn,"could not register recent activity icon changer scheduler")
             ErrorReporter.getInstance().reportError(project,"RecentActivityToolWindowIconChanger.scheduler","could not register recent activity icon changer scheduler",mapOf())
         }
+
+
+        project.messageBus.connect(this)
+            .subscribe(ApiClientChangedEvent.API_CLIENT_CHANGED_TOPIC, ApiClientChangedEvent {
+                hideBadge()
+            })
     }
 
 

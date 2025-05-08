@@ -3,17 +3,27 @@ package org.digma.intellij.plugin.ui.recentactivity
 import com.intellij.execution.runners.ExecutionUtil
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowManager
 import org.digma.intellij.plugin.PluginId
+import org.digma.intellij.plugin.analytics.getAllEnvironments
+import org.digma.intellij.plugin.common.DisposableAdaptor
 import org.digma.intellij.plugin.common.EDT
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.icons.AppIcons
+import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.scheduling.disposingPeriodicTask
+import java.util.Date
 import javax.swing.Icon
+import kotlin.time.Duration.Companion.seconds
 
 //must be a singleton because it relies on null and non-null properties
 @Service(Service.Level.PROJECT)
-class RecentActivityToolWindowIconChanger(val project: Project) {
+class RecentActivityToolWindowIconChanger(val project: Project): DisposableAdaptor {
+
+    private val logger = Logger.getInstance(this::class.java)
 
     private val defaultIcon = AppIcons.TOOL_WINDOW_OBSERVABILITY
     private var actualIcon: Icon? = null
@@ -26,6 +36,32 @@ class RecentActivityToolWindowIconChanger(val project: Project) {
         }
     }
 
+    init {
+        val registered = disposingPeriodicTask("RecentActivityIconChanger",10.seconds.inWholeMilliseconds,10.seconds.inWholeMilliseconds,true){
+            val environments = getAllEnvironments(project)
+            val lastActiveTime: Date? = environments
+                .filter { it.lastActive != null }
+                .maxByOrNull { it.lastActive!! }
+                ?.lastActive
+
+            val isRecent = lastActiveTime?.let {
+                val now = System.currentTimeMillis()
+                now - it.time < RECENT_EXPIRATION_LIMIT_MILLIS
+            } ?: false
+
+            if (isRecent){
+                showBadge()
+            }else{
+                hideBadge()
+            }
+        }
+        if (!registered){
+            Log.log(logger::warn,"could not register recent activity icon changer scheduler")
+            ErrorReporter.getInstance().reportError(project,"RecentActivityToolWindowIconChanger.scheduler","could not register recent activity icon changer scheduler",mapOf())
+        }
+    }
+
+
     fun showBadge() {
 
         val toolWindow = getToolWindow() ?: return
@@ -33,8 +69,10 @@ class RecentActivityToolWindowIconChanger(val project: Project) {
         createBadgeIcon()
 
         EDT.ensureEDT {
-            badgeIcon?.let {
-                toolWindow.setIcon(it)
+            if (toolWindow.icon != badgeIcon) {
+                badgeIcon?.let {
+                    toolWindow.setIcon(it)
+                }
             }
         }
     }
@@ -58,7 +96,10 @@ class RecentActivityToolWindowIconChanger(val project: Project) {
         val toolWindow = getToolWindow() ?: return
 
         EDT.ensureEDT {
-            toolWindow.setIcon(actualIcon ?: defaultIcon)
+            val icon = actualIcon ?: defaultIcon
+            if (toolWindow.icon != icon) {
+                toolWindow.setIcon(icon)
+            }
         }
     }
 

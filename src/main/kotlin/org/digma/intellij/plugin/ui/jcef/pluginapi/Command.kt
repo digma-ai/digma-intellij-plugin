@@ -10,7 +10,9 @@ const val CommandQueryName = "pluginCommand"
 abstract class Command {
 
     enum class Commands(val commandName: String) {
-        RECENT_ACTIVITY_BADGE("RecentActivityBadge");
+        DUMMY_COMMAND("DummyCommand"); //just a dummy enum to satisfy the compiler
+        //RecentActivityBadge is not in use; we do it from the plugin code, here just as an example
+        //RECENT_ACTIVITY_BADGE("RecentActivityBadge");
 
 
         fun createInstance():Command{

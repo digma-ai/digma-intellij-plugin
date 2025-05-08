@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.416] - 2025-05-04
+## [2.0.417] - 2025-05-08
+
+- Adopt jcef to 251 Closes #2718 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2719
+- recent activity indicator Closes #2716 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2720
+
+## 2.0.416 - 2025-05-04
 
 - don't allow post data for get and head in api proxy by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2706
 - drop support for 2023 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2707

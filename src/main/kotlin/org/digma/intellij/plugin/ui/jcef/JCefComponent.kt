@@ -12,6 +12,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.ui.AncestorListenerAdapter
 import com.intellij.ui.jcef.JBCefBrowser
+import com.intellij.ui.jcef.JBCefBrowserBase
 import com.intellij.util.Alarm
 import org.apache.maven.artifact.versioning.ComparableVersion
 import org.cef.CefApp
@@ -48,6 +49,7 @@ import org.digma.intellij.plugin.scope.ScopeContext
 import org.digma.intellij.plugin.scope.SpanScope
 import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.ui.jcef.state.StateChangedEvent
+import org.digma.intellij.plugin.ui.mainapp.MAIN_APP_APP_NAME
 import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier
 import org.digma.intellij.plugin.ui.settings.SettingsChangeListener
 import org.digma.intellij.plugin.ui.settings.Theme
@@ -55,8 +57,6 @@ import org.digma.intellij.plugin.ui.wizard.INSTALLATION_WIZARD_APP_NAME
 import java.lang.ref.WeakReference
 import java.util.Objects
 import java.util.WeakHashMap
-import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.locks.ReentrantLock
 import javax.swing.JComponent
 import javax.swing.event.AncestorEvent
 
@@ -447,11 +447,13 @@ private constructor(
         private val name: String,
         parentDisposable: Disposable,
         url: String,
-        messageRouterHandler: BaseMessageRouterHandler
+        messageRouterHandler: BaseMessageRouterHandler,
+        schemeHandlerFactory: BaseSchemeHandlerFactory
     ) {
 
         private val urlRef = WeakReference(Objects.requireNonNull(url, "url must not be null"))
         private val messageRouterHandlerRef = WeakReference(Objects.requireNonNull(messageRouterHandler, "messageRouterHandlers must not be null"))
+        private val schemeHandlerFactoryRef = WeakReference(Objects.requireNonNull(schemeHandlerFactory, "schemeHandlerFactory must not be null"))
         private val parentDisposableRef = WeakReference(parentDisposable)
         private var downloadAdapterRef: WeakReference<CefDownloadHandler>? = null
 
@@ -463,12 +465,13 @@ private constructor(
 
             val url: String = Objects.requireNonNull(urlRef.get(), "url must not be null")!!
             val messageRouterHandler = Objects.requireNonNull(messageRouterHandlerRef.get(), "messageRouterHandlers must not be null")!!
+            val schemeHandlerFactory = Objects.requireNonNull(schemeHandlerFactoryRef.get(), "schemeHandlerFactory must not be null")!!
             val parentDisposable = Objects.requireNonNull(parentDisposableRef.get(), "parentDisposable must not be null")!!
 
-
             val jbCefBrowser = JBCefBrowserBuilderCreator.create()
-                .setUrl(url)
                 .build()
+
+            jbCefBrowser.setErrorPage(JBCefBrowserBase.ErrorPage.DEFAULT)
 
             //set properties that are used by resource handlers.
             setProject(jbCefBrowser, project)
@@ -484,12 +487,9 @@ private constructor(
 
             jbCefClient.cefClient.addDisplayHandler(JCefDisplayHandler(name))
 
-            val lifeSpanHandle = if (!LifeSpanHandle.registered.get()) {
-                jbCefClient.addLifeSpanHandler(LifeSpanHandle, jbCefBrowser.cefBrowser)
-                LifeSpanHandle
-            } else {
-                null
-            }
+            val lifeSpanHandle = LifeSpanHandle(schemeHandlerFactory, url, name)
+            jbCefClient.addLifeSpanHandler(lifeSpanHandle, jbCefBrowser.cefBrowser)
+
 
             downloadAdapterRef?.get()?.let {
                 jbCefClient.addDownloadHandler(it, jbCefBrowser.cefBrowser)
@@ -505,9 +505,7 @@ private constructor(
                 cefMessageRouter.removeHandler(messageRouterHandler)
                 cefMessageRouter.dispose()
                 jbCefClient.cefClient.removeMessageRouter(cefMessageRouter)
-                lifeSpanHandle?.let {
-                    jbCefClient.removeLifeSpanHandler(it, jbCefBrowser.cefBrowser)
-                }
+                jbCefClient.removeLifeSpanHandler(lifeSpanHandle, jbCefBrowser.cefBrowser)
                 downloadAdapterRef?.get()?.let {
                     jbCefClient.removeDownloadHandle(it, jbCefBrowser.cefBrowser)
                 }
@@ -530,45 +528,27 @@ private constructor(
 }
 
 
-object LifeSpanHandle : CefLifeSpanHandlerAdapter() {
+class LifeSpanHandle(private val schemeHandlerFactory: BaseSchemeHandlerFactory, private val url: String, private val appName: String) : CefLifeSpanHandlerAdapter() {
 
-    val registered = AtomicBoolean(false)
-
-    private val registrationLock = ReentrantLock(true)
-
-    override fun onAfterCreated(browser: CefBrowser?) {
-
-        //register only one CefSchemeHandlerFactory for every type.
-        //CefSchemeHandlerFactory can be registered only on browser thread, onAfterCreated after the first jcef browser
-        // is created and at this stage it is possible to register CefSchemeHandlerFactory.
-        //it may be that this LifeSpanHandle will be registered to more than one client, but it will still register
-        // only one CefSchemeHandlerFactory for type. it is removed from the client in dispose.
+    override fun onAfterCreated(browser: CefBrowser) {
 
         try {
-            registrationLock.lock()
-            if (registered.get()) {
-                return
-            }
 
-            allSchemaHandlerFactories().forEach {
+            CefApp.getInstance().registerSchemeHandlerFactory(
+                schemeHandlerFactory.getSchema(), schemeHandlerFactory.getDomain(), schemeHandlerFactory
+            )
+
+            if(MAIN_APP_APP_NAME == appName) {
+                val mailtoSchemaHandlerFactory = MailtoSchemaHandlerFactory()
                 CefApp.getInstance().registerSchemeHandlerFactory(
-                    it.getSchema(), it.getDomain(), it
+                    mailtoSchemaHandlerFactory.getSchema(), mailtoSchemaHandlerFactory.getDomain(), mailtoSchemaHandlerFactory
                 )
             }
 
-            val mailtoSchemaHandlerFactory = MailtoSchemaHandlerFactory()
-            CefApp.getInstance().registerSchemeHandlerFactory(
-                mailtoSchemaHandlerFactory.getSchema(), mailtoSchemaHandlerFactory.getDomain(), mailtoSchemaHandlerFactory
-            )
-
-            registered.set(true)
+            browser.loadURL(url)
 
         } catch (e: Throwable) {
             ErrorReporter.getInstance().reportError("LifeSpanHandle.onAfterCreated", e)
-        } finally {
-            if (registrationLock.isHeldByCurrentThread) {
-                registrationLock.unlock()
-            }
         }
     }
 }

@@ -16,7 +16,7 @@ import javax.swing.JPanel
 
 fun is2025EAPWithJCEFRemoteEnabled(): Boolean {
     return if (ApplicationInfo.getInstance().build.baselineVersion == 251){
-        //just touch it so it will initialize static variables
+        //touch JBCefApp so it will initialize static variables
         val isJcefSupported = JBCefApp.isSupported()
         //do something with the variable so that the compiler will not optimize and remove this code
         println("isJCEFSupported = $isJcefSupported")

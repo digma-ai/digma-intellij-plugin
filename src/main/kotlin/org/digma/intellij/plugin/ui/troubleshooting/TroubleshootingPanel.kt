@@ -55,8 +55,8 @@ class TroubleshootingPanel(private val project: Project) : DisposablePanel(), Re
             JCefComponent.JCefComponentBuilder(
                 project, TROUBLESHOOTING_APP_NAME, parentDisposable,
                 TROUBLESHOOTING_URL,
-                TroubleshootingMessageRouterHandler(project)
-            ).build()
+                TroubleshootingMessageRouterHandler(project),
+                TroubleshootingSchemeHandlerFactory()).build()
         } else {
             null
         }

@@ -17,8 +17,8 @@ class EnvironmentTests extends AbstractAnalyticsProviderTest {
     void getEnvironmentsTest() throws JsonProcessingException {
 
         List<Env> expectedEnvs = new ArrayList<>();
-        expectedEnvs.add(new Env("myid1", "myname1", EnvType.Public));
-        expectedEnvs.add(new Env("myid2", "myname2", EnvType.Private));
+        expectedEnvs.add(new Env("myid1", "myname1", EnvType.Public,new Date()));
+        expectedEnvs.add(new Env("myid2", "myname2", EnvType.Private,new Date()));
         mockBackEnd.enqueue(new MockResponse()
                 .setBody(objectMapper.writeValueAsString(expectedEnvs))
                 .addHeader("Content-Type", "application/json"));

@@ -9,6 +9,7 @@ import org.digma.intellij.plugin.ui.jcef.jsonToObject
 import org.digma.intellij.plugin.ui.recentactivity.RecentActivityToolWindowIconChanger
 import java.beans.ConstructorProperties
 
+//Not in use, we do it in the plugin, keep as an example
 class RecentActivityBadgeCommand : Command() {
 
     private val logger = Logger.getInstance(this::class.java)

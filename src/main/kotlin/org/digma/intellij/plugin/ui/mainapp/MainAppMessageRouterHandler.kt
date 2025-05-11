@@ -34,7 +34,7 @@ class MainAppMessageRouterHandler(project: Project) : BaseMessageRouterHandler(p
     }
 
 
-    override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
+    override suspend fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
 
         when (action) {
 
@@ -45,7 +45,7 @@ class MainAppMessageRouterHandler(project: Project) : BaseMessageRouterHandler(p
                 handlers.forEach { handler ->
                     //can probably stop at the first true but then must rely on the correctness of the result
                     // from the handlers, which is error-prone. we use this result only for reporting
-                    // an unknown action and over time there may be mistakes there. its ok not to report
+                    // an unknown action, and over time there may be mistakes there. it's ok not to report
                     // correctly but not ok to miss a message.
                     //so we just call all handlers and collect their results
                     handled.add(handler.doOnQuery(project, browser, requestJsonNode, rawRequest, action))

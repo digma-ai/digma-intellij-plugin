@@ -1,33 +1,28 @@
 package org.digma.intellij.plugin.idea.psi.discovery
 
+import com.intellij.lang.Language
+import com.intellij.openapi.application.readAction
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
+import com.intellij.psi.PsiFile
+import kotlinx.coroutines.ensureActive
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.ReadActions
-import org.digma.intellij.plugin.common.executeCatching
-import org.digma.intellij.plugin.common.executeCatchingWithResult
-import org.digma.intellij.plugin.common.executeCatchingWithResultAndRetryIgnorePCE
-import org.digma.intellij.plugin.common.isProjectValid
-import org.digma.intellij.plugin.common.runInReadAccessWithResult
-import org.digma.intellij.plugin.common.runInReadAccessWithRetryIgnorePCE
+import org.digma.intellij.plugin.common.suspendableRetry
 import org.digma.intellij.plugin.idea.psi.createMethodCodeObjectId
-import org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscovery
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscoveryService
 import org.digma.intellij.plugin.idea.psi.discovery.span.AbstractSpanDiscovery
 import org.digma.intellij.plugin.idea.psi.getClassSimpleName
 import org.digma.intellij.plugin.idea.psi.getMethodsInClass
+import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.discovery.SpanInfo
-import org.digma.intellij.plugin.document.BuildDocumentInfoProcessContext
-import org.digma.intellij.plugin.psi.PsiFileCachedValueWithUri
-import org.digma.intellij.plugin.psi.PsiUtils
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.toUElementOfType
-import java.util.function.Consumer
+import kotlin.coroutines.coroutineContext
 
 /**
  * code object discovery for jvm languages
@@ -82,192 +77,112 @@ abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSp
 
      */
 
-    open fun buildDocumentInfo(
-        project: Project,
-        psiFileCachedValue: PsiFileCachedValueWithUri,
-        context: BuildDocumentInfoProcessContext,
-    ): DocumentInfo {
-
+    /**
+     * Builds a DocumentInfo.
+     * Assumes the psi file is valid so validate before calling.
+     * Assumes no read access, so don't call this method in read access
+     */
+    open suspend fun buildDocumentInfo(project: Project, psiFile: PsiFile, fileUrl: String, language: Language): DocumentInfo? {
         try {
-
-            //this method should not be already in read access , see comments above
+            //don't call this method on EDT or in read access, read access is taken when needed
+            EDT.assertNonDispatchThread()
             ReadActions.assertNotInReadAccess()
 
-            //should always run on background
-            EDT.assertNonDispatchThread()
-
-            DumbService.getInstance(project).waitForSmartMode()
-
-            var psiFile = psiFileCachedValue.value
-            if (!isProjectValid(project) || !PsiUtils.isValidPsiFile(psiFile)) {
-                return DocumentInfo(psiFileCachedValue.uri, mutableMapOf())
-            }
-
-
-            //build a file data in read access
-            val fileData = runInReadAccessWithResult {
-                FileData.buildFileData(psiFileCachedValue)
-            }
-
-            val fileUri = fileData.fileUri
-
             //maybe uFile is null,there is nothing to do without a UFile.
-            fileData.uFile ?: return DocumentInfo(fileUri, mutableMapOf())
+            val fileData = readAction {
+                FileData.buildFileData(psiFile)
+            } ?: return null
+            coroutineContext.ensureActive()
 
             val packageName = fileData.packageName
-
             val methodInfoMap = mutableMapOf<String, MethodInfo>()
-
-            val spans: Collection<SpanInfo> = collectSpans(project, psiFileCachedValue, context)
-
-            //get an updated psi file if it was invalidated
-            psiFile = psiFileCachedValue.value
-            //if collectMethods throws exception we don't catch it, there is no use for DocumentInfo without methods.
-            //the exception will be caught be caller and hopefully retry and succeed.
-            val classes = runInReadAccessWithResult { psiFile.toUElementOfType<UFile>()?.classes ?: listOf() }
-            collectMethods(project, fileUri, classes, packageName, methodInfoMap, spans, context)
-
-
-            val documentInfo = DocumentInfo(fileUri, methodInfoMap)
-
-            collectEndpoints(project, psiFileCachedValue, documentInfo, context)
-
+            val spans: Collection<SpanInfo> = collectSpans(project, psiFile)
+            coroutineContext.ensureActive()
+            val classes = readAction { fileData.uFile.classes }
+            collectMethods(project, fileUrl, classes, packageName, methodInfoMap, spans)
+            coroutineContext.ensureActive()
+            val documentInfo = DocumentInfo(fileUrl, methodInfoMap, language.id)
+            collectEndpoints(project, psiFile, documentInfo)
             return documentInfo
-
         } catch (e: Throwable) {
-            context.addError("buildDocumentInfo", e)
+            //may also be CancellationException
+            Log.warnWithException(logger, project, e, "error building document info for file {}", fileUrl)
             throw e
         }
     }
 
 
-    private fun collectEndpoints(
-        project: Project,
-        psiFileCachedValue: PsiFileCachedValueWithUri,
-        documentInfo: DocumentInfo,
-        context: BuildDocumentInfoProcessContext,
-    ) {
-
-        val psiFile = psiFileCachedValue.value ?: return
+    open suspend fun collectEndpoints(project: Project, psiFile: PsiFile, documentInfo: DocumentInfo) {
         val endpointDiscoveryList = EndpointDiscoveryService.getInstance(project).getEndpointDiscoveryForLanguage(psiFile)
-        endpointDiscoveryList.forEach(Consumer { framework: EndpointDiscovery ->
-            //if a framework fails catch it and continue execution so at least we have a partial document info.
-            executeCatchingWithResultAndRetryIgnorePCE({
-                framework.endpointDiscovery(psiFileCachedValue, documentInfo, context)
-            }, { e ->
-                context.addError("collectEndpoints", e)
-            })
-        })
+        for (framework in endpointDiscoveryList) {
+            suspendableRetry {
+                framework.endpointDiscovery(psiFile, documentInfo)
+            }
+        }
     }
 
 
-    private fun collectSpans(
-        project: Project,
-        psiFileCachedValue: PsiFileCachedValueWithUri,
-        context: BuildDocumentInfoProcessContext,
-    ): Collection<SpanInfo> {
-        //if span discovery fails catch it and continue execution so at least we have a partial document info.
-        return executeCatchingWithResultAndRetryIgnorePCE({
-            spanDiscovery.discoverSpans(project, psiFileCachedValue, context)
-        }, { e ->
-            context.addError("collectSpans", e)
-            listOf()
-        })
+    open suspend fun collectSpans(project: Project, psiFile: PsiFile): Collection<SpanInfo> {
+        return suspendableRetry {
+            spanDiscovery.discoverSpans(project, psiFile)
+        }
     }
 
 
-    private fun collectMethods(
+    open suspend fun collectMethods(
         project: Project,
         fileUri: String,
         classes: List<UClass>,
         packageName: String,
         methodInfoMap: MutableMap<String, MethodInfo>,
-        spans: Collection<SpanInfo>,
-        context: BuildDocumentInfoProcessContext,
+        spans: Collection<SpanInfo>
     ) {
-
         classes.forEach { uClass ->
             if (isRelevantClassType(uClass)) {
-
-                val methods: Collection<UMethod> = runInReadAccessWithResult {
+                val methods: Collection<UMethod> = readAction {
                     getMethodsInClass(uClass)
                 }
-
                 methods.forEach { uMethod ->
-                    executeCatching({
-                        runInReadAccessWithRetryIgnorePCE {
+                    suspendableRetry {
+                        readAction {
                             val id: String = createMethodCodeObjectId(uMethod)
                             val name: String = uMethod.name
                             val containingClassName: String = uClass.qualifiedName ?: getClassSimpleName(uClass)
                             val containingFileUri: String = fileUri
-                            val offsetAtFileUri: Int = uMethod.sourcePsi?.textOffset ?: 0
-                            val methodInfo = MethodInfo(id, name, containingClassName, packageName, containingFileUri, offsetAtFileUri)
-
+                            val methodInfo = MethodInfo(id, name, containingClassName, packageName, containingFileUri)
                             val methodSpans = spans.filter { spanInfo: SpanInfo -> spanInfo.containingMethodId == id }
-
                             methodInfo.addSpans(methodSpans)
-
                             methodInfoMap[id] = methodInfo
                         }
-                    }) { e ->
-                        context.addError("collectMethods", e)
                     }
                 }
-
-                val innerClasses = runInReadAccessWithResult {
+                val innerClasses = readAction {
                     uClass.innerClasses.asList()
                 }
-
-                //optimization: check if we made at least 50% of method discovery, if not throw exception, the operation will restart
-                //todo: need to know if its the last attempt and not throw the exception
-////                if (methods.isNotEmpty()) {
-////                    val percentage = (methodInfoMap.size * 100) / methods.size
-////                    if (percentage < 50){
-////                        throw CodeObjectDiscoveryException("less the 50% methods discovered.")
-////                    }
-////                }
-
-
                 if (innerClasses.isNotEmpty()) {
-                    collectMethods(project, fileUri, innerClasses, packageName, methodInfoMap, spans, context)
+                    collectMethods(project, fileUri, innerClasses, packageName, methodInfoMap, spans)
                 }
             }
         }
     }
 
 
-    private fun isRelevantClassType(uClass: UClass): Boolean {
-        return runInReadAccessWithResult {
+    open suspend fun isRelevantClassType(uClass: UClass): Boolean {
+        return readAction {
             !(uClass.isAnnotationType || uClass.isEnum || uClass.isRecord)
         }
     }
 }
 
 
-private class FileData(val fileUri: String, val uFile: UFile?, val packageName: String) {
-
-    constructor() : this("", null, "")
-    constructor(fileUri: String) : this(fileUri, null, "")
-
+private class FileData(val uFile: UFile, val packageName: String) {
     companion object {
-        fun buildFileData(psiFileCachedValue: PsiFileCachedValueWithUri): FileData {
-
-            return executeCatchingWithResult({
-
-                psiFileCachedValue.value?.let { psiFile ->
-                    val fileUri = PsiUtils.psiFileToUri(psiFile)
-                    //usually it will return a UFile but must consider null
-                    val uFile: UFile? = psiFile.toUElementOfType<UFile>()
-                    uFile?.let {
-                        val packageName = it.packageName
-                        FileData(fileUri, it, packageName)
-                    } ?: FileData(fileUri)
-
-                } ?: FileData()
-            }, {
-                FileData()
-            })
+        fun buildFileData(psiFile: PsiFile): FileData? {
+            val uFile: UFile? = psiFile.toUElementOfType<UFile>()
+            return uFile?.let {
+                val packageName = it.packageName
+                FileData(it, packageName)
+            }
         }
     }
-
 }

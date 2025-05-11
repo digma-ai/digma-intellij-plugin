@@ -13,12 +13,12 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.JBPopupListener
 import com.intellij.openapi.ui.popup.LightweightWindowEvent
+import kotlinx.coroutines.CoroutineScope
 import org.digma.intellij.plugin.PluginId
 import org.digma.intellij.plugin.analytics.AnalyticsService
-import org.digma.intellij.plugin.common.Backgroundable
-import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.common.createObjectMapper
-import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import org.digma.intellij.plugin.kotlin.ext.launchWhileActiveWithErrorReporting
+import org.digma.intellij.plugin.kotlin.ext.launchWithErrorReporting
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.common.SpanInfo
 import org.digma.intellij.plugin.model.rest.event.CodeObjectEvent
@@ -26,7 +26,6 @@ import org.digma.intellij.plugin.model.rest.event.FirstImportantInsightEvent
 import org.digma.intellij.plugin.model.rest.event.LatestCodeObjectEventsResponse
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
-import org.digma.intellij.plugin.scheduling.disposingPeriodicTask
 import org.digma.intellij.plugin.scope.ScopeContext
 import org.digma.intellij.plugin.scope.ScopeManager
 import org.digma.intellij.plugin.scope.SpanScope
@@ -39,49 +38,36 @@ import kotlin.time.Duration.Companion.minutes
 const val EVENTS_NOTIFICATION_GROUP = "Digma Events Group"
 
 @Service(Service.Level.PROJECT)
-class EventsNotificationsService(val project: Project) : Disposable {
+class EventsNotificationsService(val project: Project, private val cs: CoroutineScope) : Disposable {
+
+    val logger = Logger.getInstance(this::class.java)
 
     val objectMapper = createObjectMapper()
 
-    companion object {
-        val logger = Logger.getInstance(this::class.java)
-    }
 
     fun waitForEvents() {
 
         Log.log(logger::info, "starting insights notification service")
 
-        disposingPeriodicTask("EventsNotificationsService.waitForEvents", 1.minutes.inWholeMilliseconds, true) {
+        cs.launchWhileActiveWithErrorReporting(null, 1.minutes, true, "EventsNotificationsService.waitForEvents", logger) {
 
-            try {
+            var lastEventTime = service<PersistenceService>().getLastInsightsEventTime()
+            if (lastEventTime == null) {
+                lastEventTime = ZonedDateTime.now().minus(7, ChronoUnit.DAYS).withZoneSameInstant(ZoneOffset.UTC).toString()
+            }
 
-                var lastEventTime = service<PersistenceService>().getLastInsightsEventTime()
-                if (lastEventTime == null) {
-                    lastEventTime = ZonedDateTime.now().minus(7, ChronoUnit.DAYS).withZoneSameInstant(ZoneOffset.UTC).toString()
-                }
+            Log.log(logger::trace, "sending getLatestEvents query with lastEventTime={}", lastEventTime)
+            val events = AnalyticsService.getInstance(project).getLatestEvents(lastEventTime)
+            Log.log(logger::trace, "got latest events {}", events)
 
-                Log.log(logger::trace, "sending getLatestEvents query with lastEventTime={}", lastEventTime)
-                val events = AnalyticsService.getInstance(project).getLatestEvents(lastEventTime)
-                Log.log(logger::trace, "got latest events {}", events)
-
-                events.events.forEach {
-                    when (it) {
-                        is FirstImportantInsightEvent -> showNotificationForFirstImportantInsight(it)
-                        ////is CodeObjectDurationChangeEvent -> showNotificationForDurationChangeEvent(it)
-                    }
-                }
-
-                updateLastEventTime(events)
-
-            } catch (e: Throwable) {
-                //no need to report connection exception, it is reported by AnalyticsService
-                if (ExceptionUtils.isAnyConnectionException(e)) {
-                    Log.debugWithException(logger, e, "could not get latest events {}", e)
-                } else {
-                    Log.warnWithException(logger, e, "could not get latest events {}", e.message)
-                    ErrorReporter.getInstance().reportError(project, "EventsNotificationsService.waitForEvents", e)
+            events.events.forEach {
+                when (it) {
+                    is FirstImportantInsightEvent -> showNotificationForFirstImportantInsight(it)
+                    ////is CodeObjectDurationChangeEvent -> showNotificationForDurationChangeEvent(it)
                 }
             }
+
+            updateLastEventTime(events)
         }
     }
 
@@ -169,8 +155,8 @@ class EventsNotificationsService(val project: Project) : Disposable {
             )
         )
 
-        notification.setImportant(true)
-        notification.setToolWindowId(PluginId.TOOL_WINDOW_ID)
+        notification.isImportant = true
+        notification.toolWindowId = PluginId.TOOL_WINDOW_ID
 
         notification.notify(this.project)
         notification.balloon?.addListener(object : JBPopupListener {
@@ -185,31 +171,28 @@ class EventsNotificationsService(val project: Project) : Disposable {
     }
 
 
-}
+    inner class GoToCodeObjectInsightsAction(
+        private val project: Project,
+        private val notification: Notification,
+        private val notificationName: String,
+        private val codeObjectId: String,
+        private val methodId: String?,
+        private val environmentId: String,
+    ) :
+        AnAction("Show Insights") {
+        override fun actionPerformed(e: AnActionEvent) {
 
+            cs.launchWithErrorReporting("GoToCodeObjectInsightsAction.actionPerformed", logger) {
+                Log.log(logger::info, "GoToCodeObjectInsightsAction action clicked for {}", codeObjectId)
+                ActivityMonitor.getInstance(project).registerNotificationCenterEvent("$notificationName.clicked", mapOf())
+                val scopeContext = ScopeContext("IDE/NOTIFICATION_LINK_CLICKED", null)
+                ScopeManager.getInstance(project).changeScope(SpanScope(codeObjectId), scopeContext, environmentId)
+            }
 
-class GoToCodeObjectInsightsAction(
-    private val project: Project,
-    private val notification: Notification,
-    private val notificationName: String,
-    private val codeObjectId: String,
-    private val methodId: String?,
-    private val environmentId: String,
-) :
-    AnAction("Show Insights") {
-    override fun actionPerformed(e: AnActionEvent) = try {
-        Log.log(EventsNotificationsService.logger::info, "GoToCodeObjectInsightsAction action clicked for {}", codeObjectId)
-
-        ActivityMonitor.getInstance(project).registerNotificationCenterEvent("$notificationName.clicked", mapOf())
-
-        Backgroundable.ensurePooledThreadWithoutReadAccess {
-            val scopeContext = ScopeContext("IDE/NOTIFICATION_LINK_CLICKED", null)
-            ScopeManager.getInstance(project).changeScope(SpanScope(codeObjectId), scopeContext, environmentId)
+            notification.expire()
         }
-
-        notification.expire()
-    } catch (e: Throwable) {
-        ErrorReporter.getInstance().reportError(project, "GoToCodeObjectInsightsAction.actionPerformed", e)
     }
 
 }
+
+

@@ -4,7 +4,6 @@ import com.intellij.icons.AllIcons;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.editor.ex.EditorEx;
 import com.intellij.openapi.fileEditor.*;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.*;
@@ -38,7 +37,7 @@ public class EditorService implements Disposable {
 
     public EditorService(Project project) {
         this.project = project;
-        vcsService = project.getService(VcsService.class);
+        vcsService = VcsService.getInstance(project);
     }
 
     public static EditorService getInstance(Project project) {
@@ -149,19 +148,13 @@ public class EditorService implements Disposable {
         }
     }
 
-    private Editor openVirtualFile(VirtualFile virtualFile, int lineNumber) {
-        OpenFileDescriptor navigable = new OpenFileDescriptor(project, virtualFile, Math.max(0, lineNumber - 1), 0);
-        return FileEditorManager.getInstance(project).openTextEditor(navigable, true);
+    private void openVirtualFile(VirtualFile virtualFile, int lineNumber) {
+        SlowOperationsUtilsKt.allowSlowOperation(() -> {
+            OpenFileDescriptor navigable = new OpenFileDescriptor(project, virtualFile, Math.max(0, lineNumber - 1), 0);
+            FileEditorManager.getInstance(project).openTextEditor(navigable, true);
+        });
     }
 
-    public void openVirtualFile(@NotNull VirtualFile virtualFile, boolean readOnly) {
-        Editor editor = openVirtualFile(virtualFile, 1);
-        if (readOnly) {
-            if (editor instanceof EditorEx editorEx) {
-                editorEx.setViewer(true);
-            }
-        }
-    }
 
     private boolean showIfAlreadyOpen(String name, int lineNumber) {
 
@@ -181,6 +174,7 @@ public class EditorService implements Disposable {
     }
 
 
+    //todo: dispatch on EDT only the relevant code
     @Nullable
     public Triple<VirtualFile, Editor, Boolean> openWorkspaceFileInEditor(@NotNull String workspaceUri, int offset) {
 
@@ -228,7 +222,8 @@ public class EditorService implements Disposable {
 
     /**
      * opens a file created from a classpath resource that must be a text file.
-     * @param name the name of the editor
+     *
+     * @param name         the name of the editor
      * @param resourcePath the classpath resource path
      */
     public void openClasspathResourceReadOnly(String name, String resourcePath) {
@@ -250,12 +245,12 @@ public class EditorService implements Disposable {
                 var vf = new LightVirtualFile(name, content);
                 vf.setWritable(false);
                 openVirtualFile(vf, 0);
-            }else{
-                Log.log(LOGGER::debug, "Could not load input stream for classpath resource {}, {}",resourcePath);
+            } else {
+                Log.log(LOGGER::debug, "Could not load input stream for classpath resource {}, {}", resourcePath);
             }
 
         } catch (Exception e) {
-            Log.log(LOGGER::warn, "Could not open classpath resource {}, {}",resourcePath, e.getMessage());
+            Log.log(LOGGER::warn, "Could not open classpath resource {}, {}", resourcePath, e.getMessage());
             NotificationUtil.notifyError(project, "Could not open classpath resource " + resourcePath);
         }
     }
@@ -266,20 +261,4 @@ public class EditorService implements Disposable {
         //nothing to do
     }
 
-    @Nullable
-    public Pair<String, Integer> getCurrentCaretLocation() {
-        var selectedTextEditor = FileEditorManager.getInstance(project).getSelectedTextEditor();
-
-        if (selectedTextEditor != null){
-            var file = FileDocumentManager.getInstance().getFile(selectedTextEditor.getDocument());
-            var offset = selectedTextEditor.getCaretModel().getOffset();
-
-            if (file != null){
-                return new Pair<>(file.getUrl(),offset);
-            }
-
-        }
-
-        return null;
-    }
 }

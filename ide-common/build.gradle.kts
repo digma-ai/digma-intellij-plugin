@@ -1,22 +1,22 @@
-import common.BuildProfiles
-import common.BuildProfiles.greaterThan
-import common.currentProfile
+import common.DownloadUiBundle
+import common.GENERATED_RESOURCES_DIR_NAME
+import common.UI_BUNDLE_DIR_NAME
+import common.UI_VERSION_FILE_NAME
 import common.dynamicPlatformType
 import common.platformVersion
 import common.useBinaryInstaller
-import de.undercouch.gradle.tasks.download.Download
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 
 plugins {
     id("plugin-library")
 }
 
+
 //ide-common module should build with different platform types, if running rider with runIde or building
 // with buildWithRider=true it should build with RD,
 // if running ultimate or building with buildWIthUltimate=true it should build with IU, etc.
 //the default is to build with IC
 val platformType: IntelliJPlatformType by extra(dynamicPlatformType(project))
-
 
 dependencies {
 
@@ -44,34 +44,25 @@ dependencies {
     }
 }
 
+sourceSets {
+    main {
+        resources {
+            srcDir(layout.buildDirectory.dir(GENERATED_RESOURCES_DIR_NAME))
+        }
+    }
+}
 
 tasks {
 
-    val uiVersionFile = project.rootProject.file("ui-version")
-    val uiVersion = uiVersionFile.readText()
-    //the directory inside the jar to package to
-    val uiBundleDir = File(project.sourceSets.main.get().output.resourcesDir, "ui-bundle")
-    val uiBundleFile = File(uiBundleDir, "digma-ui-$uiVersion.zip")
-
-    val downloadUiBundle by registering(Download::class) {
-
-        inputs.files(uiVersionFile)
-        outputs.files(uiBundleFile)
-
-        src(
-            listOf(
-                "https://github.com/digma-ai/digma-ui/releases/download/v$uiVersion/dist-jetbrains-v$uiVersion.zip"
-            )
-        )
-        dest(uiBundleFile)
-        retries(3)
+    val downloadUiBundle  by registering(DownloadUiBundle::class) {
+        uiVersionFile.set(project.rootProject.file(UI_VERSION_FILE_NAME))
+        outputDir.set(layout.buildDirectory.dir(UI_BUNDLE_DIR_NAME))
     }
 
     val createUiBundleVersionFile by registering(Copy::class) {
-        from(uiVersionFile)
-        into(uiBundleDir)
+        from(project.rootProject.file(UI_VERSION_FILE_NAME))
+        into(layout.buildDirectory.dir(UI_BUNDLE_DIR_NAME))
     }
-
 
     processResources {
         dependsOn(downloadUiBundle, createUiBundleVersionFile)

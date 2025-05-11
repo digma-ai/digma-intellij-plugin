@@ -4,8 +4,8 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
 import org.digma.intellij.plugin.idea.psi.JvmLanguageService
-import org.digma.intellij.plugin.idea.psi.SupportedJvmLanguages
-import org.digma.intellij.plugin.psi.LanguageService
+import org.digma.intellij.plugin.psi.LanguageServiceProvider
+import org.digma.intellij.plugin.psi.PsiUtils
 
 //Do not change to light service because it will always register.
 // we want it to register only in Idea.
@@ -38,12 +38,8 @@ class EndpointDiscoveryService(private val project: Project) {
         endpointDiscoveryList.add(GrpcFrameworkEndpointDiscovery(project))
         endpointDiscoveryList.add(SpringBootFrameworkEndpointDiscovery(project))
 
-        SupportedJvmLanguages.values().forEach { lang ->
-            val languageService = LanguageService.findLanguageServiceByName(project, lang.language.languageServiceClassName)
-            if (languageService != null &&
-                languageService is JvmLanguageService
-            ) {
-
+        for (languageService in LanguageServiceProvider.getInstance(project).getLanguageServices()) {
+            if (languageService is JvmLanguageService) {
                 endpointDiscoveryList.addAll(languageService.getEndpointFrameworksRelevantOnlyForLanguage(project))
             }
         }
@@ -53,15 +49,9 @@ class EndpointDiscoveryService(private val project: Project) {
 
 
     fun getEndpointDiscoveryForLanguage(psiFile: PsiFile): List<EndpointDiscovery> {
-
         val endpointDiscoveryList = mutableListOf<EndpointDiscovery>()
-        SupportedJvmLanguages.values().forEach { lang ->
-            val languageService = LanguageService.findLanguageServiceByName(project, lang.language.languageServiceClassName)
-            if (languageService != null &&
-                languageService is JvmLanguageService &&
-                languageService.isSupportedFile(psiFile)
-            ) {
-
+        for (languageService in LanguageServiceProvider.getInstance(project).getLanguageServices()) {
+            if (languageService is JvmLanguageService && PsiUtils.isValidPsiFile(psiFile) && languageService.isSupportedFile(psiFile)) {
                 endpointDiscoveryList.addAll(languageService.getEndpointFrameworks(project))
             }
         }

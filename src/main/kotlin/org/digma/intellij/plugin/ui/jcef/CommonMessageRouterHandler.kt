@@ -19,7 +19,7 @@ interface CommonMessageRouterHandler {
      * return true if the action was handled. false if the action is unknown. used for error reporting only.
      */
     @Throws(Exception::class) // this is necessary for implementations in java that may throw exceptions
-    fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean
+    suspend fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean
 
 
     fun getPayloadFromRequest(requestJsonNode: JsonNode): JsonNode? {

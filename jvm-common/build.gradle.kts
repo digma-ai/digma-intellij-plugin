@@ -1,13 +1,12 @@
 import common.BuildProfiles
 import common.BuildProfiles.greaterThan
+import common.DownloadOtelJarsTask
+import common.GENERATED_RESOURCES_DIR_NAME
 import common.currentProfile
 import common.dynamicPlatformType
 import common.platformVersion
 import common.useBinaryInstaller
-import common.withSilenceLogging
-import de.undercouch.gradle.tasks.download.Download
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
-import java.util.Properties
 
 plugins {
     id("plugin-library")
@@ -35,7 +34,7 @@ dependencies {
     intellijPlatform {
 
         //this module can only build with IC or IU, so only support replacing to IU when
-        // we build with IU , otherwise build with IC even if platformType is something else like RD or PY
+        // we build with IU, otherwise build with IC even if platformType is something else like RD or PY
         if (platformType == IntelliJPlatformType.IntellijIdeaUltimate) {
             intellijIdeaUltimate(project.platformVersion(), project.useBinaryInstaller())
         } else {
@@ -52,53 +51,22 @@ dependencies {
     }
 }
 
-
-//prepare properties for downloadOtelJars during the configuration phase to support configuration cache
-val jarsUrls: List<String> by lazy {
-    val propsFile = layout.projectDirectory.file("src/main/resources/jars-urls.properties").asFile
-    Properties().apply {
-        propsFile.inputStream().use { load(it) }
-    }.values.toList().map { it.toString() }
-}
-val otelJarTmpDir = layout.buildDirectory.dir("generated/otelJars")
-val resourceOtelJarDir: Provider<File> = provider {
-    val resourcesDir = project.the<SourceSetContainer>()["main"].output.resourcesDir
-        ?: error("resourcesDir is not set. You may need to set it manually or use processResources destinationDir.")
-    File(resourcesDir, "otelJars")
+sourceSets {
+    main {
+        resources {
+            srcDir(layout.buildDirectory.dir(GENERATED_RESOURCES_DIR_NAME))
+        }
+    }
 }
 
 tasks {
 
-    val downloadOtelJars = register("downloadOtelJars", Download::class.java) {
-        notCompatibleWithConfigurationCache("downloadOtelJars is not yet compatible with configuration cache")
-
-        src(jarsUrls)
-        dest(otelJarTmpDir)
-        overwrite(false)
-        onlyIfModified(true)
-        doFirst {
-            withSilenceLogging {
-                logger.lifecycle("$name: jars to download $jarsUrls")
-            }
-        }
+    val downloadOtelJars by registering(DownloadOtelJarsTask::class) {
+        propsFile.set(layout.projectDirectory.file("src/main/resources/jars-urls.properties"))
+        outputDir.set(layout.buildDirectory.dir("$GENERATED_RESOURCES_DIR_NAME/otelJars"))
     }
-
-    val renameOtelJars = register<Copy>("renameOtelJars") {
-        //strip versions from the jars
-
-        dependsOn(downloadOtelJars)
-
-        from(otelJarTmpDir)
-        into(resourceOtelJarDir)
-
-        rename(".*digma-otel-agent-extension.*", "digma-otel-agent-extension.jar")
-        rename(".*digma-agent.*", "digma-agent.jar")
-        rename(".*opentelemetry-javaagent.*", "opentelemetry-javaagent.jar")
-    }
-
-
 
     processResources {
-        dependsOn(renameOtelJars)
+        dependsOn(downloadOtelJars)
     }
 }

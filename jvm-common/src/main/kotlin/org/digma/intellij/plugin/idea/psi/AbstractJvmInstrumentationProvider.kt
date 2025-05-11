@@ -1,55 +1,179 @@
 package org.digma.intellij.plugin.idea.psi
 
-import com.intellij.openapi.application.WriteAction
+import com.intellij.buildsystem.model.unified.UnifiedCoordinates
+import com.intellij.buildsystem.model.unified.UnifiedDependency
+import com.intellij.externalSystem.DependencyModifierService
+import com.intellij.openapi.application.EDT
+import com.intellij.openapi.application.smartReadAction
+import com.intellij.openapi.application.writeAction
+import com.intellij.openapi.components.service
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.externalSystem.autoimport.ProjectRefreshAction
+import com.intellij.openapi.module.Module
+import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.project.Project
-import org.digma.intellij.plugin.common.EDT
-import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import com.intellij.psi.JavaPsiFacade
+import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.util.concurrency.annotations.RequiresReadLock
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.withContext
+import org.digma.intellij.plugin.WITH_SPAN_ANNOTATION_FQN
+import org.digma.intellij.plugin.buildsystem.BuildSystem
+import org.digma.intellij.plugin.idea.buildsystem.JvmBuildSystemHelperService
+import org.digma.intellij.plugin.idea.deps.ModulesDepsService
+import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
+import org.digma.intellij.plugin.idea.psi.discovery.MicrometerTracingFramework.Companion.OBSERVED_FQN
 import org.digma.intellij.plugin.instrumentation.InstrumentationProvider
 import org.digma.intellij.plugin.instrumentation.MethodObservabilityInfo
+import org.digma.intellij.plugin.log.Log
+import org.jetbrains.uast.UMethod
+import kotlin.coroutines.coroutineContext
 
-abstract class AbstractJvmInstrumentationProvider(private val project: Project, private val languageService: AbstractJvmLanguageService) :
+abstract class AbstractJvmInstrumentationProvider(protected val project: Project, protected val languageService: AbstractJvmLanguageService) :
     InstrumentationProvider {
 
-    override fun buildMethodObservabilityInfo(methodId: String): MethodObservabilityInfo {
-        return languageService.canInstrumentMethod(methodId)
-    }
+    protected val logger: Logger = Logger.getInstance(this::class.java)
 
-    override fun addObservabilityDependency(methodId: String) {
-        try {
+    private val otelDependencyVersion = "1.26.0"
+    private val otelCoordinates =
+        UnifiedCoordinates("io.opentelemetry.instrumentation", "opentelemetry-instrumentation-annotations", otelDependencyVersion)
+    private val mapBuildSystem2Dependency: Map<BuildSystem, UnifiedDependency> = mapOf(
+        BuildSystem.INTELLIJ to UnifiedDependency(otelCoordinates, "compile"),
+        BuildSystem.MAVEN to UnifiedDependency(otelCoordinates, null),
+        BuildSystem.GRADLE to UnifiedDependency(otelCoordinates, "implementation")
+    )
 
-            EDT.ensureEDT {
-                try {
-                    WriteAction.run<RuntimeException> {
-                        languageService.addDependencyToOtelLib(methodId)
-                        ProjectRefreshAction.refreshProject(project)
+
+    override suspend fun buildMethodObservabilityInfo(methodId: String): MethodObservabilityInfo {
+        val uMethod = languageService.findUMethodByMethodCodeObjectId(methodId)
+        coroutineContext.ensureActive()
+        return uMethod?.let { method ->
+            smartReadAction(project) {
+                val containingModule = method.sourcePsi?.let { ModuleUtilCore.findModuleForPsiElement(it) }
+                containingModule?.let { module ->
+                    if (!hasNecessaryDependencies(project, module)) {
+                        MethodObservabilityInfo(methodId, hasMissingDependency = true, canInstrumentMethod = false, hasAnnotation = false)
+                    } else {
+                        val annotationClassFqn = getAnnotationClassFqn(project, module)
+                        val hasAnnotation = method.uAnnotations.any { uAnnotation -> uAnnotation.qualifiedName == annotationClassFqn }
+                        MethodObservabilityInfo(
+                            methodId,
+                            hasMissingDependency = false,
+                            canInstrumentMethod = true,
+                            annotationClassFqn = annotationClassFqn,
+                            hasAnnotation = hasAnnotation
+                        )
                     }
-                } catch (e: Throwable) {
-                    ErrorReporter.getInstance().reportError(project, "AbstractJvmInstrumentationProvider.addObservabilityDependency", e)
                 }
             }
-        } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError(project, "AbstractJvmInstrumentationProvider.addObservabilityDependency", e)
+        } ?: MethodObservabilityInfo(methodId, hasMissingDependency = false, canInstrumentMethod = false, hasAnnotation = false)
+    }
+
+    override suspend fun addObservabilityDependency(methodId: String) {
+
+        val uMethod = languageService.findUMethodByMethodCodeObjectId(methodId)
+        if (uMethod?.sourcePsi == null) {
+            Log.warn(logger, "Failed to get PsiMethod from method id '{}'", methodId)
+            return
+        }
+
+        withContext(Dispatchers.EDT) {
+            @Suppress("UnstableApiUsage")
+            writeAction {
+                addDependencyToOtelLib(uMethod, methodId)
+                ProjectRefreshAction.Manager.refreshProject(project)
+            }
         }
     }
 
-    override fun addObservability(methodId: String) {
-        try {
-            EDT.ensureEDT {
-                try {
-                    WriteAction.run<RuntimeException> {
-                        val observabilityInfo = languageService.canInstrumentMethod(methodId)
-                        if (!observabilityInfo.hasAnnotation) {
-                            languageService.instrumentMethod(observabilityInfo)
-                            ProjectRefreshAction.refreshProject(project)
-                        }
-                    }
-                } catch (e: Throwable) {
-                    ErrorReporter.getInstance().reportError(project, "AbstractJvmInstrumentationProvider.addObservability", e)
-                }
-            }
-        } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError(project, "AbstractJvmInstrumentationProvider.addObservability", e)
+    override suspend fun addObservability(methodId: String) {
+
+        val observabilityInfo = buildMethodObservabilityInfo(methodId)
+        if (observabilityInfo.hasAnnotation) {
+            return
+        }
+
+        withContext(Dispatchers.EDT) {
+            instrumentMethod(observabilityInfo)
+            ProjectRefreshAction.Manager.refreshProject(project)
         }
     }
+
+
+    @Suppress("UnstableApiUsage")
+    private fun addDependencyToOtelLib(uMethod: UMethod, methodId: String) {
+        val module = getModuleOfMethodId(uMethod)
+        if (module == null) {
+            Log.warn(logger, "Failed to add dependencies OTEL lib since could not lookup module by methodId='{}'", methodId)
+            return
+        }
+
+        if (isSpringBootAndMicrometer(project, module)) {
+            addDepsForSpringBootAndMicrometer(module)
+        } else {
+            val moduleBuildSystem = project.service<JvmBuildSystemHelperService>().determineBuildSystem(module)
+            val dependencyLib = mapBuildSystem2Dependency[moduleBuildSystem]
+            val dependencyModifierService = DependencyModifierService.getInstance(project)
+            if (dependencyLib != null) {
+                dependencyModifierService.addDependency(module, dependencyLib)
+            }
+        }
+    }
+
+
+    private fun getModuleOfMethodId(uMethod: UMethod): Module? {
+        return uMethod.sourcePsi?.let {
+            ModuleUtilCore.findModuleForPsiElement(it)
+        }
+    }
+
+
+    private fun addDepsForSpringBootAndMicrometer(module: Module) {
+        val modulesDepsService = ModulesDepsService.getInstance(project)
+        val moduleExt = modulesDepsService.getModuleExt(module.name)
+        if (moduleExt == null) {
+            Log.log(
+                logger::warn,
+                "Failed add dependencies of Spring Boot Micrometer since could not lookup module ext by module name='{}'",
+                module.name
+            )
+            return
+        }
+        val project = module.project
+        val springBootMicrometerConfigureDepsService = SpringBootMicrometerConfigureDepsService.getInstance(project)
+        springBootMicrometerConfigureDepsService.addMissingDependenciesForSpringBootObservability(moduleExt)
+    }
+
+
+    @RequiresReadLock(generateAssertion = false)
+    private fun hasNecessaryDependencies(project: Project, module: Module): Boolean {
+        return if (isSpringBootAndMicrometer(project, module)) {
+            val moduleExt = ModulesDepsService.getInstance(project).getModuleExt(module.name)
+            moduleExt?.let {
+                ModulesDepsService.getInstance(project).isModuleHasNeededDependenciesForSpringBootWithMicrometer(moduleExt.metadata)
+            } ?: false
+        } else {
+            val annotationClassFqn = WITH_SPAN_ANNOTATION_FQN
+            val annotationPsiClass = JavaPsiFacade.getInstance(project).findClass(
+                annotationClassFqn,
+                GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module, false)
+            )
+            annotationPsiClass != null
+        }
+    }
+
+
+    private fun isSpringBootAndMicrometer(project: Project, module: Module): Boolean {
+        return (ModulesDepsService.getInstance(project).isSpringBootModule(module)
+                && SpringBootMicrometerConfigureDepsService.isSpringBootWithMicrometer())
+    }
+
+    private fun getAnnotationClassFqn(project: Project, module: Module): String =
+        if (isSpringBootAndMicrometer(project, module)) {
+            OBSERVED_FQN
+        } else {
+            WITH_SPAN_ANNOTATION_FQN
+        }
+
 }

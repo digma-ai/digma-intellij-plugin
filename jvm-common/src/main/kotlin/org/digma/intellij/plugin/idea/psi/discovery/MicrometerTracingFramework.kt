@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.idea.psi.discovery
 
+import com.intellij.openapi.application.smartReadAction
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
@@ -8,17 +9,14 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.SmartPsiElementPointer
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
-import org.digma.intellij.plugin.common.executeCatchingIgnorePCE
-import org.digma.intellij.plugin.common.executeCatchingWithRetryIgnorePCE
 import org.digma.intellij.plugin.common.firstPart
-import org.digma.intellij.plugin.common.runInReadAccessWithRetryIgnorePCE
-import org.digma.intellij.plugin.document.BuildDocumentInfoProcessContext
+import org.digma.intellij.plugin.common.suspendableRetry
 import org.digma.intellij.plugin.idea.psi.PsiPointers
 import org.digma.intellij.plugin.idea.psi.createPsiMethodCodeObjectId
 import org.digma.intellij.plugin.idea.psi.findAnnotatedMethods
 import org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils
+import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.SpanInfo
-import org.digma.intellij.plugin.psi.PsiFileCachedValueWithUri
 import org.digma.intellij.plugin.psi.PsiUtils
 
 class MicrometerTracingFramework {
@@ -85,38 +83,25 @@ class MicrometerTracingFramework {
     }
 
 
-    fun discoverSpans(
-        project: Project,
-        psiFileCachedValue: PsiFileCachedValueWithUri,
-        context: BuildDocumentInfoProcessContext,
-    ): Collection<SpanInfo> {
+    suspend fun discoverSpans(project: Project, psiFile: PsiFile): Collection<SpanInfo> {
+
         val spanInfos = mutableListOf<SpanInfo>()
 
-        executeCatchingWithRetryIgnorePCE({
-            val newSpanAnnotationSpans = newSpanAnnotationSpanDiscovery(project, psiFileCachedValue, context)
+        suspendableRetry {
+            val newSpanAnnotationSpans = newSpanAnnotationSpanDiscovery(project, psiFile)
             spanInfos.addAll(newSpanAnnotationSpans)
-        }, { e ->
-            context.addError("newSpanAnnotationSpanDiscovery", e)
-        })
+        }
 
-        executeCatchingWithRetryIgnorePCE({
-            val observedAnnotationSpans = observedAnnotationSpanDiscovery(project, psiFileCachedValue, context)
+        suspendableRetry {
+            val observedAnnotationSpans = observedAnnotationSpanDiscovery(project, psiFile)
             spanInfos.addAll(observedAnnotationSpans)
-        }, { e ->
-            context.addError("observedAnnotationSpanDiscovery", e)
-        })
+        }
 
         return spanInfos
     }
 
 
-    private fun newSpanAnnotationSpanDiscovery(
-        project: Project,
-        psiFileCachedValue: PsiFileCachedValueWithUri,
-        context: BuildDocumentInfoProcessContext,
-    ): Collection<SpanInfo> {
-
-        val psiFile = psiFileCachedValue.value ?: return listOf()
+    private suspend fun newSpanAnnotationSpanDiscovery(project: Project, psiFile: PsiFile): Collection<SpanInfo> {
 
         val psiPointers = project.service<PsiPointers>()
 
@@ -128,21 +113,20 @@ class MicrometerTracingFramework {
                 findAnnotatedMethods(project, newSpanClassPointer) { GlobalSearchScope.fileScope(psiFile) }
             }
 
-
             annotatedMethods?.forEach { annotatedMethod: SmartPsiElementPointer<PsiMethod> ->
-
-                executeCatchingIgnorePCE({
-                    runInReadAccessWithRetryIgnorePCE {
-                        annotatedMethod.element?.let {
-                            val spanInfo = getSpanInfoFromNewSpanAnnotatedMethod(it)
-                            spanInfo?.let { si ->
-                                spanInfos.add(si)
-                            }
+                smartReadAction(project) {
+                    annotatedMethod.element?.let {
+                        val spanInfo = try {
+                            getSpanInfoFromNewSpanAnnotatedMethod(it)
+                        } catch (e: Throwable) {
+                            Log.warnWithException(logger, e, "Error in newSpanAnnotationSpanDiscovery for method {}", it.name)
+                            null
+                        }
+                        spanInfo?.let { si ->
+                            spanInfos.add(si)
                         }
                     }
-                }, { e ->
-                    context.addError("newSpanAnnotationSpanDiscovery", e)
-                })
+                }
             }
         }
 
@@ -150,18 +134,11 @@ class MicrometerTracingFramework {
     }
 
 
-    private fun observedAnnotationSpanDiscovery(
-        project: Project,
-        psiFileCachedValue: PsiFileCachedValueWithUri,
-        context: BuildDocumentInfoProcessContext,
-    ): Collection<SpanInfo> {
-
-        val psiFile = psiFileCachedValue.value ?: return listOf()
+    private suspend fun observedAnnotationSpanDiscovery(project: Project, psiFile: PsiFile): Collection<SpanInfo> {
 
         val psiPointers = project.service<PsiPointers>()
 
         val spanInfos = mutableListOf<SpanInfo>()
-
 
         psiPointers.getPsiClass(project, OBSERVED_FQN)?.let {
 
@@ -169,21 +146,21 @@ class MicrometerTracingFramework {
                 findAnnotatedMethods(project, observedAnnotationClassPointer) { GlobalSearchScope.fileScope(psiFile) }
             }
 
-
             annotatedMethods?.forEach { annotatedMethod: SmartPsiElementPointer<PsiMethod> ->
 
-                executeCatchingIgnorePCE({
-                    runInReadAccessWithRetryIgnorePCE {
-                        annotatedMethod.element?.let {
-                            val spanInfo = getSpanInfoFromObservedAnnotatedMethod(it)
-                            spanInfo?.let { si ->
-                                spanInfos.add(si)
-                            }
+                smartReadAction(project) {
+                    annotatedMethod.element?.let {
+                        val spanInfo = try {
+                            getSpanInfoFromObservedAnnotatedMethod(it)
+                        } catch (e: Throwable) {
+                            Log.warnWithException(logger, e, "Error in observedAnnotationSpanDiscovery for method {}", it.name)
+                            null
+                        }
+                        spanInfo?.let { si ->
+                            spanInfos.add(si)
                         }
                     }
-                }, { e ->
-                    context.addError("newSpanAnnotationSpanDiscovery", e)
-                })
+                }
             }
         }
 

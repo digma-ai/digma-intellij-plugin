@@ -46,6 +46,10 @@ internal class JvmSpanNavigationProvider(project: Project) : AbstractNavigationD
         return workspaceUris
     }
 
+    fun getMethodIdBySpanId(spanId: String): String? {
+        return spanLocations[spanId]?.methodCodeObjectId
+    }
+
 
     override fun getTask(myContext: NavigationProcessContext, navigationDiscoveryTrigger: NavigationDiscoveryTrigger, retry: Int): Runnable {
         return Runnable {

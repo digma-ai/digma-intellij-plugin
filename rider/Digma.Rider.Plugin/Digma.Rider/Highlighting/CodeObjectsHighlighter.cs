@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Digma.Rider.Discovery;
 using Digma.Rider.Protocol;
+using JetBrains.Application.Parts;
 using JetBrains.ProjectModel;
 using JetBrains.ReSharper.Daemon.CodeInsights;
 using JetBrains.ReSharper.Feature.Services.Daemon;
@@ -12,7 +13,7 @@ using static Digma.Rider.Logging.Logger;
 
 namespace Digma.Rider.Highlighting
 {
-    [ElementProblemAnalyzer(typeof(ICSharpFunctionDeclaration))]
+    [ElementProblemAnalyzer(Instantiation.ContainerAsyncPrimaryThread,typeof(ICSharpFunctionDeclaration))]
     public class CodeObjectsHighlighter : ElementProblemAnalyzer<ICSharpFunctionDeclaration>
     {
         private readonly ILogger _logger;

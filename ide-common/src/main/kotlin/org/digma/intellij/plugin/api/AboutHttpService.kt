@@ -26,7 +26,7 @@ internal class AboutHttpService : AbstractHttpService() {
     override fun getServiceName() = "digma/about"
 
 
-    override fun execute(urlDecoder: QueryStringDecoder, request: FullHttpRequest, context: ChannelHandlerContext): String? {
+    override suspend fun executeRequest(urlDecoder: QueryStringDecoder, request: FullHttpRequest, context: ChannelHandlerContext): String? {
         val byteOut = BufferExposingByteArrayOutputStream()
         writeApplicationInfoJson(byteOut)
         send(byteOut, request, context)

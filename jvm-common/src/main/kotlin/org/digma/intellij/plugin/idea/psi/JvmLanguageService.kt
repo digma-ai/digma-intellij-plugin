@@ -10,6 +10,6 @@ interface JvmLanguageService {
 
     fun getEndpointFrameworksRelevantOnlyForLanguage(project: Project): Collection<EndpointDiscovery>
 
-    fun findMethodByMethodCodeObjectId(methodId: String?): UMethod?
+    suspend fun findUMethodByMethodCodeObjectId(methodCodeObjectId: String?): UMethod?
 
 }

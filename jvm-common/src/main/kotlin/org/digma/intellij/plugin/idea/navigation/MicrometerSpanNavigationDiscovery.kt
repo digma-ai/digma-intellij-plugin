@@ -72,7 +72,7 @@ class MicrometerSpanNavigationDiscovery(private val project: Project) : SpanNavi
                     spanInfo?.let {
                         runInReadAccessWithRetryIgnorePCE {
                             val offset = psiMethod.textOffset
-                            val location = SpanLocation(it.containingFileUri, offset)
+                            val location = SpanLocation(it.containingFileUri, offset,it.containingMethodId)
                             spanLocations[it.id] = location
                         }
                     }

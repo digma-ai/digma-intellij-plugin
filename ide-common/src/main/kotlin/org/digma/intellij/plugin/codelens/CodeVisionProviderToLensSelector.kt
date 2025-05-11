@@ -6,7 +6,7 @@ import org.digma.intellij.plugin.common.DisposableAdaptor
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.model.lens.CodeLens
 
-private const val NUMBER_OF_PROVIDERS = 30
+private const val NUMBER_OF_PROVIDERS = 15
 
 //don't convert to light service because it will register on all IDEs, but we want it only on Idea and Pycharm
 @Suppress("LightServiceMigrationCode")

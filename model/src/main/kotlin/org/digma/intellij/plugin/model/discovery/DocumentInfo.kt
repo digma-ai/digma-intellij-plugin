@@ -2,7 +2,8 @@ package org.digma.intellij.plugin.model.discovery
 
 data class DocumentInfo(
     val fileUri: String,
-    val methods: MutableMap<String, MethodInfo>
+    val methods: MutableMap<String, MethodInfo>,
+    val languageId: String
 ) {
 
     fun addMethodInfo(key: String, value: MethodInfo) {

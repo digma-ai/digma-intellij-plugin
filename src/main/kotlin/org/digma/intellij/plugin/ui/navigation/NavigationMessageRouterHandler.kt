@@ -13,7 +13,7 @@ class NavigationMessageRouterHandler(project: Project): BaseCommonMessageRouterH
 
 
 
-    override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
+    override suspend fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
 
         Log.log(logger::trace, project, "got action '$action' with message $requestJsonNode")
 
@@ -51,7 +51,7 @@ class NavigationMessageRouterHandler(project: Project): BaseCommonMessageRouterH
         EditorRangeHighlighter.getInstance(project).clearAllHighlighters()
     }
 
-    private fun highlightMethod(requestJsonNode: JsonNode) {
+    private suspend fun highlightMethod(requestJsonNode: JsonNode) {
         val payload = getPayloadFromRequest(requestJsonNode)
         payload?.let { pl ->
             val methodId = pl.get("methodId").asText()
@@ -59,7 +59,7 @@ class NavigationMessageRouterHandler(project: Project): BaseCommonMessageRouterH
         }
     }
 
-    private fun goToCode(requestJsonNode: JsonNode) {
+    private suspend fun goToCode(requestJsonNode: JsonNode) {
         val payload = getPayloadFromRequest(requestJsonNode)
         payload?.let { pl ->
             val codeDetails = pl.get("codeDetails")
@@ -72,7 +72,7 @@ class NavigationMessageRouterHandler(project: Project): BaseCommonMessageRouterH
     }
 
 
-    private fun fixMissingDependencies(requestJsonNode: JsonNode) {
+    private suspend fun fixMissingDependencies(requestJsonNode: JsonNode) {
         val payload = getPayloadFromRequest(requestJsonNode)
         payload?.let {
             val methodId = payload.get("methodId").asText()
@@ -80,7 +80,7 @@ class NavigationMessageRouterHandler(project: Project): BaseCommonMessageRouterH
         }
     }
 
-    private fun addAnnotation(requestJsonNode: JsonNode) {
+    private suspend fun addAnnotation(requestJsonNode: JsonNode) {
         val payload = getPayloadFromRequest(requestJsonNode)
         payload?.let {
             val methodId = payload.get("methodId").asText()

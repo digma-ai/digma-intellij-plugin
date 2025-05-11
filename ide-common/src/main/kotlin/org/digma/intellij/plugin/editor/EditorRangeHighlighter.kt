@@ -1,24 +1,25 @@
 package org.digma.intellij.plugin.editor
 
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.application.EDT
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.colors.EditorColors
 import com.intellij.openapi.editor.markup.HighlighterTargetArea
 import com.intellij.openapi.editor.markup.RangeHighlighter
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
-import com.intellij.psi.PsiDocumentManager
-import com.intellij.psi.PsiElement
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
+import com.intellij.util.concurrency.annotations.RequiresEdt
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.psi.LanguageServiceLocator
+import org.digma.intellij.plugin.psi.findMethodPsiElementByMethodId
 import java.util.concurrent.locks.ReentrantLock
 
 @Service(Service.Level.PROJECT)
@@ -43,39 +44,36 @@ class EditorRangeHighlighter(private val project: Project) : Disposable {
     }
 
 
-    fun highlightMethod(methodId: String) {
+    suspend fun highlightMethod(methodId: String) {
 
-        EDT.ensureEDT {
+        val psiMethod = findMethodPsiElementByMethodId(project, methodId)
+        if (psiMethod == null) {
+            Log.log(logger::trace, "methodId {} not found, no highlighter added", methodId)
+            return
+        }
+
+        withContext(Dispatchers.EDT) {
             try {
-
-                Log.log(logger::trace, "adding highlighter for {}", methodId)
+                Log.trace(logger, "adding highlighter for {}", methodId)
 
                 //locking to make sure we don't miss a clearHighlighter.
                 // in case clearHighlighter is called before this method completes we may miss the clear
                 // and the highlighter will stay on
                 myLock.lock()
-
                 //first clear in case this method already has a highlighter
                 clearHighlighter(methodId)
-
                 val selectedTextEditor = FileEditorManager.getInstance(project).selectedTextEditor
-
                 selectedTextEditor?.let { editor ->
+                    val rangeHighlighter = editor.markupModel.addRangeHighlighter(
+                        EditorColors.LIVE_TEMPLATE_ATTRIBUTES,
+                        psiMethod.startOffset,
+                        psiMethod.endOffset,
+                        9999,
+                        HighlighterTargetArea.EXACT_RANGE
+                    )
 
-                    val psiMethod = findPsiMethod(methodId, editor.document)
-
-                    psiMethod?.also { method ->
-                        val rangeHighlighter = editor.markupModel.addRangeHighlighter(
-                            EditorColors.LIVE_TEMPLATE_ATTRIBUTES,
-                            method.startOffset,
-                            method.endOffset,
-                            9999,
-                            HighlighterTargetArea.EXACT_RANGE
-                        )
-
-                        Log.log(logger::trace, "highlighter for {} added", methodId)
-                        highlighters[methodId] = Pair(editor, rangeHighlighter)
-                    }
+                    Log.trace(logger, "highlighter for {} added", methodId)
+                    highlighters[methodId] = Pair(editor, rangeHighlighter)
                 }
 
             } catch (e: Throwable) {
@@ -97,7 +95,7 @@ class EditorRangeHighlighter(private val project: Project) : Disposable {
             try {
                 myLock.lock()
                 highlighters.remove(methodId)?.let {
-                    Log.log(logger::trace, "removing highlighter for {}", methodId)
+                    Log.trace(logger, "removing highlighter for {}", methodId)
                     removeHighlighter(it.first, it.second)
                 }
             } catch (e: Throwable) {
@@ -113,26 +111,14 @@ class EditorRangeHighlighter(private val project: Project) : Disposable {
 
 
     fun clearAllHighlighters() {
-        Log.log(logger::trace, "removing all highlighters")
+        Log.trace(logger, "removing all highlighters")
         //create a new list to avoid concurrent modification
         highlighters.keys.toList().forEach { clearHighlighter(it) }
     }
 
 
+    @RequiresEdt
     private fun removeHighlighter(editor: Editor, rangeHighlighter: RangeHighlighter) {
         editor.markupModel.removeHighlighter(rangeHighlighter)
     }
-
-
-    private fun findPsiMethod(methodId: String, document: Document): PsiElement? {
-
-        val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document)
-
-        return psiFile?.let {
-            val languageService = LanguageServiceLocator.getInstance(project).locate(it.language)
-            languageService.getPsiElementForMethod(methodId)
-        }
-    }
-
-
 }

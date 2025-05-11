@@ -9,17 +9,19 @@ namespace Digma.Rider.Highlighting
     [SolutionComponent(Instantiation.ContainerAsyncPrimaryThread)]
 #else
     [SolutionComponent]
-#endif    
+#endif
 
     public class ErrorHotspotMethodInsightsProvider : BaseMethodInsightsProvider
     {
-        public ErrorHotspotMethodInsightsProvider(ISolution solution,ILogger logger,ShowToolWindowHost showToolWindowHost) 
-            : base(solution,logger,showToolWindowHost)
-        {}
+        public ErrorHotspotMethodInsightsProvider(ISolution solution, ILogger logger,
+            ShowToolWindowHost showToolWindowHost,
+            LanguageServiceHost languageServiceHost)
+            : base(solution, logger, showToolWindowHost, languageServiceHost)
+        {
+        }
 
 
         public override string ProviderId => nameof(ErrorHotspotMethodInsightsProvider);
         public override string DisplayName => "Error Hotspot Method Hints";
-        
     }
 }

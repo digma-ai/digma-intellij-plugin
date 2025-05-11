@@ -16,4 +16,18 @@ constructor(
     val name: String,
     val type: EnvType,
     val lastActive: Date?
-)
+){
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is Env) return false
+
+        return id == other.id && name == other.name && type == other.type
+    }
+
+    override fun hashCode(): Int {
+        var result = id.hashCode()
+        result = 31 * result + name.hashCode()
+        result = 31 * result + type.hashCode()
+        return result
+    }
+}

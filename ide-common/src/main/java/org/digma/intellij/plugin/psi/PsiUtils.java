@@ -5,7 +5,6 @@ import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.*;
 import com.intellij.psi.*;
-import com.intellij.psi.util.*;
 import org.digma.intellij.plugin.common.*;
 import org.jetbrains.annotations.*;
 
@@ -78,25 +77,5 @@ public class PsiUtils {
         });
     }
 
-    @NotNull
-    public static PsiFileCachedValueWithUri getPsiFileCachedValue(Project project, VirtualFile virtualFile) {
-
-        return new PsiFileCachedValueWithUri(CachedValuesManager.getManager(project).createCachedValue(new CachedValueProvider<>() {
-            @Nullable
-            @Override
-            public Result<PsiFile> compute() {
-
-                if (!VfsUtilsKt.isValidVirtualFile(virtualFile)) {
-                    return null;
-                }
-
-                return PsiAccessUtilsKt.runInReadAccessWithResult(() -> {
-                    var psiFile = PsiManager.getInstance(project).findFile(virtualFile);
-                    //todo: maybe add PsiModificationTracker as dependency
-                    return Result.create(psiFile, virtualFile);
-                });
-            }
-        }, true), virtualFile);
-    }
 
 }

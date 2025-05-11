@@ -18,7 +18,7 @@ import com.intellij.refactoring.suggested.startOffset
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.psi.LanguageServiceLocator
+import org.digma.intellij.plugin.psi.LanguageServiceProvider
 import java.util.concurrent.locks.ReentrantLock
 
 @Service(Service.Level.PROJECT)
@@ -129,8 +129,8 @@ class EditorRangeHighlighter(private val project: Project) : Disposable {
         val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document)
 
         return psiFile?.let {
-            val languageService = LanguageServiceLocator.getInstance(project).locate(it.language)
-            languageService.getPsiElementForMethod(methodId)
+            val languageService = LanguageServiceProvider.getInstance(project).getLanguageService(it.language)
+            languageService?.getPsiElementForMethod(methodId)
         }
     }
 

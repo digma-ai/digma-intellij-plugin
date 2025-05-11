@@ -37,7 +37,6 @@ object CodeObjectsModel : Ext(SolutionModel.Solution) {
         field("containingClass", PredefinedType.string)
         field("containingNamespace", PredefinedType.string)
         field("containingFileUri", PredefinedType.string)
-        field("offsetAtFileUri", PredefinedType.int)
         field("spans", immutableList(RiderSpanInfo))
     }
 
@@ -51,14 +50,14 @@ object CodeObjectsModel : Ext(SolutionModel.Solution) {
 
     val RiderCodeLensInfo = structdef {
         field("id", PredefinedType.string)
-        field("codeObjectId", PredefinedType.string)
+        field("methodCodeObjectId", PredefinedType.string)
         field("scopeCodeObjectId", PredefinedType.string.nullable)
-        field("lensTitle", PredefinedType.string.nullable)
-        field("lensDescription", PredefinedType.string.nullable)
-        field("moreText", PredefinedType.string.nullable)
+        field("lensTitle", PredefinedType.string)
+        field("importance", PredefinedType.int)
+        field("lensDescription", PredefinedType.string)
+        field("moreText", PredefinedType.string)
         field("psiUri", PredefinedType.string)
     }
-
 
     val CodeObjectIdUriPair = structdef{
         field("codeObjectId", PredefinedType.string)

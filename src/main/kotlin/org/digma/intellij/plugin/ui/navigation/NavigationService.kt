@@ -1,32 +1,26 @@
 package org.digma.intellij.plugin.ui.navigation
 
-import com.intellij.collaboration.async.disposingScope
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.fileEditor.FileDocumentManager
-import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
-import com.intellij.psi.PsiManager
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.common.EDT
-import org.digma.intellij.plugin.common.isValidVirtualFile
-import org.digma.intellij.plugin.document.DocumentInfoService
+import org.digma.intellij.plugin.document.findMethodInfo
+import org.digma.intellij.plugin.kotlin.ext.launchWithErrorReporting
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator
 import org.digma.intellij.plugin.notifications.NotificationUtil
-import org.digma.intellij.plugin.psi.LanguageService
-import org.digma.intellij.plugin.psi.LanguageServiceLocator
-import org.digma.intellij.plugin.psi.PsiUtils
+import org.digma.intellij.plugin.psi.findLanguageServiceByMethodCodeObjectId
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
 import org.digma.intellij.plugin.ui.navigation.model.InstrumentationResult
 import java.time.Instant
 
 @Service(Service.Level.PROJECT)
-class NavigationService(private val project: Project) : Disposable {
+class NavigationService(private val project: Project, private val cs: CoroutineScope) : Disposable {
 
     private val logger = Logger.getInstance(this::class.java)
 
@@ -51,12 +45,11 @@ class NavigationService(private val project: Project) : Disposable {
 
     fun fixMissingDependencies(methodId: String) {
 
-        val languageService = LanguageService.findLanguageServiceByMethodCodeObjectId(project, methodId)
-        val instrumentationProvider = languageService.instrumentationProvider
+        val languageService = findLanguageServiceByMethodCodeObjectId(project, methodId) ?: return
+        val instrumentationProvider = languageService.getInstrumentationProvider()
         instrumentationProvider.addObservabilityDependency(methodId)
 
-        @Suppress("UnstableApiUsage")
-        this.disposingScope().launch {
+        cs.launchWithErrorReporting("NavigationService.fixMissingDependencies", logger) {
 
             val startTime = Instant.now()
             var observabilityInfo = instrumentationProvider.buildMethodObservabilityInfo(methodId)
@@ -75,26 +68,19 @@ class NavigationService(private val project: Project) : Disposable {
                     NotificationUtil.notifyFadingError(project, "Failed to add dependency, Please try again")
                 }
             }
-
-            if (isActive) {
-                simulateCursorEvent()
-            }
         }
     }
 
 
     fun addAnnotation(methodId: String) {
 
-        val languageService = LanguageService.findLanguageServiceByMethodCodeObjectId(project, methodId)
-        val instrumentationProvider = languageService.instrumentationProvider
+        val languageService = findLanguageServiceByMethodCodeObjectId(project, methodId) ?: return
+        val instrumentationProvider = languageService.getInstrumentationProvider()
         instrumentationProvider.addObservability(methodId)
 
-
-        @Suppress("UnstableApiUsage")
-        this.disposingScope().launch {
-
+        cs.launchWithErrorReporting("NavigationService.addAnnotation", logger) {
             val startTime = Instant.now()
-            var methodInfo = DocumentInfoService.getInstance(project).findMethodInfo(methodId)
+            var methodInfo = findMethodInfo(project, methodId)
 
             while (isActive &&
                 (methodInfo == null || !methodInfo.hasRelatedCodeObjectIds()) &&
@@ -102,7 +88,7 @@ class NavigationService(private val project: Project) : Disposable {
             ) {
 
                 delay(50)
-                methodInfo = DocumentInfoService.getInstance(project).findMethodInfo(methodId)
+                methodInfo = findMethodInfo(project, methodId)
             }
 
             if (isActive &&
@@ -113,31 +99,6 @@ class NavigationService(private val project: Project) : Disposable {
                 }
                 EDT.ensureEDT {
                     NotificationUtil.notifyFadingError(project, "Failed to add annotation, Please try again")
-                }
-            }
-
-            if (isActive) {
-                simulateCursorEvent()
-            }
-        }
-
-    }
-
-
-    private fun simulateCursorEvent() {
-
-        EDT.ensureEDT {
-
-            val selectedTextEditor = FileEditorManager.getInstance(project).selectedTextEditor
-            selectedTextEditor?.let { textEditor ->
-                val document = textEditor.document
-                val virtualFile = FileDocumentManager.getInstance().getFile(document)
-                virtualFile?.takeIf { isValidVirtualFile(virtualFile) }?.let { vFile ->
-                    val psiFile = PsiManager.getInstance(project).findFile(vFile)
-                    psiFile?.takeIf { PsiUtils.isValidPsiFile(psiFile) }?.let { pFile ->
-                        val languageService: LanguageService = LanguageServiceLocator.getInstance(project).locate(pFile.language)
-                        languageService.refreshMethodUnderCaret(project, pFile, textEditor, textEditor.caretModel.offset)
-                    }
                 }
             }
         }

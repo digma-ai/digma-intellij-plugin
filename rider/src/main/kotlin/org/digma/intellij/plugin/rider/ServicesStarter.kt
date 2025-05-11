@@ -2,7 +2,7 @@ package org.digma.intellij.plugin.rider
 
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import com.jetbrains.rd.platform.util.lifetime
+import com.intellij.openapi.rd.util.lifetime
 import com.jetbrains.rd.util.reactive.whenTrue
 import com.jetbrains.rider.projectView.SolutionLifecycleHost
 import org.digma.intellij.plugin.common.EDT

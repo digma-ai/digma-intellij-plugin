@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+using JetBrains.Annotations;
 using JetBrains.Application.Parts;
 using JetBrains.ProjectModel;
 using JetBrains.Util;
@@ -26,10 +28,10 @@ namespace Digma.Rider.Protocol
             _showToolWindowModel = solution.GetProtocolSolution().GetShowToolWindowModel();
         }
 
-        public void ShowToolWindow()
+        public void ShowToolWindow([CanBeNull] RiderCodeLensInfo codeLensInfo)
         {
             Log(_logger, "ShowToolWindow called");
-            _showToolWindowModel.ShowToolWindow();
+            _showToolWindowModel.ShowToolWindow(codeLensInfo);
         }
        
         

@@ -10,8 +10,6 @@ import com.jetbrains.rider.model.nova.ide.SolutionModel
 object LanguageServiceModel : Ext(SolutionModel.Solution) {
 
 
-
-
     private val MethodUnderCaretRequest = structdef {
         field("psiId", CodeObjectsModel.PsiFileID)
         field("offset", PredefinedType.int)
@@ -55,6 +53,11 @@ object LanguageServiceModel : Ext(SolutionModel.Solution) {
         call(
             "getSpansWorkspaceUris",
             immutableList(PredefinedType.string), immutableList(CodeObjectsModel.CodeObjectIdUriOffsetTrouple)
+        ).async
+
+        call(
+            "getMethodIdBySpanId",
+            PredefinedType.string, PredefinedType.string.nullable
         ).async
 
         call("isCsharpMethod", PredefinedType.string, PredefinedType.bool).async

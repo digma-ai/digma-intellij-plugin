@@ -11,21 +11,23 @@ namespace Digma.Rider.Highlighting
     [SolutionComponent(Instantiation.ContainerAsyncPrimaryThread)]
 #else
     [SolutionComponent]
-#endif    
+#endif
 
     public class LiveMethodInsightsProvider : BaseMethodInsightsProvider
     {
-        public LiveMethodInsightsProvider(ISolution solution,ILogger logger,ShowToolWindowHost showToolWindowHost) 
-            : base(solution,logger,showToolWindowHost)
-        {}
+        public LiveMethodInsightsProvider(ISolution solution, ILogger logger, ShowToolWindowHost showToolWindowHost,
+            LanguageServiceHost languageServiceHost)
+            : base(solution, logger, showToolWindowHost, languageServiceHost)
+        {
+        }
 
 
         public override string ProviderId => nameof(LiveMethodInsightsProvider);
         public override string DisplayName => "Live Method Hints";
-        
+
         public override CodeVisionAnchorKind DefaultAnchor => CodeVisionAnchorKind.Top;
+
         public override ICollection<CodeVisionRelativeOrdering> RelativeOrderings => new CodeVisionRelativeOrdering[]
             { new CodeVisionRelativeOrderingFirst() };
-        
     }
 }

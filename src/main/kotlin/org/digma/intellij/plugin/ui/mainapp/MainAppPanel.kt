@@ -11,7 +11,7 @@ import org.digma.intellij.plugin.ui.insights.InsightsService
 import org.digma.intellij.plugin.ui.jcef.DownloadHandlerAdapter
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
 import org.digma.intellij.plugin.ui.list.listBackground
-import org.digma.intellij.plugin.ui.navigation.CodeButtonCaretContextService
+import org.digma.intellij.plugin.ui.navigation.CodeButtonContextService
 import org.digma.intellij.plugin.ui.navigation.NavigationService
 import org.digma.intellij.plugin.ui.panels.DisposablePanel
 import org.digma.intellij.plugin.ui.tests.TestsUpdater
@@ -57,7 +57,7 @@ class MainAppPanel(private val project: Project) : DisposablePanel(), Reloadable
             TestsUpdater.getInstance(project).setJCefComponent(it)
             InsightsService.getInstance(project).setJCefComponent(it)
             NavigationService.getInstance(project).setJCefComponent(it)
-            CodeButtonCaretContextService.getInstance(project).setJCefComponent(it)
+            CodeButtonContextService.getInstance(project).setJCefComponent(it)
         }
 
         return jCefComponent

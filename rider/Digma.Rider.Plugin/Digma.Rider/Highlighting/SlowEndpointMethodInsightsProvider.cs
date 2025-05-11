@@ -9,17 +9,19 @@ namespace Digma.Rider.Highlighting
     [SolutionComponent(Instantiation.ContainerAsyncPrimaryThread)]
 #else
     [SolutionComponent]
-#endif    
+#endif
 
     public class SlowEndpointMethodInsightsProvider : BaseMethodInsightsProvider
     {
-        public SlowEndpointMethodInsightsProvider(ISolution solution,ILogger logger,ShowToolWindowHost showToolWindowHost) 
-            : base(solution,logger,showToolWindowHost)
-        {}
-        
+        public SlowEndpointMethodInsightsProvider(ISolution solution, ILogger logger,
+            ShowToolWindowHost showToolWindowHost,
+            LanguageServiceHost languageServiceHost)
+            : base(solution, logger, showToolWindowHost, languageServiceHost)
+        {
+        }
+
 
         public override string ProviderId => nameof(SlowEndpointMethodInsightsProvider);
         public override string DisplayName => "Slow Endpoint Method Hints";
-        
     }
 }

@@ -247,7 +247,9 @@ tasks {
             )
 
             if (project.hasProperty(DIGMA_NO_INFO_LOGGING)) {
-                argsList.add("-noConsoleLogger")
+                argsList.add("/consoleloggerparameters:ErrorsOnly") // show only errors in console
+            }else{
+                argsList.add("/consoleloggerparameters:Summary")
             }
 
             argsList.add(solutionFile)

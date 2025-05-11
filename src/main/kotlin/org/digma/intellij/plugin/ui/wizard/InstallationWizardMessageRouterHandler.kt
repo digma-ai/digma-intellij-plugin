@@ -39,7 +39,7 @@ class InstallationWizardMessageRouterHandler(
         return "wizard"
     }
 
-    override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
+    override suspend fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
 
         when (action) {
 
@@ -115,14 +115,14 @@ class InstallationWizardMessageRouterHandler(
                     val success = exitValue == "0"
 
                     if (success) {
-                        //wait up to two minutes for connection, sometimes it takes more than a minute before connection is available
+                        //wait up to two minutes for connection, sometimes it takes more than a minute before the connection is available
                         var i = 0
                         while (!BackendConnectionMonitor.getInstance(project).isConnectionOk() && i < 24) {
                             Log.log(logger::warn, "waiting for connection")
                             refreshEnvironmentsNowOnBackground(project)
                             try {
                                 Thread.sleep(5000)
-                            } catch (e: InterruptedException) {
+                            } catch (_: InterruptedException) {
                                 //ignore
                             }
                             i++
@@ -169,14 +169,14 @@ class InstallationWizardMessageRouterHandler(
                         sendIsDigmaEngineInstalled(false, browser)
                         sendIsDigmaEngineRunning(false, browser)
 
-                        //if install failed remove the engine. wait a second to let the installEngine finish and reports
+                        //if install failed, remove the engine. wait a second to let the installEngine finish and reports
                         // the installEngine.end to posthog before removeEngine.start
-                        //also the LocalInstallationFacade needs to completely finish the install operation before it will allow
+                        //also the LocalInstallationFacade needs to finish the install operation before it will allow
                         // another operation
                         Backgroundable.executeOnPooledThread {
                             try {
                                 Thread.sleep(2000)
-                            } catch (e: Exception) {
+                            } catch (_: Exception) {
                                 //ignore
                             }
                             Log.log(logger::warn, "removing engine after installation failed")
@@ -249,14 +249,14 @@ class InstallationWizardMessageRouterHandler(
                     val success = exitValue == "0"
 
                     if (success) {
-                        //wait up to two minutes for connection, sometimes it takes more than a minute before connection is available
+                        //wait up to two minutes for connection, sometimes it takes more than a minute before the connection is available
                         var i = 0
                         while (!BackendConnectionMonitor.getInstance(project).isConnectionOk() && i < 24) {
                             Log.log(logger::warn, "waiting for connection")
                             refreshEnvironmentsNowOnBackground(project)
                             try {
                                 Thread.sleep(5000)
-                            } catch (e: InterruptedException) {
+                            } catch (_: InterruptedException) {
                                 //ignore
                             }
                             i++

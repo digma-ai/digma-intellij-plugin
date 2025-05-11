@@ -13,7 +13,7 @@ class TroubleshootingMessageRouterHandler(project: Project) : BaseMessageRouterH
         return "troubleshooting"
     }
 
-    override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
+    override suspend fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
         when (action) {
 
             "TROUBLESHOOTING/INITIALIZE" -> {

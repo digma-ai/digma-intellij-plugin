@@ -28,6 +28,7 @@ import kotlin.time.Duration
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
+//todo: remove, use jetbrains progress manager
 @Service(Service.Level.PROJECT)
 class ProcessManager(private val project: Project) : Disposable {
 

@@ -5,7 +5,6 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import org.apache.maven.artifact.versioning.ComparableVersion
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.common.DisposableAdaptor
@@ -15,6 +14,7 @@ import org.digma.intellij.plugin.common.findActiveProject
 import org.digma.intellij.plugin.common.newerThan
 import org.digma.intellij.plugin.common.olderThan
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import org.digma.intellij.plugin.kotlin.ext.launchWithErrorReporting
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.paths.DigmaPathManager
 import org.digma.intellij.plugin.persistence.PersistenceService
@@ -89,7 +89,7 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
         //there are not so many services that depend on this service, but in any case make sure it initializes fast.
         //UIResourcesService depends on this service, but it will wait for startup to complete before calling it.
         //ActivityMonitor also depends on this service.
-        cs.launch {
+        cs.launchWithErrorReporting("UIVersioningService.init", logger) {
             doStartup()
             //startMonitoring is called from constructor, it will be called only once per IDE session
             startMonitoring()

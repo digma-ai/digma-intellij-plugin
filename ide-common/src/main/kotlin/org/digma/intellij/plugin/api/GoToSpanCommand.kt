@@ -13,7 +13,7 @@ import java.util.Objects
 
 class GoToSpanCommand : AbstractApiCommand() {
 
-    override fun execute(project: Project, urlDecoder: QueryStringDecoder) {
+    override suspend fun execute(project: Project, urlDecoder: QueryStringDecoder) {
         val spanUid = getStringParameter(SPAN_UID_PARAM_NAME, urlDecoder)
         val targetTab = getStringParameter(TARGET_TAB_PARAM_NAME, urlDecoder)
         Objects.requireNonNull(spanUid, "spanUid parameter must not be null")

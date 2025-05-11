@@ -4,7 +4,6 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.analytics.NoSelectedEnvironmentException;
 import org.digma.intellij.plugin.common.FrequencyDetector;
-import org.digma.intellij.plugin.errorreporting.*;
 
 import java.time.Duration;
 import java.util.function.Consumer;
@@ -23,7 +22,6 @@ public class Log {
     private static final FrequencyDetector FREQUENT_ERROR_DETECTOR = new FrequencyDetector(Duration.ofMinutes(60));
 
 
-
     public static void log(Consumer<String> consumer, Project project, String format, Object... args) {
         consumer.accept(DIGMA_PROJECT + project.getName() + ": " + String.format(format.replace("{}", "%s"), args));
     }
@@ -31,11 +29,12 @@ public class Log {
     public static void logWithThreadName(Consumer<String> consumer, String format, Object... args) {
         consumer.accept(Thread.currentThread().getName() + ": " + DIGMA + String.format(format.replace("{}", "%s"), args));
     }
+
     public static void log(Consumer<String> consumer, String format, Object... args) {
         consumer.accept(DIGMA + String.format(format.replace("{}", "%s"), args));
     }
 
-    public static void debugWithException(Logger logger,Throwable e, String format, Object... args) {
+    public static void debugWithException(Logger logger, Throwable e, String format, Object... args) {
 
         if (!logger.isDebugEnabled()) {
             return;
@@ -48,7 +47,7 @@ public class Log {
         logger.debug(e);
     }
 
-    public static void debugWithException(Logger logger, Project project,Throwable e, String format, Object... args) {
+    public static void debugWithException(Logger logger, Project project, Throwable e, String format, Object... args) {
 
         if (!logger.isDebugEnabled()) {
             return;
@@ -62,7 +61,7 @@ public class Log {
     }
 
 
-    public static void warnWithException(Logger logger,Throwable e, String format, Object... args) {
+    public static void warnWithException(Logger logger, Throwable e, String format, Object... args) {
 
         //don't log NoSelectedEnvironmentException in warn level
         if (e instanceof NoSelectedEnvironmentException) {
@@ -77,7 +76,7 @@ public class Log {
         }
     }
 
-    public static void warnWithException(Logger logger, Project project,Throwable e, String format, Object... args) {
+    public static void warnWithException(Logger logger, Project project, Throwable e, String format, Object... args) {
 
         //don't log NoSelectedEnvironmentException in warn level
         if (e instanceof NoSelectedEnvironmentException) {
@@ -93,12 +92,52 @@ public class Log {
     }
 
 
-    public static void log(Consumer<String> consumer,Project project, String msg) {
+    public static void log(Consumer<String> consumer, Project project, String msg) {
         consumer.accept(DIGMA_PROJECT + project.getName() + ": " + msg);
     }
 
     public static void log(Consumer<String> consumer, String msg) {
         consumer.accept(DIGMA + msg);
+    }
+
+
+    // **********  New API
+    public static void warn(Logger logger, Project project, String format, Object... args) {
+        logger.warn(DIGMA_PROJECT + project.getName() + ": " + format(format, args));
+    }
+
+    public static void warn(Logger logger, String format, Object... args) {
+        logger.warn(DIGMA + ": " + format(format, args));
+    }
+
+
+    public static void trace(Logger logger, Project project, String format, Object... args) {
+        if (logger.isTraceEnabled()) {
+            logger.trace(DIGMA_PROJECT + project.getName() + ": " + format(format, args));
+        }
+    }
+
+    public static void trace(Logger logger, String format, Object... args) {
+        if (logger.isTraceEnabled()) {
+            logger.trace(DIGMA + ": " + format(format, args));
+        }
+    }
+
+    public static void debug(Logger logger, Project project, String format, Object... args) {
+        if (logger.isDebugEnabled()) {
+            logger.debug(DIGMA_PROJECT + project.getName() + ": " + format(format, args));
+        }
+    }
+
+    public static void debug(Logger logger, String format, Object... args) {
+        if (logger.isDebugEnabled()) {
+            logger.debug(DIGMA + ": " + format(format, args));
+        }
+    }
+
+
+    private static String format(String format, Object... args) {
+        return String.format(format.replace("{}", "%s"), args);
     }
 
 
@@ -137,7 +176,6 @@ public class Log {
 //    private static void error(Logger logger, String msg) {
 //        logger.error(DIGMA + msg);
 //    }
-
 
 
 }

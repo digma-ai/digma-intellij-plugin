@@ -6,11 +6,11 @@ import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.common.CommonUtils
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider
-import org.digma.intellij.plugin.jaegerui.JaegerUIService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.UserActionOrigin
 import org.digma.intellij.plugin.settings.JaegerLinkMode
 import org.digma.intellij.plugin.settings.SettingsState
+import org.digma.intellij.plugin.ui.jaegerui.JaegerUIService
 import org.digma.intellij.plugin.ui.model.TraceSample
 import java.io.InputStreamReader
 import java.net.URLEncoder

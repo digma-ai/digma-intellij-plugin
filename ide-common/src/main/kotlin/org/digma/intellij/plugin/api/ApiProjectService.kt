@@ -31,7 +31,7 @@ class ApiProjectService(val project: Project) : DisposableAdaptor {
         }
     }
 
-    fun executeAction(action: String, urlDecoder: QueryStringDecoder) {
+    suspend fun executeAction(action: String, urlDecoder: QueryStringDecoder) {
 
         val command = when (action) {
             ACTION_GO_TO_HOME_PARAM_VALUE -> GoToHomeCommand()

@@ -7,12 +7,12 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.common.EDT
-import org.digma.intellij.plugin.jaegerui.JaegerUIService
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.psi.LanguageService
+import org.digma.intellij.plugin.psi.findWorkspaceUrisForCodeObjectIdsForErrorStackTrace
 import org.digma.intellij.plugin.service.EditorService
 import org.digma.intellij.plugin.ui.errors.model.ActionError
 import org.digma.intellij.plugin.ui.errors.model.ErrorActionResult
+import org.digma.intellij.plugin.ui.jaegerui.JaegerUIService
 
 
 @Service(Service.Level.PROJECT)
@@ -116,9 +116,9 @@ class ErrorsService(val project: Project) : Disposable {
         }
     }
 
-    fun getWorkspaceUris(methodCodeObjectIds: List<String>): Map<String, String> {
+    suspend fun getWorkspaceUris(methodCodeObjectIds: List<String>): Map<String, String> {
         try {
-            return LanguageService.findWorkspaceUrisForCodeObjectIdsForErrorStackTrace(project, methodCodeObjectIds)
+            return findWorkspaceUrisForCodeObjectIdsForErrorStackTrace(project, methodCodeObjectIds)
         } catch (e: Throwable) {
             Log.warnWithException(logger, project, e, "error in getWorkspaceUrls")
             return mapOf()

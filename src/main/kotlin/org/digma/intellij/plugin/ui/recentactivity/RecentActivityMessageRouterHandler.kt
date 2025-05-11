@@ -23,7 +23,7 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
     }
 
 
-    override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
+    override suspend fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
 
         //exceptions are handles in BaseMessageRouterHandler.onQuery
 

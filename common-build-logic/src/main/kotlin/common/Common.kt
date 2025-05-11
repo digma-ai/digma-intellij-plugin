@@ -1,11 +1,16 @@
 package common
 
+import org.gradle.api.GradleException
 import org.gradle.api.Project
+import org.gradle.internal.cc.base.logger
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import org.jetbrains.intellij.platform.gradle.extensions.IntelliJPlatformExtension
 
 //send -Pdigma-no-info-logging to silence some console logging, useful when debugging issues so the log is not too noisy.
 const val DIGMA_NO_INFO_LOGGING = "digma-no-info-logging"
+const val GENERATED_RESOURCES_DIR_NAME = "generated-resources"
+const val UI_VERSION_FILE_NAME = "ui-version"
+const val UI_BUNDLE_DIR_NAME = "$GENERATED_RESOURCES_DIR_NAME/ui-bundle"
 
 //use for messages we want to silence sometimes with DIGMA_NO_INFO_LOGGING
 fun Project.withSilenceLogging(consumer: () -> Unit){
@@ -52,3 +57,24 @@ fun logIntellijPlatformPlugin(project: Project, intellijPlatform: IntelliJPlatfo
 
 
 fun isWindows() = org.gradle.internal.os.OperatingSystem.current().isWindows
+
+
+fun <T> withRetry(
+    maxAttempts: Int = 3,
+    delayMillis: Long = 1000,
+    block: () -> T
+): T {
+    var lastError: Exception? = null
+    repeat(maxAttempts) { attempt ->
+        try {
+            return block()
+        } catch (e: Exception) {
+            lastError = e
+            logger.lifecycle("Retry $attempt failed: ${e.message}")
+            if (attempt < maxAttempts - 1) {
+                Thread.sleep(delayMillis * (attempt + 1)) // simple linear backoff
+            }
+        }
+    }
+    throw GradleException("Failed after $maxAttempts attempts", lastError)
+}

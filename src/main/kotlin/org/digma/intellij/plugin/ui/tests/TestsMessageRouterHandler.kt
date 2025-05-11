@@ -17,7 +17,7 @@ import java.util.Collections
 
 class TestsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHandler(project) {
 
-    override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
+    override suspend fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
 
         Log.log(logger::trace, project, "got action '$action' with message $requestJsonNode")
 
@@ -54,10 +54,10 @@ class TestsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHandl
         spanScopeNode?.let{
             spanScope = objectMapper.treeToValue(spanScopeNode, SpanScope::class.java)
         }
-        project.service<TestsUpdater>().updateTestsData(spanScope, filter)
+        TestsUpdater.getInstance(project).updateTestsData(spanScope, filter)
     }
 
-    private fun handleRunTest(project: Project, requestJsonNode: JsonNode) {
+    private suspend fun handleRunTest(project: Project, requestJsonNode: JsonNode) {
         ActivityMonitor.getInstance(project).registerUserActionWithOrigin("run test button clicked", UserActionOrigin.Tests)
         val payloadNode: JsonNode = objectMapper.readTree(requestJsonNode.get("payload").toString())
         val methodCodeObjectId = payloadNode.get("methodCodeObjectId").textValue()

@@ -10,12 +10,9 @@
 
     </extensions>
 
-
     <projectListeners>
-        <listener
-                class="org.digma.intellij.plugin.rider.document.RiderDocumentInfoConsumer"
-                topic="org.digma.intellij.plugin.document.DocumentInfoChanged"/>
+        <listener class="org.digma.intellij.plugin.rider.protocol.CodeLensHost$CodeLensHostCodelensListener"
+                  topic="org.digma.intellij.plugin.codelens.provider.CodeLensChanged"/>
     </projectListeners>
-
 
 </idea-plugin>

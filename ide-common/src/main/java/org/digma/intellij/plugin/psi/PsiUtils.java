@@ -5,7 +5,6 @@ import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.*;
 import com.intellij.psi.*;
-import com.intellij.psi.util.*;
 import org.digma.intellij.plugin.common.*;
 import org.jetbrains.annotations.*;
 
@@ -17,6 +16,7 @@ public class PsiUtils {
 
 
     public static boolean isValidPsiFile(@Nullable PsiFile psiFile) {
+        //todo: remove ReadActions.ensureReadAction when all calling code is converted to coroutine and uses new readAction api
         return psiFile != null && ReadActions.ensureReadAction(psiFile::isValid);
     }
 
@@ -27,6 +27,7 @@ public class PsiUtils {
     necessary.
      */
 
+    //todo: remove, fix all code to never use file uri, use VirtualFile where necessary
     @NotNull
     public static String psiFileToUri(@NotNull PsiFile psiFile) {
 
@@ -46,6 +47,7 @@ public class PsiUtils {
     /*
     This method should either succeed or throw exception,never return null
      */
+    //todo: remove, fix all code to never use file uri, use VirtualFile where necessary
     @NotNull
     public static PsiFile uriToPsiFile(@NotNull String uri, @NotNull Project project) throws PsiFileNotFountException {
         return ReadAction.compute(() -> {
@@ -78,25 +80,5 @@ public class PsiUtils {
         });
     }
 
-    @NotNull
-    public static PsiFileCachedValueWithUri getPsiFileCachedValue(Project project, VirtualFile virtualFile) {
-
-        return new PsiFileCachedValueWithUri(CachedValuesManager.getManager(project).createCachedValue(new CachedValueProvider<>() {
-            @Nullable
-            @Override
-            public Result<PsiFile> compute() {
-
-                if (!VfsUtilsKt.isValidVirtualFile(virtualFile)) {
-                    return null;
-                }
-
-                return PsiAccessUtilsKt.runInReadAccessWithResult(() -> {
-                    var psiFile = PsiManager.getInstance(project).findFile(virtualFile);
-                    //todo: maybe add PsiModificationTracker as dependency
-                    return Result.create(psiFile, virtualFile);
-                });
-            }
-        }, true), virtualFile);
-    }
 
 }

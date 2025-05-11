@@ -8,6 +8,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.util.SystemInfo
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -41,8 +42,8 @@ class ReloadObserver(cs: CoroutineScope) {
 
         if (SystemInfo.isMac) {
             //a long-running coroutine that processes the events in the order they arrive
-            cs.launch {
-                while (isActive) {
+            cs.launch(CoroutineName("ReloadObserver.init")) {
+                while(isActive){
                     try {
                         val event = propertyChangedEvents.poll()
                         if (event == null) {
@@ -50,10 +51,11 @@ class ReloadObserver(cs: CoroutineScope) {
                         } else {
                             checkChangesAndReload(event)
                         }
-                    } catch (ce: CancellationException) {
-                        throw ce
+                    }catch (e: CancellationException) {
+                        throw e // ⚠️ Always rethrow to propagate cancellation properly
                     } catch (e: Throwable) {
-                        ErrorReporter.getInstance().reportError("ReloadObserver.mainLoop", e)
+                        Log.warnWithException(logger, e, "Error in ReloadObserver {}", e)
+                        ErrorReporter.getInstance().reportError("ReloadObserver.init", e)
                     }
                 }
             }
@@ -188,7 +190,7 @@ class ReloadObserver(cs: CoroutineScope) {
             }
 
         } catch (e: Throwable) {
-            Log.warnWithException(logger,e,"error in ReloadObserver.checkChangesAndReload")
+            Log.warnWithException(logger, e, "error in ReloadObserver.checkChangesAndReload")
             ErrorReporter.getInstance().reportError("ReloadObserver.checkChangesAndReload", e)
         }
     }

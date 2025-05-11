@@ -39,12 +39,12 @@ namespace Digma.Rider.Highlighting
                         if (psiSourceFile != null && psiSourceFile.IsValid())
                         {
                             Log(logger, "Found PsiSourceFile for {0}, Calling Invalidate(psiSourceFile.Document) {1}",psiFileId, psiSourceFile);
-                            daemon.Invalidate(psiSourceFile.Document);
+                            daemon.Invalidate("Reanalyze Digma",psiSourceFile.Document);
                         }
                         else
                         {
                             Log(logger, "Could not find PsiSourceFile {0}. calling Calling Invalidate() for all files.", psiFileId);
-                            daemon.Invalidate();
+                            daemon.Invalidate("Reanalyze Digma");
                         }
                     }
                 });

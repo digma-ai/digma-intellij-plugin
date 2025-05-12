@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.417] - 2025-05-08
+## [2.0.418] - 2025-05-12
+
+- update build profiles by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2721
+- fix env equals by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2722
+
+## 2.0.417 - 2025-05-08
 
 - Adopt jcef to 251 Closes #2718 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2719
 - recent activity indicator Closes #2716 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2720

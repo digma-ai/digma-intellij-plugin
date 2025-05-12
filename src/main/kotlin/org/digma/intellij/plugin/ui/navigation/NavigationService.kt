@@ -5,22 +5,16 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.fileEditor.FileDocumentManager
-import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
-import com.intellij.psi.PsiManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.common.EDT
-import org.digma.intellij.plugin.common.isValidVirtualFile
 import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator
 import org.digma.intellij.plugin.notifications.NotificationUtil
 import org.digma.intellij.plugin.psi.LanguageService
-import org.digma.intellij.plugin.psi.LanguageServiceLocator
-import org.digma.intellij.plugin.psi.PsiUtils
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
 import org.digma.intellij.plugin.ui.navigation.model.InstrumentationResult
 import java.time.Instant
@@ -75,10 +69,6 @@ class NavigationService(private val project: Project) : Disposable {
                     NotificationUtil.notifyFadingError(project, "Failed to add dependency, Please try again")
                 }
             }
-
-            if (isActive) {
-                simulateCursorEvent()
-            }
         }
     }
 
@@ -113,31 +103,6 @@ class NavigationService(private val project: Project) : Disposable {
                 }
                 EDT.ensureEDT {
                     NotificationUtil.notifyFadingError(project, "Failed to add annotation, Please try again")
-                }
-            }
-
-            if (isActive) {
-                simulateCursorEvent()
-            }
-        }
-
-    }
-
-
-    private fun simulateCursorEvent() {
-
-        EDT.ensureEDT {
-
-            val selectedTextEditor = FileEditorManager.getInstance(project).selectedTextEditor
-            selectedTextEditor?.let { textEditor ->
-                val document = textEditor.document
-                val virtualFile = FileDocumentManager.getInstance().getFile(document)
-                virtualFile?.takeIf { isValidVirtualFile(virtualFile) }?.let { vFile ->
-                    val psiFile = PsiManager.getInstance(project).findFile(vFile)
-                    psiFile?.takeIf { PsiUtils.isValidPsiFile(psiFile) }?.let { pFile ->
-                        val languageService: LanguageService = LanguageServiceLocator.getInstance(project).locate(pFile.language)
-                        languageService.refreshMethodUnderCaret(project, pFile, textEditor, textEditor.caretModel.offset)
-                    }
                 }
             }
         }

@@ -135,11 +135,6 @@ public class NoOpLanguageService implements LanguageService {
     }
 
     @Override
-    public void refreshMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, @Nullable Editor selectedEditor, int offset) {
-        //nothing to do
-    }
-
-    @Override
     public boolean isCodeVisionSupported() {
         return false;
     }

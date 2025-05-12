@@ -12,7 +12,6 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
 import com.jetbrains.rdclient.util.idea.LifetimedProjectComponent
 import com.jetbrains.rider.projectView.SolutionLifecycleHost
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.runBlocking
 import org.apache.commons.lang3.time.StopWatch
 import org.digma.intellij.plugin.common.Backgroundable
@@ -21,7 +20,6 @@ import org.digma.intellij.plugin.common.executeCatchingWithResult
 import org.digma.intellij.plugin.common.isValidVirtualFile
 import org.digma.intellij.plugin.common.runInReadAccessWithResult
 import org.digma.intellij.plugin.document.BuildDocumentInfoProcessContext
-import org.digma.intellij.plugin.editor.CaretContextService
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.instrumentation.InstrumentationProvider
 import org.digma.intellij.plugin.instrumentation.NoOpInstrumentationProvider
@@ -40,7 +38,7 @@ import java.util.concurrent.TimeUnit
 import java.util.function.Supplier
 
 @Suppress("LightServiceMigrationCode")
-class CSharpLanguageService(project: Project, private val cs: CoroutineScope) : LifetimedProjectComponent(project), LanguageService {
+class CSharpLanguageService(project: Project) : LifetimedProjectComponent(project), LanguageService {
 
     private val logger = Logger.getInstance(this::class.java)
 
@@ -253,13 +251,6 @@ class CSharpLanguageService(project: Project, private val cs: CoroutineScope) : 
                     isSupportedFile(psiFile)
         })
     }
-
-
-    override fun refreshMethodUnderCaret(project: Project, psiFile: PsiFile, selectedEditor: Editor?, offset: Int) {
-        val methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedEditor, offset)
-        CaretContextService.getInstance(project).contextChanged(methodUnderCaret)
-    }
-
 
     override fun isCodeVisionSupported(): Boolean {
         return false

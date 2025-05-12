@@ -20,7 +20,6 @@ import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.isValidVirtualFile
 import org.digma.intellij.plugin.document.BuildDocumentInfoProcessContext
 import org.digma.intellij.plugin.document.DocumentInfoService
-import org.digma.intellij.plugin.editor.CaretContextService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
@@ -111,11 +110,7 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
                             val languageService = LanguageServiceLocator.getInstance(project).locate(psiFile.language)
 
                             if (languageService.isRelevant(psiFile)) {
-                                val offset = selectedTextEditor.logicalPositionToOffset(selectedTextEditor.caretModel.logicalPosition)
-
                                 Backgroundable.executeOnPooledThread {
-
-
                                     val processName = "LanguageServiceHost.buildDocumentInfo"
                                     val context = BuildDocumentInfoProcessContext(processName)
                                     val runnable = Runnable {
@@ -124,11 +119,6 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
                                         val upToDatePsiFile = psiFileCachedValue.value
                                         upToDatePsiFile?.let {
                                             documentInfoService.addCodeObjects(upToDatePsiFile, documentInfo)
-                                            runBlocking {
-                                                val methodUnderCaret =
-                                                    detectMethodUnderCaret(it, selectedTextEditor, offset)
-                                                CaretContextService.getInstance(project).contextChanged(methodUnderCaret)
-                                            }
                                         }
                                     }
                                     val processResult = project.service<ProcessManager>().runTaskUnderProcess(runnable, context, false, 2, false)

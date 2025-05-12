@@ -21,7 +21,10 @@ import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.analytics.isCentralized
 import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
+import org.digma.intellij.plugin.document.DocumentInfoService
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret
 import org.digma.intellij.plugin.psi.LanguageServiceLocator
 import kotlin.coroutines.cancellation.CancellationException
@@ -44,6 +47,7 @@ class CodeContextUpdateService(private val project: Project, private val cs: Cor
 
     private var job: Job? = null
     private var latestMethodUnderCaret: MethodUnderCaret? = null
+    private var latestMethodInfo: MethodInfo? = null
 
     init {
 
@@ -122,21 +126,36 @@ class CodeContextUpdateService(private val project: Project, private val cs: Cor
 
                             val languageService = LanguageServiceLocator.getInstance(project).locate(psiFile.language)
                             val methodUnderCaret = languageService.detectMethodUnderCaret(project, psiFile, editor, caretOffset)
-                            if (methodUnderCaret != latestMethodUnderCaret) {
+                            val methodInfo = DocumentInfoService.getInstance(project).getMethodInfo(methodUnderCaret)
+                            //it may be that methodInfo is not found because it is not ready yet, usually it will happen if a document was just opened
+                            // and code discovery didn't finish. in that case methodUnderCaret will be found but methodInfo not. methodInfo will be
+                            // created, and it will be found in one of the next iterations.
+                            //so if methodUnderCaret equals latestMethodUnderCaret, and latestMethodInfo is null, but current methodInfo is not null, it
+                            // means that methodInfo was just discovered, and we want to update the context.
+                            if (methodUnderCaret != latestMethodUnderCaret ||
+                                (latestMethodInfo == null && methodInfo != null)) {
                                 latestMethodUnderCaret = methodUnderCaret
+                                latestMethodInfo = methodInfo
                                 Log.log(logger::debug, project, "CodeContextUpdateService: method under caret changed {}", methodUnderCaret)
-                                CodeButtonContextService.getInstance(project).contextChanged(methodUnderCaret)
+                                CodeButtonContextService.getInstance(project).contextChanged(methodUnderCaret,methodInfo)
                             }
                         } else {
-                            Log.log(logger::debug, project, "CodeContextUpdateService: no editor or no psiFile")
-                            latestMethodUnderCaret = null
-                            CodeButtonContextService.getInstance(project).contextChanged(null)
+                            if (latestMethodUnderCaret != null) {
+                                Log.log(logger::debug, project, "CodeContextUpdateService: no editor or no psiFile")
+                                latestMethodUnderCaret = null
+                                latestMethodInfo = null
+                                CodeButtonContextService.getInstance(project).contextChanged(null, null)
+                            }
                         }
                     } catch (e: CancellationException) {
                         throw e // 🔁 RE-THROW cancellation to properly cancel the coroutine
                     } catch (t: Throwable) {
                         // Log error but keep coroutine alive
                         Log.warnWithException(logger, project, t, "Error updating code context")
+                        ErrorReporter.getInstance().reportError(project, "CodeContextUpdateService.startTask", t)
+                        latestMethodUnderCaret = null
+                        latestMethodInfo = null
+                        CodeButtonContextService.getInstance(project).contextChanged(null, null)
                     }
                 }
 

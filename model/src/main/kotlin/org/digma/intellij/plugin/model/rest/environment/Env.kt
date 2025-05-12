@@ -17,6 +17,10 @@ constructor(
     val type: EnvType,
     val lastActive: Date?
 ){
+
+    //ignore lastActive in hashCode and equals because it will cause many events to be fired.
+    //we rely on equals to decide if the environments list changed or if the current environment changed
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is Env) return false

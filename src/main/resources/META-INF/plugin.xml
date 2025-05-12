@@ -69,11 +69,6 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.ui.navigation.CodeButtonCaretContextService"
-                        serviceInterface="org.digma.intellij.plugin.editor.CaretContextService"/>
-
-        <projectService serviceImplementation="org.digma.intellij.plugin.editor.CurrentContextUpdater"/>
-
 
         <notificationGroup id="Digma Hidden Notification Group"
                            displayType="NONE"
@@ -136,6 +131,8 @@
                 implementation="org.digma.intellij.plugin.analytics.BackendInfoHolderStarter"/>
         <postStartupActivity
                 implementation="org.digma.intellij.plugin.ui.recentactivity.RecentActivityToolWindowIconChangerStarter"/>
+        <postStartupActivity
+                implementation="org.digma.intellij.plugin.ui.navigation.CodeContextUpdateServiceStarter"/>
 
 
         <errorHandler implementation="org.digma.intellij.plugin.ui.reports.DigmaErrorReportSubmitter"/>

@@ -416,8 +416,6 @@ public interface LanguageService extends Disposable {
 
     boolean isRelevant(PsiFile psiFile);
 
-    void refreshMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, @Nullable Editor selectedEditor, int offset);
-
     boolean isCodeVisionSupported();
 
     @NotNull

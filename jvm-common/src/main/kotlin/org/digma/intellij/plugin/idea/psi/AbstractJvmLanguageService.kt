@@ -43,7 +43,6 @@ import org.digma.intellij.plugin.common.runInReadAccess
 import org.digma.intellij.plugin.common.runInReadAccessWithResult
 import org.digma.intellij.plugin.document.BuildDocumentInfoProcessContext
 import org.digma.intellij.plugin.document.DocumentInfoService
-import org.digma.intellij.plugin.editor.CaretContextService
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.buildsystem.JvmBuildSystemHelperService
 import org.digma.intellij.plugin.idea.deps.ModulesDepsService
@@ -537,12 +536,6 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                 }
             }
         }
-    }
-
-
-    override fun refreshMethodUnderCaret(project: Project, psiFile: PsiFile, selectedEditor: Editor?, offset: Int) {
-        val methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedEditor, offset)
-        CaretContextService.getInstance(project).contextChanged(methodUnderCaret)
     }
 
 

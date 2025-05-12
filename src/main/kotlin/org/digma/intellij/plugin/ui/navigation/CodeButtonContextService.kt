@@ -1,14 +1,17 @@
 package org.digma.intellij.plugin.ui.navigation
 
+import com.intellij.openapi.Disposable
+import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import org.apache.commons.lang3.time.StopWatch
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.common.Backgroundable
+import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.IDEUtilsService
 import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.document.DocumentInfoService
-import org.digma.intellij.plugin.editor.CaretContextService
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.instrumentation.MethodObservabilityInfo
 import org.digma.intellij.plugin.log.Log
@@ -23,17 +26,16 @@ import org.digma.intellij.plugin.ui.navigation.model.CodeContextMessage
 import org.digma.intellij.plugin.ui.navigation.model.CodeContextMessagePayload
 import java.util.concurrent.TimeUnit
 
-//this is the only CaretContextService registered
-class CodeButtonCaretContextService(private val project: Project) : CaretContextService {
+@Service(Service.Level.PROJECT)
+class CodeButtonContextService(private val project: Project): Disposable{
 
     private val logger = Logger.getInstance(this::class.java)
 
     private var jCefComponent: JCefComponent? = null
 
     companion object {
-        fun getInstance(project: Project): CodeButtonCaretContextService {
-            //this unchecked casting must succeed because this is the registered CaretContextService
-            return CaretContextService.getInstance(project) as CodeButtonCaretContextService
+        fun getInstance(project: Project): CodeButtonContextService {
+            return project.service<CodeButtonContextService>()
         }
     }
 
@@ -45,9 +47,17 @@ class CodeButtonCaretContextService(private val project: Project) : CaretContext
         jCefComponent = null
     }
 
-    override fun contextChanged(methodUnderCaret: MethodUnderCaret) {
+    fun contextChanged(methodUnderCaret: MethodUnderCaret?) {
+
+        EDT.assertNonDispatchThread()
 
         Log.log(logger::trace, "contextChanged called for '{}'", methodUnderCaret)
+
+        if (methodUnderCaret == null || methodUnderCaret == MethodUnderCaret.EMPTY || methodUnderCaret.id.isBlank()){
+            empty()
+            return
+        }
+
 
         if (!isProjectValid(project)) {
             Log.log(logger::info, "project is disposed in contextChanged for '{}'", methodUnderCaret.id)
@@ -62,7 +72,7 @@ class CodeButtonCaretContextService(private val project: Project) : CaretContext
                 contextChangedImpl(methodUnderCaret)
             } catch (e: Throwable) {
                 Log.warnWithException(logger, project, e, "error in contextChangedImpl")
-                ErrorReporter.getInstance().reportError(project, "CodeButtonCaretContextService.contextChanged", e)
+                ErrorReporter.getInstance().reportError(project, "CodeButtonContextService.contextChanged", e)
             } finally {
                 stopWatch.stop()
                 Log.log(logger::trace, "contextChangedImpl took {} milliseconds", stopWatch.getTime(TimeUnit.MILLISECONDS))
@@ -137,13 +147,6 @@ class CodeButtonCaretContextService(private val project: Project) : CaretContext
         }
     }
 
-    override fun contextEmpty() {
-        empty()
-    }
-
-    override fun contextEmptyNonSupportedFile(fileUri: String) {
-        empty()
-    }
 
     private fun empty() {
         jCefComponent?.let {

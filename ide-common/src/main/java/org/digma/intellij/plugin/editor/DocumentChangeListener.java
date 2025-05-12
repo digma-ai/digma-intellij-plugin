@@ -31,13 +31,11 @@ class DocumentChangeListener {
 
     private final Project project;
     private final DocumentInfoService documentInfoService;
-    private final CurrentContextUpdater currentContextUpdater;
     private final Map<VirtualFile, Disposable> disposables = new HashMap<>();
 
-    DocumentChangeListener(Project project, CurrentContextUpdater currentContextUpdater) {
+    DocumentChangeListener(Project project) {
         this.project = project;
         documentInfoService = DocumentInfoService.getInstance(project);
-        this.currentContextUpdater = currentContextUpdater;
     }
 
     void maybeAddDocumentListener(@NotNull Editor editor) {
@@ -109,19 +107,6 @@ class DocumentChangeListener {
                             ErrorReporter.getInstance().reportError(project, "DocumentChangeListener.documentChanged", e);
                         }
 
-                        EDT.ensureEDT(() -> {
-                            //caret event is not always fired while editing, but the document may change, and a caret
-                            // event will fire only when the caret moves but not while editing.
-                            // if the document changes and no caret event is fired the UI will not be updated.
-                            // so calling here currentContextUpdater after document change will update the UI.
-                            var selectedTextEditor = FileEditorManager.getInstance(project).getSelectedTextEditor();
-                            if (selectedTextEditor != null) {
-                                int caretOffset = selectedTextEditor.logicalPositionToOffset(selectedTextEditor.getCaretModel().getLogicalPosition());
-                                var file = FileDocumentManager.getInstance().getFile(selectedTextEditor.getDocument());
-                                currentContextUpdater.clearLatestMethod();
-                                currentContextUpdater.addRequest(selectedTextEditor, caretOffset, file);
-                            }
-                        });
                     }, 2000);
                 } catch (Exception e) {
                     Log.warnWithException(LOGGER, e, "exception DocumentChangeListener.documentChanged");

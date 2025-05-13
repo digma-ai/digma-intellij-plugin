@@ -9,7 +9,7 @@ import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.jaegerui.JaegerUIService
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.psi.LanguageService
+import org.digma.intellij.plugin.psi.OldLanguageService
 import org.digma.intellij.plugin.service.EditorService
 import org.digma.intellij.plugin.ui.errors.model.ActionError
 import org.digma.intellij.plugin.ui.errors.model.ErrorActionResult
@@ -118,7 +118,7 @@ class ErrorsService(val project: Project) : Disposable {
 
     fun getWorkspaceUris(methodCodeObjectIds: List<String>): Map<String, String> {
         try {
-            return LanguageService.findWorkspaceUrisForCodeObjectIdsForErrorStackTrace(project, methodCodeObjectIds)
+            return OldLanguageService.findWorkspaceUrisForCodeObjectIdsForErrorStackTrace(project, methodCodeObjectIds)
         } catch (e: Throwable) {
             Log.warnWithException(logger, project, e, "error in getWorkspaceUrls")
             return mapOf()

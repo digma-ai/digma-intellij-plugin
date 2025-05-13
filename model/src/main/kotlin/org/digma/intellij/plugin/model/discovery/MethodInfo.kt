@@ -49,17 +49,6 @@ data class MethodInfo(
         }
     }
 
-    companion object {
-
-        @JvmStatic
-        fun removeType(objectId: String): String {
-            if (objectId.startsWith("method:")) {
-                return objectId.substringAfter("method:", objectId)
-            }
-            return objectId
-        }
-    }
-
     fun getRelatedCodeObjectIdsWithType(): List<String> {
         val spansStream = spans.stream().map(SpanInfo::idWithType)
         val endpointsStream = endpoints.stream().map(EndpointInfo::idWithType)

@@ -35,7 +35,6 @@ import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.common.Retries
 import org.digma.intellij.plugin.common.allowSlowOperation
-import org.digma.intellij.plugin.common.executeCatchingWithResult
 import org.digma.intellij.plugin.common.executeCatchingWithResultAndRetryIgnorePCE
 import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.common.isValidVirtualFile
@@ -43,7 +42,6 @@ import org.digma.intellij.plugin.common.runInReadAccess
 import org.digma.intellij.plugin.common.runInReadAccessWithResult
 import org.digma.intellij.plugin.document.BuildDocumentInfoProcessContext
 import org.digma.intellij.plugin.document.DocumentInfoService
-import org.digma.intellij.plugin.editor.CaretContextService
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.buildsystem.JvmBuildSystemHelperService
 import org.digma.intellij.plugin.idea.deps.ModulesDepsService
@@ -94,9 +92,8 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
 
     init {
-        Log.log(logger::trace,"Initializing language service $javaClass")
+        Log.log(logger::trace, "Initializing language service $javaClass")
     }
-
 
 
     //It's a different search for each jvm language.
@@ -365,13 +362,9 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
     }
 
 
-    override fun detectMethodUnderCaret(project: Project, psiFile: PsiFile, selectedEditor: Editor?, caretOffset: Int): MethodUnderCaret {
+    override suspend fun detectMethodUnderCaret(project: Project, psiFile: PsiFile, selectedEditor: Editor, caretOffset: Int): MethodUnderCaret {
 
-        //detectMethodUnderCaret should run very fast and return a result,
-        // this operation may become invalid very soon if user clicks somewhere else.
-        // no retry because it needs to complete very fast
-        //it may be called from EDT or background, runInReadAccessWithResult will acquire read access if necessary.
-        return executeCatchingWithResult({
+        return try {
             runInReadAccessWithResult {
                 allowSlowOperation<MethodUnderCaret> {
                     val fileUri = PsiUtils.psiFileToUri(psiFile)
@@ -381,10 +374,10 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                     return@allowSlowOperation detectMethodUnderCaret(psiFile, fileUri, caretOffset)
                 }
             }
-        }, { e ->
+        } catch (e: Exception) {
             ErrorReporter.getInstance().reportError(project, "${this::class.java.simpleName}.detectMethodUnderCaret", e)
             MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), caretOffset, null, false)
-        })
+        }
     }
 
 
@@ -540,12 +533,6 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
     }
 
 
-    override fun refreshMethodUnderCaret(project: Project, psiFile: PsiFile, selectedEditor: Editor?, offset: Int) {
-        val methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedEditor, offset)
-        CaretContextService.getInstance(project).contextChanged(methodUnderCaret)
-    }
-
-
     override fun canInstrumentMethod(methodId: String): MethodObservabilityInfo {
 
         class MyComputable : Computable<MethodObservabilityInfo> {
@@ -632,15 +619,16 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
         }
 
 
-        return Retries.retryWithResultAndDefault({
-            val myComputable = MyComputable()
-            val result = ProgressManager.getInstance().runProcess(Computable {
-                runInReadAccessWithResult {
-                    myComputable.compute()
-                }
-            }, myComputable.progressIndicator)
-            return@retryWithResultAndDefault result
-        },
+        return Retries.retryWithResultAndDefault(
+            {
+                val myComputable = MyComputable()
+                val result = ProgressManager.getInstance().runProcess(Computable {
+                    runInReadAccessWithResult {
+                        myComputable.compute()
+                    }
+                }, myComputable.progressIndicator)
+                return@retryWithResultAndDefault result
+            },
             Throwable::class.java,
             50,
             5,

@@ -10,7 +10,7 @@ import org.digma.intellij.plugin.model.rest.navigation.AssetNavigationResponse
 import org.digma.intellij.plugin.model.rest.navigation.AssetRelatedCodeLocation
 import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator
-import org.digma.intellij.plugin.psi.LanguageService
+import org.digma.intellij.plugin.psi.OldLanguageService
 
 
 fun buildCodeLocation(
@@ -102,7 +102,7 @@ private fun buildFromCodeLocation(project: Project, codeLocation: AssetCodeLocat
     val endpointCodeObjectId = codeLocation.endpoint?.endpointCodeObjectId
     if (endpointCodeObjectId != null) {
 
-        val endpointInfos = LanguageService.getEndpointInfos(project, endpointCodeObjectId)
+        val endpointInfos = OldLanguageService.getEndpointInfos(project, endpointCodeObjectId)
         if (!endpointInfos.isNullOrEmpty()) {
 
             //may be one or more endpoints

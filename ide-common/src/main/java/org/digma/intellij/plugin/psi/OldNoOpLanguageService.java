@@ -1,7 +1,6 @@
 package org.digma.intellij.plugin.psi;
 
 import com.intellij.lang.Language;
-import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -14,7 +13,7 @@ import org.jetbrains.annotations.*;
 
 import java.util.*;
 
-public class NoOpLanguageService implements LanguageService {
+public abstract class OldNoOpLanguageService implements LanguageService {
 
     public static final NoOpLanguageService INSTANCE = new NoOpLanguageService();
 
@@ -50,11 +49,7 @@ public class NoOpLanguageService implements LanguageService {
         return false;
     }
 
-    @Override
-    @NotNull
-    public MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, Editor selectedEditor, int caretOffset) {
-        return MethodUnderCaret.getEMPTY();
-    }
+
     @Override
     public void navigateToMethod(String methodId) {
         //nothing to do

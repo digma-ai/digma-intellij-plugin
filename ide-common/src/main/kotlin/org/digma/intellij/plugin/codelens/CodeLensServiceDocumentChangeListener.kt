@@ -20,6 +20,7 @@ import org.digma.intellij.plugin.common.runInReadAccessWithResult
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.psi.LanguageService
+import org.digma.intellij.plugin.psi.OldLanguageService
 import org.digma.intellij.plugin.psi.PsiUtils
 import java.util.function.Supplier
 
@@ -48,7 +49,7 @@ class CodeLensServiceDocumentChangeListener(private val project: Project) : File
 
 
             val languageService = allowSlowOperation(Supplier {
-                LanguageService.findLanguageServiceByFile(project, file)
+                OldLanguageService.findLanguageServiceByFile(project, file)
             })
 
 

@@ -19,7 +19,7 @@ import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret
 import org.digma.intellij.plugin.model.rest.codespans.CodeContextSpans
-import org.digma.intellij.plugin.psi.LanguageService
+import org.digma.intellij.plugin.psi.OldLanguageService
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
 import org.digma.intellij.plugin.ui.navigation.model.CodeContextMessage
 import org.digma.intellij.plugin.ui.navigation.model.CodeContextMessagePayload
@@ -155,7 +155,7 @@ class CodeButtonContextService(private val project: Project) : Disposable {
 
 
     private fun getMethodObservabilityInfo(methodId: String): MethodObservabilityInfo {
-        val languageService = LanguageService.findLanguageServiceByMethodCodeObjectId(project, methodId)
+        val languageService = OldLanguageService.findLanguageServiceByMethodCodeObjectId(project, methodId)
         val instrumentationProvider = languageService.instrumentationProvider
         return instrumentationProvider.buildMethodObservabilityInfo(methodId)
     }

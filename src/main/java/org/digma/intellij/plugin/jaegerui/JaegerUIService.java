@@ -150,7 +150,7 @@ public class JaegerUIService implements Disposable, ReloadableJCefContainer {
         Map<String, List<Insight>> allInsights = getInsights(spanCodeObjectIds);
 
         for (SupportedLanguages value : SupportedLanguages.values()) {
-            var languageService = LanguageService.findLanguageServiceByName(project, value.getLanguageServiceClassName());
+            var languageService = OldLanguageService.findLanguageServiceByName(project, value.getLanguageServiceClassName());
             if (languageService != null) {
                 var spanWorkspaceUris = ReadActions.ensureReadAction(() -> languageService.findWorkspaceUrisForSpanIds(spanCodeObjectIdsNoPrefix));
                 var methodWorkspaceUris = ReadActions.ensureReadAction(() -> languageService.findWorkspaceUrisForMethodCodeObjectIds(methodIds));

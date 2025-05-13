@@ -45,7 +45,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
             return;
         }
 
-        LanguageService.ensureStartupOnEDTForAll(project);
+        OldLanguageService.ensureStartupOnEDTForAll(project);
 
         startupEnsured = true;
     }

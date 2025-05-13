@@ -57,6 +57,11 @@ object LanguageServiceModel : Ext(SolutionModel.Solution) {
             immutableList(PredefinedType.string), immutableList(CodeObjectsModel.CodeObjectIdUriOffsetTrouple)
         ).async
 
+        call(
+            "getMethodIdBySpanId",
+            PredefinedType.string, PredefinedType.string.nullable
+        ).async
+
         call("isCsharpMethod", PredefinedType.string, PredefinedType.bool).async
 
         source("navigateToMethod", PredefinedType.string)

@@ -123,6 +123,21 @@ class CSharpLanguageService(project: Project) : LifetimedProjectComponent(projec
         }
     }
 
+
+    override fun detectMethodBySpan(project: Project, spanCodeObjectId: String): String? {
+        return Backgroundable.executeOnPooledThread(Callable {
+            runBlocking {
+                try {
+                    LanguageServiceHost.getInstance(project).getMethodIdBySpanId(spanCodeObjectId)
+                } catch (e: Throwable) {
+                    ErrorReporter.getInstance().reportError(project, javaClass.getSimpleName() + ".detectMethodBySpan", e)
+                    null
+                }
+            }
+        }).get()
+    }
+
+
     override fun navigateToMethod(methodId: String) {
 
         Log.log(logger::debug, "got navigate to method request {}", methodId)

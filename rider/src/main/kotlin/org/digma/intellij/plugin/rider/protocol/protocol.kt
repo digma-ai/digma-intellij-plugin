@@ -73,14 +73,6 @@ fun tryGetProjectModelId(psiFile: PsiFile, fileEditor: FileEditor?,project: Proj
 }
 
 
-fun tryGetProjectModelId(psiFile: PsiFile, editor: Editor?,project: Project): Int? {
-    @Suppress("IfThenToElvis")
-    return if (editor != null) {
-        editor.getProjectModelId()
-    }else{
-        tryGetProjectModelId(psiFile,project)
-    }
-}
 
 
 fun tryGetProjectModelId(psiFile: PsiFile,project: Project): Int? {

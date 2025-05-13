@@ -60,6 +60,7 @@ namespace Digma.Rider.Protocol
             languageServiceModel.GetWorkspaceUrisForMethodCodeObjectIds.Set(GetWorkspaceUrisForMethodCodeObjectIds);
             languageServiceModel.GetSpansWorkspaceUris.Set(GetSpansWorkspaceUris);
             languageServiceModel.IsCsharpMethod.Set(IsCsharpMethod);
+            languageServiceModel.GetMethodIdBySpanId.Set(GetMethodIdBySpanId);
             languageServiceModel.NavigateToMethod.Advise(lifetime, NavigateToMethod);
         }
 
@@ -334,6 +335,73 @@ namespace Digma.Rider.Protocol
             }
 
             result.Set(uris);
+            return result;
+        }
+
+        //todo: very bad performance. find a was to query resharper caches or build a cache for that
+        [NotNull]
+        private RdTask<string> GetMethodIdBySpanId(Lifetime _, string spanId)
+        {
+            var result = new RdTask<string>();
+            string methodId = null;
+            
+            using (ReadLockCookie.Create())
+            {
+                try
+                {
+                    foreach (var psiSourceFile in _codeObjectsCache.Map.Keys)
+                    {
+                        if (psiSourceFile == null)
+                        {
+                            Log(_logger, "psiSourceFile is null. Aborting operation.");
+                            continue;
+                        }
+
+                        var document = _codeObjectsCache.Map.TryGetValue(psiSourceFile);
+                        if (document == null)
+                        {
+                            Log(_logger, "Got null Document for psiSourceFile '{0}'. Aborting operation.",
+                                psiSourceFile);
+                            continue;
+                        }
+
+                        //it may be that the document is in the cache, but reference resolving was not complete
+                        //when the cache was built. this is a compensation and the document will be updated.
+                        if (!document.IsComplete)
+                        {
+                            Log(_logger, "Document '{0}' is not complete. Trying to build it on-demand.",
+                                document.FileUri);
+                            document = BuildDocumentOnDemand(psiSourceFile);
+                        }
+
+                        if (document == null)
+                        {
+                            Log(_logger,
+                                "Still could not find Document for psiSourceFile '{0}' in the cache. Aborting operation.",
+                                psiSourceFile);
+                            continue;
+                        }
+
+                        foreach (var riderMethodInfo in document.Methods)
+                        {
+                            foreach (var riderSpanInfo in riderMethodInfo.Spans)
+                            {
+                                if (spanId == riderSpanInfo.Id)
+                                {
+                                    methodId = riderMethodInfo.Id;
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    //todo: maybe throw an error to notify the fronend ?
+                    _logger.Error(e, "Error searching documents uris");
+                }
+            }
+
+            result.Set(methodId);
             return result;
         }
 

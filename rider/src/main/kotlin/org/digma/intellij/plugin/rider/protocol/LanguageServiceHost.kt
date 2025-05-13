@@ -11,6 +11,7 @@ import com.jetbrains.rd.framework.IProtocol
 import com.jetbrains.rd.util.Callable
 import com.jetbrains.rd.util.reactive.whenTrue
 import com.jetbrains.rdclient.util.idea.LifetimedProjectComponent
+import com.jetbrains.rider.editors.getProjectModelId
 import com.jetbrains.rider.projectView.SolutionLifecycleHost
 import com.jetbrains.rider.projectView.SolutionStartupService
 import com.jetbrains.rider.projectView.solution
@@ -188,7 +189,7 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
 
     //always try to send the editor to this method or execute it on EDT, if the editor is null, this method will try
     // to find the selected editor only if executed on EDT.
-    suspend fun detectMethodUnderCaret(psiFile: PsiFile, selectedEditor: Editor?, caretOffset: Int): MethodUnderCaret {
+    suspend fun detectMethodUnderCaret(psiFile: PsiFile, selectedEditor: Editor, caretOffset: Int): MethodUnderCaret {
 
         Log.log(
             logger::debug,
@@ -198,11 +199,9 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
             solutionLoaded
         )
 
-        //always try to find ProjectModelId.
-        //projectModelId is the preferred way to find a IPsiSourceFile in rider backend. the backend will try to find
+        //projectModelId is the preferred way to find the IPsiSourceFile in rider backend. the backend will try to find
         // by projectModelId and will fall back to find by uri.
-        val projectModelId: Int? = tryGetProjectModelId(psiFile, selectedEditor, project)
-
+        val projectModelId: Int = selectedEditor.getProjectModelId()
         val psiUri = PsiUtils.psiFileToUri(psiFile)
         val psiId = PsiFileID(projectModelId, psiUri)
 
@@ -219,6 +218,19 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
 
         return riderMethodUnderCaret?.toMethodUnderCaret(caretOffset) ?: MethodUnderCaret("", "", "", "", "", caretOffset)
     }
+
+
+    suspend fun getMethodIdBySpanId(spanId: String): String? {
+        Log.log(logger::debug, "Got request to getMethodIdBySpanId {}", spanId)
+        val result = model.getMethodIdBySpanId.startSuspending(spanId)
+        if (result == null) {
+            Log.log(logger::debug, "Could not load MethodIdBySpanId for {}", spanId)
+        }else{
+            Log.log(logger::debug, "Found MethodIdBySpanId for {} , '{}'", spanId, result)
+        }
+        return result
+    }
+
 
 
     suspend fun findWorkspaceUrisForCodeObjectIdsForErrorStackTrace(codeObjectIds: List<String>): Map<String, String> {

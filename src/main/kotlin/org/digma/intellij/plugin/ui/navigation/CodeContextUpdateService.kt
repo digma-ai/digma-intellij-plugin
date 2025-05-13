@@ -110,19 +110,18 @@ class CodeContextUpdateService(private val project: Project, private val cs: Cor
                 if (shouldRun()) {
 
                     try {
-                        val (editor, psiFile) = readAction {
+                        val (editor, psiFile,caretOffset) = readAction {
                             val editor = FileEditorManager.getInstance(project).selectedTextEditor
                             val document = editor?.document
                             val file = document?.let { PsiDocumentManager.getInstance(project).getPsiFile(document) }
                             if (file?.isValid == true) {
-                                Pair(editor, file)
+                                Triple(editor, file,editor.caretModel.offset)
                             } else {
-                                Pair(null, null)
+                                Triple(null, null,null)
                             }
                         }
 
-                        if (editor != null && psiFile != null) {
-                            val caretOffset = editor.caretModel.offset
+                        if (editor != null && psiFile != null && caretOffset != null) {
 
                             val languageService = LanguageServiceLocator.getInstance(project).locate(psiFile.language)
                             val methodUnderCaret = languageService.detectMethodUnderCaret(project, psiFile, editor, caretOffset)

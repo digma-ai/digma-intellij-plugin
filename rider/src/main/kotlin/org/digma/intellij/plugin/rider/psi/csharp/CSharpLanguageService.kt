@@ -16,7 +16,6 @@ import kotlinx.coroutines.runBlocking
 import org.apache.commons.lang3.time.StopWatch
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.ReadActions
-import org.digma.intellij.plugin.common.executeCatchingWithResult
 import org.digma.intellij.plugin.common.isValidVirtualFile
 import org.digma.intellij.plugin.common.runInReadAccessWithResult
 import org.digma.intellij.plugin.document.BuildDocumentInfoProcessContext
@@ -114,27 +113,14 @@ class CSharpLanguageService(project: Project) : LifetimedProjectComponent(projec
     }
 
 
-    override fun detectMethodUnderCaret(project: Project, psiFile: PsiFile, selectedEditor: Editor?, caretOffset: Int): MethodUnderCaret {
-        //detectMethodUnderCaret should run very fast and return a result,
-        // this operation may become invalid very soon if the user clicks somewhere else.
-        // no retry because it needs to complete very fast
-        //it may be called from EDT or background, runInReadAccessWithResult will acquire read access if necessary.
+    override suspend fun detectMethodUnderCaret(project: Project, psiFile: PsiFile, selectedEditor: Editor, caretOffset: Int): MethodUnderCaret {
 
-        return Backgroundable.executeOnPooledThread(Callable {
-
-            executeCatchingWithResult({
-                runInReadAccessWithResult {
-                    runBlocking {
-                        LanguageServiceHost.getInstance(project).detectMethodUnderCaret(psiFile, selectedEditor, caretOffset)
-                    }
-                }
-            }, { throwable ->
-                ErrorReporter.getInstance().reportError(project, javaClass.getSimpleName() + ".detectMethodUnderCaret", throwable)
-                MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), caretOffset, null, false)
-            })
-
-        }).get()
-
+        return try {
+            LanguageServiceHost.getInstance(project).detectMethodUnderCaret(psiFile, selectedEditor, caretOffset)
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError(project, javaClass.getSimpleName() + ".detectMethodUnderCaret", e)
+            MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), caretOffset, null, false)
+        }
     }
 
     override fun navigateToMethod(methodId: String) {

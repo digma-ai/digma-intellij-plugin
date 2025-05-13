@@ -3,7 +3,6 @@ package org.digma.intellij.plugin.psi;
 import com.intellij.lang.Language;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -19,7 +18,7 @@ import org.jetbrains.annotations.*;
 
 import java.util.*;
 
-public interface LanguageService extends Disposable {
+public interface OldLanguageService extends Disposable {
 
     Logger LOGGER = Logger.getInstance(LanguageService.class);
 
@@ -191,7 +190,7 @@ public interface LanguageService extends Disposable {
             //first try to find language with LanguageService.findLanguageByMethodCodeObjectId which usually queries
             //intellij index
             if (methodCodeObjectId != null) {
-                language = LanguageService.findLanguageByMethodCodeObjectId(project, methodCodeObjectId);
+                language = findLanguageByMethodCodeObjectId(project, methodCodeObjectId);
             }
 
             //last resort. dominant language will be available if at least one document was already opened.
@@ -213,7 +212,7 @@ public interface LanguageService extends Disposable {
     @NotNull
     static LanguageService findLanguageServiceByClassName(@NotNull Project project, @NotNull String className) {
 
-        var language = LanguageService.findLanguageByClassName(project, className);
+        var language = findLanguageByClassName(project, className);
         if (language == null) {
             return NoOpLanguageService.INSTANCE;
         }
@@ -346,7 +345,7 @@ public interface LanguageService extends Disposable {
 
 
 
-    
+
 
     /**
      * This method should be a last resort to find language as it is slow and not reliable.
@@ -367,10 +366,7 @@ public interface LanguageService extends Disposable {
 
     boolean isSupportedFile(PsiFile psiFile);
 
-    //some language services need the editor, for example CSharpLanguageService needs to take
-    // getProjectModelId from the selected editor which is the preferred way to find a IPsiSourceFile in resharper. it may be null.
-    @NotNull
-    MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, @Nullable Editor selectedEditor, int caretOffset);
+
 
     @Nullable
     default String detectMethodBySpan(@NotNull Project project, String spanCodeObjectId) {

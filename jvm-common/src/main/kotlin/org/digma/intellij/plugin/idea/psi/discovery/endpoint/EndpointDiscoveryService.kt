@@ -5,7 +5,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
 import org.digma.intellij.plugin.idea.psi.JvmLanguageService
 import org.digma.intellij.plugin.idea.psi.SupportedJvmLanguages
-import org.digma.intellij.plugin.psi.LanguageService
+import org.digma.intellij.plugin.psi.OldLanguageService
 
 //Do not change to light service because it will always register.
 // we want it to register only in Idea.
@@ -38,8 +38,8 @@ class EndpointDiscoveryService(private val project: Project) {
         endpointDiscoveryList.add(GrpcFrameworkEndpointDiscovery(project))
         endpointDiscoveryList.add(SpringBootFrameworkEndpointDiscovery(project))
 
-        SupportedJvmLanguages.values().forEach { lang ->
-            val languageService = LanguageService.findLanguageServiceByName(project, lang.language.languageServiceClassName)
+        SupportedJvmLanguages.entries.forEach { lang ->
+            val languageService = OldLanguageService.findLanguageServiceByName(project, lang.language.languageServiceClassName)
             if (languageService != null &&
                 languageService is JvmLanguageService
             ) {
@@ -55,8 +55,8 @@ class EndpointDiscoveryService(private val project: Project) {
     fun getEndpointDiscoveryForLanguage(psiFile: PsiFile): List<EndpointDiscovery> {
 
         val endpointDiscoveryList = mutableListOf<EndpointDiscovery>()
-        SupportedJvmLanguages.values().forEach { lang ->
-            val languageService = LanguageService.findLanguageServiceByName(project, lang.language.languageServiceClassName)
+        SupportedJvmLanguages.entries.forEach { lang ->
+            val languageService = OldLanguageService.findLanguageServiceByName(project, lang.language.languageServiceClassName)
             if (languageService != null &&
                 languageService is JvmLanguageService &&
                 languageService.isSupportedFile(psiFile)

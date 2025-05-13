@@ -16,7 +16,7 @@ import org.digma.intellij.plugin.errorreporting.SEVERITY_PROP_NAME
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigation
-import org.digma.intellij.plugin.psi.LanguageService
+import org.digma.intellij.plugin.psi.OldLanguageService
 import org.digma.intellij.plugin.psi.SupportedLanguages
 import org.digma.intellij.plugin.service.EditorService
 import org.digma.intellij.plugin.ui.ToolWindowShower
@@ -45,8 +45,8 @@ class CodeNavigator(val project: Project) {
 
         val spanIdWithoutType = CodeObjectsUtil.stripSpanPrefix(spanId)
 
-        SupportedLanguages.values().forEach { language ->
-            val languageService = LanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
+        SupportedLanguages.entries.forEach { language ->
+            val languageService = OldLanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
             if (languageService != null) {
                 val spanWorkspaceUris = ReadActions.ensureReadAction<Map<String, Pair<String, Int>>> {
                     languageService.findWorkspaceUrisForSpanIds(listOf(spanIdWithoutType))
@@ -56,7 +56,7 @@ class CodeNavigator(val project: Project) {
                 if (pair != null) {
                     Log.log(logger::debug, project, "found span code location in maybeNavigateToSpan for span {}", spanIdWithoutType)
                     EDT.ensureEDT {
-                        project.service<EditorService>().openWorkspaceFileInEditor(pair.first, pair.second)
+                        EditorService.getInstance(project).openWorkspaceFileInEditor(pair.first, pair.second)
                     }
                     ToolWindowShower.getInstance(project).showToolWindow()
                     //if code location was found link to it and return. no need to check the other language services
@@ -78,8 +78,8 @@ class CodeNavigator(val project: Project) {
 
         val methodIdWithoutType = CodeObjectsUtil.stripMethodPrefix(methodId)
 
-        SupportedLanguages.values().forEach { language ->
-            val languageService = LanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
+        SupportedLanguages.entries.forEach { language ->
+            val languageService = OldLanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
             if (languageService != null) {
                 val methodWorkspaceUris = ReadActions.ensureReadAction<Map<String, Pair<String, Int>>> {
                     languageService.findWorkspaceUrisForMethodCodeObjectIds(listOf(methodIdWithoutType))
@@ -89,7 +89,7 @@ class CodeNavigator(val project: Project) {
                 if (pair != null) {
                     Log.log(logger::debug, project, "found method code location in maybeNavigateToSpan for method {}", methodIdWithoutType)
                     EDT.ensureEDT {
-                        project.service<EditorService>().openWorkspaceFileInEditor(pair.first, pair.second)
+                        EditorService.getInstance(project).openWorkspaceFileInEditor(pair.first, pair.second)
                     }
                     ToolWindowShower.getInstance(project).showToolWindow()
                     //if code location was found link to it and return. no need to check the other language services
@@ -114,8 +114,8 @@ class CodeNavigator(val project: Project) {
 
         val methodIdWithoutType = CodeObjectsUtil.stripMethodPrefix(methodCodeObjectId)
 
-        SupportedLanguages.values().forEach { language ->
-            val languageService = LanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
+        SupportedLanguages.entries.forEach { language ->
+            val languageService = OldLanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
             if (languageService != null) {
                 val methodWorkspaceUris = try {
                     ReadActions.ensureReadAction<Map<String, Pair<String, Int>>> {
@@ -143,8 +143,8 @@ class CodeNavigator(val project: Project) {
 
         val spanIdWithoutType = CodeObjectsUtil.stripSpanPrefix(spanCodeObjectId)
 
-        SupportedLanguages.values().forEach { language ->
-            val languageService = LanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
+        SupportedLanguages.entries.forEach { language ->
+            val languageService = OldLanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
             if (languageService != null) {
                 val spanWorkspaceUris = ReadActions.ensureReadAction<Map<String, Pair<String, Int>>> {
                     languageService.findWorkspaceUrisForSpanIds(listOf(spanIdWithoutType))
@@ -161,8 +161,8 @@ class CodeNavigator(val project: Project) {
     }
 
     fun findMethodCodeObjectId(spanCodeObjectId: String): String? {
-        SupportedLanguages.values().forEach { language ->
-            val languageService = LanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
+        SupportedLanguages.entries.forEach { language ->
+            val languageService = OldLanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
             if (languageService != null) {
                 val methodCodeObjectId = runInReadAccessWithResult {
                     languageService.detectMethodBySpan(project, CodeObjectsUtil.stripSpanPrefix(spanCodeObjectId))
@@ -177,8 +177,8 @@ class CodeNavigator(val project: Project) {
 
         val methodIdWithoutType = CodeObjectsUtil.stripMethodPrefix(methodId)
 
-        SupportedLanguages.values().forEach { language ->
-            val languageService = LanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
+        SupportedLanguages.entries.forEach { language ->
+            val languageService = OldLanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
             if (languageService != null) {
                 val methodWorkspaceUris = ReadActions.ensureReadAction<Map<String, Pair<String, Int>>> {
                     languageService.findWorkspaceUrisForMethodCodeObjectIds(listOf(methodIdWithoutType))
@@ -197,8 +197,8 @@ class CodeNavigator(val project: Project) {
 
         val spanIdWithoutType = CodeObjectsUtil.stripSpanPrefix(spanId)
 
-        SupportedLanguages.values().forEach { language ->
-            val languageService = LanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
+        SupportedLanguages.entries.forEach { language ->
+            val languageService = OldLanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
             if (languageService != null) {
                 val spanWorkspaceUris = ReadActions.ensureReadAction<Map<String, Pair<String, Int>>> {
                     languageService.findWorkspaceUrisForSpanIds(listOf(spanIdWithoutType))
@@ -224,8 +224,8 @@ class CodeNavigator(val project: Project) {
         codeObjectNavigation.navigationEntry.navEndpointEntry?.endpointCodeObjectId?.also { it ->
             val endpointId = CodeObjectsUtil.stripEndpointPrefix(it)
 
-            SupportedLanguages.values().forEach { language ->
-                val languageService = LanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
+            SupportedLanguages.entries.forEach { language ->
+                val languageService = OldLanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
                 if (languageService != null) {
                     val endpointInfos = ReadActions.ensureReadAction<Set<EndpointInfo>> {
                         languageService.lookForDiscoveredEndpoints(endpointId)
@@ -264,8 +264,8 @@ class CodeNavigator(val project: Project) {
 
         val endpointIdWithoutType = CodeObjectsUtil.stripEndpointPrefix(endpointId)
 
-        SupportedLanguages.values().forEach { language ->
-            val languageService = LanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
+        SupportedLanguages.entries.forEach { language ->
+            val languageService = OldLanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
             if (languageService != null) {
                 val endpointInfos = ReadActions.ensureReadAction<Set<EndpointInfo>> {
                     languageService.lookForDiscoveredEndpoints(endpointIdWithoutType)
@@ -293,8 +293,8 @@ class CodeNavigator(val project: Project) {
 
         val endpointIdWithoutType = CodeObjectsUtil.stripEndpointPrefix(endpointId)
 
-        SupportedLanguages.values().forEach { language ->
-            val languageService = LanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
+        SupportedLanguages.entries.forEach { language ->
+            val languageService = OldLanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
             if (languageService != null) {
                 val endpointInfos = ReadActions.ensureReadAction<Set<EndpointInfo>> {
                     languageService.lookForDiscoveredEndpoints(endpointIdWithoutType)

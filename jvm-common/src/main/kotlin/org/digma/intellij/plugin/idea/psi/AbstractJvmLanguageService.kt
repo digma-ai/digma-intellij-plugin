@@ -14,7 +14,6 @@ import com.intellij.openapi.progress.EmptyProgressIndicator
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
-import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.openapi.util.Computable
@@ -94,20 +93,14 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
         Log.log(logger::trace, "Initializing language service $javaClass")
     }
 
+    override fun dispose() {
+
+    }
 
     //It's a different search for each jvm language.
     abstract fun findClassByClassName(className: String, scope: GlobalSearchScope): UClass?
 
     abstract fun findParentMethod(psiElement: PsiElement): UMethod?
-
-
-    override fun runWhenSmart(task: Runnable) {
-        if (DumbService.isDumb(project)) {
-            DumbService.getInstance(project).runWhenSmart(task)
-        } else {
-            task.run()
-        }
-    }
 
 
     override fun isSupportedFile(virtualFile: VirtualFile): Boolean {
@@ -143,23 +136,23 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
             if (psiFile == null) {
                 Log.log(logger::trace, "buildDocumentInfo: could not find psiFile for {}", virtualFile)
                 null
-            }else if (!PsiUtils.isValidPsiFile(psiFile)){
+            } else if (!PsiUtils.isValidPsiFile(psiFile)) {
                 Log.log(logger::trace, "buildDocumentInfo: psiFile is not valid for {}", virtualFile)
                 null
-            }else if (!isSupportedFile(psiFile)){
+            } else if (!isSupportedFile(psiFile)) {
                 Log.log(logger::trace, "buildDocumentInfo: psiFile is not supported for {}", virtualFile)
                 null
-            }else if (!isProjectValid(project)){
+            } else if (!isProjectValid(project)) {
                 Log.log(logger::trace, "buildDocumentInfo: project is not valid for {}", virtualFile)
                 null
-            }else{
+            } else {
                 psiFile
             }
         }
         coroutineContext.ensureActive()
         return psiFile?.let {
             suspendableRetry {
-                codeObjectDiscovery.buildDocumentInfo(project, it, virtualFile.url,getLanguage())
+                codeObjectDiscovery.buildDocumentInfo(project, it, virtualFile.url, getLanguage())
             }
         }
     }
@@ -168,7 +161,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
         return runInReadAccessWithResult {
             return@runInReadAccessWithResult if (isValidVirtualFile(newFile)) {
                 val psiFile = PsiManager.getInstance(project).findFile(newFile)
-                PsiUtils.isValidPsiFile(psiFile) && isSupportedFile(psiFile)
+                psiFile != null && PsiUtils.isValidPsiFile(psiFile) && isSupportedFile(psiFile)
             } else {
                 false
             }

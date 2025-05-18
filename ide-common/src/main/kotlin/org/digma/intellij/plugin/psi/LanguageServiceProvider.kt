@@ -14,7 +14,7 @@ class LanguageServiceProvider(private val project: Project) {
     private val languageServices = mutableSetOf<LanguageService>()
     private val supportedLanguages = mutableSetOf<Language>()
     private val supportedFileTypes = mutableSetOf<FileType>()
-    private val languageServiceByLanguage = mutableMapOf<String, LanguageService>()
+    private val languageServiceByLanguageId = mutableMapOf<String, LanguageService>()
 
 
     init {
@@ -40,7 +40,7 @@ class LanguageServiceProvider(private val project: Project) {
 
         supportedLanguages.addAll(languageServices.map { it.getLanguage() })
         supportedFileTypes.addAll(languageServices.map { it.getFileType() })
-        languageServiceByLanguage.putAll(languageServices.associateBy { it.getLanguage().id })
+        languageServiceByLanguageId.putAll(languageServices.associateBy { it.getLanguage().id })
 
     }
 
@@ -64,13 +64,11 @@ class LanguageServiceProvider(private val project: Project) {
     }
 
     fun getLanguageService(language: Language): LanguageService? {
-        return languageServiceByLanguage[language.id]
+        return languageServiceByLanguageId[language.id]
     }
 
     fun getLanguageService(virtualFile: VirtualFile): LanguageService? {
         val languageFileType = virtualFile.fileType as? LanguageFileType ?: return null
-        return languageServiceByLanguage[languageFileType.language.id]
+        return languageServiceByLanguageId[languageFileType.language.id]
     }
-
-
 }

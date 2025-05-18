@@ -14,7 +14,7 @@ import org.digma.intellij.plugin.document.findMethodInfo
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator
 import org.digma.intellij.plugin.notifications.NotificationUtil
-import org.digma.intellij.plugin.psi.OldLanguageService
+import org.digma.intellij.plugin.psi.findLanguageServiceByMethodCodeObjectId
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
 import org.digma.intellij.plugin.ui.navigation.model.InstrumentationResult
 import java.time.Instant
@@ -45,8 +45,8 @@ class NavigationService(private val project: Project) : Disposable {
 
     fun fixMissingDependencies(methodId: String) {
 
-        val languageService = OldLanguageService.findLanguageServiceByMethodCodeObjectId(project, methodId)
-        val instrumentationProvider = languageService.instrumentationProvider
+        val languageService = findLanguageServiceByMethodCodeObjectId(project, methodId) ?: return
+        val instrumentationProvider = languageService.getInstrumentationProvider()
         instrumentationProvider.addObservabilityDependency(methodId)
 
         @Suppress("UnstableApiUsage")
@@ -75,8 +75,8 @@ class NavigationService(private val project: Project) : Disposable {
 
     fun addAnnotation(methodId: String) {
 
-        val languageService = OldLanguageService.findLanguageServiceByMethodCodeObjectId(project, methodId)
-        val instrumentationProvider = languageService.instrumentationProvider
+        val languageService = findLanguageServiceByMethodCodeObjectId(project, methodId) ?: return
+        val instrumentationProvider = languageService.getInstrumentationProvider()
         instrumentationProvider.addObservability(methodId)
 
 

@@ -10,7 +10,7 @@ import org.digma.intellij.plugin.model.rest.navigation.AssetNavigationResponse
 import org.digma.intellij.plugin.model.rest.navigation.AssetRelatedCodeLocation
 import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator
-import org.digma.intellij.plugin.psi.OldLanguageService
+import org.digma.intellij.plugin.psi.getEndpointInfos
 
 
 fun buildCodeLocation(
@@ -102,16 +102,13 @@ private fun buildFromCodeLocation(project: Project, codeLocation: AssetCodeLocat
     val endpointCodeObjectId = codeLocation.endpoint?.endpointCodeObjectId
     if (endpointCodeObjectId != null) {
 
-        val endpointInfos = OldLanguageService.getEndpointInfos(project, endpointCodeObjectId)
-        if (!endpointInfos.isNullOrEmpty()) {
+        val endpointInfos = getEndpointInfos(project, endpointCodeObjectId)
 
-            //may be one or more endpoints
-            endpointInfos.forEach { ei ->
-                val endpointMethodId = ei.containingMethodId
-                if (codeNavigator.canNavigateToMethod(endpointMethodId)) {
+        endpointInfos.forEach { ei ->
+            val endpointMethodId = ei.containingMethodId
+            if (codeNavigator.canNavigateToMethod(endpointMethodId)) {
 //                    codeDetailsList.add(CodeDetails(getMethodDisplayName(methodId), methodId))
-                    codeDetailsList.add(CodeDetails(codeLocation.displayName, endpointMethodId))
-                }
+                codeDetailsList.add(CodeDetails(codeLocation.displayName, endpointMethodId))
             }
         }
     }

@@ -25,8 +25,8 @@ import org.digma.intellij.plugin.common.FileUtils
 import org.digma.intellij.plugin.common.isValidVirtualFile
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.psi.LanguageServiceProvider
+import org.digma.intellij.plugin.psi.isSupportedLanguageFile
 import java.time.Instant
 import java.util.Queue
 import java.util.concurrent.ConcurrentHashMap
@@ -297,7 +297,7 @@ class EditorDocumentService(private val project: Project, private val cs: Corout
                 return
             }
 
-            if (!LanguageService.isSupportedLanguageFile(project, file)) {
+            if (!isSupportedLanguageFile(project, file)) {
                 Log.log(logger::trace, "buildDocumentInfo: file is not a supported language {}", file)
                 return
             }
@@ -342,7 +342,7 @@ class EditorDocumentService(private val project: Project, private val cs: Corout
         return file.isValid &&
                 file.isWritable &&
                 !FileUtils.isLightVirtualFileBase(file) &&
-                LanguageService.isSupportedLanguageFile(project, file)
+                isSupportedLanguageFile(project, file)
     }
 
 

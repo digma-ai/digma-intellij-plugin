@@ -59,7 +59,7 @@ abstract class DigmaCodeVisionProviderBase : DaemonBoundCodeVisionProvider {
             }
             Log.log(logger::trace, "found LanguageService for file {}, {}", file, languageService)
             //not all languages support DaemonBoundCodeVisionProvider, C# does it in resharper
-            if (languageService.isCodeVisionSupported) {
+            if (languageService.isCodeVisionSupported()) {
                 Log.log(logger::trace, "file is supported, computing code lens for {}", file)
                 return project.service<CodeLensService>().getCodeLens(this.id, file, languageService)
             } else {

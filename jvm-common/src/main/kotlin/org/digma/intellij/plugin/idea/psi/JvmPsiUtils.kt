@@ -8,7 +8,7 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.impl.source.PsiExtensibleClass
 import org.digma.intellij.plugin.common.isReadAccessAllowed
 import org.digma.intellij.plugin.common.runInReadAccessWithResult
-import org.digma.intellij.plugin.psi.OldLanguageService
+import org.digma.intellij.plugin.psi.LanguageServiceProvider
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UFile
@@ -20,13 +20,8 @@ import java.util.function.Predicate
 private const val OBJECT_CLASS_FQN = "java.lang.Object"
 
 fun isJvmSupportedFile(project: Project, psiFile: PsiFile): Boolean {
-    SupportedJvmLanguages.entries.forEach {
-        val languageService = OldLanguageService.findLanguageServiceByName(project, it.language.languageServiceClassName)
-        if (languageService != null &&
-            languageService is JvmLanguageService &&
-            languageService.isSupportedFile(psiFile)
-        ) {
-
+    for (languageService in LanguageServiceProvider.getInstance(project).getLanguageServices()) {
+        if (languageService is JvmLanguageService && languageService.isSupportedFile(psiFile)) {
             return true
         }
     }

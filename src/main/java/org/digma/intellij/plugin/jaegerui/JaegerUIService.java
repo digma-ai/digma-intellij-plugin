@@ -149,21 +149,18 @@ public class JaegerUIService implements Disposable, ReloadableJCefContainer {
 
         Map<String, List<Insight>> allInsights = getInsights(spanCodeObjectIds);
 
-        for (SupportedLanguages value : SupportedLanguages.values()) {
-            var languageService = OldLanguageService.findLanguageServiceByName(project, value.getLanguageServiceClassName());
-            if (languageService != null) {
-                var spanWorkspaceUris = ReadActions.ensureReadAction(() -> languageService.findWorkspaceUrisForSpanIds(spanCodeObjectIdsNoPrefix));
-                var methodWorkspaceUris = ReadActions.ensureReadAction(() -> languageService.findWorkspaceUrisForMethodCodeObjectIds(methodIds));
-                spansMessage.payload().spans().forEach(span -> {
-                    var spanId = span.spanId();
-                    var methodId = span.methodId();
-                    var hasCodeLocation = (spanWorkspaceUris.containsKey(spanId) || methodWorkspaceUris.containsKey(methodId));
+        for (LanguageService languageService : LanguageServiceProvider.getInstance(project).getLanguageServices()) {
+            var spanWorkspaceUris = ReadActions.ensureReadAction(() -> languageService.findWorkspaceUrisForSpanIds(spanCodeObjectIdsNoPrefix));
+            var methodWorkspaceUris = ReadActions.ensureReadAction(() -> languageService.findWorkspaceUrisForMethodCodeObjectIds(methodIds));
+            spansMessage.payload().spans().forEach(span -> {
+                var spanId = span.spanId();
+                var methodId = span.methodId();
+                var hasCodeLocation = (spanWorkspaceUris.containsKey(spanId) || methodWorkspaceUris.containsKey(methodId));
 
-                    var spanData = allSpans.computeIfAbsent(span.id(), s -> new SpanData(hasCodeLocation, new ArrayList<>()));
+                var spanData = allSpans.computeIfAbsent(span.id(), s -> new SpanData(hasCodeLocation, new ArrayList<>()));
 
-                    addInsightsToSpanData(spanData, span.spanCodeObjectId(), methodId, allInsights);
-                });
-            }
+                addInsightsToSpanData(spanData, span.spanCodeObjectId(), methodId, allInsights);
+            });
         }
 
         return allSpans;

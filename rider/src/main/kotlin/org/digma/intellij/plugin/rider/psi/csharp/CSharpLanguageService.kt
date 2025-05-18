@@ -7,7 +7,6 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileTypes.FileType
-import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
@@ -65,7 +64,7 @@ class CSharpLanguageService(project: Project, cs: CoroutineScope) : LifetimedPro
             In Idea, we wait for smart mode on startup before building DocumentInfo for open files.
             In Rider the indexes are not ready when building the DocumentInfo for open files.
             Here we wait for the solution loaded and simulate fileOpened again for every file in DocumentInfoStorage
-            This code runs on EDT and should not block EDT for long time.
+            This code runs on EDT and should not block EDT for a long time.
              */
 
             Log.log(
@@ -82,7 +81,7 @@ class CSharpLanguageService(project: Project, cs: CoroutineScope) : LifetimedPro
                         Log.log(logger::trace, "Rider solution loaded, done building DocumentInfo for {}", file)
                         DocumentInfoStorage.getInstance(project).updateDocumentInfoForRider(file, documentInfo)
                     } else {
-                        Log.log(logger::warn,"Rider solution loaded,Could not build DocumentInfo for {}",file)
+                        Log.log(logger::warn, "Rider solution loaded,Could not build DocumentInfo for {}", file)
                     }
                 }
             }
@@ -97,19 +96,6 @@ class CSharpLanguageService(project: Project, cs: CoroutineScope) : LifetimedPro
     override fun getFileType(): FileType {
         return CSharpFileType
     }
-
-    override fun runWhenSmart(task: Runnable) {
-        val r = Runnable {
-            if (DumbService.isDumb(project)) {
-                DumbService.getInstance(project).runWhenSmart(task)
-            } else {
-                task.run()
-            }
-        }
-
-        LanguageServiceHost.getInstance(project).runIfSolutionLoaded(r)
-    }
-
 
     override fun getLanguageForMethodCodeObjectId(methodId: String): Language? {
 
@@ -198,10 +184,10 @@ class CSharpLanguageService(project: Project, cs: CoroutineScope) : LifetimedPro
         return CSharpLanguageUtil.isCSharpLanguage(language)
     }
 
-    override fun findWorkspaceUrisForCodeObjectIdsForErrorStackTrace(codeObjectIds: List<String>): Map<String, String> {
+    override fun findWorkspaceUrisForCodeObjectIdsForErrorStackTrace(methodCodeObjectIds: List<String>): Map<String, String> {
         return Backgroundable.executeOnPooledThread(Callable {
             runBlocking {
-                LanguageServiceHost.getInstance(project).findWorkspaceUrisForCodeObjectIdsForErrorStackTrace(codeObjectIds)
+                LanguageServiceHost.getInstance(project).findWorkspaceUrisForCodeObjectIdsForErrorStackTrace(methodCodeObjectIds)
             }
         }).get()
     }
@@ -275,12 +261,12 @@ class CSharpLanguageService(project: Project, cs: CoroutineScope) : LifetimedPro
                 //In Rider the preferred way to find a psi source file in the backend is to use projectModelId which can be found
                 //  in the frontend editor. If there is no editor, the psi will be searched by the file url
                 //todo: this is a costly operation because it must run on EDT. it happens on every file open and every time
-                // the DocumentInfo needs to update. consider removing it or refctore Rider backend to do something else.
+                // the DocumentInfo needs to update. consider removing it or refactor Rider backend to do something else.
                 val editor: Editor? = withContext(Dispatchers.EDT) {
                     getSelectedTextEditorForFile(project, virtualFile)
                 }
 
-                LanguageServiceHost.getInstance(project).getDocumentInfo(virtualFile, editor,getLanguage())
+                LanguageServiceHost.getInstance(project).getDocumentInfo(virtualFile, editor, getLanguage())
             }
         }
     }
@@ -334,7 +320,7 @@ class CSharpLanguageService(project: Project, cs: CoroutineScope) : LifetimedPro
         return NoOpInstrumentationProvider()
     }
 
-    override fun findMethodsByCodeObjectIds(psiFile: PsiFile, methodIds: MutableList<String?>): MutableMap<String?, PsiElement?> {
+    override fun findMethodsByCodeObjectIds(psiFile: PsiFile, methodIds: List<String>): Map<String, PsiElement> {
         //Never called for csharp language,
         //this method is used by CodeLensService, which is only relevant for java/kotlin/python.
         //Rider does code lens differently

@@ -20,8 +20,8 @@ import org.digma.intellij.plugin.common.runInReadAccessWithResult
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.psi.LanguageService
-import org.digma.intellij.plugin.psi.OldLanguageService
 import org.digma.intellij.plugin.psi.PsiUtils
+import org.digma.intellij.plugin.psi.findLanguageServiceByFile
 import java.util.function.Supplier
 
 //any change in the current editor needs a code lens refresh.
@@ -49,12 +49,12 @@ class CodeLensServiceDocumentChangeListener(private val project: Project) : File
 
 
             val languageService = allowSlowOperation(Supplier {
-                OldLanguageService.findLanguageServiceByFile(project, file)
+                findLanguageServiceByFile(project, file)
             })
 
 
             //only some languages need code vision support
-            if (!languageService.isCodeVisionSupported) {
+            if (languageService == null || !languageService.isCodeVisionSupported()) {
                 return
             }
 

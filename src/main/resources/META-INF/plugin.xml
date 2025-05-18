@@ -63,8 +63,6 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.service.EditorService"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.psi.LanguageServiceLocator"/>
-
         <projectService serviceImplementation="org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider"/>
 
 

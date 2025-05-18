@@ -82,14 +82,14 @@ class KotlinLanguageService(project: Project) : AbstractJvmLanguageService(proje
     }
 
 
-    //note that this method prefers non compiled classes
+    //note that this method prefers non-compiled classes
     override fun findClassByClassName(className: String, scope: GlobalSearchScope): UClass? {
 
         try {
-            val classes: Collection<KtClassOrObject> = KotlinFullClassNameIndex.get(className, project, scope)
+            val classes: Collection<KtClassOrObject> = KotlinFullClassNameIndex[className, project, scope]
 
             if (classes.isEmpty()) {
-                val files = KotlinFileFacadeFqNameIndex.get(className, project, scope)
+                val files = KotlinFileFacadeFqNameIndex[className, project, scope]
                 if (files.isNotEmpty()) {
                     val file: KtFile? =
                         if (files.any { ktf -> !ktf.isCompiled }) files.firstOrNull { ktf -> !ktf.isCompiled } else files.firstOrNull()
@@ -99,7 +99,7 @@ class KotlinLanguageService(project: Project) : AbstractJvmLanguageService(proje
                     return null
                 }
             } else {
-                //prefer non compiled class
+                //prefer non-compiled class
                 if (classes.any { ktc -> !ktc.containingKtFile.isCompiled }) {
                     return classes.firstOrNull { ktc -> !ktc.containingKtFile.isCompiled }?.toUElementOfType<UClass>()
                 }
@@ -208,7 +208,7 @@ class KotlinLanguageService(project: Project) : AbstractJvmLanguageService(proje
     //this method is called only from CodeLensService, CodeLensService should handle exceptions
     // the @Throws here is a reminder that this method may throw exception
     @Throws(Throwable::class)
-    override fun findMethodsByCodeObjectIds(psiFile: PsiFile, methodIds: MutableList<String>): Map<String, PsiElement> {
+    override fun findMethodsByCodeObjectIds(psiFile: PsiFile, methodIds: List<String>): Map<String, PsiElement> {
 
         if (methodIds.isEmpty() || !PsiUtils.isValidPsiFile(psiFile)) {
             return emptyMap()

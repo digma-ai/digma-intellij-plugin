@@ -18,7 +18,8 @@ import org.digma.intellij.plugin.common.Retries
 import org.digma.intellij.plugin.common.allowSlowOperation
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.posthog.ActivityMonitor
-import org.digma.intellij.plugin.psi.OldLanguageService
+import org.digma.intellij.plugin.psi.findLanguageServiceByClassName
+import org.digma.intellij.plugin.psi.findLanguageServiceByMethodCodeObjectId
 
 @Service(Service.Level.PROJECT)
 class TestsRunner(val project: Project) {
@@ -31,8 +32,8 @@ class TestsRunner(val project: Project) {
 
             val psiLocation = Retries.retryWithResult({
                 ReadActions.ensureReadAction<PsiLocation<PsiElement>?> {
-                    val languageService = OldLanguageService.findLanguageServiceByMethodCodeObjectId(project, methodId)
-                    val methodElement = languageService.getPsiElementForMethod(methodId)
+                    val languageService = findLanguageServiceByMethodCodeObjectId(project, methodId)
+                    val methodElement = languageService?.getPsiElementForMethod(methodId)
                     methodElement?.let {
                         PsiLocation(it)
                     }
@@ -59,8 +60,8 @@ class TestsRunner(val project: Project) {
 
             val psiLocation = Retries.retryWithResult({
                 ReadActions.ensureReadAction<PsiLocation<PsiElement>?> {
-                    val languageService = OldLanguageService.findLanguageServiceByMethodCodeObjectId(project, methodId)
-                    val classElement = languageService.getPsiElementForClassByMethodId(methodId)
+                    val languageService = findLanguageServiceByMethodCodeObjectId(project, methodId)
+                    val classElement = languageService?.getPsiElementForClassByMethodId(methodId)
                     classElement?.let {
                         PsiLocation(it)
                     }
@@ -88,8 +89,8 @@ class TestsRunner(val project: Project) {
 
             val psiLocation = Retries.retryWithResult({
                 ReadActions.ensureReadAction<PsiLocation<PsiElement>?> {
-                    val languageService = OldLanguageService.findLanguageServiceByClassName(project, className)
-                    val classElement = languageService.getPsiElementForClassByName(className)
+                    val languageService = findLanguageServiceByClassName(project, className)
+                    val classElement = languageService?.getPsiElementForClassByName(className)
                     classElement?.let {
                         PsiLocation(it)
                     }
@@ -124,7 +125,7 @@ class TestsRunner(val project: Project) {
                 /* inputEvent = */ null,
                 /* dataContext = */ dataContext,
                 /* place = */ "EditorPopup",
-                /* presentation = */ runContextAction.getTemplatePresentation().clone(),
+                /* presentation = */ runContextAction.templatePresentation.clone(),
                 /* actionManager = */ ActionManager.getInstance(),
                 /* modifiers = */ 16,
                 /* isContextMenuAction = */ true,

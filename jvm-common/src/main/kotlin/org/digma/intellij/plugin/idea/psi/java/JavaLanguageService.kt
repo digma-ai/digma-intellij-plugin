@@ -164,7 +164,7 @@ class JavaLanguageService(project: Project) : AbstractJvmLanguageService(project
     //this method is called only from CodeLensService, CodeLensService should handle exceptions
     // the @Throws here is a reminder that this method may throw exception
     @Throws(Throwable::class)
-    override fun findMethodsByCodeObjectIds(psiFile: PsiFile, methodIds: MutableList<String>): Map<String, PsiElement> {
+    override fun findMethodsByCodeObjectIds(psiFile: PsiFile, methodIds: List<String>): Map<String, PsiElement> {
 
         if (methodIds.isEmpty() || !PsiUtils.isValidPsiFile(psiFile)) {
             return emptyMap()

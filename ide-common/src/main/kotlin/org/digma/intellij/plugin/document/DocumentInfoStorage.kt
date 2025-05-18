@@ -81,6 +81,9 @@ class DocumentInfoStorage(private val project: Project) {
         file: VirtualFile,
         documentInfo: DocumentInfo
     ) {
+        if (logger.isTraceEnabled) {
+            Log.log(logger::trace, "fireDocumentInfoChanged: for {} , DocumentInfo:[{}]", file, documentInfo)
+        }
         project.messageBus.syncPublisher(DocumentInfoChanged.DOCUMENT_INFO_CHANGED_TOPIC).documentInfoChanged(file, documentInfo)
     }
 

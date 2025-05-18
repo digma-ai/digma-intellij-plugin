@@ -23,7 +23,7 @@ import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.analytics.isCentralized
 import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
-import org.digma.intellij.plugin.document.DocumentInfoStorage
+import org.digma.intellij.plugin.document.findMethodInfo
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.MethodInfo
@@ -170,8 +170,7 @@ class CodeContextUpdateService(private val project: Project, private val cs: Cor
                                 } else {
                                     Log.log(logger::debug, project, "CodeContextUpdateService: detecting method under caret for file {}", file.name)
                                     val methodUnderCaret = languageService.detectMethodUnderCaret(file, editor, caretOffset)
-                                    val documentInfo = DocumentInfoStorage.getInstance(project).getDocumentInfo(file)
-                                    val methodInfo = documentInfo?.methods[methodUnderCaret.id]
+                                    val methodInfo = findMethodInfo(project, file, methodUnderCaret.id)
                                     //it may be that methodInfo is not found because it is not ready yet, usually it will happen if a document was just opened
                                     // and code discovery didn't finish. in that case methodUnderCaret will be found but methodInfo not. methodInfo will be
                                     // created, and it will be found in one of the next iterations.

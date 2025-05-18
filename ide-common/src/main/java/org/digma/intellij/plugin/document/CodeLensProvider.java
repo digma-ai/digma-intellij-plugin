@@ -3,7 +3,7 @@ package org.digma.intellij.plugin.document;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
-import com.intellij.psi.PsiFile;
+import com.intellij.openapi.vfs.VirtualFile;
 import org.digma.intellij.plugin.analytics.*;
 import org.digma.intellij.plugin.codelens.CodeLensProviderRefresh;
 import org.digma.intellij.plugin.common.*;
@@ -13,13 +13,10 @@ import org.digma.intellij.plugin.model.discovery.*;
 import org.digma.intellij.plugin.model.lens.CodeLens;
 import org.digma.intellij.plugin.model.rest.codelens.*;
 import org.digma.intellij.plugin.model.rest.insights.*;
-import org.digma.intellij.plugin.psi.PsiUtils;
-import org.jetbrains.annotations.*;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-
-import static org.digma.intellij.plugin.document.CodeLensUtils.psiFileToKey;
 
 
 /**
@@ -36,7 +33,7 @@ public class CodeLensProvider implements Disposable {
 
     private final Project project;
 
-    private final Map<String, DocumentLensPair> codeLensPerFile = new ConcurrentHashMap<>();
+    private final Map<VirtualFile, DocumentLensPair> codeLensPerFile = new ConcurrentHashMap<>();
 
 
     public CodeLensProvider(Project project) {
@@ -55,22 +52,21 @@ public class CodeLensProvider implements Disposable {
     }
 
 
-
     @NotNull
-    public Set<CodeLens> provideCodeLens(@NotNull PsiFile psiFile) {
-        Log.log(LOGGER::trace, "Got request for code lens for {}", psiFile);
-        var lensPerFile = codeLensPerFile.get(psiFileToKey(psiFile));
+    public Set<CodeLens> provideCodeLens(@NotNull VirtualFile file) {
+        Log.log(LOGGER::trace, "Got request for code lens for {}", file);
+        var lensPerFile = codeLensPerFile.get(file);
         if (lensPerFile == null) {
-            Log.log(LOGGER::trace, "No lenses for file in cache, returning empty {}", psiFile);
+            Log.log(LOGGER::trace, "No lenses for file in cache, returning empty {}", file);
             return Collections.emptySet();
         }
-        Log.log(LOGGER::trace, "returning lenses for file {} [{}]", psiFile, lensPerFile.codeLensList);
+        Log.log(LOGGER::trace, "returning lenses for file {} [{}]", file, lensPerFile.codeLensList);
         return lensPerFile.codeLensList;
     }
 
-    public void clearCodeLens(@NotNull PsiFile psiFile) {
-        Log.log(LOGGER::trace, "clearing code lens for {}", psiFile);
-        codeLensPerFile.remove(psiFileToKey(psiFile));
+    public void clearCodeLens(@NotNull VirtualFile file) {
+        Log.log(LOGGER::trace, "clearing code lens for {}", file);
+        codeLensPerFile.remove(file);
     }
 
 
@@ -79,36 +75,28 @@ public class CodeLensProvider implements Disposable {
      * code lens are kept in local cache.
      * returns true is code lens changed.
      */
-    public boolean buildCodeLens(@NotNull PsiFile psiFile) throws AnalyticsServiceException {
-        var oldLenses = provideCodeLens(psiFile);
-        buildCodeLensImpl(psiFile);
-        var newLenses = provideCodeLens(psiFile);
+    public boolean buildCodeLens(@NotNull VirtualFile file, @NotNull DocumentInfo documentInfo) throws AnalyticsServiceException {
+        var oldLenses = provideCodeLens(file);
+        buildCodeLensImpl(file, documentInfo);
+        var newLenses = provideCodeLens(file);
         return !oldLenses.equals(newLenses);
     }
 
 
-    private void buildCodeLensImpl(@NotNull PsiFile psiFile) throws AnalyticsServiceException {
+    private void buildCodeLensImpl(@NotNull VirtualFile file, @NotNull DocumentInfo documentInfo) throws AnalyticsServiceException {
 
-        Log.log(LOGGER::trace, "Building code lens for {}", psiFile);
+        Log.log(LOGGER::trace, "Building code lens for {}", file);
 
-        if (!PsiUtils.isValidPsiFile(psiFile) || !ProjectUtilsKt.isProjectValid(project)) {
+        if (!VfsUtilsKt.isValidVirtualFile(file) || !ProjectUtilsKt.isProjectValid(project)) {
             return;
         }
 
         EDT.assertNonDispatchThread();
         ReadActions.assertNotInReadAccess();
 
-        var psiKey = psiFileToKey(psiFile);
-
-        DocumentInfoContainer documentInfo = DocumentInfoService.getInstance(project).getDocumentInfo(psiFile);
-        if (documentInfo == null) {
-            Log.log(LOGGER::trace, "Can't find DocumentInfo for {}", psiFile);
-            codeLensPerFile.put(psiKey, new DocumentLensPair(null, Collections.emptySet()));
-        } else {
-            var codeLens = buildCodeLens(documentInfo);
-            Log.log(LOGGER::trace, "Built code lens for {}, [{}]", psiFile, codeLens);
-            codeLensPerFile.put(psiKey, new DocumentLensPair(documentInfo, codeLens));
-        }
+        var codeLens = buildCodeLens(documentInfo);
+        Log.log(LOGGER::trace, "Built code lens for {}, [{}]", file, codeLens);
+        codeLensPerFile.put(file, new DocumentLensPair(documentInfo, codeLens));
     }
 
 
@@ -117,28 +105,25 @@ public class CodeLensProvider implements Disposable {
      * refresh code lens for the documents currently in the cache.
      * return the list of psi urls where code lens changed
      */
-    public List<String> refresh() {
+    public List<VirtualFile> refresh() {
 
         Log.log(LOGGER::trace, "Got request to refresh code lens");
 
         EDT.assertNonDispatchThread();
         ReadActions.assertNotInReadAccess();
 
-        var changed = new ArrayList<String>();
+        var changed = new ArrayList<VirtualFile>();
 
-        codeLensPerFile.forEach((key, documentLensPair) -> {
+        codeLensPerFile.forEach((file, documentLensPair) -> {
             try {
-                var documentInfo = documentLensPair.documentInfoContainer;
-
-                if (documentInfo != null) {
-                    Log.log(LOGGER::trace, "refreshing code lens for {}", key);
-                    var oldLenses = documentLensPair.codeLensList;
-                    var newLenses = buildCodeLens(documentInfo);
-                    documentLensPair.codeLensList = newLenses;
-                    if (!oldLenses.equals(newLenses)) {
-                        Log.log(LOGGER::trace, "Got refreshed code lens for {}, {}", key, newLenses);
-                        changed.add(key);
-                    }
+                var documentInfo = documentLensPair.documentInfo;
+                Log.log(LOGGER::trace, "refreshing code lens for {}", file);
+                var oldLenses = documentLensPair.codeLensList;
+                var newLenses = buildCodeLens(documentInfo);
+                documentLensPair.codeLensList = newLenses;
+                if (!oldLenses.equals(newLenses)) {
+                    Log.log(LOGGER::trace, "Got refreshed code lens for {}, {}", file, newLenses);
+                    changed.add(file);
                 }
 
             } catch (Throwable e) {
@@ -155,16 +140,12 @@ public class CodeLensProvider implements Disposable {
     // and should not impact performance of the plugin. consumers of code lens never wait and take what is already
     // in the codeLensPerFile cache.
     @NotNull
-    private synchronized Set<CodeLens> buildCodeLens(@NotNull DocumentInfoContainer documentInfoContainer) throws AnalyticsServiceException {
+    private synchronized Set<CodeLens> buildCodeLens(@NotNull DocumentInfo documentInfo) throws AnalyticsServiceException {
 
         //LinkedHashSet retains insertion order so retains the order from backend
         Set<CodeLens> codeLensList = new LinkedHashSet<>();
 
-        if (documentInfoContainer.getDocumentInfo() == null) {
-            return Collections.emptySet();
-        }
-
-        var methodsInfo = documentInfoContainer.getDocumentInfo().getMethods().values();
+        var methodsInfo = documentInfo.getMethods().values();
 
         List<MethodWithCodeObjects> methods = new ArrayList<>();
 
@@ -231,11 +212,11 @@ public class CodeLensProvider implements Disposable {
 
 
     private static class DocumentLensPair {
-        private final @Nullable DocumentInfoContainer documentInfoContainer;
+        private final @NotNull DocumentInfo documentInfo;
         private @NotNull Set<CodeLens> codeLensList;
 
-        public DocumentLensPair(@Nullable DocumentInfoContainer documentInfoContainer, @NotNull Set<CodeLens> codeLensList) {
-            this.documentInfoContainer = documentInfoContainer;
+        public DocumentLensPair(@NotNull DocumentInfo documentInfo, @NotNull Set<CodeLens> codeLensList) {
+            this.documentInfo = documentInfo;
             this.codeLensList = codeLensList;
         }
     }

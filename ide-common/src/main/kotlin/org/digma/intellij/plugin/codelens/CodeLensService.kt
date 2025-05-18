@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.codelens
 
+import com.google.common.base.Supplier
 import com.intellij.codeInsight.codeVision.CodeVisionEntry
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
 import com.intellij.codeInsight.hints.InlayHintsUtils
@@ -10,12 +11,15 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.pom.Navigatable
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiManager
 import com.intellij.psi.SmartPointerManager
 import com.jetbrains.rd.util.ConcurrentHashMap
 import org.digma.intellij.plugin.common.Backgroundable
+import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.common.objectToJsonNode
 import org.digma.intellij.plugin.document.CodeLensChanged
 import org.digma.intellij.plugin.document.CodeLensProvider
@@ -45,19 +49,19 @@ class CodeLensService(private val project: Project) : Disposable {
 
     init {
         project.messageBus.connect(this).subscribe(CodeLensChanged.CODELENS_CHANGED_TOPIC, object : CodeLensChanged {
-            override fun codelensChanged(psiFile: PsiFile) {
+            override fun codelensChanged(virtualFile: VirtualFile) {
                 try {
-                    Log.log(logger::trace, "codelensChanged called for file {}", psiFile)
-                    refreshOneFile(psiFile)
+                    Log.log(logger::trace, "codelensChanged called for file {}", virtualFile)
+                    refreshOneFile(virtualFile)
                 } catch (e: Throwable) {
                     ErrorReporter.getInstance().reportError("CodeLensService.codelensChanged", e)
                 }
             }
 
-            override fun codelensChanged(psiFilesUrls: List<String>) {
+            override fun codelensChanged(virtualFileList: List<VirtualFile>) {
                 try {
-                    Log.log(logger::trace, "codelensChanged called for files {}", psiFilesUrls)
-                    refreshFiles(psiFilesUrls)
+                    Log.log(logger::trace, "codelensChanged called for files {}", virtualFileList)
+                    refreshFiles(virtualFileList)
                 } catch (e: Throwable) {
                     ErrorReporter.getInstance().reportError(project, "CodeLensService.codelensChanged", e)
                 }
@@ -132,7 +136,7 @@ class CodeLensService(private val project: Project) : Disposable {
 
     private fun selectCodeLensesForProvider(providerId: String, psiFile: PsiFile): Set<CodeLens>? {
 
-        val codeLensesForFile = CodeLensProvider.getInstance(project).provideCodeLens(psiFile)
+        val codeLensesForFile = CodeLensProvider.getInstance(project).provideCodeLens(psiFile.virtualFile)
 
         val providerLensSelector = project.service<CodeVisionProviderToLensSelector>()
 
@@ -172,20 +176,25 @@ class CodeLensService(private val project: Project) : Disposable {
     }
 
 
-    fun refreshOneFile(psiFile: PsiFile) {
+    fun refreshOneFile(virtualFile: VirtualFile) {
+        val psiFile = ReadActions.ensureReadAction(Supplier{ PsiManager.getInstance(project).findFile(virtualFile)}) ?: return
         Log.log(logger::trace, "refresh called for file {}", psiFile)
         clearCacheForFile(psiFile)
         codeVisionRefresh.refreshForFile(psiFile)
     }
 
 
-    fun refreshFiles(psiFilesUrls: List<String>) {
-        Log.log(logger::trace, "refresh called for files {}", psiFilesUrls)
+    fun refreshFiles(virtualFileList:List<VirtualFile> ) {
+        Log.log(logger::trace, "refresh called for files {}", virtualFileList)
         //sending the psi urls to remove. urls came from CodeLensProvider and should be the same as used
         // here as keys, all these services use org.digma.intellij.plugin.document.CodeLensUtils.psiFileToKey.
+        val psiFilesUrls = virtualFileList.mapNotNull { vFile ->
+            ReadActions.ensureReadAction(Supplier{ PsiManager.getInstance(project).findFile(vFile)})?.let { psiFileToKey(it) }
+        }
         clearCacheForFiles(psiFilesUrls)
         codeVisionRefresh.refreshForFiles(psiFilesUrls)
     }
+
 
 
     fun refreshAll() {
@@ -225,9 +234,9 @@ class CodeLensService(private val project: Project) : Disposable {
                 }
 
                 val scopeCodeObjectId = lens.scopeCodeObjectId
-                if (scopeCodeObjectId == null){
-                    NotificationUtil.notifyFadingInfo(project,"No asset found for method: ${lens.codeMethod}")
-                }else{
+                if (scopeCodeObjectId == null) {
+                    NotificationUtil.notifyFadingInfo(project, "No asset found for method: ${lens.codeMethod}")
+                } else {
                     Backgroundable.ensurePooledThreadWithoutReadAccess {
                         val contextPayload = objectToJsonNode(ChangeScopeMessagePayload(lens))
                         val scopeContext = ScopeContext("IDE/CODE_LENS_CLICKED", contextPayload)

@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.idea.psi.kotlin
 import com.intellij.lang.Language
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.service
+import com.intellij.openapi.fileTypes.FileType
 import com.intellij.openapi.project.Project
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
@@ -26,6 +27,7 @@ import org.digma.intellij.plugin.instrumentation.InstrumentationProvider
 import org.digma.intellij.plugin.instrumentation.MethodObservabilityInfo
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.psi.PsiUtils
+import org.jetbrains.kotlin.idea.KotlinFileType
 import org.jetbrains.kotlin.idea.KotlinLanguage
 import org.jetbrains.kotlin.idea.structuralsearch.visitor.KotlinRecursiveElementWalkingVisitor
 import org.jetbrains.kotlin.idea.stubindex.KotlinFileFacadeFqNameIndex
@@ -48,6 +50,14 @@ import java.util.function.Supplier
 @Suppress("LightServiceMigrationCode")
 class KotlinLanguageService(project: Project) : AbstractJvmLanguageService(project, project.service<KotlinCodeObjectDiscovery>()) {
 
+
+    override fun getLanguage(): Language {
+        return KotlinLanguage.INSTANCE
+    }
+
+    override fun getFileType(): FileType {
+        return KotlinFileType.INSTANCE
+    }
 
     override fun isSupportedFile(psiFile: PsiFile): Boolean {
         return ReadActions.ensureReadAction(Supplier {

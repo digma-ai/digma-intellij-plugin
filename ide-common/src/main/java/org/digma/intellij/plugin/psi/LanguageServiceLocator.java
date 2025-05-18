@@ -4,11 +4,9 @@ import com.intellij.lang.Language;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.log.Log;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.*;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class LanguageServiceLocator {
 
@@ -27,6 +25,7 @@ public class LanguageServiceLocator {
     }
 
 
+    //todo: use LanguageServiceProvider where possible
     @NotNull
     public LanguageService locate(@Nullable Language language) {
 
@@ -38,6 +37,7 @@ public class LanguageServiceLocator {
             return cache.get(language);
         }
 
+        //todo: use LanguageServiceProvider where possible
         for (SupportedLanguages value : SupportedLanguages.values()) {
 
             try {

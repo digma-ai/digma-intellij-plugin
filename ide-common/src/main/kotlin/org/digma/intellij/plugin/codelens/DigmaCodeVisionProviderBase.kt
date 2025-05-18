@@ -14,7 +14,7 @@ import com.intellij.psi.PsiFile
 import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.psi.LanguageServiceLocator
+import org.digma.intellij.plugin.psi.LanguageServiceProvider
 import org.digma.intellij.plugin.psi.PsiUtils
 
 abstract class DigmaCodeVisionProviderBase : DaemonBoundCodeVisionProvider {
@@ -52,7 +52,11 @@ abstract class DigmaCodeVisionProviderBase : DaemonBoundCodeVisionProvider {
             }
 
 
-            val languageService = LanguageServiceLocator.getInstance(project).locate(file.language)
+            val languageService = LanguageServiceProvider.getInstance(project).getLanguageService(file.language)
+            if(languageService == null){
+                Log.log(logger::trace,"Could not find language service for fle {}",file)
+                return empty
+            }
             Log.log(logger::trace, "found LanguageService for file {}, {}", file, languageService)
             //not all languages support DaemonBoundCodeVisionProvider, C# does it in resharper
             if (languageService.isCodeVisionSupported) {

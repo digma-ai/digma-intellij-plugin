@@ -1,9 +1,11 @@
 package org.digma.intellij.plugin.idea.psi.java
 
+import com.intellij.ide.highlighter.JavaFileType
 import com.intellij.lang.Language
 import com.intellij.lang.java.JavaLanguage
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.service
+import com.intellij.openapi.fileTypes.FileType
 import com.intellij.openapi.project.Project
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.JavaRecursiveElementWalkingVisitor
@@ -38,6 +40,15 @@ import java.util.Objects
 
 @Suppress("LightServiceMigrationCode")
 class JavaLanguageService(project: Project) : AbstractJvmLanguageService(project, project.service<JavaCodeObjectDiscovery>()) {
+
+
+    override fun getLanguage(): Language {
+        return JavaLanguage.INSTANCE
+    }
+
+    override fun getFileType(): FileType {
+        return JavaFileType.INSTANCE
+    }
 
     override fun isSupportedFile(psiFile: PsiFile): Boolean {
         return runInReadAccessWithResult {

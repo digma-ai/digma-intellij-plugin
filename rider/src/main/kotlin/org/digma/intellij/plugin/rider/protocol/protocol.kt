@@ -1,12 +1,11 @@
 @file:JvmName("Protocol")
+
 package org.digma.intellij.plugin.rider.protocol
 
-import com.intellij.openapi.editor.Editor
-import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.Project
-import com.intellij.psi.PsiFile
+import com.intellij.openapi.vfs.VirtualFile
 import com.jetbrains.rider.editors.getProjectModelId
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.psi.PsiFileNotFountException
@@ -17,15 +16,10 @@ import org.digma.intellij.plugin.psi.PsiUtils
 
 /*
 There is an issue with file uri when running on windows,
-the uri has a file:// schema,
-and we use this uri in document info service as the key for a document, this is instead of using the PsiFile object
-because PsiFile objects are not safe to use as keys in maps in case the platform decides to reparse a file while a
-project is opened.
+the uri has a file:// schema,and we use this uri as key in various maps.
 when calling in resharper IPsiSourceFile.GetLocation().ToUri().ToString() it will return a file schema with 2 slashes,
 when calling in the java side to PsiFile.getVirtualFile().getUrl() it will return 3 slashes.
-when a document is loaded we use the uri from resharper as key in DocumentInfoService, if we later try to find a
-DocumentInfo by calling PsiFile.getVirtualFile().getUrl() the document info will not be found because that call will
-return a file schema with 3 slashes.
+
 
 the solution here is to always normalize the uri that comes from the resharper side to an uri as comes in the jvm side.
 so actually every object that passes from resharper to the jvm and has an uri that was taken from
@@ -42,9 +36,9 @@ as keys or to find DocumentInfo, they are used to open files which will always w
 
 
  */
-fun normalizeFileUri(fileUri: String,project:Project): String {
+fun normalizeFileUri(fileUri: String, project: Project): String {
 
-    if (fileUri.isBlank()){
+    if (fileUri.isBlank()) {
         return fileUri
     }
 
@@ -55,35 +49,22 @@ fun normalizeFileUri(fileUri: String,project:Project): String {
     return try {
         val psiFile = PsiUtils.uriToPsiFile(fileUri, project)
         PsiUtils.psiFileToUri(psiFile)
-    }catch (e:PsiFileNotFountException){
+    } catch (e: PsiFileNotFountException) {
         fileUri
     }
 }
 
 
 
-
-
-fun tryGetProjectModelId(psiFile: PsiFile, fileEditor: FileEditor?,project: Project):Int?{
-    return if (fileEditor != null && fileEditor is TextEditor) {
-        fileEditor.editor.getProjectModelId()
-    }else{
-        tryGetProjectModelId(psiFile,project)
-    }
-}
-
-
-
-
-fun tryGetProjectModelId(psiFile: PsiFile,project: Project): Int? {
+fun tryGetProjectModelId(file: VirtualFile, project: Project): Int? {
     return if (EDT.isEdt()) {
-        val fileEditor = FileEditorManager.getInstance(project).getSelectedEditor(psiFile.virtualFile)
+        val fileEditor = FileEditorManager.getInstance(project).getSelectedEditor(file)
         if (fileEditor != null && fileEditor is TextEditor) {
             fileEditor.editor.getProjectModelId()
-        }else{
+        } else {
             null
         }
-    }else{
+    } else {
         null
     }
 }

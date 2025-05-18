@@ -23,9 +23,9 @@ class CodeLensProviderRefresh(
 
         parentDisposable.disposingPeriodicTask("CodeLensProvider.refresh", 20000, true) {
             try {
-                val changedPsiFiles = CodeLensProvider.getInstance(project).refresh()
-                if (changedPsiFiles.isNotEmpty()) {
-                    project.messageBus.syncPublisher(CodeLensChanged.CODELENS_CHANGED_TOPIC).codelensChanged(changedPsiFiles)
+                val changedFiles = CodeLensProvider.getInstance(project).refresh()
+                if (changedFiles.isNotEmpty()) {
+                    project.messageBus.syncPublisher(CodeLensChanged.CODELENS_CHANGED_TOPIC).codelensChanged(changedFiles)
                 }
             } catch (e: Throwable) {
                 ErrorReporter.getInstance()

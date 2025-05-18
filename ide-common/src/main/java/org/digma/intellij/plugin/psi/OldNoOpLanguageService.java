@@ -17,10 +17,6 @@ public abstract class OldNoOpLanguageService implements LanguageService {
 
     public static final NoOpLanguageService INSTANCE = new NoOpLanguageService();
 
-    @Override
-    public void ensureStartupOnEDT(@NotNull Project project) {
-        //nothing to do
-    }
 
     @Override
     public void runWhenSmart(Runnable task) {
@@ -82,13 +78,13 @@ public abstract class OldNoOpLanguageService implements LanguageService {
 
 
     //this method should never be called on NoOpLanguageService, calling code must be aware of that
-    @Override
+//    @Override
     public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFileCachedValueWithUri psiFileCachedValue, BuildDocumentInfoProcessContext context) {
         throw new UnsupportedOperationException("should not be called");
     }
 
     //this method should never be called on NoOpLanguageService, calling code must be aware of that
-    @Override
+//    @Override
     public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFileCachedValueWithUri psiFileCachedValue, @Nullable FileEditor newEditor, BuildDocumentInfoProcessContext context) {
         throw new UnsupportedOperationException("should not be called");
     }

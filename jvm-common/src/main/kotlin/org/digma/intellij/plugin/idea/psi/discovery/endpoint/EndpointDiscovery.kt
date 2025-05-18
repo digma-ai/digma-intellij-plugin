@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.idea.psi.discovery.endpoint
 
+import com.intellij.psi.PsiFile
 import com.intellij.psi.search.GlobalSearchScope
 import org.digma.intellij.plugin.common.SearchScopeProvider
 import org.digma.intellij.plugin.document.BuildDocumentInfoProcessContext
@@ -7,8 +8,6 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.process.ProcessContext
-import org.digma.intellij.plugin.psi.PsiFileCachedValueWithUri
-import org.digma.intellij.plugin.psi.PsiUtils
 import java.util.Objects
 
 abstract class EndpointDiscovery {
@@ -18,14 +17,9 @@ abstract class EndpointDiscovery {
     abstract fun lookForEndpoints(searchScopeProvider: SearchScopeProvider, context: ProcessContext): List<EndpointInfo>?
 
 
-    fun endpointDiscovery(psiFileCachedValue: PsiFileCachedValueWithUri, documentInfo: DocumentInfo, context: BuildDocumentInfoProcessContext) {
+    suspend fun endpointDiscovery(psiFile: PsiFile, documentInfo: DocumentInfo) {
 
-        val psiFile = psiFileCachedValue.value ?: return
-        if (!PsiUtils.isValidPsiFile(psiFile)) {
-            return
-        }
-
-        val endpointInfos = lookForEndpoints({ GlobalSearchScope.fileScope(psiFile) }, context)
+        val endpointInfos = lookForEndpoints({ GlobalSearchScope.fileScope(psiFile) }, BuildDocumentInfoProcessContext("temp"))
 
         endpointInfos?.let { infos ->
             for (endpointInfo in infos) {

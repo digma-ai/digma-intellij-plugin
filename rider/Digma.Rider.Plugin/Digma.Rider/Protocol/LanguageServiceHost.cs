@@ -132,7 +132,7 @@ namespace Digma.Rider.Protocol
         private RdTask<RiderMethodUnderCaret> DetectMethodUnderCaret(Lifetime _,
             MethodUnderCaretRequest methodUnderCaretRequest)
         {
-            Log(_logger, "Got request for GetDocumentInfo for {0}", methodUnderCaretRequest.PsiId);
+            Log(_logger, "Got request for DetectMethodUnderCaret for {0}", methodUnderCaretRequest.PsiId);
             var result = new RdTask<RiderMethodUnderCaret>();
             RiderMethodUnderCaret methodUnderCaret;
             using (ReadLockCookie.Create())

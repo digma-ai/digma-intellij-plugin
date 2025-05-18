@@ -1,12 +1,13 @@
 package org.digma.intellij.plugin.document;
 
 import com.intellij.openapi.project.Project;
-import com.intellij.psi.PsiFile;
+import com.intellij.openapi.vfs.VirtualFile;
 import org.digma.intellij.plugin.analytics.EnvironmentChanged;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
+import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.rest.environment.Env;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.*;
 
 import java.util.List;
 
@@ -19,12 +20,12 @@ public class CodeLensProviderDocumentInfoAndEnvironmentChangedListener implement
     }
 
     @Override
-    public void documentInfoChanged(PsiFile psiFile) {
+    public void documentInfoChanged(@NotNull VirtualFile file,@NotNull DocumentInfo documentInfo) {
         Backgroundable.executeOnPooledThread(() -> {
             try {
-                boolean changed = CodeLensProvider.getInstance(project).buildCodeLens(psiFile);
+                boolean changed = CodeLensProvider.getInstance(project).buildCodeLens(file,documentInfo);
                 if (changed) {
-                    project.getMessageBus().syncPublisher(CodeLensChanged.CODELENS_CHANGED_TOPIC).codelensChanged(psiFile);
+                    project.getMessageBus().syncPublisher(CodeLensChanged.CODELENS_CHANGED_TOPIC).codelensChanged(file);
                 }
             } catch (Throwable e) {
                 ErrorReporter.getInstance().reportError(project, "CodeLensProviderDocumentInfoAndEnvironmentChangedListener.documentInfoChanged", e);
@@ -36,9 +37,9 @@ public class CodeLensProviderDocumentInfoAndEnvironmentChangedListener implement
     public void environmentChanged(@Nullable Env newEnv) {
         Backgroundable.executeOnPooledThread(() -> {
             try {
-                var changedPsiFiles = CodeLensProvider.getInstance(project).refresh();
-                if (!changedPsiFiles.isEmpty()) {
-                    project.getMessageBus().syncPublisher(CodeLensChanged.CODELENS_CHANGED_TOPIC).codelensChanged(changedPsiFiles);
+                var changedFiles = CodeLensProvider.getInstance(project).refresh();
+                if (!changedFiles.isEmpty()) {
+                    project.getMessageBus().syncPublisher(CodeLensChanged.CODELENS_CHANGED_TOPIC).codelensChanged(changedFiles);
                 }
             } catch (Throwable e) {
                 ErrorReporter.getInstance().reportError(project, "CodeLensProviderDocumentInfoAndEnvironmentChangedListener.environmentChanged", e);

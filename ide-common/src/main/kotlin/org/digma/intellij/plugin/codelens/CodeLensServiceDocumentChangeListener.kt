@@ -99,7 +99,7 @@ class CodeLensServiceDocumentChangeListener(private val project: Project) : File
 
                                     changedPsiFile?.let {
                                         if (PsiUtils.isValidPsiFile(it)) {
-                                            project.service<CodeLensService>().refreshOneFile(it)
+                                            project.service<CodeLensService>().refreshOneFile(it.virtualFile)
                                         }
                                     }
                                 } catch (e: Throwable) {

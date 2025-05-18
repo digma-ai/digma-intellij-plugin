@@ -12,7 +12,6 @@ import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
-import org.digma.intellij.plugin.psi.OldLanguageService;
 import org.digma.intellij.plugin.ui.*;
 import org.digma.intellij.plugin.ui.common.MainContentPanel;
 import org.digma.intellij.plugin.ui.common.statuspanels.*;
@@ -72,11 +71,6 @@ public final class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
         Log.log(LOGGER::debug, "createToolWindowContent for project  {}", project);
 
         toolWindow.setTitle(DIGMA_NAME);
-        //some language service should complete their startup on EDT,especially C# language service
-        // needs to initialize its models on EDT.
-        // startup may happen here if the tool window is opened on startup, or in EditorEventsHandler.selectionChanged
-        // when the first document is opened.
-        OldLanguageService.ensureStartupOnEDTForAll(project);
 
         ToolWindowShower.getInstance(project).setToolWindow(toolWindow);
 

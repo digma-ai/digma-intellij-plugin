@@ -3,13 +3,11 @@ package org.digma.intellij.plugin.psi;
 import com.intellij.lang.Language;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import kotlin.Pair;
-import org.digma.intellij.plugin.common.*;
-import org.digma.intellij.plugin.document.*;
+import org.digma.intellij.plugin.common.ReadActions;
 import org.digma.intellij.plugin.instrumentation.*;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.*;
@@ -17,6 +15,8 @@ import org.digma.intellij.plugin.model.rest.environment.Env;
 import org.jetbrains.annotations.*;
 
 import java.util.*;
+
+import static org.digma.intellij.plugin.document.DocumentInfoUtilsKt.*;
 
 public interface OldLanguageService extends Disposable {
 
@@ -29,47 +29,7 @@ public interface OldLanguageService extends Disposable {
     }
 
 
-    /**
-     * Some language services need to ensure some startup activity to be made on EDT.
-     * C# language service needs to initialize the protocol models on EDT and is the main reason for this method.
-     * although in Rider there is a ServicesStarter that is a StartupActivity, some language service methods may be
-     * called before StartupActivity, usually when documents are automatically opened on startup, documents that were
-     * opened on shutdown.
-     * This method must be called from EDT, it will not call invokeLater and shouldn't do it.
-     * This method should not be called often, it is a startup task, it is called when the tool window is created
-     * and once from EditorEventsHandler.selectionChanged.
-     * the language services should be ready for this method to be called few times during startup and should not do
-     * long-running tasks, or tasks that can not be performed more than once.
-     * as said it is mainly for C# language service to initialize the protocol models on EDT.
-     */
-    static void ensureStartupOnEDTForAll(@NotNull Project project) {
-        Log.log(LOGGER::debug, "ensureStartupOnEDTForAll invoked");
-        EDT.assertEDT("ensureStartupOnEDTForAll must be invoked on EDT");
-        for (SupportedLanguages value : SupportedLanguages.values()) {
-
-            try {
-                @SuppressWarnings("unchecked")
-                Class<? extends LanguageService> clazz = (Class<? extends LanguageService>) Class.forName(value.getLanguageServiceClassName());
-                LanguageService languageService = project.getService(clazz);
-                if (languageService != null) {
-                    Log.log(LOGGER::debug, "calling ensureStartupOnEDT for {}", languageService);
-                    languageService.ensureStartupOnEDT(project);
-                }
-            } catch (Throwable e) {
-                Log.debugWithException(LOGGER, e, "exception in ensureStartupOnEDTForAll {}", e.getMessage());
-                //catch Throwable because there may be errors.
-                //ignore: some classes will fail to load , for example the CSharpLanguageService
-                //will fail to load if it's not rider because it depends on rider classes.
-                //JavaLanguageService will fail to load on rider, etc.
-            }
-        }
-
-    }
-
-    void ensureStartupOnEDT(@NotNull Project project);
-
-
-    /**
+     /**
      * Used for running a task in smart mode.
      * Usually this is meant for startup initialization tasks that should run only in smart mode.
      * generally in intellij platform we could just use DumbService.runWhenSmart, but in Rider
@@ -181,7 +141,7 @@ public interface OldLanguageService extends Disposable {
         //if getErrorDetails is called from error insight then the document is opened for sure and MethodInfo will be found.
         MethodInfo methodInfo = null;
         if (methodCodeObjectId != null) {
-            methodInfo = DocumentInfoService.getInstance(project).findMethodInfo(methodCodeObjectId);
+            methodInfo = findMethodInfo(project,methodCodeObjectId);
         }
 
         //methodInfo may or may not exist already in documentInfoService, if exists find the language by methodInfo.
@@ -196,17 +156,21 @@ public interface OldLanguageService extends Disposable {
             //last resort. dominant language will be available if at least one document was already opened.
             //dominant language will be null if no document was opened yet.
             if (language == null) {
-                language = DocumentInfoService.getInstance(project).getDominantLanguage();
+                language = getDominantLanguage(project);
             }
         } else {
-            language = DocumentInfoService.getInstance(project).getLanguageByMethodCodeObjectId(methodInfo.getId());
+            language = getLanguageByMethodCodeObjectId(project,methodInfo.getId());
         }
 
         if (language == null) {
             return NoOpLanguageService.INSTANCE;
         }
 
-        return LanguageServiceLocator.getInstance(project).locate(language);
+        var languageService = LanguageServiceProvider.getInstance(project).getLanguageService(language);
+        if (languageService == null){
+            return NoOpLanguageService.INSTANCE;
+        }
+        return languageService;
     }
 
     @NotNull
@@ -397,15 +361,6 @@ public interface OldLanguageService extends Disposable {
     default void environmentChanged(@Nullable Env newEnv) {
         //nothing to do , implement for specific languages if necessary
     }
-
-
-    @NotNull
-    DocumentInfo buildDocumentInfo(@NotNull PsiFileCachedValueWithUri psiFileCachedValue, BuildDocumentInfoProcessContext context);
-
-    //some language services need the selected editor , for example CSharpLanguageService need to take
-    // getProjectModelId from the selected editor. it may be null
-    @NotNull
-    DocumentInfo buildDocumentInfo(@NotNull PsiFileCachedValueWithUri psiFileCachedValue, @Nullable FileEditor selectedTextEditor, BuildDocumentInfoProcessContext context);
 
 
     boolean isRelevant(VirtualFile file);

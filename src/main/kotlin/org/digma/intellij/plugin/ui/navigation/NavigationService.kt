@@ -10,7 +10,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.common.EDT
-import org.digma.intellij.plugin.document.DocumentInfoService
+import org.digma.intellij.plugin.document.findMethodInfo
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator
 import org.digma.intellij.plugin.notifications.NotificationUtil
@@ -84,7 +84,7 @@ class NavigationService(private val project: Project) : Disposable {
         this.disposingScope().launch {
 
             val startTime = Instant.now()
-            var methodInfo = DocumentInfoService.getInstance(project).findMethodInfo(methodId)
+            var methodInfo = findMethodInfo(project,methodId)
 
             while (isActive &&
                 (methodInfo == null || !methodInfo.hasRelatedCodeObjectIds()) &&
@@ -92,7 +92,7 @@ class NavigationService(private val project: Project) : Disposable {
             ) {
 
                 delay(50)
-                methodInfo = DocumentInfoService.getInstance(project).findMethodInfo(methodId)
+                methodInfo = findMethodInfo(project,methodId)
             }
 
             if (isActive &&

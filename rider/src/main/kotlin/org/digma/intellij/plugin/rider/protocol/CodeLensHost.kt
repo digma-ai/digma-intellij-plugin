@@ -2,18 +2,17 @@ package org.digma.intellij.plugin.rider.protocol
 
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import com.intellij.psi.PsiFile
+import com.intellij.openapi.vfs.VirtualFile
 import com.jetbrains.rd.framework.IProtocol
 import com.jetbrains.rdclient.util.idea.LifetimedProjectComponent
 import com.jetbrains.rider.projectView.solution
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.document.CodeLensChanged
 import org.digma.intellij.plugin.document.CodeLensProvider
-import org.digma.intellij.plugin.document.DocumentInfoService
+import org.digma.intellij.plugin.document.DocumentInfoStorage
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.lens.CodeLens
-import org.digma.intellij.plugin.psi.PsiUtils
 import org.jetbrains.annotations.NotNull
 import java.util.function.Consumer
 
@@ -23,18 +22,17 @@ class CodeLensHost(project: Project) : LifetimedProjectComponent(project) {
 
     private val logger = Logger.getInstance(CodeLensHost::class.java)
 
-    private val documentInfoService: DocumentInfoService = DocumentInfoService.getInstance(project)
     private val codeLensProvider: CodeLensProvider = CodeLensProvider.getInstance(project)
 
 
     init {
         project.messageBus.connect(this).subscribe(CodeLensChanged.CODELENS_CHANGED_TOPIC, object : CodeLensChanged {
-            override fun codelensChanged(psiFile: PsiFile) {
-                refreshOneFile(psiFile)
+            override fun codelensChanged(virtualFile: VirtualFile) {
+                refreshOneFile(virtualFile)
             }
 
-            override fun codelensChanged(psiFilesUrls: List<String>) {
-                refreshFiles(psiFilesUrls)
+            override fun codelensChanged(virtualFileList: List<VirtualFile>) {
+                refreshFiles(virtualFileList)
             }
 
             override fun codelensChanged() {
@@ -42,7 +40,6 @@ class CodeLensHost(project: Project) : LifetimedProjectComponent(project) {
             }
         })
     }
-
 
 
     //always use getInstance instead of injecting directly to other services.
@@ -57,31 +54,30 @@ class CodeLensHost(project: Project) : LifetimedProjectComponent(project) {
     }
 
 
-    private fun getProtocol(model: CodeObjectsModel):IProtocol{
+    private fun getProtocol(model: CodeObjectsModel): IProtocol {
         return model.protocol!! //protocol is nullable in 2023.2, remove when 2023.2 is our base
     }
 
 
-    private fun refreshOneFile(psiFile: PsiFile) {
+    private fun refreshOneFile(virtualFile: VirtualFile) {
         try {
-            Log.log(logger::debug, "Refreshing code lens for {}", psiFile.virtualFile)
-            val codeLens: Set<CodeLens> = codeLensProvider.provideCodeLens(psiFile)
-            Log.log(logger::debug, "Got codeLens for {}: {}", psiFile.virtualFile, codeLens)
-            installCodeLens(psiFile, codeLens)
+            Log.log(logger::debug, "Refreshing code lens for {}", virtualFile)
+            val codeLens: Set<CodeLens> = codeLensProvider.provideCodeLens(virtualFile)
+            Log.log(logger::debug, "Got codeLens for {}: {}", virtualFile, codeLens)
+            installCodeLens(virtualFile, codeLens)
         } catch (e: Throwable) {
-            Log.warnWithException(logger, project, e, "error in refresh for {}", psiFile.virtualFile)
+            Log.warnWithException(logger, project, e, "error in refresh for {}", virtualFile)
             ErrorReporter.getInstance().reportError(project, "CodeLensHost.refresh", e)
         }
     }
 
 
-    private fun refreshFiles(psiFilesUrls: List<String>) {
-        psiFilesUrls.forEach(Consumer { psiFileUri: String ->
+    private fun refreshFiles(virtualFileList: List<VirtualFile>) {
+        virtualFileList.forEach(Consumer { vFile ->
             try {
-                val psiFile = PsiUtils.uriToPsiFile(psiFileUri, project)
-                refreshOneFile(psiFile)
+                refreshOneFile(vFile)
             } catch (e: Throwable) {
-                Log.warnWithException(logger, project, e, "error in refresh for {}", psiFileUri)
+                Log.warnWithException(logger, project, e, "error in refresh for {}", vFile)
                 ErrorReporter.getInstance().reportError("CodeLensHost.refresh", e)
             }
         })
@@ -90,27 +86,26 @@ class CodeLensHost(project: Project) : LifetimedProjectComponent(project) {
     private fun refreshAll() {
         //all the files that are opened should be in documentInfoService.
         //could also take all editors from FileEditorManager
-        refreshFiles(documentInfoService.allKeys().toList())
+        refreshFiles(DocumentInfoStorage.getInstance(project).allFiles().toList())
     }
 
 
-
-    fun installCodeLens(@NotNull psiFile: PsiFile, @NotNull codeLenses: Set<CodeLens>) {
+    fun installCodeLens(@NotNull file: VirtualFile, @NotNull codeLenses: Set<CodeLens>) {
         EDT.ensureEDT {
-            installCodeLensOnEDT(psiFile, codeLenses)
+            installCodeLensOnEDT(file, codeLenses)
         }
     }
 
-    private fun installCodeLensOnEDT(@NotNull psiFile: PsiFile, @NotNull codeLenses: Set<CodeLens>) {
+    private fun installCodeLensOnEDT(@NotNull file: VirtualFile, @NotNull codeLenses: Set<CodeLens>) {
 
-        Log.log(logger::debug, "got request to installCodeLensOnEDT for {}: {}", psiFile.virtualFile, codeLenses)
+        Log.log(logger::debug, "got request to installCodeLensOnEDT for {}: {}", file, codeLenses)
 
         //install code lens for a document. this code will also take care of clearing old
         //code lens of this document, necessary in environment change event.
 
         //always try to find ProjectModelId for the psi file, it is the preferred way to find a psi file in resharper
-        val projectModelId: Int? = tryGetProjectModelId(psiFile, project)
-        val psiUri = PsiUtils.psiFileToUri(psiFile)
+        val projectModelId: Int? = tryGetProjectModelId(file, project)
+        val psiUri = file.url
         val psiId = PsiFileID(projectModelId, psiUri)
 
         Log.log(logger::debug, "Installing code lens for {}", psiId)

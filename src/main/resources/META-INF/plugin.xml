@@ -59,8 +59,6 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.analytics.AnalyticsService"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.document.DocumentInfoService"/>
-
         <projectService serviceImplementation="org.digma.intellij.plugin.document.CodeLensProvider"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.service.EditorService"/>
@@ -155,7 +153,7 @@
 
     <projectListeners>
         <listener
-                class="org.digma.intellij.plugin.editor.EditorEventsHandler"
+                class="org.digma.intellij.plugin.document.EditorEventsHandler"
                 topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
         <listener
                 class="org.digma.intellij.plugin.analytics.EnvironmentChangeHandler"

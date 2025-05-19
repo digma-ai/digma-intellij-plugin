@@ -68,10 +68,10 @@ jobs:
         env:
           CHANGELOG: ${{ steps.exportchangelog.outputs.changelog }}
         run: |
-          ./gradlew --no-daemon --no-configuration-cache -PbuildProfile=${{ inputs.build-profile }} patchChangelog --release-note="$CHANGELOG"
+          ./gradlew --no-daemon -PbuildProfile=${{ inputs.build-profile }} patchChangelog --release-note="$CHANGELOG"
 
       - name: Build plugin
-        run: ./gradlew test buildPlugin --no-daemon --no-configuration-cache -PbuildProfile=${{ inputs.build-profile }} -PbuildSearchableOptions=true
+        run: ./gradlew test buildPlugin --no-daemon -PbuildProfile=${{ inputs.build-profile }} -PbuildSearchableOptions=true
 
 
       # Publish the plugin to the Marketplace
@@ -81,7 +81,7 @@ jobs:
           DIGMA_JB_PRIVATE_KEY_PASSWORD: ${{ secrets.DIGMA_JB_PRIVATE_KEY_PASSWORD }}
           DIGMA_JB_CERTIFICATE_CHAIN_FILE: ${{ secrets.DIGMA_JB_CERTIFICATE_CHAIN_FILE }}
           DIGMA_JB_PRIVATE_KEY_FILE: ${{ secrets.DIGMA_JB_PRIVATE_KEY_FILE }}
-        run: ./gradlew publishPlugin --no-daemon --no-configuration-cache -PbuildProfile=${{ inputs.build-profile }} -PbuildSearchableOptions=true
+        run: ./gradlew publishPlugin --no-daemon -PbuildProfile=${{ inputs.build-profile }} -PbuildSearchableOptions=true
 
 
       # todo: delete the release if workflow fails, but what about rerun ? maybe disable rerun for publish workflow

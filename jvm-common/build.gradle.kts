@@ -44,9 +44,8 @@ dependencies {
 
         bundledPlugin("com.intellij.java")
 
-        //todo: this is a workaround for plugin 2.1.0, this module should be bundled.
+        //todo: this is a workaround, this module should be bundled.
         // check in next version if it is still necessary.
-        // https://jetbrains-platform.slack.com/archives/C05C80200LS/p1730794028550679
         if (project.currentProfile().profile.greaterThan(BuildProfiles.Profile.p241)) {
             bundledModule("intellij.platform.collaborationTools")
         }
@@ -54,48 +53,52 @@ dependencies {
 }
 
 
+//prepare properties for downloadOtelJars during the configuration phase to support configuration cache
+val jarsUrls: List<String> by lazy {
+    val propsFile = layout.projectDirectory.file("src/main/resources/jars-urls.properties").asFile
+    Properties().apply {
+        propsFile.inputStream().use { load(it) }
+    }.values.toList().map { it.toString() }
+}
+val otelJarTmpDir = layout.buildDirectory.dir("generated/otelJars")
+val resourceOtelJarDir: Provider<File> = provider {
+    val resourcesDir = project.the<SourceSetContainer>()["main"].output.resourcesDir
+        ?: error("resourcesDir is not set. You may need to set it manually or use processResources destinationDir.")
+    File(resourcesDir, "otelJars")
+}
+
 tasks {
 
     val downloadOtelJars = register("downloadOtelJars", Download::class.java) {
+        notCompatibleWithConfigurationCache("downloadOtelJars is not yet compatible with configuration cache")
 
-        val properties = Properties()
-        properties.load(layout.projectDirectory.file("src/main/resources/jars-urls.properties").asFile.inputStream())
-
-        src(
-            listOf(
-                properties.getProperty("otel-agent"),
-                properties.getProperty("digma-extension"),
-                properties.getProperty("digma-agent")
-            )
-        )
-
-        doFirst {
-            withSilenceLogging {
-                logger.lifecycle("${project.name}: jars to download $properties")
-            }
-        }
-
-
-        dest(File(project.sourceSets.main.get().output.resourcesDir, "otelJars"))
+        src(jarsUrls)
+        dest(otelJarTmpDir)
         overwrite(false)
         onlyIfModified(true)
-        //if a jar is downloaded with version then its name needs to change. it may happen
-        // in development if the url for some of the jars is changed to download from somewhere else.
-        //usually latest jar is downloaded without version
-        eachFile {
-            name = if (name.startsWith("digma-otel-agent-extension", true)) {
-                "digma-otel-agent-extension.jar"
-            } else if (name.startsWith("digma-agent", true)) {
-                "digma-agent.jar"
-            } else if (name.startsWith("opentelemetry-javaagent", true)) {
-                "opentelemetry-javaagent.jar"
-            } else {
-                name
+        doFirst {
+            withSilenceLogging {
+                logger.lifecycle("$name: jars to download $jarsUrls")
             }
         }
     }
 
-    processResources {
+    val renameOtelJars = register<Copy>("renameOtelJars") {
+        //strip versions from the jars
+
         dependsOn(downloadOtelJars)
+
+        from(otelJarTmpDir)
+        into(resourceOtelJarDir)
+
+        rename(".*digma-otel-agent-extension.*", "digma-otel-agent-extension.jar")
+        rename(".*digma-agent.*", "digma-agent.jar")
+        rename(".*opentelemetry-javaagent.*", "opentelemetry-javaagent.jar")
+    }
+
+
+
+    processResources {
+        dependsOn(renameOtelJars)
     }
 }

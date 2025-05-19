@@ -91,9 +91,8 @@ dependencies {
         pluginVerifier()
         zipSigner()
 
-        //todo: this is a workaround for plugin 2.1.0, this module should be bundled.
+        //todo: this is a workaround, this module should be bundled.
         // check in next version if it is still necessary.
-        // https://jetbrains-platform.slack.com/archives/C05C80200LS/p1730794028550679
         if (project.currentProfile().profile.greaterThan(BuildProfiles.Profile.p241)) {
             bundledModule("intellij.platform.collaborationTools")
         }
@@ -232,6 +231,7 @@ intellijPlatform {
 tasks {
 
     prepareSandbox {
+        notCompatibleWithConfigurationCache("prepareSandbox is not yet compatible with configuration cache")
 
         //copy rider dlls to the plugin sandbox, so it is packaged in the zip
         from(configurations.getByName("riderDotNetObjects")) {
@@ -252,7 +252,7 @@ tasks {
         //to upgrade gradle change the version here and run:
         //./gradlew wrapper --gradle-version 8.8
         //check that gradle/wrapper/gradle-wrapper.properties was changed
-        gradleVersion = "8.12.1"
+        gradleVersion = "8.13"
         distributionType = Wrapper.DistributionType.ALL
         distributionBase = Wrapper.PathBase.GRADLE_USER_HOME
         distributionPath = "wrapper/dists"

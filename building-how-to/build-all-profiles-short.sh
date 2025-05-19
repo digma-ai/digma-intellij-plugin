@@ -23,3 +23,7 @@ echo "############ building with 251 ################"
 ./gradlew clean test buildPlugin -PbuildProfile=p251
 cp build/distributions/digma-intellij-plugin*.zip ./.tmp
 for i in {1..5}; do echo; done
+
+echo "############ building with 252 ################"
+./gradlew clean test buildPlugin -PbuildProfile=p252
+cp build/distributions/digma-intellij-plugin*.zip ./.tmp

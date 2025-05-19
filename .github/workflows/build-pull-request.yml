@@ -8,7 +8,7 @@ jobs:
   build-workflow:
     strategy:
       matrix:
-        profile: [ p241, p242, p243, p251 ]
+        profile: [ p241, p242, p243, p251, p252 ]
     uses: ./.github/workflows/build-workflow.yml
     with:
       build-profile: ${{ matrix.profile }}
@@ -19,7 +19,7 @@ jobs:
   build-workflow-with-rider:
     strategy:
       matrix:
-        profile: [ p241, p242, p243, p251 ]
+        profile: [ p241, p242, p243, p251, p252 ]
     uses: ./.github/workflows/build-workflow.yml
     with:
       build-profile: ${{ matrix.profile }}
@@ -30,7 +30,7 @@ jobs:
   plugin-verifier-workflow:
     strategy:
       matrix:
-        profile: [ p241, p242, p243, p251 ]
+        profile: [ p241, p242, p243, p251, p252 ]
     uses: ./.github/workflows/plugin-verifier-workflow.yml
     with:
       build-profile: ${{ matrix.profile }}

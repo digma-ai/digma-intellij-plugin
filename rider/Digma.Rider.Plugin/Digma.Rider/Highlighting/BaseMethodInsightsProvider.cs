@@ -28,6 +28,13 @@ namespace Digma.Rider.Highlighting
             return _solution == solution;
         }
 
+#if (PROFILE_2025_2)        
+        public void OnClick(CodeInsightHighlightInfo highlightInfo, ISolution solution, CodeInsightsClickInfo clickInfo)
+        {
+            Log(_logger, "OnClick invoked for {0}", highlightInfo.CodeInsightsHighlighting.DeclaredElement.ShortName);
+            NavigateToMethod(highlightInfo.CodeInsightsHighlighting);
+        }
+#endif    
         public void OnClick(CodeInsightHighlightInfo highlightInfo, ISolution solution)
         {
             Log(_logger, "OnClick invoked for {0}", highlightInfo.CodeInsightsHighlighting.DeclaredElement.ShortName);

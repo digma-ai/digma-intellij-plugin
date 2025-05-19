@@ -4,10 +4,8 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
     id("java")
-    id("jvm-test-suite")
 }
 
-//todo: check with JvmVendorSpec.JETBRAINS
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(project.currentProfile().javaVersion))
@@ -16,37 +14,9 @@ java {
         // it's better to run the development instance with the bundled runtime.
         // so IMO its not a good idea to configure 'vendor = JvmVendorSpec.JETBRAINS'
         // follow this issue: https://github.com/JetBrains/gradle-intellij-plugin/issues/1538
-
-        vendor = JvmVendorSpec.AMAZON
+        vendor = JvmVendorSpec.ADOPTIUM
     }
 }
-
-
-testing {
-    //https://docs.gradle.org/current/userguide/jvm_test_suite_plugin.html
-
-    //this is the basic configuration of the test task for all projects.
-    //it can be extended in projects to add dependencies and other configuration.
-    //see for example analytics-provider project.
-    //jvmTestSuite eventually adds a test task to every project so the test task can also be configured
-    //independently like in legacy gradle versions. for example just adding testImplementation dependencies.
-    //but extending jvmTestSuite like in analytics-provider is more consice and safe with regards to depenency hell.
-    //so all projects are already configured to use junit jupiter.
-
-    suites {
-        val test by getting(JvmTestSuite::class) {
-            //this is the only place junit version should be mentioned in the project.
-            //it applies to all projects. can't use versions catalog in scripts plugins so using
-            //hard coded version.
-            useJUnitJupiter()
-
-            dependencies {
-                implementation(project())
-            }
-        }
-    }
-}
-
 
 
 tasks {
@@ -54,7 +24,7 @@ tasks {
     withType<JavaCompile> {
 
         doFirst {
-            logger.lifecycle("Compiling java with release:${options.release.get()}, compiler:${javaCompiler.get().executablePath}")
+            logger.lifecycle("${name}:Compiling java with release:${options.release.get()}, compiler:${javaCompiler.get().executablePath}")
         }
 
         options.compilerArgs.addAll(listOf("-Xlint:unchecked,deprecation"))
@@ -62,12 +32,11 @@ tasks {
     }
 
 
-    //configuration of test tasks logging
     withType<Test> {
         doFirst {
-            logger.lifecycle("${project.name}:${name}: Testing java with {}", javaLauncher.get().executablePath)
+            logger.lifecycle("${name}: Testing with {}", javaLauncher.get().executablePath)
         }
-
+        useJUnitPlatform()
 
         addTestListener(object : TestListener {
             override fun beforeTest(testDescriptor: TestDescriptor) {}
@@ -120,7 +89,6 @@ tasks {
             }
         }
     }
-
 }
 
 

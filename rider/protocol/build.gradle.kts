@@ -30,8 +30,6 @@ dependencies {
 val csOutput = File(project(":rider").projectDir, "Digma.Rider.Plugin/Digma.Rider/Protocol")
 val ktOutput = File(project(":rider").projectDir, "src/main/kotlin/org/digma/intellij/plugin/rider/protocol")
 
-
-
 rdgen {
 
     //this setup is good for up to 242, but not for 243 and later
@@ -73,10 +71,11 @@ tasks {
         finalizedBy("rdgen")
     }
 
-    //this setup is good for 243 and later
-    //see https://github.com/ForNeVeR/rider-plugin-template
-    if (project.currentProfile().profile.greaterThan(Profile.p242)) {
-        withType<RdGenTask> {
+    withType<RdGenTask> {
+        notCompatibleWithConfigurationCache("RdGenTask is not yet compatible with configuration cache")
+        //this setup is good for 243 and later
+        //see https://github.com/ForNeVeR/rider-plugin-template
+        if (project.currentProfile().profile.greaterThan(Profile.p242)) {
             val classPath = sourceSets["main"].runtimeClasspath
             dependsOn(classPath)
             classpath(classPath)

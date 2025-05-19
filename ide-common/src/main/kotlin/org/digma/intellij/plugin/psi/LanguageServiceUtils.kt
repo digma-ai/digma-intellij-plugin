@@ -4,6 +4,7 @@ import com.intellij.lang.Language
 import com.intellij.openapi.fileTypes.LanguageFileType
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.psi.PsiFile
 import org.digma.intellij.plugin.document.findMethodInfo
 import org.digma.intellij.plugin.document.getDominantLanguage
 import org.digma.intellij.plugin.document.getLanguageByMethodCodeObjectId
@@ -23,6 +24,10 @@ fun isSupportedLanguageFile(project: Project, virtualFile: VirtualFile): Boolean
 //            val language = fileType.language
 //            val targetLanguages = LanguageServiceProvider.getInstance(project).getLanguages()
 //            return targetLanguages.any { language.isKindOf(it) }
+}
+
+fun isSupportedLanguageFile(project: Project, psiFile: PsiFile): Boolean {
+    return LanguageServiceProvider.getInstance(project).getLanguages().any { psiFile.language == it }
 }
 
 fun findLanguageServiceByPredicate(project: Project, predicate: (LanguageService) -> Boolean): LanguageService? {

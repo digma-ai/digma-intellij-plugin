@@ -59,8 +59,6 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.analytics.AnalyticsService"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.document.CodeLensProvider"/>
-
         <projectService serviceImplementation="org.digma.intellij.plugin.service.EditorService"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider"/>
@@ -163,10 +161,10 @@
                 class="org.digma.intellij.plugin.toolwindow.DigmaToolWindowsListener"
                 topic="com.intellij.openapi.wm.ex.ToolWindowManagerListener"/>
         <listener
-                class="org.digma.intellij.plugin.document.CodeLensProviderDocumentInfoAndEnvironmentChangedListener"
+                class="org.digma.intellij.plugin.codelens.provider.CodeLensProviderListeners"
                 topic="org.digma.intellij.plugin.document.DocumentInfoChanged"/>
         <listener
-                class="org.digma.intellij.plugin.document.CodeLensProviderDocumentInfoAndEnvironmentChangedListener"
+                class="org.digma.intellij.plugin.codelens.provider.CodeLensProviderListeners"
                 topic="org.digma.intellij.plugin.analytics.EnvironmentChanged"/>
         <listener
                 class="org.digma.intellij.plugin.ui.notificationcenter.AppNotificationCenter$AggressiveUpdateStateChangedEventListener"

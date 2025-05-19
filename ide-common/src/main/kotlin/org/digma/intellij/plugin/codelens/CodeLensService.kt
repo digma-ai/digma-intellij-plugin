@@ -3,12 +3,15 @@ package org.digma.intellij.plugin.codelens
 import com.google.common.base.Supplier
 import com.intellij.codeInsight.codeVision.CodeVisionEntry
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
+import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.codeInsight.hints.InlayHintsUtils
+import com.intellij.codeInsight.hints.codeVision.ModificationStampUtil
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VirtualFile
@@ -17,13 +20,11 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
 import com.intellij.psi.SmartPointerManager
-import com.jetbrains.rd.util.ConcurrentHashMap
+import org.digma.intellij.plugin.codelens.provider.CodeLensChanged
+import org.digma.intellij.plugin.codelens.provider.CodeLensProvider
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.common.objectToJsonNode
-import org.digma.intellij.plugin.document.CodeLensChanged
-import org.digma.intellij.plugin.document.CodeLensProvider
-import org.digma.intellij.plugin.document.CodeLensUtils.psiFileToKey
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.lens.CodeLens
@@ -39,63 +40,31 @@ import java.awt.event.MouseEvent
 @Suppress("LightServiceMigrationCode")
 class CodeLensService(private val project: Project) : Disposable {
 
-    private val logger: Logger = Logger.getInstance(CodeLensService::class.java)
+    private val logger: Logger = Logger.getInstance(this::class.java)
 
-    //cache psiFile -> map providerId -> CodeLensContainer
-    private val cachedCodeVision = ConcurrentHashMap(mutableMapOf<String, MutableMap<String, CodeLensContainer>>())
-
-    private val codeVisionRefresh = CodeVisionRefresh(project)
-
-
-    init {
-        project.messageBus.connect(this).subscribe(CodeLensChanged.CODELENS_CHANGED_TOPIC, object : CodeLensChanged {
-            override fun codelensChanged(virtualFile: VirtualFile) {
-                try {
-                    Log.log(logger::trace, "codelensChanged called for file {}", virtualFile)
-                    refreshOneFile(virtualFile)
-                } catch (e: Throwable) {
-                    ErrorReporter.getInstance().reportError("CodeLensService.codelensChanged", e)
-                }
+    class CodeLensServiceCodelensChangeListener(private val project: Project) : CodeLensChanged {
+        private val logger: Logger = Logger.getInstance(this::class.java)
+        override fun codelensChanged(virtualFile: VirtualFile) {
+            //called from CodeLensProvider i a coroutine.
+            if (logger.isTraceEnabled) {
+                Log.log(logger::trace, "codelensChanged called for file {}", virtualFile)
             }
-
-            override fun codelensChanged(virtualFileList: List<VirtualFile>) {
-                try {
-                    Log.log(logger::trace, "codelensChanged called for files {}", virtualFileList)
-                    refreshFiles(virtualFileList)
-                } catch (e: Throwable) {
-                    ErrorReporter.getInstance().reportError(project, "CodeLensService.codelensChanged", e)
-                }
-            }
-
-            override fun codelensChanged() {
-                try {
-                    Log.log(logger::trace, "codelensChanged called")
-                    refreshAll()
-                } catch (e: Throwable) {
-                    ErrorReporter.getInstance().reportError(project, "CodeLensService.codelensChanged", e)
-                }
-            }
-        })
-
+            project.service<CodeLensService>().refreshFile(virtualFile)
+        }
     }
 
-
     override fun dispose() {
-        cachedCodeVision.clear()
     }
 
     fun getCodeLens(providerId: String, psiFile: PsiFile, languageService: LanguageService): List<Pair<TextRange, CodeVisionEntry>> {
 
-        Log.log(logger::trace, "getCodeLens called for provider {} for file {}", providerId, psiFile)
-
-        val cached = cachedCodeVision[psiFileToKey(psiFile)]?.get(providerId)
-        if (cached != null) {
-            Log.log(logger::trace, "returning cached code vision for provider {} for file {}", providerId, psiFile)
-            return cached.codeLensList
+        if (logger.isTraceEnabled) {
+            Log.log(logger::trace, "getCodeLens called for provider {} for file {}", providerId, psiFile)
         }
 
+        val virtualFile = psiFile.virtualFile ?: return emptyList()
 
-        val codeLensesForProvider = selectCodeLensesForProvider(providerId, psiFile)
+        val codeLensesForProvider = selectCodeLensesForProvider(providerId, virtualFile)
         Log.log(logger::trace, "got codeLensesForProvider for provider {} for file {} [{}]", providerId, psiFile, codeLensesForProvider)
 
         val codeLensContainer = CodeLensContainer()
@@ -128,15 +97,13 @@ class CodeLensService(private val project: Project) : Disposable {
             }
         }
 
-        cachedCodeVision.computeIfAbsent(psiFileToKey(psiFile)) { mutableMapOf() }[providerId] = codeLensContainer
-
         return codeLensContainer.codeLensList
     }
 
 
-    private fun selectCodeLensesForProvider(providerId: String, psiFile: PsiFile): Set<CodeLens>? {
+    private fun selectCodeLensesForProvider(providerId: String, virtualFile: VirtualFile): Set<CodeLens>? {
 
-        val codeLensesForFile = CodeLensProvider.getInstance(project).provideCodeLens(psiFile.virtualFile)
+        val codeLensesForFile = CodeLensProvider.getInstance(project).getCodeLens(virtualFile)
 
         val providerLensSelector = project.service<CodeVisionProviderToLensSelector>()
 
@@ -153,54 +120,26 @@ class CodeLensService(private val project: Project) : Disposable {
         val providerLensId = providerLensSelector.selectLensForProvider(providerId, codeLensesForFile)
 
         return providerLensId?.let { lensId ->
-            Log.log(logger::trace, "selected code lens {} for provider {}", lensId, providerId)
+            if (logger.isTraceEnabled) {
+                Log.log(logger::trace, "selected code lens {} for provider {}", lensId, providerId)
+            }
             codeLensesForFile.filter { it.id == lensId }.toSet()
         }
 
     }
 
-    @Suppress("MemberVisibilityCanBePrivate")
-    fun clearCacheForFile(psiFile: PsiFile) {
-        cachedCodeVision.remove(psiFileToKey(psiFile))
-    }
 
-    private fun clearCacheForFiles(psiFilesUrls: List<String>) {
-        psiFilesUrls.forEach {
-            cachedCodeVision.remove(it)
+    private fun refreshFile(virtualFile: VirtualFile) {
+        if (logger.isTraceEnabled) {
+            Log.log(logger::trace, "refresh called for file {}", virtualFile)
         }
-    }
-
-
-    fun clearCache() {
-        cachedCodeVision.clear()
-    }
-
-
-    fun refreshOneFile(virtualFile: VirtualFile) {
-        val psiFile = ReadActions.ensureReadAction(Supplier{ PsiManager.getInstance(project).findFile(virtualFile)}) ?: return
-        Log.log(logger::trace, "refresh called for file {}", psiFile)
-        clearCacheForFile(psiFile)
-        codeVisionRefresh.refreshForFile(psiFile)
-    }
-
-
-    fun refreshFiles(virtualFileList:List<VirtualFile> ) {
-        Log.log(logger::trace, "refresh called for files {}", virtualFileList)
-        //sending the psi urls to remove. urls came from CodeLensProvider and should be the same as used
-        // here as keys, all these services use org.digma.intellij.plugin.document.CodeLensUtils.psiFileToKey.
-        val psiFilesUrls = virtualFileList.mapNotNull { vFile ->
-            ReadActions.ensureReadAction(Supplier{ PsiManager.getInstance(project).findFile(vFile)})?.let { psiFileToKey(it) }
+        val editor =
+            FileEditorManager.getInstance(project).getEditors(virtualFile).firstOrNull { editor -> editor is TextEditor } as? TextEditor ?: return
+        ModificationStampUtil.clearModificationStamp(editor.editor)
+        val psiFile = ReadActions.ensureReadAction(Supplier { PsiManager.getInstance(project).findFile(virtualFile) })
+        psiFile?.let {
+            DaemonCodeAnalyzer.getInstance(project).restart(psiFile)
         }
-        clearCacheForFiles(psiFilesUrls)
-        codeVisionRefresh.refreshForFiles(psiFilesUrls)
-    }
-
-
-
-    fun refreshAll() {
-        Log.log(logger::trace, "refresh called for all")
-        clearCache()
-        codeVisionRefresh.refreshAll()
     }
 
 
@@ -249,6 +188,4 @@ class CodeLensService(private val project: Project) : Disposable {
             }
         }
     }
-
-
 }

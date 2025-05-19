@@ -6,10 +6,7 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.jetbrains.rd.framework.IProtocol
 import com.jetbrains.rdclient.util.idea.LifetimedProjectComponent
 import com.jetbrains.rider.projectView.solution
-import org.digma.intellij.plugin.common.EDT
-import org.digma.intellij.plugin.document.CodeLensChanged
-import org.digma.intellij.plugin.document.CodeLensProvider
-import org.digma.intellij.plugin.document.DocumentInfoStorage
+import org.digma.intellij.plugin.codelens.provider.CodeLensProvider
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.lens.CodeLens
@@ -18,28 +15,12 @@ import java.util.function.Consumer
 
 //don't make it light service because it will register on all IDEs, but we want it only on Rider
 @Suppress("LightServiceMigrationCode")
-class CodeLensHost(project: Project) : LifetimedProjectComponent(project) {
+class CodeLensHost(project: Project) : LifetimedProjectComponent(project){
 
     private val logger = Logger.getInstance(CodeLensHost::class.java)
 
     private val codeLensProvider: CodeLensProvider = CodeLensProvider.getInstance(project)
 
-
-    init {
-        project.messageBus.connect(this).subscribe(CodeLensChanged.CODELENS_CHANGED_TOPIC, object : CodeLensChanged {
-            override fun codelensChanged(virtualFile: VirtualFile) {
-                refreshOneFile(virtualFile)
-            }
-
-            override fun codelensChanged(virtualFileList: List<VirtualFile>) {
-                refreshFiles(virtualFileList)
-            }
-
-            override fun codelensChanged() {
-                refreshAll()
-            }
-        })
-    }
 
 
     //always use getInstance instead of injecting directly to other services.
@@ -59,10 +40,10 @@ class CodeLensHost(project: Project) : LifetimedProjectComponent(project) {
     }
 
 
-    private fun refreshOneFile(virtualFile: VirtualFile) {
+    internal fun refreshFile(virtualFile: VirtualFile) {
         try {
             Log.log(logger::debug, "Refreshing code lens for {}", virtualFile)
-            val codeLens: Set<CodeLens> = codeLensProvider.provideCodeLens(virtualFile)
+            val codeLens: Set<CodeLens> = codeLensProvider.getCodeLens(virtualFile)
             Log.log(logger::debug, "Got codeLens for {}: {}", virtualFile, codeLens)
             installCodeLens(virtualFile, codeLens)
         } catch (e: Throwable) {
@@ -71,29 +52,11 @@ class CodeLensHost(project: Project) : LifetimedProjectComponent(project) {
         }
     }
 
-
-    private fun refreshFiles(virtualFileList: List<VirtualFile>) {
-        virtualFileList.forEach(Consumer { vFile ->
-            try {
-                refreshOneFile(vFile)
-            } catch (e: Throwable) {
-                Log.warnWithException(logger, project, e, "error in refresh for {}", vFile)
-                ErrorReporter.getInstance().reportError("CodeLensHost.refresh", e)
-            }
-        })
-    }
-
-    private fun refreshAll() {
-        //all the files that are opened should be in documentInfoService.
-        //could also take all editors from FileEditorManager
-        refreshFiles(DocumentInfoStorage.getInstance(project).allFiles().toList())
-    }
-
-
     fun installCodeLens(@NotNull file: VirtualFile, @NotNull codeLenses: Set<CodeLens>) {
-        EDT.ensureEDT {
+        //todo: why on EDT ?
+//        EDT.ensureEDT {
             installCodeLensOnEDT(file, codeLenses)
-        }
+//        }
     }
 
     private fun installCodeLensOnEDT(@NotNull file: VirtualFile, @NotNull codeLenses: Set<CodeLens>) {

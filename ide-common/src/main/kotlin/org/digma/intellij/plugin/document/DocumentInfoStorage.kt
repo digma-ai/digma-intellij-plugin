@@ -89,6 +89,7 @@ class DocumentInfoStorage(private val project: Project) {
 
     internal fun removeDocumentInfo(file: VirtualFile) {
         documentInfos.remove(file)
+        fireDocumentInfoRemoved(file)
         if (logger.isTraceEnabled) {
             Log.log(logger::trace, "removeDocumentInfo: file:{}", file)
             Log.log(
@@ -97,8 +98,17 @@ class DocumentInfoStorage(private val project: Project) {
                 documentInfos.size,
                 documentInfos.keys.joinToString(", ") { it.path })
         }
-
     }
+
+    private fun fireDocumentInfoRemoved(file: VirtualFile) {
+        if (logger.isTraceEnabled) {
+            Log.log(logger::trace, "fireDocumentInfoRemoved: for {}", file)
+        }
+        project.messageBus.syncPublisher(DocumentInfoChanged.DOCUMENT_INFO_CHANGED_TOPIC).documentInfoRemoved(file)
+    }
+
+
+
 
     fun containsDocumentInfo(file: VirtualFile): Boolean {
         return documentInfos[file] != null

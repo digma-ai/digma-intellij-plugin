@@ -7,7 +7,6 @@ import org.digma.intellij.plugin.model.discovery.DocumentInfo
 
 interface DocumentInfoChanged {
 
-
     companion object {
         @JvmField
         @Topic.ProjectLevel
@@ -15,6 +14,6 @@ interface DocumentInfoChanged {
             Topic.create<DocumentInfoChanged>("DOCUMENT_INFO_CHANGE_TOPIC", DocumentInfoChanged::class.java)
     }
 
-
     fun documentInfoChanged(file: VirtualFile, documentInfo: DocumentInfo)
+    fun documentInfoRemoved(file: VirtualFile){}
 }

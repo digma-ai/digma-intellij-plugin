@@ -13,6 +13,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.VirtualFile
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -31,7 +32,6 @@ import java.time.Instant
 import java.util.Queue
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
-import kotlin.coroutines.cancellation.CancellationException
 import kotlin.coroutines.coroutineContext
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
@@ -105,6 +105,15 @@ class EditorDocumentService(private val project: Project, private val cs: Corout
 
     //this method is called on EDT and must be fast
     fun fileOpened(file: VirtualFile) {
+        try {
+            doOnFileOpened(file)
+        }catch (e:Throwable){
+            Log.warnWithException(logger,e,"Exception in fileOpened {}",e)
+            ErrorReporter.getInstance().reportError(project, "EditorDocumentService.fileOpened", e)
+        }
+    }
+
+    private fun doOnFileOpened(file: VirtualFile) {
 
         //usually we are not interested in non-writable files, they are library sources or vcs files etc.
         //although a user may mark a content file as non-writable, but this is probably very rare.
@@ -149,6 +158,15 @@ class EditorDocumentService(private val project: Project, private val cs: Corout
 
     //this method is called on EDT and must be fast
     fun fileClosed(file: VirtualFile) {
+        try {
+            doOnFileClosed(file)
+        }catch (e:Throwable){
+            Log.warnWithException(logger,e,"Exception in fileClosed {}",e)
+            ErrorReporter.getInstance().reportError(project, "EditorDocumentService.fileClosed", e)
+        }
+    }
+
+    private fun doOnFileClosed(file: VirtualFile) {
 
         //usually we are not interested in non-writable files, they are library sources or vcs files etc.
         //although a user may mark a content file as non-writable, but this is probably very rare.
@@ -250,89 +268,74 @@ class EditorDocumentService(private val project: Project, private val cs: Corout
     //this method will be called on EDT from fileOpened, and in a coroutine for updates, it should run fast and not take read access.
     private fun launchBuildDocumentInfoJob(file: VirtualFile) {
 
-        try {
-            if (logger.isTraceEnabled) {
-                Log.log(logger::trace, "launchBuildDocumentInfoJob: {}", file)
-            }
+        if (logger.isTraceEnabled) {
+            Log.log(logger::trace, "launchBuildDocumentInfoJob: {}", file)
+        }
 
-            runningJobs[file]?.cancel(CancellationException("New job started"))
-            val job = cs.launch {
-                buildDocumentInfo(file)
-            }
+        runningJobs[file]?.cancel(CancellationException("New job started"))
+        val job = cs.launch {
+            buildDocumentInfo(file)
+        }
 
-            runningJobs[file] = job
-            job.invokeOnCompletion { cause ->
-                //if the cause is not null and not CancellationException, then it means the job failed,
-                if (cause != null && cause !is CancellationException) {
-                    Log.warnWithException(logger, project, cause, "fileOpened.launch: job failed {}", cause)
-                    ErrorReporter.getInstance().reportError(project, "EditorDocumentService.launchBuildDocumentInfoJob.invokeOnCompletion", cause)
-                }
-                runningJobs.remove(file)
+        runningJobs[file] = job
+        job.invokeOnCompletion { cause ->
+            //if the cause is not null and not CancellationException, then it means the job failed,
+            if (cause != null && cause !is CancellationException) {
+                Log.warnWithException(logger, project, cause, "launchBuildDocumentInfoJob.launch: job failed {}", cause)
+                ErrorReporter.getInstance().reportError(project, "EditorDocumentService.launchBuildDocumentInfoJob.launch", cause)
             }
-        } catch (e: CancellationException) {
-            throw e // ⚠️ Always rethrow to propagate cancellation properly
-        } catch (e: Throwable) {
-            Log.warnWithException(logger, e, "Exception in launchBuildDocumentInfoJob {}", e)
-            ErrorReporter.getInstance().reportError(project, "EditorDocumentService.launchBuildDocumentInfoJob", e)
+            runningJobs.remove(file)
         }
     }
 
 
     private suspend fun buildDocumentInfo(file: VirtualFile) {
-        try {
 
-            //The job may be canceled before document info is ready, for example, if the file was closed before
-            // this coroutine is finished. So check if coroutine is active often.
-            //Also, make sure not to save document info for a closed file. The file may close just before
-            // building DocumentInfo finished and just before putting it in the storage, that is handled by putRemoveLock.
+        //The job may be canceled before document info is ready, for example, if the file was closed before
+        // this coroutine is finished. So check if coroutine is active often.
+        //Also, make sure not to save document info for a closed file. The file may close just before
+        // building DocumentInfo finished and just before putting it in the storage, that is handled by putRemoveLock.
+        //Exceptions are caught in the coroutine exception handler and reported in invokeOnCompletion.
 
-            Log.log(logger::trace, "buildDocumentInfo: {}", file)
+        Log.log(logger::trace, "buildDocumentInfo: {}", file)
 
-            val isRelevant = readAction {
-                isRelevantFile(file)
-            }
+        val isRelevant = readAction {
+            isRelevantFile(file)
+        }
+        coroutineContext.ensureActive()
+        if (!isRelevant) {
+            Log.log(logger::trace, "buildDocumentInfo: file is not relevant {}", file)
+            return
+        }
+
+        if (!isSupportedLanguageFile(project, file)) {
+            Log.log(logger::trace, "buildDocumentInfo: file is not a supported language {}", file)
+            return
+        }
+        coroutineContext.ensureActive()
+
+        val languageService = LanguageServiceProvider.getInstance(project).getLanguageService(file)
+        if (languageService == null) {
+            Log.log(logger::warn, "buildDocumentInfo: could not find language service for {}", file)
+            return
+        }
+
+        if (!languageService.isSupportedFile(file)) {
+            Log.log(logger::trace, "buildDocumentInfo: file is not supported by language service {}", file)
+            return
+        }
+
+        coroutineContext.ensureActive()
+        val documentInfo = languageService.buildDocumentInfo(file)
+        if (documentInfo == null) {
+            Log.log(logger::warn, "buildDocumentInfo: could not build document info for {}", file)
+        } else {
+            Log.log(logger::trace, "buildDocumentInfo: done building document info for {}", file)
             coroutineContext.ensureActive()
-            if (!isRelevant) {
-                Log.log(logger::trace, "buildDocumentInfo: file is not relevant {}", file)
-                return
-            }
-
-            if (!isSupportedLanguageFile(project, file)) {
-                Log.log(logger::trace, "buildDocumentInfo: file is not a supported language {}", file)
-                return
-            }
-            coroutineContext.ensureActive()
-
-            val languageService = LanguageServiceProvider.getInstance(project).getLanguageService(file)
-            if (languageService == null) {
-                Log.log(logger::warn, "buildDocumentInfo: could not find language service for {}", file)
-                return
-            }
-
-            if (!languageService.isSupportedFile(file)) {
-                Log.log(logger::trace, "buildDocumentInfo: file is not supported by language service {}", file)
-                return
-            }
-
-            coroutineContext.ensureActive()
-            val documentInfo = languageService.buildDocumentInfo(file)
-            if (documentInfo == null) {
-                Log.log(logger::warn, "buildDocumentInfo: could not build document info for {}", file)
-            } else {
-                Log.log(logger::trace, "buildDocumentInfo: done building document info for {}", file)
+            putRemoveLock.withLock {
                 coroutineContext.ensureActive()
-                putRemoveLock.withLock {
-                    coroutineContext.ensureActive()
-                    DocumentInfoStorage.getInstance(project).putDocumentInfo(file, documentInfo)
-                }
+                DocumentInfoStorage.getInstance(project).putDocumentInfo(file, documentInfo)
             }
-
-        } catch (e: CancellationException) {
-            Log.log(logger::trace, "buildDocumentInfo: cancelled {}", e)
-            throw e // ⚠️ Always rethrow to propagate cancellation properly
-        } catch (e: Throwable) {
-            Log.warnWithException(logger, e, "Exception in buildDocumentInfo {}", e)
-            ErrorReporter.getInstance().reportError(project, "EditorDocumentService.buildDocumentInfo", e)
         }
     }
 

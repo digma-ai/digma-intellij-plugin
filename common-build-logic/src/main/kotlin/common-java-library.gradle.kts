@@ -12,5 +12,7 @@ tasks {
     //pure java will not be built or tested, this dependency ensures they will.
     //this is instead of specifically calling build in the command line
     //it may increase build time and runIde time, but we want the tests to run on every buildPlugin.
-    create("buildPlugin").dependsOn(build)
+    register("buildPlugin") {
+        dependsOn("build")
+    }
 }

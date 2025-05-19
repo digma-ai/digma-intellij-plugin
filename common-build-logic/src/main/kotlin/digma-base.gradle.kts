@@ -23,20 +23,17 @@ configurations {
                 useVersion("2.10.5.1")
                 because("https://devhub.checkmarx.com/cve-details/CVE-2021-20190/?utm_source=jetbrains&utm_medium=referral&utm_campaign=idea")
             }
-            if (requested.group == "org.jetbrains.kotlin" &&
-                (requested.name == "kotlin-stdlib-jdk8" || requested.name == "kotlin-stdlib-jdk7")
-            ) {
-                useVersion("1.7.0")
-                because(
-                    "we should stick to version 1.7.0 because this is the version used in 2022.3 which is the lowest version we support. " +
-                            "should never compile with higher version"
-                )
-            }
         }
     }
 }
 
-
+dependencies{
+    //adding junit 4 is a workaround for this:
+    //https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-faq.html#junit5-test-framework-refers-to-junit4
+    //https://youtrack.jetbrains.com/issue/IJPL-159134/JUnit5-Test-Framework-refers-to-JUnit4-java.lang.NoClassDefFoundError-junit-framework-TestCase
+    //todo: check in future versions of the platform if it can be removed
+    testRuntimeOnly("junit:junit:4.13.2")
+}
 
 tasks {
     register("allDependencies") {

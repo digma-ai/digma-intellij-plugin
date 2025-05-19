@@ -200,15 +200,14 @@ object BuildProfiles {
             javaVersion = JavaVersion.VERSION_21.majorVersion,
         ),
 
-        //todo: 252 EAP, currently it it build with 251 until eap 252 starts
         Profile.p252 to BuildProfile(
             isEAP = true,
             profile = Profile.p252,
-            platformVersion = "2025.1.1.1",
-            riderVersion = "2025.1.2",
-            pycharmVersion = "2025.1",
+            platformVersion = "252.13776.59-EAP-SNAPSHOT",
+            riderVersion = "2025.2-EAP1-SNAPSHOT",
+            pycharmVersion = "252-EAP-SNAPSHOT",
             riderTargetFramework = "net8.0",
-            riderResharperVersionConstant = "PROFILE_2024_3",
+            riderResharperVersionConstant = "PROFILE_2024_3,PROFILE_2025_2",
             platformVersionCode = "252",
             pluginSinceBuild = "252",
             pluginUntilBuild = "252.*",

@@ -97,6 +97,7 @@ tasks {
     }
 
     val generateNuGetConfig by registering {
+        notCompatibleWithConfigurationCache("generateNuGetConfig is not yet compatible with configuration cache")
 
         inputs.property("profile", project.currentProfile().profile)
         inputs.dir(riderSdkPath)
@@ -201,6 +202,7 @@ tasks {
 
 
     val compileDotNet by registering {
+        notCompatibleWithConfigurationCache("compileDotNet is not yet compatible with configuration cache")
 
         dependsOn(rdGen)
 

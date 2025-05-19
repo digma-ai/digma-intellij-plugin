@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.418] - 2025-05-12
+## [2.0.420] - 2025-05-19
+
+- fix-semantic-version-plugin by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2730
+
+## 2.0.418 - 2025-05-12
 
 - update build profiles by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2721
 - fix env equals by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2722

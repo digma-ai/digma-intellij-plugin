@@ -42,7 +42,10 @@ abstract class DigmaCodeVisionProviderBase : DaemonBoundCodeVisionProvider {
 
     override fun computeForEditor(editor: Editor, file: PsiFile): List<Pair<TextRange, CodeVisionEntry>> {
 
-        Log.log(logger::trace, "computeForEditor called for provider {} for file {}", id, file)
+        if(logger.isTraceEnabled){
+            Log.log(logger::trace, "computeForEditor called for provider {} for file {}", id, file)
+        }
+
 
         try {
             val project: Project = editor.project ?: return empty

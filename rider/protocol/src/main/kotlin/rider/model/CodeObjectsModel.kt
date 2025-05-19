@@ -37,7 +37,6 @@ object CodeObjectsModel : Ext(SolutionModel.Solution) {
         field("containingClass", PredefinedType.string)
         field("containingNamespace", PredefinedType.string)
         field("containingFileUri", PredefinedType.string)
-        field("offsetAtFileUri", PredefinedType.int)
         field("spans", immutableList(RiderSpanInfo))
     }
 

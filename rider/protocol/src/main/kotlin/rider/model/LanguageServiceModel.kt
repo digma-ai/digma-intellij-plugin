@@ -10,8 +10,6 @@ import com.jetbrains.rider.model.nova.ide.SolutionModel
 object LanguageServiceModel : Ext(SolutionModel.Solution) {
 
 
-
-
     private val MethodUnderCaretRequest = structdef {
         field("psiId", CodeObjectsModel.PsiFileID)
         field("offset", PredefinedType.int)

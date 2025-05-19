@@ -252,7 +252,6 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
             containingClass = containingClass,
             containingNamespace = containingNamespace,
             containingFileUri = normalizeFileUri(containingFileUri, project),
-            offsetAtFileUri = offsetAtFileUri,
         )
         methodInfo.addSpans(toSpansList(spans))
         return methodInfo

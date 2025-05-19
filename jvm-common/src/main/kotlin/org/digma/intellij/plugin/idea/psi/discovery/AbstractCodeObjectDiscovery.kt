@@ -149,8 +149,7 @@ abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSp
                             val name: String = uMethod.name
                             val containingClassName: String = uClass.qualifiedName ?: getClassSimpleName(uClass)
                             val containingFileUri: String = fileUri
-                            val offsetAtFileUri: Int = uMethod.sourcePsi?.textOffset ?: 0
-                            val methodInfo = MethodInfo(id, name, containingClassName, packageName, containingFileUri, offsetAtFileUri)
+                            val methodInfo = MethodInfo(id, name, containingClassName, packageName, containingFileUri)
                             val methodSpans = spans.filter { spanInfo: SpanInfo -> spanInfo.containingMethodId == id }
                             methodInfo.addSpans(methodSpans)
                             methodInfoMap[id] = methodInfo

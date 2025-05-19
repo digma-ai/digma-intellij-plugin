@@ -9,10 +9,9 @@ data class MethodInfo(
     val containingClass: String,
     val containingNamespace: String, //namespace for c# is namespace, for java its package
     val containingFileUri: String,
-    val offsetAtFileUri: Int,
-    //mutable spans and endpoints are a compromise. we want them to be included in hash code and equals,
-    // so they need to be constructor properties. ideally it would be better if they were immutable, but we also
-    // want to add to them. every other solution involves declaring other fields, copies, etc.
+    //Declaring spans and endpoints as mutable is a compromise. We want them to be included in hash code and equals,
+    // so they need to be constructor properties. Ideally, it would be better if they were immutable, but we also
+    // want to add to them. Every other solution involves declaring other fields, copies, etc.
     val spans: MutableList<SpanInfo> = mutableListOf(),
     val endpoints: MutableList<EndpointInfo> = mutableListOf(),
 ) : CodeObjectInfo {

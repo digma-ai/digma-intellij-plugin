@@ -52,10 +52,9 @@ namespace Digma.Rider.Discovery
             var containingClassName = PsiUtils.GetClassName(functionDeclaration);
             var containingNamespace = PsiUtils.GetNamespace(functionDeclaration);
             var containingFileUri = DiscoveryContext.FileUri;
-            var offsetAtFileUri = functionDeclaration.GetNavigationRange().StartOffset.Offset;
 
             return new RiderMethodInfo(methodFqn, declaredName, containingClassName, containingNamespace,
-                containingFileUri, offsetAtFileUri, new List<RiderSpanInfo>());
+                containingFileUri, new List<RiderSpanInfo>());
         }
 
         [SuppressMessage("ReSharper", "UnusedVariable")]

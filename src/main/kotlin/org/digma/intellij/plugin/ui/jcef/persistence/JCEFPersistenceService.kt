@@ -16,7 +16,7 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.ui.jcef.model.ErrorPayload
 import org.digma.intellij.plugin.ui.jcef.model.GetFromPersistenceRequest
 import org.digma.intellij.plugin.ui.jcef.model.SaveToPersistenceRequest
-import org.digma.intellij.plugin.ui.jcef.model.Scope
+import org.digma.intellij.plugin.ui.jcef.model.JCefPersistenceScope
 import org.digma.intellij.plugin.ui.jcef.model.SetFromPersistenceMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetFromPersistenceMessagePayload
 import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
@@ -34,8 +34,8 @@ class JCEFPersistenceService(private val project: Project) {
 
     fun getFromPersistence(browser: CefBrowser, getFromPersistenceRequest: GetFromPersistenceRequest) {
         when (getFromPersistenceRequest.payload.scope) {
-            Scope.application -> getFromApplicationPersistence(browser, getFromPersistenceRequest)
-            Scope.project -> getFromProjectPersistence(browser, getFromPersistenceRequest)
+            JCefPersistenceScope.application -> getFromApplicationPersistence(browser, getFromPersistenceRequest)
+            JCefPersistenceScope.project -> getFromProjectPersistence(browser, getFromPersistenceRequest)
         }
     }
 
@@ -78,7 +78,7 @@ class JCEFPersistenceService(private val project: Project) {
     }
 
 
-    private fun sendError(key: String, scope: Scope, e: Throwable, browser: CefBrowser) {
+    private fun sendError(key: String, scope: JCefPersistenceScope, e: Throwable, browser: CefBrowser) {
         val message = SetFromPersistenceMessage(
             SetFromPersistenceMessagePayload(
                 key,
@@ -94,14 +94,14 @@ class JCEFPersistenceService(private val project: Project) {
 
         try {
             when (saveToPersistenceRequest.payload.scope) {
-                Scope.application -> {
+                JCefPersistenceScope.application -> {
                     JCEFApplicationPersistence.getInstance().set(
                         saveToPersistenceRequest.payload.key,
                         saveToPersistenceRequest.payload.value
                     )
                 }
 
-                Scope.project -> {
+                JCefPersistenceScope.project -> {
                     JCEFProjectPersistence.getInstance(project).set(
                         saveToPersistenceRequest.payload.key,
                         saveToPersistenceRequest.payload.value

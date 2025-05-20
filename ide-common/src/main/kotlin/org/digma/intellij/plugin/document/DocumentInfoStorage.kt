@@ -61,17 +61,16 @@ class DocumentInfoStorage(private val project: Project) {
         val container = DocumentInfoContainer(documentInfo)
         documentInfos[file] = container
 
-        if (existing?.getDocumentInfo() != documentInfo) {
-            fireDocumentInfoChanged(file, documentInfo)
-        }
-
-
         if (logger.isTraceEnabled) {
             Log.log(
                 logger::trace,
                 "currently have {} documents in storage: {}",
                 documentInfos.size,
                 documentInfos.keys.joinToString(", ") { it.path })
+        }
+
+        if (existing?.getDocumentInfo() != documentInfo) {
+            fireDocumentInfoChanged(file, documentInfo)
         }
     }
 
@@ -89,7 +88,6 @@ class DocumentInfoStorage(private val project: Project) {
 
     internal fun removeDocumentInfo(file: VirtualFile) {
         documentInfos.remove(file)
-        fireDocumentInfoRemoved(file)
         if (logger.isTraceEnabled) {
             Log.log(logger::trace, "removeDocumentInfo: file:{}", file)
             Log.log(
@@ -98,6 +96,8 @@ class DocumentInfoStorage(private val project: Project) {
                 documentInfos.size,
                 documentInfos.keys.joinToString(", ") { it.path })
         }
+
+        fireDocumentInfoRemoved(file)
     }
 
     private fun fireDocumentInfoRemoved(file: VirtualFile) {
@@ -107,12 +107,8 @@ class DocumentInfoStorage(private val project: Project) {
         project.messageBus.syncPublisher(DocumentInfoChanged.DOCUMENT_INFO_CHANGED_TOPIC).documentInfoRemoved(file)
     }
 
-
-
-
     fun containsDocumentInfo(file: VirtualFile): Boolean {
         return documentInfos[file] != null
-
     }
 
     fun getDocumentInfo(file: VirtualFile): DocumentInfo? {

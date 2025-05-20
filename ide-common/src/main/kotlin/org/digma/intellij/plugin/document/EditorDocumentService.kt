@@ -269,7 +269,7 @@ class EditorDocumentService(private val project: Project, private val cs: Corout
     private fun launchBuildDocumentInfoJob(file: VirtualFile) {
 
         if (logger.isTraceEnabled) {
-            Log.log(logger::trace, "launchBuildDocumentInfoJob: {}", file)
+            Log.log(logger::trace, "starting buildDocumentInfo job for {}", file)
         }
 
         runningJobs[file]?.cancel(CancellationException("New job started"))
@@ -282,7 +282,7 @@ class EditorDocumentService(private val project: Project, private val cs: Corout
             //if the cause is not null and not CancellationException, then it means the job failed,
             if (cause != null && cause !is CancellationException) {
                 Log.warnWithException(logger, project, cause, "launchBuildDocumentInfoJob.launch: job failed {}", cause)
-                ErrorReporter.getInstance().reportError(project, "EditorDocumentService.launchBuildDocumentInfoJob.launch", cause)
+                ErrorReporter.getInstance().reportError(project, "EditorDocumentService.launchBuildDocumentInfoJob", cause)
             }
             runningJobs.remove(file)
         }

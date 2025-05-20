@@ -56,12 +56,19 @@ class CodeLensProvider(private val project: Project, private val cs: CoroutineSc
 
     internal fun loadCodeLens(file: VirtualFile, documentInfo: DocumentInfo) {
         //don't launch if there is no connection to backend
-        if (BackendConnectionMonitor.getInstance(project).isConnectionError()) return
+        if (BackendConnectionMonitor.getInstance(project).isConnectionError()){
+            if (logger.isTraceEnabled) {
+                Log.log(logger::trace, "loading code lens for file called but no connection {}", file)
+            }
+            return
+        }
 
+        if (logger.isTraceEnabled) {
+            Log.log(logger::trace, "starting loadCodeLens job for {}", file)
+        }
         runningLoadJobs[file]?.cancel(CancellationException("CodeLensProvider.loadCodeLens called again before previous job finished"))
         val job = cs.launch {
             if (!isValidVirtualFile(file)) return@launch
-            Log.log(logger::trace, "loading code lens for file {}", file)
             loadCodeLensInternal(file, documentInfo)
         }
         runningLoadJobs[file] = job
@@ -98,15 +105,23 @@ class CodeLensProvider(private val project: Project, private val cs: CoroutineSc
 
 
     internal fun removeCodeLens(file: VirtualFile) {
+        if (logger.isTraceEnabled) {
+            Log.log(logger::trace, "starting removeCodeLens job for {}", file)
+        }
         runningLoadJobs[file]?.cancel()
         cs.launch {
-            Log.log(logger::trace, "removing code lens for file {}", file)
+            if (logger.isTraceEnabled) {
+                Log.log(logger::trace, "removing code lens for file {}", file)
+            }
             codeLensCache.remove(file)
             project.messageBus.syncPublisher(CodeLensChanged.CODELENS_CHANGED_TOPIC).codelensRemoved(file)
         }
     }
 
     internal fun clearCodeLens() {
+        if (logger.isTraceEnabled) {
+            Log.log(logger::trace, "starting clearCodeLens job")
+        }
         cs.launch {
             Log.log(logger::trace, "clearing code lens")
             runningLoadJobs.values.forEach { it.cancel(CancellationException("CodeLensProvider.clearCodeLens called before previous job finished")) }
@@ -118,19 +133,31 @@ class CodeLensProvider(private val project: Project, private val cs: CoroutineSc
 
     internal fun refresh() {
         //don't launch if there is no connection to backend
-        if (BackendConnectionMonitor.getInstance(project).isConnectionError()) return
+        if (BackendConnectionMonitor.getInstance(project).isConnectionError()){
+            if (logger.isTraceEnabled) {
+                Log.log(logger::trace, "refresh code lens for called but no connection")
+            }
+            return
+        }
 
         runningRefreshJobs.forEach { it.cancel(CancellationException("CodeLensProvider.refresh called again before previous job finished")) }
         val job = cs.launch {
-            Log.log(logger::trace, "refreshing code lens")
+            if (logger.isTraceEnabled) {
+                Log.log(logger::trace, "refreshing code lens")
+            }
             val files = codeLensCache.keys.toList()
             files.forEach { file ->
                 val documentInfo = DocumentInfoStorage.getInstance(project).getDocumentInfo(file)
                 if (documentInfo != null) {
-                    Log.log(logger::trace, "refreshing code lens for file {}", file)
+                    if (logger.isTraceEnabled) {
+                        Log.log(logger::trace, "refreshing code lens for file {}", file)
+                    }
                     loadCodeLens(file, documentInfo)
                 } else {
-                    Log.log(logger::trace, "no document info to refresh for file {}", file)
+                    if (logger.isTraceEnabled) {
+                        Log.log(logger::trace, "no document info to refresh for file {}. removing code lens", file)
+                    }
+                    removeCodeLens(file)
                 }
             }
         }
@@ -148,6 +175,4 @@ class CodeLensProvider(private val project: Project, private val cs: CoroutineSc
     fun getCodeLens(file: VirtualFile): Set<CodeLens> {
         return codeLensCache.getOrPut(file) { emptySet() }
     }
-
-
 }

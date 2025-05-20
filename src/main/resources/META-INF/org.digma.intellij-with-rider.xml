@@ -11,7 +11,7 @@
     </extensions>
 
     <projectListeners>
-        <listener class="org.digma.intellij.plugin.rider.protocol.RiderCodelensListener"
+        <listener class="org.digma.intellij.plugin.rider.protocol.CodeLensHost$CodeLensHostCodelensListener"
                   topic="org.digma.intellij.plugin.codelens.provider.CodeLensChanged"/>
     </projectListeners>
 

@@ -4,14 +4,17 @@ import common.currentProfile
 import common.dynamicPlatformType
 import common.platformVersion
 import common.useBinaryInstaller
-import common.withSilenceLogging
-import de.undercouch.gradle.tasks.download.Download
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
+import java.net.URI
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 import java.util.Properties
 
 plugins {
     id("plugin-library")
 }
+
+val generatedResourcesDirName = "generated-resources"
 
 //todo: modules that need to build with Idea can always use IC , there is no real need to build with IU
 //this module should always build with IC or IU.
@@ -52,53 +55,53 @@ dependencies {
     }
 }
 
-
-//prepare properties for downloadOtelJars during the configuration phase to support configuration cache
-val jarsUrls: List<String> by lazy {
-    val propsFile = layout.projectDirectory.file("src/main/resources/jars-urls.properties").asFile
-    Properties().apply {
-        propsFile.inputStream().use { load(it) }
-    }.values.toList().map { it.toString() }
-}
-val otelJarTmpDir = layout.buildDirectory.dir("generated/otelJars")
-val resourceOtelJarDir: Provider<File> = provider {
-    val resourcesDir = project.the<SourceSetContainer>()["main"].output.resourcesDir
-        ?: error("resourcesDir is not set. You may need to set it manually or use processResources destinationDir.")
-    File(resourcesDir, "otelJars")
+sourceSets {
+    main {
+        resources {
+            srcDir(layout.buildDirectory.dir(generatedResourcesDirName))
+        }
+    }
 }
 
 tasks {
 
-    val downloadOtelJars = register("downloadOtelJars", Download::class.java) {
-        notCompatibleWithConfigurationCache("downloadOtelJars is not yet compatible with configuration cache")
+    val downloadOtelJars by registering {
 
-        src(jarsUrls)
-        dest(otelJarTmpDir)
-        overwrite(false)
-        onlyIfModified(true)
-        doFirst {
-            withSilenceLogging {
-                logger.lifecycle("$name: jars to download $jarsUrls")
+        val propsFile = layout.projectDirectory.file("src/main/resources/jars-urls.properties")
+        val outputDirProperty = layout.buildDirectory.file("$generatedResourcesDirName/otelJars")
+
+        inputs.file(propsFile)
+        outputs.dir(outputDirProperty)
+
+        doLast {
+            val props = Properties().apply {
+                load(propsFile.asFile.inputStream())
+            }
+
+            val outputDir = outputDirProperty.get().asFile
+            outputDir.mkdirs()
+
+            val nameMap = mapOf(
+                "otel-agent" to "opentelemetry-javaagent.jar",
+                "digma-extension" to "digma-otel-agent-extension.jar",
+                "digma-agent" to "digma-agent.jar"
+            )
+
+            props.forEach { (key, value) ->
+                val finalName = nameMap[key] ?: throw GradleException("Unknown key in properties file: $key")
+                val url = value.toString()
+                val outputFile = outputDir.resolve(finalName)
+
+                logger.lifecycle("Downloading $url → ${outputFile.name}")
+                URI(url).toURL().openStream().use { input ->
+                    Files.copy(input, outputFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
+                }
             }
         }
     }
 
-    val renameOtelJars = register<Copy>("renameOtelJars") {
-        //strip versions from the jars
-
-        dependsOn(downloadOtelJars)
-
-        from(otelJarTmpDir)
-        into(resourceOtelJarDir)
-
-        rename(".*digma-otel-agent-extension.*", "digma-otel-agent-extension.jar")
-        rename(".*digma-agent.*", "digma-agent.jar")
-        rename(".*opentelemetry-javaagent.*", "opentelemetry-javaagent.jar")
-    }
-
-
 
     processResources {
-        dependsOn(renameOtelJars)
+        dependsOn(downloadOtelJars)
     }
 }

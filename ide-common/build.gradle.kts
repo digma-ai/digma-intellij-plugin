@@ -1,15 +1,16 @@
-import common.BuildProfiles
-import common.BuildProfiles.greaterThan
-import common.currentProfile
 import common.dynamicPlatformType
 import common.platformVersion
 import common.useBinaryInstaller
-import de.undercouch.gradle.tasks.download.Download
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
+import java.net.URI
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 
 plugins {
     id("plugin-library")
 }
+
+val generatedResourcesDirName = "generated-resources"
 
 //ide-common module should build with different platform types, if running rider with runIde or building
 // with buildWithRider=true it should build with RD,
@@ -44,32 +45,43 @@ dependencies {
     }
 }
 
+sourceSets {
+    main {
+        resources {
+            srcDir(layout.buildDirectory.dir(generatedResourcesDirName))
+        }
+    }
+}
 
 tasks {
 
     val uiVersionFile = project.rootProject.file("ui-version")
-    val uiVersion = uiVersionFile.readText()
-    //the directory inside the jar to package to
-    val uiBundleDir = File(project.sourceSets.main.get().output.resourcesDir, "ui-bundle")
-    val uiBundleFile = File(uiBundleDir, "digma-ui-$uiVersion.zip")
+    val uiBundleDirProperty = layout.buildDirectory.dir("$generatedResourcesDirName/ui-bundle")
 
-    val downloadUiBundle by registering(Download::class) {
-
+    val downloadUiBundle by registering{
         inputs.files(uiVersionFile)
-        outputs.files(uiBundleFile)
+        outputs.dir(uiBundleDirProperty)
 
-        src(
-            listOf(
-                "https://github.com/digma-ai/digma-ui/releases/download/v$uiVersion/dist-jetbrains-v$uiVersion.zip"
-            )
-        )
-        dest(uiBundleFile)
-        retries(3)
+        doLast {
+            val outputDir = uiBundleDirProperty.get().asFile
+            outputDir.mkdirs()
+
+            val uiVersion = uiVersionFile.readText()
+            val url = "https://github.com/digma-ai/digma-ui/releases/download/v$uiVersion/dist-jetbrains-v$uiVersion.zip"
+            val uiBundleFileName = "digma-ui-$uiVersion.zip"
+            val uiBundleFile = outputDir.resolve(uiBundleFileName)
+
+            logger.lifecycle("Downloading $url → ${uiBundleFile.name}")
+            URI(url).toURL().openStream().use { input ->
+                Files.copy(input, uiBundleFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
+            }
+        }
     }
+
 
     val createUiBundleVersionFile by registering(Copy::class) {
         from(uiVersionFile)
-        into(uiBundleDir)
+        into(uiBundleDirProperty)
     }
 
 

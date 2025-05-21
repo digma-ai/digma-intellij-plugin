@@ -1,4 +1,3 @@
-import common.currentProfile
 import common.logBuildProfile
 import common.logIntellijPlatformPlugin
 import common.withSilenceLogging

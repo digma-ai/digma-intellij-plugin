@@ -71,10 +71,14 @@ class TestsUpdater(private val project: Project) : Disposable {
         }
 
         try {
-            var spanCodeObjectIds: Set<String> = setOf()
-            if (scope.spanCodeObjectId.isNotEmpty())
-                spanCodeObjectIds = setOf(scope.spanCodeObjectId)
 
+            val spanCodeObjectId = scope.spanCodeObjectId
+            if (spanCodeObjectId.isEmpty()) {
+                Log.log(logger::warn, "updateTestsData was called but scope.spanCodeObjectId is null or empty")
+                return
+            }
+
+            val spanCodeObjectIds = setOf(spanCodeObjectId)
             val testsOfSpanJson = project.service<TestsService>()
                 .getLatestTestsOfSpan(TestsScopeRequest(spanCodeObjectIds, scope.methodId, null), lastKnownFilterForLatestTests)
             Log.log(logger::trace, project, "got tests of span {}", testsOfSpanJson)

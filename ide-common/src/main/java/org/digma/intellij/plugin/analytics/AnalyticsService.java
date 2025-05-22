@@ -523,7 +523,7 @@ public class AnalyticsService implements Disposable {
     }
 
     @NotNull
-    public InsightsStatsResult getInsightsStats(String spanCodeObjectId, String insightTypes, String services) {
+    public InsightsStatsResult getInsightsStats(@Nullable String spanCodeObjectId, String insightTypes, String services) {
         try {
             var envId = getCurrentEnvironmentId();
             var params = new HashMap<String, Object>();

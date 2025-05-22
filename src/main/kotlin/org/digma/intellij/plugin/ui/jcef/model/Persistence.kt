@@ -7,7 +7,7 @@ import org.digma.intellij.plugin.ui.jcef.JCEFGlobalConstants
 import java.beans.ConstructorProperties
 
 
-enum class Scope {
+enum class JCefPersistenceScope {
     application, project
 }
 
@@ -24,7 +24,7 @@ constructor(
 class SaveToPersistencePayload
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 @ConstructorProperties("key", "value", "scope")
-constructor(val key: String, val value: JsonNode, val scope: Scope)
+constructor(val key: String, val value: JsonNode, val scope: JCefPersistenceScope)
 
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -40,7 +40,7 @@ constructor(
 class GetFromPersistencePayload
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 @ConstructorProperties("key", "scope")
-constructor(val key: String, val scope: Scope)
+constructor(val key: String, val scope: JCefPersistenceScope)
 
 
 class SetFromPersistenceMessage(val payload: SetFromPersistenceMessagePayload) {
@@ -48,4 +48,4 @@ class SetFromPersistenceMessage(val payload: SetFromPersistenceMessagePayload) {
     val action = JCEFGlobalConstants.GLOBAL_SET_FROM_PERSISTENCE
 }
 
-class SetFromPersistenceMessagePayload(val key: String, val value: JsonNode?, val scope: Scope, val error: ErrorPayload? = null)
+class SetFromPersistenceMessagePayload(val key: String, val value: JsonNode?, val scope: JCefPersistenceScope, val error: ErrorPayload? = null)

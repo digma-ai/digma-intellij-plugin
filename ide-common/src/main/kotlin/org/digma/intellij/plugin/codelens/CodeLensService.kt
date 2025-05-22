@@ -205,39 +205,9 @@ class CodeLensService(private val project: Project) : Disposable {
         private val lens: CodeLens,
         private val project: Project,
     ) : (MouseEvent?, Editor) -> Unit {
-        private val logger: Logger = Logger.getInstance(this::class.java)
-        private val elementPointer = SmartPointerManager.createPointer(element)
+        private val codelensClickHandler = CodeLensClickHandler(project,lens,SmartPointerManager.createPointer(element))
         override fun invoke(event: MouseEvent?, editor: Editor) {
-            try {
-                ActivityMonitor.getInstance(project).registerLensClicked(lens.id)
-                elementPointer.element?.let {
-                    if (it is Navigatable && it.canNavigateToSource()) {
-                        it.navigate(true)
-                    } else {
-                        //it's a fallback. sometimes the psiMethod.canNavigateToSource is false and really the
-                        //navigation doesn't work. I can't say why. usually it happens when indexing is not ready yet,
-                        // and the user opens files, selects tabs or moves the caret. then when indexing is finished
-                        // we have the list of methods but then psiMethod.navigate doesn't work.
-                        // navigation to source using the editor does work in these circumstances.
-                        val selectedEditor = FileEditorManager.getInstance(project).selectedTextEditor
-                        selectedEditor?.caretModel?.moveToOffset(it.textOffset)
-                    }
-                }
-
-                val scopeCodeObjectId = lens.scopeCodeObjectId
-                if (scopeCodeObjectId == null){
-                    NotificationUtil.notifyFadingInfo(project,"No asset found for method: ${lens.codeMethod}")
-                }else{
-                    Backgroundable.ensurePooledThreadWithoutReadAccess {
-                        val contextPayload = objectToJsonNode(ChangeScopeMessagePayload(lens))
-                        val scopeContext = ScopeContext("IDE/CODE_LENS_CLICKED", contextPayload)
-                        ScopeManager.getInstance(project).changeScope(SpanScope(scopeCodeObjectId), scopeContext, null)
-                    }
-                }
-            } catch (e: Exception) {
-                Log.warnWithException(logger, project, e, "error in ClickHandler {}", e)
-                ErrorReporter.getInstance().reportError(project, "${this::class.simpleName}.ClickHandler.invoke", e)
-            }
+            codelensClickHandler.handle()
         }
     }
 

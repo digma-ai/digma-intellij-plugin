@@ -261,16 +261,16 @@ fun sendRunConfigurationAttributes(
 }
 
 
-fun sendGenericPluginEventStringPayload(project: Project, cefBrowser: CefBrowser, name: String, payload: String? = null) {
-    val jsonNode: JsonNode? = payload?.let {
-        try {
-            CommonObjectMapper.objectMapper.readTree(payload)
-        } catch (e: Throwable) {
-            null
-        }
-    }
-    sendGenericPluginEvent(project, cefBrowser, name, jsonNode)
-}
+//fun sendGenericPluginEventStringPayload(project: Project, cefBrowser: CefBrowser, name: String, payload: String? = null) {
+//    val jsonNode: JsonNode? = payload?.let {
+//        try {
+//            CommonObjectMapper.objectMapper.readTree(payload)
+//        } catch (e: Throwable) {
+//            null
+//        }
+//    }
+//    sendGenericPluginEvent(project, cefBrowser, name, jsonNode)
+//}
 
 
 fun sendGenericPluginEvent(project: Project, cefBrowser: CefBrowser, name: String, payload: JsonNode? = null) {

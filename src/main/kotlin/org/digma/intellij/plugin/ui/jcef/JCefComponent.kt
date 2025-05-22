@@ -299,7 +299,11 @@ private constructor(
         project.messageBus.connect(parentDisposable).subscribe(
             ScopeChangedEvent.SCOPE_CHANGED_TOPIC, object : ScopeChangedEvent {
                 override fun scopeChanged(
-                    scope: SpanScope?, codeLocation: CodeLocation, hasErrors: Boolean, scopeContext: ScopeContext?, environmentId: String?
+                    scope: SpanScope?,
+                    codeLocation: CodeLocation,
+                    hasErrors: Boolean,
+                    scopeContext: ScopeContext?,
+                    environmentId: String?
                 ) {
                     try {
                         val insightsStats = AnalyticsService.getInstance(project).getInsightsStats(scope?.spanCodeObjectId, null, null)
@@ -528,7 +532,8 @@ private constructor(
 }
 
 
-class LifeSpanHandle(private val schemeHandlerFactory: BaseSchemeHandlerFactory, private val url: String, private val appName: String) : CefLifeSpanHandlerAdapter() {
+class LifeSpanHandle(private val schemeHandlerFactory: BaseSchemeHandlerFactory, private val url: String, private val appName: String) :
+    CefLifeSpanHandlerAdapter() {
 
     override fun onAfterCreated(browser: CefBrowser) {
 
@@ -538,7 +543,7 @@ class LifeSpanHandle(private val schemeHandlerFactory: BaseSchemeHandlerFactory,
                 schemeHandlerFactory.getSchema(), schemeHandlerFactory.getDomain(), schemeHandlerFactory
             )
 
-            if(MAIN_APP_APP_NAME == appName) {
+            if (MAIN_APP_APP_NAME == appName) {
                 val mailtoSchemaHandlerFactory = MailtoSchemaHandlerFactory()
                 CefApp.getInstance().registerSchemeHandlerFactory(
                     mailtoSchemaHandlerFactory.getSchema(), mailtoSchemaHandlerFactory.getDomain(), mailtoSchemaHandlerFactory

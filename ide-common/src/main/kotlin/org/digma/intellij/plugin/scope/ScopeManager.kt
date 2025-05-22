@@ -36,11 +36,11 @@ class ScopeManager(private val project: Project) {
         EDT.assertNonDispatchThread()
 
         //must happen before firing the event
-        if (!environmentId.isNullOrBlank()){
-            setCurrentEnvironmentById(project,environmentId)
+        if (!environmentId.isNullOrBlank()) {
+            setCurrentEnvironmentById(project, environmentId)
         }
 
-        fireScopeChangedEvent(null, CodeLocation(listOf(), listOf()), false, scopeContext,environmentId)
+        fireScopeChangedEvent(null, CodeLocation(listOf(), listOf()), false, scopeContext, environmentId)
 
         EDT.ensureEDT {
             //don't do that on first wizard launch to let user complete the installation wizard.
@@ -64,7 +64,6 @@ class ScopeManager(private val project: Project) {
     ) {
 
         EDT.assertNonDispatchThread()
-
 
         try {
             when (scope) {
@@ -91,8 +90,8 @@ class ScopeManager(private val project: Project) {
     ) {
 
         //must happen before anything else
-        if (!environmentId.isNullOrBlank()){
-            setCurrentEnvironmentById(project,environmentId)
+        if (!environmentId.isNullOrBlank()) {
+            setCurrentEnvironmentById(project, environmentId)
         }
 
         val spanScopeInfo = try {
@@ -102,10 +101,10 @@ class ScopeManager(private val project: Project) {
             null
         }
 
-        val methodId = spanScopeInfo?.methodCodeObjectId ?: tryGetMethodIdForSpan(scope.spanCodeObjectId)
-        methodId?.let {
-            scope.methodId = CodeObjectsUtil.addMethodTypeToId(it)
-        }
+        //maybe the scope has methodId already, if not try to find it.
+        //in any case add a method type to scope.methodId.
+        val methodId = scope.methodId ?: spanScopeInfo?.methodCodeObjectId ?: tryGetMethodIdForSpan(scope.spanCodeObjectId)
+        scope.methodId = methodId?.let { CodeObjectsUtil.addMethodTypeToId(it) }
         scope.displayName = spanScopeInfo?.displayName ?: ""
         scope.role = spanScopeInfo?.role
 
@@ -153,7 +152,8 @@ class ScopeManager(private val project: Project) {
         scope: SpanScope?, codeLocation: CodeLocation, hasErrors: Boolean, scopeContext: ScopeContext?, environmentId: String?,
     ) {
         project.messageBus.syncPublisher(ScopeChangedEvent.SCOPE_CHANGED_TOPIC)
-            .scopeChanged(scope, codeLocation, hasErrors, scopeContext,environmentId)
+            .scopeChanged(scope, codeLocation, hasErrors, scopeContext, environmentId)
     }
+
 
 }

@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.420] - 2025-05-19
+## [2.0.421] - 2025-05-22
+
+- error-hotsopt-lens-click Closes #2699 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2731
+
+## 2.0.420 - 2025-05-19
 
 - fix-semantic-version-plugin by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2730
 

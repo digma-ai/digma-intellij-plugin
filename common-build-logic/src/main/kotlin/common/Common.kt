@@ -1,6 +1,8 @@
 package common
 
+import org.gradle.api.GradleException
 import org.gradle.api.Project
+import org.gradle.internal.cc.base.logger
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import org.jetbrains.intellij.platform.gradle.extensions.IntelliJPlatformExtension
 
@@ -52,3 +54,24 @@ fun logIntellijPlatformPlugin(project: Project, intellijPlatform: IntelliJPlatfo
 
 
 fun isWindows() = org.gradle.internal.os.OperatingSystem.current().isWindows
+
+
+fun <T> withRetry(
+    maxAttempts: Int = 3,
+    delayMillis: Long = 1000,
+    block: () -> T
+): T {
+    var lastError: Exception? = null
+    repeat(maxAttempts) { attempt ->
+        try {
+            return block()
+        } catch (e: Exception) {
+            lastError = e
+            logger.lifecycle("Retry $attempt failed: ${e.message}")
+            if (attempt < maxAttempts - 1) {
+                Thread.sleep(delayMillis * (attempt + 1)) // simple linear backoff
+            }
+        }
+    }
+    throw GradleException("Failed after $maxAttempts attempts", lastError)
+}

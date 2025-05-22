@@ -4,11 +4,13 @@ import common.currentProfile
 import common.dynamicPlatformType
 import common.platformVersion
 import common.useBinaryInstaller
+import common.withRetry
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import java.net.URI
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.util.Properties
+import kotlin.time.Duration.Companion.seconds
 
 plugins {
     id("plugin-library")
@@ -93,8 +95,10 @@ tasks {
                 val outputFile = outputDir.resolve(finalName)
 
                 logger.lifecycle("Downloading $url → ${outputFile.name}")
-                URI(url).toURL().openStream().use { input ->
-                    Files.copy(input, outputFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
+                withRetry(maxAttempts = 3, delayMillis = 5.seconds.inWholeMilliseconds) {
+                    URI(url).toURL().openStream().use { input ->
+                        Files.copy(input, outputFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
+                    }
                 }
             }
         }

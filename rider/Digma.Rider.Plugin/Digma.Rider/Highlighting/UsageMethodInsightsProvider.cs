@@ -11,18 +11,20 @@ namespace Digma.Rider.Highlighting
     [SolutionComponent(Instantiation.ContainerAsyncPrimaryThread)]
 #else
     [SolutionComponent]
-#endif    
+#endif
 
     public class UsageMethodInsightsProvider : BaseMethodInsightsProvider
     {
-        public UsageMethodInsightsProvider(ISolution solution,ILogger logger,ShowToolWindowHost showToolWindowHost)
-            : base(solution,logger,showToolWindowHost)
-        {}
+        public UsageMethodInsightsProvider(ISolution solution, ILogger logger, ShowToolWindowHost showToolWindowHost,
+            LanguageServiceHost languageServiceHost)
+            : base(solution, logger, showToolWindowHost, languageServiceHost)
+        {
+        }
 
         public override string ProviderId => nameof(UsageMethodInsightsProvider);
         public override string DisplayName => "Usage Method Hints";
-        
-       public new ICollection<CodeVisionRelativeOrdering> RelativeOrderings => new CodeVisionRelativeOrdering[]
+
+        public new ICollection<CodeVisionRelativeOrdering> RelativeOrderings => new CodeVisionRelativeOrdering[]
             { new CodeVisionRelativeOrderingAfter(nameof(ErrorHotspotMethodInsightsProvider)) };
     }
 }

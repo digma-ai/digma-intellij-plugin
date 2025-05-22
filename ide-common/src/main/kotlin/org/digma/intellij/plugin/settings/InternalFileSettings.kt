@@ -52,5 +52,8 @@ object InternalFileSettings {
         return getProperty("UIVersioningService.monitor.delay.seconds")?.toInt() ?: defaultValue
     }
 
+    fun getCodeContextUpdateServiceDelayMillis(defaultValue: Long): Long {
+        return getProperty("CodeContextUpdateService.delay.millis")?.toLong() ?: defaultValue
+    }
 
 }

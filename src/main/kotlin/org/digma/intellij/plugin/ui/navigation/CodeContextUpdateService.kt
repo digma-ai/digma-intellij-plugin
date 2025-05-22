@@ -13,6 +13,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.openapi.wm.ex.ToolWindowManagerListener
+import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -29,6 +30,7 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret
 import org.digma.intellij.plugin.psi.LanguageServiceProvider
+import org.digma.intellij.plugin.settings.InternalFileSettings
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlin.coroutines.cancellation.CancellationException
@@ -54,6 +56,7 @@ class CodeContextUpdateService(private val project: Project, private val cs: Cor
     private var latestMethodUnderCaret: MethodUnderCaret? = null
     private var latestMethodInfo: MethodInfo? = null
     private val startStopLock = ReentrantLock(true)
+    private val delayMillis = InternalFileSettings.getCodeContextUpdateServiceDelayMillis(1000)
 
     init {
 
@@ -127,31 +130,11 @@ class CodeContextUpdateService(private val project: Project, private val cs: Cor
                 return
             }
 
-            job = cs.launch {
+            job = cs.launch(CoroutineName("CodeContextUpdateService")) {
                 while (isActive) {
-
-                    //check if the user is logged in, otherwise there is no point to update the context.
-                    if (shouldRun()) {
-
-                        try {
-
-//                        val (editor,caretOffset) = withContext(Dispatchers.EDT) {
-//                            val editor = FileEditorManager.getInstance(project).selectedTextEditor
-//                            val caretOffset = editor?.caretModel?.offset
-//                            Pair(editor, caretOffset)
-//                        }
-
-//                        val (editor, psiFile,caretOffset) = readAction {
-//                            val editor = FileEditorManager.getInstance(project).selectedTextEditor
-//                            val document = editor?.document
-//                            val file = document?.let { PsiDocumentManager.getInstance(project).getPsiFile(document) }
-//                            if (file?.isValid == true) {
-//                                Triple(editor, file,editor.caretModel.offset)
-//                            } else {
-//                                Triple(null, null,null)
-//                            }
-//                        }
-
+                    try {
+                        //check if the user is logged in, otherwise there is no point to update the context.
+                        if (shouldRun()) {
                             val (editor, caretOffset, file) = readAction {
                                 val editor = currentEditor?.editor
                                 val caretOffset = editor?.caretModel?.offset
@@ -168,7 +151,12 @@ class CodeContextUpdateService(private val project: Project, private val cs: Cor
                                     Log.log(logger::debug, project, "CodeContextUpdateService: no language service for file {}", file.name)
                                     empty()
                                 } else {
-                                    Log.log(logger::debug, project, "CodeContextUpdateService: detecting method under caret for file {}", file.name)
+                                    Log.log(
+                                        logger::debug,
+                                        project,
+                                        "CodeContextUpdateService: detecting method under caret for file {}",
+                                        file.name
+                                    )
                                     val methodUnderCaret = languageService.detectMethodUnderCaret(file, editor, caretOffset)
                                     val methodInfo = findMethodInfo(project, file, methodUnderCaret.id)
                                     //it may be that methodInfo is not found because it is not ready yet, usually it will happen if a document was just opened
@@ -181,7 +169,12 @@ class CodeContextUpdateService(private val project: Project, private val cs: Cor
                                     ) {
                                         latestMethodUnderCaret = methodUnderCaret
                                         latestMethodInfo = methodInfo
-                                        Log.log(logger::debug, project, "CodeContextUpdateService: method under caret changed {}", methodUnderCaret)
+                                        Log.log(
+                                            logger::debug,
+                                            project,
+                                            "CodeContextUpdateService: method under caret changed {}",
+                                            methodUnderCaret
+                                        )
                                         CodeButtonContextService.getInstance(project).contextChanged(methodUnderCaret, methodInfo)
                                     }
                                 }
@@ -190,17 +183,17 @@ class CodeContextUpdateService(private val project: Project, private val cs: Cor
                                 Log.log(logger::debug, project, "CodeContextUpdateService: no editor or no caretOffset or no file")
                                 empty()
                             }
-                        } catch (e: CancellationException) {
-                            throw e // 🔁 RE-THROW cancellation to properly cancel the coroutine
-                        } catch (t: Throwable) {
-                            // Log error but keep coroutine alive
-                            Log.warnWithException(logger, project, t, "Error updating code context")
-                            ErrorReporter.getInstance().reportError(project, "CodeContextUpdateService.startTask", t)
-                            empty()
                         }
+                    } catch (e: CancellationException) {
+                        throw e // 🔁 RE-THROW cancellation to properly cancel the coroutine
+                    } catch (t: Throwable) {
+                        // Log error but keep coroutine alive
+                        Log.warnWithException(logger, project, t, "Error updating code context")
+                        ErrorReporter.getInstance().reportError(project, "CodeContextUpdateService.startTask", t)
+                        empty()
                     }
 
-                    delay(1000) // for example
+                    delay(delayMillis) // for example
                 }
             }
         }

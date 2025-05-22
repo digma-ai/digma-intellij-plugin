@@ -1,16 +1,16 @@
 package org.digma.intellij.plugin.ui.navigation
 
-import com.intellij.collaboration.async.disposingScope
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.document.findMethodInfo
+import org.digma.intellij.plugin.kotlin.ext.launchWithErrorReporting
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator
 import org.digma.intellij.plugin.notifications.NotificationUtil
@@ -20,7 +20,7 @@ import org.digma.intellij.plugin.ui.navigation.model.InstrumentationResult
 import java.time.Instant
 
 @Service(Service.Level.PROJECT)
-class NavigationService(private val project: Project) : Disposable {
+class NavigationService(private val project: Project, private val cs: CoroutineScope) : Disposable {
 
     private val logger = Logger.getInstance(this::class.java)
 
@@ -49,8 +49,7 @@ class NavigationService(private val project: Project) : Disposable {
         val instrumentationProvider = languageService.getInstrumentationProvider()
         instrumentationProvider.addObservabilityDependency(methodId)
 
-        @Suppress("UnstableApiUsage")
-        this.disposingScope().launch {
+        cs.launchWithErrorReporting("NavigationService.fixMissingDependencies", logger) {
 
             val startTime = Instant.now()
             var observabilityInfo = instrumentationProvider.buildMethodObservabilityInfo(methodId)
@@ -79,12 +78,9 @@ class NavigationService(private val project: Project) : Disposable {
         val instrumentationProvider = languageService.getInstrumentationProvider()
         instrumentationProvider.addObservability(methodId)
 
-
-        @Suppress("UnstableApiUsage")
-        this.disposingScope().launch {
-
+        cs.launchWithErrorReporting("NavigationService.addAnnotation", logger) {
             val startTime = Instant.now()
-            var methodInfo = findMethodInfo(project,methodId)
+            var methodInfo = findMethodInfo(project, methodId)
 
             while (isActive &&
                 (methodInfo == null || !methodInfo.hasRelatedCodeObjectIds()) &&
@@ -92,7 +88,7 @@ class NavigationService(private val project: Project) : Disposable {
             ) {
 
                 delay(50)
-                methodInfo = findMethodInfo(project,methodId)
+                methodInfo = findMethodInfo(project, methodId)
             }
 
             if (isActive &&

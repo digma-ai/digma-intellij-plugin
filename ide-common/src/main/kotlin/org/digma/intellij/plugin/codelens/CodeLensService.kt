@@ -23,12 +23,12 @@ import com.intellij.psi.SmartPointerManager
 import io.ktor.util.collections.ConcurrentMap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.codelens.provider.CodeLensChanged
 import org.digma.intellij.plugin.codelens.provider.CodeLensProvider
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.objectToJsonNode
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import org.digma.intellij.plugin.kotlin.ext.launchWithErrorReporting
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.lens.CodeLens
 import org.digma.intellij.plugin.notifications.NotificationUtil
@@ -143,10 +143,10 @@ class CodeLensService(private val project: Project, private val cs: CoroutineSco
             Log.log(logger::trace, "starting refreshFile job for {}", virtualFile)
         }
         runningJobs[virtualFile]?.cancel(CancellationException("CodeLensService.refreshFile called again before previous job finished"))
-        val job = cs.launch {
+        val job = cs.launchWithErrorReporting("CodeLensService.refreshFile", logger) {
             val editor =
                 FileEditorManager.getInstance(project).getEditors(virtualFile).firstOrNull { editor -> editor is TextEditor } as? TextEditor
-                    ?: return@launch
+                    ?: return@launchWithErrorReporting
             ModificationStampUtil.clearModificationStamp(editor.editor)
             val psiFile = readAction {
                 PsiManager.getInstance(project).findFile(virtualFile)
@@ -161,13 +161,7 @@ class CodeLensService(private val project: Project, private val cs: CoroutineSco
         runningJobs[virtualFile] = job
         job.invokeOnCompletion { cause ->
             runningJobs.remove(virtualFile)
-            //if the cause is not null and not CancellationException, then it means the job failed,
-            if (cause != null && cause !is kotlinx.coroutines.CancellationException) {
-                Log.warnWithException(logger, project, cause, "Error in refreshFile: job failed {}", cause)
-                ErrorReporter.getInstance().reportError(project, "CodeLensService.refreshFile", cause)
-            }
         }
-
     }
 
 

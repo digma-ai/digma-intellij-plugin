@@ -16,11 +16,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.digma.intellij.plugin.codelens.provider.CodeLensChanged
 import org.digma.intellij.plugin.codelens.provider.CodeLensProvider
-import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import org.digma.intellij.plugin.kotlin.ext.launchWithErrorReporting
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.lens.CodeLens
 import org.jetbrains.annotations.NotNull
@@ -63,7 +62,7 @@ class CodeLensHost(project: Project, private val cs: CoroutineScope) : Lifetimed
             Log.log(logger::trace, "starting installCodeLens job for {}", virtualFile)
         }
         runningJobs[virtualFile]?.cancel(CancellationException("new installCodeLens job started"))
-        val job = cs.launch {
+        val job = cs.launchWithErrorReporting("CodeLensHost.installCodeLens", logger) {
             if (logger.isTraceEnabled) {
                 Log.log(logger::trace, "Refreshing code lens for {}", virtualFile)
             }
@@ -77,11 +76,6 @@ class CodeLensHost(project: Project, private val cs: CoroutineScope) : Lifetimed
         runningJobs[virtualFile] = job
         job.invokeOnCompletion { cause ->
             runningJobs.remove(virtualFile)
-            //if the cause is not null and not CancellationException, then it means the job failed,
-            if (cause != null && cause !is CancellationException) {
-                Log.warnWithException(logger, project, cause, "Error in installCodeLens: job failed {}", cause)
-                ErrorReporter.getInstance().reportError(project, "CodeLensHost.installCodeLens", cause)
-            }
         }
     }
 
@@ -91,7 +85,7 @@ class CodeLensHost(project: Project, private val cs: CoroutineScope) : Lifetimed
             Log.log(logger::trace, "starting removeCodelens job for {}", virtualFile)
         }
         runningJobs[virtualFile]?.cancel(CancellationException("new removeCodelens job started"))
-        val job = cs.launch {
+        val job = cs.launchWithErrorReporting("CodeLensHost.removeCodelens", logger) {
             if (logger.isTraceEnabled) {
                 Log.log(logger::trace, "Removing code lens for {}", virtualFile)
             }
@@ -101,11 +95,6 @@ class CodeLensHost(project: Project, private val cs: CoroutineScope) : Lifetimed
         runningJobs[virtualFile] = job
         job.invokeOnCompletion { cause ->
             runningJobs.remove(virtualFile)
-            //if the cause is not null and not CancellationException, then it means the job failed,
-            if (cause != null && cause !is CancellationException) {
-                Log.warnWithException(logger, project, cause, "Error in removeCodelens: job failed {}", cause)
-                ErrorReporter.getInstance().reportError(project, "CodeLensHost.removeCodelens", cause)
-            }
         }
     }
 
@@ -139,7 +128,6 @@ class CodeLensHost(project: Project, private val cs: CoroutineScope) : Lifetimed
             model.reanalyze.fire(psiId)
         }
     }
-
 
 
     private suspend fun installCodeLens(@NotNull file: VirtualFile, @NotNull codeLenses: Set<CodeLens>) {
@@ -186,7 +174,7 @@ class CodeLensHost(project: Project, private val cs: CoroutineScope) : Lifetimed
 
     private fun CodeLens.toRiderCodeLensInfo(psiUri: String) = RiderCodeLensInfo(
         id = id,
-        codeObjectId = codeMethod,
+        methodCodeObjectId = codeMethod,
         scopeCodeObjectId = scopeCodeObjectId,
         lensTitle = lensTitle,
         lensDescription = lensDescription,

@@ -17,6 +17,7 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiTreeAnyChangeAbstractAdapter
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -28,6 +29,8 @@ import org.apache.commons.codec.digest.DigestUtils
 import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.psi.isJvmSupportedFile
+import org.digma.intellij.plugin.kotlin.ext.launchWhileActiveWithErrorReporting
+import org.digma.intellij.plugin.kotlin.ext.launchWithErrorReporting
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.withDebuggingEvents
@@ -40,6 +43,7 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlin.math.min
 import kotlin.time.Duration.Companion.ZERO
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
@@ -142,59 +146,46 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
 
 
     private fun launchQuitePeriodManager(): Job {
-        return cs.launch {
-
-            Log.log(logger::trace, project, "Starting quite period manager")
-
-            while (isActive) {
-
-                delay(200)
-
-                try {
-
-                    if (changedFiles.isNotEmpty()) {
-                        val now = Clock.System.now()
-                        val quitePeriodFileChange = lastChangedFileEventTime?.let {
-                            now - it
-                        } ?: ZERO
-                        if (quitePeriodFileChange >= quitePeriod) {
-                            val myChangedFiles = changedFiles
-                            changedFiles = createChangedFilesSet()
-                            changedFilesBulks.add(myChangedFiles)
-                        }
-                    }
-
-                    if (bulkEvents.isNotEmpty()) {
-                        val now = Clock.System.now()
-                        val quitePeriodBulkFileEvent = lastBulkFileChangeEventTime?.let {
-                            now - it
-                        } ?: ZERO
-                        if (quitePeriodBulkFileEvent >= quitePeriod) {
-                            val myBulkEvents = bulkEvents
-                            bulkEvents = createBulkEventsList()
-                            bulkEventsBulks.add(myBulkEvents)
-                        }
-                    }
-
-                } catch (e: Throwable) {
-                    Log.warnWithException(logger, project, e, "Exception in NavigationDiscoveryChangeService.launchQuitePeriodManager {}", e)
-                    ErrorReporter.getInstance().reportError(project, "NavigationDiscoveryChangeService.launchQuitePeriodManager", e)
+        Log.log(logger::trace, project, "Starting quite period manager")
+        return cs.launchWhileActiveWithErrorReporting(
+            200.milliseconds,
+            200.milliseconds,
+            "NavigationDiscoveryChangeService.launchQuitePeriodManager",
+            logger
+        ) {
+            if (changedFiles.isNotEmpty()) {
+                val now = Clock.System.now()
+                val quitePeriodFileChange = lastChangedFileEventTime?.let {
+                    now - it
+                } ?: ZERO
+                if (quitePeriodFileChange >= quitePeriod) {
+                    val myChangedFiles = changedFiles
+                    changedFiles = createChangedFilesSet()
+                    changedFilesBulks.add(myChangedFiles)
                 }
             }
 
-            Log.log(logger::trace, project, "quite period manager exited")
+            if (bulkEvents.isNotEmpty()) {
+                val now = Clock.System.now()
+                val quitePeriodBulkFileEvent = lastBulkFileChangeEventTime?.let {
+                    now - it
+                } ?: ZERO
+                if (quitePeriodBulkFileEvent >= quitePeriod) {
+                    val myBulkEvents = bulkEvents
+                    bulkEvents = createBulkEventsList()
+                    bulkEventsBulks.add(myBulkEvents)
+                }
+            }
         }
     }
 
 
     private fun <T> launchBulkProcessingLoop(queue: Queue<Iterable<T>>, itemProcessor: ItemProcessor<T>): Job {
 
-        return cs.launch {
+        return cs.launch(CoroutineName("NavigationDiscoveryChangeService.launchBulkProcessingLoop")) {
             Log.log(logger::trace, project, "Starting bulk processing loop for {}", itemProcessor::class.java)
             while (isActive && isProjectValid(project)) {
-
                 try {
-
                     val bulk = queue.poll()
                     if (bulk == null) {
                         delay(5.seconds)
@@ -208,8 +199,8 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
                         }
                     }
 
-                } catch (ce: CancellationException) {
-                    throw ce
+                } catch (e: CancellationException) {
+                    throw e // ⚠️ Always rethrow to propagate cancellation properly
                 } catch (e: Throwable) {
                     Log.warnWithException(logger, project, e, "Exception in NavigationDiscoveryChangeService.launchBulkProcessingLoop {}", e)
                     ErrorReporter.getInstance().reportError(project, "NavigationDiscoveryChangeService.launchBulkProcessingLoop", e)
@@ -266,7 +257,7 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
             }
 
             Log.log(logger::trace, project, "launching launchFullUpdateJob")
-            launchFullUpdateJob = cs.launch {
+            launchFullUpdateJob = cs.launchWithErrorReporting("NavigationDiscoveryChangeService.launchFullUpdateJob", logger) {
 
                 try {
 
@@ -557,7 +548,7 @@ class NavigationDiscoveryChangeService(private val project: Project, private val
                 //some events fail in toString,avoid it.
                 val toString = try {
                     item.toString()
-                }catch (e:Throwable){
+                } catch (e: Throwable) {
                     ""
                 }
                 Log.warnWithException(logger, project, e, "Exception in FileEventsProcessor.process for {}", toString)

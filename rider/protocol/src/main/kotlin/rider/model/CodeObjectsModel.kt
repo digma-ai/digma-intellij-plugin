@@ -50,7 +50,7 @@ object CodeObjectsModel : Ext(SolutionModel.Solution) {
 
     val RiderCodeLensInfo = structdef {
         field("id", PredefinedType.string)
-        field("codeObjectId", PredefinedType.string)
+        field("methodCodeObjectId", PredefinedType.string)
         field("scopeCodeObjectId", PredefinedType.string.nullable)
         field("lensTitle", PredefinedType.string.nullable)
         field("lensDescription", PredefinedType.string.nullable)

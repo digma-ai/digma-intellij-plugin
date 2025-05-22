@@ -10,9 +10,8 @@ class ShowToolWindowHost(project: Project) : LifetimedProjectComponent(project) 
 
     private val model: ShowToolWindowModel = project.solution.showToolWindowModel
 
-
     init {
-        model.showToolWindow.advise(componentLifetime){
+        model.showToolWindow.advise(componentLifetime) { codeLensInfo: RiderCodeLensInfo? ->
             ToolWindowShower.getInstance(project).showToolWindow()
         }
     }

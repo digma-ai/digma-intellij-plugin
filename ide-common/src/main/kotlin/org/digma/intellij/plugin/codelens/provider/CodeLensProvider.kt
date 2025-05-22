@@ -10,13 +10,12 @@ import io.ktor.util.collections.ConcurrentMap
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.common.isValidVirtualFile
 import org.digma.intellij.plugin.document.DocumentInfoStorage
-import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import org.digma.intellij.plugin.kotlin.ext.launchWhileActiveWithErrorReporting
+import org.digma.intellij.plugin.kotlin.ext.launchWithErrorReporting
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.lens.CodeLens
@@ -42,8 +41,7 @@ class CodeLensProvider(private val project: Project, private val cs: CoroutineSc
     }
 
     init {
-        cs.launch {
-            delay(1.minutes)
+        cs.launchWhileActiveWithErrorReporting(1.minutes,1.minutes,"CodeLensProvider.refreshLoop", logger) {
             refresh()
         }
     }
@@ -56,7 +54,7 @@ class CodeLensProvider(private val project: Project, private val cs: CoroutineSc
 
     internal fun loadCodeLens(file: VirtualFile, documentInfo: DocumentInfo) {
         //don't launch if there is no connection to backend
-        if (BackendConnectionMonitor.getInstance(project).isConnectionError()){
+        if (BackendConnectionMonitor.getInstance(project).isConnectionError()) {
             if (logger.isTraceEnabled) {
                 Log.log(logger::trace, "loading code lens for file called but no connection {}", file)
             }
@@ -67,18 +65,13 @@ class CodeLensProvider(private val project: Project, private val cs: CoroutineSc
             Log.log(logger::trace, "starting loadCodeLens job for {}", file)
         }
         runningLoadJobs[file]?.cancel(CancellationException("CodeLensProvider.loadCodeLens called again before previous job finished"))
-        val job = cs.launch {
-            if (!isValidVirtualFile(file)) return@launch
+        val job = cs.launchWithErrorReporting("CodeLensProvider.loadCodeLens", logger) {
+            if (!isValidVirtualFile(file)) return@launchWithErrorReporting
             loadCodeLensInternal(file, documentInfo)
         }
         runningLoadJobs[file] = job
         job.invokeOnCompletion { cause ->
             runningLoadJobs.remove(file)
-            //if the cause is not null and not CancellationException, then it means the job failed,
-            if (cause != null && cause !is CancellationException) {
-                Log.warnWithException(logger, project, cause, "loadCodeLens.launch: job failed {}", cause)
-                ErrorReporter.getInstance().reportError(project, "CodeLensProvider.loadCodeLens", cause)
-            }
         }
     }
 
@@ -109,7 +102,7 @@ class CodeLensProvider(private val project: Project, private val cs: CoroutineSc
             Log.log(logger::trace, "starting removeCodeLens job for {}", file)
         }
         runningLoadJobs[file]?.cancel()
-        cs.launch {
+        cs.launchWithErrorReporting("CodeLensProvider.removeCodeLens", logger) {
             if (logger.isTraceEnabled) {
                 Log.log(logger::trace, "removing code lens for file {}", file)
             }
@@ -122,7 +115,7 @@ class CodeLensProvider(private val project: Project, private val cs: CoroutineSc
         if (logger.isTraceEnabled) {
             Log.log(logger::trace, "starting clearCodeLens job")
         }
-        cs.launch {
+        cs.launchWithErrorReporting("CodeLensProvider.clearCodeLens", logger) {
             Log.log(logger::trace, "clearing code lens")
             runningLoadJobs.values.forEach { it.cancel(CancellationException("CodeLensProvider.clearCodeLens called before previous job finished")) }
             runningRefreshJobs.forEach { it.cancel(CancellationException("CodeLensProvider.clearCodeLens called before previous job finished")) }
@@ -133,7 +126,7 @@ class CodeLensProvider(private val project: Project, private val cs: CoroutineSc
 
     internal fun refresh() {
         //don't launch if there is no connection to backend
-        if (BackendConnectionMonitor.getInstance(project).isConnectionError()){
+        if (BackendConnectionMonitor.getInstance(project).isConnectionError()) {
             if (logger.isTraceEnabled) {
                 Log.log(logger::trace, "refresh code lens for called but no connection")
             }
@@ -141,7 +134,7 @@ class CodeLensProvider(private val project: Project, private val cs: CoroutineSc
         }
 
         runningRefreshJobs.forEach { it.cancel(CancellationException("CodeLensProvider.refresh called again before previous job finished")) }
-        val job = cs.launch {
+        val job = cs.launchWithErrorReporting("CodeLensProvider.refresh", logger) {
             if (logger.isTraceEnabled) {
                 Log.log(logger::trace, "refreshing code lens")
             }
@@ -164,11 +157,6 @@ class CodeLensProvider(private val project: Project, private val cs: CoroutineSc
         runningRefreshJobs.add(job)
         job.invokeOnCompletion { cause ->
             runningRefreshJobs.remove(job)
-            //if the cause is not null and not CancellationException, then it means the job failed,
-            if (cause != null && cause !is CancellationException) {
-                Log.warnWithException(logger, project, cause, "CodeLensProvider.refresh: job failed {}", cause)
-                ErrorReporter.getInstance().reportError(project, "CodeLensProvider.refresh", cause)
-            }
         }
     }
 

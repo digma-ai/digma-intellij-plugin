@@ -16,15 +16,14 @@ import com.intellij.openapi.vfs.VirtualFile
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.digma.intellij.plugin.common.FileUtils
 import org.digma.intellij.plugin.common.isValidVirtualFile
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import org.digma.intellij.plugin.kotlin.ext.launchWhileActiveWithErrorReporting
+import org.digma.intellij.plugin.kotlin.ext.launchWithErrorReporting
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.psi.LanguageServiceProvider
 import org.digma.intellij.plugin.psi.isSupportedLanguageFile
@@ -62,19 +61,9 @@ class EditorDocumentService(private val project: Project, private val cs: Corout
     private val myDocumentListener = MyDocumentChangeListener()
 
     init {
-        cs.launch {
+        cs.launchWhileActiveWithErrorReporting(1.seconds, 1.seconds, "EditorDocumentService.processDocumentQueue", logger) {
             //runs for the lifetime of the project
-            while (isActive) {
-                try {
-                    delay(1.seconds)
-                    processDocumentQueue()
-                } catch (e: CancellationException) {
-                    throw e // ⚠️ Always rethrow to propagate cancellation properly
-                } catch (e: Throwable) {
-                    Log.warnWithException(logger, e, "Exception in EditorDocumentService.processDocumentQueue {}", e)
-                    ErrorReporter.getInstance().reportError(project, "EditorDocumentService.processDocumentQueue", e)
-                }
-            }
+            processDocumentQueue()
         }
     }
 
@@ -107,8 +96,8 @@ class EditorDocumentService(private val project: Project, private val cs: Corout
     fun fileOpened(file: VirtualFile) {
         try {
             doOnFileOpened(file)
-        }catch (e:Throwable){
-            Log.warnWithException(logger,e,"Exception in fileOpened {}",e)
+        } catch (e: Throwable) {
+            Log.warnWithException(logger, e, "Exception in fileOpened {}", e)
             ErrorReporter.getInstance().reportError(project, "EditorDocumentService.fileOpened", e)
         }
     }
@@ -160,8 +149,8 @@ class EditorDocumentService(private val project: Project, private val cs: Corout
     fun fileClosed(file: VirtualFile) {
         try {
             doOnFileClosed(file)
-        }catch (e:Throwable){
-            Log.warnWithException(logger,e,"Exception in fileClosed {}",e)
+        } catch (e: Throwable) {
+            Log.warnWithException(logger, e, "Exception in fileClosed {}", e)
             ErrorReporter.getInstance().reportError(project, "EditorDocumentService.fileClosed", e)
         }
     }
@@ -191,18 +180,13 @@ class EditorDocumentService(private val project: Project, private val cs: Corout
             Disposer.dispose(it)
         }
 
-        cs.launch {
+        cs.launchWithErrorReporting("EditorDocumentService.fileClosed", logger) {
             try {
                 //if the job is still running, cancel it, so it will not build document info for a closed file
                 removeDocumentFromChangedDocuments(file)
                 filesToUpdate.remove(file)
                 runningJobs[file]?.cancel(CancellationException("File was closed"))
-            } catch (e: CancellationException) {
-                throw e // ⚠️ Always rethrow to propagate cancellation properly
-            } catch (e: Throwable) {
-                Log.warnWithException(logger, e, "Exception in fileClosed {}", e)
-                ErrorReporter.getInstance().reportError(project, "EditorDocumentService.fileClosed", e)
-            } finally {
+            }finally {
                 putRemoveLock.withLock {
                     DocumentInfoStorage.getInstance(project).removeDocumentInfo(file)
                 }
@@ -273,17 +257,11 @@ class EditorDocumentService(private val project: Project, private val cs: Corout
         }
 
         runningJobs[file]?.cancel(CancellationException("New job started"))
-        val job = cs.launch {
+        val job = cs.launchWithErrorReporting("EditorDocumentService.launchBuildDocumentInfoJob", logger) {
             buildDocumentInfo(file)
         }
-
         runningJobs[file] = job
         job.invokeOnCompletion { cause ->
-            //if the cause is not null and not CancellationException, then it means the job failed,
-            if (cause != null && cause !is CancellationException) {
-                Log.warnWithException(logger, project, cause, "launchBuildDocumentInfoJob.launch: job failed {}", cause)
-                ErrorReporter.getInstance().reportError(project, "EditorDocumentService.launchBuildDocumentInfoJob", cause)
-            }
             runningJobs.remove(file)
         }
     }

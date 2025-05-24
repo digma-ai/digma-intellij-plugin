@@ -1,9 +1,11 @@
 package org.digma.intellij.plugin.idea.psi.java
 
+import com.intellij.ide.highlighter.JavaFileType
 import com.intellij.lang.Language
 import com.intellij.lang.java.JavaLanguage
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.service
+import com.intellij.openapi.fileTypes.FileType
 import com.intellij.openapi.project.Project
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.JavaRecursiveElementWalkingVisitor
@@ -38,6 +40,15 @@ import java.util.Objects
 
 @Suppress("LightServiceMigrationCode")
 class JavaLanguageService(project: Project) : AbstractJvmLanguageService(project, project.service<JavaCodeObjectDiscovery>()) {
+
+
+    override fun getLanguage(): Language {
+        return JavaLanguage.INSTANCE
+    }
+
+    override fun getFileType(): FileType {
+        return JavaFileType.INSTANCE
+    }
 
     override fun isSupportedFile(psiFile: PsiFile): Boolean {
         return runInReadAccessWithResult {
@@ -153,7 +164,7 @@ class JavaLanguageService(project: Project) : AbstractJvmLanguageService(project
     //this method is called only from CodeLensService, CodeLensService should handle exceptions
     // the @Throws here is a reminder that this method may throw exception
     @Throws(Throwable::class)
-    override fun findMethodsByCodeObjectIds(psiFile: PsiFile, methodIds: MutableList<String>): Map<String, PsiElement> {
+    override fun findMethodsByCodeObjectIds(psiFile: PsiFile, methodIds: List<String>): Map<String, PsiElement> {
 
         if (methodIds.isEmpty() || !PsiUtils.isValidPsiFile(psiFile)) {
             return emptyMap()

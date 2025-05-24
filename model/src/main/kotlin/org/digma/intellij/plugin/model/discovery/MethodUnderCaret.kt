@@ -31,6 +31,10 @@ data class MethodUnderCaret(
     companion object {
         @JvmStatic
         val EMPTY = MethodUnderCaret("", "", "", "", "", 0, null, false)
+
+        fun empty(url: String): MethodUnderCaret {
+            return MethodUnderCaret("", "", "", "", url, 0, null, false)
+        }
     }
 
     override val type: ElementUnderCaretType = ElementUnderCaretType.Method

@@ -6,13 +6,13 @@ import com.intellij.openapi.project.Project
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import org.digma.intellij.plugin.common.DisposableAdaptor
 import org.digma.intellij.plugin.common.objectToJsonNode
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import org.digma.intellij.plugin.kotlin.ext.launchWithErrorReporting
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.scope.ScopeContext
 import org.digma.intellij.plugin.scope.ScopeManager
@@ -94,7 +94,7 @@ class DigmaProtocolApi(val cs: CoroutineScope) : DisposableAdaptor {
             return "DigmaProtocolCommand no code object id in request"
         }
 
-        cs.launch {
+        cs.launchWithErrorReporting("DigmaProtocolApi.showAsset", logger) {
 
             delayAfterMainAppInitialized()
 
@@ -119,7 +119,7 @@ class DigmaProtocolApi(val cs: CoroutineScope) : DisposableAdaptor {
 
 
     private fun showAssetTab(project: Project, action: String): String? {
-        cs.launch {
+        cs.launchWithErrorReporting("DigmaProtocolApi.showAssetTab", logger) {
 
             delayAfterMainAppInitialized()
 

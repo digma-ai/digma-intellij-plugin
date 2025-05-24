@@ -10,9 +10,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import org.digma.intellij.plugin.kotlin.ext.launchWithErrorReporting
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.livedata.DurationLiveData
 import org.digma.intellij.plugin.ui.jcef.JCEFGlobalConstants
@@ -61,9 +61,9 @@ class LiveViewUpdater(val project: Project, private val cs: CoroutineScope) : Di
 
         Log.log(logger::trace, project, "Got sendLiveData request for: {}", codeObjectId)
 
-        myJob?.cancel()
+        myJob?.cancel(CancellationException("new job arrived"))
 
-        myJob = cs.launch {
+        myJob = cs.launchWithErrorReporting("LiveViewUpdater.sendLiveData", logger) {
 
             Log.log(logger::trace, project, "live view timer started for: {}", codeObjectId)
 
@@ -94,8 +94,7 @@ class LiveViewUpdater(val project: Project, private val cs: CoroutineScope) : Di
                     }
                     delay(5000)
                 } catch (e: CancellationException) {
-                    Log.log(logger::trace, project, "live view timer job canceled for {}", codeObjectId)
-                    break
+                    throw e // ⚠️ Always rethrow to propagate cancellation properly
                 } catch (e: Exception) {
                     Log.warnWithException(logger, project, e, "exception in live data timer")
                     ErrorReporter.getInstance().reportError(project, "LiveViewUpdater.timer", e)

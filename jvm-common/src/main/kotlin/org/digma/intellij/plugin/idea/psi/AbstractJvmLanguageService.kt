@@ -4,17 +4,16 @@ import com.intellij.buildsystem.model.unified.UnifiedCoordinates
 import com.intellij.buildsystem.model.unified.UnifiedDependency
 import com.intellij.externalSystem.DependencyModifierService
 import com.intellij.lang.Language
+import com.intellij.openapi.application.smartReadAction
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
-import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.progress.EmptyProgressIndicator
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
-import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.openapi.util.Computable
@@ -27,6 +26,7 @@ import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
+import kotlinx.coroutines.ensureActive
 import org.digma.intellij.plugin.WITH_SPAN_ANNOTATION_FQN
 import org.digma.intellij.plugin.WITH_SPAN_DEPENDENCY_DESCRIPTION
 import org.digma.intellij.plugin.buildsystem.BuildSystem
@@ -35,15 +35,12 @@ import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.common.Retries
 import org.digma.intellij.plugin.common.allowSlowOperation
-import org.digma.intellij.plugin.common.executeCatchingWithResult
-import org.digma.intellij.plugin.common.executeCatchingWithResultAndRetryIgnorePCE
 import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.common.isValidVirtualFile
 import org.digma.intellij.plugin.common.runInReadAccess
 import org.digma.intellij.plugin.common.runInReadAccessWithResult
-import org.digma.intellij.plugin.document.BuildDocumentInfoProcessContext
-import org.digma.intellij.plugin.document.DocumentInfoService
-import org.digma.intellij.plugin.editor.CaretContextService
+import org.digma.intellij.plugin.common.suspendableRetry
+import org.digma.intellij.plugin.document.DocumentInfoStorage
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.buildsystem.JvmBuildSystemHelperService
 import org.digma.intellij.plugin.idea.deps.ModulesDepsService
@@ -58,9 +55,7 @@ import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret
 import org.digma.intellij.plugin.model.discovery.TextRange
-import org.digma.intellij.plugin.process.assertUnderProgress
 import org.digma.intellij.plugin.psi.LanguageService
-import org.digma.intellij.plugin.psi.PsiFileCachedValueWithUri
 import org.digma.intellij.plugin.psi.PsiFileNotFountException
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.jetbrains.uast.UClass
@@ -70,6 +65,7 @@ import org.jetbrains.uast.getContainingUFile
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.toUElementOfType
 import java.util.function.Consumer
+import kotlin.coroutines.coroutineContext
 
 @Suppress("MemberVisibilityCanBePrivate")
 abstract class AbstractJvmLanguageService(protected val project: Project, protected val codeObjectDiscovery: AbstractCodeObjectDiscovery) :
@@ -94,71 +90,78 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
 
     init {
-        Log.log(logger::trace,"Initializing language service $javaClass")
+        Log.log(logger::trace, "Initializing language service $javaClass")
     }
 
+    override fun dispose() {
 
+    }
 
     //It's a different search for each jvm language.
     abstract fun findClassByClassName(className: String, scope: GlobalSearchScope): UClass?
 
     abstract fun findParentMethod(psiElement: PsiElement): UMethod?
 
-    override fun ensureStartupOnEDT(project: Project) {
-        //nothing to do
+
+    override fun isSupportedFile(virtualFile: VirtualFile): Boolean {
+        return super.isSupportedFile(virtualFile) && !virtualFile.name.contains("package-info.java")
     }
 
-    override fun runWhenSmart(task: Runnable) {
-        if (DumbService.isDumb(project)) {
-            DumbService.getInstance(project).runWhenSmart(task)
-        } else {
-            task.run()
-        }
-    }
+    /**
+     * Builds a DocumentInfo.
+     * This method doesn't handle exceptions and may throw any kind of exception
+     */
+    override suspend fun buildDocumentInfo(virtualFile: VirtualFile): DocumentInfo? {
 
+        /*
+            Important notice:
+            building document info may be a long operation for large files.
+            Holding read access for the whole operation may cause short freezes in the UI if the user is typing.
+            Holding cancelable read access for the whole operation may cause many cancellations and eventually may
+            fail to build the document info.
+            So the strategy here is to hold read access for short periods, only for code that really needs read access,
+            that way the chance for freezes or too many cancellations is minimized.
+         */
 
-    override fun buildDocumentInfo(
-        psiFileCachedValue: PsiFileCachedValueWithUri,
-        selectedTextEditor: FileEditor?,
-        context: BuildDocumentInfoProcessContext,
-    ): DocumentInfo {
-        return buildDocumentInfo(psiFileCachedValue, context)
-    }
-
-    override fun buildDocumentInfo(psiFileCachedValue: PsiFileCachedValueWithUri, context: BuildDocumentInfoProcessContext): DocumentInfo {
-
+        //don't call this method on EDT or in read access, read access is acquired when needed
         EDT.assertNonDispatchThread()
-        //should not be in read access, read access is acquired when necessary to make it short periods
         ReadActions.assertNotInReadAccess()
-        assertUnderProgress()
 
-        val psiFile = psiFileCachedValue.value ?: return DocumentInfo(psiFileCachedValue.uri, mutableMapOf())
+        if (logger.isTraceEnabled) {
+            Log.log(logger::trace, "got buildDocumentInfo request for {}", virtualFile)
+        }
 
-        Log.log(logger::debug, "got buildDocumentInfo request for {}", psiFile)
-
-        if (isProjectValid(project) && PsiUtils.isValidPsiFile(psiFile) && isSupportedFile(psiFile)) {
-
-            val documentInfo = executeCatchingWithResultAndRetryIgnorePCE({
-                codeObjectDiscovery.buildDocumentInfo(project, psiFileCachedValue, context)
-            }, { e ->
-                context.addError("buildDocumentInfo", e)
-                DocumentInfo(psiFileCachedValue.uri, mutableMapOf())
-            })
-
-            return documentInfo
-
-        } else {
-            Log.log(logger::debug, "psi file is not supported or not valid, returning empty DocumentInfo for {}", psiFile)
-            return DocumentInfo(psiFileCachedValue.uri, mutableMapOf())
+        val psiFile = smartReadAction(project) {
+            val psiFile = PsiManager.getInstance(project).findFile(virtualFile)
+            if (psiFile == null) {
+                Log.log(logger::trace, "buildDocumentInfo: could not find psiFile for {}", virtualFile)
+                null
+            } else if (!PsiUtils.isValidPsiFile(psiFile)) {
+                Log.log(logger::trace, "buildDocumentInfo: psiFile is not valid for {}", virtualFile)
+                null
+            } else if (!isSupportedFile(psiFile)) {
+                Log.log(logger::trace, "buildDocumentInfo: psiFile is not supported for {}", virtualFile)
+                null
+            } else if (!isProjectValid(project)) {
+                Log.log(logger::trace, "buildDocumentInfo: project is not valid for {}", virtualFile)
+                null
+            } else {
+                psiFile
+            }
+        }
+        coroutineContext.ensureActive()
+        return psiFile?.let {
+            suspendableRetry {
+                codeObjectDiscovery.buildDocumentInfo(project, it, virtualFile.url, getLanguage())
+            }
         }
     }
-
 
     override fun isSupportedFile(project: Project, newFile: VirtualFile): Boolean {
         return runInReadAccessWithResult {
             return@runInReadAccessWithResult if (isValidVirtualFile(newFile)) {
                 val psiFile = PsiManager.getInstance(project).findFile(newFile)
-                PsiUtils.isValidPsiFile(psiFile) && isSupportedFile(psiFile)
+                psiFile != null && PsiUtils.isValidPsiFile(psiFile) && isSupportedFile(psiFile)
             } else {
                 false
             }
@@ -301,7 +304,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                     null
                 }
 
-            } catch (e: PsiFileNotFountException) {
+            } catch (_: PsiFileNotFountException) {
                 null
             }
         }
@@ -365,34 +368,27 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
     }
 
 
-    override fun detectMethodUnderCaret(project: Project, psiFile: PsiFile, selectedEditor: Editor?, caretOffset: Int): MethodUnderCaret {
+    override suspend fun detectMethodUnderCaret(virtualFile: VirtualFile, editor: Editor, caretOffset: Int): MethodUnderCaret {
 
-        //detectMethodUnderCaret should run very fast and return a result,
-        // this operation may become invalid very soon if user clicks somewhere else.
-        // no retry because it needs to complete very fast
-        //it may be called from EDT or background, runInReadAccessWithResult will acquire read access if necessary.
-        return executeCatchingWithResult({
-            runInReadAccessWithResult {
-                allowSlowOperation<MethodUnderCaret> {
-                    val fileUri = PsiUtils.psiFileToUri(psiFile)
-                    if (!isSupportedFile(psiFile)) {
-                        return@allowSlowOperation MethodUnderCaret("", "", "", "", fileUri, caretOffset, null, false)
-                    }
-                    return@allowSlowOperation detectMethodUnderCaret(psiFile, fileUri, caretOffset)
+        return try {
+            smartReadAction(project) {
+                if (!isSupportedFile(virtualFile)) {
+                    return@smartReadAction MethodUnderCaret.empty(virtualFile.url)
                 }
+                return@smartReadAction detectMethodUnderCaretImpl(virtualFile, caretOffset)
             }
-        }, { e ->
+        } catch (e: Exception) {
             ErrorReporter.getInstance().reportError(project, "${this::class.java.simpleName}.detectMethodUnderCaret", e)
-            MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), caretOffset, null, false)
-        })
+            MethodUnderCaret.empty(virtualFile.url)
+        }
     }
 
 
-    private fun detectMethodUnderCaret(psiFile: PsiFile, fileUri: String, caretOffset: Int): MethodUnderCaret {
+    private fun detectMethodUnderCaretImpl(virtualFile: VirtualFile, caretOffset: Int): MethodUnderCaret {
 
+        val psiFile = PsiManager.getInstance(project).findFile(virtualFile) ?: return MethodUnderCaret.empty(virtualFile.url)
         val packageName = psiFile.toUElementOfType<UFile>()?.packageName ?: ""
-        val underCaret: PsiElement =
-            psiFile.findElementAt(caretOffset) ?: return MethodUnderCaret("", "", "", packageName, fileUri, caretOffset)
+        val underCaret: PsiElement = psiFile.findElementAt(caretOffset) ?: return MethodUnderCaret.empty(virtualFile.url)
         val uMethod = findParentMethod(underCaret)
         val className: String = uMethod?.getParentOfType<UClass>()?.let {
             getClassSimpleName(it)
@@ -401,26 +397,26 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
         if (uMethod != null) {
 
             val methodId = createMethodCodeObjectId(uMethod)
-            val endpointTextRange = findEndpointTextRange(fileUri, caretOffset, methodId)
+            val endpointTextRange = findEndpointTextRange(virtualFile, caretOffset, methodId)
 
             return MethodUnderCaret(
                 methodId,
                 uMethod.name,
                 className,
                 packageName,
-                fileUri,
+                virtualFile.url,
                 caretOffset,
                 endpointTextRange
             )
         }
-        return MethodUnderCaret("", "", className, packageName, fileUri, caretOffset)
+        return MethodUnderCaret.empty(virtualFile.url)
     }
 
 
-    fun findEndpointTextRange(fileUri: String, caretOffset: Int, methodId: String): TextRange? {
-        val documentInfo = DocumentInfoService.getInstance(project).getDocumentInfo(fileUri)
+    private fun findEndpointTextRange(virtualFile: VirtualFile, caretOffset: Int, methodId: String): TextRange? {
+        val documentInfo = DocumentInfoStorage.getInstance(project).getDocumentInfo(virtualFile)
         if (documentInfo != null) {
-            val methodInfo = documentInfo.getMethodInfo(methodId)
+            val methodInfo = documentInfo.methods[methodId]
             if (methodInfo != null) {
                 val endpointInfo = methodInfo.endpoints.firstOrNull { endpointInfo: EndpointInfo ->
                     endpointInfo.textRange?.contains(caretOffset) ?: false
@@ -540,12 +536,6 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
     }
 
 
-    override fun refreshMethodUnderCaret(project: Project, psiFile: PsiFile, selectedEditor: Editor?, offset: Int) {
-        val methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedEditor, offset)
-        CaretContextService.getInstance(project).contextChanged(methodUnderCaret)
-    }
-
-
     override fun canInstrumentMethod(methodId: String): MethodObservabilityInfo {
 
         class MyComputable : Computable<MethodObservabilityInfo> {
@@ -632,15 +622,16 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
         }
 
 
-        return Retries.retryWithResultAndDefault({
-            val myComputable = MyComputable()
-            val result = ProgressManager.getInstance().runProcess(Computable {
-                runInReadAccessWithResult {
-                    myComputable.compute()
-                }
-            }, myComputable.progressIndicator)
-            return@retryWithResultAndDefault result
-        },
+        return Retries.retryWithResultAndDefault(
+            {
+                val myComputable = MyComputable()
+                val result = ProgressManager.getInstance().runProcess(Computable {
+                    runInReadAccessWithResult {
+                        myComputable.compute()
+                    }
+                }, myComputable.progressIndicator)
+                return@retryWithResultAndDefault result
+            },
             Throwable::class.java,
             50,
             5,

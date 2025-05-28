@@ -11,8 +11,7 @@ import com.intellij.util.concurrency.AppExecutorUtil
 import com.jetbrains.rd.util.AtomicInteger
 import org.apache.commons.lang3.time.StopWatch
 import org.digma.intellij.plugin.analytics.ApiErrorHandler
-import org.digma.intellij.plugin.analytics.isCentralized
-import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
+import org.digma.intellij.plugin.analytics.isNoAccountInCentralized
 import org.digma.intellij.plugin.common.FrequencyDetector
 import org.digma.intellij.plugin.common.findActiveProject
 import org.digma.intellij.plugin.common.generateDeadlockedThreadDump
@@ -267,9 +266,7 @@ private fun paused(passable: Boolean): Boolean {
     }
 }
 
-private fun isNoAccountInCentralized():Boolean{
-    return isCentralized() && DigmaDefaultAccountHolder.getInstance().account == null
-}
+
 
 
 /**

@@ -9,13 +9,13 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiFile
-import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.psi.LanguageServiceLocator
-import org.digma.intellij.plugin.psi.PsiUtils
+import org.digma.intellij.plugin.psi.LanguageServiceProvider
+import org.digma.intellij.plugin.psi.isSupportedLanguageFile
 
 abstract class DigmaCodeVisionProviderBase : DaemonBoundCodeVisionProvider {
 
@@ -42,29 +42,46 @@ abstract class DigmaCodeVisionProviderBase : DaemonBoundCodeVisionProvider {
 
     override fun computeForEditor(editor: Editor, file: PsiFile): List<Pair<TextRange, CodeVisionEntry>> {
 
-        Log.log(logger::trace, "computeForEditor called for provider {} for file {}", id, file)
+        if (file.project.isDefault) return empty
+        if (!acceptsFile(file)) return empty
+
+        //todo: maybe too long
+        if (ProjectFileIndex.getInstance(file.project).isInLibrarySource(file.viewProvider.virtualFile)) return empty
+
+        if(logger.isTraceEnabled){
+            Log.log(logger::trace, "computeForEditor called for provider {} for file {}", id, file)
+        }
 
         try {
-            val project: Project = editor.project ?: return empty
+            val project: Project = file.project
 
-            if (editor.isDisposed || !PsiUtils.isValidPsiFile(file) || !isProjectValid(project)) {
+            val languageService = LanguageServiceProvider.getInstance(project).getLanguageService(file.language)
+            if(languageService == null){
+                if (logger.isTraceEnabled) {
+                    Log.log(logger::trace,"Could not find language service for fle {}",file)
+                }
                 return empty
             }
 
+            if (logger.isTraceEnabled) {
+                Log.log(logger::trace, "found LanguageService for file {}, {}", file, languageService)
+            }
 
-            val languageService = LanguageServiceLocator.getInstance(project).locate(file.language)
-            Log.log(logger::trace, "found LanguageService for file {}, {}", file, languageService)
             //not all languages support DaemonBoundCodeVisionProvider, C# does it in resharper
-            if (languageService.isCodeVisionSupported) {
-                Log.log(logger::trace, "file is supported, computing code lens for {}", file)
+            if (languageService.isCodeVisionSupported()) {
+                if (logger.isTraceEnabled) {
+                    Log.log(logger::trace, "file is supported, computing code lens for {}", file)
+                }
                 return project.service<CodeLensService>().getCodeLens(this.id, file, languageService)
             } else {
-                Log.log(logger::trace, "file is NOT supported,returning empty code lens list for {}", file)
+                if (logger.isTraceEnabled) {
+                    Log.log(logger::trace, "file is NOT supported,returning empty code lens list for {}", file)
+                }
                 return empty
             }
 
         } catch (pce: ProcessCanceledException) {
-            //don't swallow or report ProcessCanceledException here , we have nothing to do about it,
+            //don't swallow or report ProcessCanceledException here; we have nothing to do about it,
             // the code vision infrastructure will retry
             throw pce
         } catch (e: Throwable) {
@@ -75,6 +92,10 @@ abstract class DigmaCodeVisionProviderBase : DaemonBoundCodeVisionProvider {
             )
             return empty
         }
+    }
+
+    private fun acceptsFile(file: PsiFile): Boolean {
+        return isSupportedLanguageFile(file.project, file)
     }
 
 }

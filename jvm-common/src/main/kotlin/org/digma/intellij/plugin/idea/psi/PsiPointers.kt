@@ -15,7 +15,6 @@ import java.util.concurrent.ConcurrentHashMap
 @Service(Service.Level.PROJECT)
 class PsiPointers(val project: Project) {
 
-
     private val classPointers = ConcurrentHashMap(mutableMapOf<String, SmartPsiElementPointer<PsiClass>>())
 
     private var startSpanPsiMethodPointer: SmartPsiElementPointer<PsiMethod>? = null
@@ -67,11 +66,4 @@ class PsiPointers(val project: Project) {
 
         return startSpanPsiMethodPointer
     }
-
-//    fun getOtelStartSpanMethod(project: Project, builderClass: PsiClass): PsiMethod? {
-//        return runInReadAccessWithResult {
-//            getOtelStartSpanMethodPointer(project,builderClass)?.element
-//        }
-//    }
-
 }

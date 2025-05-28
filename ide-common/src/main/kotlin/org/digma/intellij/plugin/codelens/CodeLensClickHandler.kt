@@ -6,10 +6,11 @@ import com.intellij.openapi.project.Project
 import com.intellij.pom.Navigatable
 import com.intellij.psi.PsiElement
 import com.intellij.psi.SmartPsiElementPointer
-import org.digma.intellij.plugin.common.Backgroundable
+import kotlinx.coroutines.CoroutineScope
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.objectToJsonNode
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import org.digma.intellij.plugin.kotlin.ext.launchWithErrorReporting
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.lens.CodeLens
 import org.digma.intellij.plugin.notifications.NotificationUtil
@@ -18,10 +19,11 @@ import org.digma.intellij.plugin.scope.ScopeContext
 import org.digma.intellij.plugin.scope.ScopeManager
 import org.digma.intellij.plugin.scope.SpanScope
 
-internal class CodeLensClickHandler(
+class CodeLensClickHandler(
     private val project: Project,
+    private val cs: CoroutineScope,
     private val lens: CodeLens,
-    private val elementPointer: SmartPsiElementPointer<PsiElement>
+    private val elementPointer: SmartPsiElementPointer<PsiElement>? = null//null in Rider, not null in IntelliJ IDEA){}
 ) {
 
     private val logger: Logger = Logger.getInstance(this::class.java)
@@ -30,7 +32,7 @@ internal class CodeLensClickHandler(
 
         try {
             ActivityMonitor.getInstance(project).registerLensClicked(lens.id)
-            elementPointer.element?.let {
+            elementPointer?.element?.let {
                 if (it is Navigatable && it.canNavigateToSource()) {
                     it.navigate(true)
                 } else {
@@ -43,29 +45,29 @@ internal class CodeLensClickHandler(
                     selectedEditor?.caretModel?.moveToOffset(it.textOffset)
                 }
             }
-
-            Backgroundable.ensurePooledThreadWithoutReadAccess {
-                val isErrorHotspot = lens.lensTitle.lowercase().contains("error")
-                val scopeCodeObjectId = lens.scopeCodeObjectId
-                val contextPayload = objectToJsonNode(ChangeScopeMessagePayload(lens))
-                val scopeContext = ScopeContext("IDE/CODE_LENS_CLICKED", contextPayload)
-                if (isErrorHotspot) {
-                    ScopeManager.getInstance(project)
-                        .changeToHome(true, scopeContext, null)
-                }else{
-                    if (scopeCodeObjectId == null) {
-                        EDT.ensureEDT {
-                            NotificationUtil.notifyFadingInfo(project, "No asset found for method: ${lens.codeMethod}")
-                        }
-                    }else{
-                        ScopeManager.getInstance(project)
-                            .changeScope(SpanScope(spanCodeObjectId = scopeCodeObjectId, methodId = lens.codeMethod), scopeContext, null)
-                    }
-                }
-            }
         } catch (e: Exception) {
             Log.warnWithException(logger, project, e, "error in CodeLensClickHandler {}", e)
             ErrorReporter.getInstance().reportError(project, "CodeLensClickHandler.handle", e)
+        }
+
+        cs.launchWithErrorReporting("CodeLensClickHandler.handle", logger) {
+            val isErrorHotspot = lens.lensTitle.lowercase().contains("error")
+            val scopeCodeObjectId = lens.scopeCodeObjectId
+            val contextPayload = objectToJsonNode(ChangeScopeMessagePayload(lens))
+            val scopeContext = ScopeContext("IDE/CODE_LENS_CLICKED", contextPayload)
+            if (isErrorHotspot) {
+                ScopeManager.getInstance(project)
+                    .changeToHome(true, scopeContext, null)
+            } else {
+                if (scopeCodeObjectId == null) {
+                    EDT.ensureEDT {
+                        NotificationUtil.notifyFadingInfo(project, "No asset found for method: ${lens.codeMethod}")
+                    }
+                } else {
+                    ScopeManager.getInstance(project)
+                        .changeScope(SpanScope(spanCodeObjectId = scopeCodeObjectId, methodId = lens.codeMethod), scopeContext, null)
+                }
+            }
         }
     }
 }

@@ -20,8 +20,8 @@ import org.jetbrains.annotations.*;
 import javax.swing.*;
 import java.awt.*;
 import java.net.*;
-import java.util.List;
 import java.util.*;
+import java.util.List;
 
 import static org.digma.intellij.plugin.settings.SettingsState.*;
 
@@ -416,7 +416,7 @@ class SettingsComponent {
                     }
                 }
             } catch (ConfigurationException configurationException) {
-                Messages.showErrorDialog(configurationException.getMessage(), "Invalid Settings");
+                Messages.showErrorDialog(configurationException.getLocalizedMessage(), "Invalid Settings");
             } catch (Throwable e) {
                 Messages.showErrorDialog(e.getMessage(), "Error");
                 ErrorReporter.getInstance().reportError("SettingsComponent.exportSettingsButton.ActionListener", e);
@@ -426,17 +426,20 @@ class SettingsComponent {
         var importSettingsButton = new JButton("Import Settings");
         importSettingsButton.addActionListener(actionEvent -> {
             try {
-                var dialog = FileChooserFactory.getInstance().createPathChooser(new FileChooserDescriptor(true, false, false, false, false, false), null, myMainPanel);
-                dialog.choose(null, virtualFiles -> {
-                    if (virtualFiles.size() == 1) {
-                        var properties = SettingsUtils.importSettingsFromFile(virtualFiles.get(0));
-                        if (properties == null) {
-                            Messages.showErrorDialog("Could not import settings,Please check the logs.", "Import Error");
-                        } else {
-                            fromProperties(properties);
+                SlowOperationsUtilsKt.allowSlowOperation(() -> {
+                    var dialog = FileChooserFactory.getInstance().createPathChooser(new FileChooserDescriptor(true, false, false, false, false, false), null, myMainPanel);
+                    dialog.choose(null, virtualFiles -> {
+                        if (virtualFiles.size() == 1) {
+                            var properties = SettingsUtils.importSettingsFromFile(virtualFiles.get(0));
+                            if (properties == null) {
+                                Messages.showErrorDialog("Could not import settings,Please check the logs.", "Import Error");
+                            } else {
+                                fromProperties(properties);
+                            }
                         }
-                    }
+                    });
                 });
+
             } catch (Throwable e) {
                 Messages.showErrorDialog(e.getMessage(), "Error");
                 ErrorReporter.getInstance().reportError("SettingsComponent.importSettingsButton.ActionListener", e);

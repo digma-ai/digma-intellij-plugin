@@ -3,15 +3,16 @@ package org.digma.intellij.plugin.reset
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
-import kotlinx.coroutines.CancellationException
+import com.intellij.openapi.diagnostic.Logger
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.auth.AuthManager
-import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import org.digma.intellij.plugin.kotlin.ext.launchWithErrorReporting
 import org.digma.intellij.plugin.persistence.PersistenceService
 
 @Service(Service.Level.APP)
 class ResetService(val cs: CoroutineScope) {
+
+    private val logger = Logger.getInstance(this::class.java)
 
     companion object {
         @JvmStatic
@@ -23,19 +24,13 @@ class ResetService(val cs: CoroutineScope) {
 
     fun resetUserId() {
 
-        cs.launch {
-            try {
-                PersistenceService.getInstance().nullifyUserId()
-                PersistenceService.getInstance().nullifyUserRegistrationEmail()
-                PersistenceService.getInstance().nullifyUserEmail()
-                AuthManager.getInstance().logoutSynchronously("reset plugin")
-                ApplicationManager.getApplication().invokeLater {
-                    ApplicationManager.getApplication().restart()
-                }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Throwable) {
-                ErrorReporter.getInstance().reportError("ResetService.resetUserId", e)
+        cs.launchWithErrorReporting("ResetService.resetUserId", logger) {
+            PersistenceService.getInstance().nullifyUserId()
+            PersistenceService.getInstance().nullifyUserRegistrationEmail()
+            PersistenceService.getInstance().nullifyUserEmail()
+            AuthManager.getInstance().logoutSynchronously("reset plugin")
+            ApplicationManager.getApplication().invokeLater {
+                ApplicationManager.getApplication().restart()
             }
         }
     }

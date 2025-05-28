@@ -88,7 +88,7 @@ class OpenTelemetrySpanNavigationDiscovery(private val project: Project) : SpanN
                     spanInfos.forEach { spanInfo: SpanInfo ->
                         runInReadAccessWithRetryIgnorePCE {
                             val offset = psiMethod.textOffset
-                            val location = SpanLocation(spanInfo.containingFileUri, offset)
+                            val location = SpanLocation(spanInfo.containingFileUri, offset, spanInfo.containingMethodId)
                             spanLocations[spanInfo.id] = location
                         }
                     }
@@ -137,13 +137,13 @@ class OpenTelemetrySpanNavigationDiscovery(private val project: Project) : SpanN
             executeCatchingWithRetry(context, getName(), 50, 5) {
 
 
-            val spanInfo = runInReadAccessInSmartModeWithResultAndRetryIgnorePCE(project) {
+                val spanInfo = runInReadAccessInSmartModeWithResultAndRetryIgnorePCE(project) {
                     JavaSpanDiscoveryUtils.getSpanInfoFromStartSpanMethodReference(project, reference)
                 }
                 spanInfo?.let {
                     runInReadAccessWithRetryIgnorePCE {
-                        val lineNumber = reference.element.textOffset
-                        val location = SpanLocation(spanInfo.containingFileUri, lineNumber)
+                        val offset = reference.element.textOffset
+                        val location = SpanLocation(spanInfo.containingFileUri, offset, spanInfo.containingMethodId)
                         spanLocations[spanInfo.id] = location
                     }
                 }

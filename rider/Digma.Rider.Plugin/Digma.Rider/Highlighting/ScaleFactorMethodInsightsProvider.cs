@@ -9,17 +9,19 @@ namespace Digma.Rider.Highlighting
     [SolutionComponent(Instantiation.ContainerAsyncPrimaryThread)]
 #else
     [SolutionComponent]
-#endif    
+#endif
 
     public class ScaleFactorMethodInsightsProvider : BaseMethodInsightsProvider
     {
-        public ScaleFactorMethodInsightsProvider(ISolution solution,ILogger logger,ShowToolWindowHost showToolWindowHost) 
-            : base(solution,logger,showToolWindowHost)
-        {}
+        public ScaleFactorMethodInsightsProvider(ISolution solution, ILogger logger,
+            ShowToolWindowHost showToolWindowHost,
+            LanguageServiceHost languageServiceHost)
+            : base(solution, logger, showToolWindowHost, languageServiceHost)
+        {
+        }
 
 
         public override string ProviderId => nameof(ScaleFactorMethodInsightsProvider);
         public override string DisplayName => "Scale Factor Method Hints";
-        
     }
 }

@@ -17,7 +17,7 @@ import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJav
 class AssetsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHandler(project) {
 
 
-    override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
+    override suspend fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
 
         Log.log(logger::trace, project, "got action '$action' with message $requestJsonNode")
 

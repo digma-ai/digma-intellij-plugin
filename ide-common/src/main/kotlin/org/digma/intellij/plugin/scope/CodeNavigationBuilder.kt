@@ -10,10 +10,10 @@ import org.digma.intellij.plugin.model.rest.navigation.AssetNavigationResponse
 import org.digma.intellij.plugin.model.rest.navigation.AssetRelatedCodeLocation
 import org.digma.intellij.plugin.model.rest.navigation.CodeLocation
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator
-import org.digma.intellij.plugin.psi.LanguageService
+import org.digma.intellij.plugin.psi.getEndpointInfos
 
 
-fun buildCodeLocation(
+suspend fun buildCodeLocation(
     project: Project,
     spanCodeObjectId: String,
     displayName: String,
@@ -50,7 +50,7 @@ fun buildCodeLocation(
 }
 
 
-private fun buildCodeLocationFromAssetNavigation(
+private suspend fun buildCodeLocationFromAssetNavigation(
     project: Project,
     assetNavigation: AssetNavigationResponse,
 ): CodeLocation {
@@ -73,7 +73,7 @@ private fun buildCodeLocationFromAssetNavigation(
 }
 
 
-private fun buildFromCodeLocation(project: Project, codeLocation: AssetCodeLocation): List<CodeDetails> {
+private suspend fun buildFromCodeLocation(project: Project, codeLocation: AssetCodeLocation): List<CodeDetails> {
 
     val codeNavigator = CodeNavigator.getInstance(project)
 
@@ -102,16 +102,13 @@ private fun buildFromCodeLocation(project: Project, codeLocation: AssetCodeLocat
     val endpointCodeObjectId = codeLocation.endpoint?.endpointCodeObjectId
     if (endpointCodeObjectId != null) {
 
-        val endpointInfos = LanguageService.getEndpointInfos(project, endpointCodeObjectId)
-        if (!endpointInfos.isNullOrEmpty()) {
+        val endpointInfos = getEndpointInfos(project, endpointCodeObjectId)
 
-            //may be one or more endpoints
-            endpointInfos.forEach { ei ->
-                val endpointMethodId = ei.containingMethodId
-                if (codeNavigator.canNavigateToMethod(endpointMethodId)) {
+        endpointInfos.forEach { ei ->
+            val endpointMethodId = ei.containingMethodId
+            if (codeNavigator.canNavigateToMethod(endpointMethodId)) {
 //                    codeDetailsList.add(CodeDetails(getMethodDisplayName(methodId), methodId))
-                    codeDetailsList.add(CodeDetails(codeLocation.displayName, endpointMethodId))
-                }
+                codeDetailsList.add(CodeDetails(codeLocation.displayName, endpointMethodId))
             }
         }
     }
@@ -120,7 +117,7 @@ private fun buildFromCodeLocation(project: Project, codeLocation: AssetCodeLocat
 }
 
 
-private fun buildFromRelatedCodeLocation(project: Project, assetNavigation: AssetNavigationResponse): List<CodeDetails> {
+private suspend fun buildFromRelatedCodeLocation(project: Project, assetNavigation: AssetNavigationResponse): List<CodeDetails> {
 
     val relatedCodeLocation = assetNavigation.relatedCodeLocations
 

@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.analytics
 
 import com.intellij.openapi.project.Project
+import org.digma.intellij.plugin.auth.account.DigmaDefaultAccountHolder
 import org.digma.intellij.plugin.common.findActiveProject
 import org.digma.intellij.plugin.model.rest.UNKNOWN_APPLICATION_VERSION
 import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
@@ -32,4 +33,9 @@ fun isCentralized(): Boolean {
     return project?.let {
         BackendInfoHolder.getInstance(it).isCentralized()
     } ?:false
+}
+
+
+fun isNoAccountInCentralized():Boolean{
+    return isCentralized() && DigmaDefaultAccountHolder.getInstance().account == null
 }

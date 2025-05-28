@@ -6,7 +6,6 @@ import com.intellij.openapi.diagnostic.Logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
@@ -15,6 +14,7 @@ import kotlinx.datetime.todayIn
 import org.digma.intellij.plugin.common.DisposableAdaptor
 import org.digma.intellij.plugin.common.findActiveProject
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import org.digma.intellij.plugin.kotlin.ext.launchWithErrorReporting
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.scheduling.disposingPeriodicTask
 import kotlin.math.roundToLong
@@ -96,7 +96,7 @@ class EngagementScoreService(private val cs: CoroutineScope) : DisposableAdaptor
         //an active project will not be found if user closed the last project exactly at this moment.
         //so we wait at least 30 minutes to find an active project, if we can't find give up and hopefully the next
         //event will be sent
-        cs.launch {
+        cs.launchWithErrorReporting("EngagementScoreService.sendEvent", logger) {
 
             val startTime = Clock.System.now()
 
@@ -125,11 +125,8 @@ class EngagementScoreService(private val cs: CoroutineScope) : DisposableAdaptor
     }
 
 
-
-
-
     fun addAction(action: String) {
-        cs.launch {
+        cs.launchWithErrorReporting("EngagementScoreService.addAction", logger) {
             if (MEANINGFUL_ACTIONS.contains(action)) {
                 service<EngagementScorePersistenceService>().increment(today())
             }

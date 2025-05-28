@@ -11,7 +11,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import org.digma.intellij.plugin.PluginId
 import org.digma.intellij.plugin.activation.UserActivationService
-import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.findActiveProject
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
@@ -119,7 +118,7 @@ class RegisterAction(
     override fun actionPerformed(e: AnActionEvent) {
 
         try {
-            Log.log(AppNotificationCenter.logger::info, "in RegisterAction, action clicked")
+            Log.info(AppNotificationCenter.logger, "in RegisterAction, action clicked")
 
             ActivityMonitor.getInstance(project).registerUserAction(
                 "RegisterAction link clicked",
@@ -130,19 +129,11 @@ class RegisterAction(
 
             ActivityMonitor.getInstance(project).registerNotificationCenterEvent("$notificationName.clicked", mapOf())
 
-            openRegistrationDialog(project)
+            project.service<RecentActivityService>().openRegistrationDialog()
 
             notification.expire()
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError(project, "ShowTypeformAction.actionPerformed", e)
+            ErrorReporter.getInstance().reportError(project, "RegisterAction.actionPerformed", e)
         }
     }
-
-    private fun openRegistrationDialog(project: Project) {
-        //this is called on EDT, start background and release the EDT thread
-        Backgroundable.ensurePooledThreadWithoutReadAccess {
-            project.service<RecentActivityService>().openRegistrationDialog()
-        }
-    }
-
 }

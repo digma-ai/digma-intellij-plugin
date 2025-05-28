@@ -25,18 +25,15 @@ public class ReadActions {
 
 
     public static <T> T ensureReadAction(Supplier<T> tSupplier){
-        if (ApplicationManager.getApplication().isReadAccessAllowed()){
+        if (isReadAccessAllowed()){
             return tSupplier.get();
         }else{
             return ReadAction.compute(tSupplier::get);
         }
     }
 
-
-
-
     public static void ensureReadAction(Runnable runnable){
-        if (ApplicationManager.getApplication().isReadAccessAllowed()){
+        if (isReadAccessAllowed()){
             runnable.run();
         }else{
             ReadAction.run(runnable::run);

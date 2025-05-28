@@ -52,8 +52,8 @@ import kotlin.time.toDuration
  * This service listens to source code changes and notifies the navigation discovery services about changes.
  * It uses a combination of PsiTreeChangeListener and AsyncFileListener.
  * PsiTreeChangeListener notifies immediately about psi changes but doesn't notify about deletion, move and copy.
- * AsyncFileListener notifies about deletion, move and copy, but may take long until it notifies about psi changes.
- * with these two listeners we are notifies of all changes. it may happen that the same file will be processed more
+ * AsyncFileListener notifies about deletion, move and copy, but may take a long time until it notifies about psi changes.
+ * with these two listeners, we are notified of all changes. it may happen that the same file will be processed more
  * than once for the same change.
  */
 @Service(Service.Level.PROJECT)

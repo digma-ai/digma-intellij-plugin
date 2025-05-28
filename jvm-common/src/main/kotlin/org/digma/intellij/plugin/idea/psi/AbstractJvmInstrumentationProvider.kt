@@ -4,7 +4,7 @@ import com.intellij.buildsystem.model.unified.UnifiedCoordinates
 import com.intellij.buildsystem.model.unified.UnifiedDependency
 import com.intellij.externalSystem.DependencyModifierService
 import com.intellij.openapi.application.EDT
-import com.intellij.openapi.application.smartReadAction
+import com.intellij.openapi.application.readAction
 import com.intellij.openapi.application.writeAction
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
@@ -15,6 +15,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.util.concurrency.annotations.RequiresReadLock
+import com.intellij.util.concurrency.annotations.RequiresWriteLock
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
@@ -49,7 +50,7 @@ abstract class AbstractJvmInstrumentationProvider(protected val project: Project
         val uMethod = languageService.findUMethodByMethodCodeObjectId(methodId)
         coroutineContext.ensureActive()
         return uMethod?.let { method ->
-            smartReadAction(project) {
+            readAction {
                 val containingModule = method.sourcePsi?.let { ModuleUtilCore.findModuleForPsiElement(it) }
                 containingModule?.let { module ->
                     if (!hasNecessaryDependencies(project, module)) {
@@ -80,9 +81,13 @@ abstract class AbstractJvmInstrumentationProvider(protected val project: Project
 
         withContext(Dispatchers.EDT) {
             @Suppress("UnstableApiUsage")
-            writeAction {
+            val added = writeAction {
                 addDependencyToOtelLib(uMethod, methodId)
-                ProjectRefreshAction.Manager.refreshProject(project)
+            }
+            if (added){
+                withContext(Dispatchers.Default) {
+                    ProjectRefreshAction.Manager.refreshProject(project)
+                }
             }
         }
     }
@@ -94,42 +99,43 @@ abstract class AbstractJvmInstrumentationProvider(protected val project: Project
             return
         }
 
-        withContext(Dispatchers.EDT) {
+        val instrumented = withContext(Dispatchers.EDT) {
             instrumentMethod(observabilityInfo)
-            ProjectRefreshAction.Manager.refreshProject(project)
         }
-    }
-
-
-    @Suppress("UnstableApiUsage")
-    private fun addDependencyToOtelLib(uMethod: UMethod, methodId: String) {
-        val module = getModuleOfMethodId(uMethod)
-        if (module == null) {
-            Log.warn(logger, "Failed to add dependencies OTEL lib since could not lookup module by methodId='{}'", methodId)
-            return
-        }
-
-        if (isSpringBootAndMicrometer(project, module)) {
-            addDepsForSpringBootAndMicrometer(module)
-        } else {
-            val moduleBuildSystem = project.service<JvmBuildSystemHelperService>().determineBuildSystem(module)
-            val dependencyLib = mapBuildSystem2Dependency[moduleBuildSystem]
-            val dependencyModifierService = DependencyModifierService.getInstance(project)
-            if (dependencyLib != null) {
-                dependencyModifierService.addDependency(module, dependencyLib)
+        if (instrumented){
+            withContext(Dispatchers.Default) {
+                ProjectRefreshAction.Manager.refreshProject(project)
             }
         }
     }
 
 
-    private fun getModuleOfMethodId(uMethod: UMethod): Module? {
-        return uMethod.sourcePsi?.let {
+    @Suppress("UnstableApiUsage")
+    @RequiresWriteLock
+    private fun addDependencyToOtelLib(uMethod: UMethod, methodId: String):Boolean {
+        val module = uMethod.sourcePsi?.let {
             ModuleUtilCore.findModuleForPsiElement(it)
+        }
+        if (module == null) {
+            Log.warn(logger, "Failed to add dependencies OTEL lib since could not lookup module by methodId='{}'", methodId)
+            return false
+        }
+
+        if (isSpringBootAndMicrometer(project, module)) {
+            return addDepsForSpringBootAndMicrometer(module)
+        } else {
+            val moduleBuildSystem = project.service<JvmBuildSystemHelperService>().determineBuildSystem(module)
+            val dependencyLib = mapBuildSystem2Dependency[moduleBuildSystem]
+            if (dependencyLib != null) {
+                DependencyModifierService.getInstance(project).addDependency(module, dependencyLib)
+                return true
+            }
+            return false
         }
     }
 
 
-    private fun addDepsForSpringBootAndMicrometer(module: Module) {
+    private fun addDepsForSpringBootAndMicrometer(module: Module): Boolean {
         val modulesDepsService = ModulesDepsService.getInstance(project)
         val moduleExt = modulesDepsService.getModuleExt(module.name)
         if (moduleExt == null) {
@@ -138,11 +144,12 @@ abstract class AbstractJvmInstrumentationProvider(protected val project: Project
                 "Failed add dependencies of Spring Boot Micrometer since could not lookup module ext by module name='{}'",
                 module.name
             )
-            return
+            return false
         }
         val project = module.project
         val springBootMicrometerConfigureDepsService = SpringBootMicrometerConfigureDepsService.getInstance(project)
         springBootMicrometerConfigureDepsService.addMissingDependenciesForSpringBootObservability(moduleExt)
+        return true
     }
 
 

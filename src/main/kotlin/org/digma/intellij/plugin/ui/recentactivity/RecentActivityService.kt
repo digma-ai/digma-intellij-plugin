@@ -105,6 +105,7 @@ class RecentActivityService(val project: Project, private val cs: CoroutineScope
     }
 
 
+    //Runs on EDT!
     fun openRegistrationDialog() {
 
         RecentActivityToolWindowShower.getInstance(project).showToolWindow()

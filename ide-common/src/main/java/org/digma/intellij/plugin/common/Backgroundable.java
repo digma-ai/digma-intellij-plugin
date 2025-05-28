@@ -58,8 +58,6 @@ public class Backgroundable {
     }
 
 
-
-
     public static void runInNewBackgroundThread(Project project, String name, Runnable task) {
 
         new Task.Backgroundable(project, name) {
@@ -109,7 +107,7 @@ public class Backgroundable {
             try {
                 return action.call();
             } catch (Throwable e) {
-                Log.warnWithException(LOGGER, e, "Exception in action");
+                Log.warnWithException(LOGGER, e, "Exception in task {}", e);
                 ErrorReporter.getInstance().reportError("executeOnPooledThread", e);
                 throw e;
             }
@@ -121,8 +119,8 @@ public class Backgroundable {
         try {
             task.run();
         } catch (Throwable e) {
-            Log.warnWithException(LOGGER, e, "Exception in task {}", name);
-            ErrorReporter.getInstance().reportError(project, "Backgroundable.runWithErrorReporting(Project,Runnable)" + name, e);
+            Log.warnWithException(LOGGER, e, "Exception in task {},{}", name, e);
+            ErrorReporter.getInstance().reportError(project, "Backgroundable.runWithErrorReporting(Project,name,Runnable)" + name, e);
         }
     }
 
@@ -130,7 +128,7 @@ public class Backgroundable {
         try {
             task.run();
         } catch (Throwable e) {
-            Log.warnWithException(LOGGER, e, "Exception in action");
+            Log.warnWithException(LOGGER, e, "Exception in task {}", e);
             ErrorReporter.getInstance().reportError("Backgroundable.runWithErrorReporting(Runnable)", e);
         }
     }
@@ -140,7 +138,7 @@ public class Backgroundable {
         try {
             return new FutureResult<>(action.call());
         } catch (Exception e) {
-            Log.warnWithException(LOGGER, e, "Exception in action");
+            Log.warnWithException(LOGGER, e, "Exception in task {}", e);
             ErrorReporter.getInstance().reportError("Backgroundable.runWithErrorReporting(Callable)", e);
             return new FutureResult<>();
         }

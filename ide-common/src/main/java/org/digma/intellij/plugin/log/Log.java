@@ -102,6 +102,17 @@ public class Log {
 
 
     // **********  New API
+
+    public static void info(Logger logger, Project project, String format, Object... args) {
+        logger.info(DIGMA_PROJECT + project.getName() + ": " + format(format, args));
+    }
+
+    public static void info(Logger logger, String format, Object... args) {
+        logger.info(DIGMA + ": " + format(format, args));
+    }
+
+
+
     public static void warn(Logger logger, Project project, String format, Object... args) {
         logger.warn(DIGMA_PROJECT + project.getName() + ": " + format(format, args));
     }

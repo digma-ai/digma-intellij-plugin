@@ -46,7 +46,7 @@ internal class JvmEndpointNavigationProvider(private val project: Project) {
                 methodInfo.endpoints.forEach { endpointInfo ->
                     val file = fileInfo.file
                     val endpointLocation = EndpointLocation(file, endpointInfo.id, endpointInfo.offset, methodId)
-                    Log.trace(logger, "adding endpoint location for {} endpoint {}", file.url, endpointLocation.endpointId)
+                    Log.trace(logger, project, "adding endpoint location for {} endpoint {}", file.url, endpointLocation.endpointId)
                     val methods = endpointsMap.computeIfAbsent(endpointLocation.endpointId) { CopyOnWriteArraySet() }
                     methods.add(endpointLocation)
                 }
@@ -61,9 +61,9 @@ internal class JvmEndpointNavigationProvider(private val project: Project) {
 
     suspend fun maintenance() {
 
-        Log.trace(logger, "starting maintenance, current endpoint location count {}", endpointsMap.size)
+        Log.trace(logger, project, "starting maintenance, current endpoint location count {}", endpointsMap.size)
         if (logger.isTraceEnabled) {
-            Log.trace(logger, "endpoint locations {}", endpointsMap.entries.joinToString(", ") { "[${it.key} -> ${it.value}]" })
+            Log.trace(logger, project, "endpoint locations {}", endpointsMap.entries.joinToString(", ") { "[${it.key} -> ${it.value}]" })
         }
 
         maintenanceLock.withLock {
@@ -73,7 +73,7 @@ internal class JvmEndpointNavigationProvider(private val project: Project) {
             if (toRemove.isEmpty()) {
                 return@withLock
             }
-            Log.trace(logger, "maintenance removing endpoints {}", toRemove)
+            Log.trace(logger, project, "maintenance removing endpoints {}", toRemove)
             endpointsMap.entries.removeIf { toRemove.contains(it.key) }
         }
     }

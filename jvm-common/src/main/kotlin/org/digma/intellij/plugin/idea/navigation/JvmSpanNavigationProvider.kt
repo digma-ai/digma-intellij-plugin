@@ -70,8 +70,19 @@ internal class JvmSpanNavigationProvider(private val project: Project) {
     }
 
     suspend fun maintenance() {
+
+        if(logger.isTraceEnabled){
+            Log.trace(logger, "starting maintenance, current span location count ${spanLocations.size}")
+            spanLocations.forEach { (spanId, spanLocation) ->
+                Log.trace(logger, "span location for span {} [{}]", spanId, spanLocation)
+            }
+        }
+
         maintenanceLock.withLock {
             val toRemove = spanLocations.filter { (_, spanLocation) -> !spanLocation.isAlive() || !hasIndex(project, spanLocation.file) }.keys
+            if (toRemove.isEmpty()) {
+                return@withLock
+            }
             Log.trace(logger, "maintenance removing spans {}", toRemove)
             spanLocations.entries.removeIf { toRemove.contains(it.key) }
         }

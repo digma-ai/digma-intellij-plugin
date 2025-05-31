@@ -219,7 +219,8 @@ class JvmNavigationDiscoveryManager(private val project: Project, private val cs
 
 
     private fun launchMaintenanceJob() {
-        cs.launchWhileActiveWithErrorReporting(1.minutes, 30.seconds, "${this::class.java.simpleName}.MaintenanceTask", logger) {
+        cs.launchWhileActiveWithErrorReporting(1.minutes, 1.minutes, "${this::class.java.simpleName}.MaintenanceTask", logger) {
+            DumbService.getInstance(project).waitForSmartMode()
             JvmSpanNavigationProvider.getInstance(project).maintenance()
             JvmEndpointNavigationProvider.getInstance(project).maintenance()
         }

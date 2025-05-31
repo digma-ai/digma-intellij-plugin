@@ -60,10 +60,21 @@ internal class JvmEndpointNavigationProvider(private val project: Project) {
 
 
     suspend fun maintenance() {
+
+        if(logger.isTraceEnabled){
+            Log.trace(logger, "starting maintenance, current endpoint location count ${endpointsMap.size}")
+            endpointsMap.forEach { (endpointId, endpointLocations) ->
+                Log.trace(logger, "endpoint location for endpoint {}: [{}]", endpointId, endpointLocations)
+            }
+        }
+
         maintenanceLock.withLock {
             val toRemove = endpointsMap.filter { (_, endpointLocations) ->
                 !endpointLocations.any { it.isAlive() } || !endpointLocations.any { hasIndex(project, it.file) }
             }.keys
+            if (toRemove.isEmpty()) {
+                return@withLock
+            }
             Log.trace(logger, "maintenance removing endpoints {}", toRemove)
             endpointsMap.entries.removeIf { toRemove.contains(it.key) }
         }

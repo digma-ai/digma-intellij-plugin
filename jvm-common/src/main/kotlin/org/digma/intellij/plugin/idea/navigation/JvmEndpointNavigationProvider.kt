@@ -61,12 +61,9 @@ internal class JvmEndpointNavigationProvider(private val project: Project) {
 
     suspend fun maintenance() {
 
+        Log.trace(logger, "starting maintenance, current endpoint location count {}", endpointsMap.size)
         if (logger.isTraceEnabled) {
-            Log.trace(
-                logger,
-                "starting maintenance, current endpoint location count {}, current endpoint locations {}",
-                endpointsMap.size,
-                endpointsMap.entries.joinToString(", ") { "[${it.key} -> ${it.value}]" })
+            Log.trace(logger, "endpoint locations {}", endpointsMap.entries.joinToString(", ") { "[${it.key} -> ${it.value}]" })
         }
 
         maintenanceLock.withLock {

@@ -66,7 +66,7 @@ internal class JvmEndpointNavigationProvider(private val project: Project) {
                 logger,
                 "starting maintenance, current endpoint location count {}, current endpoint locations [{}]",
                 endpointsMap.size,
-                endpointsMap.entries.joinToString("\n") { "${it.key} -> ${it.value}" })
+                endpointsMap.entries.joinToString(", ") { "${it.key} -> ${it.value}" })
         }
 
         maintenanceLock.withLock {

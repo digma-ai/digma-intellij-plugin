@@ -72,10 +72,7 @@ internal class JvmSpanNavigationProvider(private val project: Project) {
     suspend fun maintenance() {
 
         if(logger.isTraceEnabled){
-            Log.trace(logger, "starting maintenance, current span location count ${spanLocations.size}")
-            spanLocations.forEach { (spanId, spanLocation) ->
-                Log.trace(logger, "span location for span {} [{}]", spanId, spanLocation)
-            }
+            Log.trace(logger, "starting maintenance, current span location count {}, span locations [{}]", spanLocations.size, spanLocations.entries.joinToString("\n") { "${it.key} -> ${it.value}" })
         }
 
         maintenanceLock.withLock {

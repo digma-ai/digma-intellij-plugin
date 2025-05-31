@@ -11,8 +11,8 @@ import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.project.guessModuleDir
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.search.GlobalSearchScope
+import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.common.allowSlowOperation
-import org.digma.intellij.plugin.common.runInReadAccessWithResult
 import java.util.function.Supplier
 
 open class ModuleResolver(
@@ -75,7 +75,7 @@ open class ModuleResolver(
         return mainClassName?.let { className ->
 
             allowSlowOperation(Supplier {
-                val psiClass = runInReadAccessWithResult {
+                val psiClass = ReadActions.ensureReadAction(Supplier {
                     var psiCls =
                         JavaPsiFacade.getInstance(configuration.project).findClass(className, GlobalSearchScope.projectScope(configuration.project))
                     if (psiCls == null) {
@@ -87,7 +87,7 @@ open class ModuleResolver(
                             .findClass(classNameWithoutMethod, GlobalSearchScope.projectScope(configuration.project))
                     }
                     psiCls
-                }
+                })
 
                 psiClass?.let {
                     ModuleUtilCore.findModuleForPsiElement(it)

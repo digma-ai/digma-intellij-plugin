@@ -26,6 +26,7 @@ import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.common.isProjectValid
 import org.digma.intellij.plugin.common.suspendableRetry
+import org.digma.intellij.plugin.discovery.model.EndpointLocation
 import org.digma.intellij.plugin.document.DocumentInfoStorage
 import org.digma.intellij.plugin.document.getSelectedTextEditorForFile
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
@@ -33,7 +34,6 @@ import org.digma.intellij.plugin.instrumentation.InstrumentationProvider
 import org.digma.intellij.plugin.instrumentation.NoOpInstrumentationProvider
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.DocumentInfo
-import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret
 import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.psi.PsiUtils
@@ -156,7 +156,7 @@ class CSharpLanguageService(project: Project) : LifetimedProjectComponent(projec
         return LanguageServiceHost.getInstance(project).findWorkspaceUrisForSpanIds(spanIds)
     }
 
-    override fun lookForDiscoveredEndpoints(endpointId: String): Set<EndpointInfo> {
+    override fun lookForDiscoveredEndpoints(endpointId: String): Set<EndpointLocation> {
         return emptySet()
     }
 

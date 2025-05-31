@@ -9,10 +9,10 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import org.digma.intellij.plugin.discovery.FileDiscoveryProvider
+import org.digma.intellij.plugin.discovery.model.EndpointLocation
 import org.digma.intellij.plugin.instrumentation.InstrumentationProvider
-import org.digma.intellij.plugin.instrumentation.MethodObservabilityInfo
 import org.digma.intellij.plugin.model.discovery.DocumentInfo
-import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret
 
 interface LanguageService : Disposable {
@@ -55,7 +55,7 @@ interface LanguageService : Disposable {
 
     suspend fun findWorkspaceUrisForSpanIds(spanIds: List<String>): Map<String, Pair<String, Int>>
 
-    fun lookForDiscoveredEndpoints(endpointId: String): Set<EndpointInfo>
+    fun lookForDiscoveredEndpoints(endpointId: String): Set<EndpointLocation>
 
     fun isCodeVisionSupported(): Boolean
 
@@ -69,5 +69,11 @@ interface LanguageService : Disposable {
 
     //todo: this method is called from CodeLensService.getCodeLens , its not trivial to run it in coroutine
     fun findMethodsByCodeObjectIds(psiFile: PsiFile, methodIds: List<String>): Map<String, PsiElement>
+
+    fun getDiscoveryProvider(): FileDiscoveryProvider {
+        //currently relevant for jvm language services only.
+        //should never be called for other languages.
+        throw UnsupportedOperationException("getDiscoveryProvider is not implemented for ${this.javaClass.name}")
+    }
 
 }

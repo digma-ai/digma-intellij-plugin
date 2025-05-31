@@ -1,0 +1,18 @@
+This package is work in progress.
+
+the motivation:
+the previous discovery model keeps files uri in various model objects. this is not efficient, not scalable and no reliable.
+to open files or navigate we need to find a VirtualFile by its url. we also need to keep track of moved files and change the url
+in the data model.
+intellij uses VirtualFile, a VirtualFile is a long lived object. it lives in the application lifecycle.
+when files change, moved etc the VirtualFile stays the same object.
+the new model of FileDiscoveryInfo keeps the virtual file instead of the url. that way we always have the reference to the file
+and its current url even if user moved the file.
+
+the new model is cleaner and doesn't use unnecessary properties.
+the new model is regular classes instead of data classes,data classes have limitation. we want to implement equals and hashCode
+in a more suitable way for this model, for example comparing VirtualFile instead of url.
+
+the new discovery infrastructure should be written in UAST where possible, especially for java and kotlin.
+
+this model should be suitable for every language.

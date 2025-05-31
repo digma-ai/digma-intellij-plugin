@@ -105,7 +105,7 @@ private suspend fun buildFromCodeLocation(project: Project, codeLocation: AssetC
         val endpointInfos = getEndpointInfos(project, endpointCodeObjectId)
 
         endpointInfos.forEach { ei ->
-            val endpointMethodId = ei.containingMethodId
+            val endpointMethodId = ei.methodCodeObjectId
             if (codeNavigator.canNavigateToMethod(endpointMethodId)) {
 //                    codeDetailsList.add(CodeDetails(getMethodDisplayName(methodId), methodId))
                 codeDetailsList.add(CodeDetails(codeLocation.displayName, endpointMethodId))

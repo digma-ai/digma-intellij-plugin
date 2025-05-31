@@ -8,11 +8,11 @@ import kotlinx.coroutines.CoroutineScope
 import org.apache.maven.artifact.versioning.ComparableVersion
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.common.DisposableAdaptor
-import org.digma.intellij.plugin.common.Retries
 import org.digma.intellij.plugin.common.buildVersionRequest
 import org.digma.intellij.plugin.common.findActiveProject
 import org.digma.intellij.plugin.common.newerThan
 import org.digma.intellij.plugin.common.olderThan
+import org.digma.intellij.plugin.common.retry
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.kotlin.ext.launchWithErrorReporting
 import org.digma.intellij.plugin.log.Log
@@ -529,9 +529,9 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
             return
         }
         try {
-            Retries.simpleRetry(kotlinx.coroutines.Runnable {
+            retry {
                 Files.delete(uiBundleLocalFile.toPath())
-            }, Throwable::class.java, 1000, 3)
+            }
             Log.log(logger::info, "ui bundle {} deleted", uiVersion)
         } catch (e: Throwable) {
             Log.warnWithException(logger, e, "failed to delete ui bundle file")
@@ -579,7 +579,7 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
 
         try {
 
-            Retries.simpleRetry({
+            retry {
 
                 Log.log(logger::info, "downloading ui bundle {}", url)
 
@@ -611,7 +611,7 @@ class UIVersioningService(val cs: CoroutineScope) : DisposableAdaptor {
 
                     Log.log(logger::info, "ui bundle saved to {}", toFile)
                 }
-            }, Throwable::class.java, 5000, 3)
+            }
 
             return true
 

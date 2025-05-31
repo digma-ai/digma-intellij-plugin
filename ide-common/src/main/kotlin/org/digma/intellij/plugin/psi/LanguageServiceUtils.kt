@@ -6,10 +6,10 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import org.digma.intellij.plugin.discovery.model.EndpointLocation
 import org.digma.intellij.plugin.document.findMethodInfo
 import org.digma.intellij.plugin.document.getDominantLanguage
 import org.digma.intellij.plugin.document.getLanguageByMethodCodeObjectId
-import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 
 //needs to be a fast method. we could just check the file extension, but it's not as reliable for the long term as checking the language.
@@ -72,11 +72,11 @@ suspend fun findWorkspaceUrisForCodeObjectIdsForErrorStackTrace(project: Project
     return emptyMap()
 }
 
-fun getEndpointInfos(project: Project, endpointCodeObjectId: String): Set<EndpointInfo> {
+fun getEndpointInfos(project: Project, endpointCodeObjectId: String): Set<EndpointLocation> {
     for (languageService in LanguageServiceProvider.getInstance(project).getLanguageServices()) {
-        val endpointInfos = languageService.lookForDiscoveredEndpoints(endpointCodeObjectId)
-        if (endpointInfos.isNotEmpty()) {
-            return endpointInfos
+        val endpointLocations = languageService.lookForDiscoveredEndpoints(endpointCodeObjectId)
+        if (endpointLocations.isNotEmpty()) {
+            return endpointLocations
         }
     }
     return emptySet()

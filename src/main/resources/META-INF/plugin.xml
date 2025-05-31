@@ -126,6 +126,7 @@
                 implementation="org.digma.intellij.plugin.ui.recentactivity.RecentActivityToolWindowIconChangerStarter"/>
         <postStartupActivity
                 implementation="org.digma.intellij.plugin.ui.navigation.CodeContextUpdateServiceStarter"/>
+        <postStartupActivity implementation="org.digma.intellij.plugin.userstats.UserStatsServiceStarter"/>
 
 
         <errorHandler implementation="org.digma.intellij.plugin.ui.reports.DigmaErrorReportSubmitter"/>

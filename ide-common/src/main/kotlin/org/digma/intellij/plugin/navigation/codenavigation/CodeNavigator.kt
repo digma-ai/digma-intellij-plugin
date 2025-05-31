@@ -11,12 +11,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.digma.intellij.plugin.common.CodeObjectsUtil
 import org.digma.intellij.plugin.common.EDT
-import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.errorreporting.SEVERITY_LOW
 import org.digma.intellij.plugin.errorreporting.SEVERITY_PROP_NAME
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigation
 import org.digma.intellij.plugin.psi.LanguageServiceProvider
 import org.digma.intellij.plugin.service.EditorService
@@ -207,7 +205,7 @@ class CodeNavigator(val project: Project) {
                 val endpointInfos = languageService.lookForDiscoveredEndpoints(endpointId)
 
                 endpointInfos.forEach { endpointInfo ->
-                    candidateSet.add(endpointInfo.containingMethodId)
+                    candidateSet.add(endpointInfo.methodCodeObjectId)
                 }
             }
         }
@@ -266,13 +264,13 @@ class CodeNavigator(val project: Project) {
             val endpointInfos = languageService.lookForDiscoveredEndpoints(endpointIdWithoutType)
 
             endpointInfos.firstOrNull()?.let { endpointInf ->
-                if (endpointInf.textRange != null) {
+                endpointInf.file?.url?.let { url ->
                     EDT.ensureEDT {
-                        EditorService.getInstance(project).openWorkspaceFileInEditor(endpointInf.containingFileUri, endpointInf.textRange!!.start)
+                        EditorService.getInstance(project).openWorkspaceFileInEditor(url, endpointInf.offset)
                     }
-                    ToolWindowShower.getInstance(project).showToolWindow()
-                    return true
                 }
+                ToolWindowShower.getInstance(project).showToolWindow()
+                return true
             }
         }
         return false

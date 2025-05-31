@@ -235,7 +235,8 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
         id = id,
         name = name,
         containingMethodId = containingMethod,
-        containingFileUri = normalizeFileUri(containingFileUri, project)
+        containingFileUri = normalizeFileUri(containingFileUri, project),
+        offset = offset,
     )
 
 }

@@ -34,7 +34,7 @@ fun CoroutineScope.launchWithErrorReporting(
     } catch (e: CancellationException) {
         throw e // ⚠️ Always rethrow to propagate cancellation properly
     } catch (e: Throwable) {
-        Log.warnWithException(logger, e, "Error in coroutine {}", name)
+        Log.warnWithException(logger, e, "Error in coroutine {}, {}", name, e)
         ErrorReporter.getInstance().reportError("launchWithErrorReporting.$name", e)
     }
 }

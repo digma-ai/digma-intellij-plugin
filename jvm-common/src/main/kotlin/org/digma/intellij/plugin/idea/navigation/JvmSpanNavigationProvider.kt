@@ -1,28 +1,27 @@
 package org.digma.intellij.plugin.idea.navigation
 
 import com.intellij.openapi.components.service
+import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.util.Urls
-import org.digma.intellij.plugin.common.EDT
-import org.digma.intellij.plugin.common.ReadActions
-import org.digma.intellij.plugin.idea.navigation.model.NavigationDiscoveryTrigger
-import org.digma.intellij.plugin.idea.navigation.model.NavigationProcessContext
-import org.digma.intellij.plugin.idea.navigation.model.SpanLocation
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import org.digma.intellij.plugin.discovery.model.FileDiscoveryInfo
+import org.digma.intellij.plugin.discovery.model.SpanLocation
+import org.digma.intellij.plugin.idea.index.hasIndex
 import org.digma.intellij.plugin.log.Log
 import java.util.concurrent.ConcurrentHashMap
-import java.util.function.Consumer
+import kotlin.collections.component1
+import kotlin.collections.component2
 
-@Suppress("LightServiceMigrationCode") // as light service it will also register in Rider and that's not necessary
-internal class JvmSpanNavigationProvider(project: Project) : AbstractNavigationDiscovery(project) {
+@Suppress("LightServiceMigrationCode")
+internal class JvmSpanNavigationProvider(private val project: Project) {
 
-    override val type: String = "Span"
+    private val logger = thisLogger()
 
     private val spanLocations = ConcurrentHashMap(mutableMapOf<String, SpanLocation>())
 
-    private val spanNavigationDiscoveryProviders: List<SpanNavigationDiscoveryProvider> =
-        listOf(OpenTelemetrySpanNavigationDiscovery(project), MicrometerSpanNavigationDiscovery(project))
-
+    private val maintenanceLock = Mutex()
 
     companion object {
         @JvmStatic
@@ -31,18 +30,16 @@ internal class JvmSpanNavigationProvider(project: Project) : AbstractNavigationD
         }
     }
 
-
     fun getUrisForSpanIds(spanIds: List<String>): Map<String, Pair<String, Int>> {
-
         val workspaceUris = mutableMapOf<String, Pair<String, Int>>()
-
-        spanIds.forEach(Consumer { id: String ->
-            val spanLocation = spanLocations[id]
-            spanLocation?.let {
-                workspaceUris[id] = Pair(spanLocation.fileUri, spanLocation.offset)
+        spanIds.forEach { spanId ->
+            val spanLocation = spanLocations[spanId]
+            spanLocation?.takeIf { it.isAlive() }?.let { location ->
+                location.file.let { file ->
+                    workspaceUris[spanId] = Pair(file.url, location.offset)
+                }
             }
-        })
-
+        }
         return workspaceUris
     }
 
@@ -51,70 +48,34 @@ internal class JvmSpanNavigationProvider(project: Project) : AbstractNavigationD
     }
 
 
-    override fun getTask(myContext: NavigationProcessContext, navigationDiscoveryTrigger: NavigationDiscoveryTrigger, retry: Int): Runnable {
-        return Runnable {
-            buildSpanNavigation(myContext, navigationDiscoveryTrigger, retry)
-        }
-    }
+    suspend fun processCandidateFile(fileInfo: FileDiscoveryInfo) {
+        Log.trace(logger, "processing candidateFile {}", fileInfo.file.url)
+        maintenanceLock.withLock {
 
-    override fun getNumFound(): Int {
-        return spanLocations.size
-    }
+            removeEntriesForFile(fileInfo.file)
 
-    private fun buildSpanNavigation(context: NavigationProcessContext, navigationDiscoveryTrigger: NavigationDiscoveryTrigger, retry: Int) {
-
-        EDT.assertNonDispatchThread()
-        //should not run in read action so that every section can wait for smart mode
-        ReadActions.assertNotInReadAccess()
-
-        Log.log(logger::info, project, "Building span navigation, trigger {},retry {}", navigationDiscoveryTrigger, retry)
-
-        buildLock.lock()
-        try {
-            spanNavigationDiscoveryProviders.forEach { provider ->
-
-                executeCatchingWithRetry(context, provider.getName(), 30000, 5) {
-                    val otelSpans: Map<String, SpanLocation> = provider.discover(context)
-                    spanLocations.putAll(otelSpans)
+            fileInfo.methods.forEach { (methodId, methodInfo) ->
+                methodInfo.spans.forEach { spanInfo ->
+                    val file = fileInfo.file
+                    val spanLocation = SpanLocation(file, spanInfo.offset, methodId)
+                    Log.trace(logger, "adding span location for {} span {}", file.url, spanInfo.id)
+                    spanLocations[spanInfo.id] = spanLocation
                 }
-                context.indicator.checkCanceled()
             }
-        } finally {
-            if (buildLock.isHeldByCurrentThread) {
-                buildLock.unlock()
-            }
-            Log.log(
-                logger::info,
-                project,
-                "Building span navigation completed trigger {},retry {}, have {} span locations",
-                navigationDiscoveryTrigger,
-                retry,
-                spanLocations.size
-            )
-        }
-
-    }
-
-
-    override fun removeDiscoveryForFile(file: VirtualFile) {
-        removeDiscoveryForUrl(file.url)
-    }
-
-
-    override fun removeDiscoveryForPath(path: String) {
-        try {
-            val url = Urls.newUri("file", path).toString()
-            removeDiscoveryForUrl(url)
-        } catch (e: Throwable) {
-            //UrlImpl throws RuntimeException here ,
-            //something like 'Relative path in absolute URI: file://What's%20New%20in%20IntelliJ%20IDEA'
-            //catch this error and log, no need to report to posthog
-            Log.warnWithException(logger, e, "error removing path")
         }
     }
 
-    private fun removeDiscoveryForUrl(url: String) {
-        val fileSpans: Set<String> = spanLocations.entries.filter { it.value.fileUri == url }.map { it.key }.toSet()
-        fileSpans.forEach(Consumer { key: String -> spanLocations.remove(key) })
+    private fun removeEntriesForFile(file: VirtualFile) {
+        spanLocations.entries.removeIf { (_, spanLocation) -> spanLocation.file == file }
     }
+
+    suspend fun maintenance() {
+        maintenanceLock.withLock {
+            val toRemove = spanLocations.filter { (_, spanLocation) -> !spanLocation.isAlive() || !hasIndex(project, spanLocation.file) }.keys
+            Log.trace(logger, "maintenance removing spans {}", toRemove)
+            spanLocations.entries.removeIf { toRemove.contains(it.key) }
+        }
+    }
+
+
 }

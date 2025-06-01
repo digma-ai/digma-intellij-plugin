@@ -1,6 +1,6 @@
 package org.digma.intellij.plugin.document
 
-import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.intellij.openapi.project.Project
@@ -11,14 +11,11 @@ import org.digma.intellij.plugin.log.Log
 
 class EditorEventsHandler(private val project: Project) : FileEditorManagerListener {
 
-    private val logger = Logger.getInstance(this::class.java)
-
+    private val logger = thisLogger()
 
     override fun fileOpened(source: FileEditorManager, file: VirtualFile) {
         try {
-            if (logger.isTraceEnabled) {
-                Log.log(logger::trace, "fileOpened: {}", file)
-            }
+            Log.trace(logger, project, "fileOpened: {}", file)
 
             if (!isProjectValid(project)) {
                 return
@@ -27,7 +24,7 @@ class EditorEventsHandler(private val project: Project) : FileEditorManagerListe
             EditorDocumentService.getInstance(project).fileOpened(file)
 
         } catch (e: Throwable) {
-            Log.warnWithException(logger, e, "Exception in fileOpened {}", e)
+            Log.warnWithException(logger, project, e, "Exception in fileOpened {}", e)
             ErrorReporter.getInstance().reportError(project, "EditorEventsHandler.fileOpened", e)
         }
     }
@@ -35,9 +32,7 @@ class EditorEventsHandler(private val project: Project) : FileEditorManagerListe
     override fun fileClosed(source: FileEditorManager, file: VirtualFile) {
         try {
 
-            if (logger.isTraceEnabled) {
-                Log.log(logger::trace, "fileClosed: {}", file)
-            }
+            Log.trace(logger, project, "fileClosed: {}", file)
 
             if (!isProjectValid(project)) {
                 return
@@ -46,7 +41,7 @@ class EditorEventsHandler(private val project: Project) : FileEditorManagerListe
             EditorDocumentService.getInstance(project).fileClosed(file)
 
         } catch (e: Throwable) {
-            Log.warnWithException(logger, e, "Exception in fileClosed {}", e)
+            Log.warnWithException(logger, project, e, "Exception in fileClosed {}", e)
             ErrorReporter.getInstance().reportError(project, "EditorEventsHandler.fileClosed", e)
         }
     }
@@ -60,7 +55,7 @@ class EditorEventsHandler(private val project: Project) : FileEditorManagerListe
 //        try {
 //
 //            if (logger.isTraceEnabled) {
-//                Log.log(logger::trace, "selectionChanged: new {}", event.newFile)
+//                Log.trace(logger,project, "selectionChanged: new {}", event.newFile)
 //            }
 //
 //            if (!isProjectValid(project)) {
@@ -83,7 +78,7 @@ class EditorEventsHandler(private val project: Project) : FileEditorManagerListe
 //            EditorDocumentService.getInstance(project).fileOpened(file, editor)
 //
 //        } catch (e: Throwable) {
-//            Log.warnWithException(logger, e, "Exception in selectionChanged {}", e)
+//            Log.warnWithException(logger,project, e, "Exception in selectionChanged {}", e)
 //            ErrorReporter.getInstance().reportError(project, "EditorEventsHandler.selectionChanged", e)
 //        }
 //    }

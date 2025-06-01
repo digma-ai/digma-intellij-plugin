@@ -97,7 +97,7 @@ class EditorDocumentService(private val project: Project, private val cs: Corout
         try {
             doOnFileOpened(file)
         } catch (e: Throwable) {
-            Log.warnWithException(logger, e, "Exception in fileOpened {}", e)
+            Log.warnWithException(logger, project, e, "Exception in fileOpened {}", e)
             ErrorReporter.getInstance().reportError(project, "EditorDocumentService.fileOpened", e)
         }
     }
@@ -114,10 +114,7 @@ class EditorDocumentService(private val project: Project, private val cs: Corout
         //Note: I tried to use EditorFactory.getInstance().eventMulticaster but it will fire hundreds of events for every file open file also for non-writable
         // files. Don't use it!
         if (isRelevantLanguageFileNoSlowOperations(file)) {
-
-            if (logger.isTraceEnabled) {
-                Log.log(logger::trace, "fileOpened: processing {}", file)
-            }
+            Log.trace(logger, project, "fileOpened: processing {}", file)
 
             //this is protection against dev error, it should never happen. we should catch it in development.
             if (documentChangeListenerDisposables.contains(file)) {
@@ -127,20 +124,14 @@ class EditorDocumentService(private val project: Project, private val cs: Corout
 
             val document = FileDocumentManager.getInstance().getDocument(file)
             if (document != null) {
-                if (logger.isTraceEnabled) {
-                    Log.log(logger::trace, "fileOpened: adding document listener for {}", file)
-                }
+                Log.trace(logger, project, "fileOpened: adding document listener for {}", file)
                 val disposable = Disposer.newDisposable()
                 document.addDocumentListener(myDocumentListener, disposable)
                 documentChangeListenerDisposables[file] = disposable
-                if (logger.isTraceEnabled) {
-                    Log.log(logger::trace, "fileOpened: starting build document info job for {}", file)
-                }
+                Log.trace(logger, project, "fileOpened: starting build document info job for {}", file)
                 launchBuildDocumentInfoJob(file)
             } else {
-                if (logger.isTraceEnabled) {
-                    Log.log(logger::warn, "fileOpened: file is relevant but document is null for {}", file)
-                }
+                Log.warn(logger, project, "fileOpened: file is relevant but document is null for {}", file)
             }
         }
     }
@@ -150,7 +141,7 @@ class EditorDocumentService(private val project: Project, private val cs: Corout
         try {
             doOnFileClosed(file)
         } catch (e: Throwable) {
-            Log.warnWithException(logger, e, "Exception in fileClosed {}", e)
+            Log.warnWithException(logger, project, e, "Exception in fileClosed {}", e)
             ErrorReporter.getInstance().reportError(project, "EditorDocumentService.fileClosed", e)
         }
     }
@@ -168,15 +159,11 @@ class EditorDocumentService(private val project: Project, private val cs: Corout
             return
         }
 
-        if (logger.isTraceEnabled) {
-            Log.log(logger::trace, "fileClosed: processing {}", file)
-        }
+        Log.trace(logger, project, "fileClosed: processing {}", file)
 
         val disposable = documentChangeListenerDisposables.remove(file)
         disposable?.let {
-            if (logger.isTraceEnabled) {
-                Log.log(logger::trace, "fileClosed: removing document listener for {}", file)
-            }
+            Log.trace(logger, project, "fileClosed: removing document listener for {}", file)
             Disposer.dispose(it)
         }
 
@@ -186,7 +173,7 @@ class EditorDocumentService(private val project: Project, private val cs: Corout
                 removeDocumentFromChangedDocuments(file)
                 filesToUpdate.remove(file)
                 runningJobs[file]?.cancel(CancellationException("File was closed"))
-            }finally {
+            } finally {
                 putRemoveLock.withLock {
                     DocumentInfoStorage.getInstance(project).removeDocumentInfo(file)
                 }
@@ -220,8 +207,8 @@ class EditorDocumentService(private val project: Project, private val cs: Corout
         while (document != null) {
             if (document.isWritable) {
                 val file = FileDocumentManager.getInstance().getFile(document)
-                file?.let {
-                    filesToUpdate.add(file)
+                file?.takeIf { isValidVirtualFile(it) }?.let {
+                    filesToUpdate.add(it)
                 }
             }
             document = changedDocuments.poll()
@@ -241,10 +228,7 @@ class EditorDocumentService(private val project: Project, private val cs: Corout
     //This method is invoked after the quite period has passed.
     //While waiting for quite period we didn't run anything on EDT or read access.
     private fun updateDocumentInfo(virtualFile: VirtualFile) {
-        if (logger.isTraceEnabled) {
-            Log.log(logger::trace, "updateDocumentInfo: {}", virtualFile)
-        }
-
+        Log.trace(logger, project, "updateDocumentInfo: {}", virtualFile)
         launchBuildDocumentInfoJob(virtualFile)
     }
 
@@ -252,9 +236,7 @@ class EditorDocumentService(private val project: Project, private val cs: Corout
     //this method will be called on EDT from fileOpened, and in a coroutine for updates, it should run fast and not take read access.
     private fun launchBuildDocumentInfoJob(file: VirtualFile) {
 
-        if (logger.isTraceEnabled) {
-            Log.log(logger::trace, "starting buildDocumentInfo job for {}", file)
-        }
+        Log.trace(logger, project, "starting buildDocumentInfo job for {}", file)
 
         runningJobs[file]?.cancel(CancellationException("New job started"))
         val job = cs.launchWithErrorReporting("EditorDocumentService.launchBuildDocumentInfoJob", logger) {
@@ -275,40 +257,40 @@ class EditorDocumentService(private val project: Project, private val cs: Corout
         // building DocumentInfo finished and just before putting it in the storage, that is handled by putRemoveLock.
         //Exceptions are caught in the coroutine exception handler and reported in invokeOnCompletion.
 
-        Log.log(logger::trace, "buildDocumentInfo: {}", file)
+        Log.trace(logger, project, "buildDocumentInfo: {}", file)
 
         val isRelevant = readAction {
             isRelevantFile(file)
         }
         coroutineContext.ensureActive()
         if (!isRelevant) {
-            Log.log(logger::trace, "buildDocumentInfo: file is not relevant {}", file)
+            Log.trace(logger, project, "buildDocumentInfo: file is not relevant {}", file)
             return
         }
 
         if (!isSupportedLanguageFile(project, file)) {
-            Log.log(logger::trace, "buildDocumentInfo: file is not a supported language {}", file)
+            Log.trace(logger, project, "buildDocumentInfo: file is not a supported language {}", file)
             return
         }
         coroutineContext.ensureActive()
 
         val languageService = LanguageServiceProvider.getInstance(project).getLanguageService(file)
         if (languageService == null) {
-            Log.log(logger::warn, "buildDocumentInfo: could not find language service for {}", file)
+            Log.warn(logger, project, "buildDocumentInfo: could not find language service for {}", file)
             return
         }
 
         if (!languageService.isSupportedFile(file)) {
-            Log.log(logger::trace, "buildDocumentInfo: file is not supported by language service {}", file)
+            Log.trace(logger, project, "buildDocumentInfo: file is not supported by language service {}", file)
             return
         }
 
         coroutineContext.ensureActive()
         val documentInfo = languageService.buildDocumentInfo(file)
         if (documentInfo == null) {
-            Log.log(logger::warn, "buildDocumentInfo: could not build document info for {}", file)
+            Log.warn(logger, project, "buildDocumentInfo: could not build document info for {}", file)
         } else {
-            Log.log(logger::trace, "buildDocumentInfo: done building document info for {}", file)
+            Log.trace(logger, project, "buildDocumentInfo: done building document info for {}", file)
             coroutineContext.ensureActive()
             putRemoveLock.withLock {
                 coroutineContext.ensureActive()

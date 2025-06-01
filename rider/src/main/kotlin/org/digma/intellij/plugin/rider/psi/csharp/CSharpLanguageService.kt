@@ -25,6 +25,7 @@ import kotlinx.coroutines.withContext
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.common.isProjectValid
+import org.digma.intellij.plugin.common.isValidVirtualFile
 import org.digma.intellij.plugin.common.suspendableRetry
 import org.digma.intellij.plugin.discovery.model.EndpointLocation
 import org.digma.intellij.plugin.document.DocumentInfoStorage
@@ -57,7 +58,8 @@ class CSharpLanguageService(project: Project) : LifetimedProjectComponent(projec
             This code runs on EDT and should not block EDT for a long time.
              */
 
-            Log.trace(logger, "Rider solution loaded, warm startup: {}, initializing {}",
+            Log.trace(
+                logger, "Rider solution loaded, warm startup: {}, initializing {}",
                 SolutionStartupService.getInstance(project).isWarmStartup(), SolutionStartupService.getInstance(project).isInitializing()
             )
 
@@ -170,8 +172,11 @@ class CSharpLanguageService(project: Project) : LifetimedProjectComponent(projec
         EDT.assertNonDispatchThread()
         ReadActions.assertNotInReadAccess()
 
-        if (logger.isTraceEnabled) {
-            Log.trace(logger, "got buildDocumentInfo request for {}", virtualFile)
+        Log.trace(logger, project, "got buildDocumentInfo request for {}", virtualFile)
+
+        if (!isValidVirtualFile(virtualFile)) {
+            Log.trace(logger, project, "buildDocumentInfo: virtualFile is not valid for {}", virtualFile)
+            return null
         }
 
         //we don't need the psi file here, discovery is done in Rider backend. this is just a validation check
@@ -179,16 +184,16 @@ class CSharpLanguageService(project: Project) : LifetimedProjectComponent(projec
         val psiFile = smartReadAction(project) {
             val psiFile = PsiManager.getInstance(project).findFile(virtualFile)
             if (psiFile == null) {
-                Log.trace(logger, "buildDocumentInfo: could not find psiFile for {}", virtualFile)
+                Log.trace(logger, project, "buildDocumentInfo: could not find psiFile for {}", virtualFile)
                 null
             } else if (!PsiUtils.isValidPsiFile(psiFile)) {
-                Log.trace(logger, "buildDocumentInfo: psiFile is not valid for {}", virtualFile)
+                Log.trace(logger, project, "buildDocumentInfo: psiFile is not valid for {}", virtualFile)
                 null
             } else if (!isSupportedFile(psiFile)) {
-                Log.trace(logger, "buildDocumentInfo: psiFile is not supported for {}", virtualFile)
+                Log.trace(logger, project, "buildDocumentInfo: psiFile is not supported for {}", virtualFile)
                 null
             } else if (!isProjectValid(project)) {
-                Log.trace(logger, "buildDocumentInfo: project is not valid for {}", virtualFile)
+                Log.trace(logger, project, "buildDocumentInfo: project is not valid for {}", virtualFile)
                 null
             } else {
                 psiFile

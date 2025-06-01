@@ -136,7 +136,7 @@ class CodeContextUpdateService(private val project: Project, private val cs: Cor
                 while (isActive) {
                     try {
                         //check if the user is logged in, otherwise there is no point to update the context.
-                        if (shouldRun()) {
+                        if (shouldRun() && currentEditor?.isValid == true) {
                             val (editor, caretOffset, file) = readAction {
                                 val editor = currentEditor?.editor
                                 val caretOffset = editor?.caretModel?.offset

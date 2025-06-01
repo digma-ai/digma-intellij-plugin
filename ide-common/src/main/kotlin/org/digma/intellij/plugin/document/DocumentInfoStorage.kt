@@ -42,18 +42,16 @@ class DocumentInfoStorage(private val project: Project) {
     //initially I wanted to keep putDocumentInfo internal because there is no reason to put a documentInfo from other classes
     // other than EditorDocumentService. but this is a solution for the Rider issue. see comment in call site.
     fun updateDocumentInfoForRider(file: VirtualFile, documentInfo: DocumentInfo) {
-        if (logger.isTraceEnabled) {
-            Log.log(logger::trace, "updateDocumentInfoForRider: {} , DocumentInfo:[{}]", file, documentInfo)
-        }
+        Log.trace(logger, project, "updateDocumentInfoForRider: {} , DocumentInfo:[{}]", file, documentInfo)
         putDocumentInfo(file, documentInfo)
     }
 
     internal fun putDocumentInfo(file: VirtualFile, documentInfo: DocumentInfo) {
 
         if (logger.isTraceEnabled) {
-            Log.log(logger::trace, "putDocumentInfo: {} , DocumentInfo:[{}]", file, documentInfo)
+            Log.trace(logger, project, "putDocumentInfo: {} , DocumentInfo:[{}]", file, documentInfo)
             if (containsDocumentInfo(file)) {
-                Log.log(logger::trace, "putDocumentInfo: file already exists , assuming update. {}", file)
+                Log.trace(logger, project, "putDocumentInfo: file already exists , assuming update. {}", file)
             }
         }
 
@@ -79,9 +77,7 @@ class DocumentInfoStorage(private val project: Project) {
         file: VirtualFile,
         documentInfo: DocumentInfo
     ) {
-        if (logger.isTraceEnabled) {
-            Log.log(logger::trace, "fireDocumentInfoChanged: for {}", file)
-        }
+        Log.trace(logger, project, "fireDocumentInfoChanged: for {}", file)
         project.messageBus.syncPublisher(DocumentInfoChanged.DOCUMENT_INFO_CHANGED_TOPIC).documentInfoChanged(file, documentInfo)
     }
 
@@ -89,7 +85,7 @@ class DocumentInfoStorage(private val project: Project) {
     internal fun removeDocumentInfo(file: VirtualFile) {
         documentInfos.remove(file)
         if (logger.isTraceEnabled) {
-            Log.log(logger::trace, "removeDocumentInfo: file:{}", file)
+            Log.trace(logger, project, "removeDocumentInfo: file:{}", file)
             Log.log(
                 logger::trace,
                 "currently have {} documents in storage: {}",
@@ -101,9 +97,7 @@ class DocumentInfoStorage(private val project: Project) {
     }
 
     private fun fireDocumentInfoRemoved(file: VirtualFile) {
-        if (logger.isTraceEnabled) {
-            Log.log(logger::trace, "fireDocumentInfoRemoved: for {}", file)
-        }
+        Log.trace(logger, project, "fireDocumentInfoRemoved: for {}", file)
         project.messageBus.syncPublisher(DocumentInfoChanged.DOCUMENT_INFO_CHANGED_TOPIC).documentInfoRemoved(file)
     }
 

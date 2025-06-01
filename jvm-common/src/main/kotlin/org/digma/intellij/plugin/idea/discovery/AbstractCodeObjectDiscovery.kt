@@ -2,7 +2,7 @@ package org.digma.intellij.plugin.idea.discovery
 
 import com.intellij.lang.Language
 import com.intellij.openapi.application.readAction
-import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
@@ -18,6 +18,7 @@ import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.discovery.SpanInfo
 import org.digma.intellij.plugin.psi.LanguageServiceProvider
+import org.digma.intellij.plugin.psi.PsiUtils
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.UMethod
@@ -29,7 +30,7 @@ import kotlin.coroutines.coroutineContext
  */
 abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSpanDiscovery) {
 
-    protected val logger: Logger = Logger.getInstance(this::class.java)
+    protected val logger = thisLogger()
 
     /*
         Note about debugging:
@@ -88,6 +89,12 @@ abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSp
             EDT.assertNonDispatchThread()
             ReadActions.assertNotInReadAccess()
             DumbService.getInstance(project).waitForSmartMode()
+
+            if (!PsiUtils.isValidPsiFile(psiFile)) {
+                Log.trace(logger, project, "buildDocumentInfo: psiFile is not valid for {}", fileUrl)
+                return null
+            }
+
             //maybe uFile is null,there is nothing to do without a UFile.
             val fileData = readAction {
                 FileData.buildFileData(psiFile)
@@ -96,12 +103,24 @@ abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSp
 
             val packageName = fileData.packageName
             val methodInfoMap = mutableMapOf<String, MethodInfo>()
+            if (!PsiUtils.isValidPsiFile(psiFile)) {
+                Log.trace(logger, project, "buildDocumentInfo: psiFile is not valid for {}", fileUrl)
+                return null
+            }
             val spans: Collection<SpanInfo> = collectSpans(project, psiFile)
             coroutineContext.ensureActive()
             val classes = readAction { fileData.uFile.classes }
+            if (!PsiUtils.isValidPsiFile(psiFile)) {
+                Log.trace(logger, project, "buildDocumentInfo: psiFile is not valid for {}", fileUrl)
+                return null
+            }
             collectMethods(project, fileUrl, classes, packageName, methodInfoMap, spans)
             coroutineContext.ensureActive()
             val documentInfo = DocumentInfo(fileUrl, methodInfoMap, language.id)
+            if (!PsiUtils.isValidPsiFile(psiFile)) {
+                Log.trace(logger, project, "buildDocumentInfo: psiFile is not valid for {}", fileUrl)
+                return null
+            }
             collectEndpoints(project, psiFile, documentInfo)
             coroutineContext.ensureActive()
             return documentInfo

@@ -19,6 +19,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.ensureActive
 import org.digma.intellij.plugin.collections.SynchronizedHashSetQueue
+import org.digma.intellij.plugin.common.isValidVirtualFile
 import org.digma.intellij.plugin.discovery.FileDiscoveryInfoBuilder
 import org.digma.intellij.plugin.idea.index.CANDIDATE_FILES_INDEX_ID
 import org.digma.intellij.plugin.idea.index.CANDIDATE_FILES_INDEX_KEY_ENDPOINT
@@ -149,10 +150,12 @@ class JvmNavigationDiscoveryManager(private val project: Project, private val cs
                             IdFilter.getProjectIdFilter(project, false),
                             null,
                             Processor { candidateFile ->
-                                coroutineContext.ensureActive()
-                                Log.trace(logger, project, "Found candidate file {}", candidateFile.url)
-                                candidateFiles.offer(candidateFile)
-                                count++
+                                if (isValidVirtualFile(candidateFile)) {
+                                    coroutineContext.ensureActive()
+                                    Log.trace(logger, project, "Found candidate file {}", candidateFile.url)
+                                    candidateFiles.offer(candidateFile)
+                                    count++
+                                }
                                 true
                             })
                     }
@@ -198,7 +201,7 @@ class JvmNavigationDiscoveryManager(private val project: Project, private val cs
                     val isInContent = readAction {
                         ProjectFileIndex.getInstance(project).isInContent(file)
                     }
-                    if (!isInContent) {
+                    if (!isInContent || !isValidVirtualFile(file)) {
                         candidateFiles.remove(file)
                         file = candidateFiles.peek()
                         continue

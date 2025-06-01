@@ -20,6 +20,7 @@ import org.digma.intellij.plugin.common.CodeObjectsUtil
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.common.isProjectValid
+import org.digma.intellij.plugin.common.isValidVirtualFile
 import org.digma.intellij.plugin.common.suspendableRetry
 import org.digma.intellij.plugin.discovery.model.EndpointLocation
 import org.digma.intellij.plugin.document.DocumentInfoStorage
@@ -56,7 +57,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
 
     init {
-        Log.trace(logger,project, "Initializing language service {}", javaClass)
+        Log.trace(logger, project, "Initializing language service {}", javaClass)
     }
 
     override fun dispose() {
@@ -93,21 +94,26 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
         EDT.assertNonDispatchThread()
         ReadActions.assertNotInReadAccess()
 
-        Log.trace(logger,project, "got buildDocumentInfo request for {}", virtualFile)
+        Log.trace(logger, project, "got buildDocumentInfo request for {}", virtualFile)
+
+        if (!isValidVirtualFile(virtualFile)) {
+            Log.trace(logger, project, "buildDocumentInfo: virtualFile is not valid for {}", virtualFile)
+            return null
+        }
 
         val psiFile = smartReadAction(project) {
             val psiFile = PsiManager.getInstance(project).findFile(virtualFile)
             if (psiFile == null) {
-                Log.trace(logger,project, "buildDocumentInfo: could not find psiFile for {}", virtualFile)
+                Log.trace(logger, project, "buildDocumentInfo: could not find psiFile for {}", virtualFile)
                 null
             } else if (!PsiUtils.isValidPsiFile(psiFile)) {
-                Log.trace(logger,project, "buildDocumentInfo: psiFile is not valid for {}", virtualFile)
+                Log.trace(logger, project, "buildDocumentInfo: psiFile is not valid for {}", virtualFile)
                 null
             } else if (!isSupportedFile(psiFile)) {
-                Log.trace(logger,project, "buildDocumentInfo: psiFile is not supported for {}", virtualFile)
+                Log.trace(logger, project, "buildDocumentInfo: psiFile is not supported for {}", virtualFile)
                 null
             } else if (!isProjectValid(project)) {
-                Log.trace(logger,project, "buildDocumentInfo: project is not valid for {}", virtualFile)
+                Log.trace(logger, project, "buildDocumentInfo: project is not valid for {}", virtualFile)
                 null
             } else {
                 psiFile
@@ -131,7 +137,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
         //try to parse the methodId as if it is java and try to find the language
         if (methodId.indexOf("\$_$") <= 0) {
-            Log.trace(logger,project, "method id in getLanguageForMethodCodeObjectId does not contain \$_$ {}", methodId)
+            Log.trace(logger, project, "method id in getLanguageForMethodCodeObjectId does not contain \$_$ {}", methodId)
             return null
         }
 
@@ -187,36 +193,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
 
     override suspend fun detectMethodBySpan(project: Project, spanCodeObjectId: String): String? {
-
         return JvmSpanNavigationProvider.Companion.getInstance(project).getMethodIdBySpanId(spanCodeObjectId)
-//
-//        val (fileUri, offset) = try {
-//            JvmSpanNavigationProvider.getInstance(project).getUriForSpanId(spanCodeObjectId) ?: return null
-//        } catch (_: Throwable) {
-//            return null
-//        }
-//
-//        return try {
-//            val virtualFile = VirtualFileManager.getInstance().findFileByUrl(fileUri)
-//            virtualFile?.let { vFile ->
-//                smartReadAction(project) {
-//                    val psiFile = PsiManager.getInstance(project).findFile(vFile)
-//                    psiFile?.takeIf { it.isValid }?.let { psi ->
-//                        val psiElement = psi.findElementAt(offset)
-//                        psiElement?.let { element ->
-//                            val psiMethod = PsiTreeUtil.getParentOfType(element, PsiMethod::class.java)
-//                            psiMethod?.let { method ->
-//                                createPsiMethodCodeObjectId(method)
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        } catch (e: Throwable) {
-//            Log.warnWithException(logger, project, e, "Error in detectMethodBySpan {}", e)
-//            ErrorReporter.getInstance().reportError("${this::class.simpleName}.detectMethodBySpan", e)
-//            null
-//        }
     }
 
 
@@ -258,9 +235,14 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
 
     override suspend fun detectMethodUnderCaret(virtualFile: VirtualFile, editor: Editor, caretOffset: Int): MethodUnderCaret {
-        if (!isSupportedFile(virtualFile)) {
+        if (isSupportedFile(virtualFile).not()) {
             return MethodUnderCaret.Companion.empty(virtualFile.url)
         }
+
+        if (!isValidVirtualFile(virtualFile)) {
+            return MethodUnderCaret.EMPTY
+        }
+
         return smartReadAction(project) {
             return@smartReadAction detectMethodUnderCaretImpl(virtualFile, caretOffset)
         }
@@ -317,10 +299,10 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
     override suspend fun navigateToMethod(methodId: String) {
 
-        Log.trace(logger,project, "got navigate to method request {}", methodId)
+        Log.trace(logger, project, "got navigate to method request {}", methodId)
 
         if (methodId.indexOf("\$_$") <= 0) {
-            Log.trace(logger,project, "method id in navigateToMethod does not contain \$_$, can not navigate {}", methodId)
+            Log.trace(logger, project, "method id in navigateToMethod does not contain \$_$, can not navigate {}", methodId)
             return
         }
 
@@ -332,17 +314,17 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
             cls?.let {
                 val method = findMethodInClass(it, methodId)
                 if (method?.sourcePsi is Navigatable && (method.sourcePsi as Navigatable).canNavigate()) {
-                    Log.trace(logger,project, "can navigate to method {}", method)
+                    Log.trace(logger, project, "can navigate to method {}", method)
                     method
                 } else {
-                    Log.trace(logger,project, "can not navigate to method {}", method)
+                    Log.trace(logger, project, "can not navigate to method {}", method)
                     null
                 }
             }
         }
         method?.let {
             withContext(Dispatchers.EDT) {
-                Log.trace(logger,project, "navigating to method {}", method)
+                Log.trace(logger, project, "navigating to method {}", method)
                 (it.sourcePsi as Navigatable).navigate(true)
             }
         }
@@ -351,10 +333,10 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
     override suspend fun findMethodPsiElementByMethodId(methodId: String): PsiElement? {
 
-        Log.trace(logger,project, "got getPsiElementForMethod request {}", methodId)
+        Log.trace(logger, project, "got getPsiElementForMethod request {}", methodId)
 
         if (methodId.indexOf("\$_$") <= 0) {
-            Log.trace(logger,project, "method id in getPsiElementForMethod does not contain \$_$, can not find psi element {}", methodId)
+            Log.trace(logger, project, "method id in getPsiElementForMethod does not contain \$_$, can not find psi element {}", methodId)
             return null
         }
 
@@ -373,10 +355,10 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
     override suspend fun findClassPsiElementByMethodId(methodId: String): PsiElement? {
 
-        Log.trace(logger,project, "got getClassPsiElementByMethodId request {}", methodId)
+        Log.trace(logger, project, "got getClassPsiElementByMethodId request {}", methodId)
 
         if (methodId.indexOf("\$_$") <= 0) {
-            Log.trace(logger,project, "method id in getClassPsiElementByMethodId does not contain \$_$, can not navigate {}", methodId)
+            Log.trace(logger, project, "method id in getClassPsiElementByMethodId does not contain \$_$, can not navigate {}", methodId)
             return null
         }
 
@@ -387,7 +369,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
     override suspend fun findClassPsiElementByClassName(className: String): PsiElement? {
 
-        Log.trace(logger,project, "got getClassPsiElementByClassName request {}", className)
+        Log.trace(logger, project, "got getClassPsiElementByClassName request {}", className)
 
         //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
         val classNameToFind = className.replace('$', '.')

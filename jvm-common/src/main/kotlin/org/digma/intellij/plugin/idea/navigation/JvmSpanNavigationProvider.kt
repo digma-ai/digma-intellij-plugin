@@ -6,6 +6,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import org.digma.intellij.plugin.common.isValidVirtualFile
 import org.digma.intellij.plugin.discovery.model.FileDiscoveryInfo
 import org.digma.intellij.plugin.discovery.model.SpanLocation
 import org.digma.intellij.plugin.idea.index.hasIndex
@@ -50,10 +51,13 @@ internal class JvmSpanNavigationProvider(private val project: Project) {
 
     suspend fun processCandidateFile(fileInfo: FileDiscoveryInfo) {
         Log.trace(logger, project,"processing candidateFile {}", fileInfo.file.url)
+
+        if (!isValidVirtualFile(fileInfo.file)) {
+            return
+        }
+
         maintenanceLock.withLock {
-
             removeEntriesForFile(fileInfo.file)
-
             fileInfo.methods.forEach { (methodId, methodInfo) ->
                 methodInfo.spans.forEach { spanInfo ->
                     val file = fileInfo.file
@@ -70,7 +74,6 @@ internal class JvmSpanNavigationProvider(private val project: Project) {
     }
 
     suspend fun maintenance() {
-
         Log.trace(logger, project,"starting maintenance, current span location count {}", spanLocations.size)
         if(logger.isTraceEnabled){
             Log.trace(logger, project,"span locations [{}]", spanLocations.entries.joinToString(", ") { "[${it.key} -> ${it.value}]" })
@@ -85,6 +88,4 @@ internal class JvmSpanNavigationProvider(private val project: Project) {
             spanLocations.entries.removeIf { toRemove.contains(it.key) }
         }
     }
-
-
 }

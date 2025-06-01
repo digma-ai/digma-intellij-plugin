@@ -4,6 +4,7 @@ import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
+import org.digma.intellij.plugin.common.isValidVirtualFile
 import org.digma.intellij.plugin.discovery.FileDiscoveryProvider
 import org.digma.intellij.plugin.discovery.model.EndpointDiscoveryInfo
 import org.digma.intellij.plugin.discovery.model.FileDiscoveryInfo
@@ -29,6 +30,9 @@ abstract class AbstractJvmFileDiscoveryProvider: FileDiscoveryProvider {
         file: VirtualFile
     ): FileDiscoveryInfo {
         DumbService.getInstance(project).waitForSmartMode()
+        if(!isValidVirtualFile(file)){
+            return FileDiscoveryInfo(file)
+        }
         Log.trace(logger, project, "starting discovery for {}", file)
 
         val languageService = LanguageServiceProvider.getInstance(project).getLanguageService(file)

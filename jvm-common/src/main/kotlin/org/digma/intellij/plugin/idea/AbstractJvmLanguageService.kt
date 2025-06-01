@@ -80,6 +80,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
      */
     override suspend fun buildDocumentInfo(virtualFile: VirtualFile): DocumentInfo? {
 
+        Log.trace(logger, project, "buildDocumentInfo called {}", virtualFile)
         /*
             Important notice:
             building document info may be a long operation for large files.
@@ -235,6 +236,9 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
 
     override suspend fun detectMethodUnderCaret(virtualFile: VirtualFile, editor: Editor, caretOffset: Int): MethodUnderCaret {
+
+        Log.trace(logger, project, "detectMethodUnderCaret called {}", virtualFile)
+
         if (isSupportedFile(virtualFile).not()) {
             return MethodUnderCaret.Companion.empty(virtualFile.url)
         }
@@ -299,7 +303,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
     override suspend fun navigateToMethod(methodId: String) {
 
-        Log.trace(logger, project, "got navigate to method request {}", methodId)
+        Log.trace(logger, project, "navigateToMethod called {}", methodId)
 
         if (methodId.indexOf("\$_$") <= 0) {
             Log.trace(logger, project, "method id in navigateToMethod does not contain \$_$, can not navigate {}", methodId)
@@ -333,10 +337,10 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
     override suspend fun findMethodPsiElementByMethodId(methodId: String): PsiElement? {
 
-        Log.trace(logger, project, "got getPsiElementForMethod request {}", methodId)
+        Log.trace(logger, project, "findMethodPsiElementByMethodId called {}", methodId)
 
         if (methodId.indexOf("\$_$") <= 0) {
-            Log.trace(logger, project, "method id in getPsiElementForMethod does not contain \$_$, can not find psi element {}", methodId)
+            Log.trace(logger, project, "method id in findMethodPsiElementByMethodId does not contain \$_$, can not find psi element {}", methodId)
             return null
         }
 
@@ -355,7 +359,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
     override suspend fun findClassPsiElementByMethodId(methodId: String): PsiElement? {
 
-        Log.trace(logger, project, "got getClassPsiElementByMethodId request {}", methodId)
+        Log.trace(logger, project, "findClassPsiElementByMethodId called {}", methodId)
 
         if (methodId.indexOf("\$_$") <= 0) {
             Log.trace(logger, project, "method id in getClassPsiElementByMethodId does not contain \$_$, can not navigate {}", methodId)
@@ -369,7 +373,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
     override suspend fun findClassPsiElementByClassName(className: String): PsiElement? {
 
-        Log.trace(logger, project, "got getClassPsiElementByClassName request {}", className)
+        Log.trace(logger, project, "findClassPsiElementByClassName called {}", className)
 
         //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
         val classNameToFind = className.replace('$', '.')

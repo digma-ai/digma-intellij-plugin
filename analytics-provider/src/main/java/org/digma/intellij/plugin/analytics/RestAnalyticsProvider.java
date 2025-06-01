@@ -1323,8 +1323,8 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable, Base
         @Headers({
                 "Content-Type:application/json"
         })
-        @GET("spans/spanCodeObjectId/{errorId}")
-        Call<String> resolveEnvironmentByErrorId(@Path("errorId") String errorId);
+        @GET("CodeAnalytics/codeObjects/error_environment")
+        Call<String> resolveEnvironmentByErrorId(@Query("errorId") String errorId);
 
     }
 }

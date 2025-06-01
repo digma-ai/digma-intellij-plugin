@@ -576,7 +576,7 @@ public class AnalyticsService implements Disposable {
 
     @Nullable
     public String resolveEnvironmentByErrorId(@NotNull String errorId) throws AnalyticsServiceException {
-        if (backendVersionOlderThen("0.3.155")) {
+        if (backendVersionOlderThen("0.3.318")) {
             return null;
         }
 

@@ -56,7 +56,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
 
     init {
-        Log.trace(logger, "Initializing language service {}", javaClass)
+        Log.trace(logger,project, "Initializing language service {}", javaClass)
     }
 
     override fun dispose() {
@@ -93,21 +93,21 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
         EDT.assertNonDispatchThread()
         ReadActions.assertNotInReadAccess()
 
-        Log.trace(logger, "got buildDocumentInfo request for {}", virtualFile)
+        Log.trace(logger,project, "got buildDocumentInfo request for {}", virtualFile)
 
         val psiFile = smartReadAction(project) {
             val psiFile = PsiManager.getInstance(project).findFile(virtualFile)
             if (psiFile == null) {
-                Log.trace(logger, "buildDocumentInfo: could not find psiFile for {}", virtualFile)
+                Log.trace(logger,project, "buildDocumentInfo: could not find psiFile for {}", virtualFile)
                 null
             } else if (!PsiUtils.isValidPsiFile(psiFile)) {
-                Log.trace(logger, "buildDocumentInfo: psiFile is not valid for {}", virtualFile)
+                Log.trace(logger,project, "buildDocumentInfo: psiFile is not valid for {}", virtualFile)
                 null
             } else if (!isSupportedFile(psiFile)) {
-                Log.trace(logger, "buildDocumentInfo: psiFile is not supported for {}", virtualFile)
+                Log.trace(logger,project, "buildDocumentInfo: psiFile is not supported for {}", virtualFile)
                 null
             } else if (!isProjectValid(project)) {
-                Log.trace(logger, "buildDocumentInfo: project is not valid for {}", virtualFile)
+                Log.trace(logger,project, "buildDocumentInfo: project is not valid for {}", virtualFile)
                 null
             } else {
                 psiFile
@@ -130,7 +130,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
         //try to parse the methodId as if it is java and try to find the language
         if (methodId.indexOf("\$_$") <= 0) {
-            Log.trace(logger, "method id in getLanguageForMethodCodeObjectId does not contain \$_$ {}", methodId)
+            Log.trace(logger,project, "method id in getLanguageForMethodCodeObjectId does not contain \$_$ {}", methodId)
             return null
         }
 
@@ -302,7 +302,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
             val methodInfo = documentInfo.methods[methodId]
             if (methodInfo != null) {
                 val endpointInfo = methodInfo.endpoints.firstOrNull { endpointInfo: EndpointInfo ->
-                    endpointInfo.textRange?.contains(caretOffset) ?: false
+                    endpointInfo.textRange.contains(caretOffset)
                 }
 
                 if (endpointInfo != null) {
@@ -316,10 +316,10 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
     override suspend fun navigateToMethod(methodId: String) {
 
-        Log.trace(logger, "got navigate to method request {}", methodId)
+        Log.trace(logger,project, "got navigate to method request {}", methodId)
 
         if (methodId.indexOf("\$_$") <= 0) {
-            Log.trace(logger, "method id in navigateToMethod does not contain \$_$, can not navigate {}", methodId)
+            Log.trace(logger,project, "method id in navigateToMethod does not contain \$_$, can not navigate {}", methodId)
             return
         }
 
@@ -331,17 +331,17 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
             cls?.let {
                 val method = findMethodInClass(it, methodId)
                 if (method?.sourcePsi is Navigatable && (method.sourcePsi as Navigatable).canNavigate()) {
-                    Log.trace(logger, "can navigate to method {}", method)
+                    Log.trace(logger,project, "can navigate to method {}", method)
                     method
                 } else {
-                    Log.trace(logger, "can not navigate to method {}", method)
+                    Log.trace(logger,project, "can not navigate to method {}", method)
                     null
                 }
             }
         }
         method?.let {
             withContext(Dispatchers.EDT) {
-                Log.trace(logger, "navigating to method {}", method)
+                Log.trace(logger,project, "navigating to method {}", method)
                 (it.sourcePsi as Navigatable).navigate(true)
             }
         }
@@ -350,10 +350,10 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
     override suspend fun findMethodPsiElementByMethodId(methodId: String): PsiElement? {
 
-        Log.trace(logger, "got getPsiElementForMethod request {}", methodId)
+        Log.trace(logger,project, "got getPsiElementForMethod request {}", methodId)
 
         if (methodId.indexOf("\$_$") <= 0) {
-            Log.trace(logger, "method id in getPsiElementForMethod does not contain \$_$, can not find psi element {}", methodId)
+            Log.trace(logger,project, "method id in getPsiElementForMethod does not contain \$_$, can not find psi element {}", methodId)
             return null
         }
 
@@ -372,10 +372,10 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
     override suspend fun findClassPsiElementByMethodId(methodId: String): PsiElement? {
 
-        Log.trace(logger, "got getClassPsiElementByMethodId request {}", methodId)
+        Log.trace(logger,project, "got getClassPsiElementByMethodId request {}", methodId)
 
         if (methodId.indexOf("\$_$") <= 0) {
-            Log.trace(logger, "method id in getClassPsiElementByMethodId does not contain \$_$, can not navigate {}", methodId)
+            Log.trace(logger,project, "method id in getClassPsiElementByMethodId does not contain \$_$, can not navigate {}", methodId)
             return null
         }
 
@@ -386,7 +386,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
     override suspend fun findClassPsiElementByClassName(className: String): PsiElement? {
 
-        Log.trace(logger, "got getClassPsiElementByClassName request {}", className)
+        Log.trace(logger,project, "got getClassPsiElementByClassName request {}", className)
 
         //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
         val classNameToFind = className.replace('$', '.')

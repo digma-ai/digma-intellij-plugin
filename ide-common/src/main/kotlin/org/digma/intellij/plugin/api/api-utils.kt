@@ -10,12 +10,14 @@ import org.digma.intellij.plugin.common.findActiveProject
 const val ACTION_PARAM_NAME = "action"
 const val TARGET_TAB_PARAM_NAME = "targetTab"
 const val SPAN_UID_PARAM_NAME = "spanUid"
+const val ERROR_ID_PARAM_NAME = "errorId"
 const val ENVIRONMENT_ID_PARAM_NAME = "environment_id"
 const val PROJECT_NAME_PARAM_NAME = "projectName"
 
 const val ACTION_GO_TO_HOME_PARAM_VALUE = "GoToHome"
 const val ACTION_GO_TO_SPAN_PARAM_VALUE = "GoToSpan"
 const val ACTION_OPEN_REPORT_PARAM_VALUE = "OpenReport"
+const val ACTION_GO_TO_ERROR_PARAM_VALUE = "GoToError"
 
 
 fun findProjectOrNull(projectName: String): Project? {

@@ -37,6 +37,7 @@ class ApiProjectService(val project: Project) : DisposableAdaptor {
             ACTION_GO_TO_HOME_PARAM_VALUE -> GoToHomeCommand()
             ACTION_GO_TO_SPAN_PARAM_VALUE -> GoToSpanCommand()
             ACTION_OPEN_REPORT_PARAM_VALUE -> OpenReportCommand()
+            ACTION_GO_TO_ERROR_PARAM_VALUE -> GoToErrorCommand()
             else -> {
                 throw RuntimeException("unknown action $action")
             }

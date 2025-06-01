@@ -174,4 +174,5 @@ public interface AnalyticsProvider extends Closeable {
     DiscoveredDataResponse getDiscoveredData();
 
     SpanInfoByUid resolveSpanByUid(String uid);
+    EnvironmentInfoByErrorId resolveEnvironmentByErrorId(String errorId);
 }

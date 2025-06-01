@@ -97,7 +97,7 @@ class JvmNavigationDiscoveryManager(private val project: Project, private val cs
                     if (!startupJobCompleted.get()) {
                         launchStartupJob()
                     }
-                    launchCandida`tesProcessingJob()
+                    launchCandidatesProcessingJob()
                 }
             }
         })

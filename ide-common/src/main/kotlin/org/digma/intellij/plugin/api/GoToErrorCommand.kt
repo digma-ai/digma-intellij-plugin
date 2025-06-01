@@ -34,7 +34,7 @@ class GoToErrorCommand : AbstractApiCommand() {
         if (environmentId.isBlank()) {
             throw RuntimeException("could not find environment id for error id $errorId")
         }
-        val contextPayload = objectToJsonNode(GoToErrorContextPayload(errorId = errorId))
+        val contextPayload = objectToJsonNode(GoToErrorContextPayload(targetTabPath = errorId))
         val scopeContext = ScopeContext("IDE/REST_API_CALL", contextPayload)
 
         Log.log(
@@ -50,6 +50,6 @@ class GoToErrorCommand : AbstractApiCommand() {
     }
 
 
-    data class GoToErrorContextPayload(val targetTab: String = "errors", val errorId: String)
+    data class GoToErrorContextPayload(val targetTab: String = "errors", val targetTabPath: String)
 
 }

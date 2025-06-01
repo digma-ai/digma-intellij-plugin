@@ -496,6 +496,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable, Base
     }
 
     @Override
+    public String resolveEnvironmentByErrorId(String errorId) {
+        return execute(() -> client.analyticsProvider.resolveEnvironmentByErrorId(errorId));
+    }
+
+    @Override
     public HttpResponse proxyCall(HttpRequest request) {
 
         try {
@@ -1314,5 +1319,12 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable, Base
         })
         @GET("spans/spanCodeObjectId/{uid}")
         Call<SpanInfoByUid> resolveSpanByUid(@Path("uid") String uid);
+
+        @Headers({
+                "Content-Type:application/json"
+        })
+        @GET("spans/spanCodeObjectId/{errorId}")
+        Call<String> resolveEnvironmentByErrorId(@Path("errorId") String errorId);
+
     }
 }

@@ -28,6 +28,8 @@ class GoToSpanCommand : AbstractApiCommand() {
             Thread.currentThread().name
         )
 
+        //checked non-null above
+        spanUid!!
 
         val spanInfoByUid = AnalyticsService.getInstance(project).resolveSpanByUid(spanUid)
             ?: throw RuntimeException("could not find span by uid $spanUid")

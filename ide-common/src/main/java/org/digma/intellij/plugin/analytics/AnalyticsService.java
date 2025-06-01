@@ -564,7 +564,7 @@ public class AnalyticsService implements Disposable {
 
 
     @Nullable
-    public SpanInfoByUid resolveSpanByUid(String uid) throws AnalyticsServiceException {
+    public SpanInfoByUid resolveSpanByUid(@NotNull String uid) throws AnalyticsServiceException {
 
         if (backendVersionOlderThen("0.3.155")) {
             return null;
@@ -572,6 +572,15 @@ public class AnalyticsService implements Disposable {
 
         return executeCatching(() -> analyticsProviderProxy.resolveSpanByUid(uid));
 
+    }
+
+    @Nullable
+    public String resolveEnvironmentByErrorId(@NotNull String errorId) throws AnalyticsServiceException {
+        if (backendVersionOlderThen("0.3.155")) {
+            return null;
+        }
+
+        return executeCatching(() -> analyticsProviderProxy.resolveEnvironmentByErrorId(errorId));
     }
 
 
@@ -658,6 +667,8 @@ public class AnalyticsService implements Disposable {
                 new Class[]{AnalyticsProvider.class, Closeable.class},
                 new AnalyticsInvocationHandler(obj));
     }
+
+
 
     /**
      * A proxy for cross-cutting concerns across all api methods.

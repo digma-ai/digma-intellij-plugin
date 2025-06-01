@@ -102,6 +102,7 @@ abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSp
             coroutineContext.ensureActive()
             val documentInfo = DocumentInfo(fileUrl, methodInfoMap, language.id)
             collectEndpoints(project, psiFile, documentInfo)
+            coroutineContext.ensureActive()
             return documentInfo
         } catch (e: Throwable) {
             //may also be CancellationException
@@ -114,6 +115,7 @@ abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSp
     open suspend fun collectEndpoints(project: Project, psiFile: PsiFile, documentInfo: DocumentInfo) {
         val endpointDiscoveryList = getEndpointDiscoveryForLanguage(project, psiFile)
         for (framework in endpointDiscoveryList) {
+            coroutineContext.ensureActive()
             suspendableRetry {
                 framework.endpointDiscovery(psiFile, documentInfo)
             }
@@ -130,6 +132,7 @@ abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSp
 
     open suspend fun collectSpans(project: Project, psiFile: PsiFile): Collection<SpanInfo> {
         return suspendableRetry {
+            coroutineContext.ensureActive()
             spanDiscovery.discoverSpans(project, psiFile)
         }
     }
@@ -144,12 +147,14 @@ abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSp
         spans: Collection<SpanInfo>
     ) {
         classes.forEach { uClass ->
+            coroutineContext.ensureActive()
             if (isRelevantClassType(uClass)) {
                 val methods: Collection<UMethod> = readAction {
                     getMethodsInClass(uClass)
                 }
                 methods.forEach { uMethod ->
                     suspendableRetry {
+                        coroutineContext.ensureActive()
                         readAction {
                             val id: String = createMethodCodeObjectId(uMethod)
                             val name: String = uMethod.name

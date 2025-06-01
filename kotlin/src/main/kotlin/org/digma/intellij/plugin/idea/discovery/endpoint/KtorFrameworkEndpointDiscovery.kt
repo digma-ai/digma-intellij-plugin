@@ -5,6 +5,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiReference
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.searches.ReferencesSearch
+import kotlinx.coroutines.ensureActive
 import org.digma.intellij.plugin.common.SearchScopeProvider
 import org.digma.intellij.plugin.common.TextRangeUtils
 import org.digma.intellij.plugin.idea.discovery.createMethodCodeObjectId
@@ -23,6 +24,7 @@ import org.jetbrains.uast.getUCallExpression
 import org.jetbrains.uast.textRange
 import org.jetbrains.uast.toUElementOfType
 import org.jetbrains.uast.util.isMethodCall
+import kotlin.coroutines.coroutineContext
 
 class KtorFrameworkEndpointDiscovery(private val project: Project) : EndpointDiscovery() {
 
@@ -60,6 +62,7 @@ class KtorFrameworkEndpointDiscovery(private val project: Project) : EndpointDis
         val resultEndpoints = mutableListOf<EndpointInfo>()
 
         KTOR_ROUTING_BUILDER_ENDPOINTS.forEach { (fqName, httpMethod) ->
+            coroutineContext.ensureActive()
             val declarations =
                 smartReadAction(project) {
                     //todo: maybe cache the declarations, maybe in SmartElementPointer
@@ -68,12 +71,14 @@ class KtorFrameworkEndpointDiscovery(private val project: Project) : EndpointDis
                 }
 
             declarations.forEach { methodDeclarations ->
+                coroutineContext.ensureActive()
                 val references =
                     smartReadAction(project) {
                         ReferencesSearch.search(methodDeclarations, searchScopeProvider.get()).findAll()
                     }
 
                 references.forEach { ref ->
+                    coroutineContext.ensureActive()
                     smartReadAction(project) {
                         buildEndpointFromReference(resultEndpoints, ref, httpMethod)
                     }

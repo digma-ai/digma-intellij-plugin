@@ -116,6 +116,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
         coroutineContext.ensureActive()
         return psiFile?.let {
             suspendableRetry {
+                coroutineContext.ensureActive()
                 codeObjectDiscovery.buildDocumentInfo(project, it, virtualFile.url, getLanguage())
             }
         }

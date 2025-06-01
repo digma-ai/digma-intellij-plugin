@@ -9,12 +9,13 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.SmartPsiElementPointer
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
+import kotlinx.coroutines.ensureActive
 import org.digma.intellij.plugin.common.firstPart
 import org.digma.intellij.plugin.common.suspendableRetry
 import org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils
-import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.SpanInfo
 import org.digma.intellij.plugin.psi.PsiUtils
+import kotlin.coroutines.coroutineContext
 
 class MicrometerTracingFramework {
 
@@ -89,6 +90,8 @@ class MicrometerTracingFramework {
             spanInfos.addAll(newSpanAnnotationSpans)
         }
 
+        coroutineContext.ensureActive()
+
         suspendableRetry {
             val observedAnnotationSpans = observedAnnotationSpanDiscovery(project, psiFile)
             spanInfos.addAll(observedAnnotationSpans)
@@ -109,16 +112,13 @@ class MicrometerTracingFramework {
             val annotatedMethods = psiPointers.getPsiClassPointer(project, NEW_SPAN_FQN)?.let { newSpanClassPointer ->
                 findAnnotatedMethods(project, newSpanClassPointer) { GlobalSearchScope.fileScope(psiFile) }
             }
-
+            coroutineContext.ensureActive()
             annotatedMethods?.forEach { annotatedMethod: SmartPsiElementPointer<PsiMethod> ->
+                coroutineContext.ensureActive()
                 smartReadAction(project) {
                     annotatedMethod.element?.let {
-                        val spanInfo = try {
+                        val spanInfo =
                             getSpanInfoFromNewSpanAnnotatedMethod(it)
-                        } catch (e: Throwable) {
-                            Log.warnWithException(logger, e, "Error in newSpanAnnotationSpanDiscovery for method {}", it.name)
-                            null
-                        }
                         spanInfo?.let { si ->
                             spanInfos.add(si)
                         }
@@ -142,17 +142,14 @@ class MicrometerTracingFramework {
             val annotatedMethods = psiPointers.getPsiClassPointer(project, OBSERVED_FQN)?.let { observedAnnotationClassPointer ->
                 findAnnotatedMethods(project, observedAnnotationClassPointer) { GlobalSearchScope.fileScope(psiFile) }
             }
-
+            coroutineContext.ensureActive()
             annotatedMethods?.forEach { annotatedMethod: SmartPsiElementPointer<PsiMethod> ->
-
+                coroutineContext.ensureActive()
                 smartReadAction(project) {
                     annotatedMethod.element?.let {
-                        val spanInfo = try {
+                        val spanInfo =
                             getSpanInfoFromObservedAnnotatedMethod(it)
-                        } catch (e: Throwable) {
-                            Log.warnWithException(logger, e, "Error in observedAnnotationSpanDiscovery for method {}", it.name)
-                            null
-                        }
+
                         spanInfo?.let { si ->
                             spanInfos.add(si)
                         }
@@ -170,7 +167,7 @@ class MicrometerTracingFramework {
         val containingFile = PsiTreeUtil.getParentOfType(psiMethod, PsiFile::class.java)
         val containingClass = psiMethod.containingClass
 
-        //withSpanAnnotation,containingFile and containingClass must not be null because we found this annotation in a search.
+        //withSpanAnnotation, containingFile and containingClass must not be null because we found this annotation in a search.
         // a method in java must have a containing class. (psiMethod.getContainingClass may return null because
         // it supports other languages like groovy and kotlin)
         if (newSpanAnnotation != null && containingFile != null && containingClass != null) {
@@ -181,11 +178,11 @@ class MicrometerTracingFramework {
             val spanName = tmpSpanName ?: (containingClass.name + "." + psiMethod.name)
             return SpanInfo(
                 JavaLanguageUtils.createSpanIdFromInstLibraryAndSpanName(MICRO_METER_INST_LIB, spanName),
-                spanName, methodId, containingFileUri,psiMethod.textOffset
+                spanName, methodId, containingFileUri, psiMethod.textOffset
             )
         }
 
-        //if here then we couldn't completely discover the span
+        //if here, then we couldn't completely discover the span
         return null
     }
 
@@ -194,7 +191,7 @@ class MicrometerTracingFramework {
         val containingFile = PsiTreeUtil.getParentOfType(psiMethod, PsiFile::class.java)
         //TODO: see if class itself is annotated with OBSERVED_FQN - then all its methods as well
 
-        // observedAnnotationOnMethod,containingFile must not be null because we found this annotation in a search.
+        // observedAnnotationOnMethod, containingFile must not be null because we found this annotation in a search.
         if (observedAnnotationOnMethod != null && containingFile != null) {
             val methodId = createPsiMethodCodeObjectId(psiMethod)
             val containingFileUri = PsiUtils.psiFileToUri(containingFile)
@@ -210,11 +207,11 @@ class MicrometerTracingFramework {
 
             return SpanInfo(
                 JavaLanguageUtils.createSpanIdFromInstLibraryAndSpanName(OBSERVED_INST_LIB, spanName),
-                spanName, methodId, containingFileUri,psiMethod.textOffset
+                spanName, methodId, containingFileUri, psiMethod.textOffset
             )
         }
 
-        //if here then we couldn't completely discover the span
+        //if here, then we couldn't completely discover the span
         return null
     }
 

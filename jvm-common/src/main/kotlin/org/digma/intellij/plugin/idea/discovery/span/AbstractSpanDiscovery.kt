@@ -12,16 +12,17 @@ import com.intellij.psi.SmartPsiElementPointer
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.searches.AnnotatedElementsSearch
 import com.intellij.psi.search.searches.MethodReferencesSearch
+import kotlinx.coroutines.ensureActive
 import org.digma.intellij.plugin.common.SearchScopeProvider
 import org.digma.intellij.plugin.idea.discovery.MicrometerTracingFramework
 import org.digma.intellij.plugin.idea.discovery.PsiPointers
 import org.digma.intellij.plugin.idea.discovery.SPAN_BUILDER_FQN
 import org.digma.intellij.plugin.idea.discovery.WITH_SPAN_ANNOTATION_FQN
-import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.SpanInfo
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.toUElementOfType
+import kotlin.coroutines.coroutineContext
 
 abstract class AbstractSpanDiscovery {
 
@@ -38,22 +39,21 @@ abstract class AbstractSpanDiscovery {
         withSpanSpans?.let {
             spanInfos.addAll(it)
         }
+        coroutineContext.ensureActive()
 
         val startSpanSpans = discoverStartSpanMethodCallSpanDiscovery(project) { GlobalSearchScope.fileScope(psiFile) }
         startSpanSpans?.let {
             spanInfos.addAll(it)
         }
+        coroutineContext.ensureActive()
 
 
         //don't fail the discovery of micrometer failed
-        try {
-            val micrometerSpans = micrometerTracingFramework.discoverSpans(project, psiFile)
-            micrometerSpans.let {
-                spanInfos.addAll(it)
-            }
-        } catch (e: Exception) {
-            Log.warnWithException(logger, e, "Error in micrometerTracingFramework {}", e)
+        val micrometerSpans = micrometerTracingFramework.discoverSpans(project, psiFile)
+        micrometerSpans.let {
+            spanInfos.addAll(it)
         }
+        coroutineContext.ensureActive()
 
         return spanInfos
     }
@@ -67,25 +67,23 @@ abstract class AbstractSpanDiscovery {
         val psiPointers = project.service<PsiPointers>()
 
         return psiPointers.getPsiClass(project, WITH_SPAN_ANNOTATION_FQN)?.let {
-
+            coroutineContext.ensureActive()
             val spanInfos = mutableListOf<SpanInfo>()
 
             val annotatedMethods: List<UMethod>? = psiPointers.getPsiClassPointer(project, WITH_SPAN_ANNOTATION_FQN)?.let { withSpanClassPointer ->
                 findAnnotatedMethods(project, withSpanClassPointer, searchScope)
             }
 
+            coroutineContext.ensureActive()
+
             annotatedMethods?.forEach {
-                val methodSpans: List<SpanInfo> = try {
+                coroutineContext.ensureActive()
+                val methodSpans: List<SpanInfo> =
                     smartReadAction(project) {
                         findSpanInfosFromWithSpanAnnotatedMethod(it)
                     }
-                } catch (e: Throwable) {
-                    Log.warnWithException(logger, project, e, "discoverWithSpanAnnotationSpans failed for method {}", it.name)
-                    listOf()
-                }
 
                 spanInfos.addAll(methodSpans)
-
             }
 
             return@let spanInfos
@@ -120,7 +118,7 @@ abstract class AbstractSpanDiscovery {
         val psiPointers = project.service<PsiPointers>()
 
         return psiPointers.getPsiClassPointer(project, SPAN_BUILDER_FQN)?.let { tracerBuilderClassPointer ->
-
+            coroutineContext.ensureActive()
             val spanInfos = mutableListOf<SpanInfo>()
 
             val startSpanReferences: Collection<UReferenceExpression>? =
@@ -128,23 +126,15 @@ abstract class AbstractSpanDiscovery {
                     findStartSpanMethodReferences(project, startSpanMethodPointer, searchScope)
                 }
 
+            coroutineContext.ensureActive()
+
             startSpanReferences?.forEach { uReference ->
+                coroutineContext.ensureActive()
                 //catch exceptions for each method reference and skip it
-                val spanInfo: SpanInfo? = try {
+                val spanInfo: SpanInfo? =
                     smartReadAction(project) {
                         findSpanInfoFromStartSpanMethodReference(project, uReference)
                     }
-                } catch (e: Throwable) {
-                    Log.warnWithException(
-                        logger,
-                        project,
-                        e,
-                        "discoverStartSpanMethodCallSpanDiscovery failed for method reference {}",
-                        uReference.sourcePsi?.text
-                    )
-                    null
-                }
-
                 spanInfo?.let { span ->
                     spanInfos.add(span)
                 }

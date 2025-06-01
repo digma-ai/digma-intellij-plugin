@@ -7,6 +7,7 @@ import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.SmartPsiElementPointer
+import kotlinx.coroutines.ensureActive
 import org.digma.intellij.plugin.common.SearchScopeProvider
 import org.digma.intellij.plugin.common.TextRangeUtils
 import org.digma.intellij.plugin.idea.discovery.PsiPointers
@@ -18,6 +19,7 @@ import org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils
 import org.digma.intellij.plugin.model.discovery.EndpointFramework
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import java.util.Locale
+import kotlin.coroutines.coroutineContext
 
 private const val CONTROLLER_ANNOTATION_STR = "org.springframework.stereotype.Controller"
 private const val REST_CONTROLLER_ANNOTATION_STR = "org.springframework.web.bind.annotation.RestController"
@@ -82,8 +84,9 @@ class SpringBootFrameworkEndpointDiscovery(private val project: Project) : Endpo
 
         //the iterations catch exceptions and continue to the next iterations so not the whole
         // process is crashed
-
+        coroutineContext.ensureActive()
         HTTP_METHODS_ANNOTATION_STR_LIST.forEach { annotationFqn ->
+            coroutineContext.ensureActive()
 
             psiPointers.getPsiClass(project, annotationFqn)?.let {
                 val annotatedMethods = psiPointers.getPsiClassPointer(project, annotationFqn)?.let { annotationClassPointer ->
@@ -91,6 +94,7 @@ class SpringBootFrameworkEndpointDiscovery(private val project: Project) : Endpo
                 }
 
                 annotatedMethods?.forEach { annotatedMethod: SmartPsiElementPointer<PsiMethod> ->
+                    coroutineContext.ensureActive()
                     //start read access for each annotated method
                     readAction {
                         buildEndpointsForAnnotatedMethod(resultEndpoints, annotationFqn, annotatedMethod)

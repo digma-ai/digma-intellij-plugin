@@ -20,6 +20,7 @@ import com.intellij.psi.search.impl.VirtualFileEnumeration
 import com.intellij.psi.search.searches.AnnotatedElementsSearch
 import com.intellij.psi.search.searches.OverridingMethodsSearch
 import com.intellij.psi.util.PsiTreeUtil
+import kotlinx.coroutines.ensureActive
 import org.digma.intellij.plugin.common.SearchScopeProvider
 import org.digma.intellij.plugin.common.TextRangeUtils
 import org.digma.intellij.plugin.common.isProjectValid
@@ -35,6 +36,7 @@ import org.digma.intellij.plugin.model.discovery.EndpointFramework
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.psi.PsiUtils
 import java.util.Locale
+import kotlin.coroutines.coroutineContext
 
 
 abstract class AbstractJaxrsFrameworkEndpointDiscover(private val project: Project, jaxRsPackageName: String) : EndpointDiscovery() {
@@ -80,6 +82,7 @@ abstract class AbstractJaxrsFrameworkEndpointDiscover(private val project: Proje
 
         val endpointInfos = mutableListOf<EndpointInfo>()
 
+        coroutineContext.ensureActive()
         val allClassesInFile: List<SmartPsiElementPointer<PsiClass>> =
             smartReadAction(project) {
                 val classes = PsiTreeUtil.findChildrenOfType(psiFile, PsiClass::class.java)
@@ -88,13 +91,14 @@ abstract class AbstractJaxrsFrameworkEndpointDiscover(private val project: Proje
 
 
         allClassesInFile.forEach { psiClassPointer ->
-
+            coroutineContext.ensureActive()
             val psiClass = readAction { psiClassPointer.element }
 
             psiClass?.let { cls ->
                 val methodsInClass = readAction { getMethodsInClass(cls) }
 
                 methodsInClass.forEach { psiMethod ->
+                    coroutineContext.ensureActive()
                     smartReadAction(project) {
                         val candidateMethods = mutableSetOf<PsiMethod>()
                         val methodPathAnnotation = findNearestAnnotation(psiMethod, jaxRsPathAnnotationStr)

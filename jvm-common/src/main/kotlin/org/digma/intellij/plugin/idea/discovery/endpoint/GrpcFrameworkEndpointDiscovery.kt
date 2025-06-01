@@ -10,6 +10,7 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.SmartPointerManager
 import com.intellij.psi.SmartPsiElementPointer
 import com.intellij.psi.search.searches.ClassInheritorsSearch
+import kotlinx.coroutines.ensureActive
 import org.digma.intellij.plugin.common.SearchScopeProvider
 import org.digma.intellij.plugin.common.TextRangeUtils
 import org.digma.intellij.plugin.common.isProjectValid
@@ -22,6 +23,7 @@ import org.digma.intellij.plugin.idea.discovery.toFileUri
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.EndpointFramework
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
+import kotlin.coroutines.coroutineContext
 
 private const val BINDABLE_SERVICE_ANNOTATION_STR = "io.grpc.BindableService"
 private const val DIGMA_UNKNOWN_SERVICE_NAME = "Digma.Unknown.Grpc.Service"
@@ -51,7 +53,7 @@ open class GrpcFrameworkEndpointDiscovery(private val project: Project) : Endpoi
         }
 
         val result = mutableListOf<EndpointInfo>()
-
+        coroutineContext.ensureActive()
         val grpcServerInheritorsPointers: List<SmartPsiElementPointer<PsiClass>> = smartReadAction(project) {
             getBindableServiceAnnotationClass()?.let { psiClass ->
                 val inheritors = ClassInheritorsSearch.search(psiClass, searchScopeProvider.get(), true)
@@ -61,6 +63,7 @@ open class GrpcFrameworkEndpointDiscovery(private val project: Project) : Endpoi
 
 
         grpcServerInheritorsPointers.forEach { currGrpcInheritorPointer ->
+            coroutineContext.ensureActive()
             readAction {
                 val psiClass = currGrpcInheritorPointer.element
                 psiClass?.takeIf { psiClass.isValid && !isBaseClass(psiClass) }?.let { grpcInheritor ->

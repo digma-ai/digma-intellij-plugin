@@ -4,7 +4,7 @@ import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.impl.source.PsiExtensibleClass
-import org.digma.intellij.plugin.common.ReadActions
+import com.intellij.util.concurrency.annotations.RequiresReadLock
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UFile
@@ -12,11 +12,10 @@ import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.toUElementOfType
 import java.util.function.Predicate
-import java.util.function.Supplier
 
 private const val OBJECT_CLASS_FQN = "java.lang.Object"
 
-
+@RequiresReadLock(generateAssertion = false)
 fun getClassSimpleName(uClass: UClass): String {
 
     //try a few ways to get the class simple name
@@ -51,12 +50,13 @@ fun getClassSimpleName(uClass: UClass): String {
 
 }
 
-
+@RequiresReadLock(generateAssertion = false)
 fun findMethodInClass(cls: UClass, methodId: String): UMethod? {
     return getMethodsInClass(cls).firstOrNull { uMethod: UMethod -> methodId == createMethodCodeObjectId(uMethod) }
 }
 
 @Suppress("UnstableApiUsage")
+@RequiresReadLock(generateAssertion = false)
 fun findMethodInClass(psiClass: PsiClass, methodName: String, methodPredicate: Predicate<PsiMethod>): PsiMethod? {
     val methods = psiClass.findMethodsByName(methodName)
     for (method in methods) {
@@ -67,35 +67,33 @@ fun findMethodInClass(psiClass: PsiClass, methodName: String, methodPredicate: P
     return null
 }
 
-
+@RequiresReadLock(generateAssertion = false)
 fun getMethodsInClass(cls: UClass): Collection<UMethod> {
-    if (cls.sourcePsi is PsiExtensibleClass) {
+    return if (cls.sourcePsi is PsiExtensibleClass) {
         // Avoid cases when there are generated methods and/or constructors such as lombok creates,
         // see issue https://github.com/digma-ai/digma-intellij-plugin/issues/833
         // see issue https://youtrack.jetbrains.com/issue/IDEA-323198
-        val ownMethods = ReadActions.ensureReadAction(Supplier {
-            (cls.sourcePsi as PsiExtensibleClass).ownMethods
-        })
-        return ownMethods.map { psiMethod: PsiMethod -> psiMethod.toUElementOfType<UMethod>()!! }
+        val ownMethods = (cls.sourcePsi as PsiExtensibleClass).ownMethods
+        ownMethods.mapNotNull { psiMethod: PsiMethod -> psiMethod.toUElementOfType<UMethod>() }
+    } else {
+        cls.methods.asList()
     }
-    return cls.methods.asList()
 }
 
-
+@RequiresReadLock(generateAssertion = false)
 fun getMethodsInClass(psiClass: PsiClass): List<PsiMethod> {
-    if (psiClass is PsiExtensibleClass) {
+    return if (psiClass is PsiExtensibleClass) {
         // Avoid cases when there are generated methods and/or constructors such as lombok creates,
         // see issue https://github.com/digma-ai/digma-intellij-plugin/issues/833
         // see issue https://youtrack.jetbrains.com/issue/IDEA-323198
-        return ReadActions.ensureReadAction(Supplier {
-            psiClass.ownMethods
-        })
+        psiClass.ownMethods
+    } else {
+        psiClass.methods.asList()
     }
-    return psiClass.methods.asList()
 }
 
 
-//must be called in read access
+@RequiresReadLock(generateAssertion = false)
 fun hasOneOfAnnotations(psiClass: PsiClass, vararg annotationsFqn: String): Boolean {
     annotationsFqn.forEach {
         val annotObj = psiClass.getAnnotation(it)
@@ -106,6 +104,7 @@ fun hasOneOfAnnotations(psiClass: PsiClass, vararg annotationsFqn: String): Bool
     return false
 }
 
+@RequiresReadLock(generateAssertion = false)
 fun findNearestAnnotation(psiMethod: PsiMethod, annotationFqn: String): PsiAnnotation? {
     val annotClass = psiMethod.getAnnotation(annotationFqn)
     if (annotClass != null) {
@@ -122,6 +121,7 @@ fun findNearestAnnotation(psiMethod: PsiMethod, annotationFqn: String): PsiAnnot
     return null
 }
 
+@RequiresReadLock(generateAssertion = false)
 fun findNearestAnnotation(psiClass: PsiClass, annotationFqn: String): PsiAnnotation? {
     val annotClass = psiClass.getAnnotation(annotationFqn)
     if (annotClass != null) {
@@ -138,6 +138,7 @@ fun findNearestAnnotation(psiClass: PsiClass, annotationFqn: String): PsiAnnotat
     return null
 }
 
+@RequiresReadLock(generateAssertion = false)
 fun climbUpToBaseClass(psiClass: PsiClass): PsiClass {
     var prevCLass: PsiClass = psiClass
     var currentClass: PsiClass? = psiClass
@@ -149,12 +150,13 @@ fun climbUpToBaseClass(psiClass: PsiClass): PsiClass {
     return currentClass ?: prevCLass
 }
 
+@RequiresReadLock(generateAssertion = false)
 fun isBaseClass(psiClass: PsiClass): Boolean {
     val superClass = psiClass.superClass
     return (superClass == null || superClass.qualifiedName.equals(OBJECT_CLASS_FQN))
 }
 
-
+@RequiresReadLock(generateAssertion = false)
 fun toFileUri(psiMethod: PsiMethod): String {
     val containingFile = psiMethod.containingFile
     return containingFile?.let {

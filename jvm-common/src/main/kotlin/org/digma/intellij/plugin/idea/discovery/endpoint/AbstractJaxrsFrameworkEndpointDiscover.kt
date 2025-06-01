@@ -20,6 +20,7 @@ import com.intellij.psi.search.impl.VirtualFileEnumeration
 import com.intellij.psi.search.searches.AnnotatedElementsSearch
 import com.intellij.psi.search.searches.OverridingMethodsSearch
 import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.util.concurrency.annotations.RequiresReadLock
 import kotlinx.coroutines.ensureActive
 import org.digma.intellij.plugin.common.SearchScopeProvider
 import org.digma.intellij.plugin.common.TextRangeUtils
@@ -184,6 +185,7 @@ abstract class AbstractJaxrsFrameworkEndpointDiscover(private val project: Proje
         }
     }
 
+    @RequiresReadLock(generateAssertion = false)
     private fun handleCandidateMethods(candidateMethods: Collection<PsiMethod>): Set<EndpointInfo> {
         val retSet = mutableSetOf<EndpointInfo>()
         candidateMethods.forEach { currPsiMethod ->

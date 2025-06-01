@@ -10,6 +10,7 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.SmartPointerManager
 import com.intellij.psi.SmartPsiElementPointer
 import com.intellij.psi.search.searches.ClassInheritorsSearch
+import com.intellij.util.concurrency.annotations.RequiresReadLock
 import kotlinx.coroutines.ensureActive
 import org.digma.intellij.plugin.common.SearchScopeProvider
 import org.digma.intellij.plugin.common.TextRangeUtils
@@ -78,6 +79,7 @@ open class GrpcFrameworkEndpointDiscovery(private val project: Project) : Endpoi
     }
 
 
+    @RequiresReadLock(generateAssertion = false)
     private fun addEndpointMethods(grpcServerClass: PsiClass): List<EndpointInfo> {
 
         val grpcServiceName: String = evaluateServiceName(grpcServerClass)

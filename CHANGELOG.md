@@ -1,6 +1,13 @@
 # Changelog
 
-## [2.0.421] - 2025-05-22
+## [2.0.422] - 2025-06-01
+
+- update eap profile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2736
+- update rider eap profile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2744
+- update eap profile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2746
+- Support new action GoToError in the REST Plugin API Closes #2756 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2758
+
+## 2.0.421 - 2025-05-22
 
 - error-hotsopt-lens-click Closes #2699 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2731
 

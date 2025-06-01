@@ -148,7 +148,7 @@ class CodeButtonContextService(private val project: Project) : Disposable {
 
     private fun getFocusedEndpoint(methodUnderCaret: MethodUnderCaret, methodInfo: MethodInfo): EndpointInfo? {
         return methodInfo.endpoints.firstOrNull { endpointInfo: EndpointInfo ->
-            endpointInfo.textRange?.contains(methodUnderCaret.caretOffset) ?: false &&
+            endpointInfo.textRange.contains(methodUnderCaret.caretOffset) &&
                     endpointInfo.framework == EndpointFramework.Ktor
         }
     }

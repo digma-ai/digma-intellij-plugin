@@ -27,9 +27,13 @@ class GoToErrorCommand : AbstractApiCommand() {
         //checked non-null above
         errorId!!
 
-        val environmentByErrorId = AnalyticsService.getInstance(project).resolveEnvironmentByErrorId(errorId)
+        val environmentByErrorIdResponse = AnalyticsService.getInstance(project).resolveEnvironmentByErrorId(errorId)
             ?: throw RuntimeException("could not find environment by error id $errorId")
 
+        val environmentId = environmentByErrorIdResponse.environmentId
+        if (environmentId.isBlank()) {
+            throw RuntimeException("could not find environment id for error id $errorId")
+        }
         val contextPayload = objectToJsonNode(GoToErrorContextPayload(errorId = errorId))
         val scopeContext = ScopeContext("IDE/REST_API_CALL", contextPayload)
 
@@ -37,11 +41,11 @@ class GoToErrorCommand : AbstractApiCommand() {
             logger::trace,
             "calling ScopeManager.changeToHome with ,scopeContext='{}',environmentId='{}', thread='{}'",
             scopeContext,
-            environmentByErrorId,
+            environmentId,
             Thread.currentThread().name
         )
 
-        ScopeManager.getInstance(project).changeToHome(true, scopeContext, environmentByErrorId)
+        ScopeManager.getInstance(project).changeToHome(true, scopeContext, environmentId)
 
     }
 

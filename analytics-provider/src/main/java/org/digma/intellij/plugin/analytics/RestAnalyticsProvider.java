@@ -496,7 +496,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable, Base
     }
 
     @Override
-    public String resolveEnvironmentByErrorId(String errorId) {
+    public EnvironmentInfoByErrorId resolveEnvironmentByErrorId(String errorId) {
         return execute(() -> client.analyticsProvider.resolveEnvironmentByErrorId(errorId));
     }
 
@@ -1324,7 +1324,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable, Base
                 "Content-Type:application/json"
         })
         @GET("CodeAnalytics/codeObjects/error_environment")
-        Call<String> resolveEnvironmentByErrorId(@Query("errorId") String errorId);
+        Call<EnvironmentInfoByErrorId> resolveEnvironmentByErrorId(@Query("errorId") String errorId);
 
     }
 }

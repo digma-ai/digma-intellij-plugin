@@ -134,6 +134,7 @@ class JvmNavigationDiscoveryManager(private val project: Project, private val cs
             Log.trace(logger, project, "launching startup job")
             startupJob?.cancel(CancellationException("new startup job started"))
             startupJob = cs.launchWithErrorReporting("${this::class.java.simpleName}.StartupJob", logger) {
+                coroutineContext.ensureActive()
                 Log.trace(logger, project, "Starting startup job")
                 var count = 0
                 val jobTime = measureTimeMillis {
@@ -187,11 +188,13 @@ class JvmNavigationDiscoveryManager(private val project: Project, private val cs
             Log.trace(logger, project, "launching processing job")
             processingJob?.cancel(CancellationException("new job started"))
             processingJob = cs.launchWhileActiveWithErrorReporting(10.seconds, 30.seconds, "${this::class.java.simpleName}.ProcessingTask", logger) {
+                coroutineContext.ensureActive()
                 DumbService.getInstance(project).waitForSmartMode()
-                ensureActive()
+                coroutineContext.ensureActive()
                 //peek the file, remove it only if processing finished successfully.
                 var file = candidateFiles.peek()
                 while (file != null) {
+                    coroutineContext.ensureActive()
                     val isInContent = readAction {
                         ProjectFileIndex.getInstance(project).isInContent(file)
                     }
@@ -203,14 +206,16 @@ class JvmNavigationDiscoveryManager(private val project: Project, private val cs
 
                     Log.trace(logger, project, "Processing candidate file {}", file.url)
                     val fileProcessingTime = measureTimeMillis {
+                        coroutineContext.ensureActive()
                         val fileInfo = FileDiscoveryInfoBuilder.getInstance(project).buildFileInfo(file)
+                        coroutineContext.ensureActive()
                         Log.trace(logger, project, "Built fileInfo for candidate file {}  [{}]", file.url, fileInfo)
                         JvmSpanNavigationProvider.getInstance(project).processCandidateFile(fileInfo)
                         JvmEndpointNavigationProvider.getInstance(project).processCandidateFile(fileInfo)
                         candidateFiles.remove(file)
                     }
                     Log.trace(logger, project, "Finished processing candidate file {} in {} ms", file.url, fileProcessingTime)
-                    ensureActive()
+                    coroutineContext.ensureActive()
                     file = candidateFiles.peek()
                 }
             }

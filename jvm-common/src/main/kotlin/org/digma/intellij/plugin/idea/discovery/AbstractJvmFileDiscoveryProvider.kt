@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.idea.discovery
 
 import com.intellij.openapi.diagnostic.thisLogger
+import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import org.digma.intellij.plugin.discovery.FileDiscoveryProvider
@@ -27,7 +28,7 @@ abstract class AbstractJvmFileDiscoveryProvider: FileDiscoveryProvider {
         project: Project,
         file: VirtualFile
     ): FileDiscoveryInfo {
-
+        DumbService.getInstance(project).waitForSmartMode()
         Log.trace(logger, project, "starting discovery for {}", file)
 
         val languageService = LanguageServiceProvider.getInstance(project).getLanguageService(file)

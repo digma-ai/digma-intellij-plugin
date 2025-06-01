@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.idea.discovery
 import com.intellij.lang.Language
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
 import kotlinx.coroutines.ensureActive
@@ -86,7 +87,7 @@ abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSp
             //don't call this method on EDT or in read access, read access is taken when needed
             EDT.assertNonDispatchThread()
             ReadActions.assertNotInReadAccess()
-
+            DumbService.getInstance(project).waitForSmartMode()
             //maybe uFile is null,there is nothing to do without a UFile.
             val fileData = readAction {
                 FileData.buildFileData(psiFile)

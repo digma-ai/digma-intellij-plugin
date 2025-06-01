@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.422] - 2025-06-01
+## [2.0.423] - 2025-06-01
+
+- fix-show-error-api by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2759
+
+## 2.0.422 - 2025-06-01
 
 - update eap profile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2736
 - update rider eap profile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2744

@@ -32,7 +32,7 @@ internal class CodeLensBuilder(private val project: Project) {
 
         val methodsWithCodeLens = AnalyticsService.getInstance(project).getCodeLensByMethods(methodsWithCodeObjects).methodWithCodeLens
 
-        methodsWithCodeLens.forEach { methodWithCodeLens: MethodWithCodeLens ->
+        distinctForPython(documentInfo, methodsWithCodeLens).forEach { methodWithCodeLens: MethodWithCodeLens ->
 
             val codeObjectId = CodeObjectsUtil.stripMethodPrefix(methodWithCodeLens.methodCodeObjectId)
             val decorators: MutableList<Decorator> = methodWithCodeLens.decorators.toMutableList()
@@ -76,12 +76,43 @@ internal class CodeLensBuilder(private val project: Project) {
                 title,
                 1,
                 liveDecorator.description,
-                "Go to $title")
+                "Go to $title"
+            )
         return codeLens
     }
 
 
     private fun isImportant(importanceLevel: Int): Boolean {
         return importanceLevel <= InsightImportance.HighlyImportant.priority && importanceLevel >= InsightImportance.ShowStopper.priority
+    }
+
+
+    /*
+    in python we send multiple ids for a method, we may get multiple MethodWithCodeLens for the same method, for each id or some of the ids.
+    we want to keep only one MethodWithCodeLens for a method with the decorators from all the MethodWithCodeLens belonging to the same method.
+     */
+    private fun distinctForPython(documentInfo: DocumentInfo, methodsWithCodeLens: List<MethodWithCodeLens>): List<MethodWithCodeLens> {
+        //don't need to do it if it's not python
+        if (documentInfo.languageId.lowercase() != "python") {
+            return methodsWithCodeLens
+        }
+
+
+        val methodWithCodeLensByMethodIds = methodsWithCodeLens.associateBy { it.methodCodeObjectId }
+        val newMethodsWithCodeLens = mutableMapOf<String, MutableSet<Decorator>>()
+        documentInfo.methods.forEach { (methodId, methodInfo) ->
+            methodInfo.allIdsWithType().forEach { id: String ->
+                val methodWithCodeLens = methodWithCodeLensByMethodIds[id]
+                if (methodWithCodeLens != null) {
+                    val newDecorators = newMethodsWithCodeLens.computeIfAbsent(methodId) { mutableSetOf() }
+                    //map the decorators to have the same method id
+                    val decorators = methodWithCodeLens.decorators.map { Decorator(it.title,it.description,methodId,it.spanCodeObjectId,it.importance) }.toSet()
+                    //relying on that Decorator is a data class with correct equals and hashCode so this will merge and ignore duplicates.
+                    newDecorators.addAll(decorators)
+                }
+            }
+        }
+
+        return newMethodsWithCodeLens.map { (id, decorators) -> MethodWithCodeLens(id, decorators.toList()) }.toList()
     }
 }

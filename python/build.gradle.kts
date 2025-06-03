@@ -1,5 +1,6 @@
-import common.currentProfile
 import common.dynamicPlatformType
+import common.platformVersion
+import common.useBinaryInstaller
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 
 
@@ -19,30 +20,36 @@ val platformType: IntelliJPlatformType by extra {
 }
 
 
+
 dependencies {
     compileOnly(project(":ide-common"))
     compileOnly(project(":model"))
 
+    testImplementation(project(":ide-common"))
     testImplementation(project(":model"))
 
     intellijPlatform {
 
-        //the python module can also be built with IC and a dependency on python plugin.
-        //its better and more comfortable to just build with pycharm, in the past we had to build with IC
-        //because github workflow were running out of disk space when building with pycharm because then a build
-        //needed to download all IDEs. but we don't have this issue anymore so this module just builds with pycharm.
+        //see: https://plugins.jetbrains.com/docs/intellij/pycharm.html#python-plugins
 
-
-        //this module can only build with PC or PY, so only support replacing to PY when
-        // we build with PY , otherwise build with PC even if platformType is something else like RD or IC
-        if (platformType == IntelliJPlatformType.PyCharmProfessional) {
-            pycharmProfessional(project.currentProfile().pycharmVersion, project.useBinaryInstaller())
+        //We usually don't build this module with pycharmProfessional, only with pycharmCommunity.
+        //It's possible to build the whole project with pycharmCommunity or pycharmProfessional by passing
+        // -PbuildWithPycharm=true or -PbuildWithPycharmPro=true, doing that will build also the ide-common with
+        // this IDE. This functionality is meant to replace plugin verifier as it will build all the common code
+        // with this IDE. But if we run plugin verifier on pycharm then it is not really necessary.
+        //It's also possible to build with Idea and python plugin, but then we need to maintain the python plugin
+        // version in the profile. Its easier to build with pycharm and bundledPlugin
+        //intellijIdeaCommunity(project.platformVersion(), project.useBinaryInstaller())
+        //plugin("PythonCore:252.18003.27")
+        if (platformType == IntelliJPlatformType.PyCharmCommunity) {
+            pycharmCommunity(project.platformVersion(), project.useBinaryInstaller())
+            bundledPlugin("PythonCore")
         } else {
-            pycharmCommunity(project.currentProfile().pycharmVersion, project.useBinaryInstaller())
+            //we don't use the functionality of pycharm pro, we keep everything compatible with pycharm community.
+            //if we ever need to use the functionality of pycharm pro, then also PythonCore is necessary.
+            pycharmProfessional(project.platformVersion(), project.useBinaryInstaller())
+            bundledPlugin("PythonCore")
+            bundledPlugin("Pythonid")
         }
-
-        //load plugin based on IDE PY or PC
-        val pythonPlugin = if (platformType == IntelliJPlatformType.PyCharmProfessional) "Pythonid" else "PythonCore"
-        bundledPlugin(pythonPlugin)
     }
 }

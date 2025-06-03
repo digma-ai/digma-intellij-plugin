@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.common
 
+import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.SearchScope
 import java.util.function.Supplier
 
@@ -9,3 +10,5 @@ import java.util.function.Supplier
  * opening read access. in these cases send a SearchScopeProvider and call get only in read access.
  */
 fun interface SearchScopeProvider : Supplier<SearchScope>
+
+fun interface GlobalSearchScopeProvider : Supplier<GlobalSearchScope>

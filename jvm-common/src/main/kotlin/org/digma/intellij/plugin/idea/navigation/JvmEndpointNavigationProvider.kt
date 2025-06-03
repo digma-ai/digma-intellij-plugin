@@ -35,7 +35,7 @@ internal class JvmEndpointNavigationProvider(private val project: Project) {
         return endpointInfos.toSet()
     }
 
-    suspend fun processCandidateFile(fileInfo: FileDiscoveryInfo) {
+    suspend fun processFileInfo(fileInfo: FileDiscoveryInfo) {
         Log.trace(logger, "processing candidateFile {}", fileInfo.file.url)
         maintenanceLock.withLock {
 

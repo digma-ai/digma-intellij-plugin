@@ -17,3 +17,7 @@ for i in {1..5}; do echo; done
 
 echo "############ verifyPlugin with 251 ################"
 ./gradlew clean verifyPlugin -PbuildProfile=p251
+for i in {1..5}; do echo; done
+
+echo "############ verifyPlugin with 252 ################"
+./gradlew clean verifyPlugin -PbuildProfile=p252

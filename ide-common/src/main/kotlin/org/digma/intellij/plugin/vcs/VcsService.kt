@@ -127,6 +127,16 @@ class VcsService(project: Project) : BaseVcsService(project) {
                 val vcsRoot = vcsRoots[0]
                 val vcs = vcsRoot.vcs
 
+                //for some reason git4idea.GitVcs is not always available in Rider and Pycharm.
+                //if we try to use it, intellij will notify an error to the user and blam our plugin.
+                //so try to load it first and abort if it can't be loaded. to avoid the error notification to the user.
+                try{
+                    Class.forName("git4idea.GitVcs")
+                }catch (e:ClassNotFoundException){
+                    ErrorReporter.getInstance().reportError(project, "VcsService.buildRemoteLinkToCommit", e)
+                    return@executeOnPooledThread null
+                }
+
                 if (vcs !is GitVcs) {
                     return@executeOnPooledThread null
                 }

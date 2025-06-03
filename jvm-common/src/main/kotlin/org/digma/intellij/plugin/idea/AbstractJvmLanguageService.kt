@@ -5,6 +5,7 @@ import com.intellij.openapi.application.EDT
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.application.smartReadAction
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
@@ -49,7 +50,7 @@ import kotlin.coroutines.coroutineContext
 abstract class AbstractJvmLanguageService(protected val project: Project, protected val codeObjectDiscovery: AbstractCodeObjectDiscovery) :
     LanguageService, JvmLanguageService {
 
-    protected val logger: Logger = Logger.getInstance(this::class.java)
+    protected val logger: Logger = thisLogger()
 
     companion object {
         val fileNamesToExclude = mutableSetOf("package-info.java", "MavenWrapperDownloader.java")
@@ -256,9 +257,9 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
     @RequiresReadLock
     private fun detectMethodUnderCaretImpl(virtualFile: VirtualFile, caretOffset: Int): MethodUnderCaret {
 
-        val psiFile = PsiManager.getInstance(project).findFile(virtualFile) ?: return MethodUnderCaret.Companion.empty(virtualFile.url)
+        val psiFile = PsiManager.getInstance(project).findFile(virtualFile) ?: return MethodUnderCaret.empty(virtualFile.url)
         val packageName = psiFile.toUElementOfType<UFile>()?.packageName ?: ""
-        val underCaret: PsiElement = psiFile.findElementAt(caretOffset) ?: return MethodUnderCaret.Companion.empty(virtualFile.url)
+        val underCaret: PsiElement = psiFile.findElementAt(caretOffset) ?: return MethodUnderCaret.empty(virtualFile.url)
         val uMethod = findParentMethod(underCaret)
         val className: String = uMethod?.getParentOfType<UClass>()?.let {
             getClassSimpleName(it)

@@ -1,30 +1,19 @@
+<!--suppress LightServiceMigrationXML -->
 <idea-plugin xmlns:xi="http://www.w3.org/2001/XInclude">
-
-    PYTHON NOT USED
 
     <xi:include href="/META-INF/org.digma.intellij-with-codevision.xml" xpointer="xpointer(/idea-plugin/*)"/>
 
     <extensions defaultExtensionNs="com.intellij">
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.psi.python.PythonLanguageService"/>
-        <projectService serviceImplementation="org.digma.intellij.plugin.psi.python.PythonSpanNavigationProvider"/>
-        <postStartupActivity implementation="org.digma.intellij.plugin.psi.python.PythonSpanNavigationStartupActivity"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.python.PythonLanguageService"/>
 
+        <projectService serviceImplementation="org.digma.intellij.plugin.python.navigation.PythonNavigationDiscoveryManager"/>
+
+        <projectService serviceImplementation="org.digma.intellij.plugin.python.navigation.PythonSpanNavigationProvider"/>
+
+        <fileBasedIndex implementation="org.digma.intellij.plugin.python.index.PythonCandidateFilesForDiscoveryDetectionIndex"/>
+
+        <postStartupActivity implementation="org.digma.intellij.plugin.python.navigation.PythonNavigationDiscoveryStartupActivity"/>
     </extensions>
-
-
-
-    <projectListeners>
-        <listener
-                class="org.digma.intellij.plugin.psi.python.DocumentsChangeListenerForPythonSpanNavigation"
-                topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
-
-    </projectListeners>
-
-    <applicationListeners>
-        <listener
-                class="org.digma.intellij.plugin.psi.python.BulkFileChangeListenerForPythonSpanNavigation"
-                topic="com.intellij.openapi.vfs.newvfs.BulkFileListener"/>
-    </applicationListeners>
 
 </idea-plugin>

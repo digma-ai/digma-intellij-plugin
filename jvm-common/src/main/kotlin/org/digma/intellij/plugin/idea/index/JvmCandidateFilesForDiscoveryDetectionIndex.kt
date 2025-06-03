@@ -11,6 +11,9 @@ import com.intellij.util.indexing.ID
 import com.intellij.util.indexing.ScalarIndexExtension
 import com.intellij.util.io.EnumeratorStringDescriptor
 import com.intellij.util.io.KeyDescriptor
+import org.digma.intellij.plugin.discovery.index.CANDIDATE_FILES_INDEX_KEY_ENDPOINT
+import org.digma.intellij.plugin.discovery.index.CANDIDATE_FILES_INDEX_KEY_SPAN
+import org.digma.intellij.plugin.discovery.index.CandidateFilesDetectionIndexListener
 import org.digma.intellij.plugin.log.Log
 
 /**
@@ -21,7 +24,7 @@ import org.digma.intellij.plugin.log.Log
  * But with our own index we can query it. it will index only relevant files, so if it exists, we know it either
  * contains something or not.
  */
-class CandidateFilesForDiscoveryDetectionIndex : ScalarIndexExtension<String>() {
+class JvmCandidateFilesForDiscoveryDetectionIndex : ScalarIndexExtension<String>() {
 
     val logger = thisLogger()
     private val myDispatcher = EventDispatcher.create(CandidateFilesDetectionIndexListener::class.java)
@@ -32,7 +35,7 @@ class CandidateFilesForDiscoveryDetectionIndex : ScalarIndexExtension<String>() 
     }
 
     override fun getName(): ID<String, Void> {
-        return CANDIDATE_FILES_INDEX_ID
+        return JVM_CANDIDATE_FILES_INDEX_ID
     }
 
     override fun getInputFilter(): FileBasedIndex.InputFilter {
@@ -56,7 +59,7 @@ class CandidateFilesForDiscoveryDetectionIndex : ScalarIndexExtension<String>() 
     override fun getKeyDescriptor(): KeyDescriptor<String> = EnumeratorStringDescriptor.INSTANCE
 
 
-    override fun getVersion(): Int = 1
+    override fun getVersion(): Int = 2
 
 
     inner class MyDataIndexer : DataIndexer<String, Void?, FileContent> {

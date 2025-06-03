@@ -43,7 +43,7 @@
         <applicationService
                 serviceImplementation="org.digma.intellij.plugin.idea.execution.RunConfigurationHandlersHolder"/>
 
-        <fileBasedIndex implementation="org.digma.intellij.plugin.idea.index.CandidateFilesForDiscoveryDetectionIndex"/>
+        <fileBasedIndex implementation="org.digma.intellij.plugin.idea.index.JvmCandidateFilesForDiscoveryDetectionIndex"/>
 
     </extensions>
 

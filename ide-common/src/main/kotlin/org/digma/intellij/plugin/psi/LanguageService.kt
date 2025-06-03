@@ -71,7 +71,7 @@ interface LanguageService : Disposable {
     fun findMethodsByCodeObjectIds(psiFile: PsiFile, methodIds: List<String>): Map<String, PsiElement>
 
     fun getDiscoveryProvider(): FileDiscoveryProvider {
-        //currently relevant for jvm language services only.
+        //currently relevant for jvm language services and python language service.
         //should never be called for other languages.
         throw UnsupportedOperationException("getDiscoveryProvider is not implemented for ${this.javaClass.name}")
     }

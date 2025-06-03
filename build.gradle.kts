@@ -131,7 +131,6 @@ changelog {
 //}
 
 
-
 intellijPlatform {
 
     pluginConfiguration {
@@ -216,7 +215,7 @@ intellijPlatform {
                 }
                 select {
                     types =
-                        listOf(IntelliJPlatformType.IntellijIdeaCommunity)
+                        listOf(IntelliJPlatformType.IntellijIdeaCommunity, IntelliJPlatformType.Rider, IntelliJPlatformType.PyCharmCommunity)
                     channels = listOf(channel)
                     sinceBuild = project.currentProfile().pluginSinceBuild
                     untilBuild = project.currentProfile().pluginUntilBuild
@@ -319,9 +318,9 @@ tasks {
             //see https://kotlin.github.io/analysis-api/testing-in-k2-locally.html
             "idea.kotlin.plugin.use.k2" to "true",
 
-           //"jcef.remote.enabled" to true,
-           //"jcef.remote.debug" to true,
-           //"ide.browser.jcef.log.level" to "error",
+            //"jcef.remote.enabled" to true,
+            //"jcef.remote.debug" to true,
+            //"ide.browser.jcef.log.level" to "error",
 
             //"idea.ProcessCanceledException" to "disabled"
 

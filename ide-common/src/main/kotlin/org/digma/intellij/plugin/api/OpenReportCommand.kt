@@ -7,7 +7,7 @@ import org.digma.intellij.plugin.log.Log
 
 class OpenReportCommand : AbstractApiCommand(){
 
-    override fun execute(project: Project, urlDecoder: QueryStringDecoder) {
+    override suspend fun execute(project: Project, urlDecoder: QueryStringDecoder) {
 
         Log.log(
             logger::trace,

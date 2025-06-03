@@ -3,9 +3,9 @@ package org.digma.intellij.plugin.idea.execution
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
-import org.digma.intellij.plugin.common.Retries
+import org.digma.intellij.plugin.common.retryWithBackoff
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import org.digma.intellij.plugin.kotlin.ext.launchWithErrorReporting
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.paths.DigmaPathManager
 import org.digma.intellij.plugin.persistence.PersistenceService
@@ -91,7 +91,7 @@ class OTELJarProvider(cs: CoroutineScope) {
         customDigmaAgentJar.deleteOnExit()
 
 
-        cs.launch {
+        cs.launchWithErrorReporting("OTELJarProvider.init", logger) {
 
             //on startup check if we need to unpack the jars. it will run on IDE startup when the first project is opened
             //usually this operation will finish before the first file is requested. if a file is requested before the operation is finished it will
@@ -200,7 +200,6 @@ class OTELJarProvider(cs: CoroutineScope) {
     }
 
 
-
     private fun unpackFiles() {
 
         lock.withLock {
@@ -292,7 +291,7 @@ class OTELJarProvider(cs: CoroutineScope) {
 
             Log.log(logger::info, "downloading {} to {}", url, toFile)
 
-            Retries.simpleRetry({
+            retryWithBackoff(initialDelay = 2000) {
 
                 val connection = url.openConnection()
                 connection.connectTimeout = 5000
@@ -305,12 +304,11 @@ class OTELJarProvider(cs: CoroutineScope) {
                 Log.log(logger::info, "copying downloaded file {} to {}", tempFile, toFile)
                 try {
                     Files.move(tempFile, toFile.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     //ATOMIC_MOVE is not always supported so try again on exception
                     Files.move(tempFile, toFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
                 }
-
-            }, Throwable::class.java, 5000, 3)
+            }
 
             Log.log(logger::info, "url {} downloaded to {}", url, toFile)
 

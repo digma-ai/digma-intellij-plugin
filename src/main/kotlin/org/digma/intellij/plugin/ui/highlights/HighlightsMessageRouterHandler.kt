@@ -18,7 +18,7 @@ import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJav
 
 class HighlightsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHandler(project) {
 
-    override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
+    override suspend fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
 
         val version = getBackendVersion(project)
         val comparableVersion = ComparableVersion(version)

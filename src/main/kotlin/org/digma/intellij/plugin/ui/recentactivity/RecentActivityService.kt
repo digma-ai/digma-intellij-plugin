@@ -8,8 +8,8 @@ import com.intellij.openapi.project.Project
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.common.EDT
+import org.digma.intellij.plugin.kotlin.ext.launchWithErrorReporting
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.recentactivity.RecentActivityToolWindowShower
@@ -56,7 +56,6 @@ class RecentActivityService(val project: Project, private val cs: CoroutineScope
     fun appInitialized() {
         appInitialized.set(true)
     }
-
 
 
     fun processRecentActivityGoToTraceRequest(payload: RecentActivityEntrySpanForTracePayload?) {
@@ -106,6 +105,7 @@ class RecentActivityService(val project: Project, private val cs: CoroutineScope
     }
 
 
+    //Runs on EDT!
     fun openRegistrationDialog() {
 
         RecentActivityToolWindowShower.getInstance(project).showToolWindow()
@@ -113,7 +113,7 @@ class RecentActivityService(val project: Project, private val cs: CoroutineScope
         //maybe the recent activity is not open yet. it will be opened as a result of calling
         // showToolWindow, but takes some time before the app is ready to accept messages.
         // so wait here until the app is initialized
-        cs.launch {
+        cs.launchWithErrorReporting("RecentActivityService.openRegistrationDialog", logger) {
 
             val startTime = Instant.now()
 

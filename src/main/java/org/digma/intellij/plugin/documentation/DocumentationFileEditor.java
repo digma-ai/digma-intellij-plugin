@@ -5,6 +5,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.*;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.jcef.JBCefApp;
+import org.digma.intellij.plugin.ui.documentation.DocumentationMessageRouterHandler;
 import org.digma.intellij.plugin.ui.jcef.*;
 import org.jetbrains.annotations.*;
 

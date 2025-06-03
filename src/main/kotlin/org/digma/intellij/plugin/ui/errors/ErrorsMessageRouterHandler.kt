@@ -24,7 +24,7 @@ import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJav
 
 class ErrorsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHandler(project) {
 
-    override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
+    override suspend fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String): Boolean {
 
         Log.log(logger::trace, project, "got action '$action' with message $requestJsonNode")
 
@@ -123,7 +123,7 @@ class ErrorsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHand
         getPayloadFromRequest(requestJsonNode)?.let { payload ->
             val errorId = payload.get("errorId")?.takeIf { it !is NullNode }?.asText()
             if (errorId != null) {
-                var queryMap = getMapFromNode(payload.get("scope"), objectMapper)
+                val queryMap = getMapFromNode(payload.get("scope"), objectMapper)
                 val errorsData = ErrorsService.getInstance(project).getErrorTimeseries(errorId, queryMap)
                 val setErrorsDataMessage = SetErrorTimeSeriesDataMessage(errorsData)
                 serializeAndExecuteWindowPostMessageJavaScript(browser, setErrorsDataMessage, project)
@@ -174,7 +174,7 @@ class ErrorsMessageRouterHandler(project: Project) : BaseCommonMessageRouterHand
         }
     }
 
-    private fun getFilesUrls(project: Project, browser: CefBrowser, requestJsonNode: JsonNode) {
+    private suspend fun getFilesUrls(project: Project, browser: CefBrowser, requestJsonNode: JsonNode) {
         getPayloadFromRequest(requestJsonNode)?.let { payload ->
 
             val codeObjectIds = payload.get("codeObjectIds")

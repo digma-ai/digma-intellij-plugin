@@ -163,7 +163,7 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
 
         Log.log(logger::trace, "launching tryConnection job")
 
-        cs.launch(CoroutineName("tryConnection")) {
+        cs.launch(CoroutineName("AuthManager.tryConnection")) {
             try {
                 Log.log(logger::trace, "${coroutineContext[CoroutineName]}: trying to call getAbout")
                 //just call getAbout, if it succeeds then connection is ok.
@@ -178,6 +178,8 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
                 // no harm if there is nothing to do. it happens only on startup, called from withAuth which is called only once on project startup.
                 ApiErrorHandler.getInstance().resetConnectionLostAndNotifyIfNecessary(project)
 
+            } catch (e: CancellationException) {
+                throw e // ⚠️ Always rethrow to propagate cancellation properly
             } catch (e: Throwable) {
 
                 Log.warnWithException(logger, e, "${coroutineContext[CoroutineName]}: getAbout failed with exception {}", e)
@@ -201,7 +203,7 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
         }
 
         Log.log(logger::trace, "launching updateCredentialsHolder job")
-        cs.launch(CoroutineName("updateCredentialsHolder")) {
+        cs.launch(CoroutineName("AuthManager.updateCredentialsHolder")) {
             try {
                 val account = DigmaDefaultAccountHolder.getInstance().account
                 account?.let { acc ->
@@ -218,8 +220,11 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
                     }
                 }
 
+            } catch (e: CancellationException) {
+                throw e // ⚠️ Always rethrow to propagate cancellation properly
             } catch (e: Throwable) {
                 Log.warnWithException(logger, e, "${coroutineContext[CoroutineName]}: error in updateCredentialsHolder {}", e)
+                ErrorReporter.getInstance().reportError("${coroutineContext[CoroutineName]}",e)
             }
         }
     }
@@ -296,11 +301,13 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
      */
     fun logoutAsync(trigger: String) {
         Log.log(logger::trace, "launching logoutAsync job, analytics url {}", myAnalyticsProvider.apiUrl)
-        cs.launch(CoroutineName("logoutAsync")) {
+        cs.launch(CoroutineName("AuthManager.logoutAsync")) {
             try {
                 Log.log(logger::trace, "starting job logoutAsync, analytics url {}", myAnalyticsProvider.apiUrl)
                 val loginHandler = LoginHandler.createLoginHandler(myAnalyticsProvider)
                 loginHandler.logout("logoutAsync called,$trigger")
+            } catch (e: CancellationException) {
+                throw e // ⚠️ Always rethrow to propagate cancellation properly
             } catch (e: Throwable) {
                 Log.warnWithException(logger, e, "error in logoutAsync {}", e)
                 ErrorReporter.getInstance().reportError("AuthManager.logout", e)
@@ -329,11 +336,13 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
 
             val waitingSemaphore = Semaphore(0, true)
             Log.log(logger::trace, "launching logoutSynchronously job, analytics url {}", myAnalyticsProvider.apiUrl)
-            val job = cs.launch(CoroutineName("logoutSynchronously")) {
+            val job = cs.launch(CoroutineName("AuthManager.logoutSynchronously")) {
                 try {
                     Log.log(logger::trace, "starting job logoutSynchronously, analytics url {}", myAnalyticsProvider.apiUrl)
                     val loginHandler = LoginHandler.createLoginHandler(myAnalyticsProvider)
                     loginHandler.logout("logoutSynchronously called,$trigger")
+                } catch (e: CancellationException) {
+                    throw e // ⚠️ Always rethrow to propagate cancellation properly
                 } catch (e: Throwable) {
                     Log.warnWithException(logger, e, "error in logoutSynchronously {}", e)
                     ErrorReporter.getInstance().reportError("AuthManager.logout", e)
@@ -616,7 +625,7 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
                     }
 
                     if (delay > ZERO) {
-                        autoRefreshWaitingJob = launch {
+                        autoRefreshWaitingJob = launch(CoroutineName("AuthManager.autoRefreshWaitingJob")) {
                             Log.log(logger::trace, "${coroutineContext[CoroutineName]} in autoRefreshJob.autoRefreshWaitingJob waiting {}", delay)
                             delay(delay.inWholeMilliseconds)
                             Log.log(logger::trace, "${coroutineContext[CoroutineName]} in autoRefreshJob.autoRefreshWaitingJob done")
@@ -753,7 +762,7 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
 
                 val waitingSemaphore = Semaphore(0, true)
                 Log.log(logger::trace, "launching lockingLoginOrRefresh job, analytics url {}, method {}", myAnalyticsProvider.apiUrl, methodName)
-                val job = cs.launch(CoroutineName("lockingLoginOrRefresh") + errorHandler) {
+                val job = cs.launch(CoroutineName("AuthManager.lockingLoginOrRefresh") + errorHandler) {
                     try {
                         Log.log(
                             logger::trace,
@@ -765,6 +774,8 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
                         loginHandler.loginOrRefresh(onAuthenticationError, trigger)
                         //wake up the auto refresh to check the next auto refresh time
                         cancelAutoRefreshWaitingJob("from lockingLoginOrRefresh for $methodName")
+                    } catch (e: CancellationException) {
+                        throw e // ⚠️ Always rethrow to propagate cancellation properly
                     } catch (e: Throwable) {
                         Log.warnWithException(logger, e, "error in lockingLoginOrRefresh job {}", e)
                         ErrorReporter.getInstance().reportError("AuthManager.loginOrRefresh", e)
@@ -828,13 +839,15 @@ class AuthManager(private val cs: CoroutineScope) : Disposable {
 
             val waitingSemaphore = Semaphore(0, true)
             Log.log(logger::trace, "launching nonLockingLoginOrRefresh job, analytics url {}", myAnalyticsProvider.apiUrl)
-            val job = cs.launch(CoroutineName("nonLockingLoginOrRefresh")) {
+            val job = cs.launch(CoroutineName("AuthManager.nonLockingLoginOrRefresh")) {
                 try {
                     Log.log(logger::trace, "starting nonLockingLoginOrRefresh job, analytics url {}", myAnalyticsProvider.apiUrl)
                     val loginHandler = LoginHandler.createLoginHandler(myAnalyticsProvider, true)
                     loginHandler.loginOrRefresh(onAuthenticationError, trigger)
                     //wake up the auto refresh to check the next auto refresh time
                     cancelAutoRefreshWaitingJob("from nonLockingLoginOrRefresh")
+                } catch (e: CancellationException) {
+                    throw e // ⚠️ Always rethrow to propagate cancellation properly
                 } catch (e: Throwable) {
                     Log.warnWithException(logger, e, "error in nonLockingLoginOrRefresh job {}", e)
                     ErrorReporter.getInstance().reportError("AuthManager.loginOrRefresh", e)

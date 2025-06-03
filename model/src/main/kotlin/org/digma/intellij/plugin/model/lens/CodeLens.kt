@@ -9,9 +9,10 @@ data class CodeLens(
     val scopeCodeObjectId: String?,
     val lensTitle: String,
     val importance: Int,
+    var lensDescription: String,
+    var lensMoreText: String
 ) {
-    var lensDescription: String = ""
-    var lensMoreText: String = ""
+
 
     // generated code. hashCode and equals on top of codeObjectId and lensTitle, in order to avoid duplicates
     override fun hashCode(): Int {

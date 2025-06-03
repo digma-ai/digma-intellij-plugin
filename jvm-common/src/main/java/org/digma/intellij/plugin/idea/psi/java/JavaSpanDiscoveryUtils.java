@@ -2,52 +2,20 @@ package org.digma.intellij.plugin.idea.psi.java;
 
 
 import com.intellij.openapi.project.Project;
-import com.intellij.psi.PsiAssignmentExpression;
-import com.intellij.psi.PsiClass;
-import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiExpression;
-import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiJavaFile;
-import com.intellij.psi.PsiMethod;
-import com.intellij.psi.PsiMethodCallExpression;
-import com.intellij.psi.PsiReference;
-import com.intellij.psi.PsiReferenceExpression;
-import com.intellij.psi.PsiVariable;
+import com.intellij.psi.*;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Query;
 import org.digma.intellij.plugin.model.discovery.SpanInfo;
 import org.digma.intellij.plugin.psi.PsiUtils;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.*;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
-import static org.digma.intellij.plugin.DiscoveryConstantsKt.GLOBAL_OPENTELEMETY_FQN;
-import static org.digma.intellij.plugin.DiscoveryConstantsKt.JAKARTA_INJECT_FQN;
-import static org.digma.intellij.plugin.DiscoveryConstantsKt.JAVAX_INJECT_FQN;
-import static org.digma.intellij.plugin.DiscoveryConstantsKt.OPENLIBERTY_MICROPROFILE_INST_LIB;
-import static org.digma.intellij.plugin.DiscoveryConstantsKt.OPENTELEMETY_FQN;
-import static org.digma.intellij.plugin.DiscoveryConstantsKt.SPAN_BUILDER_FQN;
-import static org.digma.intellij.plugin.DiscoveryConstantsKt.TRACER_BUILDER_FQN;
-import static org.digma.intellij.plugin.DiscoveryConstantsKt.TRACER_FQN;
-import static org.digma.intellij.plugin.DiscoveryConstantsKt.WITH_SPAN_ANNOTATION_FQN;
-import static org.digma.intellij.plugin.DiscoveryConstantsKt.WITH_SPAN_INST_LIBRARY_1;
-import static org.digma.intellij.plugin.DiscoveryConstantsKt.WITH_SPAN_INST_LIBRARY_2;
-import static org.digma.intellij.plugin.DiscoveryConstantsKt.WITH_SPAN_INST_LIBRARY_3;
-import static org.digma.intellij.plugin.DiscoveryConstantsKt.WITH_SPAN_INST_LIBRARY_4;
-import static org.digma.intellij.plugin.DiscoveryConstantsKt.WITH_SPAN_INST_LIBRARY_5;
-import static org.digma.intellij.plugin.idea.psi.JvmCodeObjectsUtilsKt.createPsiMethodCodeObjectId;
-import static org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils.createSpanIdForWithSpanAnnotation;
-import static org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils.createSpanIdFromInstLibraryAndSpanName;
-import static org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils.createSpanNameForWithSpanAnnotation;
-import static org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils.getValueFromFirstArgument;
-import static org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils.isMethodWithFirstArgumentString;
-import static org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils.isMethodWithNoArguments;
+import static org.digma.intellij.plugin.idea.discovery.DiscoveryConstantsKt.*;
+import static org.digma.intellij.plugin.idea.discovery.JvmCodeObjectsUtilsKt.createPsiMethodCodeObjectId;
+import static org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils.*;
 
 /**
  * Utility methods for span discovery.
@@ -90,11 +58,11 @@ public class JavaSpanDiscoveryUtils {
             var spanName = createSpanNameForWithSpanAnnotation(psiMethod, withSpanAnnotation, containingClass);
 
             List<SpanInfo> spanInfos = new ArrayList<>();
-            spanInfos.add(new SpanInfo(createSpanIdForWithSpanAnnotation(psiMethod, withSpanAnnotation, containingClass, WITH_SPAN_INST_LIBRARY_1), spanName, methodId, containingFileUri));
-            spanInfos.add(new SpanInfo(createSpanIdForWithSpanAnnotation(psiMethod, withSpanAnnotation, containingClass, WITH_SPAN_INST_LIBRARY_2), spanName, methodId, containingFileUri));
-            spanInfos.add(new SpanInfo(createSpanIdForWithSpanAnnotation(psiMethod, withSpanAnnotation, containingClass, WITH_SPAN_INST_LIBRARY_3), spanName, methodId, containingFileUri));
-            spanInfos.add(new SpanInfo(createSpanIdForWithSpanAnnotation(psiMethod, withSpanAnnotation, containingClass, WITH_SPAN_INST_LIBRARY_4), spanName, methodId, containingFileUri));
-            spanInfos.add(new SpanInfo(createSpanIdForWithSpanAnnotation(psiMethod, withSpanAnnotation, containingClass, WITH_SPAN_INST_LIBRARY_5), spanName, methodId, containingFileUri));
+            spanInfos.add(new SpanInfo(createSpanIdForWithSpanAnnotation(psiMethod, withSpanAnnotation, containingClass, WITH_SPAN_INST_LIBRARY_1), spanName, methodId, containingFileUri,psiMethod.getTextOffset()));
+            spanInfos.add(new SpanInfo(createSpanIdForWithSpanAnnotation(psiMethod, withSpanAnnotation, containingClass, WITH_SPAN_INST_LIBRARY_2), spanName, methodId, containingFileUri,psiMethod.getTextOffset()));
+            spanInfos.add(new SpanInfo(createSpanIdForWithSpanAnnotation(psiMethod, withSpanAnnotation, containingClass, WITH_SPAN_INST_LIBRARY_3), spanName, methodId, containingFileUri,psiMethod.getTextOffset()));
+            spanInfos.add(new SpanInfo(createSpanIdForWithSpanAnnotation(psiMethod, withSpanAnnotation, containingClass, WITH_SPAN_INST_LIBRARY_4), spanName, methodId, containingFileUri,psiMethod.getTextOffset()));
+            spanInfos.add(new SpanInfo(createSpanIdForWithSpanAnnotation(psiMethod, withSpanAnnotation, containingClass, WITH_SPAN_INST_LIBRARY_5), spanName, methodId, containingFileUri,psiMethod.getTextOffset()));
             return spanInfos;
         }
 
@@ -242,7 +210,7 @@ public class JavaSpanDiscoveryUtils {
 
         if (spanName != null && instLibrary != null) {
             String spanId = createSpanIdFromInstLibraryAndSpanName(instLibrary, spanName);
-            return new SpanInfo(spanId, spanName, methodId, containingFileUri);
+            return new SpanInfo(spanId, spanName, methodId, containingFileUri,spanBuilderMethodCall.getTextOffset());
         }
 
         //if here then we couldn't completely discover the span

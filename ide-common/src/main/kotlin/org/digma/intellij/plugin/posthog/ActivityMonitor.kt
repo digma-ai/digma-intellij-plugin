@@ -10,6 +10,8 @@ import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.project.Project
 import com.intellij.ui.jcef.JBCefApp
 import com.posthog.java.PostHog
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -128,7 +130,7 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
 
         //if posthog is not null don't even start the coroutine.
         if (postHog == null) {
-            cs.launch {
+            cs.launch(CoroutineName("ActivityMonitor.waitForPosthogConnection")) {
                 //once we have a non-null posthog stop this coroutine.
                 //increase the delay on every iteration, but not more than 30 minutes. probably there is no connection.
                 var delay = 1
@@ -145,6 +147,8 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
                                 Log.log(logger::trace, "posthog connection OK")
                             }
                         }
+                    } catch (e: CancellationException) {
+                        throw e // ⚠️ Always rethrow to propagate cancellation properly
                     } catch (e: Throwable) {
                         Log.warnWithException(logger, e, "error while checking posthog connection")
                     }
@@ -433,7 +437,7 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
                 "plugin.version" to pluginVersion,
                 "server.version" to serverInfo?.applicationVersion.toString(),
                 "user.type" to if (UniqueGeneratedUserId.isDevUser) "internal" else "external",
-                "backend.connection.status" to if(BackendConnectionMonitor.getInstance(project).isConnectionOk()) "connected" else "disconnected"
+                "backend.connection.status" to if (BackendConnectionMonitor.getInstance(project).isConnectionOk()) "connected" else "disconnected"
             )
 
 
@@ -912,18 +916,20 @@ class ActivityMonitor(private val project: Project, cs: CoroutineScope) : Dispos
         val uiVersion = UIVersioningService.getInstance().getCurrentUiVersion()
         val isJcefSupported = JBCefApp.isSupported()
 
-        registerCustomEvent("2025EAPWithJCEFRemote patch activated", mapOf(
-            "app.name" to appName,
-            "os.type" to osType,
-            "ide.name" to ideName,
-            "ide.version" to ideVersion,
-            "ide.build" to ideBuildNumber,
-            "plugin.version" to pluginVersion,
-            "ui.version" to uiVersion,
-            "user.type" to if (UniqueGeneratedUserId.isDevUser) "internal" else "external",
-            "jcef.supported" to isJcefSupported,
-            INSTALL_STATUS_PROPERTY_NAME to getCurrentInstallStatus()
-        ))
+        registerCustomEvent(
+            "2025EAPWithJCEFRemote patch activated", mapOf(
+                "app.name" to appName,
+                "os.type" to osType,
+                "ide.name" to ideName,
+                "ide.version" to ideVersion,
+                "ide.build" to ideBuildNumber,
+                "plugin.version" to pluginVersion,
+                "ui.version" to uiVersion,
+                "user.type" to if (UniqueGeneratedUserId.isDevUser) "internal" else "external",
+                "jcef.supported" to isJcefSupported,
+                INSTALL_STATUS_PROPERTY_NAME to getCurrentInstallStatus()
+            )
+        )
     }
 
 

@@ -162,7 +162,7 @@ class QuarkusConfigureDepsService(private val project: Project) : Disposable {
         }
 
         Backgroundable.executeOnPooledThread {
-            ProjectRefreshAction.refreshProject(project)
+            ProjectRefreshAction.Manager.refreshProject(project)
         }
     }
 

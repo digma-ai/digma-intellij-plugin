@@ -10,6 +10,7 @@ abstract class DigmaProjectActivity : ProjectActivity {
 
     protected val logger = Logger.getInstance(this::class.java)
 
+    //todo: change signature to suspend
     abstract fun executeProjectStartup(project: Project)
 
     override suspend fun execute(project: Project) {

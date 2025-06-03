@@ -5,7 +5,6 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.JBColor;
 import org.apache.commons.lang3.time.StopWatch;
-import org.apache.maven.artifact.versioning.ComparableVersion;
 import org.digma.intellij.plugin.auth.AuthManager;
 import org.digma.intellij.plugin.common.*;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
@@ -42,12 +41,12 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.*;
 
+import static org.digma.intellij.plugin.analytics.BackendUtilsKt.backendVersionOlderThen;
 import static org.digma.intellij.plugin.analytics.EnvUtilsKt.getAllEnvironmentsIds;
 import static org.digma.intellij.plugin.analytics.EnvironmentRefreshSchedulerKt.scheduleEnvironmentRefresh;
 import static org.digma.intellij.plugin.common.JsonUtilsKt.objectToJsonNoException;
 import static org.digma.intellij.plugin.common.StringUtilsKt.argsToString;
 import static org.digma.intellij.plugin.log.Log.API_LOGGER_NAME;
-import static org.digma.intellij.plugin.model.rest.AboutResultKt.UNKNOWN_APPLICATION_VERSION;
 
 
 public class AnalyticsService implements Disposable {
@@ -566,7 +565,7 @@ public class AnalyticsService implements Disposable {
     @Nullable
     public SpanInfoByUid resolveSpanByUid(@NotNull String uid) throws AnalyticsServiceException {
 
-        if (backendVersionOlderThen("0.3.155")) {
+        if (backendVersionOlderThen(project, "0.3.155")) {
             return null;
         }
 
@@ -576,26 +575,11 @@ public class AnalyticsService implements Disposable {
 
     @Nullable
     public EnvironmentInfoByErrorId resolveEnvironmentByErrorId(@NotNull String errorId) throws AnalyticsServiceException {
-        if (backendVersionOlderThen("0.3.318")) {
+        if (backendVersionOlderThen(project, "0.3.318")) {
             return null;
         }
 
         return executeCatching(() -> analyticsProviderProxy.resolveEnvironmentByErrorId(errorId));
-    }
-
-
-    private boolean backendVersionOlderThen(String version) {
-        String backendVersion = BackendInfoHolder.getInstance(project).getAbout().getApplicationVersion();
-
-        //dev environment may return unknown
-        if (UNKNOWN_APPLICATION_VERSION.equalsIgnoreCase(backendVersion)) {
-            return false;
-        }
-
-        ComparableVersion currentBackendVersion = new ComparableVersion(backendVersion);
-        ComparableVersion requiredBackendVersion = new ComparableVersion(version);
-
-        return currentBackendVersion.compareTo(requiredBackendVersion) < 0;
     }
 
 

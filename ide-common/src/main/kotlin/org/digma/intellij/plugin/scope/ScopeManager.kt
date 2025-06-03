@@ -1,9 +1,12 @@
 package org.digma.intellij.plugin.scope
 
+import com.intellij.openapi.application.EDT
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.setCurrentEnvironmentById
 import org.digma.intellij.plugin.common.CodeObjectsUtil
@@ -27,7 +30,7 @@ class ScopeManager(private val project: Project) {
         }
     }
 
-    fun changeToHome(
+    suspend fun changeToHome(
         openMainPanel: Boolean = false,
         scopeContext: ScopeContext? = null,
         environmentId: String? = null
@@ -42,7 +45,7 @@ class ScopeManager(private val project: Project) {
 
         fireScopeChangedEvent(null, CodeLocation(listOf(), listOf()), false, scopeContext, environmentId)
 
-        EDT.ensureEDT {
+        withContext(Dispatchers.EDT) {
             //don't do that on first wizard launch to let user complete the installation wizard.
             if (!PersistenceService.getInstance().isFirstWizardLaunch()) {
                 MainToolWindowCardsController.getInstance(project).closeCoveringViewsIfNecessary()
@@ -56,8 +59,7 @@ class ScopeManager(private val project: Project) {
 
     }
 
-    //preferredView is the preferred view to show after changing scope.
-    fun changeScope(
+    suspend fun changeScope(
         scope: Scope,
         scopeContext: ScopeContext? = null,
         environmentId: String? = null
@@ -65,25 +67,25 @@ class ScopeManager(private val project: Project) {
 
         EDT.assertNonDispatchThread()
 
-        try {
-            when (scope) {
-                is SpanScope -> changeToSpanScope(scope, scopeContext, environmentId)
+//        try {
+        when (scope) {
+            is SpanScope -> changeToSpanScope(scope, scopeContext, environmentId)
 
-                else -> {
-                    ErrorReporter.getInstance().reportError(
-                        project, "ScopeManager.changeScope", "changeScope,unknown scope", mapOf(
-                            "error hint" to "got unknown scope $scope"
-                        )
+            else -> {
+                ErrorReporter.getInstance().reportError(
+                    project, "ScopeManager.changeScope", "changeScope,unknown scope", mapOf(
+                        "error hint" to "got unknown scope $scope"
                     )
-                }
+                )
             }
-        } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError(project, "ScopeManager.changeScope", e)
         }
+//        } catch (e: Throwable) {
+//            ErrorReporter.getInstance().reportError(project, "ScopeManager.changeScope", e)
+//        }
     }
 
 
-    private fun changeToSpanScope(
+    private suspend fun changeToSpanScope(
         scope: SpanScope,
         scopeContext: ScopeContext? = null,
         environmentId: String? = null
@@ -125,7 +127,7 @@ class ScopeManager(private val project: Project) {
 
         fireScopeChangedEvent(scope, codeLocation, hasErrors, scopeContext, environmentId)
 
-        EDT.ensureEDT {
+        withContext(Dispatchers.EDT) {
             MainToolWindowCardsController.getInstance(project).closeCoveringViewsIfNecessary()
             ToolWindowShower.getInstance(project).showToolWindow()
         }
@@ -143,7 +145,7 @@ class ScopeManager(private val project: Project) {
     }
 
 
-    private fun tryGetMethodIdForSpan(spanCodeObjectId: String): String? {
+    private suspend fun tryGetMethodIdForSpan(spanCodeObjectId: String): String? {
         return CodeNavigator.getInstance(project).findMethodCodeObjectId(spanCodeObjectId)
     }
 

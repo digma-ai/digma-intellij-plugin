@@ -8,6 +8,6 @@ abstract class AbstractApiCommand {
 
     protected val logger: Logger = Logger.getInstance(this::class.java)
 
-    abstract fun execute(project: Project, urlDecoder: QueryStringDecoder)
+    abstract suspend fun execute(project: Project, urlDecoder: QueryStringDecoder)
 
 }

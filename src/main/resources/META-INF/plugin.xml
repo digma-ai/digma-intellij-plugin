@@ -48,7 +48,6 @@
 
         <applicationService serviceImplementation="org.digma.intellij.plugin.errorreporting.ErrorReporter"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.jaegerui.JaegerUIService"/>
         <fileEditorProvider implementation="org.digma.intellij.plugin.jaegerui.JaegerUIFileEditorProvider"/>
         <fileEditorProvider implementation="org.digma.intellij.plugin.documentation.DocumentationFileEditorProvider"/>
 
@@ -59,20 +58,9 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.analytics.AnalyticsService"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.document.DocumentInfoService"/>
-
-        <projectService serviceImplementation="org.digma.intellij.plugin.document.CodeLensProvider"/>
-
         <projectService serviceImplementation="org.digma.intellij.plugin.service.EditorService"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.psi.LanguageServiceLocator"/>
-
         <projectService serviceImplementation="org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider"/>
-
-        <projectService serviceImplementation="org.digma.intellij.plugin.ui.navigation.CodeButtonCaretContextService"
-                        serviceInterface="org.digma.intellij.plugin.editor.CaretContextService"/>
-
-        <projectService serviceImplementation="org.digma.intellij.plugin.editor.CurrentContextUpdater"/>
 
 
         <notificationGroup id="Digma Hidden Notification Group"
@@ -136,6 +124,9 @@
                 implementation="org.digma.intellij.plugin.analytics.BackendInfoHolderStarter"/>
         <postStartupActivity
                 implementation="org.digma.intellij.plugin.ui.recentactivity.RecentActivityToolWindowIconChangerStarter"/>
+        <postStartupActivity
+                implementation="org.digma.intellij.plugin.ui.navigation.CodeContextUpdateServiceStarter"/>
+        <postStartupActivity implementation="org.digma.intellij.plugin.userstats.UserStatsServiceStarter"/>
 
 
         <errorHandler implementation="org.digma.intellij.plugin.ui.reports.DigmaErrorReportSubmitter"/>
@@ -158,11 +149,11 @@
 
     <projectListeners>
         <listener
-                class="org.digma.intellij.plugin.editor.EditorEventsHandler"
+                class="org.digma.intellij.plugin.ui.navigation.CodeContextUpdateService$CodeContextUpdateServiceEditorListener"
                 topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
         <listener
-                class="org.digma.intellij.plugin.analytics.EnvironmentChangeHandler"
-                topic="org.digma.intellij.plugin.analytics.EnvironmentChanged"/>
+                class="org.digma.intellij.plugin.document.EditorEventsHandler"
+                topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
         <listener
                 class="org.digma.intellij.plugin.debugger.DebuggerListener"
                 topic="com.intellij.xdebugger.XDebuggerManagerListener"/>
@@ -170,10 +161,10 @@
                 class="org.digma.intellij.plugin.toolwindow.DigmaToolWindowsListener"
                 topic="com.intellij.openapi.wm.ex.ToolWindowManagerListener"/>
         <listener
-                class="org.digma.intellij.plugin.document.CodeLensProviderDocumentInfoAndEnvironmentChangedListener"
+                class="org.digma.intellij.plugin.codelens.provider.CodeLensProviderListeners"
                 topic="org.digma.intellij.plugin.document.DocumentInfoChanged"/>
         <listener
-                class="org.digma.intellij.plugin.document.CodeLensProviderDocumentInfoAndEnvironmentChangedListener"
+                class="org.digma.intellij.plugin.codelens.provider.CodeLensProviderListeners"
                 topic="org.digma.intellij.plugin.analytics.EnvironmentChanged"/>
         <listener
                 class="org.digma.intellij.plugin.ui.notificationcenter.AppNotificationCenter$AggressiveUpdateStateChangedEventListener"

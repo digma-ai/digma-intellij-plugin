@@ -11,7 +11,7 @@ import java.util.Objects
 
 class GoToHomeCommand : AbstractApiCommand(){
 
-    override fun execute(project: Project, urlDecoder: QueryStringDecoder) {
+    override suspend fun execute(project: Project, urlDecoder: QueryStringDecoder) {
         val environmentId = getStringParameter(ENVIRONMENT_ID_PARAM_NAME, urlDecoder)
         val targetTab = getStringParameter(TARGET_TAB_PARAM_NAME, urlDecoder)
         Objects.requireNonNull(environmentId, "environmentId parameter must not be null")

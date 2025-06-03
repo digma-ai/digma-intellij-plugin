@@ -9,19 +9,20 @@ namespace Digma.Rider.Highlighting
     [SolutionComponent(Instantiation.ContainerAsyncPrimaryThread)]
 #else
     [SolutionComponent]
-#endif    
+#endif
 
     public class CodeLensMethodInsightsProvider5 : BaseMethodInsightsProvider
     {
         public CodeLensMethodInsightsProvider5(
             ISolution solution,
             ILogger logger,
-            ShowToolWindowHost showToolWindowHost
-        ) : base(solution, logger, showToolWindowHost)
-        { }
-        
+            ShowToolWindowHost showToolWindowHost,
+            LanguageServiceHost languageServiceHost
+        ) : base(solution, logger, showToolWindowHost, languageServiceHost)
+        {
+        }
+
         public override string ProviderId => "MethodInsightsProvider5";
         public override string DisplayName => "Method Insights Provider_5 Hints";
-        
     }
 }

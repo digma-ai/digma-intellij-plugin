@@ -4,6 +4,7 @@ import com.intellij.openapi.components.service
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http.FullHttpRequest
 import io.netty.handler.codec.http.QueryStringDecoder
+import kotlinx.coroutines.CancellationException
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import java.util.Objects
@@ -17,23 +18,24 @@ class ShowAssetsHttpService : AbstractHttpService() {
     override fun getServiceName() = "digma/show"
 
 
-    override fun execute(urlDecoder: QueryStringDecoder, request: FullHttpRequest, context: ChannelHandlerContext): String? {
+    override suspend fun executeRequest(urlDecoder: QueryStringDecoder, request: FullHttpRequest, context: ChannelHandlerContext): String? {
 
         try {
-            executeImpl(urlDecoder,request,context)
-            sendOk(request,context)
+            executeImpl(urlDecoder, request, context)
+            sendOk(request, context)
             return null
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Throwable) {
             ErrorReporter.getInstance().reportError("ShowAssetsHttpService.execute", e)
             return "Error $e"
         }
-
     }
 
-    private fun executeImpl(urlDecoder: QueryStringDecoder, request: FullHttpRequest, context: ChannelHandlerContext) {
+    private suspend fun executeImpl(urlDecoder: QueryStringDecoder, request: FullHttpRequest, context: ChannelHandlerContext) {
 
         val action = getStringParameter(ACTION_PARAM_NAME, urlDecoder)
-        Objects.requireNonNull(action,"action parameter must not be null")
+        Objects.requireNonNull(action, "action parameter must not be null")
 
         Log.log(
             logger::trace,
@@ -42,7 +44,8 @@ class ShowAssetsHttpService : AbstractHttpService() {
             Thread.currentThread().name
         )
 
-        service<ApiService>().executeAction(action!!,urlDecoder)
+        action?.let {
+            service<ApiService>().executeAction(it, urlDecoder)
+        }
     }
-
 }

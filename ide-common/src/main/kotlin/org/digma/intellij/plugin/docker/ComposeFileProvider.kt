@@ -1,7 +1,8 @@
 package org.digma.intellij.plugin.docker
 
 import com.intellij.openapi.diagnostic.Logger
-import org.digma.intellij.plugin.common.Retries
+import org.digma.intellij.plugin.common.retry
+import org.digma.intellij.plugin.common.retryWithBackoff
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.paths.DigmaPathManager
@@ -71,7 +72,6 @@ class ComposeFileProvider {
         }
         return composeFile.absolutePath
     }
-
 
 
     //this method should return a file, if the file does not exist, the docker operation will fail
@@ -170,7 +170,7 @@ class ComposeFileProvider {
 
         try {
 
-            Retries.simpleRetry({
+            retryWithBackoff(initialDelay = 2000) {
 
                 Log.log(logger::info, "downloading {}", url)
 
@@ -195,7 +195,7 @@ class ComposeFileProvider {
                         Files.move(tempFile, toFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
                     }
                 }
-            }, Throwable::class.java, 5000, 3)
+            }
 
             return true
 
@@ -217,10 +217,10 @@ class ComposeFileProvider {
 
 
     fun deleteFile() {
-        Retries.simpleRetry({
+        retry {
             val file = if (usingCustomComposeFile()) customComposeFile else composeFile
             Files.deleteIfExists(file.toPath())
-        }, Throwable::class.java, 100, 5)
+        }
     }
 
 

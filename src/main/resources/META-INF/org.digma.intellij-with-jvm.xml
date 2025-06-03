@@ -15,10 +15,11 @@
                -->
 
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.idea.psi.java.JavaLanguageService"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.idea.java.JavaLanguageService"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.idea.psi.java.JavaCodeObjectDiscovery"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.idea.java.JavaCodeObjectDiscovery"/>
 
+        <projectService serviceImplementation="org.digma.intellij.plugin.idea.navigation.JvmNavigationDiscoveryManager"/>
 
         <projectService
                 serviceImplementation="org.digma.intellij.plugin.idea.navigation.JvmSpanNavigationProvider"/>
@@ -33,20 +34,16 @@
         <projectService serviceImplementation="org.digma.intellij.plugin.idea.deps.ModulesDepsService"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.idea.deps.ModuleDepsStarter"/>
 
-        <postStartupActivity implementation="org.digma.intellij.plugin.idea.userstats.UserStatsServiceStarter"/>
-
         <projectService serviceImplementation="org.digma.intellij.plugin.idea.buildsystem.JvmBuildSystemHelperService"/>
 
         <projectService
                 serviceImplementation="org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService"/>
         <projectService serviceImplementation="org.digma.intellij.plugin.idea.frameworks.QuarkusConfigureDepsService"/>
 
-
-        <projectService
-                serviceImplementation="org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscoveryService"/>
-
         <applicationService
                 serviceImplementation="org.digma.intellij.plugin.idea.execution.RunConfigurationHandlersHolder"/>
+
+        <fileBasedIndex implementation="org.digma.intellij.plugin.idea.index.CandidateFilesForDiscoveryDetectionIndex"/>
 
     </extensions>
 

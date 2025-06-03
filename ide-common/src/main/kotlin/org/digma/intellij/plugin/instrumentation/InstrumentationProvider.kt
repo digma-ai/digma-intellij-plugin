@@ -1,8 +1,8 @@
 package org.digma.intellij.plugin.instrumentation
 
 interface InstrumentationProvider {
-
-    fun buildMethodObservabilityInfo(methodId: String): MethodObservabilityInfo
-    fun addObservabilityDependency(methodId: String)
-    fun addObservability(methodId: String)
+    suspend fun buildMethodObservabilityInfo(methodId: String): MethodObservabilityInfo
+    suspend fun addObservabilityDependency(methodId: String)
+    suspend fun addObservability(methodId: String)
+    suspend fun instrumentMethod(methodObservabilityInfo: MethodObservabilityInfo): Boolean
 }

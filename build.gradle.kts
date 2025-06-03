@@ -87,6 +87,7 @@ dependencies {
         pluginModule(implementation(project(":maven-support")))
         pluginModule(implementation(project(":rider")))
         pluginModule(implementation(project(":kotlin")))
+        pluginModule(implementation(project(":python")))
 
         pluginVerifier()
         zipSigner()

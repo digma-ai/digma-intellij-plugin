@@ -1,8 +1,8 @@
-package org.digma.intellij.plugin.psi.python
+package org.digma.intellij.plugin.python
 
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 
-class PythonAdditionalIdsProvider:MethodInfo.AdditionalIdsProvider {
+class PythonAdditionalIdsProvider: MethodInfo.AdditionalIdsProvider {
 
 
     override fun provideAdditionalIdsWithType(methodInfo: MethodInfo): List<String> {

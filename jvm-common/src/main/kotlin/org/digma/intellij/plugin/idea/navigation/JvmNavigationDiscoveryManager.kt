@@ -188,6 +188,7 @@ class JvmNavigationDiscoveryManager(private val project: Project, private val cs
                     }
 
                     Log.trace(logger, project, "Processing candidate file {}", file.url)
+                    DumbService.getInstance(project).waitForSmartMode()
                     val fileProcessingTime = measureTimeMillis {
                         coroutineContext.ensureActive()
                         val fileInfo = FileDiscoveryInfoBuilder.getInstance(project).buildFileInfo(file)

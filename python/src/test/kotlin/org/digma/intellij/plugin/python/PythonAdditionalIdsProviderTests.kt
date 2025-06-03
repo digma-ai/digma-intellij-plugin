@@ -1,6 +1,7 @@
-package org.digma.intellij.plugin.psi.python
+package org.digma.intellij.plugin.python
 
 import org.digma.intellij.plugin.model.discovery.MethodInfo
+import org.digma.intellij.plugin.python.PythonAdditionalIdsProvider
 import org.junit.jupiter.api.Test
 import kotlin.test.assertContains
 
@@ -9,7 +10,7 @@ internal class PythonAdditionalIdsProviderTests {
 
     @Test
     fun testAdditionalIdsWithType(){
-        val methodInfo = MethodInfo("project-root/test/folder/main.py\$_\$myFunction", "myFunction", "myClass", "my.namespace.MyClass", "file://my/file.uri", 10)
+        val methodInfo = MethodInfo("project-root/test/folder/main.py\$_\$myFunction", "myFunction", "myClass", "my.namespace.MyClass", "file://my/file.uri")
         val ids = PythonAdditionalIdsProvider().provideAdditionalIdsWithType(methodInfo)
 
         assert(ids.size == 3)
@@ -20,7 +21,7 @@ internal class PythonAdditionalIdsProviderTests {
 
     @Test
     fun testAdditionalIdsWithoutType(){
-        val methodInfo = MethodInfo("project-root/test/folder/main.py\$_\$myFunction", "myFunction", "myClass", "my.namespace.MyClass", "file://my/file.uri", 10)
+        val methodInfo = MethodInfo("project-root/test/folder/main.py\$_\$myFunction", "myFunction", "myClass", "my.namespace.MyClass", "file://my/file.uri")
         val ids = PythonAdditionalIdsProvider().provideAdditionalIdsWithoutType(methodInfo)
 
         assert(ids.size == 3)
@@ -31,7 +32,7 @@ internal class PythonAdditionalIdsProviderTests {
 
     @Test
     fun testAdditionalIdsMethodInfoWithType(){
-        val methodInfo = MethodInfo("project-root/test/folder/main.py\$_\$myFunction", "myFunction", "myClass", "my.namespace.MyClass", "file://my/file.uri", 10)
+        val methodInfo = MethodInfo("project-root/test/folder/main.py\$_\$myFunction", "myFunction", "myClass", "my.namespace.MyClass", "file://my/file.uri")
         methodInfo.additionalIdsProvider = PythonAdditionalIdsProvider()
 
         val ids = methodInfo.allIdsWithType()
@@ -45,7 +46,7 @@ internal class PythonAdditionalIdsProviderTests {
 
     @Test
     fun testAdditionalIdsMethodInfoWithoutType(){
-        val methodInfo = MethodInfo("project-root/test/folder/main.py\$_\$myFunction", "myFunction", "myClass", "my.namespace.MyClass", "file://my/file.uri", 10)
+        val methodInfo = MethodInfo("project-root/test/folder/main.py\$_\$myFunction", "myFunction", "myClass", "my.namespace.MyClass", "file://my/file.uri")
         methodInfo.additionalIdsProvider = PythonAdditionalIdsProvider()
 
         val ids = methodInfo.allIdsWithoutType()

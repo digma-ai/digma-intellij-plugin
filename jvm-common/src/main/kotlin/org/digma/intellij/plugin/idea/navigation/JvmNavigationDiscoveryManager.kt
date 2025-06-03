@@ -38,26 +38,6 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 
-//todo:
-//on startup find candidates from the index and put in set.
-//register listener on the index to listen for new and updated candidates.
-//run a task that takes files from the set: builds FileInfo that contains MethodInfos with spans and endpoints.
-//send the FileInfo to JvmSpanNavigationProvider and JvmEndpointNavigationProvider, each will take what they need from the FileInfo.
-//dismiss the FileInfo. todo: think if i want to keep the FileInfo
-//run maintenance task that checks all files in JvmSpanNavigationProvider and JvmEndpointNavigationProvider , if a file doesn't have
-// index anymore assume its deleted and remove the discovery
-
-//todo: what to do with deleted files, or files that had spans and now edited and don't have spans anymore?
-// when a file is deleted the index listener will not be called, so we can't remove it from the set.'
-// when a file was a candidate and edited and now is not a candidate the listener will not be called.
-// possible solutions:
-// 1) in the index keep an in memory list of all candidates , when a file in indexed and has no keys keys and was a candidate before fire an event of file removed.
-//     this is a clean solution but keeps an in memory set of VirtualFiles
-//     !! this option is not good because after the index is read and project restart there will not be indexing for files that were indexed before so can't save them in memory.
-// 2) run a maintenance task every minute that check all files in the discovery, query the index if the file still has keys, if not, remove it from the discovery.
-//    this needs to travers all files in the discovery, or the manager should keep a list of discovered files.
-
-
 @Suppress("LightServiceMigrationCode")
 class JvmNavigationDiscoveryManager(private val project: Project, private val cs: CoroutineScope) : Disposable, CandidateFilesDetectionIndexListener {
 

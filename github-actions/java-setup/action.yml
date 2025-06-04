@@ -8,4 +8,3 @@ runs:
       with:
         java-version: '24'
         distribution: 'temurin'
-        cache: 'gradle'

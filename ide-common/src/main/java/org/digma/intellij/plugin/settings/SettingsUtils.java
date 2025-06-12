@@ -37,9 +37,6 @@ public class SettingsUtils {
                  URLValidator.IncorrectSchemaException e) {
             throw new ConfigurationException("Api url is not a well formed: " + e.getMessage());
         }
-        if (!CommonUtils.isHttpsUrl(settingsComponent.getApiUrl())) {
-            throw new ConfigurationException("Api url schema must be https");
-        }
 
         if (settingsComponent.getRuntimeObservabilityBackendUrl().isBlank()) {
             throw new ConfigurationException("Runtime observability url can not be empty");

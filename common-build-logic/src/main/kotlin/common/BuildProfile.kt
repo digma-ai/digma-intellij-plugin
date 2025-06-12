@@ -117,7 +117,7 @@ object BuildProfiles {
     )
 
 
-    //todo: check products releases file, can be used to automatically to update the profiles
+    //todo: check products releases file, can be used to automatically update the profiles
     // https://www.jetbrains.com/updates/updates.xml
     // IntelliJPluginConstants.IDEA_PRODUCTS_RELEASES_URL
     // https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html#tasks-listproductsreleases
@@ -142,7 +142,7 @@ object BuildProfiles {
             profile = Profile.p241,
             platformVersion = "2024.1.7",
             riderVersion = "2024.1.6",
-            pycharmVersion = "2024.1.5",
+            pycharmVersion = "2024.1.7",
             riderTargetFramework = "net8.0",
             riderResharperVersionConstant = "",
             platformVersionCode = "241",
@@ -157,9 +157,9 @@ object BuildProfiles {
 
         Profile.p242 to BuildProfile(
             profile = Profile.p242,
-            platformVersion = "2024.2.4",
+            platformVersion = "2024.2.6",
             riderVersion = "2024.2.7",
-            pycharmVersion = "2024.2",
+            pycharmVersion = "2024.2.6",
             riderTargetFramework = "net8.0",
             riderResharperVersionConstant = "",
             platformVersionCode = "242",
@@ -174,7 +174,7 @@ object BuildProfiles {
             profile = Profile.p243,
             platformVersion = "2024.3.5",
             riderVersion = "2024.3.6",
-            pycharmVersion = "2024.3",
+            pycharmVersion = "2024.3.5",
             riderTargetFramework = "net8.0",
             riderResharperVersionConstant = "PROFILE_2024_3",
             platformVersionCode = "243",
@@ -189,7 +189,7 @@ object BuildProfiles {
             profile = Profile.p251,
             platformVersion = "2025.1.2",
             riderVersion = "2025.1.2",
-            pycharmVersion = "2025.1.1.1",
+            pycharmVersion = "2025.1.2",
             riderTargetFramework = "net8.0",
             riderResharperVersionConstant = "PROFILE_2024_3",
             platformVersionCode = "251",
@@ -215,7 +215,6 @@ object BuildProfiles {
             kotlinJvmTarget = JvmTarget.JVM_21,
             javaVersion = JavaVersion.VERSION_21.majorVersion,
         )
-
     )
 
 }

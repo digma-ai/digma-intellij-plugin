@@ -13,6 +13,7 @@ jobs:
       build-profile: ${{ matrix.profile }}
       ref-name: ${{ github.ref_name }}
       build-with-rider: false
+      build-with-pycharm: false
     secrets: inherit
   ## can do a double matrix for rider but then it's not clear in github which is the rider build.
   build-workflow-with-rider:
@@ -24,6 +25,19 @@ jobs:
       build-profile: ${{ matrix.profile }}
       ref-name: ${{ github.ref_name }}
       build-with-rider: true
+      build-with-pycharm: false
+    secrets: inherit
+
+  build-workflow-with-pycharm:
+    strategy:
+      matrix:
+        profile: [ p241, p242, p243, p251, p252 ]
+    uses: ./.github/workflows/build-workflow.yml
+    with:
+      build-profile: ${{ matrix.profile }}
+      ref-name: ${{ github.ref_name }}
+      build-with-rider: false
+      build-with-pycharm: true
     secrets: inherit
 
   plugin-verifier-workflow:

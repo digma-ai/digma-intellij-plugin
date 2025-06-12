@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.idea.navigation
+package org.digma.intellij.plugin.python.navigation
 
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.thisLogger
@@ -9,14 +9,12 @@ import kotlinx.coroutines.sync.withLock
 import org.digma.intellij.plugin.common.isValidVirtualFile
 import org.digma.intellij.plugin.discovery.model.FileDiscoveryInfo
 import org.digma.intellij.plugin.discovery.model.SpanLocation
-import org.digma.intellij.plugin.idea.index.hasIndex
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.python.index.hasIndex
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.collections.component1
-import kotlin.collections.component2
 
 @Suppress("LightServiceMigrationCode")
-internal class JvmSpanNavigationProvider(private val project: Project) {
+internal class PythonSpanNavigationProvider(private val project: Project) {
 
     private val logger = thisLogger()
 
@@ -26,8 +24,8 @@ internal class JvmSpanNavigationProvider(private val project: Project) {
 
     companion object {
         @JvmStatic
-        fun getInstance(project: Project): JvmSpanNavigationProvider {
-            return project.service<JvmSpanNavigationProvider>()
+        fun getInstance(project: Project): PythonSpanNavigationProvider {
+            return project.service<PythonSpanNavigationProvider>()
         }
     }
 
@@ -50,7 +48,7 @@ internal class JvmSpanNavigationProvider(private val project: Project) {
 
 
     suspend fun processFileInfo(fileInfo: FileDiscoveryInfo) {
-        Log.trace(logger, project,"processing candidateFile {}", fileInfo.file.url)
+        Log.trace(logger, project, "processing candidateFile {}", fileInfo.file.url)
 
         if (!isValidVirtualFile(fileInfo.file)) {
             return
@@ -62,7 +60,7 @@ internal class JvmSpanNavigationProvider(private val project: Project) {
                 methodInfo.spans.forEach { spanInfo ->
                     val file = fileInfo.file
                     val spanLocation = SpanLocation(file, spanInfo.offset, methodId)
-                    Log.trace(logger, project,"adding span location for {} span {}", file.url, spanInfo.id)
+                    Log.trace(logger, project, "adding span location for {} span {}", file.url, spanInfo.id)
                     spanLocations[spanInfo.id] = spanLocation
                 }
             }
@@ -74,9 +72,9 @@ internal class JvmSpanNavigationProvider(private val project: Project) {
     }
 
     suspend fun maintenance() {
-        Log.trace(logger, project,"starting maintenance, current span location count {}", spanLocations.size)
-        if(logger.isTraceEnabled){
-            Log.trace(logger, project,"span locations [{}]", spanLocations.entries.joinToString(", ") { "[${it.key} -> ${it.value}]" })
+        Log.trace(logger, project, "starting maintenance, current span location count {}", spanLocations.size)
+        if (logger.isTraceEnabled) {
+            Log.trace(logger, project, "span locations [{}]", spanLocations.entries.joinToString(", ") { "[${it.key} -> ${it.value}]" })
         }
 
         maintenanceLock.withLock {
@@ -84,7 +82,7 @@ internal class JvmSpanNavigationProvider(private val project: Project) {
             if (toRemove.isEmpty()) {
                 return@withLock
             }
-            Log.trace(logger, project,"maintenance removing spans {}", toRemove)
+            Log.trace(logger, project, "maintenance removing spans {}", toRemove)
             spanLocations.entries.removeIf { toRemove.contains(it.key) }
         }
     }

@@ -67,6 +67,10 @@ class LanguageServiceProvider(private val project: Project) {
         return languageServiceByLanguageId[language.id]
     }
 
+    fun getLanguageService(languageId: String): LanguageService? {
+        return languageServiceByLanguageId[languageId]
+    }
+
     fun getLanguageService(virtualFile: VirtualFile): LanguageService? {
         val languageFileType = virtualFile.fileType as? LanguageFileType ?: return null
         return languageServiceByLanguageId[languageFileType.language.id]

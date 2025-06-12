@@ -14,6 +14,7 @@ jobs:
       build-profile: ${{ matrix.profile }}
       ref-name: ${{ github.event.pull_request.head.sha }}
       build-with-rider: false
+      build-with-pycharm: false
     secrets: inherit
 
   build-workflow-with-rider:
@@ -25,6 +26,19 @@ jobs:
       build-profile: ${{ matrix.profile }}
       ref-name: ${{ github.event.pull_request.head.sha }}
       build-with-rider: true
+      build-with-pycharm: false
+    secrets: inherit
+
+  build-workflow-with-pycharm:
+    strategy:
+      matrix:
+        profile: [ p241, p242, p243, p251, p252 ]
+    uses: ./.github/workflows/build-workflow.yml
+    with:
+      build-profile: ${{ matrix.profile }}
+      ref-name: ${{ github.event.pull_request.head.sha }}
+      build-with-rider: false
+      build-with-pycharm: true
     secrets: inherit
 
   plugin-verifier-workflow:

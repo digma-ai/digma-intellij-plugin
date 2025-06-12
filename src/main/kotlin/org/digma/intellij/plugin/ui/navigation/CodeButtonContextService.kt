@@ -18,7 +18,9 @@ import org.digma.intellij.plugin.model.discovery.EndpointFramework
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret
+import org.digma.intellij.plugin.model.rest.codespans.Asset
 import org.digma.intellij.plugin.model.rest.codespans.CodeContextSpans
+import org.digma.intellij.plugin.model.rest.codespans.ErrorData
 import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
 import org.digma.intellij.plugin.ui.navigation.model.CodeContextMessage
@@ -99,8 +101,24 @@ class CodeButtonContextService(private val project: Project) : Disposable {
                 sendCodeContext(jcefComp.jbCefBrowser.cefBrowser, codeContextMessage)
 
             } else {
-                val allIds = listOf(methodInfo.idWithType()).plus(methodInfo.getRelatedCodeObjectIdsWithType())
-                val codeContextSpans = AnalyticsService.getInstance(project).getSpansForCodeLocation(allIds)
+                //todo: backend returns error when sending all method ids for python
+                //see: https://github.com/digma-ai/digma-collector-backend/issues/3268
+                //this should be the correct code
+                //val allIds = methodInfo.allIdsWithType().plus(methodInfo.getRelatedCodeObjectIdsWithType())
+                //val codeContextSpans = AnalyticsService.getInstance(project).getSpansForCodeLocation(allIds)
+                //this is a workaround, call the api multiple times and collect all Assets and merge them
+                val assets = mutableSetOf<Asset>()
+                var errorData: ErrorData? = null
+                methodInfo.allIdsWithType().forEach { idWithType ->
+                    val ids = listOf(idWithType).plus(methodInfo.getRelatedCodeObjectIdsWithType())
+                    val codeContextSpans = AnalyticsService.getInstance(project).getSpansForCodeLocation(ids)
+                    assets.addAll(codeContextSpans.assets)
+                    errorData = errorData ?: codeContextSpans.errorData
+                }
+                //now create a new CodeContextSpans with all the collected Assets
+                val codeContextSpans = CodeContextSpans(assets.toList(), errorData)
+                //End workaround
+
                 val displayName = methodInfo.buildDisplayName()
 
                 var hasMissingDependency: Boolean? = null

@@ -43,6 +43,22 @@ data class MethodInfo(
         }
     }
 
+    //the default DisplayNameProvider, good for java,kotlin, csharp, for python we need something different
+    var displayNameProvider: DisplayNameProvider = object : DisplayNameProvider {
+        override fun provideDisplayName(methodInfo: MethodInfo): String {
+            val methodName = id.substringAfter("\$_$")
+            val className = id.substringBefore("\$_$")
+
+            if (methodName == className) {
+                return methodName
+            }
+
+            val classSimpleName = className.substringAfterLast(".")
+
+            return classSimpleName.plus(".").plus(methodName)
+        }
+    }
+
     fun getRelatedCodeObjectIdsWithType(): List<String> {
         val spansStream = spans.stream().map(SpanInfo::idWithType)
         val endpointsStream = endpoints.stream().map(EndpointInfo::idWithType)
@@ -108,23 +124,17 @@ data class MethodInfo(
     }
 
     fun buildDisplayName(): String {
-
-        val methodName = id.substringAfter("\$_$")
-        val className = id.substringBefore("\$_$")
-
-        if (methodName == className) {
-            return methodName
-        }
-
-        val classSimpleName = className.substringAfterLast(".")
-
-        return classSimpleName.plus(".").plus(methodName)
+        return displayNameProvider.provideDisplayName(this)
     }
 
 
     interface AdditionalIdsProvider {
         fun provideAdditionalIdsWithType(methodInfo: MethodInfo): List<String>
         fun provideAdditionalIdsWithoutType(methodInfo: MethodInfo): List<String>
+    }
+
+    interface DisplayNameProvider {
+        fun provideDisplayName(methodInfo: MethodInfo): String
     }
 }
 

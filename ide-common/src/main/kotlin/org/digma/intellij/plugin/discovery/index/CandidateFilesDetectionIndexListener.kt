@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.idea.index
+package org.digma.intellij.plugin.discovery.index
 
 import com.intellij.openapi.vfs.VirtualFile
 import java.util.EventListener

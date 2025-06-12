@@ -87,6 +87,7 @@ dependencies {
         pluginModule(implementation(project(":maven-support")))
         pluginModule(implementation(project(":rider")))
         pluginModule(implementation(project(":kotlin")))
+        pluginModule(implementation(project(":python")))
 
         pluginVerifier()
         zipSigner()
@@ -128,7 +129,6 @@ changelog {
 //    saveReport.set(true)
 //    showReport.set(System.getenv("QODANA_SHOW_REPORT")?.toBoolean() ?: false)
 //}
-
 
 
 intellijPlatform {
@@ -206,20 +206,26 @@ intellijPlatform {
                 //there is a feature request: https://github.com/JetBrains/intellij-platform-gradle-plugin/issues/1715
                 //ide(platformType, buildProfile.platformVersion)
                 //use recommended() and hope it doesn't fail too much because sometimes it does fail for unknown reasons
-                recommended()
+//                recommended()
 
-                val channel = if (buildProfile.isEAP) {
-                    ProductRelease.Channel.EAP
-                } else {
-                    ProductRelease.Channel.RELEASE
-                }
-                select {
-                    types =
-                        listOf(IntelliJPlatformType.IntellijIdeaCommunity)
-                    channels = listOf(channel)
-                    sinceBuild = project.currentProfile().pluginSinceBuild
-                    untilBuild = project.currentProfile().pluginUntilBuild
-                }
+//                val channel = if (buildProfile.isEAP) {
+//                    ProductRelease.Channel.EAP
+//                } else {
+//                    ProductRelease.Channel.RELEASE
+//                }
+//                select {
+//                    types =
+//                        listOf(IntelliJPlatformType.IntellijIdeaCommunity, IntelliJPlatformType.Rider, IntelliJPlatformType.PyCharmCommunity)
+//                    channels = listOf(channel)
+//                    sinceBuild = project.currentProfile().pluginSinceBuild
+//                    untilBuild = project.currentProfile().pluginUntilBuild
+//                }
+
+                val useInstaller = project.useBinaryInstaller()
+
+                ide(IntelliJPlatformType.IntellijIdeaCommunity, buildProfile.platformVersion, useInstaller)
+//                ide(IntelliJPlatformType.PyCharmCommunity, buildProfile.pycharmVersion, useInstaller)
+//                ide(IntelliJPlatformType.Rider, buildProfile.riderVersion, useInstaller)
             }
         }
         subsystemsToCheck = VerifyPluginTask.Subsystems.WITHOUT_ANDROID
@@ -318,9 +324,9 @@ tasks {
             //see https://kotlin.github.io/analysis-api/testing-in-k2-locally.html
             "idea.kotlin.plugin.use.k2" to "true",
 
-           //"jcef.remote.enabled" to true,
-           //"jcef.remote.debug" to true,
-           //"ide.browser.jcef.log.level" to "error",
+            //"jcef.remote.enabled" to true,
+            //"jcef.remote.debug" to true,
+            //"ide.browser.jcef.log.level" to "error",
 
             //"idea.ProcessCanceledException" to "disabled"
 

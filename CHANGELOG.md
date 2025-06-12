@@ -1,6 +1,14 @@
 # Changelog
 
-## [2.0.423] - 2025-06-01
+## [2.0.425] - 2025-06-12
+
+- Update profiles and remove gradle cache by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2760
+- update eap profile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2764
+- update rider eap by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2765
+- Support python Closes #2761 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2762
+- delete-leftover-files-in-python by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2767
+
+## 2.0.423 - 2025-06-01
 
 - fix-show-error-api by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2759
 

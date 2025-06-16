@@ -172,6 +172,11 @@ class CodeContextUpdateService(private val project: Project, private val cs: Cor
                             } else {
                                 empty()
                             }
+                        }else{
+                            //if shouldRun is false (maybe user logged out)
+                            //or the editor is null, editor is null when there are no open editors. or the selectionChanged was with a null
+                            // editor, that will happen when opening a non-text editor or one of digma's editors like dashboard or jaeger.
+                            empty()
                         }
                     } catch (e: CancellationException) {
                         throw e // 🔁 RE-THROW cancellation to properly cancel the coroutine

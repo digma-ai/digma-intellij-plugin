@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.425] - 2025-06-12
+## [2.0.426] - 2025-06-17
+
+- fix-code-context-change-when-editor-is-null by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2768
+
+## 2.0.425 - 2025-06-12
 
 - Update profiles and remove gradle cache by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2760
 - update eap profile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2764

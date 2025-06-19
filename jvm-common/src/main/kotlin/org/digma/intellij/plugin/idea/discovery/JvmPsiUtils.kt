@@ -111,7 +111,7 @@ fun findNearestAnnotation(psiMethod: PsiMethod, annotationFqn: String): PsiAnnot
         return annotClass
     }
 
-    val superMethods = psiMethod.findSuperMethods(false)
+    val superMethods = psiMethod.findSuperMethods(true)
     superMethods.forEach {
         val theAnnotation = it.getAnnotation(annotationFqn)
         if (theAnnotation != null) {

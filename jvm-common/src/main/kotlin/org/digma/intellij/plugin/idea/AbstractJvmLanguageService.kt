@@ -257,20 +257,25 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
     @RequiresReadLock
     private fun detectMethodUnderCaretImpl(virtualFile: VirtualFile, caretOffset: Int): MethodUnderCaret {
 
-        val psiFile = PsiManager.getInstance(project).findFile(virtualFile) ?: return MethodUnderCaret.empty(virtualFile.url)
-        val packageName = psiFile.toUElementOfType<UFile>()?.packageName ?: ""
-        val underCaret: PsiElement = psiFile.findElementAt(caretOffset) ?: return MethodUnderCaret.empty(virtualFile.url)
-        val uMethod = findParentMethod(underCaret)
-        val className: String = uMethod?.getParentOfType<UClass>()?.let {
+        if (!isValidVirtualFile(virtualFile)) {
+            return MethodUnderCaret.EMPTY
+        }
+
+        val psiFile = PsiManager.getInstance(project).findFile(virtualFile)?.takeIf { it.isValid && virtualFile.isValid } ?: return MethodUnderCaret.empty(virtualFile.url)
+        val packageName = psiFile.takeIf { it.isValid }?.toUElementOfType<UFile>()?.takeIf { it.isPsiValid && virtualFile.isValid }?.packageName ?: ""
+        val underCaret: PsiElement = psiFile.takeIf { it.isValid && virtualFile.isValid }?.findElementAt(caretOffset) ?: return MethodUnderCaret.empty(virtualFile.url)
+        val uMethod = underCaret.takeIf { psiFile.isValid && virtualFile.isValid }?.let {
+            findParentMethod(it)
+        }
+        val className: String = uMethod?.takeIf { psiFile.isValid && virtualFile.isValid }?.getParentOfType<UClass>()?.let {
             getClassSimpleName(it)
         } ?: ""
 
-        if (uMethod != null) {
-
+        return uMethod?.takeIf { psiFile.isValid && virtualFile.isValid }?.let {
             val methodId = createMethodCodeObjectId(uMethod)
             val endpointTextRange = findEndpointTextRange(virtualFile, caretOffset, methodId)
 
-            return MethodUnderCaret(
+            MethodUnderCaret(
                 methodId,
                 uMethod.name,
                 className,
@@ -279,8 +284,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                 caretOffset,
                 endpointTextRange
             )
-        }
-        return MethodUnderCaret.Companion.empty(virtualFile.url)
+        } ?: MethodUnderCaret.empty(virtualFile.url)
     }
 
 

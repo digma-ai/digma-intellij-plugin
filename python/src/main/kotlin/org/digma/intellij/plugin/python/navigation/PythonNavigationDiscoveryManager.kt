@@ -11,7 +11,7 @@ import org.digma.intellij.plugin.python.index.getPythonCandidateFilesForDiscover
 
 
 @Suppress("LightServiceMigrationCode")
-class PythonNavigationDiscoveryManager(project: Project, cs: CoroutineScope) : AbstractNavigationDiscoveryManager(project, cs) {
+class PythonNavigationDiscoveryManager(project: Project, cs: CoroutineScope) : AbstractNavigationDiscoveryManager(project, cs,) {
 
 
     companion object {
@@ -32,6 +32,10 @@ class PythonNavigationDiscoveryManager(project: Project, cs: CoroutineScope) : A
 
     override suspend fun processFileInfo(fileInfo: FileDiscoveryInfo) {
         PythonSpanNavigationProvider.getInstance(project).processFileInfo(fileInfo)
+    }
+
+    override suspend fun getDiscoveryStatus(): String {
+        return PythonSpanNavigationProvider.getInstance(project).status()
     }
 
     override suspend fun maintenance() {

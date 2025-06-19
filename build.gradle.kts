@@ -11,7 +11,6 @@ import org.apache.tools.ant.filters.ReplaceTokens
 import org.jetbrains.changelog.date
 import org.jetbrains.changelog.exceptions.MissingVersionException
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
-import org.jetbrains.intellij.platform.gradle.models.ProductRelease
 import org.jetbrains.intellij.platform.gradle.tasks.VerifyPluginTask
 
 fun properties(key: String) = properties(key, project)
@@ -286,14 +285,14 @@ tasks {
 
     val deleteLog by registering(Delete::class) {
         outputs.upToDateWhen { false }
-        val ideFolderName = if (platformType == IntelliJPlatformType.Rider) {
-            "${platformType.code}-${project.currentProfile().riderVersion}"
-        } else {
-            "${platformType.code}-${project.currentProfile().platformVersion}"
-        }
-        project.layout.buildDirectory.dir("idea-sandbox/$ideFolderName/log").get().asFile.walk().forEach {
-            if (it.name.endsWith(".log")) {
-                delete(it)
+
+        doLast {
+            val sandboxDir = project.layout.buildDirectory.dir("idea-sandbox").get().asFile
+            sandboxDir.listFiles { file -> file.isDirectory }?.forEach { versionDir ->
+                val logFile = File(versionDir, "log/idea.log")
+                if (logFile.exists()) {
+                    logFile.delete()
+                }
             }
         }
     }

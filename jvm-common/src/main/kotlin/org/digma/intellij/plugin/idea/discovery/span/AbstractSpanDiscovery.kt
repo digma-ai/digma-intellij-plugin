@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.idea.discovery.span
 
+import com.intellij.openapi.application.readAction
 import com.intellij.openapi.application.smartReadAction
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
@@ -159,10 +160,16 @@ abstract class AbstractSpanDiscovery {
         searchScope: SearchScopeProvider,
     ): Collection<UReferenceExpression>? {
 
-        return smartReadAction(project) {
+        coroutineContext.ensureActive()
+        val methodReferences = smartReadAction(project) {
             startSpanMethodPointer.element?.let { startSpanMethod ->
-                val methodReferences = MethodReferencesSearch.search(startSpanMethod, searchScope.get(), true)
-                methodReferences.findAll().mapNotNull { psiReference: PsiReference -> psiReference.element.toUElementOfType<UReferenceExpression>() }
+                MethodReferencesSearch.search(startSpanMethod, searchScope.get(), true)
+            }
+        }
+        coroutineContext.ensureActive()
+        return methodReferences?.let {
+            readAction {
+                it.findAll().mapNotNull { psiReference: PsiReference -> psiReference.element.toUElementOfType<UReferenceExpression>() }
             }
         }
     }

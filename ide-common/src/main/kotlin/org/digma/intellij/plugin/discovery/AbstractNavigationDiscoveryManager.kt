@@ -8,6 +8,7 @@ import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.waitForSmartMode
 import com.intellij.openapi.roots.ProjectFileIndex
+import com.intellij.openapi.vfs.AsyncFileListener
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.VirtualFileManagerListener
@@ -104,25 +105,26 @@ abstract class AbstractNavigationDiscoveryManager(protected val project: Project
             }
         })
 
-//this listener send too many events
-//        VirtualFileManager.getInstance().addAsyncFileListener({ it ->
-//            val count = it.size
-//            object : AsyncFileListener.ChangeApplier {
-//                override fun beforeVfsChange() {
-////                    if(count > 10) {
-//                    Log.trace(logger, project, "Event: beforeVfsChange, count=$count")
-//                    jonManager.stop("stop because beforeVfsChange")
-////                    }
-//                }
-//
-//                override fun afterVfsChange() {
-////                    if (count > 10) {
-//                    Log.trace(logger, project, "Event: afterVfsChange, count=$count")
-//                    jonManager.startWithDelay()
-////                    }
-//                }
-//            }
-//        }, this)
+        VirtualFileManager.getInstance().addAsyncFileListener({ it ->
+            val minSizeToActivate = 50
+            val count = it.size
+            object : AsyncFileListener.ChangeApplier {
+                private val isInBulkUpdate = AtomicBoolean(false)
+                override fun beforeVfsChange() {
+                    if (isInBulkUpdate.compareAndSet(false, true) && count > minSizeToActivate) {
+                        Log.trace(logger, project, "Event: beforeVfsChange, count=$count")
+                        jonManager.stop("stop because beforeVfsChange")
+                    }
+                }
+
+                override fun afterVfsChange() {
+                    if (isInBulkUpdate.compareAndSet(true, false) && count > minSizeToActivate) {
+                        Log.trace(logger, project, "Event: afterVfsChange, count=$count")
+                        jonManager.startWithDelay()
+                    }
+                }
+            }
+        }, this)
 
 
         VirtualFileManager.getInstance().addVirtualFileManagerListener(object : VirtualFileManagerListener {
@@ -169,7 +171,7 @@ abstract class AbstractNavigationDiscoveryManager(protected val project: Project
         private var stuckTimerJob: Job? = null
 
         init {
-            managementJob = cs.launchWithErrorReporting("${this::class.java.simpleName}.JobManager", logger){
+            managementJob = cs.launchWithErrorReporting("${this::class.java.simpleName}.JobManager", logger) {
                 Log.trace(logger, project, "JobManager: managementJob started")
                 jobManagementChannel.consumeEach { command: JobCommand ->
                     Log.trace(logger, project, "JobManager: processing command: {}", command::class.java.simpleName)
@@ -208,7 +210,7 @@ abstract class AbstractNavigationDiscoveryManager(protected val project: Project
         // is not 0, then restart the jobs and hope for the best.
         private fun startStuckTimer() {
             stuckTimerJob?.cancel()
-            stuckTimerJob = cs.launchWithErrorReporting("$ {this::class.java.simpleName}.JobManager.startStuckTimer", logger){
+            stuckTimerJob = cs.launchWithErrorReporting("$ {this::class.java.simpleName}.JobManager.startStuckTimer", logger) {
                 delay(5.minutes)
                 @Suppress("UnstableApiUsage")
                 project.waitForSmartMode()
@@ -227,7 +229,7 @@ abstract class AbstractNavigationDiscoveryManager(protected val project: Project
         }
 
         fun startup() {
-            cs.launchWithErrorReporting("${this::class.java.simpleName}.JobManager.startup", logger){
+            cs.launchWithErrorReporting("${this::class.java.simpleName}.JobManager.startup", logger) {
                 //on startup currentState is not relevant, if its 0 the jobs will start, if it was changed by any listener,
                 // the jobs will not start until the currentState is 0 again when a listener calls startWithDelay
                 Log.trace(logger, project, "JobManager: startup called, sending RestartWithDelay command")
@@ -256,7 +258,10 @@ abstract class AbstractNavigationDiscoveryManager(protected val project: Project
                 } else {
                     Log.warn(logger, project, "JobManager: RestartWithDelay command failed with ${result.exceptionOrNull()}")
                     ErrorReporter.getInstance()
-                        .reportError("AbstractNavigationDiscoveryManager.JobManager.startWithDelay", result.exceptionOrNull() ?: Exception("Unknown error"))
+                        .reportError(
+                            "AbstractNavigationDiscoveryManager.JobManager.startWithDelay",
+                            result.exceptionOrNull() ?: Exception("Unknown error")
+                        )
                 }
             }
         }

@@ -11,7 +11,7 @@ import org.digma.intellij.plugin.idea.index.getJvmCandidateFilesForDiscoveryInde
 
 
 @Suppress("LightServiceMigrationCode")
-class JvmNavigationDiscoveryManager(project: Project, cs: CoroutineScope) : AbstractNavigationDiscoveryManager(project, cs) {
+class JvmNavigationDiscoveryManager(project: Project, cs: CoroutineScope) : AbstractNavigationDiscoveryManager(project, cs,) {
 
 
     companion object {
@@ -33,6 +33,13 @@ class JvmNavigationDiscoveryManager(project: Project, cs: CoroutineScope) : Abst
     override suspend fun processFileInfo(fileInfo: FileDiscoveryInfo) {
         JvmSpanNavigationProvider.getInstance(project).processFileInfo(fileInfo)
         JvmEndpointNavigationProvider.getInstance(project).processFileInfo(fileInfo)
+    }
+
+    override suspend fun getDiscoveryStatus(): String {
+        return buildString {
+            appendLine(JvmSpanNavigationProvider.getInstance(project).status())
+            appendLine(JvmEndpointNavigationProvider.getInstance(project).status())
+        }
     }
 
     override suspend fun maintenance() {

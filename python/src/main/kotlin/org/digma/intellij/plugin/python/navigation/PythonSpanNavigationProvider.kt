@@ -86,4 +86,8 @@ internal class PythonSpanNavigationProvider(private val project: Project) {
             spanLocations.entries.removeIf { toRemove.contains(it.key) }
         }
     }
+
+    fun status(): String {
+        return "  PythonSpanNavigationProvider: ${spanLocations.size} span locations"
+    }
 }

@@ -78,4 +78,8 @@ internal class JvmEndpointNavigationProvider(private val project: Project) {
         }
     }
 
+    fun status(): String {
+        return "  JvmEndpointNavigationProvider: ${endpointsMap.size} endpoint groups"
+    }
+
 }

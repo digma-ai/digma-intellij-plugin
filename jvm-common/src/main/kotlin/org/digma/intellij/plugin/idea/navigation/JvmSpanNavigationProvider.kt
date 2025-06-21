@@ -50,7 +50,7 @@ internal class JvmSpanNavigationProvider(private val project: Project) {
 
 
     suspend fun processFileInfo(fileInfo: FileDiscoveryInfo) {
-        Log.trace(logger, project,"processing candidateFile {}", fileInfo.file.url)
+        Log.trace(logger, project, "processing candidateFile {}", fileInfo.file.url)
 
         if (!isValidVirtualFile(fileInfo.file)) {
             return
@@ -62,7 +62,7 @@ internal class JvmSpanNavigationProvider(private val project: Project) {
                 methodInfo.spans.forEach { spanInfo ->
                     val file = fileInfo.file
                     val spanLocation = SpanLocation(file, spanInfo.offset, methodId)
-                    Log.trace(logger, project,"adding span location for {} span {}", file.url, spanInfo.id)
+                    Log.trace(logger, project, "adding span location for {} span {}", file.url, spanInfo.id)
                     spanLocations[spanInfo.id] = spanLocation
                 }
             }
@@ -74,9 +74,9 @@ internal class JvmSpanNavigationProvider(private val project: Project) {
     }
 
     suspend fun maintenance() {
-        Log.trace(logger, project,"starting maintenance, current span location count {}", spanLocations.size)
-        if(logger.isTraceEnabled){
-            Log.trace(logger, project,"span locations [{}]", spanLocations.entries.joinToString(", ") { "[${it.key} -> ${it.value}]" })
+        Log.trace(logger, project, "starting maintenance, current span location count {}", spanLocations.size)
+        if (logger.isTraceEnabled) {
+            Log.trace(logger, project, "span locations [{}]", spanLocations.entries.joinToString(", ") { "[${it.key} -> ${it.value}]" })
         }
 
         maintenanceLock.withLock {
@@ -84,8 +84,12 @@ internal class JvmSpanNavigationProvider(private val project: Project) {
             if (toRemove.isEmpty()) {
                 return@withLock
             }
-            Log.trace(logger, project,"maintenance removing spans {}", toRemove)
+            Log.trace(logger, project, "maintenance removing spans {}", toRemove)
             spanLocations.entries.removeIf { toRemove.contains(it.key) }
         }
+    }
+
+    fun status(): String {
+        return "  JvmSpanNavigationProvider: ${spanLocations.size} span locations"
     }
 }

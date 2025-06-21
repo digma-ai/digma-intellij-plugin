@@ -100,17 +100,20 @@ abstract class AbstractJaxrsFrameworkEndpointDiscover(private val project: Proje
 
                 methodsInClass.forEach { psiMethod ->
                     coroutineContext.ensureActive()
-                    smartReadAction(project) {
-                        val candidateMethods = mutableSetOf<PsiMethod>()
-                        val methodPathAnnotation = findNearestAnnotation(psiMethod, jaxRsPathAnnotationStr)
-                        val hasPath = methodPathAnnotation != null
-                        val hasHttpMethod = httpMethodsAnnotationStrList.any { annotationFqn ->
+                    val candidateMethods = mutableSetOf<PsiMethod>()
+                    val methodPathAnnotation = readAction { findNearestAnnotation(psiMethod, jaxRsPathAnnotationStr) }
+                    coroutineContext.ensureActive()
+                    val hasPath = methodPathAnnotation != null
+                    val hasHttpMethod = httpMethodsAnnotationStrList.any { annotationFqn ->
+                        coroutineContext.ensureActive()
+                        readAction {
                             findNearestAnnotation(psiMethod, annotationFqn) != null
                         }
-                        if (hasPath || hasHttpMethod) {
-                            candidateMethods.add(psiMethod)
-                            endpointInfos.addAll(handleCandidateMethods(candidateMethods).stream().toList())
-                        }
+                    }
+                    coroutineContext.ensureActive()
+                    if (hasPath || hasHttpMethod) {
+                        candidateMethods.add(psiMethod)
+                        endpointInfos.addAll(handleCandidateMethods(candidateMethods).stream().toList())
                     }
                 }
             }
@@ -137,25 +140,26 @@ abstract class AbstractJaxrsFrameworkEndpointDiscover(private val project: Proje
         val endpointInfos: MutableList<EndpointInfo> = ArrayList()
 
         httpMethodsAnnotationStrList.forEach { annotationFqn ->
-
+            coroutineContext.ensureActive()
             psiPointers.getPsiClass(project, annotationFqn)?.let {
-
                 val annotatedMethods: List<SmartPsiElementPointer<PsiMethod>>? =
                     psiPointers.getPsiClassPointer(project, annotationFqn)?.let { annotationClassPointer ->
                         findAnnotatedMethods(project, annotationClassPointer, searchScopeProvider)
                     }
-
-
+                coroutineContext.ensureActive()
                 annotatedMethods?.forEach { annotatedMethodPointer ->
-                    smartReadAction(project) {
-                        val annotatedMethod = annotatedMethodPointer.element
-                        annotatedMethod?.let {
-                            val candidateMethods = mutableSetOf<PsiMethod>()
-                            candidateMethods.add(annotatedMethod)
-                            val overridingMethods = OverridingMethodsSearch.search(annotatedMethod)
-                            candidateMethods.addAll(overridingMethods.findAll())
-                            endpointInfos.addAll(handleCandidateMethods(candidateMethods).stream().toList())
+                    coroutineContext.ensureActive()
+                    val annotatedMethod = readAction { annotatedMethodPointer.element }
+                    annotatedMethod?.let {
+                        coroutineContext.ensureActive()
+                        val candidateMethods = mutableSetOf<PsiMethod>()
+                        candidateMethods.add(annotatedMethod)
+                        val overridingMethods = smartReadAction(project) {
+                            OverridingMethodsSearch.search(annotatedMethod).findAll()
                         }
+                        coroutineContext.ensureActive()
+                        candidateMethods.addAll(overridingMethods)
+                        endpointInfos.addAll(handleCandidateMethods(candidateMethods).toList())
                     }
                 }
             }
@@ -163,6 +167,7 @@ abstract class AbstractJaxrsFrameworkEndpointDiscover(private val project: Proje
 
         return endpointInfos
     }
+
 
     @Suppress("UnstableApiUsage")
     private suspend fun extractPsiFileIfFileScope(searchScopeProvider: SearchScopeProvider): PsiFile? {
@@ -185,33 +190,41 @@ abstract class AbstractJaxrsFrameworkEndpointDiscover(private val project: Proje
         }
     }
 
-    @RequiresReadLock(generateAssertion = false)
-    private fun handleCandidateMethods(candidateMethods: Collection<PsiMethod>): Set<EndpointInfo> {
+
+    private suspend fun handleCandidateMethods(candidateMethods: Collection<PsiMethod>): Set<EndpointInfo> {
         val retSet = mutableSetOf<EndpointInfo>()
         candidateMethods.forEach { currPsiMethod ->
-            val methodPathAnnotation = findNearestAnnotation(currPsiMethod, jaxRsPathAnnotationStr)
-            val currClass = currPsiMethod.containingClass
-            val controllerPathAnnotation = if (currClass == null) null else findNearestAnnotation(currClass, jaxRsPathAnnotationStr)
+            coroutineContext.ensureActive()
+            val methodPathAnnotation = readAction { findNearestAnnotation(currPsiMethod, jaxRsPathAnnotationStr) }
+            coroutineContext.ensureActive()
+            val currClass = readAction { currPsiMethod.containingClass }
+            val controllerPathAnnotation = if (currClass == null) null else readAction { findNearestAnnotation(currClass, jaxRsPathAnnotationStr) }
+            coroutineContext.ensureActive()
             // skip if we couldn't find annotation of @Path, in either class and method
             if (methodPathAnnotation != null || controllerPathAnnotation != null) {
-                val appPaths = evaluateApplicationPaths(currPsiMethod)
+                val appPaths = readAction { evaluateApplicationPaths(currPsiMethod) }
+                coroutineContext.ensureActive()
                 httpMethodsAnnotationStrList.forEach { annotationFqn ->
-                    val httpMethodAnnotation = findNearestAnnotation(currPsiMethod, annotationFqn)
+                    coroutineContext.ensureActive()
+                    val httpMethodAnnotation = readAction { findNearestAnnotation(currPsiMethod, annotationFqn) }
                     httpMethodAnnotation?.let {
-                        val endpointSuffixUri = combinePaths(controllerPathAnnotation, methodPathAnnotation)
+                        val endpointSuffixUri = readAction { combinePaths(controllerPathAnnotation, methodPathAnnotation) }
                         appPaths.forEach { appPath ->
-                            val endpointFullUri = combineUri(appPath, endpointSuffixUri)
-                            val httpEndpointCodeObjectId = createHttpEndpointCodeObjectId(annotationFqn, endpointFullUri)
-                            val textRange =
-                                TextRangeUtils.fromJBTextRange(currPsiMethod.textRange)
-                            val endpointInfo = EndpointInfo(
-                                httpEndpointCodeObjectId,
-                                createPsiMethodCodeObjectId(currPsiMethod),
-                                toFileUri(currPsiMethod),
-                                textRange,
-                                getFramework()
-                            )
-                            retSet.add(endpointInfo)
+                            coroutineContext.ensureActive()
+                            readAction {
+                                val endpointFullUri = combineUri(appPath, endpointSuffixUri)
+                                val httpEndpointCodeObjectId = createHttpEndpointCodeObjectId(annotationFqn, endpointFullUri)
+                                val textRange =
+                                    TextRangeUtils.fromJBTextRange(currPsiMethod.textRange)
+                                val endpointInfo = EndpointInfo(
+                                    httpEndpointCodeObjectId,
+                                    createPsiMethodCodeObjectId(currPsiMethod),
+                                    toFileUri(currPsiMethod),
+                                    textRange,
+                                    getFramework()
+                                )
+                                retSet.add(endpointInfo)
+                            }
                         }
                     }
                 }
@@ -221,13 +234,11 @@ abstract class AbstractJaxrsFrameworkEndpointDiscover(private val project: Proje
     }
 
 
-    //must run in read access
+    @RequiresReadLock(generateAssertion = false)
     private fun evaluateApplicationPaths(psiElement: PsiElement): Set<String?> {
 
         var appPathAnnotationClass = project.service<PsiPointers>().getPsiClass(project, applicationPathAnnotationClassFqn)
-
         val appPaths: MutableSet<String?> = HashSet()
-
         appPathAnnotationClass?.let {
             // check for ApplicationPath in context of module
             val module = ModuleUtilCore.findModuleForPsiElement(psiElement)

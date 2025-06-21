@@ -102,7 +102,6 @@ fun <T> CoroutineScope.asyncWithErrorReporting(
     } catch (e: Throwable) {
         Log.warnWithException(logger, e, "Error in coroutine {}", e)
         ErrorReporter.getInstance().reportError("asyncWithErrorReporting.$name", e)
-        //todo: will jetbrains consider it as unhandled exception? if yes swallow the exceptions and return empty Deferred
         throw e
     }
 }

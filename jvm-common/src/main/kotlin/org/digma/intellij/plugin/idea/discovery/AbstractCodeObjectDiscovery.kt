@@ -96,9 +96,7 @@ abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSp
             }
 
             //maybe uFile is null,there is nothing to do without a UFile.
-            val fileData = readAction {
-                FileData.buildFileData(psiFile)
-            } ?: return null
+            val fileData = FileData.buildFileData(psiFile) ?: return null
             coroutineContext.ensureActive()
 
             val packageName = fileData.packageName
@@ -208,10 +206,12 @@ abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSp
 
 private class FileData(val uFile: UFile, val packageName: String) {
     companion object {
-        fun buildFileData(psiFile: PsiFile): FileData? {
-            val uFile: UFile? = psiFile.toUElementOfType<UFile>()
-            return uFile?.let {
-                val packageName = it.packageName
+        suspend fun buildFileData(psiFile: PsiFile): FileData? {
+            coroutineContext.ensureActive()
+            val uFile: UFile? = readAction { psiFile.takeIf { it.isValid }?.toUElementOfType<UFile>() }
+            return uFile?.takeIf { it.isPsiValid }?.let {
+                coroutineContext.ensureActive()
+                val packageName = readAction { it.packageName }
                 FileData(it, packageName)
             }
         }

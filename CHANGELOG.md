@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.426] - 2025-06-17
+## [2.0.427] - 2025-06-23
+
+- update-build-profiles by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2770
+- Fix psi errors Closes #2769 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2772
+
+## 2.0.426 - 2025-06-17
 
 - fix-code-context-change-when-editor-is-null by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/2768
 

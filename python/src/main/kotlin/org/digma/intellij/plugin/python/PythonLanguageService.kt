@@ -91,14 +91,15 @@ class PythonLanguageService(private val project: Project) : LanguageService, Dis
         caretOffset: Int
     ): MethodUnderCaret {
 
-        val psiFile = PsiManager.getInstance(project).findFile(virtualFile)
+        val psiFile = PsiManager.getInstance(project).findFile(virtualFile)?.takeIf { it.isValid && virtualFile.isValid }
             ?: return MethodUnderCaret.empty(virtualFile.url)
 
-        val underCaret: PsiElement = psiFile.findElementAt(caretOffset)
+        val underCaret: PsiElement = psiFile.findElementAt(caretOffset).takeIf { psiFile.isValid && virtualFile.isValid }
             ?: return MethodUnderCaret.empty(virtualFile.url)
 
-        val pyFunction = PsiTreeUtil.getParentOfType(underCaret, PyFunction::class.java)
-            ?: return MethodUnderCaret.empty(virtualFile.url)
+        val pyFunction = underCaret.takeIf { psiFile.isValid && virtualFile.isValid }?.let {
+            PsiTreeUtil.getParentOfType(underCaret, PyFunction::class.java)
+        } ?: return MethodUnderCaret.empty(virtualFile.url)
 
         val methodId = createPythonMethodCodeObjectId(project, pyFunction)
         val name = pyFunction.name ?: ""

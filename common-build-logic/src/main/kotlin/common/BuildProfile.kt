@@ -78,7 +78,7 @@ fun Project.useBinaryInstaller(): Boolean = !this.currentProfile().isEAP
 object BuildProfiles {
 
     @Suppress("EnumEntryName")
-    enum class Profile { p241, p242, p243, p251, p252 }
+    enum class Profile { p241, p242, p243, p251, p252 ,p253}
 
     fun Profile.greaterThan(other:Profile):Boolean{
         val thisNumber = this.name.substring(1).toInt()
@@ -112,8 +112,8 @@ object BuildProfiles {
     //update this list as new profiles are added or removed
     private val profileAliases = mapOf(
         "lowest" to Profile.p241.name,
-        "latest" to Profile.p251.name,
-        "eap" to Profile.p252.name,
+        "latest" to Profile.p252.name,
+        "eap" to Profile.p253.name,
     )
 
 
@@ -201,16 +201,32 @@ object BuildProfiles {
         ),
 
         Profile.p252 to BuildProfile(
-            isEAP = true,
             profile = Profile.p252,
-            platformVersion = "252.23892-EAP-CANDIDATE-SNAPSHOT",
-            riderVersion = "2025.2-RC1-SNAPSHOT",
-            pycharmVersion = "252.23892-EAP-CANDIDATE-SNAPSHOT",
+            platformVersion = "2025.2",
+            riderVersion = "2025.2-RC2-SNAPSHOT",
+            pycharmVersion = "2025.2",
             riderTargetFramework = "net8.0",
             riderResharperVersionConstant = "PROFILE_2024_3,PROFILE_2025_2",
             platformVersionCode = "252",
             pluginSinceBuild = "252",
             pluginUntilBuild = "252.*",
+            kotlinTarget = KotlinVersion.KOTLIN_2_0,
+            kotlinJvmTarget = JvmTarget.JVM_21,
+            javaVersion = JavaVersion.VERSION_21.majorVersion,
+        ),
+
+        //todo: update profile when 253 starts, for now build with 252
+        Profile.p253 to BuildProfile(
+            isEAP = true,
+            profile = Profile.p253,
+            platformVersion = "2025.2",
+            riderVersion = "2025.2-RC2-SNAPSHOT",
+            pycharmVersion = "2025.2",
+            riderTargetFramework = "net8.0",
+            riderResharperVersionConstant = "PROFILE_2024_3,PROFILE_2025_2",
+            platformVersionCode = "253",
+            pluginSinceBuild = "253",
+            pluginUntilBuild = "253.*",
             kotlinTarget = KotlinVersion.KOTLIN_2_0,
             kotlinJvmTarget = JvmTarget.JVM_21,
             javaVersion = JavaVersion.VERSION_21.majorVersion,

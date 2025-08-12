@@ -201,6 +201,7 @@ object BuildProfiles {
         ),
 
         Profile.p252 to BuildProfile(
+            isEAP = true,
             profile = Profile.p252,
             platformVersion = "2025.2",
             riderVersion = "2025.2-RC2-SNAPSHOT",

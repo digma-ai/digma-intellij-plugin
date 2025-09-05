@@ -73,7 +73,7 @@ class SettingsComponent {
             @Override
             public boolean verify(JComponent input) {
                 try {
-                    URLValidator.create(myApiUrlTextField.getText().trim(), ALLOW_HTTPS).validate();
+                    URLValidator.create(myApiUrlTextField.getText().trim(), ALLOW_HTTP_AND_HTTPS).validate();
                     myUrlLabel.setForeground(defaultLabelForeground);
                     myApiUrlTextField.setToolTipText(null);
                     return true;
